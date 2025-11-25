@@ -1,9 +1,9 @@
 ---
 title: Top 10 Best LangChain Courses on Udemy for 2026
 description: 'Ranked 10 best LangChain courses on Udemy 2026 by 50K+ enrollments. Master LLM apps, RAG, LangGraph, AI agents, local models with projects, certificates, $10–$20.'
-pubDate: 2025-11-17T01:51:00.000Z
+pubDate: 2025-11-25T09:40:39.672Z
 tags:
-  - langchain
+  - udemy
 image: /images/top-langchain-courses.jpg
 affiliate_links:
   - text: 'Enroll Now: ChatGPT and LangChain Masterclass (10K+ Students, Production Focus) →'

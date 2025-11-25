@@ -1,10 +1,9 @@
 ---
 title: 12 Best Prompt Engineering Courses on Udemy for 2026
 description: 'Top 12 Udemy prompt engineering courses for 2026—ranked by enrollments, ratings, fresh updates, and packed with projects, certificates, and lifetime access.'
-pubDate: 2025-11-21T01:00:00.000Z
+pubDate: 2025-11-25T09:40:39.666Z
 tags:
-  - prompt engineering
-  - chatgpt
+  - udemy
 image: /images/best-prompt-engineering-courses-udemy-2026.jpg
 affiliate_links:
   - text: 'Enroll Now: The Complete Prompt Engineering for AI Bootcamp (108K+ Students) →'

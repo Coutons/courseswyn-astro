@@ -1,10 +1,9 @@
 ---
 title: Top AI and Machine Learning Courses on Udemy 2026
 description: 'Discover the top 10 AI and machine learning courses on Udemy for 2026. Perfect for beginners to advanced learners aiming for careers in AI engineering, data science, and generative AI.'
-pubDate: 2025-10-24T07:00:00.000Z
+pubDate: 2025-11-25T09:40:39.682Z
 tags:
-  - ai
-  - machine learning
+  - udemy
 image: /images/ai-machine-learning-2025.jpg
 affiliate_links:
   - text: 'Get Course: Python for Data Science and Machine Learning Bootcamp'

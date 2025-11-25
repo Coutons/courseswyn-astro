@@ -1,9 +1,9 @@
 ---
 title: Best Web Development Bootcamps on Udemy 2026
 description: 'Top 10 Udemy web development bootcamps for 2026—master full-stack, React, Node.js, and modern web workflows with hands-on projects for beginners through advanced coders.'
-pubDate: 2025-10-24T14:22:00.000Z
+pubDate: 2025-11-25T09:40:39.661Z
 tags:
-  - web development
+  - udemy
 image: /images/best-web-development-bootcamps-on-udemy-2025.jpg
 affiliate_links:
   - text: 'Get Course: The Complete 2025 Web Development Bootcamp'

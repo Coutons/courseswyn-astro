@@ -1,14 +1,9 @@
 ---
 title: Top 10 Best NFT Courses on Udemy for 2026
 description: 'Top 10 NFT courses on Udemy 2026—ranked by enrollments, ratings, and relevance for beginners, artists, and investors mastering minting, trading, and Web3.'
-pubDate: 2025-11-14T04:35:00.000Z
+pubDate: 2025-11-25T09:40:39.678Z
 tags:
-  - nft
-  - non fungible tokens
-  - blockchain
-  - web3
-  - nft minting
-  - nft trading
+  - udemy
 image: /images/top-nft-courses-2026.jpg
 affiliate_links:
   - text: 'Get Course: NFT Fundamentals (Buy, Create and Sell NFTs)'

@@ -1,9 +1,9 @@
 ---
 title: Top 10 Python Courses on Udemy 2025
 description: 'Top 10 Python courses on Udemy 2025—ranked by enrollments and ratings for beginners through advanced learners in programming, data science, AI, and automation.'
-pubDate: 2025-10-24T07:27:00.000Z
+pubDate: 2025-11-25T09:40:39.679Z
 tags:
-  - python
+  - udemy
 image: /images/python-2025.jpg
 affiliate_links:
   - text: 'Get Course: 100 Days of Code: The Complete Python Pro Bootcamp for 2025'

@@ -1,9 +1,11 @@
 ---
 title: 10 Best Data Science Courses on Udemy 2025
 description: 'Top 10 Udemy data science courses for 2025—learn Python, machine learning, AI, and analytics from bestselling instructors with projects and certificates.'
-pubDate: 2025-10-13T08:00:00.000Z
+pubDate: 2025-11-25T09:40:39.663Z
 tags:
   - data science
+  - python
+  - machine learning
 image: /images/ai-machine-learning-2025.jpg
 affiliate_links:
   - text: 'Enroll Now: Python for Data Science and Machine Learning Bootcamp'

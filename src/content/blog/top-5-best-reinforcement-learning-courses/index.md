@@ -1,9 +1,9 @@
 ---
 title: Top 5 Best Reinforcement Learning Courses on Udemy for 2026
 description: 'Top 5 reinforcement learning courses on Udemy 2026—ranked by enrollments, ratings, and 2025–2026 updates with hands-on projects, certificates, and $10–$20 sales.'
-pubDate: 2025-11-19T01:00:00.000Z
+pubDate: 2025-11-25T09:40:39.680Z
 tags:
-  - reinforcement learning
+  - udemy
 image: /images/top-reinforcement-learning-courses-2026.png
 affiliate_links:
   - text: 'Enroll Now: Advanced AI: Deep Reinforcement Learning in PyTorch (50K+ Students) →'

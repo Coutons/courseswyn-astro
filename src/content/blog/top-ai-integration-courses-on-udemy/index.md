@@ -1,9 +1,9 @@
 ---
 title: Top AI Integration Courses on Udemy 2026
 description: 'Explore the top 10 AI integration courses on Udemy for 2026. Perfect for beginners to advanced learners aiming for careers in AI engineering, generative AI, and business applications.'
-pubDate: 2025-10-28T03:00:00.000Z
+pubDate: 2025-11-25T09:40:39.683Z
 tags:
-  - ai integration
+  - udemy
 image: /images/ai-machine-learning-2025.jpg
 affiliate_links:
   - text: 'Get Course: The Complete Artificial Intelligence and ChatGPT Course'

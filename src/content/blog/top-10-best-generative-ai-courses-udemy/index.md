@@ -1,9 +1,9 @@
 ---
 title: Top 10 Best Generative AI (Gen AI) Courses on Udemy for 2026
 description: 'Ranked 10 best Generative AI courses on Udemy 2026 by 150K+ enrollments. Master ChatGPT, RAG, AI agents, LLMs, local models with projects, certificates, $10–$20 sales.'
-pubDate: 2025-11-17T05:57:00.000Z
+pubDate: 2025-11-25T09:40:39.669Z
 tags:
-  - generative ai
+  - udemy
 image: /images/top-generative-ai-courses-2026.png
 affiliate_links:
   - text: 'Enroll Now: ChatGPT & Generative AI - The Complete Guide (150K+ Students, Constant Updates) →'

@@ -1,9 +1,11 @@
 ---
 title: 10 Best Java Spring Courses on Udemy (2026)
 description: 'Expert-ranked top 10 Java Spring courses on Udemy 2026—Spring Boot, Spring Framework, and Spring Security paths with pricing, student reviews, and job-ready projects.'
-pubDate: 2025-11-25T08:47:13.782Z
+pubDate: 2025-11-25T09:40:39.651Z
 tags:
-  - udemy
+  - java
+  - spring boot
+  - backend
 image: /images/spring-boot-udemy-courses.jpg
 affiliate_links:
   - text: Enroll Now on Udemy
