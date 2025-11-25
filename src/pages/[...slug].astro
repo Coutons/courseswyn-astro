@@ -74,21 +74,27 @@ if (isCategoryPage) {
     '@type': 'BlogPosting',
     headline: post.data.title,
     description: post.data.description,
+    image: post.data.image ? [new URL(post.data.image, site).toString()] : undefined,
+    datePublished: post.data.pubDate.toISOString(),
+    dateModified: post.data.pubDate.toISOString(),
     author: {
       '@type': 'Organization',
       name: 'CoursesWyn',
+      url: site
     },
     publisher: {
       '@type': 'Organization',
       name: 'CoursesWyn',
+      url: site,
       logo: {
         '@type': 'ImageObject',
         url: `${site}/images/og-default.svg`,
       },
     },
-    mainEntityOfPage: canonical,
-    datePublished: post.data.pubDate.toISOString(),
-    image: post.data.image ? [new URL(post.data.image, site).toString()] : undefined,
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': canonical
+    }
   };
 }
 ---
@@ -140,7 +146,13 @@ if (isCategoryPage) {
 
       {post.data.image ? (
         <figure class="overflow-hidden rounded-3xl border border-white/5">
-          <img src={post.data.image} alt={post.data.title} class="w-full" loading="lazy" />
+          {post.data.image && (
+            <img 
+              src={post.data.image} 
+              alt={`${post.data.title} - Course review and ranking`}
+              class="w-full h-auto rounded-2xl mb-6"
+            />
+          )}
         </figure>
       ) : null}
 
