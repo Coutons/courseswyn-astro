@@ -71,7 +71,7 @@ We've analyzed the current 2025 course catalog to bring you the **50 highest-rat
 
 | # | Course Title | Category | Rating | Students | Enroll Now |
 |---|-------------|----------|--------|----------|------------|
-| 1 | Complete Web Developer Bootcamp 2025 | Development | 4.7 | 1.2M+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fthe-complete-web-developer-in-2024-zero-to-mastery%2F) |
+| 1 | Complete Web Developer Bootcamp 2025 | Development | 4.7 | 1.2M+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fweb-development-masterclass-complete-web-developer-bootcamp%2F) |
 | 2 | Python Bootcamp 2025: Zero to Hero | Development | 4.6 | 980K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2F100-days-of-code%2F) |
 | 3 | Excel Masterclass 2025: Beginner to Pro | Business | 4.7 | 950K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fmicrosoft-excel-2024-from-beginner-to-advanced-in-easy-online-sessions%2F) |
 | 4 | Digital Marketing 2025: Complete Course | Marketing | 4.4 | 890K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fthe-complete-digital-marketing-course-12-courses-in-1%2F) |
@@ -82,11 +82,11 @@ We've analyzed the current 2025 course catalog to bring you the **50 highest-rat
 | 9 | JavaScript Masterclass 2025 | Development | 4.6 | 730K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fjavascript-the-complete-guide-2020-beginner-advanced%2F) |
 | 10 | Data Science Bootcamp 2025 | Development | 4.6 | 700K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fdata-science-and-machine-learning-bootcamp-with-python%2F) |
 | 11 | React Development 2025: Complete Guide | Development | 4.7 | 680K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Freact-the-complete-guide-incl-redux%2F) |
-| 12 | iOS Development 2025: Swift & SwiftUI | Development | 4.7 | 650K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fios-13-swift5-the-complete-ios-app-development-bootcamp%2F) |
+| 12 | iOS Development 2025: Swift & SwiftUI | Development | 4.7 | 650K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fios-13-app-development-bootcamp%2F) |
 | 13 | Angular Development 2025 | Development | 4.6 | 630K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fthe-complete-angular-course%2F) |
 | 14 | Node.js Development 2025: MERN Stack | Development | 4.7 | 610K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fnodejs-the-complete-guide%2F) |
 | 15 | Docker & Kubernetes 2025 | IT & Software | 4.7 | 590K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fdocker-kubernetes-the-practical-guide%2F) |
-| 16 | Java Programming 2025: Complete Course | Development | 4.6 | 580K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fjava-programming-masterclass-for-software-developers%2F) |
+| 16 | Java Programming 2025: Complete Course | Development | 4.6 | 580K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fcomplete-java-programming-beginner-to-expert%2F) |
 | 17 | C++ Programming 2025: Complete Guide | Development | 4.6 | 570K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fbeginning-c-plus-plus-programming%2F) |
 | 18 | Digital Marketing 2025: Advanced | Marketing | 4.4 | 560K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fadvanced-digital-marketing-masterclass%2F) |
 | 19 | Photoshop CC 2025: Essential Training | Design | 4.6 | 550K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fadobe-photoshop-cc-essentials-training-course%2F) |
@@ -101,13 +101,13 @@ We've analyzed the current 2025 course catalog to bring you the **50 highest-rat
 | 28 | Ethical Hacking 2025: Complete Course | IT & Software | 4.5 | 460K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fpractical-ethical-hacking-the-complete-course%2F) |
 | 29 | Social Media Marketing 2025 | Marketing | 4.3 | 450K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fthe-social-media-marketing-complete-certificate-course%2F) |
 | 30 | Investment Banking 2025 | Finance | 4.5 | 440K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Finvestment-banking-360-the-complete-course%2F) |
-| 31 | Vue.js Development 2025 | Development | 4.6 | 430K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fvue-js-the-complete-guide%2F) |
+| 31 | Vue.js Development 2025 | Development | 4.6 | 430K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fvuejs-2-the-complete-guide%2F) |
 | 32 | Cyber Security 2025: Network Security | IT & Software | 4.5 | 420K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fthe-complete-cyber-security-course-hackers-exposed%2F) |
 | 33 | Illustrator CC 2025: Essential Training | Design | 4.6 | 410K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fadobe-illustrator-cc-essentials-training-course%2F) |
 | 34 | Business Analysis 2025: Complete Course | Business | 4.4 | 400K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fbusiness-analysis-fundamentals%2F) |
 | 35 | Ruby Programming 2025: Complete Course | Development | 4.5 | 390K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fprogramming-with-ruby%2F) |
 | 36 | SEO Course 2025: Rank #1 on Google | Marketing | 4.4 | 380K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fseosearch-engine-optimization-complete-course%2F) |
-| 37 | Unity Game Development 2025 | Development | 4.6 | 370K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Funity-game-development-mega-course-beginner-to%2F) |
+| 37 | Unity Game Development 2025 | Development | 4.6 | 370K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Funity-game-development-master-class%2F) |
 | 38 | Forex Trading 2025: Complete Course | Finance | 4.4 | 360K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fforex-trading-a-z-with-live-examples-of-forex-trading%2F) |
 | 39 | Google Analytics 4 2025: GA4 Training | Marketing | 4.5 | 350K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fgoogle-analytics-4-ga4-2024-the-ultimate-course%2F) |
 | 40 | PowerPoint 2025: Presentation Skills | Business | 4.4 | 340K+ | [Enroll Now](https://trk.udemy.com/c/6564357/3398467/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fpowerpoint-presentation-slide-design-animation%2F) |
