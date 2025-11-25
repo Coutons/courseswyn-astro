@@ -7,5 +7,13 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://courseswyn.com',
   output: 'static',
-  integrations: [tailwind(), preact(), sitemap()],
+  integrations: [
+    tailwind(), 
+    preact(), 
+    sitemap({
+      changefreq: 'weekly',
+      priority: 0.8,
+      entryLimit: 5000
+    })
+  ],
 });
