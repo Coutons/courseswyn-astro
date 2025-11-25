@@ -1,11 +1,14 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import AffiliateLink from '../components/AffiliateLink.astro';
-import { fetchPosts, formatDate, tagToLabel } from '../lib/posts';
+import { fetchPosts, formatDate, tagToLabel, paginate } from '../lib/posts';
 
 const posts = await fetchPosts();
-const featured = posts.slice(0, 3);
-const latest = posts.slice(3, 9);
+const pageParam = Number(Astro.url?.searchParams.get('page') ?? '1');
+const { slice, currentPage, totalPages } = paginate(posts, isNaN(pageParam) ? 1 : pageParam, 6);
+
+const featured = slice.slice(0, 3);
+const latest = slice.slice(3, 6);
 ---
 
 <Layout title="CoursesWyn · Best Course Reviews 2026" description="Independent reviews covering the best Udemy courses for AI, coding, and automation—ranked with real outcomes and affiliate transparency.">
@@ -88,4 +91,30 @@ const latest = posts.slice(3, 9);
       ))}
     </div>
   </section>
+
+  {totalPages > 1 && (
+    <section class="flex justify-center gap-4">
+      {currentPage > 1 && (
+        <a 
+          href={currentPage > 2 ? `/?page=${currentPage - 1}` : '/'} 
+          class="button-ghost"
+        >
+          ← Previous
+        </a>
+      )}
+      
+      <span class="text-white/60">
+        Page {currentPage} of {totalPages}
+      </span>
+      
+      {currentPage < totalPages && (
+        <a 
+          href={`/?page=${currentPage + 1}`} 
+          class="button-ghost"
+        >
+          Next →
+        </a>
+      )}
+    </section>
+  )}
 </Layout>

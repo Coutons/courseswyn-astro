@@ -1,10 +1,11 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { fetchPosts, formatDate, paginate, tagToLabel } from '../../lib/posts';
+import Search from '../../components/Search.astro';
 
 const posts = await fetchPosts();
 const pageParam = Number(Astro.url?.searchParams.get('page') ?? '1');
-const { slice, currentPage, totalPages } = paginate(posts, isNaN(pageParam) ? 1 : pageParam);
+const { slice, currentPage, totalPages } = paginate(posts, isNaN(pageParam) ? 1 : pageParam, 12);
 
 const baseUrl = '/blog/';
 const pageHref = (page: number) => (page <= 1 ? baseUrl : `${baseUrl}?page=${page}`);
@@ -18,6 +19,8 @@ const pageHref = (page: number) => (page <= 1 ? baseUrl : `${baseUrl}?page=${pag
       Filtered affiliate recommendations for Udemy courses across prompt engineering, retrieval-augmented generation, and generative AI product workflows.
     </p>
   </section>
+
+  <Search posts={posts} />
 
   <section class="space-y-6">
     {slice.map((post) => (
