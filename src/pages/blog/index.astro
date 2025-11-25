@@ -1,0 +1,56 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { fetchPosts, formatDate, paginate, tagToLabel } from '../../lib/posts';
+
+const posts = await fetchPosts();
+const pageParam = Number(Astro.url?.searchParams.get('page') ?? '1');
+const { slice, currentPage, totalPages } = paginate(posts, isNaN(pageParam) ? 1 : pageParam);
+
+const baseUrl = '/blog/';
+const pageHref = (page: number) => (page <= 1 ? baseUrl : `${baseUrl}?page=${page}`);
+---
+
+<Layout title="CoursesWyn Udemy Blog" description="All CoursesWyn affiliate rundowns for Udemy prompt engineering, RAG, and generative AI.">
+  <section class="mb-10 space-y-4">
+    <p class="badge">All rundowns</p>
+    <h1 class="text-4xl font-semibold text-white">Udemy Affiliate Research Library</h1>
+    <p class="text-white/70">
+      Filtered affiliate recommendations for Udemy courses across prompt engineering, retrieval-augmented generation, and generative AI product workflows.
+    </p>
+  </section>
+
+  <section class="space-y-6">
+    {slice.map((post) => (
+      <article class="rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur">
+        <div class="flex flex-wrap items-center justify-between gap-2 text-sm text-white/60">
+          <span>{formatDate(post.data.pubDate)}</span>
+          <div class="flex flex-wrap gap-2">
+            {post.data.tags.map((tag) => (
+              <a class="tag-pill" href={`/category/${tag}/`}>
+                {tagToLabel(tag)}
+              </a>
+            ))}
+          </div>
+        </div>
+        <h2 class="mt-4 text-2xl font-semibold text-white">
+          <a class="hover:text-mint-300" href={`/${post.slug}/`}>
+            {post.data.title}
+          </a>
+        </h2>
+        <p class="mt-2 text-white/70">{post.data.description}</p>
+      </article>
+    ))}
+  </section>
+
+  <nav class="mt-10 flex items-center justify-between text-sm text-white/70">
+    <a class:list={{ 'text-white': currentPage > 1, 'text-white/30 pointer-events-none': currentPage === 1 }} href={pageHref(currentPage - 1)}>
+      ← Newer
+    </a>
+    <span>
+      Page {currentPage} / {totalPages}
+    </span>
+    <a class:list={{ 'text-white': currentPage < totalPages, 'text-white/30 pointer-events-none': currentPage === totalPages }} href={pageHref(currentPage + 1)}>
+      Older →
+    </a>
+  </nav>
+</Layout>

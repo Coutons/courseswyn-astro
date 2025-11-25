@@ -1,0 +1,116 @@
+---
+import '../styles/global.css';
+import SpeedInsights from '@vercel/speed-insights/astro';
+
+type Props = {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  canonical?: string;
+  structuredData?: Record<string, any> | null;
+};
+
+const {
+  title = 'CoursesWyn · Udemy AI Reviews',
+  description = 'Curated Udemy AI & automation course reviews with affiliate picks.',
+  ogImage = '/images/og-default.svg',
+  canonical = Astro.url?.href ?? 'https://courseswyn.com',
+  structuredData = null,
+} = Astro.props as Props;
+
+const metaTitle = title.includes('CoursesWyn') ? title : `${title} · CoursesWyn`;
+---
+
+<html lang="en" class="min-h-full bg-surface text-white">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{metaTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={metaTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:type" content="article" />
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content={metaTitle} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={ogImage} />
+    <link rel="canonical" href={canonical} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script is:inline>
+      if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+        const root = document.documentElement;
+        const storedTheme = localStorage.getItem('courseswyn-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const nextTheme = storedTheme ?? (prefersDark ? 'dark' : 'light');
+        root.dataset.theme = nextTheme;
+        root.classList.toggle('dark', nextTheme === 'dark');
+      }
+    </script>
+    <script is:inline>
+      if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+        window.__COURSESWYN_TOGGLE__ = () => {
+          const root = document.documentElement;
+          const current = root.dataset.theme === 'dark' ? 'dark' : 'light';
+          const next = current === 'dark' ? 'light' : 'dark';
+          root.dataset.theme = next;
+          root.classList.toggle('dark', next === 'dark');
+          localStorage.setItem('courseswyn-theme', next);
+        };
+      }
+    </script>
+    {structuredData ? (
+      <script type="application/ld+json" is:inline>{JSON.stringify(structuredData)}</script>
+    ) : null}
+  </head>
+  <body class="min-h-screen bg-surface text-white antialiased">
+    <div class="absolute inset-0 -z-10 bg-grid-mesh [background-size:60px_60px]"></div>
+    <header class="sticky top-0 z-50 border-b border-white/5 bg-surface/80 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+        <a href="/" class="flex items-center gap-2 text-lg font-semibold tracking-tight">
+          <span class="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-mint-500/20 text-mint-300">
+            CW
+          </span>
+          CoursesWyn
+        </a>
+        <nav class="hidden gap-6 text-sm text-white/70 md:flex">
+          <a class="hover:text-white" href="/">Home</a>
+          <a class="hover:text-white" href="/blog/">Blog</a>
+          <a class="hover:text-white" href="/about/">About</a>
+          <a class="hover:text-white" href="/contact-us/">Contact</a>
+          <a class="hover:text-white" href="/privacy/">Privacy</a>
+        </nav>
+        <button class="dark-toggle" type="button" aria-label="Toggle theme" onClick="__COURSESWYN_TOGGLE__()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364-.707.707M6.343 17.657l-.707.707m12.728 0-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10 5 5 0 000-10z"
+            />
+          </svg>
+        </button>
+      </div>
+    </header>
+    <main class="mx-auto max-w-6xl px-4 py-12">
+      <slot />
+    </main>
+    <footer class="border-t border-white/5 bg-surface/80 py-8 text-sm text-white/60">
+      <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 md:flex-row md:items-center md:justify-between">
+        <p>© {new Date().getFullYear()} CoursesWyn. Curated Udemy affiliate picks.</p>
+        <div class="flex gap-4">
+          <a href="/blog/" class="hover:text-white">Editorial</a>
+          <a href="/about/" class="hover:text-white">About</a>
+          <a href="/contact-us/" class="hover:text-white">Contact</a>
+          <a href="/privacy/" class="hover:text-white">Privacy</a>
+        </div>
+      </div>
+    </footer>
+    <SpeedInsights />
+  </body>
+</html>
