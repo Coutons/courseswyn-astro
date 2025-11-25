@@ -2,21 +2,18 @@
 import '../styles/global.css';
 import SpeedInsights from '@vercel/speed-insights/astro';
 
-type Props = {
-  title?: string;
-  description?: string;
-  ogImage?: string;
+interface Props {
+  title: string;
+  description: string;
   canonical?: string;
-  structuredData?: Record<string, any> | null;
-};
+  ogImage?: string;
+  structuredData?: Record<string, any>;
+}
 
-const {
-  title = 'CoursesWyn · Udemy AI Reviews',
-  description = 'Curated Udemy AI & automation course reviews with affiliate picks.',
-  ogImage = '/images/og-default.svg',
-  canonical = Astro.url?.href ?? 'https://courseswyn.com',
-  structuredData = null,
-} = Astro.props as Props;
+const { title, description, canonical, ogImage, structuredData } = Astro.props;
+const currentPath = Astro.url.pathname;
+const segments = currentPath.split('/').filter(Boolean);
+const isHomepage = currentPath === '/';
 
 const metaTitle = title.includes('CoursesWyn') ? title : `${title} · CoursesWyn`;
 ---
@@ -68,6 +65,24 @@ const metaTitle = title.includes('CoursesWyn') ? title : `${title} · CoursesWyn
       <script type="application/ld+json" is:inline>{JSON.stringify(structuredData)}</script>
     ) : null}
     
+    <!-- Organization Schema -->
+    <script type="application/ld+json" is:inline>
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "CoursesWyn",
+      "url": "https://courseswyn.com",
+      "description": "Best Udemy Course Reviews 2026 - Independent reviews covering AI, coding, and automation courses",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://courseswyn.com/images/og-default.svg"
+      },
+      "sameAs": [
+        "https://github.com/Coutons/courseswyn-astro"
+      ]
+    }
+    </script>
+    
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXX"></script>
     <script is:inline>
@@ -75,6 +90,18 @@ const metaTitle = title.includes('CoursesWyn') ? title : `${title} · CoursesWyn
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-XXXXXXXXX');
+      
+      // Scroll depth tracking
+      let scrollDepthTracked = false;
+      window.addEventListener('scroll', () => {
+        if (!scrollDepthTracked && window.scrollY > 0.5 * document.body.scrollHeight) {
+          scrollDepthTracked = true;
+          gtag('event', 'scroll_50', {
+            event_category: 'engagement',
+            value: 50
+          });
+        }
+      });
     </script>
   </head>
   <body class="min-h-screen bg-surface text-white antialiased">
@@ -107,6 +134,37 @@ const metaTitle = title.includes('CoursesWyn') ? title : `${title} · CoursesWyn
         </button>
       </div>
     </header>
+    
+    {!isHomepage && (
+      <nav aria-label="Breadcrumb" class="mx-auto max-w-6xl px-4 py-4">
+        <ol class="flex items-center gap-2 text-sm text-white/60">
+          <li>
+            <a href="/" class="hover:text-white">Home</a>
+          </li>
+          <li class="text-white/40">/</li>
+          {segments.map((segment, index) => (
+            <li class="flex items-center gap-2">
+              {index === segments.length - 1 ? (
+                <span class="text-white/80 capitalize">
+                  {segment.replace(/-/g, ' ')}
+                </span>
+              ) : (
+                <>
+                  <a 
+                    href={`/${segments.slice(0, index + 1).join('/')}/`}
+                    class="hover:text-white capitalize"
+                  >
+                    {segment.replace(/-/g, ' ')}
+                  </a>
+                  <span class="text-white/40">/</span>
+                </>
+              )}
+            </li>
+          ))}
+        </ol>
+      </nav>
+    )}
+    
     <main id="main" class="mx-auto max-w-6xl px-4 py-12">
       <slot />
     </main>
