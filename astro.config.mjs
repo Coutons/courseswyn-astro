@@ -13,7 +13,8 @@ export default defineConfig({
     sitemap({
       changefreq: 'weekly',
       priority: 0.8,
-      entryLimit: 5000
+      entryLimit: 5000,
+      lastmod: new Date()
     })
   ],
 });
