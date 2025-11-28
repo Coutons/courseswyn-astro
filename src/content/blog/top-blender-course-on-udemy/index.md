@@ -24,7 +24,7 @@ affiliate_links:
     url: 'https://trk.udemy.com/gOZao2'
 ---
 
-![Top 8 Blender Courses on Udemy 2026](/images/top-blender-courses-2026.jpg "Top 8 Blender Courses on Udemy 2026)
+![Top 8 Blender Courses on Udemy 2026](/images/top-blender-courses-2026.jpg "Top 8 Blender Courses on Udemy 2026")
 
 *Top 8 Blender Courses on Udemy 2026 — Master 3D modeling, animation, game assets, ArchViz, and VFX with Blender 4.5+ updates.*
 
