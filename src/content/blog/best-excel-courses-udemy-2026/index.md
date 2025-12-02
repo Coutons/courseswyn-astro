@@ -1,7 +1,7 @@
 ---
 title: Top 10 Best Excel Courses on Udemy (2026)
 description: 'Discover the 10 best Excel courses on Udemy for 2026. Learn from top instructors like Chris Dutton, Leila Gharani, and 365 Careers. Master Excel for data analysis, business intelligence, and financial modeling with these expert-led courses.'
-pubDate: 2025-12-03T09:40:39.683Z
+pubDate: 2025-12-02T17:47:00.000Z
 tags:
   - Microsoft Excel
   - Online Learning
