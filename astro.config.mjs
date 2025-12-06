@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 import preact from '@astrojs/preact';
 import sitemap from '@astrojs/sitemap';
+import remarkToc from 'remark-toc';
 
 export default defineConfig({
   site: 'https://courseswyn.com',
@@ -17,4 +18,13 @@ export default defineConfig({
       lastmod: new Date()
     })
   ],
+  markdown: {
+    remarkPlugins: [
+      [remarkToc, {
+        heading: 'Table of Contents',
+        maxDepth: 3,
+        tight: true
+      }]
+    ]
+  }
 });
