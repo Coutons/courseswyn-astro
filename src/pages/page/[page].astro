@@ -1,17 +1,25 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import AffiliateLink from '../components/AffiliateLink.astro';
-import { fetchPosts, formatDate, tagToLabel, paginate } from '../lib/posts';
+import Layout from '../../layouts/Layout.astro';
+import AffiliateLink from '../../components/AffiliateLink.astro';
+import { fetchPosts, formatDate, tagToLabel, paginate } from '../../lib/posts';
 
-// Get all posts and sort them by date
+// Generate static paths for all pages
+export async function getStaticPaths() {
+  const allPosts = await fetchPosts();
+  const { totalPages } = paginate(allPosts, 1);
+  
+  return Array.from({ length: totalPages }, (_, i) => ({
+    params: { page: String(i + 1) },
+    props: { pageNumber: i + 1 }
+  }));
+}
+
+// Get page number from props
+const { pageNumber } = Astro.props;
+
+// Get all posts and paginate
 const allPosts = await fetchPosts();
-const pageParam = Number(Astro.url.searchParams.get('page') || '1');
-const { slice, currentPage, totalPages } = paginate(allPosts, pageParam);
-
-// For static build, always show first page
-const isStaticBuild = Astro.url.searchParams.get('page') === null;
-const displayPage = isStaticBuild ? 1 : currentPage;
-const displaySlice = isStaticBuild ? allPosts.slice(0, 8) : slice;
+const { slice, currentPage, totalPages } = paginate(allPosts, pageNumber);
 
 // Review Schema for Homepage
 const reviewSchema = {
@@ -33,15 +41,17 @@ const reviewSchema = {
 };
 ---
 
-<Layout title="CoursesWyn · Best Course Reviews 2026" description="Top-ranked Udemy courses 2026 for AI, Python, Excel, Blender & more. Independent 500+ word reviews, real student results, verified coupons." structuredData={reviewSchema}>
+<Layout title={`CoursesWyn · Page ${currentPage} - Best Course Reviews 2026`} description={`Top-ranked Udemy courses 2026 - Page ${currentPage}. Independent 500+ word reviews, real student results, verified coupons.`} structuredData={reviewSchema}>
   <!-- Hero Section with H1 -->
   <nav aria-label="Breadcrumb" class="text-sm text-white/60 mb-6">
     <ol class="flex items-center gap-2">
       <li><a href="/" class="hover:text-white">Home</a></li>
+      <span class="text-white/40">/</span>
+      <li>Page {currentPage}</li>
     </ol>
   </nav>
   <section class="text-center py-12">
-    <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">Best Udemy Course Reviews 2026</h1>
+    <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">Best Udemy Course Reviews 2026 - Page {currentPage}</h1>
     <p class="text-white/70 max-w-2xl mx-auto">Independent reviews covering the best Udemy courses for AI, coding, and automation—ranked with real outcomes and affiliate transparency.</p>
     <p class="text-center text-white/60 mt-4">Affiliate disclosure: We earn commission from qualifying Udemy purchases (no extra cost to you).</p>
   </section>
@@ -49,13 +59,13 @@ const reviewSchema = {
   <!-- Latest Drops Section -->
   <section class="space-y-8">
     <div class="flex items-center justify-between">
-      <h2 class="text-2xl font-semibold text-white">Latest Drops</h2>
+      <h2 class="text-2xl font-semibold text-white">Latest Drops - Page {currentPage}</h2>
       <a href="/rss.xml" class="inline-flex items-center gap-2 px-5 py-3 bg-mint-500/20 rounded-xl hover:bg-mint-500/30 text-mint-300 transition">
         RSS Feed
       </a>
     </div>
     <div class="grid gap-6 md:grid-cols-2">
-      {displaySlice.map((post) => (
+      {slice.map((post) => (
         <article class="rounded-3xl border border-white/5 bg-surface/70 p-6 backdrop-blur">
           <div class="flex items-center justify-between text-sm text-white/50">
             <span>{formatDate(post.data.pubDate)}</span>
@@ -76,12 +86,15 @@ const reviewSchema = {
   <!-- Pagination Controls -->
   {totalPages > 1 && (
     <nav class="flex justify-center gap-3 mt-12" aria-label="Pagination">
-      <span class="px-4 py-2 bg-mint-500 text-black rounded-lg font-medium">1</span>
-      {totalPages > 1 && <a href="/page/2" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">2</a>}
-      {totalPages > 2 && <a href="/page/3" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">3</a>}
-      {totalPages > 3 && <span class="px-3 py-2 text-white/60">...</span>}
-      {totalPages > 3 && <a href={`/page/${totalPages}`} class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">{totalPages}</a>}
-      {totalPages > 1 && <a href="/page/2" class="ml-4 px-6 py-3 bg-mint-500/20 rounded-xl hover:bg-mint-500/30 text-mint-300">Next →</a>}
+      {currentPage > 1 && <a href={`/page/${currentPage - 1}`} class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">←</a>}
+      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+        page === currentPage ? (
+          <span class="px-4 py-2 bg-mint-500 text-black rounded-lg font-medium">{page}</span>
+        ) : (
+          <a href={`/page/${page}`} class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">{page}</a>
+        )
+      ))}
+      {currentPage < totalPages && <a href={`/page/${currentPage + 1}`} class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">→</a>}
     </nav>
   )}
 
