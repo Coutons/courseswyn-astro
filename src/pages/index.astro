@@ -8,6 +8,11 @@ const allPosts = await fetchPosts();
 const pageParam = Number(Astro.url.searchParams.get('page') || '1');
 const { slice, currentPage, totalPages } = paginate(allPosts, pageParam);
 
+// For static build, always show first page
+const isStaticBuild = Astro.url.searchParams.get('page') === null;
+const displayPage = isStaticBuild ? 1 : currentPage;
+const displaySlice = isStaticBuild ? allPosts.slice(0, 8) : slice;
+
 // Review Schema for Homepage
 const reviewSchema = {
   '@context': 'https://schema.org',
@@ -50,7 +55,7 @@ const reviewSchema = {
       </a>
     </div>
     <div class="grid gap-6 md:grid-cols-2">
-      {slice.map((post) => (
+      {displaySlice.map((post) => (
         <article class="rounded-3xl border border-white/5 bg-surface/70 p-6 backdrop-blur">
           <div class="flex items-center justify-between text-sm text-white/50">
             <span>{formatDate(post.data.pubDate)}</span>
@@ -72,15 +77,11 @@ const reviewSchema = {
   {totalPages > 1 && (
     <nav class="flex justify-center gap-3 mt-12" aria-label="Pagination">
       <span class="px-4 py-2 bg-mint-500 text-black rounded-lg font-medium">1</span>
-      {currentPage < totalPages && (
-        <>
-          {totalPages > 2 && <a href="/?page=2" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">2</a>}
-          {totalPages > 3 && <a href="/?page=3" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">3</a>}
-          {totalPages > 4 && <span class="px-3 py-2 text-white/60">...</span>}
-          {totalPages > 4 && <a href={`/?page=${totalPages}`} class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">{totalPages}</a>}
-          <a href={`/?page=${currentPage + 1}`} class="ml-4 px-6 py-3 bg-mint-500/20 rounded-xl hover:bg-mint-500/30 text-mint-300">Next →</a>
-        </>
-      )}
+      {totalPages > 1 && <a href="/?page=2" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">2</a>}
+      {totalPages > 2 && <a href="/?page=3" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">3</a>}
+      {totalPages > 3 && <span class="px-3 py-2 text-white/60">...</span>}
+      {totalPages > 3 && <a href={`/?page=${totalPages}`} class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">{totalPages}</a>}
+      {totalPages > 1 && <a href="/?page=2" class="ml-4 px-6 py-3 bg-mint-500/20 rounded-xl hover:bg-mint-500/30 text-mint-300">Next →</a>}
     </nav>
   )}
 
