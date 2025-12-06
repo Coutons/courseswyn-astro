@@ -5,7 +5,7 @@ export async function fetchPosts() {
   return posts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
 }
 
-export const PAGE_SIZE = 10;
+export const PAGE_SIZE = 4;
 
 export function paginate(posts: CollectionEntry<'blog'>[], page: number) {
   const totalPages = Math.max(1, Math.ceil(posts.length / PAGE_SIZE));
