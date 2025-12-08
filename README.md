@@ -1,9 +1,9 @@
 # CoursesWyn Build with Astro.js - Real-Time Udemy Course Reviews 2026
 
-![CoursesWyn Banner](https://courseswyn.com/images/top-python-ai-2026.jpg)
+![CoursesWyn](https://courseswyn.com/images/top-python-ai-2026.jpg)
 
 **Live Site** → https://courseswyn.com  
-**Stack** → Astro 4 + Tailwind CSS + Markdown + Schema.org LD+JSON
+**Stack** → Astro 5 + Tailwind CSS + Markdown + Schema.org LD+JSON
 
 CoursesWyn is an independent Udemy review site that pulls **real-time enrollment numbers, ratings, and sale prices** directly from Udemy dashboards — updated monthly (December 2025 data verified).
 
