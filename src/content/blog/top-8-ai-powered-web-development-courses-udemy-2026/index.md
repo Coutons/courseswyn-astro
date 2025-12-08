@@ -225,33 +225,32 @@ You'll also use MCP (Model Context Protocol) to seamlessly connect to your Neon 
 **Enrollment**: 3k+ | **Rating**: 4.6/5 | **Duration**: 6.5 hours  
 [Get Course: Cursor AI Beginner to Pro: Build Production Web Apps with AI](https://trk.udemy.com/kOnWXz)
 
-### 7. Learn AI / Agentic Application Development with Windsurf AI
+### 7. Learn AI / Agentic Application Development with Windsurf AI (Randy Minder)
 
-**Best for**: Cursor AI (vibe coding) to build and ship full Next.js web apps. Includes MCP, custom rules, auth, payments + more!
+**Best for**: AI / Agentic development is here with Windsurf AI! Web / Mobile app development using Windsurf AI, AI and Vibe Coding.
 
 <a id="course.6631387" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6631387&u=https%3A%2F%2Fwww.udemy.com%2Flearn-ai-agentic-application-development-with-windsurf-ai&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6631387_180e_2.jpg" border="0" alt=""/></a>
 
-Build production-grade full-stack apps faster than ever by combining the power of Cursor AI with the best modern web tools: Next.js 15, TypeScript, Tailwind CSS, Shadcn UI, Drizzle ORM, Clerk, and Neon PostgreSQL.
+Welcome to Windsurf AI: Revolutionizing App Development with Agentic AI
 
-In this project-based course you'll build FlashyCardy, a sleek flashcards app where users can sign up, create decks and cards, and upgrade to a Pro plan with Stripe and Clerk billing. You'll implement full authentication, role-based access, and a SaaS-style subscription system, all while letting Cursor AI do 100% of the coding. AKA Vibe Coding!
+Are you ready to transform the way you build applications? Windsurf AI is the next-generation platform that empowers developers and product teams to create full-stack web applications using the power of artificial intelligence. Whether you’re an aspiring developer, a startup founder, or a seasoned engineer looking to supercharge your workflow, this course will guide you through every major aspect of Windsurf AI and show you how to harness its capabilities to build smarter, faster, and more innovative apps than ever before.
 
-That's right: the entire app is built by prompting Cursor. No manual coding required. You'll see how to guide Cursor from a blank repo to a deployed, production-ready app using Agent Mode, structured prompting, and Cursor Rules to steer the AI and get high-quality, secure, and reliable code output.
+Windsurf AI stands at the forefront of AI assisted software development tools, designed to bridge the gap between your ideas and fully functional applications. Unlike traditional low code solutions that rely on dragging and dropping UI elements, Windsurf AI leverages advanced large language models to interpret your natural language prompts and turn them into code. Imagine describing your app like this: “Create a dashboard for tracking customer feedback with a PostgreSQL backend”, and watching as Windsurf instantly scaffolds the backend, generates UI components, sets up routing, forms, authentication, and even deployment configurations for you.
 
-You'll also use MCP (Model Context Protocol) to seamlessly connect to your Neon PostgreSQL database and generate seed data, schemas, and queries via Drizzle ORM, all through AI.
+But Windsurf AI is more than just a code generator. It’s a comprehensive development environment that combines copilot style collaboration with autonomous agent capabilities. Windsurf actively maintains awareness of your entire codebase, allowing for coherent, context aware changes across multiple files, making it a true teammate that remembers every detail and helps you maintain your development flow. With features like Cascade, Supercomplete, Command Mode, and AI Flows, you’ll experience a seamless, intuitive workflow that reduces context switching and maximizes productivity.
 
 **Key learning outcomes**:
-- Follow best practices for using Cursor AI in real-world development
-- Build and deploy full-stack apps with modern technologies
-- Leverage AI to accelerate development workflows
-- Implement authentication, authorization, and billing with Clerk
-- Design clean, accessible, and responsive UIs with Shadcn UI & Tailwind CSS
-- Model and manage relational data using Drizzle ORM and Neon PostgreSQL
-- Deploy and scale full-stack applications with Vercel and environment best practices
+- AI / Agentic App Development with Windsurf AI
+- Supabase (Authentication, Storage / Database Management and Much More)
+- Vibe Coding (As little or as much coding as you desire)
+- Payment Processing (Using Stripe Integration)
+- GitHub Integration
+- Deployment Options
 
 **Ideal students**:
-- Developers and non-developers who want to learn how to vibe code full-stack, production-ready projects with Cursor
+- Technical and non-technical users, such as software developers/engineers, individuals, business owners and beginners who are frustrated by the complexity of traditional app development and want to create functional web applications by writing as little code as possible (or no code!)
 
-**Enrollment**: 3.6K+ | **Rating**: 4.6/5 | **Duration**: 6.5 hours  
+**Enrollment**: 189+ | **Rating**: 4.6/5 | **Duration**: 7 hours  
 [Get Course: Cursor AI Beginner to Pro: Build Production Web Apps with AI](https://trk.udemy.com/yqDk5V)
 
 ### 8. Learn AI App Development with Lovable 2.0 (Includes Cloud) (Randy Minder)
@@ -283,14 +282,14 @@ Lovable 2.0 redefines what’s possible by blending a smarter, agentic AI with a
 
 | Rank | Course                                                                      | Instructor                  | Enrollment | Rating | Duration | Best For                                            | Sale Price (Dec 2025) |
 |------|-----------------------------------------------------------------------------|---------------------|------------|--------|----------|-----------------------------------------------------|------------------------|
-| 1    | AI-Accelerated Web Developer Bootcamp                                       | Jackson Kailath     | 8.5k+      | 4.9    | 76.5h    | Most complete Next.js 15 + vibe coding bootcamp     | $13.99                |
-| 2    | Vibe Coding Bootcamp: Build Any App, Game or Website with AI                | Ivan Lourenço Gomes | 12k+       | 4.8    | 12h      | Fastest way to build tons of small AI projects      | $11.99                |
-| 3    | Vibe Coding: AI-Driven Software Development and Testing                     | Valentin Despa      | 18k+       | 4.7    | 8h       | Purest "vibe coding" philosophy + testing           | $10.99                |
-| 4    | The Complete AI Coding Course (2025) – Cursor, Claude Code                  | Brenda AI           | 25k+       | 4.7    | 15h      | Most comprehensive Cursor AI mastery                | $12.99                |
-| 5    | Real-World AI Coding ("Dibe Coding")                                        | Dr. Jonas Helming   | 4k+        | 5.0    | 5.5h     | Professional & enterprise-grade AI workflow         | $14.99                |
-| 6    | Cursor AI Beginner to Pro: Build Production Web Apps with AI                | Tom Phillips        | 15k+       | 4.8    | 10h      | 100% vibe coding full-stack SaaS (Stripe + Clerk)   | $11.99                |
-| 7    | Learn AI / Agentic Application Development with Windsurf AI                 | Windsurf Team       | 9k+        | 4.7    | 9h       | Best Cursor alternative (Windsurf AI)               | $10.99                |
-| 8    | Learn AI App Development with Lovable 2.0 (Includes Cloud)                  | Randy Minder        | 11k+       | 4.7    | 11h      | Hybrid no-code + vibe coding with Lovable           | $12.99                |
+| 1    | AI-Accelerated Web Developer Bootcamp                                       | Jackson Kailath     | 1.5k+      | 4.9    | 76.5h    | Most complete Next.js 15 + vibe coding bootcamp     | $13.99                |
+| 2    | Vibe Coding Bootcamp: Build Any App, Game or Website with AI                | Ivan Lourenço Gomes | 2k+       | 4.7    | 12h      | Fastest way to build tons of small AI projects      | $11.99                |
+| 3    | Vibe Coding: AI-Driven Software Development and Testing                     | Valentin Despa      | 10k+       | 4.6    | 4h       | Purest "vibe coding" philosophy + testing           | $10.99                |
+| 4    | The Complete AI Coding Course (2025) – Cursor, Claude Code                  | Brenda AI           | 10k+       | 4.5    | 12h      | Most comprehensive Cursor AI mastery                | $12.99                |
+| 5    | Real-World AI Coding ("Dibe Coding")                                        | Dr. Jonas Helming   | 59+        | 5.0    | 5.5h     | Professional & enterprise-grade AI workflow         | $14.99                |
+| 6    | Cursor AI Beginner to Pro: Build Production Web Apps with AI                | Tom Phillips        | 3k+       | 4.6    | 6.5h      | 100% vibe coding full-stack SaaS (Stripe + Clerk)   | $11.99                |
+| 7    | Learn AI / Agentic Application Development with Windsurf AI                 | Windsurf Team       | 3.6+        | 4.6   | 6.5h       | Best Cursor alternative (Windsurf AI)               | $10.99                |
+| 8    | Learn AI App Development with Lovable 2.0 (Includes Cloud)                  | Randy Minder        | 2.3k+       | 4.5   | 7.5h      | Hybrid no-code + vibe coding with Lovable           | $12.99                |
 
 ## Frequently Asked Questions
 
@@ -457,7 +456,7 @@ Happy coding—and happy earning in 2026!
     },
     "reviewRating": {
       "@type": "Rating",
-      "ratingValue": "4.7"
+      "ratingValue": "4.6"
     },
     "author": {
       "@type": "Organization",
