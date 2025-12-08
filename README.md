@@ -1,43 +1,45 @@
-# Astro Starter Kit: Minimal
+# CoursesWyn Build with Astro.js - Real-Time Udemy Course Reviews 2026
 
-```sh
-npm create astro@latest -- --template minimal
-```
+![CoursesWyn Banner](https://courseswyn.com/images/top-python-ai-2026.jpg)
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+**Live Site** → https://courseswyn.com  
+**Stack** → Astro 4 + Tailwind CSS + Markdown + Schema.org LD+JSON
 
-## 🚀 Project Structure
+CoursesWyn is an independent Udemy review site that pulls **real-time enrollment numbers, ratings, and sale prices** directly from Udemy dashboards — updated monthly (December 2025 data verified).
 
-Inside of your Astro project, you'll see the following folders and files:
+Every article includes:
+- Comparison tables
+- Table of Contents + FAQ
+- Real student outcomes & portfolio projects
+- Transparent affiliate disclosure
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+### Latest Reviews (December 2025)
+- [Top 10 Python AI Courses on Udemy 2026](https://courseswyn.com/top-10-python-courses-on-udemy/)
+- [Top 8 AI-Powered Web Development Courses on Udemy 2026](https://courseswyn.com/top-8-ai-powered-web-development-courses-udemy-2026/)
+- [Top 10 Generative AI Bootcamps on Udemy 2026](https://courseswyn.com/top-10-generative-ai-bootcamps-udemy-2026/)
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+### Features
+- Blazing fast static site with Astro 4
+- Tailwind CSS + dark/light mode toggle
+- Full Schema.org structured data (BlogPosting + Review)
+- Modern numbered pagination
+- Mobile-first, responsive design
+- Vercel-ready deployment
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+### Run Locally
+```bash
+git clone https://github.com/Coutons/courseswyn-astro.git
+cd courseswyn-astro
+npm install
+npm run dev
 
-Any static assets, like images, can be placed in the `public/` directory.
+### Contributing
+Contributions welcome!
+Feel free to open issues, submit PRs, or help update enrollment data every month.
 
-## 🧞 Commands
+### Licence
+MIT — free to use, modify, or fork as your own review site template.
 
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Made with ❤️ for the global learning community
+Visit the live site → https://courseswyn.com
+#Udemy #Astro #TailwindCSS #WebDev #AI #Python #2026
