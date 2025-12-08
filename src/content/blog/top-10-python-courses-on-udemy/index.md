@@ -1,7 +1,7 @@
 ---
 title: "Top 10 Python AI Courses on Udemy 2026: From Basics to Agentic Apps"
 description: 'Updated December 2025 — The only Python courses you need in 2026. Real-time enrollment data, comparison table, and which one actually teaches you to build AI agents with LangChain, Llama 3, OpenAI API & Cursor.'
-pubDate: 2025-11-25T09:40:39.679Z
+pubDate: 2025-12-08T09:40:39.679Z
 lastUpdated: 2025-12-08
 tags:
   - Python
