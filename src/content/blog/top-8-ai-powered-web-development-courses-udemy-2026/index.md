@@ -91,7 +91,7 @@ By the end of this course, you will not only have an incredible project for your
 - For Experienced Developers: If you're already a developer, this course will level up your skills. You will learn how to integrate a cutting-edge, AI-accelerated workflow and master the latest features of the modern web stack, including React 19, Next.js 15 Server Components, and advanced database management with Prisma.
 - For All Learners: This course is perfect for anyone tired of fragmented tutorials who wants to build a single, comprehensive portfolio project and learn a practical, momentum-driven approach to development.
 
-**Enrollment**: 1.5k+ | **Rating**: 4.9/5 | **Duration**: 76.5 hours
+**Enrollment**: 1.7M | **Rating**: 4.7/5 | **Duration**: 76.5 hours
 [Get Course: AI-Accelerated Web Developer Bootcamp | Build Full-Stack App](trk.udemy.com/yqDkPb)
 
 ### 2. Vibe Coding Bootcamp: Build Any App, Game or Website with AI (Ivan Lourenço Gomes)
