@@ -9,8 +9,8 @@ export default defineConfig({
   site: 'https://courseswyn.com',
   output: 'static',
   integrations: [
-    tailwind(), 
-    preact(), 
+    tailwind(),
+    preact(),
     sitemap({
       changefreq: 'weekly',
       priority: 0.8,
@@ -26,5 +26,8 @@ export default defineConfig({
         tight: true
       }]
     ]
+  },
+  experimental: {
+    svgo: true
   }
 });

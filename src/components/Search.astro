@@ -1,80 +1,144 @@
 ---
-import Fuse from 'fuse.js';
+import Fuse from "fuse.js";
 
 const posts = await Astro.props.posts;
 const fuseOptions = {
-  keys: ['data.title', 'data.description', 'data.tags'],
+  keys: ["data.title", "data.description", "data.tags"],
   threshold: 0.3,
-  includeScore: true
+  includeScore: true,
 };
 
 const fuse = new Fuse(posts, fuseOptions);
 ---
 
-<div id="search-container" class="mb-8">
+<div id="search-container" class="relative group">
   <div class="relative">
-    <input 
-      type="text" 
+    <input
+      type="text"
       id="search-input"
-      placeholder="Search courses..."
-      class="w-full rounded-2xl border border-white/10 bg-surface/50 px-4 py-3 text-white placeholder-white/50 focus:border-mint-500 focus:outline-none"
+      placeholder="Search..."
+      class="w-full rounded-full border border-white/10 bg-white/5 px-4 py-2 pl-10 text-sm text-white placeholder-white/50 focus:border-mint-500 focus:bg-white/10 focus:outline-none transition-all"
     />
-    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
-      <svg class="h-5 w-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    <div
+      class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
+    >
+      <svg
+        class="h-4 w-4 text-white/50"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
       </svg>
     </div>
   </div>
-  <div id="search-results" class="mt-4 hidden">
-    <div class="space-y-4" id="results-container"></div>
+  <div
+    id="search-results"
+    class="absolute top-full left-0 right-0 mt-2 hidden rounded-xl border border-white/10 bg-surface/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50"
+  >
+    <div class="max-h-96 overflow-y-auto p-2 space-y-2" id="results-container">
+    </div>
   </div>
 </div>
 
-<script define:vars={{ posts, fuseOptions }}>
-  const fuse = new Fuse(posts, fuseOptions);
-  const searchInput = document.getElementById('search-input');
-  const searchResults = document.getElementById('search-results');
-  const resultsContainer = document.getElementById('results-container');
+<script is:inline define:vars={{ posts, fuseOptions }}>
+  window.SEARCH_POSTS = posts;
+  window.FUSE_OPTIONS = fuseOptions;
+</script>
 
-  searchInput.addEventListener('input', (e) => {
-    const query = e.target.value.trim();
-    
-    if (query.length < 2) {
-      searchResults.classList.add('hidden');
-      return;
-    }
+<script>
+  import Fuse from "fuse.js";
 
-    const results = fuse.search(query);
-    
-    if (results.length === 0) {
-      resultsContainer.innerHTML = '<p class="text-white/60">No results found</p>';
-    } else {
-      resultsContainer.innerHTML = results.slice(0, 5).map(result => {
-        const post = result.item;
-        const tags = post.data.tags.map(tag => {
-          const label = tag.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-          return `<span class="tag-pill">${label}</span>`;
-        }).join(' ');
-        
-        return `
-          <div class="card border-white/10 bg-surface/70 p-4">
-            <h3 class="text-lg font-semibold text-white">
-              <a href="/${post.slug}/" class="hover:text-mint-300">${post.data.title}</a>
-            </h3>
-            <p class="mt-1 text-sm text-white/70">${post.data.description}</p>
-            <div class="mt-2 flex gap-2">${tags}</div>
-          </div>
-        `;
-      }).join('');
-    }
-    
-    searchResults.classList.remove('hidden');
-  });
+  const searchInput = document.getElementById("search-input");
+  const searchResults = document.getElementById("search-results");
+  const resultsContainer = document.getElementById("results-container");
 
-  // Hide results when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-      searchResults.classList.add('hidden');
+  // Placeholder Animation
+  const placeholders = [
+    "Search courses...",
+    "Try 'Python'",
+    "Try 'Machine Learning'",
+    "Try 'Excel'",
+    "Try 'Java'",
+    "Try 'Data Science'",
+  ];
+  let placeholderIndex = 0;
+
+  function rotatePlaceholder() {
+    placeholderIndex = (placeholderIndex + 1) % placeholders.length;
+    if (searchInput) {
+      searchInput.setAttribute("placeholder", placeholders[placeholderIndex]);
     }
-  });
+  }
+
+  setInterval(rotatePlaceholder, 3000);
+
+  // Search Functionality
+  // Wait for window variables if necessary, though inline script runs first
+  const posts = window.SEARCH_POSTS;
+  const fuseOptions = window.SEARCH_FUSE_OPTIONS || window.FUSE_OPTIONS;
+
+  if (
+    posts &&
+    fuseOptions &&
+    searchInput &&
+    searchResults &&
+    resultsContainer
+  ) {
+    const fuse = new Fuse(posts, fuseOptions);
+
+    searchInput.addEventListener("input", (e) => {
+      const query = e.target.value.trim();
+
+      if (query.length < 2) {
+        searchResults.classList.add("hidden");
+        return;
+      }
+
+      const results = fuse.search(query);
+
+      if (results.length === 0) {
+        resultsContainer.innerHTML =
+          '<p class="text-white/60">No results found</p>';
+      } else {
+        resultsContainer.innerHTML = results
+          .slice(0, 5)
+          .map((result) => {
+            const post = result.item;
+            const tags = post.data.tags
+              .map((tag) => {
+                const label = tag
+                  .replace(/-/g, " ")
+                  .replace(/\b\w/g, (l) => l.toUpperCase());
+                return `<span class="tag-pill">${label}</span>`;
+              })
+              .join(" ");
+
+            return `
+            <a href="/${post.slug}/" class="block rounded-lg p-3 hover:bg-white/5 transition-colors">
+              <h3 class="text-sm font-medium text-white line-clamp-1">${post.data.title}</h3>
+              <div class="mt-1 flex flex-wrap gap-1">${tags}</div>
+            </a>
+          `;
+          })
+          .join("");
+      }
+
+      searchResults.classList.remove("hidden");
+    });
+
+    // Hide results when clicking outside
+    document.addEventListener("click", (e) => {
+      if (
+        !searchInput.contains(e.target) &&
+        !searchResults.contains(e.target)
+      ) {
+        searchResults.classList.add("hidden");
+      }
+    });
+  }
 </script>

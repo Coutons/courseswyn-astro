@@ -1,39 +1,79 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import AffiliateLink from '../components/AffiliateLink.astro';
-import { fetchPosts, formatDate, tagToLabel, paginate } from '../lib/posts';
+import Layout from "../layouts/Layout.astro";
+import AffiliateLink from "../components/AffiliateLink.astro";
+import { fetchPosts, formatDate, tagToLabel, paginate } from "../lib/posts";
 
 // Get all posts and sort them by date
 const allPosts = await fetchPosts();
-const pageParam = Number(Astro.url.searchParams.get('page') || '1');
+const pageParam = Number(Astro.url.searchParams.get("page") || "1");
 const { slice, currentPage, totalPages } = paginate(allPosts, pageParam);
 
 // For static build, always show first page
-const isStaticBuild = Astro.url.searchParams.get('page') === null;
+const isStaticBuild = Astro.url.searchParams.get("page") === null;
 const displayPage = isStaticBuild ? 1 : currentPage;
 const displaySlice = isStaticBuild ? allPosts.slice(0, 8) : slice;
 
 // Review Schema for Homepage
-const reviewSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'AggregateRating',
-  'itemReviewed': {
-    '@type': 'Website',
-    'name': 'CoursesWyn - Best Udemy Course Reviews 2026',
-    'url': 'https://courseswyn.com'
-  },
-  'ratingValue': '4.8',
-  'ratingCount': '1250',
-  'bestRating': '5',
-  'worstRating': '1',
-  'reviewAuthor': {
-    '@type': 'Organization',
-    'name': 'CoursesWyn'
-  }
+// Schema for Homepage
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      name: "CoursesWyn",
+      url: "https://courseswyn.com",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: "https://courseswyn.com/?s={search_term_string}",
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@type": "FAQPage",
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "What are the best Udemy courses to take in 2026?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "We identify the best Udemy courses by testing for 2026 relevance, instructor expertise, and hands-on projects. Our top categories include Generative AI, Python Programming, and Digital Marketing.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Are Udemy certificates valid for jobs?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "While not accredited degrees, Udemy certificates validate your skills to employers. The courses we review focus on building portfolio-ready projects that directly help you ace job interviews.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "How do I get the lowest price on Udemy?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "CoursesWyn links automatically apply the best available verified Udemy coupons. This ensures you get sale pricing (often $9.99 - $12.99) without needing verification.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Is Udemy worth it for beginners?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Absolutely. Udemy is one of the most cost-effective platforms for upskilling. For less than the cost of a lunch, you get lifetime access to comprehensive bootcamps that would cost thousands elsewhere.",
+          },
+        },
+      ],
+    },
+  ],
 };
 ---
 
-<Layout title="CoursesWyn · Best Course Reviews 2026" description="Top-ranked Udemy courses 2026 for AI, Python, Excel, Blender & more. Independent 500+ word reviews, real student results, verified coupons." structuredData={reviewSchema}>
+<Layout
+  title="CoursesWyn · Best Course Reviews 2026"
+  description="Top-ranked Udemy courses 2026 for AI, Python, Excel, Blender & more. Independent 500+ word reviews, real student results, verified coupons."
+  structuredData={schema}
+>
   <!-- Hero Section with H1 -->
   <nav aria-label="Breadcrumb" class="text-sm text-white/60 mb-6">
     <ol class="flex items-center gap-2">
@@ -41,60 +81,277 @@ const reviewSchema = {
     </ol>
   </nav>
   <section class="text-center py-12">
-    <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">Best Udemy Course Reviews 2026</h1>
-    <p class="text-white/70 max-w-2xl mx-auto">Independent reviews covering the best Udemy courses for AI, coding, and automation—ranked with real outcomes and affiliate transparency.</p>
-    <p class="text-center text-white/60 mt-4">Affiliate disclosure: We earn commission from qualifying Udemy purchases (no extra cost to you).</p>
+    <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
+      Best Udemy Course Reviews 2026
+    </h1>
+    <p class="text-white/70 max-w-2xl mx-auto">
+      Independent reviews covering the best Udemy courses for AI, coding, and
+      automation—ranked with real outcomes and affiliate transparency.
+    </p>
+    <p class="text-center text-white/60 mt-4">
+      Affiliate disclosure: We earn commission from qualifying Udemy purchases
+      (no extra cost to you).
+    </p>
   </section>
 
   <!-- Latest Drops Section -->
   <section class="space-y-8">
     <div class="flex items-center justify-between">
       <h2 class="text-2xl font-semibold text-white">Latest Drops</h2>
-      <a href="/rss.xml" class="inline-flex items-center gap-2 px-5 py-3 bg-mint-500/20 rounded-xl hover:bg-mint-500/30 text-mint-300 transition">
+      <a
+        href="/rss.xml"
+        class="inline-flex items-center gap-2 px-5 py-3 bg-mint-500/20 rounded-xl hover:bg-mint-500/30 text-mint-300 transition"
+      >
         RSS Feed
       </a>
     </div>
     <div class="grid gap-6 md:grid-cols-2">
-      {displaySlice.map((post) => (
-        <article class="rounded-3xl border border-white/5 bg-surface/70 p-6 backdrop-blur">
-          <div class="flex items-center justify-between text-sm text-white/50">
-            <span>{formatDate(post.data.pubDate)}</span>
-            <span>{post.data.tags.map((tag) => tagToLabel(tag)).join(' · ')}</span>
-          </div>
-          <h3 class="mt-4 text-xl font-semibold text-white">
-            <a href={`/${post.slug}/`} class="hover:text-mint-300">{post.data.title}</a>
-          </h3>
-          <p class="mt-2 text-white/70">{post.data.description}</p>
-          <div class="mt-6 flex gap-3 text-sm">
-            <a class="text-mint-400 hover:text-mint-300" href={`/${post.slug}/`}>Read review →</a>
-          </div>
-        </article>
-      ))}
+      {
+        displaySlice.map((post) => (
+          <article class="rounded-3xl border border-white/5 bg-surface/70 backdrop-blur group hover:border-mint-500/30 transition-colors">
+            <a
+              href={`/${post.slug}/`}
+              class="block overflow-hidden rounded-t-3xl aspect-video"
+            >
+              <img
+                src={post.data.image}
+                alt={post.data.title}
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+              />
+            </a>
+            <div class="p-6">
+              <div class="flex items-center justify-between text-sm text-white/50">
+                <span>{formatDate(post.data.pubDate)}</span>
+                <span>
+                  {post.data.tags.map((tag) => tagToLabel(tag)).join(" · ")}
+                </span>
+              </div>
+              <h3 class="mt-4 text-xl font-semibold text-white">
+                <a href={`/${post.slug}/`} class="hover:text-mint-300">
+                  {post.data.title}
+                </a>
+              </h3>
+              <p class="mt-2 text-white/70">{post.data.description}</p>
+              <div class="mt-6 flex gap-3 text-sm">
+                <a
+                  class="text-mint-400 hover:text-mint-300"
+                  href={`/${post.slug}/`}
+                >
+                  Read review →
+                </a>
+              </div>
+            </div>
+          </article>
+        ))
+      }
     </div>
   </section>
 
   <!-- Pagination Controls -->
-  {totalPages > 1 && (
-    <nav class="flex justify-center gap-3 mt-12" aria-label="Pagination">
-      <span class="px-4 py-2 bg-mint-500 text-black rounded-lg font-medium">1</span>
-      {totalPages > 1 && <a href="/page/2" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">2</a>}
-      {totalPages > 2 && <a href="/page/3" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">3</a>}
-      {totalPages > 3 && <span class="px-3 py-2 text-white/60">...</span>}
-      {totalPages > 3 && <a href={`/page/${totalPages}`} class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">{totalPages}</a>}
-      {totalPages > 1 && <a href="/page/2" class="ml-4 px-6 py-3 bg-mint-500/20 rounded-xl hover:bg-mint-500/30 text-mint-300">Next →</a>}
-    </nav>
-  )}
+  {
+    totalPages > 1 && (
+      <nav class="flex justify-center gap-3 mt-12" aria-label="Pagination">
+        <span class="px-4 py-2 bg-mint-500 text-black rounded-lg font-medium">
+          1
+        </span>
+        {totalPages > 1 && (
+          <a
+            href="/page/2"
+            class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10"
+          >
+            2
+          </a>
+        )}
+        {totalPages > 2 && (
+          <a
+            href="/page/3"
+            class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10"
+          >
+            3
+          </a>
+        )}
+        {totalPages > 3 && <span class="px-3 py-2 text-white/60">...</span>}
+        {totalPages > 3 && (
+          <a
+            href={`/page/${totalPages}`}
+            class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10"
+          >
+            {totalPages}
+          </a>
+        )}
+        {totalPages > 1 && (
+          <a
+            href="/page/2"
+            class="ml-4 px-6 py-3 bg-mint-500/20 rounded-xl hover:bg-mint-500/30 text-mint-300"
+          >
+            Next →
+          </a>
+        )}
+      </nav>
+    )
+  }
+
+  <!-- Trust Authority Section -->
+  <section class="py-16 border-t border-white/5">
+    <div class="grid md:grid-cols-3 gap-8 text-center">
+      <div class="p-6 rounded-2xl bg-surface/50 border border-white/5">
+        <div class="text-4xl mb-4">🛡️</div>
+        <h3 class="text-xl font-semibold text-white mb-2">
+          Independent Reviews
+        </h3>
+        <p class="text-white/60 text-sm">
+          We buy and test courses ourselves. No paid placements, just honest,
+          student-focused rankings.
+        </p>
+      </div>
+      <div class="p-6 rounded-2xl bg-surface/50 border border-white/5">
+        <div class="text-4xl mb-4">📈</div>
+        <h3 class="text-xl font-semibold text-white mb-2">Data-Backed</h3>
+        <p class="text-white/60 text-sm">
+          Our scores combine instructor reputation, curriculum depth, and real
+          student success stories.
+        </p>
+      </div>
+      <div class="p-6 rounded-2xl bg-surface/50 border border-white/5">
+        <div class="text-4xl mb-4">🔄</div>
+        <h3 class="text-xl font-semibold text-white mb-2">Always Updated</h3>
+        <p class="text-white/60 text-sm">
+          We refresh our guides monthly to ensure you only see relevant,
+          2026-ready content.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="py-12 max-w-3xl mx-auto">
+    <h2 class="text-2xl font-semibold text-white mb-8 text-center">
+      Frequently Asked Questions
+    </h2>
+    <div class="space-y-4">
+      <details
+        class="group bg-surface/50 rounded-xl border border-white/5 overflow-hidden"
+        open
+      >
+        <summary
+          class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors"
+        >
+          <span class="font-medium text-white"
+            >What are the best Udemy courses to take in 2026?</span
+          >
+          <span class="text-mint-400 group-open:rotate-180 transition-transform"
+            >▼</span
+          >
+        </summary>
+        <div
+          class="p-4 pt-0 text-white/70 text-sm border-t border-white/5 mt-2"
+        >
+          We identify the best Udemy courses by testing for 2026 relevance,
+          instructor expertise, and hands-on projects. Our top categories
+          include Generative AI, Python Programming, and Digital Marketing.
+        </div>
+      </details>
+      <details
+        class="group bg-surface/50 rounded-xl border border-white/5 overflow-hidden"
+      >
+        <summary
+          class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors"
+        >
+          <span class="font-medium text-white"
+            >Are Udemy certificates valid for jobs?</span
+          >
+          <span class="text-mint-400 group-open:rotate-180 transition-transform"
+            >▼</span
+          >
+        </summary>
+        <div
+          class="p-4 pt-0 text-white/70 text-sm border-t border-white/5 mt-2"
+        >
+          While not accredited degrees, Udemy certificates validate your skills
+          to employers. The courses we review focus on building portfolio-ready
+          projects that directly help you ace job interviews.
+        </div>
+      </details>
+      <details
+        class="group bg-surface/50 rounded-xl border border-white/5 overflow-hidden"
+      >
+        <summary
+          class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors"
+        >
+          <span class="font-medium text-white"
+            >How do I get the lowest price on Udemy?</span
+          >
+          <span class="text-mint-400 group-open:rotate-180 transition-transform"
+            >▼</span
+          >
+        </summary>
+        <div
+          class="p-4 pt-0 text-white/70 text-sm border-t border-white/5 mt-2"
+        >
+          CoursesWyn links automatically apply the best available verified Udemy
+          coupons. This ensures you get sale pricing (often $9.99 - $12.99)
+          without needing verification.
+        </div>
+      </details>
+      <details
+        class="group bg-surface/50 rounded-xl border border-white/5 overflow-hidden"
+      >
+        <summary
+          class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors"
+        >
+          <span class="font-medium text-white"
+            >Is Udemy worth it for beginners?</span
+          >
+          <span class="text-mint-400 group-open:rotate-180 transition-transform"
+            >▼</span
+          >
+        </summary>
+        <div
+          class="p-4 pt-0 text-white/70 text-sm border-t border-white/5 mt-2"
+        >
+          Absolutely. Udemy is one of the most cost-effective platforms for
+          upskilling. For less than the cost of a lunch, you get lifetime access
+          to comprehensive bootcamps that would cost thousands elsewhere.
+        </div>
+      </details>
+    </div>
+  </section>
 
   <!-- Browse by Topic Section -->
   <section class="py-12 text-center">
     <h2 class="text-2xl font-semibold mb-8">Browse by Topic</h2>
     <div class="flex flex-wrap justify-center gap-4">
-      <a href="/category/ai/" class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors">AI & Machine Learning</a>
-      <a href="/category/python/" class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors">Python</a>
-      <a href="/category/excel/" class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors">Excel</a>
-      <a href="/category/java/" class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors">Java</a>
-      <a href="/category/data science/" class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors">Data Science</a>
-      <a href="/category/black-friday/" class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors">Black Friday Deals</a>
+      <a
+        href="/category/ai/"
+        class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors"
+        >AI & Machine Learning</a
+      >
+      <a
+        href="/category/python/"
+        class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors"
+        >Python</a
+      >
+      <a
+        href="/category/excel/"
+        class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors"
+        >Excel</a
+      >
+      <a
+        href="/category/java/"
+        class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors"
+        >Java</a
+      >
+      <a
+        href="/category/data science/"
+        class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors"
+        >Data Science</a
+      >
+      <a
+        href="/category/black-friday/"
+        class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors"
+        >Black Friday Deals</a
+      >
     </div>
   </section>
 </Layout>

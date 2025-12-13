@@ -1,6 +1,8 @@
 ---
-import '../styles/global.css';
-import SpeedInsights from '@vercel/speed-insights/astro';
+import "../styles/global.css";
+import SpeedInsights from "@vercel/speed-insights/astro";
+import Search from "../components/Search.astro";
+import { fetchPosts } from "../lib/posts";
 
 interface Props {
   title: string;
@@ -12,13 +14,16 @@ interface Props {
 
 const { title, description, canonical, ogImage, structuredData } = Astro.props;
 const currentPath = Astro.url.pathname;
-const segments = currentPath.split('/').filter(Boolean);
-const isHomepage = currentPath === '/';
+const segments = currentPath.split("/").filter(Boolean);
+const isHomepage = currentPath === "/";
 
-const metaTitle = title.includes('CoursesWyn') ? title : `${title} · CoursesWyn`;
-const defaultOgImage = 'https://courseswyn.com/images/og-default.svg';
+const metaTitle = title.includes("CoursesWyn")
+  ? title
+  : `${title} · CoursesWyn`;
+const defaultOgImage = "https://courseswyn.com/images/og-default.svg";
 const finalOgImage = ogImage || defaultOgImage;
 const finalCanonical = canonical || new URL(currentPath, Astro.site).href;
+const allPosts = await fetchPosts();
 ---
 
 <html lang="en" class="min-h-full bg-surface text-white">
@@ -27,13 +32,13 @@ const finalCanonical = canonical || new URL(currentPath, Astro.site).href;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{metaTitle}</title>
     <meta name="description" content={description} />
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    
+
     <meta property="og:title" content={metaTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={finalOgImage} />
@@ -51,82 +56,112 @@ const finalCanonical = canonical || new URL(currentPath, Astro.site).href;
       rel="stylesheet"
     />
     <script is:inline>
-      if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      if (typeof window !== "undefined" && typeof document !== "undefined") {
         const root = document.documentElement;
-        const storedTheme = localStorage.getItem('courseswyn-theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const nextTheme = storedTheme ?? (prefersDark ? 'dark' : 'light');
+        const storedTheme = localStorage.getItem("courseswyn-theme");
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
+        const nextTheme = storedTheme ?? (prefersDark ? "dark" : "light");
         root.dataset.theme = nextTheme;
-        root.classList.toggle('dark', nextTheme === 'dark');
+        root.classList.toggle("dark", nextTheme === "dark");
       }
     </script>
     <script is:inline>
-      if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      if (typeof window !== "undefined" && typeof document !== "undefined") {
         window.__COURSESWYN_TOGGLE__ = () => {
           const root = document.documentElement;
-          const current = root.dataset.theme === 'dark' ? 'dark' : 'light';
-          const next = current === 'dark' ? 'light' : 'dark';
+          const current = root.dataset.theme === "dark" ? "dark" : "light";
+          const next = current === "dark" ? "light" : "dark";
           root.dataset.theme = next;
-          root.classList.toggle('dark', next === 'dark');
-          localStorage.setItem('courseswyn-theme', next);
+          root.classList.toggle("dark", next === "dark");
+          localStorage.setItem("courseswyn-theme", next);
         };
       }
     </script>
-        
+
     <!-- Organization Schema -->
     <script type="application/ld+json" is:inline>
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "CoursesWyn",
-      "url": "https://courseswyn.com",
-      "description": "Best Udemy Course Reviews 2026 - Independent reviews covering AI, coding, and automation courses",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "https://courseswyn.com/images/og-default.svg"
-      },
-      "sameAs": [
-        "https://github.com/Coutons/courseswyn-astro"
-      ]
-    }
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "CoursesWyn",
+        "url": "https://courseswyn.com",
+        "description": "Best Udemy Course Reviews 2026 - Independent reviews covering AI, coding, and automation courses",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://courseswyn.com/images/og-default.svg"
+        },
+        "sameAs": ["https://github.com/Coutons/courseswyn-astro"]
+      }
     </script>
-    
-    {structuredData && (
-      <script type="application/ld+json" set:html={JSON.stringify(structuredData)}></script>
-    )}
-    
+
+    {
+      structuredData && (
+        <script
+          type="application/ld+json"
+          set:html={JSON.stringify(structuredData)}
+        />
+      )
+    }
+
     <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=GT-55B77QRB"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GT-55B77QRB"
+    ></script>
     <script is:inline>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'GT-55B77QRB');
-      
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "GT-55B77QRB");
+
       // Scroll depth tracking
       let scrollDepthTracked = false;
-      window.addEventListener('scroll', () => {
-        if (!scrollDepthTracked && window.scrollY > 0.5 * document.body.scrollHeight) {
+      window.addEventListener("scroll", () => {
+        if (
+          !scrollDepthTracked &&
+          window.scrollY > 0.5 * document.body.scrollHeight
+        ) {
           scrollDepthTracked = true;
-          gtag('event', 'scroll_50', {
-            event_category: 'engagement',
-            value: 50
+          gtag("event", "scroll_50", {
+            event_category: "engagement",
+            value: 50,
           });
         }
       });
     </script>
   </head>
   <body class="min-h-screen bg-surface text-white antialiased">
-    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-mint-500 text-white px-4 py-2 rounded">Skip to content</a>
-    <div class="absolute inset-0 -z-10 bg-grid-mesh [background-size:60px_60px]"></div>
-    <header class="sticky top-0 z-50 border-b border-white/5 bg-surface/80 backdrop-blur">
-      <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-        <a href="/" class="flex items-center gap-2 text-lg font-semibold tracking-tight">
-          <span class="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-mint-500/20 text-mint-300">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-mint-500 text-white px-4 py-2 rounded"
+      >Skip to content</a
+    >
+    <div
+      class="absolute inset-0 -z-10 bg-grid-mesh [background-size:60px_60px]"
+    >
+    </div>
+    <header
+      class="sticky top-0 z-50 border-b border-white/5 bg-surface/80 backdrop-blur"
+    >
+      <div
+        class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4"
+      >
+        <a
+          href="/"
+          class="flex items-center gap-2 text-lg font-semibold tracking-tight"
+        >
+          <span
+            class="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-mint-500/20 text-mint-300"
+          >
             CW
           </span>
           CoursesWyn
         </a>
+        <div class="hidden md:block flex-1 max-w-md mx-6">
+          <Search posts={allPosts} />
+        </div>
         <nav class="hidden gap-6 text-sm text-white/70 md:flex">
           <a class="hover:text-white" href="/">Home</a>
           <a class="hover:text-white" href="/blog/">Blog</a>
@@ -134,55 +169,76 @@ const finalCanonical = canonical || new URL(currentPath, Astro.site).href;
           <a class="hover:text-white" href="/contact-us/">Contact</a>
           <a class="hover:text-white" href="/privacy/">Privacy</a>
         </nav>
-        <button class="dark-toggle" type="button" aria-label="Toggle theme" onClick="__COURSESWYN_TOGGLE__()">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button
+          class="dark-toggle"
+          type="button"
+          aria-label="Toggle theme"
+          onClick="__COURSESWYN_TOGGLE__()"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="1.5"
               d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364-.707.707M6.343 17.657l-.707.707m12.728 0-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10 5 5 0 000-10z"
-            />
+            ></path>
           </svg>
         </button>
       </div>
     </header>
-    
-    {!isHomepage && (
-      <nav aria-label="Breadcrumb" class="mx-auto max-w-6xl px-4 py-4">
-        <ol class="flex items-center gap-2 text-sm text-white/60">
-          <li>
-            <a href="/" class="hover:text-white">Home</a>
-          </li>
-          <li class="text-white/40">/</li>
-          {segments.map((segment, index) => (
-            <li class="flex items-center gap-2">
-              {index === segments.length - 1 ? (
-                <span class="text-white/80 capitalize">
-                  {segment.replace(/-/g, ' ')}
-                </span>
-              ) : (
-                <>
-                  <a 
-                    href={`/${segments.slice(0, index + 1).join('/')}/`}
-                    class="hover:text-white capitalize"
-                  >
-                    {segment.replace(/-/g, ' ')}
-                  </a>
-                  <span class="text-white/40">/</span>
-                </>
-              )}
+
+    {
+      !isHomepage && (
+        <nav aria-label="Breadcrumb" class="mx-auto max-w-6xl px-4 py-4">
+          <ol class="flex items-center gap-2 text-sm text-white/60">
+            <li>
+              <a href="/" class="hover:text-white">
+                Home
+              </a>
             </li>
-          ))}
-        </ol>
-      </nav>
-    )}
-    
+            <li class="text-white/40">/</li>
+            {segments.map((segment, index) => (
+              <li class="flex items-center gap-2">
+                {index === segments.length - 1 ? (
+                  <span class="text-white/80 capitalize">
+                    {segment.replace(/-/g, " ")}
+                  </span>
+                ) : (
+                  <>
+                    <a
+                      href={`/${segments.slice(0, index + 1).join("/")}/`}
+                      class="hover:text-white capitalize"
+                    >
+                      {segment.replace(/-/g, " ")}
+                    </a>
+                    <span class="text-white/40">/</span>
+                  </>
+                )}
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )
+    }
+
     <main id="main" class="mx-auto max-w-6xl px-4 py-12">
       <slot />
     </main>
-    <footer class="border-t border-white/5 bg-surface/80 py-8 text-sm text-white/60">
-      <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 md:flex-row md:items-center md:justify-between">
-        <p>© {new Date().getFullYear()} CoursesWyn. Curated Udemy affiliate picks.</p>
+    <footer
+      class="border-t border-white/5 bg-surface/80 py-8 text-sm text-white/60"
+    >
+      <div
+        class="mx-auto flex max-w-6xl flex-col gap-3 px-4 md:flex-row md:items-center md:justify-between"
+      >
+        <p>
+          © {new Date().getFullYear()} CoursesWyn. Curated Udemy affiliate picks.
+        </p>
         <div class="flex gap-4">
           <a href="/blog/" class="hover:text-white">Editorial</a>
           <a href="/about/" class="hover:text-white">About</a>
@@ -191,7 +247,10 @@ const finalCanonical = canonical || new URL(currentPath, Astro.site).href;
         </div>
       </div>
       <div class="mx-auto mt-4 max-w-6xl px-4">
-        <p class="text-xs text-white/40">Affiliate disclosure: We earn commission from qualifying purchases through Udemy links at no extra cost to you.</p>
+        <p class="text-xs text-white/40">
+          Affiliate disclosure: We earn commission from qualifying purchases
+          through Udemy links at no extra cost to you.
+        </p>
       </div>
     </footer>
     <SpeedInsights />
