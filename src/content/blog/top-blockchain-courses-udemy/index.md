@@ -10,7 +10,7 @@ tags:
   - Smart Contracts
   - Web3
   - Bitcoin
-image: /images/top-blockchain-2026.jpg
+image: ../../../assets/images/top-blockchain-2026.jpg
 affiliate_links:
   - text: 'Blockchain A-Z: Build a Blockchain, a Crypto + ChatGPT Prize'
     url: 'https://trk.udemy.com/qzR63b'

@@ -4,7 +4,7 @@ description: 'Top 10 data structures and algorithms courses on Udemy for 2026—
 pubDate: 2025-11-25T09:40:39.664Z
 tags:
   - udemy
-image: /images/data-structures-2026.png
+image: ../../../assets/images/data-structures-2026.png
 affiliate_links:
   - text: 'Get Course: Mastering Data Structures & Algorithms using C and C++'
     url: 'https://trk.udemy.com/c/6564357/3193860/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fdatastructurescncpp%2F%3FcouponCode%3DUDEAFFHP22025'

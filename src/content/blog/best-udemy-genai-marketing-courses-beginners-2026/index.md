@@ -11,7 +11,7 @@ tags:
   - AI Tools
   - Beginners
   - Content Creation
-image: /images/top-genai-marketing-courses-2026.jpg
+image: ../../../assets/images/top-genai-marketing-courses-2026.jpg
 affiliate_links:
   - text: 'Artificial Intelligence AI Marketing to Grow your Business'
     url: 'https://trk.udemy.com/rav5QR'

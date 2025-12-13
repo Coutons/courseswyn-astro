@@ -4,7 +4,7 @@ description: 'Top 10 Udemy web development bootcamps for 2026—master full-stac
 pubDate: 2025-11-25T09:40:39.661Z
 tags:
   - udemy
-image: /images/best-web-development-bootcamps-on-udemy-2025.jpg
+image: ../../../assets/images/web-dev-2025.jpg
 affiliate_links:
   - text: 'Get Course: The Complete 2025 Web Development Bootcamp'
     url: 'https://trk.udemy.com/c/6564357/3193860/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fthe-complete-web-development-bootcamp%2F%3FcouponCode%3DUDEAFFHP22025'

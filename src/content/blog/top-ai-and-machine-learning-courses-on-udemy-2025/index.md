@@ -4,7 +4,7 @@ description: 'Discover the top 10 AI and machine learning courses on Udemy for 2
 pubDate: 2025-11-25T09:40:39.682Z
 tags:
   - udemy
-image: /images/ai-machine-learning-2025.jpg
+image: ../../../assets/images/ai-machine-learning-2025.jpg
 affiliate_links:
   - text: 'Get Course: Python for Data Science and Machine Learning Bootcamp'
     url: 'https://trk.udemy.com/c/6564357/3193860/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fpython-for-data-science-and-machine-learning-bootcamp%2F%3FcouponCode%3DUDEAFFHP22025'

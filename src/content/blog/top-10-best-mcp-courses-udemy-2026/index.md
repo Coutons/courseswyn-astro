@@ -4,7 +4,7 @@ description: 'Top 10 MCP courses on Udemy 2026—ranked by enrollments, ratings,
 pubDate: 2025-11-25T09:40:39.675Z
 tags:
   - udemy
-image: /images/top-10-best-mcp-courses-udemy-2026.jpg
+image: ../../../assets/images/top-mcp-courses-2026.jpg
 affiliate_links:
   - text: 'Get Course: AI Engineer Agentic Track: The Complete Agent & MCP Course'
     url: 'https://trk.udemy.com/jevv0a'

@@ -11,7 +11,7 @@ tags:
   - Full-Stack
   - Tailwind CSS
   - OpenAI API
-image: /images/top-ai-web-dev-2026.jpg
+image: ../../../assets/images/top-ai-web-dev-2026.jpg
 affiliate_links:
   - text: 'AI-Accelerated Web Developer Bootcamp | Build Full-Stack App'
     url: 'https://trk.udemy.com/yqDkPb'

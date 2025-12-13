@@ -4,7 +4,7 @@ description: 'Top 12 Udemy prompt engineering courses for 2026—ranked by enrol
 pubDate: 2025-11-25T09:40:39.666Z
 tags:
   - udemy
-image: /images/best-prompt-engineering-courses-udemy-2026.jpg
+image: ../../../assets/images/best-prompt-engineering-courses-udemy-2026.jpg
 affiliate_links:
   - text: 'Enroll Now: The Complete Prompt Engineering for AI Bootcamp (108K+ Students) →'
     url: 'https://trk.udemy.com/kOePbN'

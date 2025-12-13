@@ -4,7 +4,7 @@ description: 'Top 10 n8n courses on Udemy 2026—ranked by enrollments and ratin
 pubDate: 2025-11-25T09:40:39.676Z
 tags:
   - udemy
-image: /images/top-n8n-courses.jpg
+image: ../../../assets/images/top-n8n-courses.jpg
 affiliate_links:
   - text: 'Get Course: n8n - AI Agents, AI Automations & AI Voice Agents (No-code!)'
     url: 'https://trk.udemy.com/Qj55WA'

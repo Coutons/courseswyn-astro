@@ -4,7 +4,7 @@ description: 'Top 5 reinforcement learning courses on Udemy 2026—ranked by enr
 pubDate: 2025-11-25T09:40:39.680Z
 tags:
   - udemy
-image: /images/top-reinforcement-learning-courses-2026.png
+image: ../../../assets/images/top-reinforcement-learning-courses-2026.png
 affiliate_links:
   - text: 'Enroll Now: Advanced AI: Deep Reinforcement Learning in PyTorch (50K+ Students) →'
     url: 'https://trk.udemy.com/5567Lj'

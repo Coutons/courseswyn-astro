@@ -53,7 +53,18 @@ const fuse = new Fuse(posts, fuseOptions);
 <script>
   import Fuse from "fuse.js";
 
-  const searchInput = document.getElementById("search-input");
+  // Extend Window interface for custom properties
+  declare global {
+    interface Window {
+      SEARCH_POSTS: any[];
+      FUSE_OPTIONS: any;
+      SEARCH_FUSE_OPTIONS: any;
+    }
+  }
+
+  const searchInput = document.getElementById(
+    "search-input",
+  ) as HTMLInputElement;
   const searchResults = document.getElementById("search-results");
   const resultsContainer = document.getElementById("results-container");
 
@@ -92,7 +103,8 @@ const fuse = new Fuse(posts, fuseOptions);
     const fuse = new Fuse(posts, fuseOptions);
 
     searchInput.addEventListener("input", (e) => {
-      const query = e.target.value.trim();
+      const target = e.target as HTMLInputElement;
+      const query = target.value.trim();
 
       if (query.length < 2) {
         searchResults.classList.add("hidden");
@@ -107,10 +119,10 @@ const fuse = new Fuse(posts, fuseOptions);
       } else {
         resultsContainer.innerHTML = results
           .slice(0, 5)
-          .map((result) => {
+          .map((result: any) => {
             const post = result.item;
             const tags = post.data.tags
-              .map((tag) => {
+              .map((tag: string) => {
                 const label = tag
                   .replace(/-/g, " ")
                   .replace(/\b\w/g, (l) => l.toUpperCase());
@@ -133,10 +145,8 @@ const fuse = new Fuse(posts, fuseOptions);
 
     // Hide results when clicking outside
     document.addEventListener("click", (e) => {
-      if (
-        !searchInput.contains(e.target) &&
-        !searchResults.contains(e.target)
-      ) {
+      const target = e.target as Node;
+      if (!searchInput.contains(target) && !searchResults.contains(target)) {
         searchResults.classList.add("hidden");
       }
     });

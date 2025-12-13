@@ -10,7 +10,7 @@ tags:
   - UI/UX
   - Freelancing
   - Responsive Design
-image: /images/top-figma-courses-2026.jpg
+image: ../../../assets/images/top-figma-courses-2026.jpg
 affiliate_links:
   - text: 'Complete Web Design: from Figma to Webflow to Freelancing'
     url: 'https://trk.udemy.com/nXOK6x'

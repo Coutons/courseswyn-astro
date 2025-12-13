@@ -8,7 +8,7 @@ tags:
   - Data Analysis
   - Productivity
   - Excel Certification
-image: /images/top-excel-courses-2026.jpg
+image: ../../../assets/images/top-excel-courses-2026.jpg
 affiliate_links:
   - text: 'Microsoft Excel - Excel from Beginner to Advanced'
     url: 'https://trk.udemy.com/MA6333'

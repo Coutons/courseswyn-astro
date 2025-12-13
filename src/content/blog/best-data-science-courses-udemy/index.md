@@ -6,7 +6,7 @@ tags:
   - data science
   - python
   - machine learning
-image: /images/ai-machine-learning-2025.jpg
+image: ../../../assets/images/ai-machine-learning-2025.jpg
 affiliate_links:
   - text: 'Enroll Now: Python for Data Science and Machine Learning Bootcamp'
     url: 'https://trk.udemy.com/c/6564357/3193860/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fpython-for-data-science-and-machine-learning-bootcamp%2F%3FcouponCode%3DUDEAFFHP22025'

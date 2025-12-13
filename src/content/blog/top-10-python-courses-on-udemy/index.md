@@ -10,7 +10,7 @@ tags:
   - LangChain
   - OpenAI API
   - Agentic AI
-image: /images/top-python-ai-2026.jpg
+image: ../../../assets/images/top-python-ai-2026.jpg
 affiliate_links:
   - text: '100 Days of Code™: The Complete Python Pro Bootcamp'
     url: 'https://trk.udemy.com/LKVnbM'

@@ -4,7 +4,7 @@ description: 'Ranked 10 best Generative AI courses on Udemy 2026 by 150K+ enroll
 pubDate: 2025-11-25T09:40:39.669Z
 tags:
   - udemy
-image: /images/top-generative-ai-courses-2026.png
+image: ../../../assets/images/top-generative-ai-courses-2026.png
 affiliate_links:
   - text: 'Enroll Now: ChatGPT & Generative AI - The Complete Guide (150K+ Students, Constant Updates) →'
     url: 'https://trk.udemy.com/vP7ezL'

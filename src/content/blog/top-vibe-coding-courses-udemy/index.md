@@ -6,7 +6,7 @@ tags:
   - udemy
   - vibe-coding
   - AI
-image: /images/top-vibe-coding-courses-2026.jpg
+image: ../../../assets/images/top-vibe-coding-courses-2026.jpg
 affiliate_links:
   - text: 'Get Course: Vibe Coding Bootcamp: Build Any App, Game or Website with AI'
     url: 'https://trk.udemy.com/MA6333'

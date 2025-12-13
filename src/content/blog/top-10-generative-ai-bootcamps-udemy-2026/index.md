@@ -8,7 +8,7 @@ tags:
   - LLM Agents
   - AI Engineering
   - Langchain
-image: /images/top-generative-ai-bootcamps-2026.jpg
+image: ../../../assets/images/top-generative-ai-bootcamps-2026.jpg
 affiliate_links:
   - text: 'Generative AI, ChatGPT 5, Copilot & AI Agents Mastery 2025'
     url: 'https://trk.udemy.com/xL7A9y'

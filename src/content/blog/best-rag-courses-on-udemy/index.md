@@ -4,7 +4,7 @@ description: 'Top 8 best-selling RAG courses on Udemy in 2026 ranked by real enr
 pubDate: 2025-11-25T09:40:39.668Z
 tags:
   - udemy
-image: /images/top-rag-courses-2026.png
+image: ../../../assets/images/top-rag-courses-2026.png
 affiliate_links:
   - text: 'Enroll Now: Ultimate RAG Bootcamp (11K+ Students) →'
     url: 'https://trk.udemy.com/MA9GLK'

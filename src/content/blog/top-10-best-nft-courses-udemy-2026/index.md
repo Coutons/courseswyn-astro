@@ -4,7 +4,7 @@ description: 'Top 10 NFT courses on Udemy 2026—ranked by enrollments, ratings,
 pubDate: 2025-11-25T09:40:39.678Z
 tags:
   - udemy
-image: /images/top-nft-courses-2026.jpg
+image: ../../../assets/images/top-nft-courses-2026.jpg
 affiliate_links:
   - text: 'Get Course: NFT Fundamentals (Buy, Create and Sell NFTs)'
     url: 'https://trk.udemy.com/c/6564357/3193860/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fnft-fundamentals%2F%3FcouponCode%3DUDEAFFHP22026'

@@ -4,7 +4,7 @@ description: 'Ranked 10 best LangChain courses on Udemy 2026 by 50K+ enrollments
 pubDate: 2025-11-25T09:40:39.672Z
 tags:
   - udemy
-image: /images/top-langchain-courses.jpg
+image: ../../../assets/images/top-langchain-courses.jpg
 affiliate_links:
   - text: 'Enroll Now: ChatGPT and LangChain Masterclass (10K+ Students, Production Focus) →'
     url: 'https://trk.udemy.com/qz75jy'

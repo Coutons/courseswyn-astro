@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import AffiliateLink from "../components/AffiliateLink.astro";
 import { fetchPosts, formatDate, tagToLabel, paginate } from "../lib/posts";
+import { Image } from "astro:assets";
 
 // Get all posts and sort them by date
 const allPosts = await fetchPosts();
@@ -107,17 +108,20 @@ const schema = {
     </div>
     <div class="grid gap-6 md:grid-cols-2">
       {
-        displaySlice.map((post) => (
+        displaySlice.map((post, index) => (
           <article class="rounded-3xl border border-white/5 bg-surface/70 backdrop-blur group hover:border-mint-500/30 transition-colors">
             <a
               href={`/${post.slug}/`}
               class="block overflow-hidden rounded-t-3xl aspect-video"
             >
-              <img
+              <Image
                 src={post.data.image}
                 alt={post.data.title}
+                widths={[400, 800]}
+                sizes="(max-width: 768px) 100vw, 400px"
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                loading="lazy"
+                loading={index < 2 ? "eager" : "lazy"}
+                fetchpriority={index === 0 ? "high" : "auto"}
               />
             </a>
             <div class="p-6">

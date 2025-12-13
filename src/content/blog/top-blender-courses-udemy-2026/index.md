@@ -4,7 +4,7 @@ description: 'Top 8 Blender courses on Udemy 2026 — deep 480+ word reviews, ex
 pubDate: 2025-11-29T09:40:39.683Z
 tags:
   - udemy
-image: /images/top-blender-courses-2026.jpg
+image: ../../../assets/images/top-blender-courses-2026.jpg
 affiliate_links:
   - text: 'Get Course: Complete Blender Creator'
     url: 'https://trk.udemy.com/nX0W4M'
