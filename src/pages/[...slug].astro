@@ -1,7 +1,14 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import AffiliateLink from '../components/AffiliateLink.astro';
-import { fetchPosts, formatDate, tagToLabel, getRelatedPosts, postsByTag } from '../lib/posts';
+import Layout from "../layouts/Layout.astro";
+import AffiliateLink from "../components/AffiliateLink.astro";
+import {
+  fetchPosts,
+  formatDate,
+  tagToLabel,
+  getRelatedPosts,
+  postsByTag,
+} from "../lib/posts";
+import { Image } from "astro:assets";
 
 export async function getStaticPaths() {
   const posts = await fetchPosts();
@@ -9,7 +16,9 @@ export async function getStaticPaths() {
     params: { slug: post.slug },
   }));
 
-  const categories = Array.from(new Set(posts.flatMap((post) => post.data.tags)));
+  const categories = Array.from(
+    new Set(posts.flatMap((post) => post.data.tags)),
+  );
   const categoryPaths = categories.map((tag) => ({
     params: { slug: `category/${tag}` },
   }));
@@ -17,47 +26,55 @@ export async function getStaticPaths() {
   return [...postPaths, ...categoryPaths];
 }
 
-const slugParam = Astro.params.slug ?? '';
-const segments = slugParam.split('/').filter(Boolean);
-const site = 'https://courseswyn.com';
+const slugParam = Astro.params.slug ?? "";
+const segments = slugParam.split("/").filter(Boolean);
+const site = "https://courseswyn.com";
 
 // Check if this is a coupon path and return 410 Gone
-if (segments[0] === 'coupon') {
-  return new Response('Gone - Coupon pages have been permanently removed', { 
+if (segments[0] === "coupon") {
+  return new Response("Gone - Coupon pages have been permanently removed", {
     status: 410,
     headers: {
-      'Content-Type': 'text/plain'
-    }
+      "Content-Type": "text/plain",
+    },
   });
 }
 
 if (!segments.length) {
-  return Astro.redirect('/');
+  return Astro.redirect("/");
 }
 
 const posts = await fetchPosts();
-const isCategoryPage = segments[0] === 'category';
+const isCategoryPage = segments[0] === "category";
 
 let categoryTag: string | null = null;
 let categoryPosts = [] as Awaited<ReturnType<typeof fetchPosts>>;
-let categoryMeta: { title: string; description: string; canonical: string } | null = null;
+let categoryMeta: {
+  title: string;
+  description: string;
+  canonical: string;
+} | null = null;
 
 let post = null as Awaited<ReturnType<typeof fetchPosts>>[number] | undefined;
-let Content: Awaited<ReturnType<Awaited<ReturnType<typeof fetchPosts>>[number]['render']>>['Content'] | null = null;
-let canonical = '';
+let Content:
+  | Awaited<
+      ReturnType<Awaited<ReturnType<typeof fetchPosts>>[number]["render"]>
+    >["Content"]
+  | null = null;
+let canonical = "";
 let structuredData: Record<string, any> | null = null;
 let related = [] as Awaited<ReturnType<typeof fetchPosts>>;
 
 if (isCategoryPage) {
   categoryTag = segments[1] ?? null;
   if (!categoryTag) {
-    return Astro.redirect('/blog/');
+    return Astro.redirect("/blog/");
   }
 
   categoryPosts = postsByTag(posts, categoryTag);
 
   if (!categoryPosts.length) {
-    return new Response('Not found', { status: 404 });
+    return new Response("Not found", { status: 404 });
   }
 
   const title = `${tagToLabel(categoryTag)} Course Picks`;
@@ -68,11 +85,11 @@ if (isCategoryPage) {
     canonical: `${site}/category/${categoryTag}/`,
   };
 } else {
-  const slug = segments.join('/');
+  const slug = segments.join("/");
   post = posts.find((entry) => entry.slug === slug);
 
   if (!post) {
-    return new Response('Not found', { status: 404 });
+    return new Response("Not found", { status: 404 });
   }
 
   const rendered = await post.render();
@@ -80,126 +97,180 @@ if (isCategoryPage) {
   related = getRelatedPosts(posts, post);
   canonical = `${site}/${post.slug}/`;
   structuredData = {
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
     headline: post.data.title,
     description: post.data.description,
-    image: post.data.image ? [new URL(post.data.image, site).toString()] : undefined,
+    image: post.data.image
+      ? [new URL(post.data.image.src, site).toString()]
+      : undefined,
     datePublished: post.data.pubDate.toISOString(),
     dateModified: post.data.pubDate.toISOString(),
     author: {
-      '@type': 'Organization',
-      name: 'CoursesWyn',
-      url: site
+      "@type": "Organization",
+      name: "CoursesWyn",
+      url: site,
     },
     publisher: {
-      '@type': 'Organization',
-      name: 'CoursesWyn',
+      "@type": "Organization",
+      name: "CoursesWyn",
       url: site,
       logo: {
-        '@type': 'ImageObject',
+        "@type": "ImageObject",
         url: `${site}/images/og-default.svg`,
       },
     },
     mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': canonical
-    }
+      "@type": "WebPage",
+      "@id": canonical,
+    },
   };
 }
 ---
 
-{isCategoryPage && categoryMeta ? (
-  <Layout title={categoryMeta.title} description={categoryMeta.description} canonical={categoryMeta.canonical}>
-    <section class="mb-12 space-y-4">
-      <p class="badge">Category</p>
-      <h1 class="text-4xl font-semibold text-white">{categoryMeta.title}</h1>
-      <p class="text-white/70">{categoryMeta.description}</p>
-    </section>
-    <section class="grid gap-6 md:grid-cols-2">
-      {categoryPosts.map((post) => (
-        <article class="card flex flex-col gap-4 border-white/10 bg-surface/70">
-          <div class="flex items-center justify-between text-sm text-white/60">
-            <span>{formatDate(post.data.pubDate)}</span>
-            <span>{post.data.tags.map((tag) => tagToLabel(tag)).join(' · ')}</span>
-          </div>
-          <h2 class="text-xl font-semibold text-white">
-            <a class="hover:text-mint-300" href={`/${post.slug}/`}>
-              {post.data.title}
-            </a>
-          </h2>
-          <p class="text-white/70">{post.data.description}</p>
-        </article>
-      ))}
-    </section>
-  </Layout>
-) : post && Content ? (
-  <Layout
-    title={post.data.title}
-    description={post.data.description}
-    canonical={canonical}
-    ogImage={post.data.image}
-    structuredData={structuredData}
-  >
-    <article class="mx-auto max-w-3xl space-y-10">
-      <nav class="text-sm text-white/60 mb-4">
-        <a href="/" class="hover:text-white">Home</a>
-        <span class="mx-2">›</span>
-        <a href="/blog/" class="hover:text-white">Blog</a>
-        <span class="mx-2">›</span>
-        <span class="text-white/80">{post.data.title}</span>
-      </nav>
-      <header class="space-y-4">
-        <p class="text-sm text-white/60">{formatDate(post.data.pubDate)}</p>
-        <h1 class="text-4xl font-semibold text-white">{post.data.title}</h1>
-        <div class="flex flex-wrap gap-3">
-          {post.data.tags.map((tag) => (
-            <a class="tag-pill" href={`/category/${tag}/`}>
-              {tagToLabel(tag)}
-            </a>
-          ))}
-        </div>
-      </header>
-
-      {post.data.image ? (
-        <figure class="overflow-hidden rounded-3xl border border-white/5">
-          {post.data.image && (
-            <img 
-              src={post.data.image} 
-              alt={post.data.title.includes('Black Friday') ? 'Udemy Black Friday 2025 Deals - 95% OFF on 50 Best Courses' : `${post.data.title} - Course review and ranking`}
-              class="w-full h-auto rounded-2xl mb-6"
-            />
-          )}
-        </figure>
-      ) : null}
-
-      <section class="space-y-4 rounded-3xl border border-mint-500/10 bg-mint-500/5 p-6">
-        <h2 class="text-lg font-semibold text-mint-200">Recommended Udemy enrollments</h2>
-        <div class="flex flex-wrap gap-3">
-          {post.data.affiliate_links.map((link) => (
-            <AffiliateLink url={link.url} text={link.text} />
-          ))}
-        </div>
-        <p class="text-xs text-white/60">Links include Udemy affiliate tracking via trk.udemy.com.</p>
+{
+  isCategoryPage && categoryMeta ? (
+    <Layout
+      title={categoryMeta.title}
+      description={categoryMeta.description}
+      canonical={categoryMeta.canonical}
+    >
+      <section class="mb-12 space-y-4">
+        <p class="badge">Category</p>
+        <h1 class="text-4xl font-semibold text-white">{categoryMeta.title}</h1>
+        <p class="text-white/70">{categoryMeta.description}</p>
       </section>
-
-      <div class="article-body">
-        <Content />
-      </div>
-
-      {related.length ? (
-        <section class="space-y-4">
-          <h2 class="text-2xl font-semibold text-white">Related rundowns</h2>
-          <div class="grid gap-4 md:grid-cols-2">
-            {related.map((item) => (
-              <a class="card border-white/5 bg-surface/70" href={`/${item.slug}/`}>
-                <p class="text-xs uppercase tracking-[0.3em] text-white/50">{formatDate(item.data.pubDate)}</p>
-                <p class="mt-2 text-lg font-semibold text-white">{item.data.title}</p>
+      <section class="grid gap-6 md:grid-cols-2">
+        {categoryPosts.map((post) => (
+          <article class="rounded-3xl border border-white/5 bg-surface/70 backdrop-blur group hover:border-mint-500/30 transition-colors">
+            <a
+              href={`/${post.slug}/`}
+              class="block overflow-hidden rounded-t-3xl aspect-video"
+            >
+              <Image
+                src={post.data.image}
+                alt={post.data.title}
+                widths={[400, 800]}
+                sizes="(max-width: 768px) 100vw, 400px"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            </a>
+            <div class="p-6">
+              <div class="flex items-center justify-between text-sm text-white/50">
+                <span>{formatDate(post.data.pubDate)}</span>
+                <span>
+                  {post.data.tags.map((tag) => tagToLabel(tag)).join(" · ")}
+                </span>
+              </div>
+              <h3 class="mt-4 text-xl font-semibold text-white">
+                <a href={`/${post.slug}/`} class="hover:text-mint-300">
+                  {post.data.title}
+                </a>
+              </h3>
+              <p class="mt-2 text-white/70">{post.data.description}</p>
+              <div class="mt-6 flex gap-3 text-sm">
+                <a
+                  class="text-mint-400 hover:text-mint-300"
+                  href={`/${post.slug}/`}
+                >
+                  Read review →
+                </a>
+              </div>
+            </div>
+          </article>
+        ))}
+      </section>
+    </Layout>
+  ) : post && Content ? (
+    <Layout
+      title={post.data.title}
+      description={post.data.description}
+      canonical={canonical}
+      ogImage={post.data.image?.src}
+      structuredData={structuredData}
+    >
+      <article class="mx-auto max-w-3xl space-y-10">
+        <nav class="text-sm text-white/60 mb-4">
+          <a href="/" class="hover:text-white">
+            Home
+          </a>
+          <span class="mx-2">›</span>
+          <a href="/blog/" class="hover:text-white">
+            Blog
+          </a>
+          <span class="mx-2">›</span>
+          <span class="text-white/80">{post.data.title}</span>
+        </nav>
+        <header class="space-y-4">
+          <p class="text-sm text-white/60">{formatDate(post.data.pubDate)}</p>
+          <h1 class="text-4xl font-semibold text-white">{post.data.title}</h1>
+          <div class="flex flex-wrap gap-3">
+            {post.data.tags.map((tag) => (
+              <a class="tag-pill" href={`/category/${tag}/`}>
+                {tagToLabel(tag)}
               </a>
             ))}
           </div>
+        </header>
+
+        {post.data.image ? (
+          <figure class="overflow-hidden rounded-3xl border border-white/5">
+            {post.data.image && (
+              <Image
+                src={post.data.image}
+                alt={
+                  post.data.title.includes("Black Friday")
+                    ? "Udemy Black Friday 2025 Deals - 95% OFF on 50 Best Courses"
+                    : `${post.data.title} - Course review and ranking`
+                }
+                class="w-full h-auto rounded-2xl mb-6"
+                widths={[600, 1200]}
+                sizes="(max-width: 768px) 100vw, 800px"
+                loading="eager"
+              />
+            )}
+          </figure>
+        ) : null}
+
+        <section class="space-y-4 rounded-3xl border border-mint-500/10 bg-mint-500/5 p-6">
+          <h2 class="text-lg font-semibold text-mint-200">
+            Recommended Udemy enrollments
+          </h2>
+          <div class="flex flex-wrap gap-3">
+            {post.data.affiliate_links.map((link) => (
+              <AffiliateLink url={link.url} text={link.text} />
+            ))}
+          </div>
+          <p class="text-xs text-white/60">
+            Links include Udemy affiliate tracking via trk.udemy.com.
+          </p>
         </section>
-      ) : null}
-    </article>
-  </Layout>
-) : null}
+
+        <div class="article-body">
+          <Content />
+        </div>
+
+        {related.length ? (
+          <section class="space-y-4">
+            <h2 class="text-2xl font-semibold text-white">Related rundowns</h2>
+            <div class="grid gap-4 md:grid-cols-2">
+              {related.map((item) => (
+                <a
+                  class="card border-white/5 bg-surface/70"
+                  href={`/${item.slug}/`}
+                >
+                  <p class="text-xs uppercase tracking-[0.3em] text-white/50">
+                    {formatDate(item.data.pubDate)}
+                  </p>
+                  <p class="mt-2 text-lg font-semibold text-white">
+                    {item.data.title}
+                  </p>
+                </a>
+              ))}
+            </div>
+          </section>
+        ) : null}
+      </article>
+    </Layout>
+  ) : null
+}

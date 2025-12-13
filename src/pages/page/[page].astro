@@ -1,16 +1,17 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import AffiliateLink from '../../components/AffiliateLink.astro';
-import { fetchPosts, formatDate, tagToLabel, paginate } from '../../lib/posts';
+import Layout from "../../layouts/Layout.astro";
+import AffiliateLink from "../../components/AffiliateLink.astro";
+import { fetchPosts, formatDate, tagToLabel, paginate } from "../../lib/posts";
+import { Image } from "astro:assets";
 
 // Generate static paths for all pages
 export async function getStaticPaths() {
   const allPosts = await fetchPosts();
   const { totalPages } = paginate(allPosts, 1);
-  
+
   return Array.from({ length: totalPages }, (_, i) => ({
     params: { page: String(i + 1) },
-    props: { pageNumber: i + 1 }
+    props: { pageNumber: i + 1 },
   }));
 }
 
@@ -23,25 +24,29 @@ const { slice, currentPage, totalPages } = paginate(allPosts, pageNumber);
 
 // Review Schema for Homepage
 const reviewSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'AggregateRating',
-  'itemReviewed': {
-    '@type': 'Website',
-    'name': 'CoursesWyn - Best Udemy Course Reviews 2026',
-    'url': 'https://courseswyn.com'
+  "@context": "https://schema.org",
+  "@type": "AggregateRating",
+  itemReviewed: {
+    "@type": "Website",
+    name: "CoursesWyn - Best Udemy Course Reviews 2026",
+    url: "https://courseswyn.com",
   },
-  'ratingValue': '4.8',
-  'ratingCount': '1250',
-  'bestRating': '5',
-  'worstRating': '1',
-  'reviewAuthor': {
-    '@type': 'Organization',
-    'name': 'CoursesWyn'
-  }
+  ratingValue: "4.8",
+  ratingCount: "1250",
+  bestRating: "5",
+  worstRating: "1",
+  reviewAuthor: {
+    "@type": "Organization",
+    name: "CoursesWyn",
+  },
 };
 ---
 
-<Layout title={`CoursesWyn · Page ${currentPage} - Best Course Reviews 2026`} description={`Top-ranked Udemy courses 2026 - Page ${currentPage}. Independent 500+ word reviews, real student results, verified coupons.`} structuredData={reviewSchema}>
+<Layout
+  title={`CoursesWyn · Page ${currentPage} - Best Course Reviews 2026`}
+  description={`Top-ranked Udemy courses 2026 - Page ${currentPage}. Independent 500+ word reviews, real student results, verified coupons.`}
+  structuredData={reviewSchema}
+>
   <!-- Hero Section with H1 -->
   <nav aria-label="Breadcrumb" class="text-sm text-white/60 mb-6">
     <ol class="flex items-center gap-2">
@@ -51,63 +56,148 @@ const reviewSchema = {
     </ol>
   </nav>
   <section class="text-center py-12">
-    <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">Best Udemy Course Reviews 2026 - Page {currentPage}</h1>
-    <p class="text-white/70 max-w-2xl mx-auto">Independent reviews covering the best Udemy courses for AI, coding, and automation—ranked with real outcomes and affiliate transparency.</p>
-    <p class="text-center text-white/60 mt-4">Affiliate disclosure: We earn commission from qualifying Udemy purchases (no extra cost to you).</p>
+    <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
+      Best Udemy Course Reviews 2026 - Page {currentPage}
+    </h1>
+    <p class="text-white/70 max-w-2xl mx-auto">
+      Independent reviews covering the best Udemy courses for AI, coding, and
+      automation—ranked with real outcomes and affiliate transparency.
+    </p>
+    <p class="text-center text-white/60 mt-4">
+      Affiliate disclosure: We earn commission from qualifying Udemy purchases
+      (no extra cost to you).
+    </p>
   </section>
 
   <!-- Latest Drops Section -->
   <section class="space-y-8">
     <div class="flex items-center justify-between">
-      <h2 class="text-2xl font-semibold text-white">Latest Drops - Page {currentPage}</h2>
-      <a href="/rss.xml" class="inline-flex items-center gap-2 px-5 py-3 bg-mint-500/20 rounded-xl hover:bg-mint-500/30 text-mint-300 transition">
+      <h2 class="text-2xl font-semibold text-white">
+        Latest Drops - Page {currentPage}
+      </h2>
+      <a
+        href="/rss.xml"
+        class="inline-flex items-center gap-2 px-5 py-3 bg-mint-500/20 rounded-xl hover:bg-mint-500/30 text-mint-300 transition"
+      >
         RSS Feed
       </a>
     </div>
     <div class="grid gap-6 md:grid-cols-2">
-      {slice.map((post) => (
-        <article class="rounded-3xl border border-white/5 bg-surface/70 p-6 backdrop-blur">
-          <div class="flex items-center justify-between text-sm text-white/50">
-            <span>{formatDate(post.data.pubDate)}</span>
-            <span>{post.data.tags.map((tag) => tagToLabel(tag)).join(' · ')}</span>
-          </div>
-          <h3 class="mt-4 text-xl font-semibold text-white">
-            <a href={`/${post.slug}/`} class="hover:text-mint-300">{post.data.title}</a>
-          </h3>
-          <p class="mt-2 text-white/70">{post.data.description}</p>
-          <div class="mt-6 flex gap-3 text-sm">
-            <a class="text-mint-400 hover:text-mint-300" href={`/${post.slug}/`}>Read review →</a>
-          </div>
-        </article>
-      ))}
+      {
+        slice.map((post) => (
+          <article class="rounded-3xl border border-white/5 bg-surface/70 backdrop-blur group hover:border-mint-500/30 transition-colors">
+            <a
+              href={`/${post.slug}/`}
+              class="block overflow-hidden rounded-t-3xl aspect-video"
+            >
+              <Image
+                src={post.data.image}
+                alt={post.data.title}
+                widths={[400, 800]}
+                sizes="(max-width: 768px) 100vw, 400px"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            </a>
+            <div class="p-6">
+              <div class="flex items-center justify-between text-sm text-white/50">
+                <span>{formatDate(post.data.pubDate)}</span>
+                <span>
+                  {post.data.tags.map((tag) => tagToLabel(tag)).join(" · ")}
+                </span>
+              </div>
+              <h3 class="mt-4 text-xl font-semibold text-white">
+                <a href={`/${post.slug}/`} class="hover:text-mint-300">
+                  {post.data.title}
+                </a>
+              </h3>
+              <p class="mt-2 text-white/70">{post.data.description}</p>
+              <div class="mt-6 flex gap-3 text-sm">
+                <a
+                  class="text-mint-400 hover:text-mint-300"
+                  href={`/${post.slug}/`}
+                >
+                  Read review →
+                </a>
+              </div>
+            </div>
+          </article>
+        ))
+      }
     </div>
   </section>
 
   <!-- Pagination Controls -->
-  {totalPages > 1 && (
-    <nav class="flex justify-center gap-3 mt-12" aria-label="Pagination">
-      {currentPage > 1 && <a href={`/page/${currentPage - 1}`} class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">←</a>}
-      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-        page === currentPage ? (
-          <span class="px-4 py-2 bg-mint-500 text-black rounded-lg font-medium">{page}</span>
-        ) : (
-          <a href={`/page/${page}`} class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">{page}</a>
-        )
-      ))}
-      {currentPage < totalPages && <a href={`/page/${currentPage + 1}`} class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10">→</a>}
-    </nav>
-  )}
+  {
+    totalPages > 1 && (
+      <nav class="flex justify-center gap-3 mt-12" aria-label="Pagination">
+        {currentPage > 1 && (
+          <a
+            href={`/page/${currentPage - 1}`}
+            class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10"
+          >
+            ←
+          </a>
+        )}
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) =>
+          page === currentPage ? (
+            <span class="px-4 py-2 bg-mint-500 text-black rounded-lg font-medium">
+              {page}
+            </span>
+          ) : (
+            <a
+              href={`/page/${page}`}
+              class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10"
+            >
+              {page}
+            </a>
+          ),
+        )}
+        {currentPage < totalPages && (
+          <a
+            href={`/page/${currentPage + 1}`}
+            class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10"
+          >
+            →
+          </a>
+        )}
+      </nav>
+    )
+  }
 
   <!-- Browse by Topic Section -->
   <section class="py-12 text-center">
     <h2 class="text-2xl font-semibold mb-8">Browse by Topic</h2>
     <div class="flex flex-wrap justify-center gap-4">
-      <a href="/category/ai/" class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors">AI & Machine Learning</a>
-      <a href="/category/python/" class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors">Python</a>
-      <a href="/category/excel/" class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors">Excel</a>
-      <a href="/category/java/" class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors">Java</a>
-      <a href="/category/data science/" class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors">Data Science</a>
-      <a href="/category/black-friday/" class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors">Black Friday Deals</a>
+      <a
+        href="/category/ai/"
+        class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors"
+        >AI & Machine Learning</a
+      >
+      <a
+        href="/category/python/"
+        class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors"
+        >Python</a
+      >
+      <a
+        href="/category/excel/"
+        class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors"
+        >Excel</a
+      >
+      <a
+        href="/category/java/"
+        class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors"
+        >Java</a
+      >
+      <a
+        href="/category/data science/"
+        class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors"
+        >Data Science</a
+      >
+      <a
+        href="/category/black-friday/"
+        class="px-6 py-3 bg-mint-500/10 rounded-full hover:bg-mint-500/20 transition-colors"
+        >Black Friday Deals</a
+      >
     </div>
   </section>
 </Layout>
