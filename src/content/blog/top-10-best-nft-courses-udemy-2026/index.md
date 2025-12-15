@@ -25,7 +25,7 @@ affiliate_links:
 ---
 ## Top 10 Best NFT Courses on Udemy 2026
 
-![Top 10 Best NFT Courses on Udemy 2026](/images/top-nft-courses-2026.jpg "Top 10 Best NFT Courses on Udemy 2026 - Master minting, trading, smart contracts, and blockchain with hands-on projects in non-fungible tokens. Ideal for Web3 careers, artists, and investors in 2026.")
+![Top 10 Best NFT Courses on Udemy 2026](../../../assets/images/top-nft-courses-2026.jpg "Top 10 Best NFT Courses on Udemy 2026 - Master minting, trading, smart contracts, and blockchain with hands-on projects in non-fungible tokens. Ideal for Web3 careers, artists, and investors in 2026.")
 
 *Top 10 Best NFT Courses on Udemy for 2026 - Master minting, trading, smart contracts, and blockchain with hands-on projects in non-fungible tokens. Ideal for Web3 careers, artists, and investors in 2026.*
 

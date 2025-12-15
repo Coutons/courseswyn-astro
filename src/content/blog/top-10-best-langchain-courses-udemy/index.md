@@ -23,7 +23,7 @@ affiliate_links:
   - text: 'Enroll Now: GenAI for JS Devs →'
     url: 'https://trk.udemy.com/Bn6mMq'
 ---
-![Top LangChain Courses 2026](/images/top-langchain-courses.jpg)
+![Top LangChain Courses 2026](../../../assets/images/top-langchain-courses.jpg)
 
 *Master LLM apps, RAG, LangGraph, AI agents, local models, and real-world projects in 2026.*
 

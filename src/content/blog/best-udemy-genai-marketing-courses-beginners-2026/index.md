@@ -31,7 +31,7 @@ affiliate_links:
     url: 'https://trk.udemy.com/bootC8'
 ---
 
-![Best Udemy GenAI for Marketing Courses for Beginners in 2026](/images/top-genai-marketing-courses-2026.jpg "Best Udemy GenAI for Marketing Courses for Beginners in 2026")
+![Best Udemy GenAI for Marketing Courses for Beginners in 2026](../../../assets/images/top-genai-marketing-courses-2026.jpg "Best Udemy GenAI for Marketing Courses for Beginners in 2026")
 
 ## Table of Contents
 

@@ -32,7 +32,7 @@ affiliate_links:
     url: 'https://trk.udemy.com/ra6m0j'
 ---
 
-![Top 10 Best Excel Courses on Udemy 2026](/images/top-excel-courses-2026.jpg "Top 10 Excel Courses on Udemy 2026")
+![Top 10 Best Excel Courses on Udemy 2026](../../../assets/images/top-excel-courses-2026.jpg "Top 10 Excel Courses on Udemy 2026")
 
 ## Table of Contents
 - [Why Learn Excel in 2026?](#why-learn-excel-in-2026)

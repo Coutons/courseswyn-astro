@@ -32,7 +32,7 @@ affiliate_links:
     url: 'https://trk.udemy.com/zx71aW'
 ---
 
-![Top 10 Generative AI Bootcamps on Udemy 2026](/images/top-generative-ai-bootcamps-2026.jpg "Top 10 Generative AI Bootcamps on Udemy 2026")
+![Top 10 Generative AI Bootcamps on Udemy 2026](../../../assets/images/top-generative-ai-bootcamps-2026.jpg "Top 10 Generative AI Bootcamps on Udemy 2026")
 
 ## Table of Contents
 

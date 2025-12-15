@@ -30,7 +30,7 @@ affiliate_links:
     url: 'https://trk.udemy.com/xLxKaO'
 ---
 
-![Best Udemy Figma Courses for No-Code Web Design and UI/UX in 2026](/images/top-figma-courses-2026.jpg "Best Udemy Figma Courses for No-Code Web Design and UI/UX in 2026")
+![Best Udemy Figma Courses for No-Code Web Design and UI/UX in 2026](../../../assets/images/top-figma-courses-2026.jpg "Best Udemy Figma Courses for No-Code Web Design and UI/UX in 2026")
 
 ## Table of Contents
 

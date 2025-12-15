@@ -25,7 +25,7 @@ affiliate_links:
 ---
 ## Top 10 Best n8n Courses on Udemy 2026
 
-![Top 10 Best n8n Courses on Udemy 2026](/images/top-n8n-courses.jpg "Top 10 Best n8n Courses on Udemy 2026 - Master AI agents, no-code automations, workflows, and integrations with hands-on projects. Ideal for AI careers, developers, and business automation in 2026.")
+![Top 10 Best n8n Courses on Udemy 2026](../../../assets/images/top-n8n-courses.jpg "Top 10 Best n8n Courses on Udemy 2026 - Master AI agents, no-code automations, workflows, and integrations with hands-on projects. Ideal for AI careers, developers, and business automation in 2026.")
 
 *Top 10 Best n8n Courses on Udemy for 2026 - Master AI agents, no-code automations, workflows, and integrations with hands-on projects. Ideal for AI careers, developers, and business automation in 2026.*
 

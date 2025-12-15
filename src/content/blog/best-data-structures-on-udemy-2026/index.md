@@ -25,7 +25,7 @@ affiliate_links:
 ---
 ## Best Data Structures on Udemy 2026
 
-![Best Data Structures and Algorithms Courses on Udemy 2026](/images/data-structures-2026.png "Best Data Structures and Algorithms Courses on Udemy 2026 - Master arrays, linked lists, trees, graphs, sorting, and Big O with Python, Java, C++, and JavaScript. Ideal for coding interviews and software engineering in 2026.")
+![Best Data Structures and Algorithms Courses on Udemy 2026](../../../assets/images/data-structures-2026.png "Best Data Structures and Algorithms Courses on Udemy 2026 - Master arrays, linked lists, trees, graphs, sorting, and Big O with Python, Java, C++, and JavaScript. Ideal for coding interviews and software engineering in 2026.")
 
 *Best Data Structures and Algorithms Courses on Udemy 2026 - Master arrays, linked lists, trees, graphs, sorting, and Big O with Python, Java, C++, and JavaScript. Ideal for coding interviews and software engineering in 2026.*
 

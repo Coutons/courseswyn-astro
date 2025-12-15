@@ -37,7 +37,7 @@ affiliate_links:
 
 ## Top 10 Python Courses on Udemy 2026
 
-![Top 10 Python Courses on Udemy 2026: From Beginner to Pro](/images/top-python-ai-2026.jpg)
+![Top 10 Python Courses on Udemy 2026: From Beginner to Pro](../../../assets/images/top-python-ai-2026.jpg)
 
 ## Table of Contents
 

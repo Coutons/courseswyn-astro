@@ -23,7 +23,7 @@ affiliate_links:
   - text: 'Enroll Now: Prompt Engineering: Getting Future Ready (1000+ Prompts) →'
     url: 'https://trk.udemy.com/GKeY2L'
 ---
-![12 Best Prompt Engineering Courses on Udemy for 2026](/images/best-prompt-engineering-courses-udemy-2026.jpg)
+![12 Best Prompt Engineering Courses on Udemy for 2026](../../../assets/images/best-prompt-engineering-courses-udemy-2026.jpg)
 
 *Master GPT-5, Claude 3.5, Gemini 2, Veo 3, LangGraph, RAG, Tool-Calling & Production AI in 2026.*
 

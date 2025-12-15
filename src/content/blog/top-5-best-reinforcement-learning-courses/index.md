@@ -23,7 +23,7 @@ affiliate_links:
   - text: Enroll now
     url: 'https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6672583&u=https%3A%2F%2Fwww.udemy.com%2Fevolutionary-deep-reinforcement-learning&intsrc=PUI2_26324'
 ---
-![Top Reinforcement Learning Courses 2026](/images/top-reinforcement-learning-courses-2026.png)
+![Top Reinforcement Learning Courses 2026](../../../assets/images/top-reinforcement-learning-courses-2026.png)
 
 *Master DQN, Policy Gradients, A2C, Evolution Strategies, and real-world RL trading in 2026.*
 

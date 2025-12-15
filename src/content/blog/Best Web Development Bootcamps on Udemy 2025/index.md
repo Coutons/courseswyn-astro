@@ -25,7 +25,7 @@ affiliate_links:
 ---
 ## Best Web Development Bootcamps on Udemy 2026
 
-![Best Web Development Bootcamps 2025](/images/web-dev-2025.jpg "Best Web Development Courses on Udemy 2025 - Learn full-stack development, React, Node.js, and modern frameworks")
+![Best Web Development Bootcamps 2025](../../../assets/images/web-dev-2025.jpg "Best Web Development Courses on Udemy 2025 - Learn full-stack development, React, Node.js, and modern frameworks")
 
 *Best Web Development Courses on Udemy 2025 - Learn full-stack development, React, Node.js, and modern frameworks*
 

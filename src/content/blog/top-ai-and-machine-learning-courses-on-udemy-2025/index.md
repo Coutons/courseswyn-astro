@@ -25,7 +25,7 @@ affiliate_links:
 ---
 ## Top AI and Machine Learning Courses on Udemy 2026
 
-![Top AI and Machine Learning Courses on Udemy 2025](/images/ai-machine-learning-2025.jpg "Top AI and Machine Learning Courses on Udemy 2025 - Learn generative AI, deep learning, neural networks, and machine learning with Python. Best courses for beginners to advanced learners in 2025.")
+![Top AI and Machine Learning Courses on Udemy 2025](../../../assets/images/ai-machine-learning-2025.jpg "Top AI and Machine Learning Courses on Udemy 2025 - Learn generative AI, deep learning, neural networks, and machine learning with Python. Best courses for beginners to advanced learners in 2025.")
 
 *Top AI and Machine Learning Courses on Udemy 2025 - Learn generative AI, deep learning, neural networks, and machine learning with Python. Best courses for beginners to advanced learners in 2025.*
 

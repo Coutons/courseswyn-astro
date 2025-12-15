@@ -30,7 +30,7 @@ affiliate_links:
     url: 'https://trk.udemy.com/LKvdNo'
 ---
 
-![Top 8 Blockchain Courses on Udemy for Beginners 2026](/images/top-blockchain-2026.jpg "Top 8 Blockchain Courses on Udemy for Beginners 2026")
+![Top 8 Blockchain Courses on Udemy for Beginners 2026](../../../assets/images/top-blockchain-2026.jpg "Top 8 Blockchain Courses on Udemy for Beginners 2026")
 
 ## Table of Contents
 

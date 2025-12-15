@@ -23,7 +23,7 @@ affiliate_links:
   - text: 'Enroll Now: Generative AI on AWS - Bedrock, RAG & 9+ Use Cases →'
     url: 'https://trk.udemy.com/VxGz5E'
 ---
-![Top Generative AI Courses 2026](/images/top-generative-ai-courses-2026.png)
+![Top Generative AI Courses 2026](../../../assets/images/top-generative-ai-courses-2026.png)
 
 *Master ChatGPT, RAG, AI agents, LLMs, local models, and real-world projects in 2026.*
 

@@ -31,7 +31,7 @@ affiliate_links:
     url: 'https://trk.udemy.com/gOzGKr'
 ---
 
-![Top 8 AI-Powered Web Development Courses on Udemy 2026](/images/top-ai-web-dev-2026.jpg "Top 8 AI-Powered Web Development Courses on Udemy 2026")
+![Top 8 AI-Powered Web Development Courses on Udemy 2026](../../../assets/images/top-ai-web-dev-2026.jpg "Top 8 AI-Powered Web Development Courses on Udemy 2026")
 
 ## Table of Contents
 

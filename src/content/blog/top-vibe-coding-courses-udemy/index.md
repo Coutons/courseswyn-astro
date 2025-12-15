@@ -30,7 +30,7 @@ affiliate_links:
     url: 'https://trk.udemy.com/BnZoa1'
 ---
 
-![Top 10 Vibe Coding Courses on Udemy 2026](/images/top-vibe-coding-courses-2026.jpg "Top 10 Vibe Coding Courses on Udemy 2026")
+![Top 10 Vibe Coding Courses on Udemy 2026](../../../assets/images/top-vibe-coding-courses-2026.jpg "Top 10 Vibe Coding Courses on Udemy 2026")
 
 *Top 10 Vibe Coding Courses on Udemy (2026) — deep reviews, Cursor AI 2026 features, real prototypes, and which course fits your goal.*
 

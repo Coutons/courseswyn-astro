@@ -23,7 +23,7 @@ affiliate_links:
   - text: Enroll now
     url: 'https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6696573&u=https%3A%2F%2Fwww.udemy.com%2Fultimate-rag-bootcamp-using-langchainlanggraph-langsmith&intsrc=PUI2_26324'
 ---
-![Top RAG Courses 2026](/images/top-rag-courses-2026.png)
+![Top RAG Courses 2026](../../../assets/images/top-rag-courses-2026.png)
 
 *Master RAG pipelines, vector databases, LangChain/LlamaIndex, multimodal retrieval, and enterprise deployment in 2026.*
 

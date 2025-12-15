@@ -25,7 +25,7 @@ affiliate_links:
 ---
 ## Top 10 Best MCP Courses on Udemy 2026
 
-![Top 10 Best MCP Courses on Udemy 2026](/images/top-mcp-courses-2026.jpg "Top 10 Best MCP Courses on Udemy 2026 - Master Model Context Protocol, AI agents, LLM integrations, and automations with hands-on projects. Ideal for AI careers, developers, and protocol pros in 2026.")
+![Top 10 Best MCP Courses on Udemy 2026](../../../assets/images/top-mcp-courses-2026.jpg "Top 10 Best MCP Courses on Udemy 2026 - Master Model Context Protocol, AI agents, LLM integrations, and automations with hands-on projects. Ideal for AI careers, developers, and protocol pros in 2026.")
 
 *Top 10 Best MCP Courses on Udemy for 2026 - Master Model Context Protocol, AI agents, LLM integrations, and automations with hands-on projects. Ideal for AI careers, developers, and protocol pros in 2026.*
 
