@@ -1,29 +1,775 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import DealCard from '../../components/coupon/DealCard.astro';
 
-// Get the slug from URL params
-const slug = Astro.params.slug || '';
+const slugParam = Astro.params.slug ?? "";
+const segments = typeof slugParam === 'string' ? slugParam.split('/').filter(Boolean) : [];
 
-// Generate static paths for known coupon URLs
+import coupons from '../../data/coupons.json';
+
+// Pagination constants
+const ITEMS_PER_PAGE = 12;
+
 export async function getStaticPaths() {
-  // List of known coupon URLs from your old site
-  const knownCoupons = [
-    'reactjs-tailwind-css-complete-web-projects',
-    'apa-aja',
-    'test',
-    // Add more known coupon URLs here
+  const paths = [
+    { params: { slug: undefined } },
+    ...coupons.map((c) => ({ params: { slug: c.slug } })),
   ];
-
-  return knownCoupons.map(coupon => ({
-    params: { slug: coupon }
-  }));
+  return paths;
 }
+
+// Get unique categories for filter
+const categories = [...new Set(coupons.map(c => c.category))].sort();
+
+// Helper functions
+function formatDate(date: string | Date): string {
+  return new Date(date).toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+}
+
+function getDaysUntilExpiry(expiryDate: string): number {
+  const today = new Date();
+  const expiry = new Date(expiryDate);
+  const diffTime = expiry.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+}
+
+function getPriceRangeLabel(range: string): string {
+  const labels: Record<string, string> = {
+    'free': 'FREE',
+    'budget': '$1-$20',
+    'standard': '$20-$100',
+    'premium': '$100+'
+  };
+  return labels[range] || 'All Prices';
+}
+
+// Prepare coupon data as JSON for client-side filtering
+const couponsJSON = JSON.stringify(coupons);
+const totalCoupons = coupons.length;
+const totalPages = Math.ceil(totalCoupons / ITEMS_PER_PAGE);
 ---
 
-<Layout title="410 Gone - Coupon Pages Permanently Removed" description="Coupon pages have been permanently removed from CoursesWyn">
-  <div style="text-align: center; max-width: 600px; margin: 50px auto;">
-    <h1 style="color: #d63031;">410 Gone</h1>
-    <p>Coupon pages have been permanently removed from CoursesWyn.</p>
-    <p><a href="/">Return to Homepage</a></p>
-  </div>
-</Layout>
+<script define:vars={{ couponsJSON, ITEMS_PER_PAGE }}>
+  const couponsData = JSON.parse(couponsJSON);
+  let filteredCoupons = [...couponsData];
+  let currentCategory = 'all';
+  let currentSort = 'newest';
+  let currentPage = 1;
+  let currentMinRating = 0;
+  let currentPriceRange = 'all';
+
+  function filterCoupons(category) {
+    currentCategory = category;
+    currentPage = 1;
+    applyFiltersAndSort();
+    
+    document.querySelectorAll('[data-filter-category]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filterCategory === category);
+    });
+  }
+
+  function filterByRating(minRating) {
+    currentMinRating = parseFloat(minRating) || 0;
+    currentPage = 1;
+    applyFiltersAndSort();
+    
+    // Update display
+    const display = document.getElementById('rating-display');
+    if (display) {
+      if (currentMinRating === 0) {
+        display.textContent = 'All Ratings';
+      } else {
+        display.textContent = `${currentMinRating} stars and above`;
+      }
+    }
+  }
+
+  function filterByPrice(range) {
+    currentPriceRange = range;
+    currentPage = 1;
+    applyFiltersAndSort();
+    
+    document.querySelectorAll('[data-filter-price]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filterPrice === range);
+    });
+  }
+
+  function sortCoupons(sortBy) {
+    currentSort = sortBy;
+    currentPage = 1;
+    applyFiltersAndSort();
+  }
+
+  function applyFiltersAndSort() {
+    // Filter by category
+    filteredCoupons = currentCategory === 'all' 
+      ? [...couponsData]
+      : couponsData.filter(c => c.category === currentCategory);
+
+    // Filter by rating
+    filteredCoupons = filteredCoupons.filter(c => c.rating >= currentMinRating);
+
+    // Filter by price range
+    if (currentPriceRange !== 'all') {
+      filteredCoupons = filteredCoupons.filter(c => c.priceRange === currentPriceRange);
+    }
+
+    // Sort
+    switch(currentSort) {
+      case 'discount':
+        filteredCoupons.sort((a, b) => {
+          const discountA = parseInt(a.discount) || 0;
+          const discountB = parseInt(b.discount) || 0;
+          return discountB - discountA;
+        });
+        break;
+      case 'rating':
+        filteredCoupons.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'students':
+        filteredCoupons.sort((a, b) => b.students - a.students);
+        break;
+      case 'newest':
+      default:
+        filteredCoupons.sort((a, b) => new Date(b.addedDate) - new Date(a.addedDate));
+        break;
+    }
+
+    updatePagination();
+  }
+
+  function updatePagination() {
+    const totalPages = Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE);
+    const paginationControls = document.getElementById('pagination-controls');
+    
+    if (paginationControls) {
+      paginationControls.innerHTML = '';
+      
+      if (totalPages <= 1) return;
+
+      // Previous button
+      if (currentPage > 1) {
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '← Previous';
+        prevBtn.className = 'px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-white transition';
+        prevBtn.onclick = () => goToPage(currentPage - 1);
+        paginationControls.appendChild(prevBtn);
+      }
+
+      // Page numbers
+      for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = String(i);
+        pageBtn.className = `px-3 py-2 rounded-lg transition ${
+          i === currentPage 
+            ? 'bg-mint-500/20 border border-mint-500/50 text-white' 
+            : 'border border-white/10 hover:bg-white/5 text-white/70 hover:text-white'
+        }`;
+        pageBtn.onclick = () => goToPage(i);
+        paginationControls.appendChild(pageBtn);
+      }
+
+      // Next button
+      if (currentPage < totalPages) {
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = 'Next →';
+        nextBtn.className = 'px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-white transition';
+        nextBtn.onclick = () => goToPage(currentPage + 1);
+        paginationControls.appendChild(nextBtn);
+      }
+    }
+  }
+
+  function goToPage(page) {
+    const totalPages = Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE);
+    if (page >= 1 && page <= totalPages) {
+      currentPage = page;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      updatePagination();
+    }
+  }
+
+  // Copy to clipboard
+  window.copyCouponCode = function(code, button) {
+    navigator.clipboard.writeText(code).then(() => {
+      const originalText = button.textContent;
+      button.textContent = '✓ Copied!';
+      button.classList.add('!bg-green-500/20', '!border-green-500/50', '!text-green-400');
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('!bg-green-500/20', '!border-green-500/50', '!text-green-400');
+      }, 2000);
+    });
+  };
+
+  // Countdown timer
+  window.updateCountdownTimer = function(expiryDate, elementId) {
+    function countdown() {
+      const now = new Date().getTime();
+      const expiry = new Date(expiryDate).getTime();
+      const distance = expiry - now;
+
+      if (distance < 0) {
+        document.getElementById(elementId).textContent = 'Expired';
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      
+      if (days > 0) {
+        document.getElementById(elementId).textContent = `${days}d ${hours}h left`;
+      } else {
+        document.getElementById(elementId).textContent = `${hours}h left`;
+      }
+    }
+
+    countdown();
+    setInterval(countdown, 60000); // Update every minute
+  };
+
+  // Initialize on load
+  document.addEventListener('DOMContentLoaded', () => {
+    applyFiltersAndSort();
+    document.querySelector('[data-filter-category="all"]')?.classList.add('!bg-mint-500/30', '!border-mint-500');
+    document.querySelector('[data-filter-price="all"]')?.classList.add('!bg-mint-500/30', '!border-mint-500');
+  });
+</script>
+
+{
+  !segments.length ? (
+    <Layout 
+      title="Free Udemy Coupons & Deals - CoursesWyn" 
+      description="2,500+ verified free Udemy coupons updated daily. Save up to 95% on premium courses. 100% free, no credit card required."
+      structuredData={{
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "CollectionPage",
+            "name": "Free Udemy Coupons & Deals",
+            "description": "2,500+ verified free Udemy coupons updated daily",
+            "url": "https://courseswyn.com/coupon/",
+            "mainEntity": {
+              "@type": "AggregateOffer",
+              "name": "Free Udemy Courses",
+              "description": "Verified free Udemy coupons and deals",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "url": "https://courseswyn.com/coupon/",
+              "offerCount": coupons.length
+            }
+          }
+        ]
+      }}
+    >
+      <!-- Header -->
+      <section class="mb-12">
+        <h1 class="text-4xl md:text-5xl font-bold text-white mb-3">Free Udemy Coupons & Deals</h1>
+        <p class="text-white/70 text-lg">
+          {coupons.length}+ verified coupons updated daily. Get premium courses for free — 100% guaranteed working.
+        </p>
+      </section>
+
+      <!-- Filter Section -->
+      <section class="mb-12 pb-8 border-b border-white/10">
+        <!-- Category Filter -->
+        <div class="mb-8">
+          <h3 class="text-sm font-semibold text-white/70 mb-3 uppercase">Category</h3>
+          <div class="flex gap-2 flex-wrap">
+            <button 
+              class="px-4 py-2 rounded-lg bg-mint-500/20 border border-mint-500/50 text-white hover:bg-mint-500/30 transition text-sm font-medium" 
+              data-filter-category="all"
+              onclick="filterCoupons('all')"
+            >
+              All Categories
+            </button>
+            {categories.map(cat => (
+              <button 
+                class="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:border-mint-500/50 hover:text-white transition text-sm" 
+                data-filter-category={cat}
+                onclick={`filterCoupons('${cat}')`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <!-- Price Range Filter -->
+        <div class="mb-8">
+          <h3 class="text-sm font-semibold text-white/70 mb-3 uppercase">Price Range</h3>
+          <div class="flex gap-2 flex-wrap">
+            <button 
+              class="px-4 py-2 rounded-lg bg-mint-500/20 border border-mint-500/50 text-white hover:bg-mint-500/30 transition text-sm font-medium" 
+              data-filter-price="all"
+              onclick="filterByPrice('all')"
+            >
+              All Prices
+            </button>
+            <button 
+              class="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:border-mint-500/50 hover:text-white transition text-sm" 
+              data-filter-price="free"
+              onclick="filterByPrice('free')"
+            >
+              Free
+            </button>
+            <button 
+              class="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:border-mint-500/50 hover:text-white transition text-sm" 
+              data-filter-price="budget"
+              onclick="filterByPrice('budget')"
+            >
+              $1-$20
+            </button>
+            <button 
+              class="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:border-mint-500/50 hover:text-white transition text-sm" 
+              data-filter-price="standard"
+              onclick="filterByPrice('standard')"
+            >
+              $20-$100
+            </button>
+            <button 
+              class="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:border-mint-500/50 hover:text-white transition text-sm" 
+              data-filter-price="premium"
+              onclick="filterByPrice('premium')"
+            >
+              $100+
+            </button>
+          </div>
+        </div>
+
+        <!-- Rating & Sort -->
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <label class="text-sm font-semibold text-white/70 mb-3 block uppercase">Minimum Rating</label>
+            <input 
+              type="range" 
+              min="0" 
+              max="5" 
+              step="0.5" 
+              value="0" 
+              onchange="filterByRating(this.value)"
+              class="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+            />
+            <div class="text-xs text-white/50 mt-1" id="rating-display">All Ratings</div>
+          </div>
+
+          <div>
+            <label class="text-sm font-semibold text-white/70 mb-3 block uppercase">Sort By</label>
+            <select 
+              class="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:border-mint-500/50 transition text-sm"
+              onchange="sortCoupons(this.value)"
+            >
+              <option value="newest">Newest First</option>
+              <option value="discount">Highest Discount</option>
+              <option value="rating">Best Rated</option>
+              <option value="students">Most Students</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Coupons Grid -->
+      <section class="deals-grid mb-12" id="coupons-grid">
+        {coupons.map((c) => (
+          <DealCard
+            title={c.title}
+            description={c.description}
+            image={c.image}
+            price={c.price}
+            originalPrice={c.originalPrice}
+            discount={c.discount}
+            url={c.url}
+            provider={c.provider}
+            category={c.category}
+            rating={c.rating}
+            students={c.students}
+            verified={c.verified}
+            expiryDate={c.expiryDate}
+            slug={c.slug}
+          />
+        ))}
+      </section>
+
+      <!-- Pagination Controls -->
+      {totalPages > 1 && (
+        <nav class="flex justify-center gap-2 mb-16 flex-wrap" id="pagination-controls">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+            <button 
+              class={`px-3 py-2 rounded-lg transition ${
+                page === 1
+                  ? 'bg-mint-500/20 border border-mint-500/50 text-white'
+                  : 'border border-white/10 hover:bg-white/5 text-white/70 hover:text-white'
+              }`}
+              onclick={`goToPage(${page})`}
+            >
+              {page}
+            </button>
+          ))}
+        </nav>
+      )}
+
+      <!-- Info Section -->
+      <section class="py-12 border-t border-white/10">
+        <div class="grid md:grid-cols-3 gap-8 mb-12">
+          <div class="text-center">
+            <div class="text-4xl font-bold text-mint-400 mb-2">{coupons.length}+</div>
+            <div class="text-white/70">Active Coupons</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-bold text-mint-400 mb-2">100%</div>
+            <div class="text-white/70">Verified & Working</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-bold text-mint-400 mb-2">Daily</div>
+            <div class="text-white/70">Updated Coupons</div>
+          </div>
+        </div>
+
+        <!-- FAQ -->
+        <h2 class="text-2xl font-bold text-white mb-6 text-center">Common Questions</h2>
+        <div class="max-w-2xl mx-auto space-y-4">
+          <details class="group bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+            <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/10 transition font-semibold text-white">
+              How do these free coupons work?
+              <span class="text-mint-400 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div class="p-4 pt-0 text-white/70 border-t border-white/10 mt-2">
+              Click on any coupon to apply the discount to your Udemy cart. The course will show as free before checkout. All coupons are verified daily to ensure they work.
+            </div>
+          </details>
+
+          <details class="group bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+            <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/10 transition font-semibold text-white">
+              Do I need to sign up or use a code?
+              <span class="text-mint-400 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div class="p-4 pt-0 text-white/70 border-t border-white/10 mt-2">
+              No signup required on CoursesWyn. Just click the button, it redirects to Udemy with the coupon pre-applied. You only need a free Udemy account to enroll.
+            </div>
+          </details>
+
+          <details class="group bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+            <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/10 transition font-semibold text-white">
+              How long do free coupons last?
+              <span class="text-mint-400 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div class="p-4 pt-0 text-white/70 border-t border-white/10 mt-2">
+              Free coupons vary in duration (usually 1-30 days). Once enrolled, you keep the course forever. Our coupons are verified daily, so if one expires we replace it with a new one.
+            </div>
+          </details>
+        </div>
+      </section>
+    </Layout>
+  ) : (
+    // Show individual coupon detail if slug matches
+    (() => {
+      const slug = segments.join('/');
+      const entry = coupons.find((c) => c.slug === slug);
+      
+      if (!entry) {
+        return (
+          <Layout title="Coupon Not Found - CoursesWyn" description="The coupon you're looking for doesn't exist or has been removed.">
+            <div class="text-center py-16">
+              <h1 class="text-4xl font-bold text-white mb-3">404 - Coupon Not Found</h1>
+              <p class="text-white/70 mb-8">This coupon does not exist or has been removed. Check our latest deals below.</p>
+              <a href="/coupon/" class="inline-block bg-mint-500 hover:bg-mint-600 text-black font-semibold px-6 py-3 rounded-lg transition">
+                Browse All Deals
+              </a>
+            </div>
+          </Layout>
+        );
+      }
+
+      // Get related coupons (same category)
+      const relatedCoupons = coupons
+        .filter(c => c.category === entry.category && c.slug !== entry.slug)
+        .slice(0, 3);
+
+      const detailSchema = {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://courseswyn.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Coupons",
+                "item": "https://courseswyn.com/coupon/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": entry.title,
+                "item": `https://courseswyn.com/coupon/${entry.slug}/`
+              }
+            ]
+          },
+          {
+            "@type": "Product",
+            "name": entry.title,
+            "description": entry.description,
+            "image": entry.image,
+            "brand": {
+              "@type": "Brand",
+              "name": entry.provider
+            },
+            "offers": {
+              "@type": "Offer",
+              "url": entry.url,
+              "priceCurrency": "USD",
+              "price": entry.price.replace(/[^\d.-]/g, ''),
+              "availability": "https://schema.org/InStock",
+              "category": entry.category
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": entry.rating,
+              "reviewCount": entry.students
+            }
+          }
+        ]
+      };
+
+      return (
+        <Layout 
+          title={`${entry.title} - Free Udemy Coupon`}
+          description={entry.description}
+          structuredData={detailSchema}
+        >
+          <!-- Breadcrumb Navigation -->
+          <nav class="flex items-center gap-2 text-sm text-white/60 mb-8">
+            <a href="/" class="hover:text-white transition">Home</a>
+            <span>/</span>
+            <a href="/coupon/" class="hover:text-white transition">Coupons</a>
+            <span>/</span>
+            <span class="text-white">{entry.title}</span>
+          </nav>
+
+          <!-- Detail Article -->
+          <article class="mb-20">
+            <!-- Hero Section -->
+            <header class="mb-12">
+              <div class="mb-4 flex gap-2 flex-wrap items-center">
+                {entry.verified && (
+                  <div class="inline-block px-3 py-1 rounded-full bg-green-500/20 border border-green-500/50 text-green-400 text-sm font-semibold">
+                    ✓ Verified ({formatDate(entry.verifiedAt)})
+                  </div>
+                )}
+                <div class="inline-block px-3 py-1 rounded-full bg-mint-500/20 border border-mint-500/50 text-mint-400 text-sm font-semibold">
+                  Added {formatDate(entry.addedDate)}
+                </div>
+              </div>
+              <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">{entry.title}</h1>
+              <p class="text-lg text-white/70 max-w-2xl">{entry.description}</p>
+            </header>
+
+            <!-- Image + Sidebar -->
+            <div class="grid md:grid-cols-3 gap-8 mb-12">
+              <!-- Image + Content -->
+              <div class="md:col-span-2">
+                <!-- Image with Badges -->
+                <div class="relative mb-8">
+                  <img 
+                    src={entry.image} 
+                    alt={entry.title} 
+                    class="w-full h-96 object-cover rounded-2xl border border-white/10 shadow-lg" 
+                    loading="eager"
+                  />
+                  
+                  <!-- Badges Overlay -->
+                  <div class="absolute top-4 right-4 flex flex-col gap-2">
+                    {entry.level && (
+                      <span class="bg-blue-500/90 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm">
+                        {entry.level}
+                      </span>
+                    )}
+                    {entry.hasLifetimeAccess && (
+                      <span class="bg-green-500/90 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm flex items-center gap-1">
+                        ♾ Lifetime Access
+                      </span>
+                    )}
+                  </div>
+
+                  <!-- Duration Badge Bottom Left -->
+                  {entry.duration && (
+                    <div class="absolute bottom-4 left-4 bg-black/70 text-white text-xs font-semibold px-3 py-2 rounded-full backdrop-blur-sm flex items-center gap-1">
+                      ⏱ {entry.duration}
+                    </div>
+                  )}
+                </div>
+
+                <!-- About This Course -->
+                <section class="mb-16">
+                  <h2 class="text-2xl font-bold text-white mb-6">About This Course</h2>
+                  
+                  {entry.subtitle && (
+                    <p class="text-lg text-mint-400 font-semibold mb-6">{entry.subtitle}</p>
+                  )}
+                  
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 p-6 rounded-xl bg-white/5 border border-white/10">
+                    {entry.totalLectures && (
+                      <div class="text-center">
+                        <div class="text-2xl font-bold text-mint-400">{entry.totalLectures}</div>
+                        <div class="text-xs text-white/60 mt-1">Lectures</div>
+                      </div>
+                    )}
+                    <div class="text-center">
+                      <div class="text-2xl font-bold text-mint-400">{entry.duration}</div>
+                      <div class="text-xs text-white/60 mt-1">Duration</div>
+                    </div>
+                    {entry.language && (
+                      <div class="text-center">
+                        <div class="text-sm font-bold text-mint-400">{entry.language}</div>
+                        <div class="text-xs text-white/60 mt-1">Language</div>
+                      </div>
+                    )}
+                    <div class="text-center">
+                      <div class="text-sm font-bold text-mint-400">{entry.level}</div>
+                      <div class="text-xs text-white/60 mt-1">Level</div>
+                    </div>
+                  </div>
+
+                  <p class="text-white/70 leading-relaxed mb-4">
+                    <strong>What You'll Learn:</strong> This comprehensive {entry.category.toLowerCase()} course on {entry.provider} has been rated <strong>{entry.rating} out of 5 stars</strong> by <strong>{entry.students.toLocaleString()} students</strong>. The course covers essential skills and practical techniques designed for {entry.level.toLowerCase()} learners looking to advance their knowledge in this field.
+                  </p>
+
+                  <p class="text-white/70 leading-relaxed mb-4">
+                    <strong>Why Enroll:</strong> This course is currently available for <strong>FREE</strong> through an exclusive verified coupon. After enrolling, you'll have <strong>lifetime access</strong> to all course materials, video lectures, downloadable resources, and quizzes. No expiration date on your enrollment means you can learn at your own pace.
+                  </p>
+
+                  <p class="text-white/70 leading-relaxed">
+                    <strong>How to Get Started:</strong> Simply click the "Claim Free Course" button below to apply the coupon to your Udemy cart, then complete the free enrollment. The discount is automatically applied — no coupon code entry needed. You only need a free Udemy account to get started.
+                  </p>
+                </section>
+              </div>
+
+              <!-- Sidebar -->
+              <div class="space-y-6">
+                <!-- Price Card -->
+                <div class="rounded-2xl border border-mint-500/20 bg-mint-500/5 p-6">
+                  <div class="text-sm text-white/60 mb-2">{entry.provider}</div>
+                  <div class="text-4xl font-bold text-mint-400 mb-2">{entry.price}</div>
+                  <div class="text-white/60 line-through mb-2">{entry.originalPrice}</div>
+                  <div class="text-lg font-semibold text-white mb-4">{entry.discount} OFF</div>
+                  
+                  <!-- Expiry Timer -->
+                  <div class="text-sm text-yellow-400/80 bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-3 mb-4">
+                    ⏱ <span id={`timer-${entry.slug}`}>{getDaysUntilExpiry(entry.expiryDate)}d left</span>
+                  </div>
+
+                  <script is:inline define:vars={{ expiryDate: entry.expiryDate, slug: entry.slug }}>
+                    window.updateCountdownTimer(expiryDate, `timer-${slug}`);
+                  </script>
+                  
+                  <!-- CTA Button -->
+                  <a 
+                    href={entry.url} 
+                    target="_blank"
+                    rel="nofollow noopener noreferrer"
+                    class="block w-full bg-mint-500 hover:bg-mint-600 text-black font-bold py-4 rounded-lg transition text-center mb-4"
+                  >
+                    Claim Free Course →
+                  </a>
+
+                  <!-- Copy Coupon Code -->
+                  {entry.couponCode && (
+                    <div class="flex gap-2">
+                      <div class="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 flex items-center justify-between overflow-hidden">
+                        <code>{entry.couponCode}</code>
+                      </div>
+                      <button 
+                        onclick={`copyCouponCode('${entry.couponCode}', this)`}
+                        class="px-4 py-2 rounded-lg border border-white/10 hover:border-mint-500/50 hover:bg-white/5 text-white/70 hover:text-white transition text-sm font-medium"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  )}
+
+                  <div class="text-xs text-white/50 text-center mt-4">
+                    Direct link applies coupon automatically
+                  </div>
+                </div>
+
+                <!-- Rating -->
+                <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+                  <div class="flex items-center gap-2 mb-3">
+                    <div class="text-2xl font-bold text-white">{entry.rating}</div>
+                    <div class="flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <span class={i < Math.round(entry.rating) ? 'text-yellow-400' : 'text-white/30'}>★</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div class="text-sm text-white/60">
+                    {entry.students.toLocaleString()} students enrolled
+                  </div>
+                </div>
+
+                <!-- Info -->
+                <div class="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4 text-sm">
+                  <div>
+                    <div class="text-white/60 mb-1">Category</div>
+                    <div class="font-medium text-white">{entry.category}</div>
+                  </div>
+                  <div>
+                    <div class="text-white/60 mb-1">Type</div>
+                    <div class="font-medium text-white">Free Coupon</div>
+                  </div>
+                  <div>
+                    <div class="text-white/60 mb-1">Expires</div>
+                    <div class="font-medium text-white">{formatDate(entry.expiryDate)}</div>
+                  </div>
+                  <div>
+                    <div class="text-white/60 mb-1">Price Range</div>
+                    <div class="font-medium text-white">{getPriceRangeLabel(entry.priceRange)}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Related Coupons -->
+            {relatedCoupons.length > 0 && (
+              <section class="mb-16">
+                <h2 class="text-2xl font-bold text-white mb-6">Similar Deals in {entry.category}</h2>
+                <div class="deals-grid">
+                  {relatedCoupons.map((c) => (
+                    <DealCard
+                      title={c.title}
+                      description={c.description}
+                      image={c.image}
+                      price={c.price}
+                      originalPrice={c.originalPrice}
+                      discount={c.discount}
+                      url={c.url}
+                      provider={c.provider}
+                      category={c.category}
+                      rating={c.rating}
+                      students={c.students}
+                      verified={c.verified}
+                      expiryDate={c.expiryDate}
+                      slug={c.slug}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+          </article>
+        </Layout>
+      );
+    })()
+  )
+}

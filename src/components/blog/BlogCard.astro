@@ -1,0 +1,81 @@
+---
+import { Image } from 'astro:assets';
+
+interface Props {
+  title: string;
+  description: string;
+  slug: string;
+  pubDate: Date;
+  tags: string[];
+  image?: any;
+}
+
+const { title, description, slug, pubDate, tags, image } = Astro.props;
+
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+}
+
+function tagToLabel(tag: string) {
+  return tag
+    .split('-')
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(' ');
+}
+---
+
+<article class="bg-white rounded-lg shadow-sm overflow-hidden transition duration-200 hover:-translate-y-1 hover:shadow-lg">
+  {image && (
+    <a href={`/${slug}/`} class="block overflow-hidden">
+      <Image
+        src={image}
+        alt={title}
+        widths={[400, 800]}
+        sizes="(max-width: 768px) 100vw, 400px"
+        class="w-full h-48 object-cover hover:scale-105 transition duration-300"
+      />
+    </a>
+  )}
+
+  <div class="p-6">
+    <div class="flex items-center justify-between gap-2 mb-3">
+      <span class="text-xs text-gray-500">{formatDate(pubDate)}</span>
+      <div class="flex gap-2 flex-wrap justify-end">
+        {tags.map((tag) => (
+          <a href={`/category/${tag}/`} class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200">
+            {tagToLabel(tag)}
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <a href={`/${slug}/`} class="block">
+      <h3 class="text-lg font-semibold text-gray-900 line-clamp-2 hover:text-indigo-600">{title}</h3>
+    </a>
+
+    <p class="text-sm text-gray-600 mt-3 line-clamp-3">{description}</p>
+
+    <a href={`/${slug}/`} class="inline-block mt-4 text-indigo-600 hover:text-indigo-700 font-medium text-sm">
+      Read article →
+    </a>
+  </div>
+</article>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

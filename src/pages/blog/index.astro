@@ -1,59 +1,63 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import BlogCard from '../../components/blog/BlogCard.astro';
 import { fetchPosts, formatDate, paginate, tagToLabel } from '../../lib/posts';
 import Search from '../../components/Search.astro';
 
 const posts = await fetchPosts();
 const pageParam = Number(Astro.url?.searchParams.get('page') ?? '1');
-const { slice, currentPage, totalPages } = paginate(posts, isNaN(pageParam) ? 1 : pageParam, 12);
+const { slice, currentPage, totalPages } = paginate(posts, isNaN(pageParam) ? 1 : pageParam);
 
 const baseUrl = '/blog/';
 const pageHref = (page: number) => (page <= 1 ? baseUrl : `${baseUrl}?page=${page}`);
 ---
 
-<Layout title="CoursesWyn Blog" description="All CoursesWyn affiliate rundowns for Udemy prompt engineering, RAG, and generative AI.">
-  <section class="mb-10 space-y-4">
-    <p class="badge">All rundowns</p>
-    <h1 class="text-4xl font-semibold text-white">Udemy Affiliate Research Library</h1>
-    <p class="text-white/70">
-      Filtered affiliate recommendations for Udemy courses across prompt engineering, retrieval-augmented generation, and generative AI product workflows.
+<Layout title="Course Reviews & Learning Guides - CoursesWyn" description="Expert Udemy course reviews covering AI, Python, Web Development, Data Science, Excel & more. In-depth guides with real student feedback and course comparisons.">
+  <section class="mb-12 space-y-4">
+    <h1 class="text-4xl font-semibold text-white">Course Reviews & Learning Guides</h1>
+    <p class="text-white/70 max-w-2xl">
+      In-depth, independent reviews of the best Udemy courses. Find expert recommendations for AI, Python, Web Development, Data Science, and 50+ other categories.
     </p>
   </section>
 
   <Search posts={posts} />
 
-  <section class="space-y-6">
+  <section class="deals-grid my-12">
     {slice.map((post) => (
-      <article class="rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur">
-        <div class="flex flex-wrap items-center justify-between gap-2 text-sm text-white/60">
-          <span>{formatDate(post.data.pubDate)}</span>
-          <div class="flex flex-wrap gap-2">
-            {post.data.tags.map((tag) => (
-              <a class="tag-pill" href={`/category/${tag}/`}>
-                {tagToLabel(tag)}
-              </a>
-            ))}
-          </div>
-        </div>
-        <h2 class="mt-4 text-2xl font-semibold text-white">
-          <a class="hover:text-mint-300" href={`/${post.slug}/`}>
-            {post.data.title}
-          </a>
-        </h2>
-        <p class="mt-2 text-white/70">{post.data.description}</p>
-      </article>
+      <BlogCard
+        title={post.data.title}
+        description={post.data.description}
+        slug={post.slug}
+        pubDate={post.data.pubDate}
+        tags={post.data.tags}
+        image={post.data.image}
+      />
     ))}
   </section>
 
-  <nav class="mt-10 flex items-center justify-between text-sm text-white/70">
-    <a class:list={{ 'text-white': currentPage > 1, 'text-white/30 pointer-events-none': currentPage === 1 }} href={pageHref(currentPage - 1)}>
-      ← Newer
-    </a>
-    <span>
-      Page {currentPage} / {totalPages}
-    </span>
-    <a class:list={{ 'text-white': currentPage < totalPages, 'text-white/30 pointer-events-none': currentPage === totalPages }} href={pageHref(currentPage + 1)}>
-      Older →
-    </a>
-  </nav>
+  {totalPages > 1 && (
+    <nav class="mt-12 flex items-center justify-between text-sm text-white/70">
+      <a
+        class:list={{
+          'text-white hover:text-mint-300': currentPage > 1,
+          'text-white/30 pointer-events-none': currentPage === 1,
+        }}
+        href={pageHref(currentPage - 1)}
+      >
+        ← Newer posts
+      </a>
+      <span class="text-white/60">
+        Page {currentPage} of {totalPages}
+      </span>
+      <a
+        class:list={{
+          'text-white hover:text-mint-300': currentPage < totalPages,
+          'text-white/30 pointer-events-none': currentPage === totalPages,
+        }}
+        href={pageHref(currentPage + 1)}
+      >
+        Older posts →
+      </a>
+    </nav>
+  )}
 </Layout>

@@ -1,0 +1,83 @@
+---
+interface DealProps {
+  title: string;
+  description?: string;
+  image?: string;
+  provider?: string;
+  category?: string;
+  rating?: number;
+  students?: number;
+  price?: string;
+  originalPrice?: string;
+  discount?: string;
+  url?: string;
+  verified?: boolean;
+  expiryDate?: string;
+  slug?: string;
+}
+const { title, description, image, provider, category, rating, students, price, originalPrice, discount, url, verified = false, expiryDate, slug } = Astro.props as DealProps;
+
+function getDaysUntilExpiry(expiryDate: string | undefined): number {
+  if (!expiryDate) return 0;
+  const today = new Date();
+  const expiry = new Date(expiryDate);
+  const diffTime = expiry.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays);
+}
+---
+
+<article class="bg-white rounded-lg shadow-sm overflow-hidden transition duration-200 hover:-translate-y-1 hover:shadow-lg flex flex-col cursor-pointer group">
+  <a href={slug ? `/coupon/${slug}/` : '#'} class="block">
+    <div class="relative w-full bg-gray-100" style="aspect-ratio: 16/9;">
+      {image ? (
+        <img src={image} alt={title} loading="lazy" class="w-full h-full object-cover group-hover:opacity-90 transition" />
+      ) : (
+        <div class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">No image</div>
+      )}
+      
+      <!-- Badges -->
+      <div class="absolute top-3 right-3 flex flex-col gap-2">
+        {discount && <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">{discount}</span>}
+        {verified && <span class="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">✓ Verified</span>}
+      </div>
+
+      <!-- Expiry Timer -->
+      {expiryDate && (
+        <div class="absolute bottom-3 left-3 bg-yellow-400/90 text-yellow-900 text-xs font-bold px-2 py-1 rounded">
+          {getDaysUntilExpiry(expiryDate)}d left
+        </div>
+      )}
+    </div>
+  </a>
+
+  <div class="p-6 flex-1 flex flex-col">
+    <div class="flex items-start justify-between gap-4 mb-2">
+      <div class="flex-1">
+        <a href={slug ? `/coupon/${slug}/` : '#'}>
+          <h3 class="text-lg font-semibold text-gray-900 line-clamp-2 group-hover:text-indigo-600 transition">{title}</h3>
+        </a>
+        {provider && <div class="text-xs text-gray-600 mt-1">{provider}</div>}
+      </div>
+      <div class="text-right">
+        {price && <div class="text-xl font-bold text-emerald-600">{price}</div>}
+        {originalPrice && <div class="text-sm text-gray-500 line-through">{originalPrice}</div>}
+      </div>
+    </div>
+    
+    {description && <p class="text-sm text-gray-600 mb-3 line-clamp-3">{description}</p>}
+    
+    <div class="flex items-center justify-between mb-3 mt-auto">
+      <div class="flex items-center gap-2 text-sm">
+        {rating && <div class="text-yellow-500">⭐ {rating}</div>}
+        {students && <div class="text-gray-500">({students.toLocaleString()})</div>}
+      </div>
+      <a href={url || '#'} target="_blank" rel="nofollow noopener noreferrer" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-medium transition">Enroll Now</a>
+    </div>
+    {category && <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">{category}</span>}
+  </div>
+</article>
+<style>
+  .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+</style>

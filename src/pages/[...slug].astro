@@ -30,15 +30,9 @@ const slugParam = Astro.params.slug ?? "";
 const segments = slugParam.split("/").filter(Boolean);
 const site = "https://courseswyn.com";
 
-// Check if this is a coupon path and return 410 Gone
-if (segments[0] === "coupon") {
-  return new Response("Gone - Coupon pages have been permanently removed", {
-    status: 410,
-    headers: {
-      "Content-Type": "text/plain",
-    },
-  });
-}
+// Coupon paths are handled by `src/pages/coupon/[...slug].astro`.
+// Keep this file focused on blog posts and categories so coupon routes
+// won't be intercepted here.
 
 if (!segments.length) {
   return Astro.redirect("/");
@@ -53,9 +47,9 @@ let categoryMeta: {
   title: string;
   description: string;
   canonical: string;
-} | null = null;
+} | undefined = undefined;
 
-let post = null as Awaited<ReturnType<typeof fetchPosts>>[number] | undefined;
+let post: Awaited<ReturnType<typeof fetchPosts>>[number] | undefined = undefined;
 let Content:
   | Awaited<
       ReturnType<Awaited<ReturnType<typeof fetchPosts>>[number]["render"]>
@@ -77,8 +71,8 @@ if (isCategoryPage) {
     return new Response("Not found", { status: 404 });
   }
 
-  const title = `${tagToLabel(categoryTag)} Course Picks`;
-  const description = `All CoursesWyn write-ups referencing ${tagToLabel(categoryTag)} for Udemy builders.`;
+  const title = `${tagToLabel(categoryTag)} Course Reviews & Guides`;
+  const description = `Expert ${tagToLabel(categoryTag)} course reviews and learning guides. Find the best Udemy courses in this category with independent ratings and student feedback.`;
   categoryMeta = {
     title,
     description,
@@ -187,7 +181,7 @@ if (isCategoryPage) {
       description={post.data.description}
       canonical={canonical}
       ogImage={post.data.image?.src}
-      structuredData={structuredData}
+      structuredData={structuredData || undefined}
     >
       <article class="mx-auto max-w-3xl space-y-10">
         <nav class="text-sm text-white/60 mb-4">
