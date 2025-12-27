@@ -28,41 +28,43 @@ function tagToLabel(tag: string) {
 }
 ---
 
-<article class="bg-white rounded-lg shadow-sm overflow-hidden transition duration-200 hover:-translate-y-1 hover:shadow-lg">
+<article class="group bg-gradient-to-br from-slate-800/60 to-slate-900/60 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/20 border border-white/10 backdrop-blur-sm" itemscope itemtype="https://schema.org/BlogPosting">
   {image && (
     <a href={`/${slug}/`} class="block overflow-hidden">
       <Image
         src={image}
-        alt={title}
+        alt={`${title} - course review and guide`}
         widths={[400, 800]}
         sizes="(max-width: 768px) 100vw, 400px"
-        class="w-full h-48 object-cover hover:scale-105 transition duration-300"
+        class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+        itemprop="image"
       />
     </a>
   )}
 
-  <div class="p-6">
-    <div class="flex items-center justify-between gap-2 mb-3">
-      <span class="text-xs text-gray-500">{formatDate(pubDate)}</span>
-      <div class="flex gap-2 flex-wrap justify-end">
-        {tags.map((tag) => (
-          <a href={`/category/${tag}/`} class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200">
-            {tagToLabel(tag)}
-          </a>
-        ))}
-      </div>
+  <div class="p-6 flex flex-col h-full">
+    <div class="flex items-center justify-between gap-2 mb-4">
+      <time class="text-xs text-white/60 font-medium" itemprop="datePublished">{formatDate(pubDate)}</time>
+      {tags.length > 0 && (
+        <a href={`/category/${tags[0]}/`} class="text-xs bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 px-3 py-1.5 rounded-lg hover:from-emerald-500/40 hover:to-teal-500/40 transition-all border border-emerald-500/30 whitespace-nowrap" itemprop="keywords">
+          {tagToLabel(tags[0])}
+        </a>
+      )}
     </div>
 
     <a href={`/${slug}/`} class="block">
-      <h3 class="text-lg font-semibold text-gray-900 line-clamp-2 hover:text-indigo-600">{title}</h3>
+      <h3 class="text-lg font-bold text-white line-clamp-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-indigo-400 group-hover:to-purple-400 group-hover:bg-clip-text transition-all" itemprop="headline">{title}</h3>
     </a>
 
-    <p class="text-sm text-gray-600 mt-3 line-clamp-3">{description}</p>
+    <p class="text-sm text-white/70 mt-3 line-clamp-3 flex-grow" itemprop="description">{description}</p>
 
-    <a href={`/${slug}/`} class="inline-block mt-4 text-indigo-600 hover:text-indigo-700 font-medium text-sm">
-      Read article →
+    <a href={`/${slug}/`} class="inline-flex items-center gap-2 mt-6 px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 hover:from-cyan-500/40 hover:to-blue-500/40 font-semibold text-sm transition-all border border-cyan-500/30 w-fit">
+      Read article <span>→</span>
     </a>
+    <meta itemprop="url" content={`https://courseswyn.com/${slug}/`} />
+    <meta itemprop="author" content="CoursesWyn" />
   </div>
+</article>
 </article>
 
 <style>

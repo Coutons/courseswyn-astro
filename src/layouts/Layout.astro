@@ -10,9 +10,11 @@ interface Props {
   canonical?: string;
   ogImage?: string;
   structuredData?: Record<string, any>;
+  paginationNext?: string;
+  paginationPrev?: string;
 }
 
-const { title, description, canonical, ogImage, structuredData } = Astro.props;
+const { title, description, canonical, ogImage, structuredData, paginationNext, paginationPrev } = Astro.props;
 const currentPath = Astro.url.pathname;
 const segments = currentPath.split("/").filter(Boolean);
 const isHomepage = currentPath === "/";
@@ -49,6 +51,8 @@ const allPosts = await fetchPosts();
     <meta name="twitter:image" content={finalOgImage} />
     <link rel="canonical" href={finalCanonical} />
     <link rel="alternate" hreflang="en" href={finalCanonical} />
+    {paginationNext && <link rel="next" href={paginationNext} />}
+    {paginationPrev && <link rel="prev" href={paginationPrev} />}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -135,7 +139,7 @@ const allPosts = await fetchPosts();
   <body class="min-h-screen bg-surface text-white antialiased">
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-mint-500 text-white px-4 py-2 rounded"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold"
       >Skip to content</a
     >
     <div
@@ -143,39 +147,51 @@ const allPosts = await fetchPosts();
     >
     </div>
     <header
-      class="sticky top-0 z-50 border-b border-white/5 bg-surface/80 backdrop-blur"
+      class="sticky top-0 z-50 border-b border-white/10 bg-gradient-to-r from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-xl shadow-lg shadow-indigo-500/5"
     >
       <div
         class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4"
       >
         <a
           href="/"
-          class="flex items-center gap-2 text-lg font-semibold tracking-tight"
+          class="flex items-center gap-2 text-lg font-bold tracking-tight group"
         >
           <span
-            class="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-mint-500/20 text-mint-300"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/30 to-purple-600/30 text-transparent bg-clip-text font-black border border-indigo-500/30 group-hover:border-indigo-500/60 group-hover:shadow-lg group-hover:shadow-indigo-500/20 transition-all"
           >
             CW
           </span>
-          <span class="hidden sm:inline">CoursesWyn</span>
+          <span class="hidden sm:inline bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">CoursesWyn</span>
         </a>
         <div class="hidden md:block flex-1 max-w-md mx-6">
           <Search posts={allPosts} />
         </div>
         <nav class="hidden gap-8 text-sm text-white/70 md:flex items-center">
-          <a class="hover:text-mint-300 transition" href="/coupon/">Free Coupons</a>
-          <a class="hover:text-mint-300 transition" href="/blog/">Course Reviews</a>
-          <a class="hover:text-mint-300 transition" href="/about/">About</a>
-          <a class="hover:text-mint-300 transition" href="/contact-us/">Contact</a>
+          <a class="group relative font-medium transition-all duration-300 hover:text-indigo-300" href="/coupon/">
+            Free Coupons
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
+          </a>
+          <a class="group relative font-medium transition-all duration-300 hover:text-purple-300" href="/blog/">
+            Course Reviews
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300"></span>
+          </a>
+          <a class="group relative font-medium transition-all duration-300 hover:text-cyan-300" href="/about/">
+            About
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-cyan-400 to-blue-400 group-hover:w-full transition-all duration-300"></span>
+          </a>
+          <a class="group relative font-medium transition-all duration-300 hover:text-emerald-300" href="/contact-us/">
+            Contact
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-400 to-teal-400 group-hover:w-full transition-all duration-300"></span>
+          </a>
         </nav>
 
         <!-- Mobile Menu Button -->
         <button
-          class="md:hidden p-2 hover:bg-white/5 rounded-lg transition"
+          class="md:hidden p-2 hover:bg-gradient-to-br hover:from-indigo-500/20 hover:to-purple-500/20 rounded-lg transition-all border border-transparent hover:border-indigo-500/30"
           aria-label="Open menu"
           onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
         </button>
@@ -204,18 +220,18 @@ const allPosts = await fetchPosts();
       </div>
 
       <!-- Mobile Menu -->
-      <div id="mobile-menu" class="hidden md:hidden border-t border-white/5 bg-surface/95 backdrop-blur">
-        <nav class="flex flex-col p-4 space-y-3">
-          <a href="/coupon/" class="block px-4 py-2 rounded-lg hover:bg-white/5 text-white/70 hover:text-mint-300 transition">
+      <div id="mobile-menu" class="hidden md:hidden border-t border-indigo-500/20 bg-gradient-to-b from-slate-800/95 via-slate-900/95 to-slate-900/95 backdrop-blur-xl">
+        <nav class="flex flex-col p-4 space-y-2">
+          <a href="/coupon/" class="block px-4 py-3 rounded-lg bg-gradient-to-r hover:from-indigo-500/20 hover:to-purple-500/20 text-white/70 hover:text-indigo-300 font-medium transition-all border border-transparent hover:border-indigo-500/30">
             Free Coupons
           </a>
-          <a href="/blog/" class="block px-4 py-2 rounded-lg hover:bg-white/5 text-white/70 hover:text-mint-300 transition">
+          <a href="/blog/" class="block px-4 py-3 rounded-lg bg-gradient-to-r hover:from-purple-500/20 hover:to-pink-500/20 text-white/70 hover:text-purple-300 font-medium transition-all border border-transparent hover:border-purple-500/30">
             Course Reviews
           </a>
-          <a href="/about/" class="block px-4 py-2 rounded-lg hover:bg-white/5 text-white/70 hover:text-mint-300 transition">
+          <a href="/about/" class="block px-4 py-3 rounded-lg bg-gradient-to-r hover:from-cyan-500/20 hover:to-blue-500/20 text-white/70 hover:text-cyan-300 font-medium transition-all border border-transparent hover:border-cyan-500/30">
             About
           </a>
-          <a href="/contact-us/" class="block px-4 py-2 rounded-lg hover:bg-white/5 text-white/70 hover:text-mint-300 transition">
+          <a href="/contact-us/" class="block px-4 py-3 rounded-lg bg-gradient-to-r hover:from-emerald-500/20 hover:to-teal-500/20 text-white/70 hover:text-emerald-300 font-medium transition-all border border-transparent hover:border-emerald-500/30">
             Contact
           </a>
         </nav>
@@ -224,29 +240,29 @@ const allPosts = await fetchPosts();
 
     {
       !isHomepage && (
-        <nav aria-label="Breadcrumb" class="mx-auto max-w-6xl px-4 py-4">
-          <ol class="flex items-center gap-2 text-sm text-white/60">
+        <nav aria-label="Breadcrumb" class="mx-auto max-w-6xl px-4 py-4 border-b border-white/5">
+          <ol class="flex items-center gap-2 text-sm">
             <li>
-              <a href="/" class="hover:text-white">
+              <a href="/" class="text-white/60 hover:text-indigo-300 transition-colors font-medium">
                 Home
               </a>
             </li>
-            <li class="text-white/40">/</li>
+            <li class="text-white/30">/</li>
             {segments.map((segment, index) => (
               <li class="flex items-center gap-2">
                 {index === segments.length - 1 ? (
-                  <span class="text-white/80 capitalize">
+                  <span class="text-white/70 capitalize font-medium">
                     {segment.replace(/-/g, " ")}
                   </span>
                 ) : (
                   <>
                     <a
                       href={`/${segments.slice(0, index + 1).join("/")}/`}
-                      class="hover:text-white capitalize"
+                      class="text-white/60 hover:text-indigo-300 capitalize font-medium transition-colors"
                     >
                       {segment.replace(/-/g, " ")}
                     </a>
-                    <span class="text-white/40">/</span>
+                    <span class="text-white/30">/</span>
                   </>
                 )}
               </li>
