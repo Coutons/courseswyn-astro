@@ -27,56 +27,142 @@ function getDaysUntilExpiry(expiryDate: string | undefined): number {
 }
 ---
 
-<article class="bg-white rounded-lg shadow-sm overflow-hidden transition duration-200 hover:-translate-y-1 hover:shadow-lg flex flex-col cursor-pointer group">
-  <a href={slug ? `/coupon/${slug}/` : '#'} class="block">
+<article class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-105 flex flex-col cursor-pointer group h-full border border-slate-200 hover:border-indigo-400 relative">
+  <!-- Corner Accent -->
+  <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-300"></div>
+  <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-500/10 to-teal-500/10 rounded-full -ml-12 -mb-12"></div>
+
+  <!-- Image Section with Overlay -->
+  <a href={slug ? `/coupon/${slug}/` : '#'} class="block relative overflow-hidden group/img">
     <div class="relative w-full bg-gray-100" style="aspect-ratio: 16/9;">
       {image ? (
-        <img src={image} alt={title} loading="lazy" class="w-full h-full object-cover group-hover:opacity-90 transition" />
+        <img src={image} alt={title} loading="lazy" class="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-500" />
       ) : (
-        <div class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">No image</div>
+        <div class="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-gray-500 font-semibold">Course Image</div>
       )}
       
-      <!-- Badges -->
-      <div class="absolute top-3 right-3 flex flex-col gap-2">
-        {discount && <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">{discount}</span>}
-        {verified && <span class="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">✓ Verified</span>}
+      <!-- Gradient Overlay -->
+      <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-300"></div>
+
+      <!-- Badge Container -->
+      <div class="absolute top-4 right-4 flex flex-col gap-2 z-10">
+        {discount && (
+          <div class="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm">
+            {discount}
+          </div>
+        )}
+        {verified && (
+          <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
+            <span>✓</span> Verified
+          </div>
+        )}
       </div>
 
-      <!-- Expiry Timer -->
+      <!-- Expiry Timer - Bottom Left -->
       {expiryDate && (
-        <div class="absolute bottom-3 left-3 bg-yellow-400/90 text-yellow-900 text-xs font-bold px-2 py-1 rounded">
-          {getDaysUntilExpiry(expiryDate)}d left
+        <div class="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm text-slate-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+          ⏱ {getDaysUntilExpiry(expiryDate)}d left
         </div>
       )}
     </div>
   </a>
 
-  <div class="p-6 flex-1 flex flex-col">
-    <div class="flex items-start justify-between gap-4 mb-2">
-      <div class="flex-1">
-        <a href={slug ? `/coupon/${slug}/` : '#'}>
-          <h3 class="text-lg font-semibold text-gray-900 line-clamp-2 group-hover:text-indigo-600 transition">{title}</h3>
-        </a>
-        {provider && <div class="text-xs text-gray-600 mt-1">{provider}</div>}
-      </div>
-      <div class="text-right">
-        {price && <div class="text-xl font-bold text-emerald-600">{price}</div>}
-        {originalPrice && <div class="text-sm text-gray-500 line-through">{originalPrice}</div>}
-      </div>
+  <!-- Content Section -->
+  <div class="p-5 flex-1 flex flex-col h-72 relative z-10">
+    <!-- Top Info Row -->
+    <div class="flex items-center justify-between gap-2 mb-3">
+      {provider && (
+        <span class="text-xs font-bold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">
+          {provider}
+        </span>
+      )}
+      {category && (
+        <span class="text-xs font-medium text-slate-600 bg-slate-200 px-2.5 py-1 rounded-full ml-auto">
+          {category}
+        </span>
+      )}
     </div>
-    
-    {description && <p class="text-sm text-gray-600 mb-3 line-clamp-3">{description}</p>}
-    
-    <div class="flex items-center justify-between mb-3 mt-auto">
-      <div class="flex items-center gap-2 text-sm">
-        {rating && <div class="text-yellow-500">⭐ {rating}</div>}
-        {students && <div class="text-gray-500">({students.toLocaleString()})</div>}
+
+    <!-- Title -->
+    <a href={slug ? `/coupon/${slug}/` : '#'}>
+      <h3 class="text-base font-bold text-slate-900 line-clamp-2 group-hover:text-indigo-600 transition-colors mb-2 leading-tight">
+        {title}
+      </h3>
+    </a>
+
+    <!-- Description with gradient text -->
+    {description && (
+      <p class="text-sm text-slate-600 line-clamp-2 mb-3 leading-snug">
+        {description}
+      </p>
+    )}
+
+    <!-- Rating Section - Unique Style -->
+    {(rating || students) && (
+      <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-200">
+        {rating && (
+          <div class="flex items-center gap-1.5">
+            <div class="flex gap-0.5">
+              {[...Array(5)].map((_, i) => (
+                <span key={i} class={i < Math.floor(rating) ? 'text-yellow-400 text-sm' : 'text-slate-300 text-sm'}>
+                  ★
+                </span>
+              ))}
+            </div>
+            <span class="text-xs font-bold text-slate-800">{rating}</span>
+          </div>
+        )}
+        {students && (
+          <span class="text-xs text-slate-500 ml-auto">
+            <span class="font-semibold text-slate-700">{students.toLocaleString()}</span> enrolled
+          </span>
+        )}
       </div>
-      <a href={url || '#'} target="_blank" rel="nofollow noopener noreferrer" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-medium transition">Enroll Now</a>
-    </div>
-    {category && <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">{category}</span>}
+    )}
+
+    <!-- Price Section - Highlight -->
+    {(price || originalPrice) && (
+      <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-3 mb-4 border border-emerald-200">
+        <div class="flex items-baseline gap-2 justify-center">
+          {price && (
+            <span class="text-2xl font-black text-emerald-600">
+              {price}
+            </span>
+          )}
+          {originalPrice && (
+            <span class="text-sm font-medium text-slate-400 line-through">
+              {originalPrice}
+            </span>
+          )}
+        </div>
+        {discount && (
+          <div class="text-xs text-center text-emerald-600 font-semibold mt-1">
+            Save {discount}
+          </div>
+        )}
+      </div>
+    )}
+
+    <!-- CTA Button - Full Width -->
+    <a href={url || '#'} target="_blank" rel="nofollow noopener noreferrer" class="mt-auto w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold py-3 rounded-xl transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0 text-center text-sm shadow-lg hover:shadow-xl relative overflow-hidden group/btn">
+      <span class="relative z-10 flex items-center justify-center gap-2">
+        Enroll Now
+        <svg class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+      </span>
+    </a>
   </div>
 </article>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
 <style>
   .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }

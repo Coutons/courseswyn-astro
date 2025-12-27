@@ -140,7 +140,33 @@ const totalPages = Math.ceil(totalCoupons / ITEMS_PER_PAGE);
         break;
     }
 
+    updateCouponsDisplay();
     updatePagination();
+  }
+
+  function updateCouponsDisplay() {
+    const grid = document.getElementById('coupons-grid');
+    if (!grid) return;
+
+    const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIdx = startIdx + ITEMS_PER_PAGE;
+    const pageItems = filteredCoupons.slice(startIdx, endIdx);
+
+    // Get all coupon cards
+    const cards = grid.querySelectorAll('[data-coupon-slug]');
+    
+    // Hide all cards
+    cards.forEach(card => {
+      card.style.display = 'none';
+    });
+
+    // Show only cards for current page
+    pageItems.forEach(coupon => {
+      const card = grid.querySelector(`[data-coupon-slug="${coupon.slug}"]`);
+      if (card) {
+        card.style.display = '';
+      }
+    });
   }
 
   function updatePagination() {
@@ -190,6 +216,7 @@ const totalPages = Math.ceil(totalCoupons / ITEMS_PER_PAGE);
     if (page >= 1 && page <= totalPages) {
       currentPage = page;
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      updateCouponsDisplay();
       updatePagination();
     }
   }
@@ -377,22 +404,24 @@ const totalPages = Math.ceil(totalCoupons / ITEMS_PER_PAGE);
       <!-- Coupons Grid -->
       <section class="deals-grid mb-12" id="coupons-grid">
         {coupons.map((c) => (
-          <DealCard
-            title={c.title}
-            description={c.description}
-            image={c.image}
-            price={c.price}
-            originalPrice={c.originalPrice}
-            discount={c.discount}
-            url={c.url}
-            provider={c.provider}
-            category={c.category}
-            rating={c.rating}
-            students={c.students}
-            verified={c.verified}
-            expiryDate={c.expiryDate}
-            slug={c.slug}
-          />
+          <div data-coupon-slug={c.slug}>
+            <DealCard
+              title={c.title}
+              description={c.description}
+              image={c.image}
+              price={c.price}
+              originalPrice={c.originalPrice}
+              discount={c.discount}
+              url={c.url}
+              provider={c.provider}
+              category={c.category}
+              rating={c.rating}
+              students={c.students}
+              verified={c.verified}
+              expiryDate={c.expiryDate}
+              slug={c.slug}
+            />
+          </div>
         ))}
       </section>
 
@@ -653,6 +682,112 @@ const totalPages = Math.ceil(totalCoupons / ITEMS_PER_PAGE);
                   <p class="text-white/70 leading-relaxed">
                     <strong>How to Get Started:</strong> Simply click the "Claim Free Course" button below to apply the coupon to your Udemy cart, then complete the free enrollment. The discount is automatically applied — no coupon code entry needed. You only need a free Udemy account to get started.
                   </p>
+                </section>
+
+                <!-- Course FAQs -->
+                <section class="mb-16">
+                  <h2 class="text-2xl font-bold text-white mb-6">Frequently Asked Questions</h2>
+                  <div class="space-y-4">
+                    <!-- FAQ: What will I learn -->
+                    <details class="group bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+                      <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/10 transition font-semibold text-white">
+                        What are the main topics covered in this course?
+                        <span class="text-mint-400 group-open:rotate-180 transition-transform">▼</span>
+                      </summary>
+                      <div class="p-4 pt-0 text-white/70 border-t border-white/10 mt-2">
+                        <p class="mb-3">{entry.description}</p>
+                        <p>You'll gain hands-on experience in {entry.category.toLowerCase()} and learn industry-standard practices that you can immediately apply to your projects and career growth.</p>
+                      </div>
+                    </details>
+
+                    <!-- FAQ: Course level -->
+                    <details class="group bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+                      <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/10 transition font-semibold text-white">
+                        Who should take this course?
+                        <span class="text-mint-400 group-open:rotate-180 transition-transform">▼</span>
+                      </summary>
+                      <div class="p-4 pt-0 text-white/70 border-t border-white/10 mt-2">
+                        This course is designed for {entry.level.toLowerCase()} learners. {entry.level === 'Beginner' ? 'No prior experience is required. The course starts with fundamentals and gradually builds up complexity, making it perfect for anyone new to this field.' : entry.level === 'Intermediate' ? 'You should have basic foundational knowledge of the subject. This course assumes some prior understanding and builds upon it with more advanced concepts.' : 'This course is for advanced learners with strong foundational knowledge. It covers complex topics and advanced techniques for experienced professionals.'} Regardless of where you are in your learning journey, you'll find valuable content tailored to your level.
+                      </div>
+                    </details>
+
+                    <!-- FAQ: Course duration -->
+                    <details class="group bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+                      <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/10 transition font-semibold text-white">
+                        How much time do I need to dedicate to complete this course?
+                        <span class="text-mint-400 group-open:rotate-180 transition-transform">▼</span>
+                      </summary>
+                      <div class="p-4 pt-0 text-white/70 border-t border-white/10 mt-2">
+                        The total course content is approximately {entry.duration}. However, your actual completion time depends on your pace and learning style. Some students complete the course faster, while others prefer to spend more time on practice and projects. With lifetime access, you can learn at your own speed and revisit lessons whenever needed.
+                      </div>
+                    </details>
+
+                    <!-- FAQ: Certificate -->
+                    <details class="group bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+                      <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/10 transition font-semibold text-white">
+                        Do I receive a certificate upon completion?
+                        <span class="text-mint-400 group-open:rotate-180 transition-transform">▼</span>
+                      </summary>
+                      <div class="p-4 pt-0 text-white/70 border-t border-white/10 mt-2">
+                        Yes! Upon completion, you'll receive a certificate of completion from {entry.provider}. This recognized credential can be added to your LinkedIn profile, resume, and portfolio to demonstrate your expertise and commitment to professional development to employers and clients.
+                      </div>
+                    </details>
+
+                    <!-- FAQ: Lifetime access -->
+                    <details class="group bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+                      <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/10 transition font-semibold text-white">
+                        What kind of access will I have to the course materials?
+                        <span class="text-mint-400 group-open:rotate-180 transition-transform">▼</span>
+                      </summary>
+                      <div class="p-4 pt-0 text-white/70 border-t border-white/10 mt-2">
+                        You get unlimited lifetime access to all course materials, including video lectures, downloadable resources, source code, and quizzes. There's no expiration date on your enrollment. You can revisit the course anytime, stay updated with new content, and refresh your knowledge as needed.
+                      </div>
+                    </details>
+
+                    <!-- FAQ: Instructor support -->
+                    <details class="group bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+                      <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/10 transition font-semibold text-white">
+                        Can I get help if I have questions?
+                        <span class="text-mint-400 group-open:rotate-180 transition-transform">▼</span>
+                      </summary>
+                      <div class="p-4 pt-0 text-white/70 border-t border-white/10 mt-2">
+                        Absolutely! You'll have access to the {entry.provider} community where you can ask questions and get answers from the instructor and fellow students. The active community provides peer support, and most questions are answered promptly. You'll benefit from collaborative learning with thousands of students worldwide.
+                      </div>
+                    </details>
+
+                    <!-- FAQ: Quality and rating -->
+                    <details class="group bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+                      <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/10 transition font-semibold text-white">
+                        How is the course quality assessed?
+                        <span class="text-mint-400 group-open:rotate-180 transition-transform">▼</span>
+                      </summary>
+                      <div class="p-4 pt-0 text-white/70 border-t border-white/10 mt-2">
+                        This course has earned a {entry.rating} out of 5 stars rating from {entry.students.toLocaleString()} student reviews. These ratings reflect the course's effectiveness, instructor expertise, content quality, and overall value. High ratings indicate that students found the course engaging, practical, and successful in achieving learning objectives.
+                      </div>
+                    </details>
+
+                    <!-- FAQ: Free coupon -->
+                    <details class="group bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+                      <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/10 transition font-semibold text-white">
+                        How can I access this course for free?
+                        <span class="text-mint-400 group-open:rotate-180 transition-transform">▼</span>
+                      </summary>
+                      <div class="p-4 pt-0 text-white/70 border-t border-white/10 mt-2">
+                        Course instructors on {entry.provider} periodically offer free access through limited-time coupons and promotions. This course is currently available for free with a verified coupon (valid until {formatDate(entry.expiryDate)}). Simply click "Claim Free Course" to apply the coupon and enroll. No credit card is required, and you get the same full access as paying students.
+                      </div>
+                    </details>
+
+                    <!-- FAQ: How to enroll -->
+                    <details class="group bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+                      <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-white/10 transition font-semibold text-white">
+                        How do I get started with enrollment?
+                        <span class="text-mint-400 group-open:rotate-180 transition-transform">▼</span>
+                      </summary>
+                      <div class="p-4 pt-0 text-white/70 border-t border-white/10 mt-2">
+                        Getting started is simple: Click the "Claim Free Course" button, which takes you to {entry.provider} with the coupon pre-applied. You'll see the course price as free in your cart. Complete the enrollment process with your {entry.provider} account (create one if you don't have it), and you'll immediately get access to all course materials.
+                      </div>
+                    </details>
+                  </div>
                 </section>
               </div>
 
