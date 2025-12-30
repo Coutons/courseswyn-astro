@@ -1,0 +1,199 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import DealCard from '../../components/coupon/DealCard.astro';
+import coupons from '../../data/coupons.json';
+
+const CATEGORY = 'Data Science';
+const ITEMS_PER_PAGE = 12;
+
+export async function getStaticPaths() {
+  return [{ params: {} }];
+}
+
+const dsCoupons = coupons.filter(c => c.category === 'Data Science' || c.title.toLowerCase().includes('data'));
+const totalCoupons = dsCoupons.length;
+const totalPages = Math.ceil(totalCoupons / ITEMS_PER_PAGE);
+const currentMonthYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+const couponsLast24h = dsCoupons.filter(c => {
+  const now = new Date();
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  return new Date(c.addedDate) >= oneDayAgo && new Date(c.addedDate) <= now;
+}).length;
+
+const couponsJSON = JSON.stringify(dsCoupons);
+---
+
+<script define:vars={{ couponsJSON, ITEMS_PER_PAGE }}>
+  const couponsData = JSON.parse(couponsJSON);
+  let filteredCoupons = [...couponsData];
+  let currentPage = 1;
+
+  window.goToPage = function(page) {
+    currentPage = Math.max(1, Math.min(page, Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE)));
+    updateCouponsDisplay();
+    updatePagination();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  function updateCouponsDisplay() {
+    const grid = document.getElementById('coupons-grid');
+    if (!grid) return;
+    const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIdx = startIdx + ITEMS_PER_PAGE;
+    const pageItems = filteredCoupons.slice(startIdx, endIdx);
+    const cards = grid.querySelectorAll('[data-coupon-slug]');
+    cards.forEach(card => card.style.display = 'none');
+    pageItems.forEach(coupon => {
+      const card = grid.querySelector(`[data-coupon-slug="${coupon.slug}"]`);
+      if (card) card.style.display = '';
+    });
+  }
+
+  function updatePagination() {
+    const totalPages = Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE);
+    const paginationControls = document.getElementById('pagination-controls');
+    if (paginationControls) {
+      paginationControls.innerHTML = '';
+      if (totalPages <= 1) return;
+      for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = String(i);
+        pageBtn.className = `px-3 py-2 rounded-lg transition ${
+          i === currentPage 
+            ? 'bg-green-500/20 border border-green-500/50 text-white' 
+            : 'border border-white/10 hover:bg-white/5 text-white/70 hover:text-white'
+        }`;
+        pageBtn.onclick = () => window.goToPage(i);
+        paginationControls.appendChild(pageBtn);
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateCouponsDisplay();
+    updatePagination();
+  });
+</script>
+
+<Layout 
+  title={`Data Science & Analytics Courses - Free 100% Off Udemy Coupons ${currentMonthYear}`}
+  description={`Browse ${totalCoupons}+ free 100% off Udemy data science coupons. Learn Python, pandas, SQL, machine learning, data visualization. Verified daily with ${couponsLast24h}+ new courses.`}
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": `Free Data Science Udemy Coupons ${currentMonthYear}`,
+    "description": `${totalCoupons}+ verified 100% off Udemy data science courses`,
+    "url": `https://courseswyn.com/coupon/data-science/`,
+    "mainEntity": {
+      "@type": "AggregateOffer",
+      "name": `Free Data Science Courses with 100% Off Coupons`,
+      "price": "0",
+      "priceCurrency": "USD",
+      "offerCount": totalCoupons
+    }
+  }}
+>
+  <section class="mb-16 relative">
+    <div class="absolute inset-0 -z-10">
+      <div class="absolute top-0 left-1/4 w-72 h-72 bg-green-500/20 rounded-full blur-3xl animate-pulse"></div>
+      <div class="absolute bottom-0 right-1/4 w-72 h-72 bg-emerald-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+    </div>
+
+    <div class="relative">
+      <div class="inline-flex items-center gap-3 mb-6">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/40">
+          <span class="w-2 h-2 rounded-full bg-gradient-to-r from-green-400 to-emerald-400 animate-pulse"></span>
+          <span class="text-xs font-semibold text-green-300">✓ Verified Daily</span>
+        </div>
+      </div>
+
+      <h1 class="text-5xl md:text-6xl lg:text-7xl font-black text-white mb-2 leading-tight">
+        Best <strong>Data Science & Analytics</strong> Courses<br />
+        <span class="bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent">100% Off Udemy Coupons</span>
+      </h1>
+      <p class="text-lg md:text-xl text-green-300 font-semibold mb-6\">Master Python, SQL, Pandas, Machine Learning & Data Analysis - Free Daily Updates</p>
+
+      <p class="text-lg text-white/80 leading-relaxed mb-6 max-w-2xl">
+        Learn <strong>data science</strong> with {totalCoupons}+ verified 100% off Udemy coupons. Master Python, pandas, SQL, Tableau, Power BI, machine learning with lifetime access and certificates. {couponsLast24h}+ new data science courses added daily.
+      </p>
+
+      <a href="#coupons-grid" class="inline-block px-8 py-4 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:shadow-lg hover:shadow-green-500/50 text-white font-bold transition">
+        Browse {totalCoupons}+ Free Data Science Courses ↓
+      </a>
+    </div>
+  </section>
+
+  <section class="mb-16 py-12 rounded-2xl bg-gradient-to-r from-green-500/20 via-emerald-500/15 to-teal-500/10 border border-green-500/30 backdrop-blur-sm p-8">
+    <h2 class="text-3xl md:text-4xl font-black text-white mb-6">
+      Why Learn <strong>Data Science</strong> in {currentMonthYear}?
+    </h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="flex gap-4">
+        <div class="text-3xl">📊</div>
+        <div>
+          <h3 class="font-bold text-white mb-2">Highest Paying Tech Role</h3>
+          <p class="text-white/70 text-sm">Data scientists earn $130K-$200K+ annually. Extract insights, build predictive models, and drive business decisions with our free courses.</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <div class="text-3xl">🔬</div>
+        <div>
+          <h3 class="font-bold text-white mb-2">Hands-On Learning</h3>
+          <p class="text-white/70 text-sm\">Analyze real datasets, build ML models, create visualizations. Work with industry tools: Python, SQL, pandas, scikit-learn, Tableau.</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <div class="text-3xl\">💯</div>
+        <div>
+          <h3 class="font-bold text-white mb-2">100% Free Education</h3>
+          <p class="text-white/70 text-sm">{totalCoupons}+ data science courses completely free. Lifetime access. Certificates. Save $6,000+.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-16">
+    <h2 class="text-3xl md:text-4xl font-black text-white mb-8">
+      {totalCoupons}+ Free Data Science Courses with 100% Off Coupons
+    </h2>
+
+    <section class="deals-grid mb-12" id="coupons-grid">
+      {dsCoupons.map((c) => (
+        <div data-coupon-slug={c.slug}>
+          <DealCard
+            title={c.title}
+            description={c.description}
+            image={c.image}
+            price={c.price}
+            originalPrice={c.originalPrice}
+            discount={c.discount}
+            url={c.url}
+            provider={c.provider}
+            category={c.category}
+            rating={c.rating}
+            students={c.students}
+            verified={c.verified}
+            expiryDate={c.expiryDate}
+            slug={c.slug}
+          />
+        </div>
+      ))}
+    </section>
+
+    {totalPages > 1 && (
+      <nav class="flex justify-center gap-2 mb-12 flex-wrap" id="pagination-controls"></nav>
+    )}
+  </section>
+
+  <section class="mb-16 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl p-8 border border-green-500/30 backdrop-blur-sm">
+    <h2 class="text-3xl font-black text-white mb-4">
+      Start Your Data Science Career Free
+    </h2>
+    <p class="text-white/80 mb-6">
+      Access {totalCoupons}+ verified 100% off data science courses. Learn Python, machine learning, statistics, SQL. Lifetime access. Professional certificates. Join the data revolution.
+    </p>
+    <a href="#coupons-grid" class="inline-block px-8 py-4 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:shadow-lg hover:shadow-green-500/50 text-white font-bold transition">
+      Browse All Free Data Science Courses Now →
+    </a>
+  </section>
+</Layout>

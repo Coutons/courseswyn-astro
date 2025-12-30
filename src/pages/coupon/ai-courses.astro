@@ -1,0 +1,314 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import DealCard from '../../components/coupon/DealCard.astro';
+
+import coupons from '../../data/coupons.json';
+
+// Category constants
+const CATEGORY = 'Artificial Intelligence';
+const ITEMS_PER_PAGE = 12;
+
+export async function getStaticPaths() {
+  return [{ params: {} }];
+}
+
+// Filter coupons by AI category
+const aiCoupons = coupons.filter(c => c.category === CATEGORY);
+const totalCoupons = aiCoupons.length;
+const totalPages = Math.ceil(totalCoupons / ITEMS_PER_PAGE);
+const currentMonthYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+const couponsLast24h = aiCoupons.filter(c => {
+  const now = new Date();
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  return new Date(c.addedDate) >= oneDayAgo && new Date(c.addedDate) <= now;
+}).length;
+
+const couponsJSON = JSON.stringify(aiCoupons);
+---
+
+<script define:vars={{ couponsJSON, ITEMS_PER_PAGE, CATEGORY }}>
+  const couponsData = JSON.parse(couponsJSON);
+  let filteredCoupons = [...couponsData];
+  let currentPage = 1;
+
+  window.goToPage = function(page) {
+    currentPage = Math.max(1, Math.min(page, Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE)));
+    applyFiltersAndSort();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  function applyFiltersAndSort() {
+    updateCouponsDisplay();
+    updatePagination();
+  }
+
+  function updateCouponsDisplay() {
+    const grid = document.getElementById('coupons-grid');
+    if (!grid) return;
+
+    const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIdx = startIdx + ITEMS_PER_PAGE;
+    const pageItems = filteredCoupons.slice(startIdx, endIdx);
+
+    const cards = grid.querySelectorAll('[data-coupon-slug]');
+    cards.forEach(card => card.style.display = 'none');
+    pageItems.forEach(coupon => {
+      const card = grid.querySelector(`[data-coupon-slug="${coupon.slug}"]`);
+      if (card) card.style.display = '';
+    });
+  }
+
+  function updatePagination() {
+    const totalPages = Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE);
+    const paginationControls = document.getElementById('pagination-controls');
+    if (paginationControls) {
+      paginationControls.innerHTML = '';
+      if (totalPages <= 1) return;
+      for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = String(i);
+        pageBtn.className = `px-3 py-2 rounded-lg transition ${
+          i === currentPage 
+            ? 'bg-indigo-500/20 border border-indigo-500/50 text-white' 
+            : 'border border-white/10 hover:bg-white/5 text-white/70 hover:text-white'
+        }`;
+        pageBtn.onclick = () => window.goToPage(i);
+        paginationControls.appendChild(pageBtn);
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    applyFiltersAndSort();
+  });
+</script>
+
+<Layout 
+  title={`Best AI & Machine Learning Free Courses - 100% Off Udemy Coupon Codes ${currentMonthYear}`}
+  description={`Browse ${totalCoupons}+ free AI & machine learning courses with 100% off Udemy coupon codes and discount deals. ${couponsLast24h}+ new verified AI learning courses added daily. Get ChatGPT, LLM, deep learning, neural networks coupon codes with lifetime access & certificates.`}
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": `Free ${CATEGORY} Udemy Coupons ${currentMonthYear}`,
+    "description": `${totalCoupons}+ verified 100% off Udemy ${CATEGORY.toLowerCase()} courses`,
+    "url": `https://courseswyn.com/coupon/ai-courses/`,
+    "mainEntity": {
+      "@type": "AggregateOffer",
+      "name": `Free ${CATEGORY} Courses with 100% Off Coupons`,
+      "price": "0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock",
+      "offerCount": totalCoupons
+    }
+  }}
+>
+  <!-- Hero Section -->
+  <section class="mb-16 relative">
+    <div class="absolute inset-0 -z-10">
+      <div class="absolute top-0 left-1/4 w-72 h-72 bg-violet-500/20 rounded-full blur-3xl animate-pulse"></div>
+      <div class="absolute bottom-0 right-1/4 w-72 h-72 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+    </div>
+
+    <div class="relative">
+      <div class="inline-flex items-center gap-3 mb-6">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-violet-500/20 to-indigo-500/20 border border-violet-500/40">
+          <span class="w-2 h-2 rounded-full bg-gradient-to-r from-violet-400 to-indigo-400 animate-pulse"></span>
+          <span class="text-xs font-semibold text-violet-300">✓ Verified Daily</span>
+        </div>
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/40">
+          <span class="text-xs font-semibold text-indigo-300">{couponsLast24h}+ New in 24h</span>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <h1 class="text-5xl md:text-6xl lg:text-7xl font-black text-white mb-2 leading-tight">
+          Free <strong>{CATEGORY} & Machine Learning</strong> Courses<br />
+          <span class="bg-gradient-to-r from-violet-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">100% Off Udemy Coupon Codes</span>
+        </h1>
+        <p class="text-lg md:text-xl text-violet-300 font-semibold">Get Free AI Learning Paths - Daily Verified Coupon Codes & Discount Deals</p>
+      </div>
+
+      <p class="text-lg text-white/80 leading-relaxed mb-6 max-w-2xl">
+        Learn <strong>{CATEGORY}</strong> with {totalCoupons}+ verified 100% off Udemy coupons. Get instant access to premium AI, machine learning, and deep learning courses with lifetime access, professional certificates, and {couponsLast24h}+ new courses added daily.
+      </p>
+
+      <div class="flex gap-3 flex-wrap">
+        <a href="/coupon/" class="px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 hover:shadow-lg hover:shadow-indigo-500/50 text-white font-semibold transition">
+          Browse All {coupons.length}+ Coupons
+        </a>
+        <a href="#coupons-grid" class="px-6 py-3 rounded-lg border border-white/20 hover:border-indigo-400/50 hover:bg-indigo-500/10 text-white font-semibold transition">
+          View {CATEGORY} Courses ↓
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Learn AI Section -->
+  <section class="mb-16 py-12 rounded-2xl bg-gradient-to-r from-violet-500/20 via-indigo-500/15 to-purple-500/10 border border-violet-500/30 backdrop-blur-sm p-8">
+    <h2 class="text-3xl md:text-4xl font-black text-white mb-6">
+      Why Learn <strong>{CATEGORY}</strong> in {currentMonthYear}?
+    </h2>
+    <div class="grid md:grid-cols-3 gap-6 mb-8">
+      <div class="flex gap-4">
+        <div class="text-3xl">🚀</div>
+        <div>
+          <h3 class="font-bold text-white mb-2">Career Growth</h3>
+          <p class="text-white/70 text-sm">{CATEGORY} skills command 2-3x higher salaries. Land roles like AI Engineer, ML Specialist, Data Scientist with verified certifications from our free courses.</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <div class="text-3xl">💡</div>
+        <div>
+          <h3 class="font-bold text-white mb-2">Future-Proof Skills</h3>
+          <p class="text-white/70 text-sm">{CATEGORY} is reshaping every industry. Master ChatGPT, LLMs, neural networks, and deep learning with hands-on projects in our Udemy courses.</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <div class="text-3xl">🎓</div>
+        <div>
+          <h3 class="font-bold text-white mb-2">100% Free Access</h3>
+          <p class="text-white/70 text-sm">Get premium {CATEGORY} courses with verified 100% off coupons. Lifetime access + certificates included. Save $5,000+ in learning costs today.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Courses Grid Section -->
+  <section class="mb-16">
+    <div class="mb-8">
+      <h2 class="text-3xl md:text-4xl font-black text-white mb-3">
+        {totalCoupons}+ Free {CATEGORY} Courses with 100% Off Coupons
+      </h2>
+      <p class="text-white/60 text-base max-w-2xl">
+        Browse our complete collection of verified {CATEGORY} courses. Each coupon is tested daily and works instantly with one click. No code entry needed.
+      </p>
+    </div>
+
+    <!-- Coupons Grid -->
+    <section class="deals-grid mb-12" id="coupons-grid">
+      {aiCoupons.map((c) => (
+        <div data-coupon-slug={c.slug}>
+          <DealCard
+            title={c.title}
+            description={c.description}
+            image={c.image}
+            price={c.price}
+            originalPrice={c.originalPrice}
+            discount={c.discount}
+            url={c.url}
+            provider={c.provider}
+            category={c.category}
+            rating={c.rating}
+            students={c.students}
+            verified={c.verified}
+            expiryDate={c.expiryDate}
+            slug={c.slug}
+          />
+        </div>
+      ))}
+    </section>
+
+    <!-- Pagination -->
+    {totalPages > 1 && (
+      <nav class="flex justify-center gap-2 mb-12 flex-wrap" id="pagination-controls"></nav>
+    )}
+  </section>
+
+  <!-- Learning Path Section -->
+  <section class="mb-16 border-t border-white/10 pt-12">
+    <h2 class="text-3xl font-black text-white mb-8">
+      Complete {CATEGORY} Learning Path - Free with Our Coupons
+    </h2>
+    <div class="space-y-4">
+      <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-violet-500/10 to-indigo-500/10 border border-violet-500/20">
+        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center font-bold text-white">1</div>
+        <div>
+          <h3 class="font-bold text-white mb-2">Fundamentals & Basics</h3>
+          <p class="text-white/70 text-sm">Start with foundational {CATEGORY} concepts, mathematics, and Python programming. Build a strong base for advanced topics.</p>
+        </div>
+      </div>
+      <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white">2</div>
+        <div>
+          <h3 class="font-bold text-white mb-2">Machine Learning & Deep Learning</h3>
+          <p class="text-white/70 text-sm">Master supervised learning, unsupervised learning, neural networks, and deep learning frameworks like TensorFlow and PyTorch.</p>
+        </div>
+      </div>
+      <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
+        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-white">3</div>
+        <div>
+          <h3 class="font-bold text-white mb-2">Advanced Topics & Specializations</h3>
+          <p class="text-white/70 text-sm">Explore NLP, computer vision, reinforcement learning, LLMs, ChatGPT, and production ML systems with hands-on projects.</p>
+        </div>
+      </div>
+      <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-pink-500/10 to-rose-500/10 border border-pink-500/20">
+        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center font-bold text-white">4</div>
+        <div>
+          <h3 class="font-bold text-white mb-2">Portfolio Building & Career Growth</h3>
+          <p class="text-white/70 text-sm">Build real-world projects, earn certificates, and land your dream {CATEGORY} role with 2-3x higher salary potential.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="mb-16 border-t border-white/10 pt-12">
+    <h2 class="text-3xl font-black text-white mb-8">
+      FAQ - Free {CATEGORY} Courses & Udemy Coupons
+    </h2>
+    <div class="space-y-4 max-w-3xl">
+      <details class="group bg-gradient-to-br from-slate-800/40 to-slate-900/40 rounded-xl border border-white/10 backdrop-blur-sm overflow-hidden hover:border-violet-500/30 transition-all">
+        <summary class="flex items-center justify-between p-6 cursor-pointer hover:bg-white/5 font-semibold text-white">
+          Which {CATEGORY} course should a beginner start with?
+          <span class="text-violet-400 group-open:rotate-180 transition-transform font-bold">▼</span>
+        </summary>
+        <div class="p-6 pt-0 text-white/70 border-t border-white/10 mt-2">
+          Start with fundamental Python programming, linear algebra, and statistics courses. These courses cover the mathematical foundations needed for machine learning. Once you're comfortable with the basics, move to introductory machine learning courses, then advance to specialized topics like deep learning, NLP, or computer vision.
+        </div>
+      </details>
+
+      <details class="group bg-gradient-to-br from-slate-800/40 to-slate-900/40 rounded-xl border border-white/10 backdrop-blur-sm overflow-hidden hover:border-violet-500/30 transition-all">
+        <summary class="flex items-center justify-between p-6 cursor-pointer hover:bg-white/5 font-semibold text-white">
+          How long does it take to become proficient in {CATEGORY}?
+          <span class="text-violet-400 group-open:rotate-180 transition-transform font-bold">▼</span>
+        </summary>
+        <div class="p-6 pt-0 text-white/70 border-t border-white/10 mt-2">
+          You can learn the basics in 3-6 months with 10+ hours per week of consistent study. To become job-ready, plan for 6-12 months of dedicated learning, including hands-on projects. Our free Udemy courses provide the foundational knowledge you need to start your {CATEGORY} career.
+        </div>
+      </details>
+
+      <details class="group bg-gradient-to-br from-slate-800/40 to-slate-900/40 rounded-xl border border-white/10 backdrop-blur-sm overflow-hidden hover:border-violet-500/30 transition-all">
+        <summary class="flex items-center justify-between p-6 cursor-pointer hover:bg-white/5 font-semibold text-white">
+          Are Udemy certificates for {CATEGORY} courses recognized by employers?
+          <span class="text-violet-400 group-open:rotate-180 transition-transform font-bold">▼</span>
+        </summary>
+        <div class="p-6 pt-0 text-white/70 border-t border-white/10 mt-2">
+          Yes! Udemy certificates are recognized by many employers, especially when combined with projects in your portfolio. Major tech companies value practical skills and project experience. Include your certificates on LinkedIn, resume, and GitHub portfolio to showcase your {CATEGORY} expertise to potential employers.
+        </div>
+      </details>
+
+      <details class="group bg-gradient-to-br from-slate-800/40 to-slate-900/40 rounded-xl border border-white/10 backdrop-blur-sm overflow-hidden hover:border-violet-500/30 transition-all">
+        <summary class="flex items-center justify-between p-6 cursor-pointer hover:bg-white/5 font-semibold text-white">
+          How much can I save with free {CATEGORY} Udemy coupons?
+          <span class="text-violet-400 group-open:rotate-180 transition-transform font-bold">▼</span>
+        </summary>
+        <div class="p-6 pt-0 text-white/70 border-t border-white/10 mt-2">
+          With our {totalCoupons}+ free {CATEGORY} Udemy coupons, you can save $50-$300 per course. A typical {CATEGORY} learning path of 10-15 courses would cost $500-$3,000 normally. Using CoursesWyn, you save 100% on all courses - completely free with lifetime access and certificates included!
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section class="mb-16 bg-gradient-to-r from-violet-500/20 to-indigo-500/20 rounded-2xl p-8 border border-violet-500/30 backdrop-blur-sm">
+    <h2 class="text-3xl font-black text-white mb-4">
+      Start Your Free {CATEGORY} Learning Journey Today
+    </h2>
+    <p class="text-white/80 mb-6">
+      Access {totalCoupons}+ verified 100% off Udemy {CATEGORY} courses. No credit card required. Lifetime access. Professional certificates included. Join 50,000+ learners who've transformed their careers with free courses from CoursesWyn.
+    </p>
+    <a href="#coupons-grid" class="inline-block px-8 py-4 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 hover:shadow-lg hover:shadow-indigo-500/50 text-white font-bold transition">
+      Browse {totalCoupons}+ Free {CATEGORY} Courses Now →
+    </a>
+  </section>
+</Layout>

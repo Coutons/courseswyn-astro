@@ -1,0 +1,159 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import DealCard from '../../components/coupon/DealCard.astro';
+import coupons from '../../data/coupons.json';
+
+const CATEGORY = 'Business';
+const ITEMS_PER_PAGE = 12;
+
+export async function getStaticPaths() {
+  return [{ params: {} }];
+}
+
+const businessCoupons = coupons.filter(c => c.category === 'Business' || c.title.toLowerCase().includes('business'));
+const totalCoupons = businessCoupons.length;
+const totalPages = Math.ceil(totalCoupons / ITEMS_PER_PAGE);
+const currentMonthYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+const couponsLast24h = businessCoupons.filter(c => {
+  const now = new Date();
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  return new Date(c.addedDate) >= oneDayAgo && new Date(c.addedDate) <= now;
+}).length;
+
+const couponsJSON = JSON.stringify(businessCoupons);
+---
+
+<script define:vars={{ couponsJSON, ITEMS_PER_PAGE }}>
+  const couponsData = JSON.parse(couponsJSON);
+  let filteredCoupons = [...couponsData];
+  let currentPage = 1;
+
+  window.goToPage = function(page) {
+    currentPage = Math.max(1, Math.min(page, Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE)));
+    updateCouponsDisplay();
+    updatePagination();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  function updateCouponsDisplay() {
+    const grid = document.getElementById('coupons-grid');
+    if (!grid) return;
+    const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIdx = startIdx + ITEMS_PER_PAGE;
+    const pageItems = filteredCoupons.slice(startIdx, endIdx);
+    const cards = grid.querySelectorAll('[data-coupon-slug]');
+    cards.forEach(card => card.style.display = 'none');
+    pageItems.forEach(coupon => {
+      const card = grid.querySelector(`[data-coupon-slug="${coupon.slug}"]`);
+      if (card) card.style.display = '';
+    });
+  }
+
+  function updatePagination() {
+    const totalPages = Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE);
+    const paginationControls = document.getElementById('pagination-controls');
+    if (paginationControls) {
+      paginationControls.innerHTML = '';
+      if (totalPages <= 1) return;
+      for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = String(i);
+        pageBtn.className = `px-3 py-2 rounded-lg transition ${i === currentPage ? 'bg-yellow-500/20 border border-yellow-500/50 text-white' : 'border border-white/10 hover:bg-white/5 text-white/70 hover:text-white'}`;
+        pageBtn.onclick = () => window.goToPage(i);
+        paginationControls.appendChild(pageBtn);
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateCouponsDisplay();
+    updatePagination();
+  });
+</script>
+
+<Layout 
+  title={`Business & Entrepreneurship Courses - Free 100% Off Udemy Coupons`}
+  description={`Browse ${totalCoupons}+ free 100% off Udemy business coupons. Learn leadership, management, marketing, finance, entrepreneurship. Verified daily.`}
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": `Free Business Udemy Coupons`,
+    "description": `${totalCoupons}+ verified 100% off Udemy business courses`,
+    "url": `https://courseswyn.com/coupon/business-courses/`,
+    "mainEntity": {
+      "@type": "AggregateOffer",
+      "name": `Free Business Courses with 100% Off Coupons`,
+      "price": "0",
+      "priceCurrency": "USD",
+      "offerCount": totalCoupons
+    }
+  }}
+>
+  <section class="mb-16 relative">
+    <div class="absolute inset-0 -z-10">
+      <div class="absolute top-0 left-1/4 w-72 h-72 bg-yellow-500/20 rounded-full blur-3xl animate-pulse"></div>
+      <div class="absolute bottom-0 right-1/4 w-72 h-72 bg-rose-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+    </div>
+
+    <div class="relative">
+      <h1 class="text-5xl md:text-6xl lg:text-7xl font-black text-white mb-2 leading-tight">
+        Best <strong>Business & Entrepreneurship</strong> Courses<br />
+        <span class="bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 bg-clip-text text-transparent">100% Off Udemy Coupons</span>
+      </h1>
+      <p class="text-lg md:text-xl text-yellow-300 font-semibold mb-6">Leadership, Marketing, Finance & Entrepreneurship - Free Verified Daily</p>
+
+      <p class="text-lg text-white/80 leading-relaxed mb-6 max-w-2xl">
+        Master <strong>business skills</strong> with {totalCoupons}+ verified 100% off Udemy coupons. Learn marketing, finance, leadership, project management, entrepreneurship with lifetime access. {couponsLast24h}+ new business courses daily.
+      </p>
+
+      <a href="#coupons-grid" class="inline-block px-8 py-4 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 hover:shadow-lg hover:shadow-yellow-500/50 text-white font-bold transition">
+        Browse {totalCoupons}+ Free Business Courses ↓
+      </a>
+    </div>
+  </section>
+
+  <section class="mb-16">
+    <h2 class="text-3xl md:text-4xl font-black text-white mb-8">
+      {totalCoupons}+ Free Business Courses with 100% Off Coupons
+    </h2>
+
+    <section class="deals-grid mb-12" id="coupons-grid">
+      {businessCoupons.map((c) => (
+        <div data-coupon-slug={c.slug}>
+          <DealCard
+            title={c.title}
+            description={c.description}
+            image={c.image}
+            price={c.price}
+            originalPrice={c.originalPrice}
+            discount={c.discount}
+            url={c.url}
+            provider={c.provider}
+            category={c.category}
+            rating={c.rating}
+            students={c.students}
+            verified={c.verified}
+            expiryDate={c.expiryDate}
+            slug={c.slug}
+          />
+        </div>
+      ))}
+    </section>
+
+    {totalPages > 1 && (
+      <nav class="flex justify-center gap-2 mb-12 flex-wrap" id="pagination-controls"></nav>
+    )}
+  </section>
+
+  <section class="mb-16 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-2xl p-8 border border-yellow-500/30 backdrop-blur-sm">
+    <h2 class="text-3xl font-black text-white mb-4">
+      Grow Your Business Skills Free
+    </h2>
+    <p class="text-white/80 mb-6">
+      Access {totalCoupons}+ verified 100% off business courses. Learn marketing, leadership, finance, entrepreneurship. Lifetime access. Certificates included.
+    </p>
+    <a href="#coupons-grid" class="inline-block px-8 py-4 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 hover:shadow-lg hover:shadow-yellow-500/50 text-white font-bold transition">
+      Browse All Free Business Courses Now →
+    </a>
+  </section>
+</Layout>

@@ -1,0 +1,192 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import DealCard from '../../components/coupon/DealCard.astro';
+import coupons from '../../data/coupons.json';
+
+const CATEGORY = 'Design';
+const ITEMS_PER_PAGE = 12;
+
+export async function getStaticPaths() {
+  return [{ params: {} }];
+}
+
+const designCoupons = coupons.filter(c => c.category === 'Design' || c.category?.includes('Design'));
+const totalCoupons = designCoupons.length;
+const totalPages = Math.ceil(totalCoupons / ITEMS_PER_PAGE);
+const currentMonthYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+const couponsLast24h = designCoupons.filter(c => {
+  const now = new Date();
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  return new Date(c.addedDate) >= oneDayAgo && new Date(c.addedDate) <= now;
+}).length;
+
+const couponsJSON = JSON.stringify(designCoupons);
+---
+
+<script define:vars={{ couponsJSON, ITEMS_PER_PAGE }}>
+  const couponsData = JSON.parse(couponsJSON);
+  let filteredCoupons = [...couponsData];
+  let currentPage = 1;
+
+  window.goToPage = function(page) {
+    currentPage = Math.max(1, Math.min(page, Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE)));
+    updateCouponsDisplay();
+    updatePagination();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  function updateCouponsDisplay() {
+    const grid = document.getElementById('coupons-grid');
+    if (!grid) return;
+    const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIdx = startIdx + ITEMS_PER_PAGE;
+    const pageItems = filteredCoupons.slice(startIdx, endIdx);
+    const cards = grid.querySelectorAll('[data-coupon-slug]');
+    cards.forEach(card => card.style.display = 'none');
+    pageItems.forEach(coupon => {
+      const card = grid.querySelector(`[data-coupon-slug="${coupon.slug}"]`);
+      if (card) card.style.display = '';
+    });
+  }
+
+  function updatePagination() {
+    const totalPages = Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE);
+    const paginationControls = document.getElementById('pagination-controls');
+    if (paginationControls) {
+      paginationControls.innerHTML = '';
+      if (totalPages <= 1) return;
+      for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = String(i);
+        pageBtn.className = `px-3 py-2 rounded-lg transition ${
+          i === currentPage 
+            ? 'bg-pink-500/20 border border-pink-500/50 text-white' 
+            : 'border border-white/10 hover:bg-white/5 text-white/70 hover:text-white'
+        }`;
+        pageBtn.onclick = () => window.goToPage(i);
+        paginationControls.appendChild(pageBtn);
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateCouponsDisplay();
+    updatePagination();
+  });
+</script>
+
+<Layout 
+  title={`Graphic Design Courses - Free 100% Off Udemy Coupons ${currentMonthYear}`}
+  description={`Browse ${totalCoupons}+ free 100% off Udemy design coupons. Learn Photoshop, Figma, graphic design, UI/UX, Canva. Verified daily with ${couponsLast24h}+ new design courses.`}
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": `Free Design Udemy Coupons ${currentMonthYear}`,
+    "description": `${totalCoupons}+ verified 100% off Udemy design courses`,
+    "url": `https://courseswyn.com/coupon/design-courses/`,
+    "mainEntity": {
+      "@type": "AggregateOffer",
+      "name": `Free Design Courses with 100% Off Coupons`,
+      "price": "0",
+      "priceCurrency": "USD",
+      "offerCount": totalCoupons
+    }
+  }}
+>
+  <section class="mb-16 relative">
+    <div class="absolute inset-0 -z-10">
+      <div class="absolute top-0 left-1/4 w-72 h-72 bg-pink-500/20 rounded-full blur-3xl animate-pulse"></div>
+      <div class="absolute bottom-0 right-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+    </div>
+
+    <div class="relative">
+      <h1 class="text-5xl md:text-6xl lg:text-7xl font-black text-white mb-2 leading-tight">
+        Best <strong>Graphic Design & UI/UX</strong> Courses<br />
+        <span class="bg-gradient-to-r from-pink-400 via-purple-400 to-violet-400 bg-clip-text text-transparent">100% Off Udemy Coupons</span>
+      </h1>
+      <p class="text-lg md:text-xl text-pink-300 font-semibold mb-6">Photoshop, Figma, UI/UX, Graphic Design - Free Verified Daily</p>
+
+      <p class="text-lg text-white/80 leading-relaxed mb-6 max-w-2xl">
+        Master <strong>design skills</strong> with {totalCoupons}+ verified 100% off Udemy coupons. Learn Photoshop, Figma, UI/UX design, graphic design, Canva with lifetime access and certificates. {couponsLast24h}+ new design courses added daily.
+      </p>
+
+      <a href="#coupons-grid" class="inline-block px-8 py-4 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 hover:shadow-lg hover:shadow-pink-500/50 text-white font-bold transition">
+        Browse {totalCoupons}+ Free Design Courses ↓
+      </a>
+    </div>
+  </section>
+
+  <section class="mb-16 py-12 rounded-2xl bg-gradient-to-r from-pink-500/20 via-purple-500/15 to-violet-500/10 border border-pink-500/30 backdrop-blur-sm p-8">
+    <h2 class="text-3xl md:text-4xl font-black text-white mb-6">
+      Why Learn <strong>Design</strong> in {currentMonthYear}?
+    </h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="flex gap-4">
+        <div class="text-3xl">🎨</div>
+        <div>
+          <h3 class="font-bold text-white mb-2">Creative Career Path</h3>
+          <p class="text-white/70 text-sm">Designers earn $60K-$120K+. Create stunning visuals, build UX experiences, and land creative roles at top companies.</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <div class="text-3xl">✨</div>
+        <div>
+          <h3 class="font-bold text-white mb-2">Portfolio Building</h3>
+          <p class="text-white/70 text-sm">Create professional design projects in Figma, Photoshop, and other tools. Build a portfolio that impresses clients and employers.</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <div class="text-3xl">💯</div>
+        <div>
+          <h3 class="font-bold text-white mb-2">100% Free Learning</h3>
+          <p class="text-white/70 text-sm">{totalCoupons}+ design courses completely free. Lifetime access. Certificates. Save $4,000+.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-16">
+    <h2 class="text-3xl md:text-4xl font-black text-white mb-8">
+      {totalCoupons}+ Free Design Courses with 100% Off Coupons
+    </h2>
+
+    <section class="deals-grid mb-12" id="coupons-grid">
+      {designCoupons.map((c) => (
+        <div data-coupon-slug={c.slug}>
+          <DealCard
+            title={c.title}
+            description={c.description}
+            image={c.image}
+            price={c.price}
+            originalPrice={c.originalPrice}
+            discount={c.discount}
+            url={c.url}
+            provider={c.provider}
+            category={c.category}
+            rating={c.rating}
+            students={c.students}
+            verified={c.verified}
+            expiryDate={c.expiryDate}
+            slug={c.slug}
+          />
+        </div>
+      ))}
+    </section>
+
+    {totalPages > 1 && (
+      <nav class="flex justify-center gap-2 mb-12 flex-wrap" id="pagination-controls"></nav>
+    )}
+  </section>
+
+  <section class="mb-16 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-2xl p-8 border border-pink-500/30 backdrop-blur-sm">
+    <h2 class="text-3xl font-black text-white mb-4">
+      Launch Your Design Career Free
+    </h2>
+    <p class="text-white/80 mb-6">
+      Access {totalCoupons}+ verified 100% off design courses. Learn Figma, Photoshop, UI/UX design, graphic design. Lifetime access. Professional certificates. Build your creative portfolio.
+    </p>
+    <a href="#coupons-grid" class="inline-block px-8 py-4 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 hover:shadow-lg hover:shadow-pink-500/50 text-white font-bold transition">
+      Browse All Free Design Courses Now →
+    </a>
+  </section>
+</Layout>

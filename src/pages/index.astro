@@ -10,6 +10,27 @@ const allPosts = await fetchPosts();
 const featuredPosts = allPosts.slice(0, 3);
 const featuredCoupons = coupons.slice(0, 3);
 
+// Dynamic SEO helper functions
+function getCurrentMonthYear(): string {
+  const now = new Date();
+  const options: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' };
+  return now.toLocaleDateString('en-US', options);
+}
+
+function getCouponsAddedInLast24Hours(): number {
+  const now = new Date();
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  
+  return coupons.filter(coupon => {
+    const addedDate = new Date(coupon.addedDate);
+    return addedDate >= oneDayAgo && addedDate <= now;
+  }).length;
+}
+
+const totalCoupons = coupons.length;
+const currentMonthYear = getCurrentMonthYear();
+const couponsLast24h = getCouponsAddedInLast24Hours();
+
 const schema = {
   "@context": "https://schema.org",
   "@graph": [
@@ -17,7 +38,7 @@ const schema = {
       "@type": "WebSite",
       name: "CoursesWyn",
       url: "https://courseswyn.com",
-      description: "2,500+ verified free Udemy coupons and independent course reviews. Save up to 95% on premium courses.",
+      description: `100% off and free Udemy coupons with ${totalCoupons}+ verified deals. Save on premium courses with lifetime access and professional certificates.`,
       potentialAction: {
         "@type": "SearchAction",
         target: {
@@ -32,7 +53,7 @@ const schema = {
       name: "CoursesWyn",
       url: "https://courseswyn.com",
       logo: "https://courseswyn.com/logo.png",
-      description: "Free Udemy coupons and independent course reviews platform with 2,500+ verified deals updated daily.",
+      description: `Free Udemy coupons and course reviews platform with ${totalCoupons}+ verified deals updated daily in ${currentMonthYear}.`,
       sameAs: [
         "https://twitter.com/courseswyn",
         "https://reddit.com/r/courseswyn"
@@ -46,7 +67,7 @@ const schema = {
     {
       "@type": "LocalBusiness",
       name: "CoursesWyn",
-      description: "Online platform for free Udemy course coupons and reviews",
+      description: "Online platform for 100% off and free Udemy coupons with verified discount codes",
       url: "https://courseswyn.com",
       contactPoint: {
         "@type": "ContactPoint",
@@ -56,13 +77,13 @@ const schema = {
     },
     {
       "@type": "CollectionPage",
-      name: "Free Udemy Coupons & Course Reviews",
-      description: "2,500+ verified free Udemy coupons updated daily with independent expert reviews and learning guides",
+      name: `100% Off and Free Udemy Coupons ${currentMonthYear}`,
+      description: `${totalCoupons}+ verified 100% off Udemy coupons updated daily with lifetime access and professional certificates`,
       url: "https://courseswyn.com",
       mainEntity: {
         "@type": "AggregateOffer",
-        name: "Free Udemy Courses",
-        description: "2,500+ verified free Udemy coupons",
+        name: "100% Off Udemy Courses",
+        description: `${totalCoupons}+ verified 100% off Udemy coupons`,
         url: "https://courseswyn.com/coupon/",
         price: "0",
         priceCurrency: "USD",
@@ -147,15 +168,42 @@ const schema = {
 ---
 
 <Layout
-  title="CoursesWyn - Free Udemy Coupons & Course Reviews 2026"
-  description="2,500+ verified free Udemy coupons & independent course reviews. Save up to 95% on premium courses for AI, Python, Web Development, Data Science & more. Updated daily with working deals."
+  title={`100% Off Udemy Coupons & Free Courses ${currentMonthYear}`}
+  description={`Get ${totalCoupons}+ verified 100% off Udemy coupons & free courses with daily updates. Access premium courses in programming, data science, business, design & more. No credit card required.`}
   structuredData={schema}
 >
   <Hero
-    title="Free Udemy Coupons & Course Reviews"
-    subtitle="2,500+ verified free Udemy coupons updated daily. Independent expert reviews, trusted deals, and learning guides. Save up to 95% on premium courses — no credit card required."
-    cta={{ text: "Browse Free Coupons", href: "/coupon/" }}
+    title={`100% Off & Free Udemy Coupons ${currentMonthYear}`}
+    subtitle={`${totalCoupons}+ verified 100% off Udemy coupons updated daily. Free premium courses worth $200+ with lifetime access and professional certificates. No credit card required. Start learning free today!`}
+    cta={{ text: "Get Free Coupons Now", href: "/coupon/" }}
   />
+
+  <!-- Special Offer Section (SEO: Dynamic Keyword Focus) -->
+  <section class="mb-20 py-12 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-teal-500/10 to-cyan-500/10 border border-emerald-500/30 backdrop-blur-sm p-8">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="px-3 py-1 bg-emerald-500/30 border border-emerald-400/50 rounded-full text-emerald-300 text-xs font-bold">{currentMonthYear.toUpperCase()} SPECIAL</span>
+      </div>
+      <h2 class="text-3xl md:text-4xl font-black text-white mb-4"><strong>100% Off Udemy Coupons</strong> - Valid Through {currentMonthYear}</h2>
+      <p class="text-white/80 text-lg mb-6 leading-relaxed">
+        CoursesWyn brings you the most comprehensive collection of <strong>100% off Udemy coupons for {currentMonthYear}</strong>. Every coupon is verified daily and gives you instant access to premium courses worth $200+ absolutely free. With lifetime access, professional certificates, and zero hidden fees, our <strong>free Udemy coupons</strong> are the best way to upgrade your skills without spending anything.
+      </p>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="flex items-center gap-3 text-white/90">
+          <span class="text-2xl">✓</span>
+          <span class="font-semibold">{totalCoupons}+ <strong>100% off coupons</strong> verified daily</span>
+        </div>
+        <div class="flex items-center gap-3 text-white/90">
+          <span class="text-2xl">✓</span>
+          <span class="font-semibold">Lifetime access to <strong>free Udemy courses</strong></span>
+        </div>
+        <div class="flex items-center gap-3 text-white/90">
+          <span class="text-2xl">✓</span>
+          <span class="font-semibold">Professional certificates included</span>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- How It Works Section (SEO: Process Steps + Intent Clarity) -->
   <section class="mb-20" itemscope itemtype="https://schema.org/HowTo">
@@ -286,31 +334,41 @@ const schema = {
   <!-- Why Choose CoursesWyn Section (SEO: Trust & Differentiation) -->
   <section class="mb-20 py-16 border-y border-white/10" itemscope itemtype="https://schema.org/Organization">
     <meta itemprop="name" content="CoursesWyn" />
-    <meta itemprop="description" content="Why choose CoursesWyn for free Udemy coupons - Independent reviews, verified deals, expert curation" />
+    <meta itemprop="description" content="Why choose CoursesWyn for 100% off Udemy coupons December 2025 - Verified deals, expert curation, lifetime access, professional certificates" />
     <div class="flex items-center gap-3 mb-12">
-      <div class="w-1 h-8 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
-      <h2 class="text-3xl md:text-4xl font-black text-white">Why Choose CoursesWyn?</h2>
+      <div class="w-1 h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
+      <h2 class="text-3xl md:text-4xl font-black text-white">Why CoursesWyn for <strong>100% Off Udemy Coupons</strong>?</h2>
     </div>
     <div class="grid md:grid-cols-2 gap-6">
-      <div class="bg-gradient-to-br from-slate-800/60 to-slate-900/60 rounded-2xl p-8 border border-white/10 backdrop-blur-sm hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-300" itemscope itemtype="https://schema.org/Thing">
-        <meta itemprop="name" content="Independent Reviews" />
-        <div class="text-3xl font-black bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-4">✓ Independent Reviews</div>
-        <p class="text-white/70 leading-relaxed" itemprop="description">We buy and test courses ourselves. No paid placements, just honest student-focused rankings based on curriculum depth and real results.</p>
+      <div class="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl p-8 border border-emerald-500/20 backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-300" itemscope itemtype="https://schema.org/Thing">
+        <meta itemprop="name" content="Verified December 2025 Coupons" />
+        <div class="text-3xl font-black bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent mb-4">✓ Verified Daily</div>
+        <p class="text-white/70 leading-relaxed" itemprop="description">Every <strong>100% off Udemy coupon</strong> is bot-verified in real-time to ensure it works. Get courses worth $200+ for free. If a coupon expires, we replace it with a new verified deal the same day.</p>
       </div>
-      <div class="bg-gradient-to-br from-slate-800/60 to-slate-900/60 rounded-2xl p-8 border border-white/10 backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-300" itemscope itemtype="https://schema.org/Thing">
-        <meta itemprop="name" content="Verified Coupons" />
-        <div class="text-3xl font-black bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent mb-4">✓ Verified Coupons</div>
-        <p class="text-white/70 leading-relaxed" itemprop="description">Every coupon is bot-verified in real-time. Get courses worth $200+ for free. Save up to 95% with guaranteed working links.</p>
+      <div class="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl p-8 border border-emerald-500/20 backdrop-blur-sm hover:shadow-lg hover:shadow-teal-500/20 transition-all duration-300" itemscope itemtype="https://schema.org/Thing">
+        <meta itemprop="name" content="Lifetime Access" />
+        <div class="text-3xl font-black bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent mb-4">✓ Lifetime Access</div>
+        <p class="text-white/70 leading-relaxed" itemprop="description">Enroll with our <strong>free Udemy coupons</strong> and keep the course forever. No expiration, no additional fees. Get instant access to {totalCoupons}+ premium courses with lifetime learning rights.</p>
       </div>
-      <div class="bg-gradient-to-br from-slate-800/60 to-slate-900/60 rounded-2xl p-8 border border-white/10 backdrop-blur-sm hover:shadow-lg hover:shadow-pink-500/20 transition-all duration-300" itemscope itemtype="https://schema.org/Thing">
-        <meta itemprop="name" content="Always Updated" />
-        <div class="text-3xl font-black bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent mb-4">✓ Always Updated</div>
-        <p class="text-white/70 leading-relaxed" itemprop="description">New courses and coupons added daily. Our guides are refreshed monthly to ensure 2026-ready content and current best practices.</p>
+      <div class="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl p-8 border border-emerald-500/20 backdrop-blur-sm hover:shadow-lg hover:shadow-cyan-500/20 transition-all duration-300" itemscope itemtype="https://schema.org/Thing">
+        <meta itemprop="name" content="Professional Certificates" />
+        <div class="text-3xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-4">✓ Free Certificates</div>
+        <p class="text-white/70 leading-relaxed" itemprop="description">Complete courses with our <strong>100% off coupons</strong> and earn professional certificates. Add them to LinkedIn and boost your resume. Same certificates as paid courses.</p>
       </div>
-      <div class="bg-gradient-to-br from-slate-800/60 to-slate-900/60 rounded-2xl p-8 border border-white/10 backdrop-blur-sm hover:shadow-lg hover:shadow-cyan-500/20 transition-all duration-300" itemscope itemtype="https://schema.org/Thing">
+      <div class="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl p-8 border border-emerald-500/20 backdrop-blur-sm hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300" itemscope itemtype="https://schema.org/Thing">
+        <meta itemprop="name" content="No Hidden Costs" />
+        <div class="text-3xl font-black bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">✓ No Hidden Costs</div>
+        <p class="text-white/70 leading-relaxed" itemprop="description">100% free. No signup required on CoursesWyn, no credit card needed, no hidden fees. Just click and get instant access to <strong>free Udemy courses</strong> with our verified coupons.</p>
+      </div>
+      <div class="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl p-8 border border-emerald-500/20 backdrop-blur-sm hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300" itemscope itemtype="https://schema.org/Thing">
+        <meta itemprop="name" content={`${totalCoupons}+ Deals`} />
+        <div class="text-3xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">✓ {totalCoupons}+ Deals</div>
+        <p class="text-white/70 leading-relaxed" itemprop="description">Our largest collection of <strong>100% off Udemy coupons</strong>. Covering AI, Python, Web Development, Data Science, Business, Design, and 15+ more categories with new deals added daily.</p>
+      </div>
+      <div class="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl p-8 border border-emerald-500/20 backdrop-blur-sm hover:shadow-lg hover:shadow-pink-500/20 transition-all duration-300" itemscope itemtype="https://schema.org/Thing">
         <meta itemprop="name" content="Expert Curation" />
-        <div class="text-3xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-4">✓ Expert Curation</div>
-        <p class="text-white/70 leading-relaxed" itemprop="description">Handpicked by learning specialists with 10+ years in EdTech. Courses are ranked by instructor reputation, engagement metrics, and student success.</p>
+        <div class="text-3xl font-black bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent mb-4">✓ Expert Curation</div>
+        <p class="text-white/70 leading-relaxed" itemprop="description">Handpicked by EdTech specialists. Every <strong>free Udemy course</strong> is ranked by instructor quality, student ratings, and learning outcomes. Only the best courses make our December 2025 coupon list.</p>
       </div>
     </div>
   </section>
@@ -358,13 +416,13 @@ const schema = {
   </section>
 
   <!-- CTA Section -->
-  <section class="rounded-2xl bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-transparent border border-indigo-500/30 backdrop-blur-sm p-12 text-center mb-20">
-    <h2 class="text-4xl md:text-5xl font-black text-white mb-4">Start Learning Today</h2>
+  <section class="rounded-2xl bg-gradient-to-br from-emerald-500/20 via-teal-500/10 to-cyan-500/5 border border-emerald-500/30 backdrop-blur-sm p-12 text-center mb-20">
+    <h2 class="text-4xl md:text-5xl font-black text-white mb-4">Get <strong>100% Off Udemy Coupons</strong> Now</h2>
     <p class="text-white/70 mb-8 max-w-2xl mx-auto text-lg leading-relaxed">
-      Get instant access to premium Udemy courses worth $200+ for free. Lifetime access guaranteed. No credit card required.
+      December 2025 is the best time to learn free. Get instant access to 75+ premium Udemy courses worth $200+ with verified <strong>100% off coupons</strong>. Lifetime access, professional certificates, and zero hidden fees included.
     </p>
     <a href="/coupon/" class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:shadow-lg hover:shadow-emerald-500/50 text-white font-bold px-8 py-4 rounded-lg transition-all duration-300 text-lg">
-      Get Free Courses Now
+      Claim Free Courses for December 2025
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
       </svg>
