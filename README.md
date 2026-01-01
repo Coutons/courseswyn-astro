@@ -5,7 +5,7 @@
 **Live Site** → https://courseswyn.com  
 **Stack** → Astro 5 + Tailwind CSS + Markdown + Schema.org LD+JSON
 
-CoursesWyn is an independent Udemy review site that pulls **real-time enrollment numbers, ratings, and sale prices** directly from Udemy dashboards — updated monthly (December 2025 data verified).
+CoursesWyn is an independent Udemy review site that pulls **real-time enrollment numbers, ratings, and sale prices** directly from Udemy dashboards — updated monthly (January 2026 data verified).
 
 Every article includes:
 - Comparison tables
