@@ -23,11 +23,90 @@ const categories = [...new Set(coupons.map(c => c.category))].sort();
 
 // Helper functions
 function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
   });
+}
+
+function calculateDiscount(price: string, originalPrice: string): string {
+  const p = price === 'Free' ? 0 : parseFloat(price.replace(/[^\d.-]/g, ''));
+  const op = parseFloat(originalPrice.replace(/[^\d.-]/g, ''));
+  if (op > 0 && !isNaN(p)) {
+    const discountPercent = Math.round(((op - p) / op) * 100);
+    return `-${discountPercent}%`;
+  }
+  return '-0%';
+}
+
+function getDiscount(entry: any): string {
+  return calculateDiscount(entry.price, entry.originalPrice);
+}
+
+function generateLearningObjectives(title: string, category: string, level: string): string[] {
+  const baseObjectives = [
+    `Master ${title} fundamentals and core concepts`,
+    `Build practical projects using ${category} techniques`,
+    `Learn industry best practices and professional workflows`,
+    `Get certified and enhance your career prospects`
+  ];
+
+  const levelSpecific = {
+    'Beginner': [
+      `Start from basics and build strong ${category} foundation`,
+      `Complete hands-on exercises for practical understanding`
+    ],
+    'Intermediate': [
+      `Advance your skills with intermediate ${category} concepts`,
+      `Work on real-world projects and case studies`
+    ],
+    'Advanced': [
+      `Master advanced ${category} techniques and tools`,
+      `Develop expertise for professional applications`
+    ]
+  };
+
+  return [...baseObjectives, ...(levelSpecific[level as keyof typeof levelSpecific] || [])];
+}
+
+function generateSkills(category: string): string[] {
+  const skillMap: Record<string, string[]> = {
+    'Development': ['Programming', 'Web Development', 'Problem Solving', 'Code Optimization'],
+    'Business': ['Project Management', 'Leadership', 'Strategy', 'Analytics'],
+    'IT & Software': ['System Administration', 'Network Security', 'Cloud Computing', 'DevOps'],
+    'Design': ['UI/UX Design', 'Graphic Design', 'Creative Tools', 'Visual Communication'],
+    'Marketing': ['Digital Marketing', 'SEO', 'Content Marketing', 'Social Media'],
+    'Data Science': ['Data Analysis', 'Machine Learning', 'Statistics', 'Python'],
+    'Photography': ['Photo Editing', 'Composition', 'Lighting', 'Post-Processing']
+  };
+
+  return skillMap[category] || ['Technical Skills', 'Professional Development', 'Industry Knowledge'];
+}
+
+function generateFAQs(entry: any): Array<{question: string, answer: string}> {
+  return [
+    {
+      question: `Is ${entry.title} suitable for ${entry.level.toLowerCase()}s?`,
+      answer: `Yes, this course is designed for ${entry.level.toLowerCase()} learners. ${entry.level === 'Beginner' ? 'No prior experience required - we start from the basics.' : entry.level === 'Intermediate' ? 'Some foundational knowledge is recommended but not required.' : 'This course assumes advanced knowledge and experience in the field.'}`
+    },
+    {
+      question: `How long does it take to complete ${entry.title}?`,
+      answer: `The course contains ${entry.totalLectures} lectures and takes approximately ${entry.duration} to complete. However, completion time depends on your pace and learning schedule.`
+    },
+    {
+      question: `Do I get a certificate after completing this course?`,
+      answer: `Yes! Upon completion, you'll receive a verified ${entry.provider} certificate that you can add to your LinkedIn profile, resume, and portfolio.`
+    },
+    {
+      question: `What skills will I learn in ${entry.title}?`,
+      answer: `You'll master essential ${entry.category} skills including ${generateSkills(entry.category).slice(0, 3).join(', ')}, and gain practical experience through hands-on projects.`
+    },
+    {
+      question: `Can I access the course materials after enrollment?`,
+      answer: `Absolutely! You get lifetime access to all course materials, including videos, resources, and updates. Learn at your own pace with no expiration.`
+    }
+  ];
 }
 
 function getDaysUntilExpiry(expiryDate: string): number {
@@ -81,6 +160,7 @@ const couponsJSON = JSON.stringify(coupons);
 const totalCoupons = coupons.length;
 const totalPages = Math.ceil(totalCoupons / ITEMS_PER_PAGE);
 const currentMonthYear = getCurrentMonthYear();
+const currentYear = new Date().getFullYear();
 const couponsLast24h = getCouponsAddedInLast24Hours();
 const couponsToday = getCouponsAddedToday();
 ---
@@ -581,12 +661,14 @@ const couponsToday = getCouponsAddedToday();
               discount={c.discount}
               url={c.url}
               provider={c.provider}
+              instructor={c.instructor}
               category={c.category}
               rating={c.rating}
               students={c.students}
               verified={c.verified}
               expiryDate={c.expiryDate}
               slug={c.slug}
+              language={c.language}
             />
           </div>
         ))}
@@ -914,8 +996,10 @@ const couponsToday = getCouponsAddedToday();
 
       return (
         <Layout
-          title={`90% Off Udemy: ${entry.title} - Coupon ${currentMonthYear}`}
+          title={`${entry.title} - ${getDiscount(entry).replace('-', '')} Off Udemy Coupon Code ${currentYear}`}
           description={entry.description}
+          ogImage={entry.image}
+          keywords={`udemy coupon, ${entry.title.toLowerCase()}, ${entry.category.toLowerCase()}, ${getDiscount(entry).toLowerCase()} off, lifetime access, certificate`}
           structuredData={detailSchema}
         >
           <!-- Detail Article -->
@@ -995,8 +1079,33 @@ const couponsToday = getCouponsAddedToday();
                     </div>
                     {entry.language && (
                       <div class="bg-gradient-to-br from-slate-800/60 to-slate-900/60 rounded-xl p-4 border border-white/10 backdrop-blur-sm text-center hover:shadow-lg hover:shadow-pink-500/20 transition-all">
-                        <div class="text-sm font-black bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">{entry.language}</div>
-                        <div class="text-xs text-white/60 mt-2 font-medium">Language</div>
+                        <svg class="w-8 h-6 mx-auto mb-2" viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect width="24" height="16" rx="2" fill="#B22234"/>
+                          <rect y="1" width="24" height="1" fill="#FFFFFF"/>
+                          <rect y="3" width="24" height="1" fill="#FFFFFF"/>
+                          <rect y="5" width="24" height="1" fill="#FFFFFF"/>
+                          <rect y="7" width="24" height="1" fill="#FFFFFF"/>
+                          <rect y="9" width="24" height="1" fill="#FFFFFF"/>
+                          <rect y="11" width="24" height="1" fill="#FFFFFF"/>
+                          <rect y="13" width="24" height="1" fill="#FFFFFF"/>
+                          <rect y="15" width="24" height="1" fill="#FFFFFF"/>
+                          <rect width="10" height="8" fill="#3C3B6E"/>
+                          <circle cx="2" cy="2" r="0.5" fill="#FFFFFF"/>
+                          <circle cx="4" cy="2" r="0.5" fill="#FFFFFF"/>
+                          <circle cx="6" cy="2" r="0.5" fill="#FFFFFF"/>
+                          <circle cx="8" cy="2" r="0.5" fill="#FFFFFF"/>
+                          <circle cx="3" cy="3" r="0.5" fill="#FFFFFF"/>
+                          <circle cx="5" cy="3" r="0.5" fill="#FFFFFF"/>
+                          <circle cx="7" cy="3" r="0.5" fill="#FFFFFF"/>
+                          <circle cx="2" cy="4" r="0.5" fill="#FFFFFF"/>
+                          <circle cx="4" cy="4" r="0.5" fill="#FFFFFF"/>
+                          <circle cx="6" cy="4" r="0.5" fill="#FFFFFF"/>
+                          <circle cx="8" cy="4" r="0.5" fill="#FFFFFF"/>
+                          <circle cx="3" cy="5" r="0.5" fill="#FFFFFF"/>
+                          <circle cx="5" cy="5" r="0.5" fill="#FFFFFF"/>
+                          <circle cx="7" cy="5" r="0.5" fill="#FFFFFF"/>
+                        </svg>
+                        <div class="text-xs text-white/60 font-medium">Language</div>
                       </div>
                     )}
                     <div class="bg-gradient-to-br from-slate-800/60 to-slate-900/60 rounded-xl p-4 border border-white/10 backdrop-blur-sm text-center hover:shadow-lg hover:shadow-cyan-500/20 transition-all">
@@ -1034,7 +1143,7 @@ const couponsToday = getCouponsAddedToday();
                 <section class="mb-16 border-t border-white/10 pt-12">
                   <div class="flex items-center gap-3 mb-8">
                     <div class="w-1 h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
-                    <h2 class="text-3xl font-black text-white">Why Choose CoursesWyn for Your <strong>{entry.category} Learning?</strong></h2>
+                    <h2 class="text-3xl font-black text-white">FAQs: Why Choose CoursesWyn for Your <strong>{entry.category} Learning?</strong></h2>
                   </div>
                   
                   <!-- Trust Signals Section -->
@@ -1428,6 +1537,12 @@ const couponsToday = getCouponsAddedToday();
 
                 <!-- Info -->
                 <div class="bg-gradient-to-br from-slate-800/60 to-slate-900/60 rounded-2xl border border-white/10 backdrop-blur-sm p-8 space-y-6 hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300">
+                  {entry.instructor && (
+                    <div class="border-b border-white/10 pb-4">
+                      <div class="text-xs text-white/50 uppercase font-bold tracking-wider mb-2">Instructor</div>
+                      <div class="font-bold text-white text-lg bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">{entry.instructor}</div>
+                    </div>
+                  )}
                   <div class="border-b border-white/10 pb-4">
                     <div class="text-xs text-white/50 uppercase font-bold tracking-wider mb-2">Category</div>
                     <div class="font-bold text-white text-lg bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">{entry.category}</div>
@@ -1469,12 +1584,14 @@ const couponsToday = getCouponsAddedToday();
                       discount={c.discount}
                       url={c.url}
                       provider={c.provider}
+                      instructor={c.instructor}
                       category={c.category}
                       rating={c.rating}
                       students={c.students}
                       verified={c.verified}
                       expiryDate={c.expiryDate}
                       slug={c.slug}
+                      language={c.language}
                     />
                   ))}
                 </div>

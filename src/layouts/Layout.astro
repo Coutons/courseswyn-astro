@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import SpeedInsights from "@vercel/speed-insights/astro";
 import Search from "../components/Search.astro";
+import coupons from "../data/coupons.json";
 import { fetchPosts } from "../lib/posts";
 
 interface Props {
@@ -9,12 +10,13 @@ interface Props {
   description: string;
   canonical?: string;
   ogImage?: string;
+  keywords?: string;
   structuredData?: Record<string, any>;
   paginationNext?: string;
   paginationPrev?: string;
 }
 
-const { title, description, canonical, ogImage, structuredData, paginationNext, paginationPrev } = Astro.props;
+const { title, description, canonical, ogImage, keywords, structuredData, paginationNext, paginationPrev } = Astro.props;
 const currentPath = Astro.url.pathname;
 const segments = currentPath.split("/").filter(Boolean);
 const isHomepage = currentPath === "/";
@@ -33,6 +35,8 @@ const allPosts = await fetchPosts();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{metaTitle}</title>
     <meta name="description" content={description} />
+    <meta name="author" content="CoursesWyn" />
+    {keywords && <meta name="keywords" content={keywords} />}
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -163,7 +167,7 @@ const allPosts = await fetchPosts();
           <span class="hidden sm:inline bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">CoursesWyn</span>
         </a>
         <div class="hidden md:block flex-1 max-w-md mx-6">
-          <Search posts={allPosts} />
+          <Search posts={allPosts} coupons={coupons} />
         </div>
         <nav class="hidden gap-8 text-sm text-white/70 md:flex items-center">
           <a class="group relative font-medium transition-all duration-300 hover:text-indigo-300" href="/coupon/">

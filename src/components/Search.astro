@@ -1,14 +1,35 @@
 ---
 import Fuse from "fuse.js";
 
-const posts = await Astro.props.posts;
+const posts: any[] = await Astro.props.posts || [];
+const coupons: any[] = await Astro.props.coupons || [];
+
+// Prepare coupon data for search
+const couponItems = coupons.map(coupon => ({
+  ...coupon,
+  data: {
+    title: coupon.title,
+    description: coupon.description,
+    tags: [coupon.category, coupon.provider]
+  },
+  type: 'coupon',
+  slug: `coupon/${coupon.slug}`
+}));
+
+const blogItems = posts.map(post => ({
+  ...post,
+  type: 'blog'
+}));
+
+const allItems = [...blogItems, ...couponItems];
+
 const fuseOptions = {
   keys: ["data.title", "data.description", "data.tags"],
   threshold: 0.3,
   includeScore: true,
 };
 
-const fuse = new Fuse(posts, fuseOptions);
+const fuse = new Fuse(allItems, fuseOptions);
 ---
 
 <div id="search-container" class="relative group">
@@ -45,8 +66,8 @@ const fuse = new Fuse(posts, fuseOptions);
   </div>
 </div>
 
-<script is:inline define:vars={{ posts, fuseOptions }}>
-  window.SEARCH_POSTS = posts;
+<script is:inline define:vars={{ allItems, fuseOptions }}>
+  window.SEARCH_POSTS = allItems;
   window.FUSE_OPTIONS = fuseOptions;
 </script>
 
@@ -71,11 +92,11 @@ const fuse = new Fuse(posts, fuseOptions);
   // Placeholder Animation
   const placeholders = [
     "Search courses...",
-    "Try 'Python'",
-    "Try 'Machine Learning'",
-    "Try 'Excel'",
-    "Try 'Java'",
-    "Try 'Data Science'",
+    "Python",
+    "Machine Learning",
+    "Angela Yu",
+    "JavaScript",
+    "Data Science",
   ];
   let placeholderIndex = 0;
 

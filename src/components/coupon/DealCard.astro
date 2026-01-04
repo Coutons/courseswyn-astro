@@ -4,6 +4,7 @@ interface DealProps {
   description?: string;
   image?: string;
   provider?: string;
+  instructor?: string;
   category?: string;
   rating?: number;
   students?: number;
@@ -14,8 +15,10 @@ interface DealProps {
   verified?: boolean;
   expiryDate?: string;
   slug?: string;
+  language?: string;
 }
-const { title, description, image, provider, category, rating, students, price, originalPrice, discount, url, verified = false, expiryDate, slug } = Astro.props as DealProps;
+const { title, description, image, provider, instructor, category, rating, students, price, originalPrice, discount, url, verified = false, expiryDate, slug, language } = Astro.props as DealProps;
+const calculatedDiscount = calculateDiscount(price, originalPrice);
 
 function getDaysUntilExpiry(expiryDate: string | undefined): number {
   if (!expiryDate) return 0;
@@ -24,6 +27,26 @@ function getDaysUntilExpiry(expiryDate: string | undefined): number {
   const diffTime = expiry.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return Math.max(0, diffDays);
+}
+
+function calculateDiscount(price: string | undefined, originalPrice: string | undefined): string | undefined {
+  if (!price || !originalPrice) return discount;
+
+  const priceStr = price.toString().toLowerCase();
+  if (priceStr.includes('free')) {
+    return '-100%';
+  }
+
+  const p = parseFloat(price.replace(/[^\d.-]/g, ''));
+  const op = parseFloat(originalPrice.replace(/[^\d.-]/g, ''));
+
+  if (isNaN(p) || isNaN(op)) return discount;
+
+  if (op > 0) {
+    const discountPercent = Math.round(((op - p) / op) * 100);
+    return `-${discountPercent}%`;
+  }
+  return '-0%';
 }
 ---
 
@@ -36,19 +59,19 @@ function getDaysUntilExpiry(expiryDate: string | undefined): number {
   <a href={slug ? `/coupon/${slug}/` : '#'} class="block relative overflow-hidden group/img">
     <div class="relative w-full bg-gray-100" style="aspect-ratio: 16/9;">
       {image ? (
-        <img src={image} alt={title} loading="lazy" class="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-500" />
+        <img src={image} alt={title} loading="lazy" class="w-full h-full object-cover transition-transform duration-500" />
       ) : (
         <div class="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-gray-500 font-semibold">Course Image</div>
       )}
-      
+
       <!-- Gradient Overlay -->
-      <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-300"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
       <!-- Badge Container -->
       <div class="absolute top-4 right-4 flex flex-col gap-2 z-10">
-        {discount && (
+        {calculatedDiscount && (
           <div class="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm">
-            {discount}
+            {calculatedDiscount}
           </div>
         )}
         {verified && (
@@ -97,6 +120,20 @@ function getDaysUntilExpiry(expiryDate: string | undefined): number {
       </p>
     )}
 
+    <!-- Instructor -->
+    {instructor && (
+      <div class="text-xs font-semibold text-pink-600 bg-pink-50 px-3 py-1 rounded-full mb-2 inline-block">
+        👨‍🏫 {instructor}
+      </div>
+    )}
+
+    <!-- Language -->
+    {language && (
+      <div class="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full mb-3 inline-block ml-2">
+        🌐 {language}
+      </div>
+    )}
+
     <!-- Rating Section - Unique Style -->
     {(rating || students) && (
       <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-200">
@@ -135,9 +172,9 @@ function getDaysUntilExpiry(expiryDate: string | undefined): number {
             </span>
           )}
         </div>
-        {discount && (
+        {calculatedDiscount && (
           <div class="text-xs text-center text-emerald-600 font-semibold mt-1">
-            Save {discount}
+            {calculatedDiscount === '-100%' ? '100% Free Course' : `${calculatedDiscount.replace('-', '')} OFF`}
           </div>
         )}
       </div>
