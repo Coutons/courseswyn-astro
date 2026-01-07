@@ -88,36 +88,102 @@ if (isCategoryPage) {
 
   const rendered = await post.render();
   Content = rendered.Content;
-  related = getRelatedPosts(posts, post);
+  related = getRelatedPosts(posts, post).slice(0, 6); // Limit to 6 most relevant posts
   canonical = `${site}/${post.slug}/`;
+  // Enhanced structured data for maximum AI comprehension
   structuredData = {
     "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: post.data.title,
-    description: post.data.description,
-    image: post.data.image
-      ? [new URL(post.data.image.src, site).toString()]
-      : undefined,
-    datePublished: post.data.pubDate.toISOString(),
-    dateModified: post.data.pubDate.toISOString(),
-    author: {
-      "@type": "Organization",
-      name: "CoursesWyn",
-      url: site,
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "CoursesWyn",
-      url: site,
-      logo: {
-        "@type": "ImageObject",
-        url: `${site}/images/og-default.svg`,
+    "@graph": [
+      // Main Article Entity
+      {
+        "@type": "BlogPosting",
+        "@id": canonical,
+        "headline": post.data.title,
+        "description": post.data.description,
+        "image": post.data.image
+          ? [new URL(post.data.image.src, site).toString()]
+          : [`${site}/images/og-default.svg`],
+        "datePublished": post.data.pubDate.toISOString(),
+        "dateModified": post.data.pubDate.toISOString(),
+        "author": {
+          "@type": "Organization",
+          "name": "CoursesWyn",
+          "url": site,
+          "logo": `${site}/images/og-default.svg`
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "CoursesWyn",
+          "url": site,
+          "logo": {
+            "@type": "ImageObject",
+            "url": `${site}/images/og-default.svg`,
+            "width": 400,
+            "height": 400
+          },
+          "sameAs": [
+            "https://courseswyn.com"
+          ]
+        },
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": canonical,
+        },
+        "articleSection": post.data.tags?.[0] || "Education",
+        "keywords": post.data.tags?.join(", ") || "",
+        "wordCount": 1500, // Approximate word count
+        "inLanguage": "en-US",
+        "isFamilyFriendly": true,
+        "copyrightHolder": {
+          "@type": "Organization",
+          "name": "CoursesWyn"
+        }
       },
-    },
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": canonical,
-    },
+      // Breadcrumb Navigation
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": site
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Blog",
+            "item": `${site}/blog/`
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": post.data.title,
+            "item": canonical
+          }
+        ]
+      },
+      // WebPage Schema
+      {
+        "@type": "WebPage",
+        "@id": canonical,
+        "url": canonical,
+        "name": post.data.title,
+        "description": post.data.description,
+        "inLanguage": "en-US",
+        "datePublished": post.data.pubDate.toISOString(),
+        "dateModified": post.data.pubDate.toISOString(),
+        "publisher": {
+          "@type": "Organization",
+          "name": "CoursesWyn",
+          "url": site
+        },
+        "potentialAction": {
+          "@type": "ReadAction",
+          "target": canonical
+        }
+      }
+    ]
   };
 }
 ---
@@ -164,7 +230,7 @@ if (isCategoryPage) {
               <p class="mt-2 text-white/70">{post.data.description}</p>
               <div class="mt-6 flex gap-3 text-sm">
                 <a
-                  class="text-mint-400 hover:text-mint-300"
+                  class="text-purple-400 hover:text-purple-300"
                   href={`/${post.slug}/`}
                 >
                   Read review →
@@ -183,10 +249,33 @@ if (isCategoryPage) {
       ogImage={post.data.image?.src}
       structuredData={structuredData || undefined}
     >
-      <article class="mx-auto max-w-3xl space-y-10">
+      <!-- Breadcrumb Navigation for SEO -->
+      <nav class="mb-6 text-sm text-gray-600" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2">
+          <li><a href="/" class="hover:text-purple-600 transition-colors">Home</a></li>
+          <li class="flex items-center">
+            <svg class="w-4 h-4 mx-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+            <a href="/blog/" class="hover:text-purple-600 transition-colors">Blog</a>
+          </li>
+          <li class="flex items-center">
+            <svg class="w-4 h-4 mx-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+            <span class="text-purple-600 font-medium">{post.data.title}</span>
+          </li>
+        </ol>
+      </nav>
+
+      <article class="mx-auto max-w-5xl space-y-10 bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
         <header class="space-y-4">
-          <p class="text-sm text-white/60">{formatDate(post.data.pubDate)}</p>
-          <h1 class="text-4xl font-semibold text-white">{post.data.title}</h1>
+          <div class="flex items-center gap-4 text-sm text-gray-500">
+            <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+            <span>•</span>
+            <span>Last updated: {formatDate(post.data.pubDate)}</span>
+          </div>
+          <h1 class="text-4xl font-semibold text-gray-900">{post.data.title}</h1>
           <div class="flex flex-wrap gap-3">
             {post.data.tags.map((tag) => (
               <a class="tag-pill" href={`/category/${tag}/`}>
@@ -215,8 +304,8 @@ if (isCategoryPage) {
           </figure>
         ) : null}
 
-        <section class="space-y-4 rounded-3xl border border-mint-500/10 bg-mint-500/5 p-6">
-          <h2 class="text-lg font-semibold text-mint-200">
+        <section class="space-y-4 rounded-3xl border border-purple-500/10 bg-purple-500/5 p-6">
+          <h2 class="text-lg font-semibold text-gray-900">
             Recommended Udemy enrollments
           </h2>
           <div class="flex flex-wrap gap-3">
@@ -224,7 +313,7 @@ if (isCategoryPage) {
               <AffiliateLink url={link.url} text={link.text} />
             ))}
           </div>
-          <p class="text-xs text-white/60">
+          <p class="text-xs text-gray-500">
             Links include Udemy affiliate tracking via trk.udemy.com.
           </p>
         </section>

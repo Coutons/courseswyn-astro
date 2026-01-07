@@ -4,6 +4,7 @@ import SpeedInsights from "@vercel/speed-insights/astro";
 import Search from "../components/Search.astro";
 import coupons from "../data/coupons.json";
 import { fetchPosts } from "../lib/posts";
+import { SEO } from "astro-seo";
 
 interface Props {
   title: string;
@@ -20,6 +21,8 @@ const { title, description, canonical, ogImage, keywords, structuredData, pagina
 const currentPath = Astro.url.pathname;
 const segments = currentPath.split("/").filter(Boolean);
 const isHomepage = currentPath === "/";
+const isCouponPage = currentPath.startsWith("/coupon/");
+const isLightTheme = true;
 
 // Keep title as is - don't add extra text to maintain optimal SEO length
 const metaTitle = title;
@@ -29,14 +32,10 @@ const finalCanonical = canonical || new URL(currentPath, Astro.site).href;
 const allPosts = await fetchPosts();
 ---
 
-<html lang="en" class="min-h-full bg-surface text-white">
+<html lang="en" class={`min-h-full ${isLightTheme ? 'bg-gray-50 text-gray-900' : 'bg-surface text-white'}`}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{metaTitle}</title>
-    <meta name="description" content={description} />
-    <meta name="author" content="CoursesWyn" />
-    {keywords && <meta name="keywords" content={keywords} />}
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -44,18 +43,49 @@ const allPosts = await fetchPosts();
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
-    <meta property="og:title" content={metaTitle} />
-    <meta property="og:description" content={description} />
-    <meta property="og:image" content={finalOgImage} />
-    <meta property="og:type" content="article" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={metaTitle} />
-    <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={finalOgImage} />
+    <SEO
+      title={metaTitle}
+      description={description}
+      canonical={finalCanonical}
+      openGraph={{
+        basic: {
+          title: metaTitle,
+          type: "website",
+          image: finalOgImage,
+          url: finalCanonical,
+        },
+        optional: {
+          description: description,
+        },
+      }}
+      twitter={{
+        card: "summary_large_image",
+        title: metaTitle,
+        description: description,
+        image: finalOgImage,
+      }}
+      extend={{
+        link: [
+          { rel: "alternate", hreflang: "en", href: finalCanonical },
+          ...(paginationNext ? [{ rel: "next", href: paginationNext }] : []),
+          ...(paginationPrev ? [{ rel: "prev", href: paginationPrev }] : []),
+        ],
+        meta: [
+          { name: "author", content: "CoursesWyn" },
+          ...(keywords ? [{ name: "keywords", content: keywords }] : []),
+        ],
+      }}
+    />
+
+    <!-- Additional SEO meta tags -->
+    <meta name="author" content="CoursesWyn" />
+    {keywords && <meta name="keywords" content={keywords} />}
     <link rel="canonical" href={finalCanonical} />
-    <link rel="alternate" hreflang="en" href={finalCanonical} />
-    {paginationNext && <link rel="next" href={paginationNext} />}
-    {paginationPrev && <link rel="prev" href={paginationPrev} />}
+
+    <!-- Performance and SEO monitoring -->
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="bingbot" content="index, follow" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -112,6 +142,69 @@ const allPosts = await fetchPosts();
       )
     }
 
+    <!-- Additional SEO Structured Data for Homepage -->
+    {isHomepage && (
+      <script type="application/ld+json" is:inline>
+        {
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "100% Off Udemy Coupons & Free Courses {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}",
+          "description": "{coupons.length}+ verified 100% off Udemy coupons updated daily. Free premium courses worth $200+ with lifetime access and professional certificates. No credit card required.",
+          "url": "https://courseswyn.com",
+          "mainEntity": {
+            "@type": "ItemList",
+            "name": "Free Udemy Courses",
+            "description": "{coupons.length}+ verified 100% off Udemy coupons",
+            "numberOfItems": "{coupons.length}",
+            "itemListElement": [
+              {
+                "@type": "Course",
+                "name": "Python Programming Masterclass",
+                "provider": {
+                  "@type": "Organization",
+                  "name": "Udemy"
+                },
+                "offers": {
+                  "@type": "Offer",
+                  "price": "0",
+                  "priceCurrency": "USD",
+                  "availability": "https://schema.org/InStock"
+                }
+              },
+              {
+                "@type": "Course",
+                "name": "Web Development Bootcamp",
+                "provider": {
+                  "@type": "Organization",
+                  "name": "Udemy"
+                },
+                "offers": {
+                  "@type": "Offer",
+                  "price": "0",
+                  "priceCurrency": "USD",
+                  "availability": "https://schema.org/InStock"
+                }
+              },
+              {
+                "@type": "Course",
+                "name": "Data Science with Python",
+                "provider": {
+                  "@type": "Organization",
+                  "name": "Udemy"
+                },
+                "offers": {
+                  "@type": "Offer",
+                  "price": "0",
+                  "priceCurrency": "USD",
+                  "availability": "https://schema.org/InStock"
+                }
+              }
+            ]
+          }
+        }
+      </script>
+    )}
+
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=GT-55B77QRB"
     ></script>
@@ -139,7 +232,7 @@ const allPosts = await fetchPosts();
       });
     </script>
   </head>
-  <body class="min-h-screen bg-surface text-white antialiased">
+  <body class={`min-h-screen antialiased ${isLightTheme ? 'bg-gray-50 text-gray-900' : 'bg-surface text-white'}`}>
     <a
       href="#main"
       class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold"
@@ -150,7 +243,7 @@ const allPosts = await fetchPosts();
     >
     </div>
     <header
-      class="sticky top-0 z-50 border-b border-white/10 bg-gradient-to-r from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-xl shadow-lg shadow-indigo-500/5"
+      class={`sticky top-0 z-50 ${isLightTheme ? 'bg-white text-gray-900 border-b border-gray-200 shadow-sm' : 'border-b border-white/10 bg-gradient-to-r from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-xl shadow-lg shadow-indigo-500/5'}`}
     >
       <div
         class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4"
@@ -166,35 +259,56 @@ const allPosts = await fetchPosts();
           </span>
           <span class="hidden sm:inline bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">CoursesWyn</span>
         </a>
-        <div class="hidden md:block flex-1 max-w-md mx-6">
+        <div class="hidden md:flex items-center gap-4 flex-1 max-w-2xl mx-6">
+          <!-- Categories Dropdown -->
+          <div class="relative group">
+            <button class="flex items-center gap-2 px-3 py-2 text-sm font-medium ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/80 hover:text-white hover:bg-white/5'} rounded-lg transition-all border border-transparent ${isLightTheme ? 'hover:border-gray-300' : 'hover:border-white/10'}">
+              Categories
+              <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div class="absolute top-full left-0 mt-2 w-64 ${isLightTheme ? 'bg-white border-gray-200' : 'bg-slate-800/95 backdrop-blur-xl border-white/10'} rounded-xl p-2 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+              <div class="grid grid-cols-2 gap-1">
+                <a href="/coupon/?category=development" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Development</a>
+                <a href="/coupon/?category=business" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Business</a>
+                <a href="/coupon/?category=design" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Design</a>
+                <a href="/coupon/?category=marketing" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Marketing</a>
+                <a href="/coupon/?category=data-science" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Data Science</a>
+                <a href="/coupon/?category=it-software" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">IT & Software</a>
+                <a href="/coupon/?category=personal-development" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Personal Development</a>
+                <a href="/coupon/?category=photography" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Photography</a>
+              </div>
+            </div>
+          </div>
           <Search posts={allPosts} coupons={coupons} />
         </div>
-        <nav class="hidden gap-8 text-sm text-white/70 md:flex items-center">
-          <a class="group relative font-medium transition-all duration-300 hover:text-indigo-300" href="/coupon/">
+        <nav class="hidden gap-8 text-sm ${isLightTheme ? 'text-gray-700' : 'text-white/70'} md:flex items-center">
+          <a class="group relative font-medium transition-all duration-300 ${isLightTheme ? 'hover:text-purple-600' : 'hover:text-indigo-300'}" href="/coupon/">
             90% OFF Coupons
-            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 ${isLightTheme ? 'bg-gradient-to-r from-purple-500 to-purple-600' : 'bg-gradient-to-r from-indigo-400 to-purple-400'} group-hover:w-full transition-all duration-300"></span>
           </a>
-          <a class="group relative font-medium transition-all duration-300 hover:text-purple-300" href="/blog/">
+          <a class="group relative font-medium transition-all duration-300 ${isLightTheme ? 'hover:text-purple-600' : 'hover:text-purple-300'}" href="/blog/">
             Course Reviews
-            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300"></span>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 ${isLightTheme ? 'bg-gradient-to-r from-purple-500 to-purple-600' : 'bg-gradient-to-r from-purple-400 to-pink-400'} group-hover:w-full transition-all duration-300"></span>
           </a>
-          <a class="group relative font-medium transition-all duration-300 hover:text-cyan-300" href="/about/">
+          <a class="group relative font-medium transition-all duration-300 ${isLightTheme ? 'hover:text-purple-600' : 'hover:text-cyan-300'}" href="/about/">
             About
-            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-cyan-400 to-blue-400 group-hover:w-full transition-all duration-300"></span>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 ${isLightTheme ? 'bg-gradient-to-r from-purple-500 to-purple-600' : 'bg-gradient-to-r from-cyan-400 to-blue-400'} group-hover:w-full transition-all duration-300"></span>
           </a>
-          <a class="group relative font-medium transition-all duration-300 hover:text-emerald-300" href="/contact-us/">
+          <a class="group relative font-medium transition-all duration-300 ${isLightTheme ? 'hover:text-purple-600' : 'hover:text-emerald-300'}" href="/contact-us/">
             Contact
-            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-400 to-teal-400 group-hover:w-full transition-all duration-300"></span>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 ${isLightTheme ? 'bg-gradient-to-r from-purple-500 to-purple-600' : 'bg-gradient-to-r from-emerald-400 to-teal-400'} group-hover:w-full transition-all duration-300"></span>
           </a>
         </nav>
 
         <!-- Mobile Menu Button -->
         <button
-          class="md:hidden p-2 hover:bg-gradient-to-br hover:from-indigo-500/20 hover:to-purple-500/20 rounded-lg transition-all border border-transparent hover:border-indigo-500/30"
+          class="md:hidden p-2 ${isLightTheme ? 'hover:bg-gray-100 hover:border-gray-300' : 'hover:bg-gradient-to-br hover:from-indigo-500/20 hover:to-purple-500/20 hover:border-indigo-500/30'} rounded-lg transition-all border border-transparent"
           aria-label="Open menu"
           onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
         >
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-6 h-6 ${isLightTheme ? 'text-gray-700' : 'text-white'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
         </button>
@@ -223,18 +337,18 @@ const allPosts = await fetchPosts();
       </div>
 
       <!-- Mobile Menu -->
-      <div id="mobile-menu" class="hidden md:hidden border-t border-indigo-500/20 bg-gradient-to-b from-slate-800/95 via-slate-900/95 to-slate-900/95 backdrop-blur-xl">
+      <div id="mobile-menu" class="hidden md:hidden border-t ${isLightTheme ? 'border-gray-200 bg-white' : 'border-indigo-500/20 bg-gradient-to-b from-slate-800/95 via-slate-900/95 to-slate-900/95 backdrop-blur-xl'}">
         <nav class="flex flex-col p-4 space-y-2">
-          <a href="/coupon/" class="block px-4 py-3 rounded-lg bg-gradient-to-r hover:from-indigo-500/20 hover:to-purple-500/20 text-white/70 hover:text-indigo-300 font-medium transition-all border border-transparent hover:border-indigo-500/30">
+          <a href="/coupon/" class="block px-4 py-3 rounded-lg ${isLightTheme ? 'hover:bg-purple-50 hover:border-purple-200 text-gray-700 hover:text-purple-700 border border-transparent' : 'bg-gradient-to-r hover:from-indigo-500/20 hover:to-purple-500/20 text-white/70 hover:text-indigo-300 border border-transparent hover:border-indigo-500/30'} font-medium transition-all">
             Free Coupons
           </a>
-          <a href="/blog/" class="block px-4 py-3 rounded-lg bg-gradient-to-r hover:from-purple-500/20 hover:to-pink-500/20 text-white/70 hover:text-purple-300 font-medium transition-all border border-transparent hover:border-purple-500/30">
+          <a href="/blog/" class="block px-4 py-3 rounded-lg ${isLightTheme ? 'hover:bg-purple-50 hover:border-purple-200 text-gray-700 hover:text-purple-700 border border-transparent' : 'bg-gradient-to-r hover:from-purple-500/20 hover:to-pink-500/20 text-white/70 hover:text-purple-300 border border-transparent hover:border-purple-500/30'} font-medium transition-all">
             Course Reviews
           </a>
-          <a href="/about/" class="block px-4 py-3 rounded-lg bg-gradient-to-r hover:from-cyan-500/20 hover:to-blue-500/20 text-white/70 hover:text-cyan-300 font-medium transition-all border border-transparent hover:border-cyan-500/30">
+          <a href="/about/" class="block px-4 py-3 rounded-lg ${isLightTheme ? 'hover:bg-purple-50 hover:border-purple-200 text-gray-700 hover:text-purple-700 border border-transparent' : 'bg-gradient-to-r hover:from-cyan-500/20 hover:to-blue-500/20 text-white/70 hover:text-cyan-300 border border-transparent hover:border-cyan-500/30'} font-medium transition-all">
             About
           </a>
-          <a href="/contact-us/" class="block px-4 py-3 rounded-lg bg-gradient-to-r hover:from-emerald-500/20 hover:to-teal-500/20 text-white/70 hover:text-emerald-300 font-medium transition-all border border-transparent hover:border-emerald-500/30">
+          <a href="/contact-us/" class="block px-4 py-3 rounded-lg ${isLightTheme ? 'hover:bg-purple-50 hover:border-purple-200 text-gray-700 hover:text-purple-700 border border-transparent' : 'bg-gradient-to-r hover:from-emerald-500/20 hover:to-teal-500/20 text-white/70 hover:text-emerald-300 border border-transparent hover:border-emerald-500/30'} font-medium transition-all">
             Contact
           </a>
         </nav>
@@ -243,33 +357,51 @@ const allPosts = await fetchPosts();
 
     {
       !isHomepage && (
-        <nav aria-label="Breadcrumb" class="mx-auto max-w-6xl px-4 py-4 border-b border-white/5">
+        <nav aria-label="Breadcrumb" class={`mx-auto max-w-6xl px-4 py-4 border-b ${isLightTheme ? 'border-gray-200' : 'border-white/5'}`}>
           <ol class="flex items-center gap-2 text-sm">
             <li>
-              <a href="/" class="text-white/60 hover:text-indigo-300 transition-colors font-medium">
+              <a href="/" class={`hover:text-purple-600 transition-colors font-medium ${isLightTheme ? 'text-gray-600' : 'text-white/60 hover:text-indigo-300'}`}>
                 Home
               </a>
             </li>
-            <li class="text-white/30">/</li>
-            {segments.map((segment, index) => (
-              <li class="flex items-center gap-2">
-                {index === segments.length - 1 ? (
-                  <span class="text-white/70 capitalize font-medium">
-                    {segment.replace(/-/g, " ")}
-                  </span>
-                ) : (
-                  <>
-                    <a
-                      href={`/${segments.slice(0, index + 1).join("/")}/`}
-                      class="text-white/60 hover:text-indigo-300 capitalize font-medium transition-colors"
-                    >
-                      {segment.replace(/-/g, " ")}
-                    </a>
-                    <span class="text-white/30">/</span>
-                  </>
-                )}
-              </li>
-            ))}
+            <li class={`${isLightTheme ? 'text-gray-400' : 'text-white/30'}`}>/</li>
+            {segments.map((segment, index) => {
+              // Special handling for coupon pages - show course title instead of slug
+              const isLastSegment = index === segments.length - 1;
+              const isCouponDetailPage = isCouponPage && segments.length === 2 && index === 1;
+
+              let displayText = segment.replace(/-/g, " ");
+              let linkHref = `/${segments.slice(0, index + 1).join("/")}/`;
+
+              // For coupon detail pages, show course title instead of slug
+              if (isCouponDetailPage) {
+                const course = coupons.find(c => c.slug === segment);
+                if (course) {
+                  displayText = course.title;
+                  linkHref = `/coupon/${segment}/`;
+                }
+              }
+
+              return (
+                <li class="flex items-center gap-2">
+                  {isLastSegment ? (
+                    <span class={`${isLightTheme ? 'text-gray-900' : 'text-white/70'} font-medium`}>
+                      {displayText}
+                    </span>
+                  ) : (
+                    <>
+                      <a
+                        href={linkHref}
+                        class={`font-medium transition-colors ${isLightTheme ? 'text-gray-600 hover:text-purple-600' : 'text-white/60 hover:text-indigo-300'}`}
+                      >
+                        {displayText}
+                      </a>
+                      <span class={`${isLightTheme ? 'text-gray-400' : 'text-white/30'}`}>/</span>
+                    </>
+                  )}
+                </li>
+              );
+            })}
           </ol>
         </nav>
       )
@@ -278,22 +410,22 @@ const allPosts = await fetchPosts();
     <main id="main" class="mx-auto max-w-6xl px-4 py-12">
       <slot />
     </main>
-    <footer class="border-t border-white/5 bg-surface/80 text-white/70">
+    <footer class="border-t border-purple-200 bg-gradient-to-br from-purple-50 to-white text-purple-700">
       <div class="mx-auto max-w-6xl px-4 py-12">
         <!-- Footer Grid -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <!-- About Widget -->
           <div>
-            <h3 class="text-white font-semibold mb-4">CoursesWyn</h3>
-            <p class="text-sm text-white/60 mb-4">Independent Udemy course reviews and verified coupons to help you learn for free.</p>
-            <div class="flex gap-3 text-white/60">
-              <a href="https://twitter.com/CoursesGift" class="hover:text-mint-400 transition" title="Twitter">
+            <h3 class="text-purple-900 font-semibold mb-4">CoursesWyn</h3>
+            <p class="text-sm text-purple-600 mb-4">Independent Udemy course reviews and verified coupons to help you learn for free.</p>
+            <div class="flex gap-3 text-purple-500">
+              <a href="https://twitter.com/CoursesGift" class="hover:text-purple-700 transition" title="Twitter">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2s9 5 20 5a9.5 9.5 0 00-9-5.5c4.75 2.25 9-0.5 11-4.5a17.54 17.54 0 001-4c0-.27 0-.52-.05-.78A12.07 12.07 0 0023 3"/></svg>
               </a>
-              <a href="https://reddit.com/r/courseswyn" class="hover:text-mint-400 transition" title="Reddit">
+              <a href="https://reddit.com/r/courseswyn" class="hover:text-purple-700 transition" title="Reddit">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.385 4.859-7.181 4.859-3.796 0-7.182-2.165-7.182-4.859a3.5 3.5 0 0 1 .476-1.465 1.762 1.762 0 0 0-.587-1.668c-.342-.364-.546-.849-.546-1.39 0-.955.778-1.734 1.733-1.734.959 0 1.734.779 1.734 1.734 0 .39-.126.756-.361 1.067.588-.435 1.404-.776 2.32-.776.656 0 1.275.165 1.758.477l-.061-2.869a1.25 1.25 0 0 1 1.246-1.257c.693 0 1.255.563 1.255 1.25.006.693-.56 1.255-1.253 1.26zm2.004 7.224c-.575-.431-1.331-.446-1.691-.15-.727.592-1.64.946-2.712.946-.296 0-.588-.017-.868-.052l.023.739c.0 2.367 3.536 4.286 7.857 4.286 2.777 0 5.229-1.12 6.326-2.655.4-.558 1.249-.944 2.227-.944.778 0 1.487.33 1.987.893.647.72.878 1.933.78 2.965l-.002.018c-.314.028-.65.044-.99.044-3.882 0-7.091-1.568-7.091-3.504 0-.126.009-.25.025-.37l-.006-.038.001.021c-.052-.265-.075-.535-.075-.81 0-.826.266-1.563.733-2.175zm4.032-3.208c.35-.035.671.166.85.431.275.39.508.927.508 1.549 0 1.02-.597 1.854-1.496 1.854-.8 0-1.45-.616-1.45-1.402 0-.588.27-1.09.68-1.358a1.02 1.02 0 0 1 .908-.474z"/></svg>
               </a>
-              <a href="/rss.xml" class="hover:text-mint-400 transition" title="RSS Feed">
+              <a href="/rss.xml" class="hover:text-purple-700 transition" title="RSS Feed">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
               </a>
             </div>
@@ -301,57 +433,57 @@ const allPosts = await fetchPosts();
 
           <!-- Explore Widget -->
           <div>
-            <h4 class="text-white font-semibold mb-4">Explore</h4>
+            <h4 class="text-purple-900 font-semibold mb-4">Explore</h4>
             <ul class="space-y-2 text-sm">
-              <li><a href="/coupon/" class="text-white/60 hover:text-mint-400 transition">90% OFF Coupons</a></li>
-              <li><a href="/blog/" class="text-white/60 hover:text-mint-400 transition">Course Reviews</a></li>
-              <li><a href="/coupon/?category=ai" class="text-white/60 hover:text-mint-400 transition">AI Courses</a></li>
-              <li><a href="/coupon/?category=python" class="text-white/60 hover:text-mint-400 transition">Python Courses</a></li>
-              <li><a href="/coupon/?category=web" class="text-white/60 hover:text-mint-400 transition">Web Development</a></li>
+              <li><a href="/coupon/" class="text-purple-600 hover:text-purple-800 transition">90% OFF Coupons</a></li>
+              <li><a href="/blog/" class="text-purple-600 hover:text-purple-800 transition">Course Reviews</a></li>
+              <li><a href="/coupon/?category=ai" class="text-purple-600 hover:text-purple-800 transition">AI Courses</a></li>
+              <li><a href="/coupon/?category=python" class="text-purple-600 hover:text-purple-800 transition">Python Courses</a></li>
+              <li><a href="/coupon/?category=web" class="text-purple-600 hover:text-purple-800 transition">Web Development</a></li>
             </ul>
           </div>
 
           <!-- Company Widget -->
           <div>
-            <h4 class="text-white font-semibold mb-4">Company</h4>
+            <h4 class="text-purple-900 font-semibold mb-4">Company</h4>
             <ul class="space-y-2 text-sm">
-              <li><a href="/about/" class="text-white/60 hover:text-mint-400 transition">About Us</a></li>
-              <li><a href="/contact-us/" class="text-white/60 hover:text-mint-400 transition">Contact</a></li>
-              <li><a href="/privacy/" class="text-white/60 hover:text-mint-400 transition">Privacy Policy</a></li>
-              <li><a href="#" class="text-white/60 hover:text-mint-400 transition">Terms of Service</a></li>
-              <li><a href="#" class="text-white/60 hover:text-mint-400 transition">Advertise</a></li>
+              <li><a href="/about/" class="text-purple-600 hover:text-purple-800 transition">About Us</a></li>
+              <li><a href="/contact-us/" class="text-purple-600 hover:text-purple-800 transition">Contact</a></li>
+              <li><a href="/privacy/" class="text-purple-600 hover:text-purple-800 transition">Privacy Policy</a></li>
+              <li><a href="#" class="text-purple-600 hover:text-purple-800 transition">Terms of Service</a></li>
+              <li><a href="#" class="text-purple-600 hover:text-purple-800 transition">Advertise</a></li>
             </ul>
           </div>
 
           <!-- Newsletter Widget -->
           <div>
-            <h4 class="text-white font-semibold mb-4">Newsletter</h4>
-            <p class="text-sm text-white/60 mb-4">Get new 90% OFF coupons delivered to your inbox daily.</p>
+            <h4 class="text-purple-900 font-semibold mb-4">Newsletter</h4>
+            <p class="text-sm text-purple-600 mb-4">Get new 90% OFF coupons delivered to your inbox daily.</p>
             <form class="space-y-2">
-              <input 
-                type="email" 
-                placeholder="your@email.com" 
-                class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-mint-500 transition text-sm"
+              <input
+                type="email"
+                placeholder="your@email.com"
+                class="w-full px-3 py-2 bg-white border border-purple-300 rounded-lg text-purple-900 placeholder-purple-400 focus:outline-none focus:border-purple-500 transition text-sm"
                 required
               />
-              <button 
+              <button
                 type="submit"
-                class="w-full bg-mint-500 hover:bg-mint-600 text-black font-semibold py-2 rounded-lg transition text-sm"
+                class="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-2 rounded-lg transition text-sm"
               >
                 Subscribe
               </button>
             </form>
-            <p class="text-xs text-white/40 mt-3">We respect your privacy. Unsubscribe at any time.</p>
+            <p class="text-xs text-purple-500 mt-3">We respect your privacy. Unsubscribe at any time.</p>
           </div>
         </div>
 
         <!-- Footer Bottom -->
-        <div class="border-t border-white/10 pt-8">
+        <div class="border-t border-purple-200 pt-8">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <p class="text-sm text-white/60">
+            <p class="text-sm text-purple-600">
               © {new Date().getFullYear()} CoursesWyn. All rights reserved.
             </p>
-            <p class="text-xs text-white/40">
+            <p class="text-xs text-purple-500">
               Affiliate disclosure: We earn commission from qualifying purchases through Udemy links at no extra cost to you.
             </p>
           </div>

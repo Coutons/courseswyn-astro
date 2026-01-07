@@ -1,0 +1,182 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import courses from '../../data/coupons.json';
+
+const categories = [...new Set(courses.map(c => c.category))].sort();
+const totalCourses = courses.length;
+
+// Pagination
+const ITEMS_PER_PAGE = 20;
+const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
+const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+const endIndex = startIndex + ITEMS_PER_PAGE;
+const paginatedCourses = courses.slice(startIndex, endIndex);
+const totalPages = Math.ceil(totalCourses / ITEMS_PER_PAGE);
+---
+
+<Layout
+  title={`90% Off Udemy Coupons ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} - ${totalCourses}+ Free Course Deals | CoursesWyn`}
+  description={`✅ ${totalCourses}+ verified 90% off Udemy coupons updated daily. Free premium courses in ${categories.join(', ')} with lifetime access & certificates. No credit card required. Start learning free today!`}
+  keywords="udemy coupons, free udemy courses, 90% off udemy, udemy discount codes, free online courses, udemy deals, coupon codes udemy, udemy promo codes, free certification courses, online learning coupons"
+>
+  <header class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">Browse Free Course Coupons</h1>
+    <p class="text-lg text-gray-600 mb-4">Find your next course with verified 90% off deals and lifetime access.</p>
+    <div class="flex flex-wrap gap-4 text-sm text-gray-500">
+      <span class="flex items-center gap-1">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        {totalCourses}+ Verified Coupons
+      </span>
+      <span class="flex items-center gap-1">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        Updated Daily
+      </span>
+      <span class="flex items-center gap-1">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        Lifetime Access
+      </span>
+    </div>
+  </header>
+
+  <!-- Filters -->
+  <div class="mb-8">
+    <div class="flex flex-wrap gap-2">
+      <button
+        id="filter-all"
+        class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+        onclick="filterCourses('all')"
+      >
+        All Categories ({totalCourses})
+      </button>
+      {categories.map(cat => (
+        <button
+          id={`filter-${cat.toLowerCase().replace(/\s+/g, '-')}`}
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+          onclick={`filterCourses('${cat}')`}
+        >
+          {cat} ({courses.filter(c => c.category === cat).length})
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <!-- Course Grid -->
+  <section id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {paginatedCourses.map(course => (
+      <article class="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden group">
+        <div class="relative">
+          <a href={`/coupon/${course.slug}`} aria-label={`Get ${course.discount} off ${course.title}`}>
+            <img
+              src={course.image}
+              alt={`${course.title} - ${course.discount} off Udemy course by ${course.instructor}`}
+              class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
+              loading="lazy"
+              width="400"
+              height="225"
+            />
+          </a>
+          <div class="absolute top-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded font-semibold shadow-lg">
+            {course.discount}
+          </div>
+        </div>
+        <div class="p-4">
+          <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight hover:text-red-600 transition-colors">
+            <a href={`/coupon/${course.slug}`}>{course.title}</a>
+          </h3>
+
+          <div class="text-xs text-gray-500 mb-2" aria-label={`Instructor: ${course.instructor}`}>
+            {course.instructor}
+          </div>
+
+          <div class="flex items-center mb-2" aria-label={`Rating: ${course.rating} out of 5 stars from ${course.students} students`}>
+            <span class="text-yellow-400 text-sm mr-1" aria-hidden="true">★</span>
+            <span class="text-xs font-medium text-gray-900">{course.rating}</span>
+            <span class="text-xs text-gray-500 ml-1">({course.students} students)</span>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="text-lg font-bold text-red-600" aria-label={`Price: ${course.price}`}>{course.price}</span>
+              <span class="text-sm text-gray-500 line-through" aria-label={`Original price: ${course.originalPrice}`}>{course.originalPrice}</span>
+            </div>
+          </div>
+
+          <div class="text-xs text-gray-500 mt-2" aria-label={`Duration: ${course.duration}, Level: ${course.level}`}>
+            <span>{course.duration}</span>
+            <span class="mx-1">•</span>
+            <span>{course.level}</span>
+          </div>
+
+          <a
+            href={`/coupon/${course.slug}`}
+            class="mt-3 inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700 font-medium transition-colors"
+            aria-label={`View coupon details for ${course.title}`}
+          >
+            View Coupon →
+          </a>
+        </div>
+      </article>
+    ))}
+  </section>
+
+  <!-- Pagination -->
+  {totalPages > 1 && (
+    <div class="mt-8 flex justify-center">
+      <nav class="flex space-x-2" aria-label="Pagination">
+        {currentPage > 1 && (
+          <a
+            href={currentPage === 2 ? '/coupon/' : `?page=${currentPage - 1}`}
+            class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 transition-colors"
+          >
+            Previous
+          </a>
+        )}
+
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+          <a
+            href={pageNum === 1 ? '/coupon/' : `?page=${pageNum}`}
+            class={`px-3 py-2 border rounded transition-colors ${
+              pageNum === currentPage
+                ? 'bg-red-500 text-white border-red-500'
+                : 'border-gray-300 hover:bg-gray-50 text-gray-700'
+            }`}
+          >
+            {pageNum}
+          </a>
+        ))}
+
+        {currentPage < totalPages && (
+          <a
+            href={`?page=${currentPage + 1}`}
+            class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 transition-colors"
+          >
+            Next
+          </a>
+        )}
+      </nav>
+
+      <p class="ml-4 text-sm text-gray-600 self-center">
+        Page {currentPage} of {totalPages}
+      </p>
+    </div>
+  )}
+
+  <script>
+    function filterCourses(category: string) {
+      // Navigate to category page or filtered page
+      if (category === 'all') {
+        window.location.href = '/coupon/';
+      } else {
+        // You can implement category-specific filtering here
+        // For now, just go to main page
+        window.location.href = '/coupon/';
+      }
+    }
+  </script>
+</Layout>

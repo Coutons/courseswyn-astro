@@ -41,19 +41,28 @@ const structuredData = {
 ---
 
 <Layout title={title} description={description} canonical={canonical} structuredData={structuredData}>
-  <section class="mb-12 space-y-4">
-    <div class="flex items-center gap-3 mb-8">
-      <div class="w-1 h-10 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
-      <h1 class="text-4xl md:text-5xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Course Reviews & Learning Guides</h1>
-    </div>
-    <p class="text-white/70 max-w-2xl text-lg leading-relaxed">
-      In-depth, independent reviews of the best Udemy courses. Find expert recommendations for AI, Python, Web Development, Data Science, and 50+ other categories.
-    </p>
-  </section>
+  <!-- Breadcrumb Navigation for SEO -->
+  <nav class="mb-6 text-sm text-gray-600" aria-label="Breadcrumb">
+    <ol class="flex items-center space-x-2">
+      <li><a href="/" class="hover:text-purple-600 transition-colors">Home</a></li>
+      <li class="flex items-center">
+        <svg class="w-4 h-4 mx-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+        </svg>
+        <span class="text-purple-600 font-medium">Blog</span>
+      </li>
+    </ol>
+  </nav>
+
+  <header class="mb-8">
+    <h1 class="text-4xl font-bold text-purple-900 mb-4">Course Reviews & Learning Guides</h1>
+    <p class="text-lg text-gray-600 mb-4">In-depth, independent reviews of the best Udemy courses. Find expert recommendations for AI, Python, Web Development, Data Science, and 50+ other categories.</p>
+  </header>
 
   <Search posts={posts} />
 
-  <section class="deals-grid my-12">
+  <!-- Blog Grid -->
+  <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 my-12">
     {slice.map((post) => (
       <BlogCard
         title={post.data.title}
@@ -66,29 +75,45 @@ const structuredData = {
     ))}
   </section>
 
+  <!-- Pagination -->
   {totalPages > 1 && (
-    <nav class="mt-12 flex items-center justify-between gap-4 flex-wrap">
-      <a
-        class:list={{
-          'px-6 py-3 rounded-lg font-semibold transition-all duration-300 bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-lg hover:shadow-indigo-500/50': currentPage > 1,
-          'px-6 py-3 rounded-lg font-semibold text-white/30 pointer-events-none': currentPage === 1,
-        }}
-        href={pageHref(currentPage - 1)}
-      >
-        ← Newer posts
-      </a>
-      <span class="text-white/70 font-semibold">
+    <div class="mt-8 flex justify-center">
+      <nav class="flex space-x-2" aria-label="Pagination">
+        {currentPage > 1 && (
+          <a
+            href={pageHref(currentPage - 1)}
+            class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 transition-colors"
+          >
+            Previous
+          </a>
+        )}
+
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+          <a
+            href={pageHref(pageNum)}
+            class={`px-3 py-2 border rounded transition-colors ${
+              pageNum === currentPage
+                ? 'bg-purple-600 text-white border-purple-600'
+                : 'border-gray-300 hover:bg-gray-50 text-gray-700'
+            }`}
+          >
+            {pageNum}
+          </a>
+        ))}
+
+        {currentPage < totalPages && (
+          <a
+            href={pageHref(currentPage + 1)}
+            class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 transition-colors"
+          >
+            Next
+          </a>
+        )}
+      </nav>
+
+      <p class="ml-4 text-sm text-gray-600 self-center">
         Page {currentPage} of {totalPages}
-      </span>
-      <a
-        class:list={{
-          'px-6 py-3 rounded-lg font-semibold transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg hover:shadow-purple-500/50': currentPage < totalPages,
-          'px-6 py-3 rounded-lg font-semibold text-white/30 pointer-events-none': currentPage === totalPages,
-        }}
-        href={pageHref(currentPage + 1)}
-      >
-        Older posts →
-      </a>
-    </nav>
+      </p>
+    </div>
   )}
 </Layout>
