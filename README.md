@@ -34,6 +34,39 @@ npm install
 npm run dev
 ```
 
+### Manual Maintenance Tasks
+
+#### Adding New Courses
+1. Edit `src/data/coupons.json`
+2. Add new course object with required fields:
+   - `slug`: URL-friendly identifier
+   - `title`: Course title
+   - `description`: Course description
+   - `price`: Current discounted price (e.g., "9.99")
+   - `originalPrice`: Original price (e.g., "$74.99")
+   - Other fields: image, provider, instructor, category, rating, students, etc.
+3. After adding, run: `npm run update-discounts`
+   - This automatically calculates the `discount` field based on price and originalPrice
+
+#### Updating Course Data
+- Run `npm run update-discounts` after any manual changes to price/originalPrice
+- Update ratings, student counts, expiry dates manually as needed
+
+#### Content Management
+- Blog posts: Add new `.md` files to `src/content/blog/` directories
+- Static pages: Edit `.astro` files in `src/pages/`
+- Images: Place in `public/images/` or `src/assets/images/`
+
+#### Deployment
+- Build: `npm run build`
+- Preview: `npm run preview`
+- Deploy to Vercel or your preferred platform
+
+#### Badge System
+- **Free courses** (100% off): Automatically show "Highest Rated" badge (purple star ⭐)
+- **Paid courses**: Show "Best Seller" badge (yellow trophy 🏆)
+- Badges appear on course cards and detail pages
+
 ### Contributing
 Contributions welcome!
 Feel free to open issues, submit PRs, or help update enrollment data every month.
