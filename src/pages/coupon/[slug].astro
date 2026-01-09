@@ -11,28 +11,85 @@ export async function getStaticPaths() {
 
 const { course } = Astro.props;
 
-// Generate conversion-focused title for affiliate marketing
-const generateOptimizedTitle = (course: any) => {
-  // For affiliate sites, include compelling offer in title for better CTR
-  const shortTitle = course.title.length > 40 ?
-    course.title.substring(0, 37) + '...' :
-    course.title;
+// Global function for extracting key skills from course descriptions
+const extractKeySkill = (description: string) => {
+  const desc = description.toLowerCase();
 
-  return `${course.discount} OFF ${shortTitle} - Udemy Coupon`;
+  // Cybersecurity & Security
+  if (desc.includes('hacking') || desc.includes('penetration') || desc.includes('pentesting')) return 'ethical hacking & cybersecurity';
+  if (desc.includes('cybersecurity') || desc.includes('bug bounty') || desc.includes('vulnerability')) return 'cybersecurity & bug bounty';
+  if (desc.includes('network security') || desc.includes('firewall') || desc.includes('encryption')) return 'network security';
+
+  // Data Science & Analytics
+  if (desc.includes('machine learning') || desc.includes('deep learning') || desc.includes('neural network')) return 'machine learning & AI';
+  if (desc.includes('data science') || desc.includes('data analysis') || desc.includes('big data')) return 'data science & analytics';
+  if (desc.includes('data visualization') || desc.includes('tableau') || desc.includes('power bi')) return 'data visualization';
+  if (desc.includes('statistics') || desc.includes('statistical analysis') || desc.includes('probability')) return 'statistics & probability';
+
+  // Web Development
+  if (desc.includes('full stack') || desc.includes('full-stack')) return 'full-stack web development';
+  if (desc.includes('front-end') || desc.includes('frontend') || desc.includes('react') || desc.includes('vue') || desc.includes('angular')) return 'front-end development';
+  if (desc.includes('back-end') || desc.includes('backend') || desc.includes('node.js') || desc.includes('django') || desc.includes('laravel')) return 'back-end development';
+  if (desc.includes('html') || desc.includes('css') || desc.includes('responsive design')) return 'HTML/CSS & responsive design';
+
+  // Programming Languages
+  if (desc.includes('javascript') || desc.includes('js') || desc.includes('es6') || desc.includes('typescript')) return 'JavaScript & TypeScript';
+  if (desc.includes('python') && !desc.includes('hacking')) return 'Python programming';
+  if (desc.includes('java') || desc.includes('spring boot') || desc.includes('android')) return 'Java development';
+  if (desc.includes('c++') || desc.includes('c#') || desc.includes('dotnet')) return 'C++ & C# programming';
+
+  // AI & Emerging Tech
+  if (desc.includes('artificial intelligence') || desc.includes('chatgpt') || desc.includes('gpt') || desc.includes('openai')) return 'AI & ChatGPT';
+  if (desc.includes('generative ai') || desc.includes('dall-e') || desc.includes('stable diffusion')) return 'generative AI';
+  if (desc.includes('computer vision') || desc.includes('opencv') || desc.includes('image processing')) return 'computer vision';
+  if (desc.includes('nlp') || desc.includes('natural language processing') || desc.includes('text mining')) return 'NLP & text analytics';
+
+  // DevOps & Cloud
+  if (desc.includes('docker') || desc.includes('kubernetes') || desc.includes('container')) return 'Docker & containerization';
+  if (desc.includes('aws') || desc.includes('azure') || desc.includes('google cloud')) return 'cloud computing';
+  if (desc.includes('devops') || desc.includes('ci/cd') || desc.includes('jenkins')) return 'DevOps & CI/CD';
+
+  // Business & Design
+  if (desc.includes('digital marketing') || desc.includes('seo') || desc.includes('social media')) return 'digital marketing & SEO';
+  if (desc.includes('ui/ux') || desc.includes('user experience') || desc.includes('figma') || desc.includes('adobe xd')) return 'UI/UX design';
+  if (desc.includes('blockchain') || desc.includes('cryptocurrency') || desc.includes('web3')) return 'blockchain & Web3';
+
+  // Mobile Development
+  if (desc.includes('react native') || desc.includes('flutter') || desc.includes('mobile app')) return 'mobile app development';
+  if (desc.includes('ios') || desc.includes('swift') || desc.includes('xcode')) return 'iOS development';
+  if (desc.includes('android') || desc.includes('kotlin') || desc.includes('mobile development')) return 'Android development';
+
+  // Default fallback
+  return course.category;
+};
+
+// Generate SEO-optimized title with target keywords
+const generateOptimizedTitle = (course: any) => {
+  // Extract key skill for title optimization
+  const extractKeySkillForTitle = (description: string) => {
+    const desc = description.toLowerCase();
+    if (desc.includes('hacking') || desc.includes('penetration')) return 'Ethical Hacking';
+    if (desc.includes('machine learning') || desc.includes('deep learning')) return 'Machine Learning';
+    if (desc.includes('data science') || desc.includes('data analysis')) return 'Data Science';
+    if (desc.includes('web development') || desc.includes('full stack')) return 'Web Development';
+    if (desc.includes('javascript') || desc.includes('react')) return 'JavaScript';
+    if (desc.includes('python') && !desc.includes('hacking')) return 'Python';
+    if (desc.includes('ai') || desc.includes('artificial intelligence')) return 'AI';
+    if (desc.includes('cybersecurity') || desc.includes('bug bounty')) return 'Cybersecurity';
+    return course.category;
+  };
+
+  const keySkill = extractKeySkillForTitle(course.description);
+  // SEO-optimized title: [Discount] OFF [Course Title] - Learn [Key Skill] Free Udemy Course
+  return `${course.discount} OFF ${course.title} - Learn ${keySkill} Free Udemy Course`;
 };
 
 const generateOptimizedDescription = (course: any) => {
-  // Create benefit-focused descriptions that don't repeat the title
-  const descTemplates = {
-    'python': `Master Python programming with hands-on projects. Get ${course.discount} OFF this comprehensive Udemy Python course with ${course.students.toLocaleString()}+ students. Use our ${course.title} Udemy coupon for free Python certification & lifetime access. Learn Python data analysis and visualization with professional Udemy training.`,
-    'javascript': `Become a JavaScript expert with real-world applications. Save ${course.discount} with this Udemy JavaScript course trusted by ${course.students.toLocaleString()}+ developers. ${course.title} Udemy discount code for full JavaScript development certification.`,
-    'data-science': `Transform your career with data science skills. ${course.discount} OFF this complete Udemy data science program with ${course.students.toLocaleString()}+ successful graduates. ${course.title} Udemy free course access with professional data science certification.`,
-    'web-development': `Build modern websites & web applications. Get ${course.discount} OFF this Udemy full-stack web development course with lifetime access & professional certificate. ${course.title} Udemy coupon for complete web development training.`,
-    'ai': `Future-proof your career with AI skills. ${course.discount} OFF this Udemy AI & machine learning course with ${course.students.toLocaleString()}+ students enrolled. ${course.title} Udemy free access to AI certification course.`,
-    'default': `Master ${course.category} with professional training. ${course.discount} OFF this comprehensive Udemy course with certificate, lifetime access & ${course.students.toLocaleString()}+ students. ${course.title} Udemy coupon for ${course.category} certification.`
-  };
+  // Create unique descriptions with full title, keeping within SEO limits
+  const keySkill = extractKeySkill(course.description);
+  const fullDesc = `🚀 Get ${course.title} FREE with ${course.discount} OFF! ${course.rating}⭐ rated by ${course.students.toLocaleString()}+ students. Master ${keySkill} skills with lifetime access & certificate. No credit card required. Best Udemy deal 2026!`;
 
-  return ((descTemplates as any)[course.category] || descTemplates['default']) + ' Best Udemy deal 2026.';
+  return fullDesc;
 };
 
 const title = generateOptimizedTitle(course);
@@ -158,10 +215,18 @@ const structuredData = {
       "hasCourseInstance": {
         "@type": "CourseInstance",
         "courseMode": "online",
+        "courseWorkload": course.duration,
         "instructor": {
           "@type": "Person",
-          "name": course.instructor
-        }
+          "name": course.instructor,
+          "jobTitle": `${course.category} Instructor`,
+          "knowsAbout": extractKeySkill(course.description)
+        },
+        "coursePrerequisites": course.level === 'Beginner' ? 'No prior experience required' : `Basic knowledge of ${course.category}`,
+        "teaches": extractKeySkill(course.description),
+        "educationalLevel": course.level,
+        "numberOfCredits": course.totalLectures,
+        "inLanguage": course.language || "en"
       },
       "about": {
         "@type": "DefinedTerm",
@@ -241,6 +306,22 @@ const structuredData = {
           "acceptedAnswer": {
             "@type": "Answer",
             "text": `${course.title} provides lifetime access! Once enrolled with our coupon, you can learn at your own pace and revisit the material anytime. No expiration dates or hidden fees for this ${course.title} Udemy course.`
+          }
+        },
+        {
+          "@type": "Question",
+          "name": `What will I learn in ${course.title}? ${extractKeySkill(course.description)} course content`,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": `${course.title} teaches you ${extractKeySkill(course.description)} through ${course.totalLectures} comprehensive lectures. You'll master practical skills with hands-on projects and real-world applications. Perfect for ${course.level.toLowerCase()} level students looking to advance their ${course.category} career.`
+          }
+        },
+        {
+          "@type": "Question",
+          "name": `${course.title} instructor - who teaches this course?`,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": `${course.title} is taught by ${course.instructor}, an experienced professional with expertise in ${course.category}. With ${course.students.toLocaleString()}+ students enrolled and excellent ${course.rating}⭐ ratings, this instructor provides high-quality education and ongoing support throughout the course.`
           }
         }
       ]
@@ -648,8 +729,9 @@ const sampleTestimonials = generateRealisticTestimonials(course);
       <div>
         <img
           src={course.image}
-          alt={`${course.title} Udemy coupon - ${course.discount} off ${course.category} course with certificate`}
+          alt={`${course.title} - ${extractKeySkill(course.description)} Udemy course. Get ${course.discount} off certification with lifetime access. ${course.rating} stars from ${course.students.toLocaleString()}+ students. Learn ${course.category} skills online.`}
           class="w-full rounded-lg shadow-lg"
+          loading="lazy"
         />
 
         <!-- Price and CTA -->
@@ -831,6 +913,34 @@ const sampleTestimonials = generateRealisticTestimonials(course);
           </div>
         </details>
       </div>
+
+      <div class="border border-gray-200 rounded-lg">
+        <details class="group">
+          <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+            <h3 class="text-lg font-semibold text-gray-900 pr-4">What will I learn in {course.title}? {extractKeySkill(course.description)} course content</h3>
+            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </summary>
+          <div class="px-4 pb-4">
+            <p class="text-gray-700 leading-relaxed">{course.title} teaches you {extractKeySkill(course.description)} through {course.totalLectures} comprehensive lectures. You'll master practical skills with hands-on projects and real-world applications. Perfect for {course.level.toLowerCase()} level students looking to advance their {course.category} career.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="border border-gray-200 rounded-lg">
+        <details class="group">
+          <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+            <h3 class="text-lg font-semibold text-gray-900 pr-4">{course.title} instructor - who teaches this course?</h3>
+            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </summary>
+          <div class="px-4 pb-4">
+            <p class="text-gray-700 leading-relaxed">{course.title} is taught by {course.instructor}, an experienced professional with expertise in {course.category}. With {course.students.toLocaleString()}+ students enrolled and excellent {course.rating}⭐ ratings, this instructor provides high-quality education and ongoing support throughout the course.</p>
+          </div>
+        </details>
+      </div>
     </div>
   </div>
 
@@ -851,7 +961,7 @@ const sampleTestimonials = generateRealisticTestimonials(course);
       </div>
     </div>
     <div class="grid md:grid-cols-2 gap-6">
-      {sampleTestimonials.map((testimonial) => (
+      {sampleTestimonials.map((testimonial: any) => (
         <div class="bg-white rounded-lg p-4 border border-purple-100">
           <div class="flex items-center mb-3">
             <div class="flex mr-2">
@@ -870,7 +980,7 @@ const sampleTestimonials = generateRealisticTestimonials(course);
   <!-- Similar Courses -->
   {similarCourses.length > 0 && (
     <div class="mb-8">
-      <h2 class="text-2xl font-bold text-gray-900 mb-6">Students also bought</h2>
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">More {extractKeySkill(course.description)} Courses - Students Also Bought</h2>
       <div class="grid md:grid-cols-3 gap-6">
         {similarCourses.map((similar) => (
           <a
@@ -880,8 +990,9 @@ const sampleTestimonials = generateRealisticTestimonials(course);
             <div class="relative">
               <img
                 src={similar.image}
-                alt={similar.title}
+                alt={`${similar.title} - ${extractKeySkill(similar.description)} Udemy course with ${similar.discount} off`}
                 class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-200"
+                loading="lazy"
               />
               <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
                 {similar.discount}
