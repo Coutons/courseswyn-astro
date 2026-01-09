@@ -13,7 +13,7 @@ Every article includes:
 - Real student outcomes & portfolio projects
 - Transparent affiliate disclosure
 
-### Latest Reviews (December 2025)
+### Latest Reviews (2026)
 - [Top 10 Python AI Courses on Udemy 2026](https://courseswyn.com/top-10-python-courses-on-udemy/)
 - [Top 8 AI-Powered Web Development Courses on Udemy 2026](https://courseswyn.com/top-8-ai-powered-web-development-courses-udemy-2026/)
 - [Top 10 Generative AI Bootcamps on Udemy 2026](https://courseswyn.com/top-10-generative-ai-bootcamps-udemy-2026/)
