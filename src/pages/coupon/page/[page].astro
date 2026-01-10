@@ -3,14 +3,36 @@ import Layout from '../../../layouts/Layout.astro';
 import courses from '../../../data/coupons.json';
 
 const categories = [...new Set(courses.map(c => c.category))].sort();
-const totalCourses = courses.length;
+
+// Helper functions for category slug handling
+function createSlug(text: string): string {
+  return text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+}
+
+function findCategoryFromSlug(slug: string): string | null {
+  return categories.find(cat => createSlug(cat) === slug) || null;
+}
+
+// Parse URL parameters
+const url = new URL(Astro.request.url);
+const categorySlug = url.searchParams.get('category');
+const currentCategory = categorySlug ? findCategoryFromSlug(categorySlug) : null;
+
+// Filter courses by category if specified
+const filteredCourses = currentCategory ? courses.filter(c => c.category === currentCategory) : courses;
+const totalCourses = filteredCourses.length;
+
+// Helper function to build URLs with category parameter
+function buildUrl(pagePath: string): string {
+  return currentCategory ? `${pagePath}?category=${createSlug(currentCategory)}` : pagePath;
+}
 
 // Pagination
 const ITEMS_PER_PAGE = 12;
 const currentPage = parseInt(Astro.params.page || '1');
 const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
 const endIndex = startIndex + ITEMS_PER_PAGE;
-const paginatedCourses = courses.slice(startIndex, endIndex);
+const paginatedCourses = filteredCourses.slice(startIndex, endIndex);
 const totalPages = Math.ceil(totalCourses / ITEMS_PER_PAGE);
 
 // Pagination pages
@@ -76,23 +98,36 @@ export async function getStaticPaths() {
 
   <!-- Filters -->
   <div class="mb-8">
-    <div class="flex flex-wrap gap-2">
-      <button
-        id="filter-all"
-        class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-        onclick="filterCourses('all')"
+    <!-- Category Search Input -->
+    <div class="mb-4">
+      <input
+        type="text"
+        id="category-search"
+        placeholder="Search categories..."
+        class="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+      />
+    </div>
+
+    <div id="categories-container" class="flex flex-wrap gap-2">
+      <a
+        href="/coupon/"
+        class={`px-4 py-2 rounded transition-colors ${!currentCategory ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
       >
-        All Categories ({totalCourses})
-      </button>
-      {categories.map(cat => (
-        <button
-          id={`filter-${cat.toLowerCase().replace(/\s+/g, '-')}`}
-          class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
-          onclick={`filterCourses('${cat}')`}
-        >
-          {cat} ({courses.filter(c => c.category === cat).length})
-        </button>
-      ))}
+        All Categories ({courses.length})
+      </a>
+      {categories.map(cat => {
+        const isActive = cat === currentCategory;
+        const slug = createSlug(cat);
+        return (
+          <a
+            href={`/coupon/?category=${slug}`}
+            class={`px-4 py-2 rounded transition-colors category-item ${isActive ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+            data-category={cat.toLowerCase()}
+          >
+            {cat} ({courses.filter(c => c.category === cat).length})
+          </a>
+        );
+      })}
     </div>
   </div>
 
@@ -171,7 +206,7 @@ export async function getStaticPaths() {
       <nav class="flex space-x-2" aria-label="Pagination">
         {currentPage > 1 && (
           <a
-            href={currentPage === 2 ? '/coupon/' : `/coupon/page/${currentPage - 1}`}
+            href={buildUrl(currentPage === 2 ? '/coupon/' : `/coupon/page/${currentPage - 1}`)}
             class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 transition-colors"
           >
             Previous
@@ -183,7 +218,7 @@ export async function getStaticPaths() {
             <span class="px-3 py-2 border border-gray-300 text-gray-500">...</span>
           ) : (
             <a
-              href={pageNum === 1 ? '/coupon/' : `/coupon/page/${pageNum}`}
+              href={buildUrl(pageNum === 1 ? '/coupon/' : `/coupon/page/${pageNum}`)}
               class={`px-3 py-2 border rounded transition-colors ${
                 pageNum === currentPage
                   ? 'bg-red-500 text-white border-red-500'
@@ -197,7 +232,7 @@ export async function getStaticPaths() {
 
         {currentPage < totalPages && (
           <a
-            href={`/coupon/page/${currentPage + 1}`}
+            href={buildUrl(`/coupon/page/${currentPage + 1}`)}
             class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 transition-colors"
           >
             Next
@@ -212,15 +247,31 @@ export async function getStaticPaths() {
   )}
 
   <script>
-    function filterCourses(category: string) {
-      // Navigate to category page or filtered page
-      if (category === 'all') {
-        window.location.href = '/coupon/';
-      } else {
-        // You can implement category-specific filtering here
-        // For now, just go to main page
-        window.location.href = '/coupon/';
+    // Handle category search input
+    function handleCategorySearch(event: Event) {
+      const target = event.target as HTMLInputElement;
+      const searchTerm = target.value.toLowerCase();
+      const categoryItems = document.querySelectorAll('.category-item');
+
+      categoryItems.forEach(item => {
+        const categoryName = item.getAttribute('data-category');
+        if (categoryName && categoryName.includes(searchTerm)) {
+          (item as HTMLElement).style.display = 'inline-block';
+        } else {
+          (item as HTMLElement).style.display = 'none';
+        }
+      });
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      const searchInput = document.getElementById('category-search');
+      if (searchInput) {
+        searchInput.addEventListener('input', handleCategorySearch);
       }
     }
+
+    // Initialize
+    setupEventListeners();
   </script>
 </Layout>
