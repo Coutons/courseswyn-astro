@@ -5,23 +5,7 @@ pubDate: 2025-11-25T09:40:39.666Z
 tags:
   - udemy
 image: ../../../assets/images/best-prompt-engineering-courses-udemy-2026.jpg
-affiliate_links:
-  - text: 'Enroll Now: The Complete Prompt Engineering for AI Bootcamp (108K+ Students) →'
-    url: 'https://trk.udemy.com/kOePbN'
-  - text: 'Enroll Now: Prompt Engineering Certification: Master AI →'
-    url: 'https://trk.udemy.com/e19xBz'
-  - text: 'Enroll Now: Practical Prompt Engineering Masterclass →'
-    url: 'https://trk.udemy.com/o41abm'
-  - text: 'Enroll Now: Prompt Engineering & AI with ChatGPT: Novice to Expert 2025 →'
-    url: 'https://trk.udemy.com/bOxg0k'
-  - text: 'Enroll Now: Prompt Engineering for Developers: The Definitive Guide →'
-    url: 'https://trk.udemy.com/4GbBqo'
-  - text: 'Enroll Now: AI Prompt Engineering For Cybersecurity Pros →'
-    url: 'https://trk.udemy.com/K01YW9'
-  - text: 'Enroll Now: Prompt Engineering for Beginners →'
-    url: 'https://trk.udemy.com/qzJGBL'
-  - text: 'Enroll Now: Prompt Engineering: Getting Future Ready (1000+ Prompts) →'
-    url: 'https://trk.udemy.com/GKeY2L'
+
 ---
 ![12 Best Prompt Engineering Courses on Udemy for 2026](../../../assets/images/best-prompt-engineering-courses-udemy-2026.jpg)
 

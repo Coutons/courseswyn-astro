@@ -7,27 +7,6 @@ tags:
   - vibe-coding
   - AI
 image: ../../../assets/images/top-vibe-coding-courses-2026.jpg
-affiliate_links:
-  - text: 'Get Course: Vibe Coding Bootcamp: Build Any App, Game or Website with AI'
-    url: 'https://trk.udemy.com/MA6333'
-  - text: 'Get Course: Vibe Coding: AI-Driven Software Development and Testing'
-    url: 'https://trk.udemy.com/mOWVVq'
-  - text: 'Get Course: The Complete Vibe Coding for Non-coders Guide'
-    url: 'https://trk.udemy.com/e1VPPD'
-  - text: 'Get Course: Cursor Course: FullStack development with Cursor Vibe Coding'
-    url: 'https://trk.udemy.com/nX0Jzo'
-  - text: 'Get Course: Vibe Coding Masterclass: Full-Stack Web Development with AI'
-    url: 'https://trk.udemy.com/YRQ3xm'
-  - text: 'Get Course: Vibe Coding: Use AI & Python to Automate and Prototype Ideas'
-    url: 'https://trk.udemy.com/DyXzrj'
-  - text: 'Get Course: AI-assisted Android App Development - Gen AI (Vibe Coding)'
-    url: 'https://trk.udemy.com/APJXVj'
-  - text: 'Get Course: The Complete Vibe coding for UX/UI Designers'
-    url: 'https://trk.udemy.com/K0n3Ln'
-  - text: 'Get Course: Vibe Coding for Digital Marketing'
-    url: 'https://trk.udemy.com/e1VPXr'
-  - text: 'Get Course: Front-End Web Development With Replit AI - Vibe Coding'
-    url: 'https://trk.udemy.com/BnZoa1'
 ---
 
 ![Top 10 Vibe Coding Courses on Udemy 2026](../../../assets/images/top-vibe-coding-courses-2026.jpg "Top 10 Vibe Coding Courses on Udemy 2026")

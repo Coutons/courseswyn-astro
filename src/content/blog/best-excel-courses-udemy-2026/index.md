@@ -9,27 +9,6 @@ tags:
   - Productivity
   - Excel Certification
 image: ../../../assets/images/top-excel-courses-2026.jpg
-affiliate_links:
-  - text: 'Microsoft Excel - Excel from Beginner to Advanced'
-    url: 'https://trk.udemy.com/MA6333'
-  - text: 'Microsoft Excel: Advanced Excel Formulas & Functions'
-    url: 'https://trk.udemy.com/WymMN3'
-  - text: 'Microsoft Excel: Business Intelligence w/ Power Query & DAX'
-    url: 'https://trk.udemy.com/ra6mDB'
-  - text: 'Ultimate Microsoft Office; Excel, Word, PowerPoint & Access'
-    url: 'https://trk.udemy.com/yqdX9y'
-  - text: 'Unlock Excel VBA and Excel Macros'
-    url: 'https://trk.udemy.com/YRQMbq'
-  - text: 'Microsoft Excel: Data Analysis with Excel Pivot Tables'
-    url: 'https://trk.udemy.com/qzbamq'
-  - text: 'Beginner to Pro in Excel: Financial Modeling and Valuation'
-    url: 'https://trk.udemy.com/N9OM2P'
-  - text: 'Microsoft Excel Certification Exam Prep: MO-201 Excel Expert'
-    url: 'https://trk.udemy.com/qzbaVq'
-  - text: 'Microsoft Excel for Data & Business Analytics'
-    url: 'https://trk.udemy.com/EEoMxW'
-  - text: 'Become a Data Analyst: Excel, SQL & Tableau - 3-in-1 Bundle'
-    url: 'https://trk.udemy.com/ra6m0j'
 ---
 
 ![Top 10 Best Excel Courses on Udemy 2026](../../../assets/images/top-excel-courses-2026.jpg "Top 10 Excel Courses on Udemy 2026")

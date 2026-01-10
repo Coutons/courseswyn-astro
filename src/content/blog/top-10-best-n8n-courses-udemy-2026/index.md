@@ -5,23 +5,6 @@ pubDate: 2025-11-25T09:40:39.676Z
 tags:
   - udemy
 image: ../../../assets/images/top-n8n-courses.jpg
-affiliate_links:
-  - text: 'Get Course: n8n - AI Agents, AI Automations & AI Voice Agents (No-code!)'
-    url: 'https://trk.udemy.com/Qj55WA'
-  - text: 'Get Course: Build & Monetize n8n AI Agents Workflow Automation Designs'
-    url: 'https://trk.udemy.com/kOmmNN'
-  - text: 'Get Course: Master n8n AI Agents: Build & Sell AI Agents and Automations'
-    url: 'https://trk.udemy.com/qz77BL'
-  - text: 'Get Course: Complete N8N and AI Automation Masterclass'
-    url: 'https://trk.udemy.com/jevvB0'
-  - text: 'Get Course: n8n Masterclass: Build AI Automations & Scalable Workflows'
-    url: 'https://trk.udemy.com/aO004M'
-  - text: 'Get Course: n8n The Ultimate Course'
-    url: 'https://trk.udemy.com/19mmVm'
-  - text: 'Get Course: N8N Automation for AI Agents (Full Course)'
-    url: 'https://trk.udemy.com/EE33AK'
-  - text: 'Get Course: MCP: Build Agents with Claude, Cursor, Flowise, Python & n8n'
-    url: 'https://trk.udemy.com/vP77mj'
 ---
 ## Top 10 Best n8n Courses on Udemy 2026
 

@@ -5,23 +5,6 @@ pubDate: 2025-11-25T09:40:39.669Z
 tags:
   - udemy
 image: ../../../assets/images/top-generative-ai-courses-2026.png
-affiliate_links:
-  - text: 'Enroll Now: ChatGPT & Generative AI - The Complete Guide (150K+ Students, Constant Updates) →'
-    url: 'https://trk.udemy.com/vP7ezL'
-  - text: 'Enroll Now: The Complete AI Guide - 50+ Tools, Monetization & No-Code Apps →'
-    url: 'https://trk.udemy.com/YRJWDr'
-  - text: 'Enroll Now: Full Stack Generative AI with Python - Deploy Production Apps →'
-    url: 'https://trk.udemy.com/7aZ3m5'
-  - text: 'Enroll Now: Generative AI, ChatGPT 5 & Copilot Mastery 2025 - Business Automation →'
-    url: 'https://trk.udemy.com/xL7A9y'
-  - text: 'Enroll Now: Complete Generative AI Course - RAG, Multi-Agent & AWS Deployment →'
-    url: 'https://trk.udemy.com/Qj5VO6'
-  - text: 'Enroll Now: The Complete Python + Generative AI Bootcamp - Zero to Pro →'
-    url: 'https://trk.udemy.com/ra7jnD'
-  - text: 'Enroll Now: Generative AI for NodeJs - OpenAI, LangChain, TypeScript →'
-    url: 'https://trk.udemy.com/POPJDQ'
-  - text: 'Enroll Now: Generative AI on AWS - Bedrock, RAG & 9+ Use Cases →'
-    url: 'https://trk.udemy.com/VxGz5E'
 ---
 ![Top Generative AI Courses 2026](../../../assets/images/top-generative-ai-courses-2026.png)
 

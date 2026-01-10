@@ -7,11 +7,7 @@ tags:
   - spring boot
   - backend
 image: ../../../assets/images/spring-boot-udemy-courses.jpg
-affiliate_links:
-  - text: Enroll Now on Udemy
-    url: 'https://trk.udemy.com/c/6564357/3193860/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fspring-hibernate-tutorial%2F%3FcouponCode%3DUDEAFFHP22025'
-  - text: Enroll Now on Udemy
-    url: 'https://trk.udemy.com/c/6564357/3193860/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fspring-framework-5-beginner-to-guru%2F%3FcouponCode%3DUDEAFFHP22025'
+
 ---
 <!-- More Content... -->
 

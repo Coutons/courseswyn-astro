@@ -456,7 +456,12 @@ Paid bootcamps win with structured learning, certificates, lifetime access, and 
   "@type": "AggregateRating",
   "itemReviewed": {
     "@type": "Course",
-    "name": "Top 10 Generative AI Bootcamps on Udemy 2026"
+    "name": "Top 10 Generative AI Bootcamps on Udemy 2026",
+    "description": "Discover the 10 best Generative AI bootcamps on Udemy for 2026. Learn from top instructors like Ryan Ahmed, Krish Naik, and Leila Gharani. Master Gen AI for ChatGPT, LLM agents, RAG, and more with these expert-led courses.",
+    "provider": {
+      "@type": "Organization",
+      "name": "Udemy"
+    }
   },
   "ratingValue": "4.8",
   "reviewCount": "1250",
@@ -472,7 +477,12 @@ Paid bootcamps win with structured learning, certificates, lifetime access, and 
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "Generative AI, ChatGPT 5, Copilot & AI Agents Mastery 2025"
+      "name": "Generative AI, ChatGPT 5, Copilot & AI Agents Mastery 2025",
+      "description": "Comprehensive Gen AI mastery with ChatGPT, Copilot, and AI agents for business applications.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -488,7 +498,12 @@ Paid bootcamps win with structured learning, certificates, lifetime access, and 
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "The Agentic AI Engineering Masterclass 2025"
+      "name": "The Agentic AI Engineering Masterclass 2025",
+      "description": "Complete bootcamp for building autonomous AI agents and multi-agent systems.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -504,7 +519,12 @@ Paid bootcamps win with structured learning, certificates, lifetime access, and 
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "Complete Generative AI Course With Langchain and Huggingface"
+      "name": "Complete Generative AI Course With Langchain and Huggingface",
+      "description": "Open-source Gen AI with LangChain and Hugging Face for building advanced applications.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -520,7 +540,12 @@ Paid bootcamps win with structured learning, certificates, lifetime access, and 
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "AI for Business Leaders (Bestseller)"
+      "name": "AI for Business Leaders (Bestseller)",
+      "description": "Non-technical guide to AI implementation and risks for business leaders.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -536,7 +561,12 @@ Paid bootcamps win with structured learning, certificates, lifetime access, and 
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "Gemini Google AI: The All-in-One AI Masterclass 2025 [NEW]"
+      "name": "Gemini Google AI: The All-in-One AI Masterclass 2025 [NEW]",
+      "description": "Productivity-focused Gen AI with Google tools like Gemini for business use.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -552,7 +582,12 @@ Paid bootcamps win with structured learning, certificates, lifetime access, and 
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "Ultimate RAG Bootcamp Using Langchain, LangGraph & Langsmith"
+      "name": "Ultimate RAG Bootcamp Using Langchain, LangGraph & Langsmith",
+      "description": "Advanced RAG and agentic systems using LangChain and LangGraph.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -568,7 +603,12 @@ Paid bootcamps win with structured learning, certificates, lifetime access, and 
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "Building AI Agents & Agentic AI System via Microsoft AutoGen"
+      "name": "Building AI Agents & Agentic AI System via Microsoft AutoGen",
+      "description": "Microsoft-based agentic AI systems with AutoGen framework.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -584,7 +624,12 @@ Paid bootcamps win with structured learning, certificates, lifetime access, and 
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "Complete Agentic AI Bootcamp With LangGraph and Langchain"
+      "name": "Complete Agentic AI Bootcamp With LangGraph and Langchain",
+      "description": "Full agentic AI stack with LangGraph and LangChain for production applications.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -600,7 +645,12 @@ Paid bootcamps win with structured learning, certificates, lifetime access, and 
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "Generative AI - Risk and Cyber Security Masterclass 2026"
+      "name": "Generative AI - Risk and Cyber Security Masterclass 2026",
+      "description": "Gen AI security and risk management for cybersecurity professionals.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -616,7 +666,12 @@ Paid bootcamps win with structured learning, certificates, lifetime access, and 
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "Generative AI for Leaders & Business Professionals"
+      "name": "Generative AI for Leaders & Business Professionals",
+      "description": "Business applications and leadership in Gen AI for professionals.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",

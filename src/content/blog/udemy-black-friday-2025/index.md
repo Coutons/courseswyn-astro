@@ -7,9 +7,6 @@ tags:
   - black-friday
   - deals
 image: ../../../assets/images/udemy-black-friday-2025.png
-affiliate_links:
-  - text: See All Black Friday Deals
-    url: https://trk.udemy.com/c/6564357/3398467/39854
 ---
 
 <script type="application/ld+json">

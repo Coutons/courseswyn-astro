@@ -340,7 +340,12 @@ Happy coding—and happy earning in 2026!
   "@type": "AggregateRating",
   "itemReviewed": {
     "@type": "Course",
-    "name": "Top 8 AI-Powered Web Development Courses on Udemy 2026"
+    "name": "Top 8 AI-Powered Web Development Courses on Udemy 2026",
+    "description": "Discover the 8 best AI-accelerated web dev courses on Udemy 2026. Build full-stack apps 5× faster with Next.js 15, Cursor AI, OpenAI API & modern stacks.",
+    "provider": {
+      "@type": "Organization",
+      "name": "Udemy"
+    }
   },
   "ratingValue": "4.7",
   "reviewCount": "850",
@@ -356,7 +361,12 @@ Happy coding—and happy earning in 2026!
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "AI-Accelerated Web Developer Bootcamp | Build Full-Stack App"
+      "name": "AI-Accelerated Web Developer Bootcamp | Build Full-Stack App",
+      "description": "Complete full-stack Next.js bootcamp with AI-assisted development workflows.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -372,7 +382,12 @@ Happy coding—and happy earning in 2026!
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "Vibe Coding Bootcamp: Build Any App, Game or Website with AI"
+      "name": "Vibe Coding Bootcamp: Build Any App, Game or Website with AI",
+      "description": "Build websites and apps using AI tools like ChatGPT and Lovable.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -388,7 +403,12 @@ Happy coding—and happy earning in 2026!
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "Vibe Coding: AI-Driven Software Development and Testing"
+      "name": "Vibe Coding: AI-Driven Software Development and Testing",
+      "description": "Learn vibe coding approach with Cursor and Windsurf AI tools.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -404,7 +424,12 @@ Happy coding—and happy earning in 2026!
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "The Complete AI Coding Course (2025) - Cursor, Claude Code"
+      "name": "The Complete AI Coding Course (2025) - Cursor, Claude Code",
+      "description": "Comprehensive AI coding course with Cursor AI and Claude tools.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -420,7 +445,12 @@ Happy coding—and happy earning in 2026!
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "Real-World AI Coding (\"Dibe Coding\")"
+      "name": "Real-World AI Coding (\"Dibe Coding\")",
+      "description": "Professional AI coding workflow for enterprise development.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -436,7 +466,12 @@ Happy coding—and happy earning in 2026!
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "Cursor AI Beginner to Pro: Build Production Web Apps with AI"
+      "name": "Cursor AI Beginner to Pro: Build Production Web Apps with AI",
+      "description": "Build production web apps using Cursor AI and modern stacks.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -452,7 +487,12 @@ Happy coding—and happy earning in 2026!
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "Learn AI / Agentic Application Development with Windsurf AI"
+      "name": "Learn AI / Agentic Application Development with Windsurf AI",
+      "description": "AI and agentic app development using Windsurf AI platform.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",
@@ -468,7 +508,12 @@ Happy coding—and happy earning in 2026!
     "@type": "Review",
     "itemReviewed": {
       "@type": "Course",
-      "name": "Learn AI App Development with Lovable 2.0 (Includes Cloud)"
+      "name": "Learn AI App Development with Lovable 2.0 (Includes Cloud)",
+      "description": "No-code AI app development with Lovable platform and cloud features.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Udemy"
+      }
     },
     "reviewRating": {
       "@type": "Rating",

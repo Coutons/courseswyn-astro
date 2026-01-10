@@ -12,23 +12,6 @@ tags:
   - Beginners
   - Content Creation
 image: ../../../assets/images/top-genai-marketing-courses-2026.jpg
-affiliate_links:
-  - text: 'Artificial Intelligence AI Marketing to Grow your Business'
-    url: 'https://trk.udemy.com/rav5QR'
-  - text: 'AI in Digital Marketing: Master ChatGPT & 100+ AI Tools'
-    url: 'https://trk.udemy.com/gOz31B'
-  - text: 'Mastering AI with ChatGPT 5, Gemini (AI Agents Included)'
-    url: 'https://trk.udemy.com/7aAYay'
-  - text: 'AI for Creative Marketing and Customer Experience'
-    url: 'https://trk.udemy.com/APz4P1'
-  - text: 'Email Marketing + AI Mastery: 5 Email Marketing Courses in 1'
-    url: 'https://trk.udemy.com/RGxeGg'
-  - text: 'Twitter X Growth with AI ChatGPT - Marketing Business Sales'
-    url: 'https://trk.udemy.com/e1omnj'
-  - text: 'Full AI Course 2026: ChatGPT, Gemini, Midjourney, Firefly'
-    url: 'https://trk.udemy.com/Z6kgVk'
-  - text: 'Instagram Business with AI Leads and Sales Viral Marketing'
-    url: 'https://trk.udemy.com/bootC8'
 ---
 
 ![Best Udemy GenAI for Marketing Courses for Beginners in 2026](../../../assets/images/top-genai-marketing-courses-2026.jpg "Best Udemy GenAI for Marketing Courses for Beginners in 2026")

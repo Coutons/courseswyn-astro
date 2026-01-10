@@ -5,23 +5,6 @@ pubDate: 2025-11-29T09:40:39.683Z
 tags:
   - udemy
 image: ../../../assets/images/top-blender-courses-2026.jpg
-affiliate_links:
-  - text: 'Get Course: Complete Blender Creator'
-    url: 'https://trk.udemy.com/nX0W4M'
-  - text: 'Get Course: Blender Character Creator for Video Games'
-    url: 'https://trk.udemy.com/2axVRA'
-  - text: 'Get Course: Full Game Character – Moth Girl'
-    url: 'https://trk.udemy.com/N9O2G1'
-  - text: 'Get Course: Learn Architectural Design & Animation'
-    url: 'https://trk.udemy.com/MA6RQn'
-  - text: 'Get Course: Ultimate Blender Character Creation & Animation'
-    url: 'https://trk.udemy.com/xL4zny'
-  - text: 'Get Course: Dragon Girl in Blender'
-    url: 'https://trk.udemy.com/5591j1'
-  - text: 'Get Course: Architectural Design & Animation (Business)'
-    url: 'https://trk.udemy.com/DyXRLa'
-  - text: 'Get Course: Blender VFX Course'
-    url: 'https://trk.udemy.com/gOZao2'
 ---
 
 ![Top 8 Blender Courses on Udemy 2026](../../../assets/images/top-blender-courses-2026.jpg "Top 8 Blender Courses on Udemy 2026")

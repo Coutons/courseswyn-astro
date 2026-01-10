@@ -12,23 +12,6 @@ tags:
   - MLflow
   - Cloud Deployment
 image: ../../../assets/images/top-mlops-courses-2026.jpg
-affiliate_links:
-  - text: 'MLOps Zero to Hero 2026'
-    url: 'https://trk.udemy.com/kO524L'
-  - text: 'Ultimate DevOps to MLOps Bootcamp 2026'
-    url: 'https://trk.udemy.com/QjBdKo'
-  - text: 'Complete MLOps Bootcamp With 10+ End To End ML Projects 2026'
-    url: 'https://trk.udemy.com/o4A6zO'
-  - text: 'LLMOps Masterclass 2026 - Generative AI - MLOps - AIOps'
-    url: 'https://trk.udemy.com/RGzd1N'
-  - text: 'Full-Stack AI Engineer 2026: ML, Deep Learning, GenerativeAI'
-    url: 'https://trk.udemy.com/POodr6'
-  - text: 'AI Engineer MLOps Track: Deploy Gen AI & Agentic AI at Scale'
-    url: 'https://trk.udemy.com/kO52oM'
-  - text: 'MLflow in Action - Master the art of MLOps using MLflow tool'
-    url: 'https://trk.udemy.com/9LNdEe'
-  - text: 'Deployment of Machine Learning Models'
-    url: 'https://trk.udemy.com/POodbq'
 ---
 
 ![Best Udemy MLOps Courses for 2026](../../../assets/images/top-mlops-courses-2026.jpg "Best Udemy MLOps Courses for 2026")

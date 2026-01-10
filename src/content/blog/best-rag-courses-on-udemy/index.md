@@ -5,23 +5,6 @@ pubDate: 2025-11-25T09:40:39.668Z
 tags:
   - udemy
 image: ../../../assets/images/top-rag-courses-2026.png
-affiliate_links:
-  - text: 'Enroll Now: Ultimate RAG Bootcamp (11K+ Students) →'
-    url: 'https://trk.udemy.com/MA9GLK'
-  - text: 'Enroll Now: AI Engineer Core Track (6K+ Students) →'
-    url: 'https://trk.udemy.com/9LRJKE'
-  - text: 'Enroll Now: RAG Agents with LangChain & n8n (6K+ Students) →'
-    url: 'https://trk.udemy.com/190W4z'
-  - text: 'Enroll Now: Basic to Advanced RAG (7K+ Students) →'
-    url: 'https://trk.udemy.com/nXG2mM'
-  - text: 'Enroll Now: RAG AI Agents 2026 (8K+ Students) →'
-    url: 'https://trk.udemy.com/vPBZAL'
-  - text: 'Enroll Now: Hands-On RAG with LangChain (5K+ Students) →'
-    url: 'https://trk.udemy.com/xLWN7y'
-  - text: 'Enroll Now: Master LangChain & Ollama RAG (5K+ Students) →'
-    url: 'https://trk.udemy.com/kOmDqN'
-  - text: Enroll now
-    url: 'https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6696573&u=https%3A%2F%2Fwww.udemy.com%2Fultimate-rag-bootcamp-using-langchainlanggraph-langsmith&intsrc=PUI2_26324'
 ---
 ![Top RAG Courses 2026](../../../assets/images/top-rag-courses-2026.png)
 

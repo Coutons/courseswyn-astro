@@ -5,23 +5,6 @@ pubDate: 2025-11-25T09:40:39.672Z
 tags:
   - udemy
 image: ../../../assets/images/top-langchain-courses.jpg
-affiliate_links:
-  - text: 'Enroll Now: ChatGPT and LangChain Masterclass (10K+ Students, Production Focus) →'
-    url: 'https://trk.udemy.com/qz75jy'
-  - text: 'Enroll Now: Ultimate RAG Bootcamp (Deepest RAG Training) →'
-    url: 'https://trk.udemy.com/MA9GLK'
-  - text: 'Enroll Now: AI Agents with LangGraph →'
-    url: 'https://trk.udemy.com/RGkgrg'
-  - text: 'Enroll Now: LLM Masterclass →'
-    url: 'https://trk.udemy.com/bOE4dk'
-  - text: 'Enroll Now: Master Langchain and Ollama →'
-    url: 'https://trk.udemy.com/kOmDqN'
-  - text: 'Enroll Now: GenAI for NodeJs →'
-    url: 'https://trk.udemy.com/POPJDQ'
-  - text: 'Enroll Now: GenAI on AWS →'
-    url: 'https://trk.udemy.com/VxGz5E'
-  - text: 'Enroll Now: GenAI for JS Devs →'
-    url: 'https://trk.udemy.com/Bn6mMq'
 ---
 ![Top LangChain Courses 2026](../../../assets/images/top-langchain-courses.jpg)
 

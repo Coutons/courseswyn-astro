@@ -11,28 +11,6 @@ tags:
   - OpenAI API
   - Agentic AI
 image: ../../../assets/images/top-python-ai-2026.jpg
-affiliate_links:
-  - text: '100 Days of Code™: The Complete Python Pro Bootcamp'
-    url: 'https://trk.udemy.com/LKVnbM'
-  - text: 'The Complete Python Bootcamp From Zero to Hero in Python'
-    url: 'https://trk.udemy.com/e1oNOQ'
-  - text: 'Complete 2025 Python Bootcamp: Learn Python from Scratch'
-    url: 'https://trk.udemy.com/9L1zGE'
-  - text: 'Vibe Coding: Use AI & Python to Automate and Prototype Ideas'
-    url: 'https://trk.udemy.com/DyXzrj'
-  - text: 'Complete Python with AI Skills to Get Your Dream IT Job'
-    url: 'https://trk.udemy.com/vPByXA'
-  - text: 'Full stack generative and Agentic AI with python'
-    url: 'https://trk.udemy.com/7aZ3m5'
-  - text: 'Complete Python With DSA Bootcamp + LEETCODE Exercises'
-    url: 'https://trk.udemy.com/BnWyXW'
-  - text: 'The Complete Generative AI and Python Programming Bootcamp'
-    url: 'https://trk.udemy.com/ra7jnD'
-  - text: 'Python Data Structures and Algorithms: Complete Guide'
-    url: 'https://trk.udemy.com/MA4BA2'
-  - text: 'Master Time Series Analysis and Forecasting with Python 2026'
-    url: 'https://trk.udemy.com/APz3Px'
-
 ---
 
 ## Top 10 Python Courses on Udemy 2026

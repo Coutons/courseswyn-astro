@@ -12,23 +12,6 @@ tags:
   - Penetration Testing
   - Security Tools
 image: ../../../assets/images/top-ai-cybersecurity-courses-2026.jpg
-affiliate_links:
-  - text: 'AI & Cyber Security Mastery 2026'
-    url: 'https://trk.udemy.com/YR6o7q'
-  - text: 'Artificial Intelligence & ChatGPT for Cyber Security 2026'
-    url: 'https://trk.udemy.com/xLxB6y'
-  - text: 'Artificial Intelligence Risk and Cyber Security Course 2026'
-    url: 'https://trk.udemy.com/55eR01'
-  - text: 'Agentic AI - Risk and Cybersecurity Masterclass 2026'
-    url: 'https://trk.udemy.com/GK6ad2'
-  - text: 'Generative AI - Risk and Cyber Security Masterclass 2026'
-    url: 'https://trk.udemy.com/JK3kda'
-  - text: 'Machine Learning & AI in Cybersecurity: Build 20+ Projects'
-    url: 'https://trk.udemy.com/OeNXdP'
-  - text: 'AI for Ethical Hacking & Cybersecurity (2026)'
-    url: 'https://trk.udemy.com/dOXxJ2'
-  - text: 'Cyber security and Artificial Intelligence Risk Course'
-    url: 'https://trk.udemy.com/K0RV3e'
 ---
 
 ![Best Udemy Cybersecurity Courses with AI Integration for 2026](../../../assets/images/top-ai-cybersecurity-courses-2026.jpg "Best Udemy Cybersecurity Courses with AI Integration for 2026")

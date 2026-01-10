@@ -11,23 +11,6 @@ tags:
   - Freelancing
   - Responsive Design
 image: ../../../assets/images/top-figma-courses-2026.jpg
-affiliate_links:
-  - text: 'Complete Web Design: from Figma to Webflow to Freelancing'
-    url: 'https://trk.udemy.com/nXOK6x'
-  - text: 'Master Figma: Getting started the Beginner to Pro Class'
-    url: 'https://trk.udemy.com/9L16ae'
-  - text: 'Complete Web & Mobile Designer: UI/UX, Figma, +more'
-    url: 'https://trk.udemy.com/jekzKb'
-  - text: 'Webflow Essentials Course'
-    url: 'https://trk.udemy.com/e1o0GZ'
-  - text: 'UI/UX Web Design in Figma 2025 | AI & Big Projects'
-    url: 'https://trk.udemy.com/dOXW0y'
-  - text: 'Figma UI/UX Complete Bootcamp: Design 10 Job-Ready Projects'
-    url: 'https://trk.udemy.com/e1o0MZ'
-  - text: 'Complete UI/UX Design Course 2025: Figma + AI + Real Project'
-    url: 'https://trk.udemy.com/bOZBz6'
-  - text: 'Motion Design with Figma: Animations, Motion Graphics, UX/UI'
-    url: 'https://trk.udemy.com/xLxKaO'
 ---
 
 ![Best Udemy Figma Courses for No-Code Web Design and UI/UX in 2026](../../../assets/images/top-figma-courses-2026.jpg "Best Udemy Figma Courses for No-Code Web Design and UI/UX in 2026")

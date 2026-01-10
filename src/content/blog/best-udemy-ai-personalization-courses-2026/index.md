@@ -14,19 +14,6 @@ tags:
   - AI Personalization
   - AI Productivity
 image: ../../../assets/images/top-ai-personalization-courses-2026.jpg
-affiliate_links:
-  - text: 'The Complete Prompt Engineering for AI Bootcamp (2025)'
-    url: 'https://trk.udemy.com/kOePbN'
-  - text: 'Succeed in the Age of AI'
-    url: 'https://trk.udemy.com/7aEe7A'
-  - text: 'ChatGPT: Complete ChatGPT Course For Work 2025 (Ethically)!'
-    url: 'https://trk.udemy.com/BnNEJL'
-  - text: 'AI Lead Generation: B2B Lead Generation & Cold Email With AI'
-    url: 'https://trk.udemy.com/e13vGr'
-  - text: 'B2B Lead Gen: Clay, LinkedIn, Cold Email and Reddit Playbook'
-    url: 'https://trk.udemy.com/qzQD3y'
-  - text: 'AI Sales Prospecting: Automate Outreach at Scale with AI'
-    url: 'https://trk.udemy.com/55WaEL'
 ---
 
 ![Top Udemy AI Personalization Courses for Customized Learning Paths 2026](../../../assets/images/top-ai-personalization-courses-2026.jpg "Top Udemy AI Personalization Courses for Customized Learning Paths 2026")
