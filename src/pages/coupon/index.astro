@@ -1,17 +1,29 @@
 ---
+export const prerender = false;
+
 import Layout from '../../layouts/Layout.astro';
 import courses from '../../data/coupons.json';
 
 const categories = [...new Set(courses.map(c => c.category))].sort();
-const totalCourses = courses.length;
+
+// Category filtering
+const url = new URL(Astro.request.url);
+const selectedCategory = url.searchParams.get('category');
+let filteredCourses = selectedCategory ? courses.filter(c => c.category.toLowerCase() === selectedCategory.toLowerCase()) : courses;
+const totalCourses = filteredCourses.length;
 
 // Pagination
 const ITEMS_PER_PAGE = 12;
 const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
 const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
 const endIndex = startIndex + ITEMS_PER_PAGE;
-const paginatedCourses = courses.slice(startIndex, endIndex);
+const paginatedCourses = filteredCourses.slice(startIndex, endIndex);
 const totalPages = Math.ceil(totalCourses / ITEMS_PER_PAGE);
+
+// Helper function to build URLs with category param
+const buildUrl = (path: string) => {
+  return selectedCategory ? `${path}?category=${encodeURIComponent(selectedCategory)}` : path;
+};
 
 // Pagination pages
 const pages = [];
@@ -34,13 +46,13 @@ if (endPage < totalPages) {
 ---
 
 <Layout
-  title={`90% Off Udemy Coupons ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} - ${totalCourses}+ Free Course Deals | CoursesWyn`}
-  description={`✅ ${totalCourses}+ verified 90% off Udemy coupons updated daily. Free premium courses in ${categories.join(', ')} with lifetime access & certificates. No credit card required. Start learning free today!`}
+  title={selectedCategory ? `${selectedCategory} Udemy Coupons ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} - ${totalCourses}+ Free ${selectedCategory} Course Deals | CoursesWyn` : `90% Off Udemy Coupons ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} - ${totalCourses}+ Free Course Deals | CoursesWyn`}
+  description={selectedCategory ? `✅ ${totalCourses}+ verified 90% off ${selectedCategory} Udemy coupons updated daily. Free premium ${selectedCategory.toLowerCase()} courses with lifetime access & certificates. No credit card required. Start learning free today!` : `✅ ${totalCourses}+ verified 90% off Udemy coupons updated daily. Free premium courses in ${categories.join(', ')} with lifetime access & certificates. No credit card required. Start learning free today!`}
   keywords="udemy coupons, free udemy courses, 90% off udemy, udemy discount codes, free online courses, udemy deals, coupon codes udemy, udemy promo codes, free certification courses, online learning coupons"
 >
   <header class="mb-8">
-    <h1 class="text-4xl font-bold text-gray-900 mb-4">Browse Free Course Coupons</h1>
-    <p class="text-lg text-gray-600 mb-4">Find your next course with verified 90% off deals and lifetime access.</p>
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">{selectedCategory ? 'Free ' + selectedCategory + ' Course Coupons' : 'Browse Free Course Coupons'}</h1>
+    <p class="text-lg text-gray-600 mb-4">{selectedCategory ? 'Find verified 90% off ' + selectedCategory.toLowerCase() + ' courses with lifetime access.' : 'Find your next course with verified 90% off deals and lifetime access.'}</p>
     <div class="flex flex-wrap gap-4 text-sm text-gray-500">
       <span class="flex items-center gap-1">
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -68,15 +80,15 @@ if (endPage < totalPages) {
     <div class="flex flex-wrap gap-2">
       <button
         id="filter-all"
-        class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors"
+        class={`px-4 py-2 rounded transition-colors ${!selectedCategory ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
         onclick="filterCourses('all')"
       >
-        All Categories ({totalCourses})
+        All Categories ({courses.length})
       </button>
       {categories.map(cat => (
         <button
           id={`filter-${cat.toLowerCase().replace(/\s+/g, '-')}`}
-          class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+          class={`px-4 py-2 rounded transition-colors ${selectedCategory === cat ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
           onclick={`filterCourses('${cat}')`}
         >
           {cat} ({courses.filter(c => c.category === cat).length})
@@ -160,7 +172,7 @@ if (endPage < totalPages) {
       <nav class="flex space-x-2" aria-label="Pagination">
         {currentPage > 1 && (
           <a
-            href={currentPage === 2 ? '/coupon/' : `/coupon/page/${currentPage - 1}`}
+            href={buildUrl(currentPage === 2 ? '/coupon/' : `/coupon/page/${currentPage - 1}`)}
             class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 transition-colors"
           >
             Previous
@@ -172,7 +184,7 @@ if (endPage < totalPages) {
             <span class="px-3 py-2 border border-gray-300 text-gray-500">...</span>
           ) : (
             <a
-              href={pageNum === 1 ? '/coupon/' : `/coupon/page/${pageNum}`}
+              href={buildUrl(pageNum === 1 ? '/coupon/' : `/coupon/page/${pageNum}`)}
               class={`px-3 py-2 border rounded transition-colors ${
                 pageNum === currentPage
                   ? 'bg-purple-500 text-white border-purple-500'
@@ -186,7 +198,7 @@ if (endPage < totalPages) {
 
         {currentPage < totalPages && (
           <a
-            href={`/coupon/page/${currentPage + 1}`}
+            href={buildUrl(`/coupon/page/${currentPage + 1}`)}
             class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 transition-colors"
           >
             Next
@@ -206,9 +218,7 @@ if (endPage < totalPages) {
       if (category === 'all') {
         window.location.href = '/coupon/';
       } else {
-        // You can implement category-specific filtering here
-        // For now, just go to main page
-        window.location.href = '/coupon/';
+        window.location.href = `/coupon/?category=${encodeURIComponent(category)}`;
       }
     }
   </script>
