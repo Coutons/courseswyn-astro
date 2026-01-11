@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import courses from '../../data/coupons.json';
+import { fetchPosts } from '../../lib/posts';
 
 export async function getStaticPaths() {
   return courses.map(course => ({
@@ -156,6 +157,16 @@ const generateLongTailKeywords = (course: any) => {
 };
 
 const keywords = generateLongTailKeywords(course);
+const allPosts = await fetchPosts();
+
+// Find related blog posts for course reviews
+const relatedPosts = allPosts
+  .filter(post =>
+    post.data.title.toLowerCase().includes(course.category.toLowerCase()) ||
+    post.data.title.toLowerCase().includes(extractKeySkill(course.description).toLowerCase()) ||
+    post.slug.includes(course.category.toLowerCase().replace(' ', '-'))
+  )
+  .slice(0, 3);
 
 // Enhanced JSON-LD structured data for full SEO
 const structuredData = {
@@ -350,60 +361,6 @@ const structuredData = {
         "target": "https://courseswyn.com/search?q={search_term_string}",
         "query-input": "required name=search_term_string"
       }
-    },
-    // FAQ Schema for Rich Snippets
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": `Is the ${course.title} course worth it? ${course.title} Udemy review`,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `Yes! This ${course.category} course has excellent ratings (${course.rating} stars from ${course.students.toLocaleString()} students) and covers essential skills with lifetime access. The ${course.discount} discount makes it an exceptional value. Get ${course.title} Udemy coupon for the best deal.`
-          }
-        },
-        {
-          "@type": "Question",
-          "name": `${course.title} ${course.discount} off - is this a good deal?`,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `Absolutely! The ${course.discount} off ${course.title} Udemy discount makes this premium ${course.category} course available at an unbeatable price. Regular price would be much higher for this quality content with ${course.students.toLocaleString()}+ students enrolled.`
-          }
-        },
-        {
-          "@type": "Question",
-          "name": `Is ${course.title} Udemy free with coupon?`,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `Yes! Use our verified ${course.title} Udemy coupon to get this course completely free. The coupon code provides ${course.discount} off, making it free for new students. Don't miss this ${course.title} Udemy free offer!`
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Do I need prior experience to take this course?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `This course is designed for ${course.level.toLowerCase()} level students. ${course.level === 'Beginner' ? 'No prior experience required - perfect for complete beginners learning ' + course.category.toLowerCase() : 'Some basic knowledge in ' + course.category.toLowerCase() + ' is recommended but not mandatory'}.`
-          }
-        },
-        {
-          "@type": "Question",
-          "name": `Does ${course.title} include certificate? ${course.title} professional certification`,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `Yes! ${course.title} includes a professional certificate upon completion that you can add to your LinkedIn profile, resume, or portfolio. The Udemy certificate is recognized worldwide and demonstrates your ${course.category} proficiency.`
-          }
-        },
-        {
-          "@type": "Question",
-          "name": `${course.title} lifetime access - how long do I have access?`,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `${course.title} provides lifetime access! Once enrolled with our coupon, you can learn at your own pace and revisit the material anytime. No expiration dates or hidden fees for this ${course.title} Udemy course.`
-          }
-        }
-      ]
     }
   ]
 };
@@ -658,142 +615,271 @@ const sampleTestimonials = generateRealisticTestimonials(course);
 >
 
 
-  <!-- Course Header -->
-  <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden mb-8">
-    <div class="grid md:grid-cols-2 gap-8 p-8">
-      <!-- Course Info -->
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900 mb-4">{course.title}</h1>
-        <p class="text-gray-600 mb-6">Get Free {course.discount} Off {course.title} - Udemy Coupon with Certificate & Lifetime Access</p>
+  <!-- Completely New Modern Design -->
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
 
-        <!-- Rating and Stats -->
-        <div class="flex items-center space-x-4 mb-6">
-          <div class="flex items-center">
-            <div class="flex items-center mr-2">
-              {[...Array(5)].map((_, i) => (
-                <span class={`text-lg ${i < Math.floor(parseFloat(String(course.rating))) ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
-              ))}
-            </div>
-            <span class="font-semibold text-gray-900">{course.rating}</span>
+    <!-- Simple Course Header -->
+    <div class="bg-white border-b border-gray-200 py-8 mb-8">
+      <div class="max-w-6xl mx-auto px-4">
+        <div class="flex flex-col lg:flex-row gap-6">
+          <!-- Course Image -->
+          <div class="lg:w-1/4 flex-shrink-0">
+            <img
+              src={course.image}
+              alt={course.title}
+              class="w-full rounded-lg shadow-md"
+              loading="lazy"
+            />
           </div>
-          <div class="text-gray-700 font-medium">{course.students.toLocaleString()} students</div>
-        </div>
 
-        <!-- Instructor -->
-        <div class="mb-6">
-          <p class="text-gray-500 text-sm mb-1">Created by</p>
-          <p class="font-semibold text-gray-900">{course.instructor}</p>
-        </div>
+          <!-- Course Info -->
+          <div class="lg:w-3/4">
+            <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">{course.title} - Udemy Course Review & Coupon</h1>
+            <p class="text-gray-600 mb-6 text-lg leading-relaxed">{course.description.split('.')[0]}.</p>
 
-        <!-- Course Details Grid -->
-        <div class="grid grid-cols-2 gap-6 mb-8">
-          <div class="flex items-center">
-            <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div>
-              <p class="text-sm text-gray-500">Duration</p>
-              <p class="font-semibold text-gray-900">{course.duration}</p>
-            </div>
-          </div>
-          <div class="flex items-center">
-            <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <div>
-              <p class="text-sm text-gray-500">Lectures</p>
-              <p class="font-semibold text-gray-900">{course.totalLectures}</p>
-            </div>
-          </div>
-          <div class="flex items-center">
-            <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <div>
-              <p class="text-sm text-gray-500">Level</p>
-              <p class="font-semibold text-gray-900">{course.level}</p>
-            </div>
-          </div>
-          <div class="flex items-center">
-            <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-            </svg>
-            <div>
-              <p class="text-sm text-gray-500">Language</p>
-              <p class="font-semibold text-gray-900">{course.language}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+            <!-- Course Highlights -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-xl border border-yellow-200">
+                <div class="flex items-center justify-center mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <span class={`text-lg ${i < Math.floor(parseFloat(String(course.rating))) ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                  ))}
+                </div>
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-gray-900">{course.rating}</div>
+                  <div class="text-sm text-gray-600">Rating</div>
+                </div>
+              </div>
 
-      <!-- Course Image -->
-      <div>
-        <img
-          src={course.image}
-          alt={`${course.title} - ${extractKeySkill(course.description)} Udemy course. Get ${course.discount} off certification with lifetime access. ${course.rating} stars from ${course.students.toLocaleString()}+ students. Learn ${course.category} skills online.`}
-          class="w-full rounded-lg shadow-lg"
-          loading="lazy"
-        />
+              <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
+                <div class="text-center">
+                  <div class="text-3xl mb-2">👥</div>
+                  <div class="text-2xl font-bold text-gray-900">{course.students.toLocaleString()}+</div>
+                  <div class="text-sm text-gray-600">Students</div>
+                </div>
+              </div>
 
-        <!-- Price and CTA -->
-        <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mt-4">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-baseline space-x-2">
-              <span class="text-4xl font-bold text-red-600">{course.price}</span>
-              <span class="text-xl text-gray-500 line-through">{course.originalPrice}</span>
-              <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold">
-                {course.discount}
-              </span>
-              {course.discount === '-100%' ? (
-                <span class="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
-                  <span>⭐</span> Highest Rated
+              <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
+                <div class="text-center">
+                  <div class="text-3xl mb-2">⏰</div>
+                  <div class="text-2xl font-bold text-gray-900">{course.duration}</div>
+                  <div class="text-sm text-gray-600">Duration</div>
+                </div>
+              </div>
+
+              <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200">
+                <div class="text-center">
+                  <div class="text-3xl mb-2">📚</div>
+                  <div class="text-2xl font-bold text-gray-900">{course.totalLectures}</div>
+                  <div class="text-sm text-gray-600">Lectures</div>
+                </div>
+              </div>
+            </div>
+
+
+
+            <!-- Modern Prominent CTA Button -->
+            <div class="bg-gradient-to-r from-red-500 via-red-600 to-red-700 p-6 rounded-2xl shadow-2xl border border-red-400">
+              <a href={course.url} target="_blank" rel="nofollow noopener noreferrer" class="block w-full bg-gradient-to-r from-red-500 via-pink-500 to-purple-600 hover:from-red-600 hover:via-pink-600 hover:to-purple-700 text-white font-black py-4 px-6 rounded-xl text-center text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl animate-pulse border-2 border-yellow-400">
+                🔥 GET THIS COURSE NOW - {course.discount.replace('-', '')} OFF! 🚀
+              </a>
+              <div class="flex items-center justify-center gap-4 mt-4 text-sm text-white">
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                  Lifetime Access
                 </span>
-              ) : (
-                <span class="bg-gradient-to-r from-yellow-500 to-orange-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
-                  <span>🏆</span> Best Seller
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                  Certificate Included
                 </span>
-              )}
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                  30-Day Money Back
+                </span>
+              </div>
             </div>
           </div>
-
-          {course.verified && (
-            <div class="flex items-center text-green-600 text-sm mb-4">
-              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-              Verified coupon code
-            </div>
-          )}
-
-          <a href={course.url} target="_blank" rel="nofollow noopener noreferrer" class="block w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-6 rounded text-center transition-colors mb-4">
-            Get Course Now
-          </a>
-
-          {course.couponCode && (
-            <div class="text-center">
-              <p class="text-sm text-gray-600 mb-2">Use coupon code:</p>
-              <code class="bg-gray-200 px-3 py-1 rounded text-sm font-mono">{course.couponCode}</code>
-            </div>
-          )}
-
-          {course.hasLifetimeAccess && (
-            <div class="flex items-center justify-center text-green-600 text-sm mt-4">
-              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-              Lifetime access included
-            </div>
-          )}
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- What You'll Learn -->
+    <!-- Content Layout -->
+    <div class="max-w-7xl mx-auto px-4 pb-16">
+      <div class="flex flex-col lg:flex-row gap-8">
+
+        <!-- Sidebar -->
+        <aside class="lg:w-1/4 lg:order-2">
+          <div class="sticky top-8 space-y-6">
+
+            <!-- Modern Coupon Card -->
+            <div class="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden transform hover:scale-105 transition-all duration-300">
+              <!-- Animated Header with Discount Badge -->
+              <div class="relative bg-gradient-to-br from-red-500 via-pink-500 to-purple-600 text-white p-8 overflow-hidden">
+                <div class="absolute top-0 right-0 w-20 h-20 bg-yellow-400 rounded-full -mr-10 -mt-10 opacity-20 animate-pulse"></div>
+                <div class="absolute bottom-0 left-0 w-16 h-16 bg-white rounded-full -ml-8 -mb-8 opacity-10"></div>
+
+                <div class="text-center relative z-10">
+                  <div class="inline-block bg-yellow-400 text-red-600 font-black text-3xl px-4 py-2 rounded-full mb-4 shadow-lg transform rotate-3">
+                    🔥 {course.discount} OFF
+                  </div>
+                  <div class="text-5xl font-black mb-2 text-white drop-shadow-lg">{course.price}</div>
+                  <div class="text-red-100 line-through text-xl">Was {course.originalPrice}</div>
+                  <div class="mt-4 space-y-2">
+                    <div class="text-sm bg-white/20 backdrop-blur-sm rounded-full px-4 py-1 inline-block">
+                      💰 Save {course.discount.replace('OFF', '')} Today!
+                    </div>
+                    <div class="text-xs bg-red-500 text-white rounded-full px-3 py-1 inline-block animate-pulse">
+                      ⚡ Limited Time Deal - Ends Soon!
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Course Features with Icons -->
+              <div class="p-6 bg-gradient-to-b from-gray-50 to-white">
+                {course.verified && (
+                  <div class="flex items-center justify-center bg-green-500 text-white px-4 py-2 rounded-full mb-6 shadow-lg">
+                    <svg class="w-5 h-5 mr-2 animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="font-bold text-sm">✓ VERIFIED TODAY</span>
+                  </div>
+                )}
+
+                <div class="grid grid-cols-1 gap-4 mb-6">
+                  <div class="flex items-center bg-blue-50 p-3 rounded-xl border border-blue-100">
+                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
+                      <span class="text-white font-bold text-lg">⏱️</span>
+                    </div>
+                    <div>
+                      <div class="text-xs text-blue-600 font-semibold uppercase tracking-wide">Duration</div>
+                      <div class="text-gray-900 font-bold">{course.duration}</div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center bg-purple-50 p-3 rounded-xl border border-purple-100">
+                    <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
+                      <span class="text-white font-bold text-lg">📚</span>
+                    </div>
+                    <div>
+                      <div class="text-xs text-purple-600 font-semibold uppercase tracking-wide">Lectures</div>
+                      <div class="text-gray-900 font-bold">{course.totalLectures}</div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center bg-green-50 p-3 rounded-xl border border-green-100">
+                    <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mr-3">
+                      <span class="text-white font-bold text-lg">🎯</span>
+                    </div>
+                    <div>
+                      <div class="text-xs text-green-600 font-semibold uppercase tracking-wide">Level</div>
+                      <div class="text-gray-900 font-bold">{course.level}</div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center bg-orange-50 p-3 rounded-xl border border-orange-100">
+                    <div class="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
+                      <span class="text-white font-bold text-lg">🌐</span>
+                    </div>
+                    <div>
+                      <div class="text-xs text-orange-600 font-semibold uppercase tracking-wide">Language</div>
+                      <div class="text-gray-900 font-bold">{course.language}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Benefits List -->
+                <div class="space-y-3 mb-6">
+                  <div class="flex items-center text-green-600">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-sm font-medium">Lifetime Access</span>
+                  </div>
+                  <div class="flex items-center text-green-600">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-sm font-medium">Professional Certificate</span>
+                  </div>
+                  <div class="flex items-center text-green-600">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-sm font-medium">30-Day Money Back</span>
+                  </div>
+                  <div class="flex items-center text-green-600">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-sm font-medium">Mobile & Desktop Access</span>
+                  </div>
+                </div>
+
+                <!-- Certificate Badge -->
+                <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-2xl text-center shadow-lg">
+                  <div class="text-2xl mb-1">🎓</div>
+                  <div class="text-sm font-bold uppercase tracking-wide">Professional Udemy Certificate</div>
+                  <div class="text-xs opacity-90 mt-1">Add to LinkedIn & Resume</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="lg:w-3/4 lg:order-1">
+
+          <!-- Why Choose This Course - Moved to Top -->
+          <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Why Choose This Course?</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">🎓 Professional {course.category} Certification</h3>
+                <p class="text-gray-700 mb-4">Get recognized {course.category} certification from Udemy. This {course.title} course provides industry-standard {extractKeySkill(course.description)} skills that employers look for in {course.level.toLowerCase()} level professionals.</p>
+
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">⏰ Flexible Learning Schedule</h3>
+                <p class="text-gray-700 mb-4">Learn {course.category} at your own pace with lifetime access to this {course.title} Udemy course. Complete the {course.totalLectures} lectures in {course.duration} with no deadlines or pressure.</p>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">💼 Career Advancement</h3>
+                <p class="text-gray-700 mb-4">Advance your career with {extractKeySkill(course.description)} expertise. Join {course.students.toLocaleString()}+ successful students who have mastered {course.category} through this highly-rated Udemy course.</p>
+
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">⭐ Top-Rated Instructor</h3>
+                <p class="text-gray-700 mb-4">Learn from {course.instructor}, an expert instructor with proven track record in teaching {course.category}. This {course.title} Udemy course has earned {course.rating} stars from thousands of students.</p>
+              </div>
+            </div>
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
+              <p class="text-gray-800 font-medium text-center">🎯 <strong>{course.discount} OFF {course.title}</strong> - Limited Time Udemy Coupon for Professional {course.category} Training</p>
+            </div>
+          </div>
+
+          <!-- Instructor Info -->
+          <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">About the Instructor</h2>
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                {course.instructor?.charAt(0) || 'I'}
+              </div>
+              <div>
+                <h3 class="text-xl font-semibold text-gray-900">{course.instructor}</h3>
+                <p class="text-gray-600">Expert {course.category} Instructor</p>
+              </div>
+            </div>
+          </div>
+
+  <!-- What You'll Learn & Course Overview -->
   <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 mb-8">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">What you'll learn</h2>
-    <div class="grid md:grid-cols-2 gap-3">
-      {whatYouLearn.map((item: string) => (
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">What you'll learn in this {course.category} course</h2>
+    <div class="grid md:grid-cols-2 gap-4 mb-8">
+      {whatYouLearn.slice(0, 8).map((item: string) => (
         <div class="flex items-start">
           <svg class="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
@@ -802,32 +888,31 @@ const sampleTestimonials = generateRealisticTestimonials(course);
         </div>
       ))}
     </div>
-  </div>
 
-  <!-- Course Content Grid -->
-  <div class="grid lg:grid-cols-3 gap-8 mb-8">
-    <!-- Requirements -->
-    <div class="lg:col-span-1 bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-      <h3 class="text-lg font-bold text-gray-900 mb-4">Requirements</h3>
-      <ul class="space-y-3">
-        {requirements.map((req: string) => (
-          <li class="flex items-start text-sm">
-            <span class="w-1.5 h-1.5 bg-purple-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-            <span class="text-gray-700 leading-relaxed">{req}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-
-    <!-- Description -->
-    <div class="lg:col-span-2 bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-      <h3 class="text-lg font-bold text-gray-900 mb-4">Description</h3>
+    <!-- Course Description -->
+    <div class="border-t border-gray-100 pt-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Course Description & Overview</h3>
       <div class="prose prose-gray max-w-none">
         <p class="text-gray-700 mb-4 leading-relaxed">{course.description}</p>
-        <p class="text-gray-700 leading-relaxed">{courseDescription}</p>
+        <p class="text-gray-700 leading-relaxed mb-6">{courseDescription}</p>
+
+        <!-- Course Stats -->
+        <div class="bg-gray-50 rounded-lg p-4">
+          <h4 class="font-semibold text-gray-900 mb-3">Course Specifications:</h4>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div><strong>Last Updated:</strong> {course.addedDate}</div>
+            <div><strong>Skill Level:</strong> {course.level}</div>
+            <div><strong>Duration:</strong> {course.duration}</div>
+            <div><strong>Lectures:</strong> {course.totalLectures}</div>
+            <div><strong>Language:</strong> {course.language}</div>
+            <div><strong>Certificate:</strong> Yes, Udemy Certificate</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+
+
 
   <!-- Curriculum -->
   <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 mb-8">
@@ -864,20 +949,39 @@ const sampleTestimonials = generateRealisticTestimonials(course);
     </div>
   </div>
 
-  <!-- FAQ Section -->
+  <!-- Course FAQ & Requirements -->
   <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 mb-8">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
-    <div class="space-y-6">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Course Requirements & FAQ</h2>
+
+    <!-- Requirements Section -->
+    <div class="mb-8">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">What are the requirements for this {course.category} course?</h3>
+      <div class="bg-gray-50 rounded-lg p-4">
+        <ul class="space-y-2">
+          {requirements.map((req: string) => (
+            <li class="flex items-start text-sm">
+              <span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+              <span class="text-gray-700 leading-relaxed">{req}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="space-y-4">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Frequently Asked Questions about {course.title}</h3>
+
       <div class="border border-gray-200 rounded-lg">
         <details class="group">
           <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-            <h3 class="text-lg font-semibold text-gray-900 pr-4">Is the {course.title} course worth it? {course.title} Udemy review</h3>
+            <h4 class="text-base font-semibold text-gray-900 pr-4">Is {course.title} worth it? Complete Udemy review</h4>
             <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </summary>
           <div class="px-4 pb-4">
-            <p class="text-gray-700 leading-relaxed">Yes! This {course.category} course has excellent ratings ({course.rating} stars from {course.students.toLocaleString()} students) and covers essential skills with lifetime access. The {course.discount} discount makes it an exceptional value. Get {course.title} Udemy coupon for the best deal on this highly-rated {course.category} certification course.</p>
+            <p class="text-gray-700 leading-relaxed">Absolutely! This premium {course.category} Udemy course has {course.rating}⭐ stars from {course.students.toLocaleString()}+ students. It provides comprehensive {extractKeySkill(course.description)} training with lifetime access and professional certification. The current {course.discount} discount makes it an unbeatable value for quality online education.</p>
           </div>
         </details>
       </div>
@@ -885,13 +989,13 @@ const sampleTestimonials = generateRealisticTestimonials(course);
       <div class="border border-gray-200 rounded-lg">
         <details class="group">
           <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-            <h3 class="text-lg font-semibold text-gray-900 pr-4">Do I need prior experience to take this course?</h3>
+            <h4 class="text-base font-semibold text-gray-900 pr-4">Do I get a certificate after completing {course.title}?</h4>
             <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </summary>
           <div class="px-4 pb-4">
-            <p class="text-gray-700 leading-relaxed">This course is designed for {course.level.toLowerCase()} level students. {course.level === 'Beginner' ? 'No prior experience required - perfect for complete beginners.' : 'Some basic knowledge in ' + course.category.toLowerCase() + ' is recommended but not mandatory.'} The instructor explains concepts clearly from the ground up.</p>
+            <p class="text-gray-700 leading-relaxed">Yes! Upon completion, you'll receive a professional Udemy certificate that you can add to your LinkedIn, resume, or portfolio. This industry-recognized certification demonstrates your expertise in {course.category} and is valued by employers worldwide.</p>
           </div>
         </details>
       </div>
@@ -899,13 +1003,13 @@ const sampleTestimonials = generateRealisticTestimonials(course);
       <div class="border border-gray-200 rounded-lg">
         <details class="group">
           <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-            <h3 class="text-lg font-semibold text-gray-900 pr-4">Is there a certificate upon completion?</h3>
+            <h4 class="text-base font-semibold text-gray-900 pr-4">How long do I have access to this Udemy course?</h4>
             <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </summary>
           <div class="px-4 pb-4">
-            <p class="text-gray-700 leading-relaxed">Yes, Udemy provides a certificate of completion that you can add to your LinkedIn profile, resume, or portfolio upon finishing all course lectures and assignments. This industry-recognized certificate demonstrates your proficiency in {course.category.toLowerCase()}.</p>
+            <p class="text-gray-700 leading-relaxed">Lifetime access! Once you enroll with our coupon, you can learn at your own pace, revisit materials anytime, and access updates. No expiration dates or recurring fees - your Udemy course enrollment is permanent.</p>
           </div>
         </details>
       </div>
@@ -913,51 +1017,23 @@ const sampleTestimonials = generateRealisticTestimonials(course);
       <div class="border border-gray-200 rounded-lg">
         <details class="group">
           <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-            <h3 class="text-lg font-semibold text-gray-900 pr-4">How long do I have access to this course?</h3>
+            <h4 class="text-base font-semibold text-gray-900 pr-4">Who is the instructor for {course.title}?</h4>
             <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </summary>
           <div class="px-4 pb-4">
-            <p class="text-gray-700 leading-relaxed">You have lifetime access to this course! Once enrolled, you can learn at your own pace and revisit the material anytime. No expiration dates or hidden fees - your enrollment is permanent.</p>
-          </div>
-        </details>
-      </div>
-
-      <div class="border border-gray-200 rounded-lg">
-        <details class="group">
-          <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-            <h3 class="text-lg font-semibold text-gray-900 pr-4">What will I learn in {course.title}? {extractKeySkill(course.description)} course content</h3>
-            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </summary>
-          <div class="px-4 pb-4">
-            <p class="text-gray-700 leading-relaxed">{course.title} teaches you {extractKeySkill(course.description)} through {course.totalLectures} comprehensive lectures. You'll master practical skills with hands-on projects and real-world applications. Perfect for {course.level.toLowerCase()} level students looking to advance their {course.category} career.</p>
-          </div>
-        </details>
-      </div>
-
-      <div class="border border-gray-200 rounded-lg">
-        <details class="group">
-          <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-            <h3 class="text-lg font-semibold text-gray-900 pr-4">{course.title} instructor - who teaches this course?</h3>
-            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </summary>
-          <div class="px-4 pb-4">
-            <p class="text-gray-700 leading-relaxed">{course.title} is taught by {course.instructor}, an experienced professional with expertise in {course.category}. With {course.students.toLocaleString()}+ students enrolled and excellent {course.rating}⭐ ratings, this instructor provides high-quality education and ongoing support throughout the course.</p>
+            <p class="text-gray-700 leading-relaxed">{course.instructor} is a highly experienced {course.category} professional with expertise in {extractKeySkill(course.description)}. With {course.students.toLocaleString()}+ students taught and excellent ratings, they provide clear instruction, practical examples, and ongoing support throughout your learning journey.</p>
           </div>
         </details>
       </div>
     </div>
   </div>
 
-  <!-- Reviews/Testimonials -->
-  <div class="bg-gradient-to-br from-purple-50 to-white border border-purple-200 rounded-lg shadow-sm p-8 mb-8">
+  <!-- Enhanced Student Reviews & Testimonials with Long Tail Keywords -->
+  <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 mb-8">
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-purple-900">Reviews</h2>
+      <h2 class="text-2xl font-bold text-gray-900">{course.title} Udemy Reviews 2026 - Real Student Experiences & Testimonials</h2>
       <div class="flex items-center space-x-4">
         <div class="flex items-center">
           <div class="flex mr-2">
@@ -965,64 +1041,176 @@ const sampleTestimonials = generateRealisticTestimonials(course);
               <span class={`text-sm ${i < Math.floor(parseFloat(String(course.rating))) ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
             ))}
           </div>
-          <span class="text-lg font-bold text-purple-900">{course.rating}</span>
-          <span class="text-purple-600 ml-1">course rating • {course.students.toLocaleString()} ratings</span>
+          <span class="text-lg font-bold text-gray-900">{course.rating}</span>
+          <span class="text-gray-600 ml-1">average rating • {course.students.toLocaleString()}+ verified Udemy reviews</span>
         </div>
       </div>
     </div>
-    <div class="grid md:grid-cols-2 gap-6">
-      {sampleTestimonials.map((testimonial: any) => (
-        <div class="bg-white rounded-lg p-4 border border-purple-100">
-          <div class="flex items-center mb-3">
-            <div class="flex mr-2">
-              {[...Array(5)].map((_, i) => (
-                <span class={`text-sm ${i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
-              ))}
+
+    <!-- Long Tail Keyword Rich Introduction -->
+    <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-8 border border-blue-100">
+      <h3 class="text-xl font-bold text-gray-900 mb-4">Why Students Love This {course.title} Udemy Course Review 2026</h3>
+      <p class="text-gray-700 leading-relaxed mb-4">
+        Discover why {course.students.toLocaleString()}+ students have chosen this comprehensive {course.category} Udemy course for their professional development.
+        Read authentic {course.title} Udemy reviews from real students who have transformed their careers through this highly-rated online course.
+        Whether you're looking for <strong>{course.title} free Udemy coupon</strong>, <strong>{course.discount} off {course.title}</strong> deal, or comprehensive
+        {course.category} training, these {course.title} Udemy testimonials showcase the quality education and practical skills you'll gain.
+      </p>
+      <div class="grid md:grid-cols-3 gap-4 text-center">
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+          <div class="text-2xl font-bold text-blue-600">{course.students.toLocaleString()}+</div>
+          <div class="text-sm text-gray-600">Students Enrolled</div>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+          <div class="text-2xl font-bold text-green-600">{course.rating}⭐</div>
+          <div class="text-sm text-gray-600">Average Rating</div>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+          <div class="text-2xl font-bold text-purple-600">100%</div>
+          <div class="text-sm text-gray-600">Lifetime Access</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enhanced Testimonials with Long Tail Keywords -->
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+      {sampleTestimonials.slice(0, 2).map((testimonial: any, index: number) => (
+        <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+              {testimonial.name.charAt(0)}
             </div>
-            <span class="text-purple-900 font-medium">{testimonial.name}</span>
+            <div>
+              <div class="font-bold text-gray-900">{testimonial.name}</div>
+              <div class="flex items-center">
+                <div class="flex mr-2">
+                  {[...Array(5)].map((_, i) => (
+                    <span class={`text-sm ${i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                  ))}
+                </div>
+                <span class="text-sm text-gray-600">Verified Udemy Student</span>
+              </div>
+            </div>
           </div>
-          <p class="text-purple-700 text-sm leading-relaxed">"{testimonial.text}"</p>
+          <p class="text-gray-700 leading-relaxed italic mb-3">"{testimonial.text}"</p>
+          <div class="text-xs text-gray-500">
+            {index === 0 && `Real ${course.title} Udemy review from career changer`}
+            {index === 1 && `${course.category} professional recommends this Udemy course`}
+            {index === 2 && `Beginner-friendly ${course.title} Udemy experience`}
+            {index === 3 && `Advanced ${course.category} skills through Udemy training`}
+          </div>
         </div>
       ))}
     </div>
+
+    <div class="text-center">
+      <p class="text-gray-600 mb-4">⭐ Join {course.students.toLocaleString()}+ satisfied students who have mastered {course.category} with this Udemy course</p>
+      <a href={course.url} target="_blank" rel="nofollow noopener noreferrer" class="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg hover:shadow-xl transform hover:scale-105">
+        🚀 ENROLL NOW & READ ALL REVIEWS
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      </a>
+    </div>
   </div>
 
-  <!-- Similar Courses -->
+  <!-- Course Reviews & Blog Posts -->
+  {relatedPosts.length > 0 && (
+    <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">📝 Detailed {course.category} Course Reviews & Guides</h2>
+      <p class="text-gray-600 mb-6">Read comprehensive reviews, comparisons, and expert analysis of {course.category} courses to find the perfect learning path for your career goals.</p>
+      <div class="space-y-6">
+        {relatedPosts.map((post) => (
+          <article class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+            <div class="flex gap-4">
+              <img
+                src={post.data.image.src}
+                alt={post.data.title}
+                class="w-24 h-24 rounded-lg object-cover flex-shrink-0"
+                loading="lazy"
+              />
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
+                  <a href={`/blog/${post.slug}`}>{post.data.title}</a>
+                </h3>
+                <p class="text-gray-600 mb-3 line-clamp-2">{post.data.description}</p>
+                <div class="flex items-center gap-4 text-sm text-gray-500">
+                  <span>📅 {post.data.pubDate.toLocaleDateString()}</span>
+                  <span>🏷️ {post.data.tags?.[0] || course.category}</span>
+                </div>
+                <a href={`/blog/${post.slug}`} class="inline-flex items-center gap-2 text-blue-600 font-medium hover:text-blue-800 transition-colors mt-2">
+                  Read Full Review →
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- Recommended Similar Courses -->
   {similarCourses.length > 0 && (
-    <div class="mb-8">
-      <h2 class="text-2xl font-bold text-gray-900 mb-6">More {extractKeySkill(course.description)} Courses - Students Also Bought</h2>
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Recommended {course.category} Courses - Students Also Enrolled</h2>
+      <p class="text-gray-600 mb-6">Explore more high-quality {course.category} courses with Udemy coupons and professional certifications.</p>
       <div class="grid md:grid-cols-3 gap-6">
         {similarCourses.map((similar) => (
           <a
             href={`/coupon/${similar.slug}`}
-            class="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden group"
+            class="block bg-gray-50 border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:border-blue-300 transition-all duration-200 overflow-hidden group"
           >
             <div class="relative">
               <img
                 src={similar.image}
-                alt={`${similar.title} - ${extractKeySkill(similar.description)} Udemy course with ${similar.discount} off`}
+                alt={`${similar.title} - Best ${extractKeySkill(similar.description)} Udemy course with ${similar.discount} discount`}
                 class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-200"
                 loading="lazy"
               />
-              <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                {similar.discount}
+              <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded font-bold">
+                {similar.discount} OFF
               </div>
+              {similar.verified && (
+                <div class="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded font-bold">
+                  ✓ Verified
+                </div>
+              )}
             </div>
             <div class="p-4">
-              <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight hover:text-purple-700 transition-colors">{similar.title}</h3>
-              <p class="text-xs text-gray-500 mb-2">{similar.instructor}</p>
-              <div class="flex items-center mb-2">
-                <span class="text-yellow-400 text-sm mr-1">★</span>
-                <span class="text-xs font-medium text-gray-900">{similar.rating}</span>
+              <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight hover:text-blue-600 transition-colors">{similar.title}</h3>
+              <p class="text-xs text-gray-500 mb-2">by {similar.instructor}</p>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center">
+                  <span class="text-yellow-400 text-sm mr-1">★</span>
+                  <span class="text-xs font-medium text-gray-900">{similar.rating}</span>
+                  <span class="text-xs text-gray-500 ml-1">({similar.students.toLocaleString()})</span>
+                </div>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-lg font-bold text-purple-600">{similar.price}</span>
+                <span class="text-lg font-bold text-blue-600">{similar.price}</span>
                 <span class="text-xs text-gray-500 line-through">{similar.originalPrice}</span>
               </div>
             </div>
           </a>
         ))}
       </div>
+
+      <div class="text-center mt-6">
+        <a href="/coupon/" class="inline-flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+          View All Udemy Course Coupons
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
     </div>
   )}
+
+      </div>
+    </div>
+
+  </div> <!-- end content layout -->
 </Layout>
