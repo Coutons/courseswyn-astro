@@ -1,0 +1,160 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Breadcrumb from '../../../components/Breadcrumb.astro';
+import courses from '../../../data/coupons.json';
+
+export async function getStaticPaths() {
+  const categoryMap = new Map();
+
+  courses.forEach(course => {
+    if (!categoryMap.has(course.category)) {
+      categoryMap.set(course.category, {
+        category: course.category,
+        subCategories: new Set(),
+        courses: []
+      });
+    }
+    categoryMap.get(course.category).subCategories.add(course.subCategory);
+    categoryMap.get(course.category).courses.push(course);
+  });
+
+  return Array.from(categoryMap.values()).map(({ category, subCategories, courses: categoryCourses }) => ({
+    params: {
+      category: category.toLowerCase().replace(/\s+/g, '-')
+    },
+    props: {
+      category,
+      subCategories: Array.from(subCategories),
+      courses: categoryCourses
+    }
+  }));
+}
+
+const { category, subCategories, courses: categoryCourses } = Astro.props;
+
+const title = `${category} Courses - Best Udemy Coupons 2026`;
+const description = `Discover the best ${category} courses on Udemy with our verified coupons. Explore ${subCategories.length} subcategories with lifetime access and certificates. Save up to 95% on premium courses.`;
+const keywords = `${category}, udemy coupons, free courses, discount codes, ${category} certification, online learning, ${subCategories.join(', ')}`;
+const canonical = `https://courseswyn.com/coupon/category/${category.toLowerCase().replace(/\s+/g, '-')}`;
+---
+
+<Layout
+  title={title}
+  description={description}
+  keywords={keywords}
+  canonical={canonical}
+ >
+
+<Breadcrumb
+  category={category}
+  isCategoryPage={true}
+/>
+
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+
+  <!-- Header Section -->
+  <div class="bg-white border-b border-gray-200 py-12 mb-8">
+    <div class="max-w-6xl mx-auto px-4">
+      <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+        {category} Courses - Best Udemy Coupons 2026
+      </h1>
+      <p class="text-gray-600 text-lg leading-relaxed mb-6">
+        Master {category} with our curated selection of premium Udemy courses.
+        Get lifetime access to high-quality education with up to 95% OFF using our verified coupons.
+      </p>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
+          <div class="text-center">
+            <div class="text-3xl font-bold text-blue-600 mb-2">{subCategories.length}</div>
+            <div class="text-gray-600 font-medium">Subcategories</div>
+          </div>
+        </div>
+        <div class="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-xl border border-green-200">
+          <div class="text-center">
+            <div class="text-3xl font-bold text-green-600 mb-2">{categoryCourses.length}</div>
+            <div class="text-gray-600 font-medium">Total Courses</div>
+          </div>
+        </div>
+        <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200">
+          <div class="text-center">
+            <div class="text-3xl font-bold text-purple-600 mb-2">95%</div>
+            <div class="text-gray-600 font-medium">Max Discount</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subcategories Grid -->
+  <div class="max-w-7xl mx-auto px-4 pb-16">
+    <div class="mb-8">
+      <h2 class="text-2xl font-bold text-gray-900 mb-2">Explore {category} Subcategories</h2>
+      <p class="text-gray-600">Choose from our specialized {category} courses to advance your skills</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+      {(subCategories as string[]).map((subCat: string) => {
+        const subCourses = (categoryCourses as any[]).filter((c: any) => c.subCategory === subCat);
+        const avgRating = (subCourses.reduce((sum: number, c: any) => sum + parseFloat(c.rating), 0) / subCourses.length).toFixed(1);
+
+        return (
+          <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden group">
+            <div class="p-6">
+              <h3 class="font-bold text-gray-900 mb-3 text-lg leading-tight group-hover:text-blue-600 transition-colors">
+                <a href={`/coupon/${category.toLowerCase().replace(/\s+/g, '-')}/${subCat.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and').replace(/\//g, '-')}`}>
+                  {subCat}
+                </a>
+              </h3>
+
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                  <span class="text-sm font-medium text-gray-600">{subCourses.length} courses</span>
+                </div>
+                <div class="flex items-center">
+                  <span class="text-sm font-medium text-gray-900 mr-1">{avgRating}</span>
+                  <span class="text-yellow-400 text-sm">★</span>
+                </div>
+              </div>
+
+              <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+                Explore {subCourses.length} premium {subCat} courses with verified Udemy coupons.
+              </p>
+
+              <a
+                href={`/coupon/${category.toLowerCase().replace(/\s+/g, '-')}/${subCat.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and').replace(/\//g, '-')}`}
+                class="block w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-lg text-center transition-all duration-200 transform hover:scale-105"
+              >
+                View {subCat} Courses
+              </a>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    <!-- Featured Courses -->
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-8">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Featured {category} Courses</h2>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {(categoryCourses as any[]).slice(0, 6).map((course: any) => (
+          <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <h4 class="font-semibold text-gray-900 mb-2 line-clamp-2">
+              <a href={`/coupon/${course.slug}`} class="hover:text-blue-600">
+                {course.title}
+              </a>
+            </h4>
+            <p class="text-sm text-gray-600 mb-2">{course.subCategory}</p>
+            <div class="flex items-center justify-between">
+              <span class="text-lg font-bold text-green-600">{course.price}</span>
+              <span class="text-sm text-gray-500 line-through">{course.originalPrice}</span>
+            </div>
+            <div class="mt-2 text-xs text-yellow-600 font-medium">{course.discount} OFF</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</div>
+</Layout>

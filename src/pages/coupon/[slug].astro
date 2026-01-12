@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
 import courses from '../../data/coupons.json';
 import { fetchPosts } from '../../lib/posts';
 
@@ -81,9 +82,9 @@ const generateOptimizedTitle = (course: any) => {
   };
 
   const keySkill = extractKeySkillForTitle(course.description);
-  // SEO-optimized title: [Discount] OFF [Full Course Title] - Learn [Key Skill] Free Udemy Course
+  // SEO-optimized title: [title - Udemy Course Review & Coupon]
   // Keep full title for maximum keyword coverage and SEO value
-  return `${course.discount} OFF ${course.title} - Learn ${keySkill} Free Udemy Course`;
+  return `${course.title} - Udemy Course Review & Coupon`;
 };
 
 const generateOptimizedDescription = (course: any) => {
@@ -264,6 +265,18 @@ const structuredData = {
         {
           "@type": "ListItem",
           "position": 3,
+          "name": course.category,
+          "item": `https://courseswyn.com/coupon/category/${course.category.toLowerCase().replace(/\s+/g, '-')}`
+        },
+        ...(course.subCategory ? [{
+          "@type": "ListItem",
+          "position": 4,
+          "name": course.subCategory,
+          "item": `https://courseswyn.com/coupon/${course.category.toLowerCase().replace(/\s+/g, '-')}/${course.subCategory.toLowerCase().replace(/\s+/g, '-')}`
+        }] : []),
+        {
+          "@type": "ListItem",
+          "position": course.subCategory ? 5 : 4,
           "name": course.title,
           "item": canonical
         }
@@ -612,7 +625,13 @@ const sampleTestimonials = generateRealisticTestimonials(course);
   keywords={keywords}
   ogImage={course.image}
   structuredData={structuredData}
->
+ >
+
+  <Breadcrumb
+    category={course.category}
+    subCategory={course.subCategory}
+    courseTitle={course.title}
+  />
 
 
   <!-- Completely New Modern Design -->
