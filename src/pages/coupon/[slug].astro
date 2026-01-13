@@ -518,6 +518,37 @@ const generateDescription = (course: any) => {
   return `Master ${skillFocus} with this comprehensive Udemy ${course.category.toLowerCase()} course. ${levelText}, this Udemy program includes ${course.totalLectures} expertly crafted lectures spanning ${course.duration} of high-quality content. Learn from industry professionals and gain practical skills you can immediately apply in your career. This highly-rated Udemy course (${course.rating} stars from ${course.students.toLocaleString()}+ students) provides Udemy lifetime access, professional Udemy certification, and ongoing support. Transform your career with proven ${course.category.toLowerCase()} training from Udemy that delivers real results.`;
 };
 
+// Generate instructor bio dynamically
+const generateInstructorBio = (instructor: string) => {
+  const instructorBios: Record<string, string> = {
+    "Prof. Ryan Ahmed, Ph.D., MBA, Stemplicity Inc.": "Lead Instructor and AI Systems Architect at Stemplicity Inc., with 12+ years' experience building scalable AI agent workflows used in production environments. His published work includes peer-reviewed research on AI automation and contributions to open-source agent frameworks.",
+    "Joshua George, ClickSlice Ltd": "Experienced digital marketing expert and founder of ClickSlice Ltd, specializing in Facebook and Google Ads with over 8 years in performance marketing. Author of multiple Udemy bestsellers on digital advertising.",
+    "Kirill Eremenko, SuperDataScience Team, Ligency": "Data science educator and founder of SuperDataScience, with expertise in machine learning and AI. Has trained over 500,000 students worldwide through his comprehensive data science courses.",
+    "Colt Steele": "Full-stack developer and instructor with 10+ years of experience teaching coding. Known for his practical approach to web development and JavaScript mastery.",
+    "Hadelin de Ponteves": "Machine learning expert and co-founder of SuperDataScience, specializing in deep learning and neural networks. Published researcher in AI and data science applications.",
+    "Stephene Mareek": "AWS certified expert and cloud architect with extensive experience in DevOps and cloud solutions. Author of multiple AWS certification preparation courses.",
+    "Prof. Ryan Ahmed, Ph.D., MBA": "Lead Instructor and AI Systems Architect at Stemplicity Inc., with 12+ years' experience building scalable AI agent workflows used in production environments. His published work includes peer-reviewed research on AI automation and contributions to open-source agent frameworks.",
+    // Default bio for unknown instructors
+    "default": "Experienced professional instructor in their field, with proven track record of teaching high-quality courses and helping students achieve their learning goals."
+  };
+
+  // Try exact match first
+  if (instructorBios[instructor]) {
+    return instructorBios[instructor];
+  }
+
+  // Try partial match for instructors with variations
+  for (const [key, bio] of Object.entries(instructorBios)) {
+    if (instructor.includes(key.split(',')[0])) {
+      return bio;
+    }
+  }
+
+  return instructorBios["default"];
+};
+
+const instructorBio = generateInstructorBio(course.instructor || "Unknown Instructor");
+
 // Generate dynamic content
 const whatYouLearn = generateWhatYouLearn(course);
 const requirements = generateRequirements(course);
@@ -883,7 +914,7 @@ const sampleTestimonials = generateRealisticTestimonials(course);
               </div>
               <div>
                 <h3 class="text-xl font-semibold text-gray-900">{course.instructor}</h3>
-                <p class="text-gray-600">Lead Instructor and AI Systems Architect at Stemplicity Inc., with 12+ years' experience building scalable AI agent workflows used in production environments. His published work includes peer-reviewed research on AI automation and contributions to open-source agent frameworks.</p>
+                <p class="text-gray-600">{instructorBio}</p>
               </div>
             </div>
           </div>
