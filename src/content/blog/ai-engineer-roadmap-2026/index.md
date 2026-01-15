@@ -28,7 +28,7 @@ This section explains the current AI job market trends and why this specific roa
 
 Hey there! If you're dreaming of a killer career in AI engineering, 2026 is your year. The job market has totally flipped – gone are the days when just knowing how to chat with ChatGPT was enough. Now, companies are hunting for **Agentic AI Engineers** who can build smart systems that think, plan, and get stuff done on their own.
 
-Think autonomous AI powered by the **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)** – that's the cool tech making everything work smoothly. We've crafted this awesome AI Engineer Roadmap 2026 to guide you step by step to master all that.
+Think autonomous AI powered by the <a href="https://modelcontextprotocol.io/" target="_blank" rel="dofollow"><strong>Model Context Protocol (MCP)</strong></a> – that's the cool tech making everything work smoothly. We've crafted this awesome AI Engineer Roadmap 2026 to guide you step by step to master all that.
 
 At **CoursesWyn**, we're all about real value. We don't just throw course links at you – our team digs deep, checking syllabi, verifying instructors, and making sure everything's up-to-date for 2026. The result? A roadmap that packs $10,000+ worth of skills into courses costing less than $100. How sweet is that?
 
