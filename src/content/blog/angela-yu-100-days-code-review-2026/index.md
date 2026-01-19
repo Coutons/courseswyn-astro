@@ -15,7 +15,7 @@ tags:
 image: ../../../assets/images/100-Days-of-Code-Python-Bootcamp.jpg
 ---
 
-## Angela Yu's 100 Days of Code Python Bootcamp Review: Worth It in 2026?
+## Is Dr. Angela Yu’s Python Course Still Relevant for AI Careers in 2026?
 
 ![Is the 100 Days of Code Python Bootcamp Worth It?](../../../assets/images/100-Days-of-Code-Python-Bootcamp.jpg)
 
