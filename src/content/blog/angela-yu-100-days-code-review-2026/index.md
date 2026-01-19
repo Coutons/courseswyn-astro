@@ -190,6 +190,35 @@ Commit to the 100 days, build your projects, and leverage the community. By the 
 
 *Disclosure: This is an affiliate link. We earn a commission at no extra cost to you, helping support our site.*
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Review",
+  "itemReviewed": {
+    "@type": "Course",
+    "name": "100 Days of Code: The Complete Python Pro Bootcamp",
+    "provider": {
+      "@type": "Organization",
+      "name": "Udemy"
+    },
+    "instructor": {
+      "@type": "Person",
+      "name": "Dr. Angela Yu"
+    }
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "CoursesWyn"
+  },
+  "reviewRating": {
+    "@type": "Rating",
+    "ratingValue": "4.7",
+    "bestRating": "5"
+  },
+  "reviewBody": "A comprehensive Python bootcamp for beginners, with strong AI foundations for 2026."
+}
+</script>
+
 ## Alternatives to Angela Yu's 100 Days of Code on Udemy
 
 If the 100 Days of Code doesn't fit your schedule or style, here are two strong alternatives on Udemy for Python learning in 2026:
