@@ -27,6 +27,12 @@ In the rapidly evolving landscape of artificial intelligence, agentic AI systems
 - **Duration:** 15 hours
 - **The Bottom Line:** Essential for devs transitioning from simple RAG to full agentic AI systems.
 
+<div style="text-align: center; margin: 20px 0; padding: 20px; border: 2px solid #007bff; border-radius: 10px; background-color: #f8f9fa;">
+  <h3 style="margin-bottom: 10px; color: #007bff;">Ready to Master Agentic AI?</h3>
+  <p style="margin-bottom: 15px;">Enroll now and get 90% off with our exclusive link!</p>
+  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6566789&u=https%3A%2F%2Fwww.udemy.com%2Fthe-complete-agentic-ai-engineering-course&intsrc=APIG_26324" class="inline-block bg-blue-600 hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-lg text-lg transition duration-300" target="_blank" rel="noopener sponsored">Enroll in Course Now 🚀</a>
+</div>
+
 To get a firsthand perspective, check out this comprehensive YouTube review of the course:
 
 <iframe width="601" height="338" src="https://www.youtube.com/embed/LSk5KaEGVk4?start=10" title="AI Engineer Agentic Track: The Complete Agent & MCP Course by Ed Donner and Ligency - Course Review" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
@@ -100,6 +106,11 @@ Hands-on building of agents enhances learning. The customer service agent projec
 ### Community Support
 Active Udemy community for troubleshooting, far superior to scattered forum posts.
 
+<div style="text-align: center; margin: 25px 0; padding: 15px; border: 2px solid #ffc107; border-radius: 10px; background-color: #fff3cd;">
+  <p style="margin-bottom: 10px; font-weight: bold; color: #856404;">Still deciding? 👀</p>
+  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6566789&u=https%3A%2F%2Fwww.udemy.com%2Fthe-complete-agentic-ai-engineering-course&intsrc=APIG_26324" class="inline-block bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded" target="_blank" rel="noopener sponsored">Check Course Details on Udemy</a>
+</div>
+
 ## Potential Drawbacks for Beginners in Agentic AI
 
 ### Prerequisite Knowledge
@@ -161,8 +172,10 @@ Intermediate Python, basic AI/ML concepts, and familiarity with APIs. Knowledge 
 
 **Ready to Enroll? Get the Course Now!**
 
-<div style="text-align: center; margin: 20px 0;">
-<a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6566789&u=https%3A%2F%2Fwww.udemy.com%2Fthe-complete-agentic-ai-engineering-course&intsrc=APIG_26324" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-block" target="_blank" rel="noopener sponsored">Enroll in AI Engineer Agentic Track: The Complete Agent & MCP Course</a>
+<div style="text-align: center; margin: 30px 0; padding: 25px; border: 3px solid #28a745; border-radius: 15px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  <h2 style="margin-bottom: 15px; color: #28a745; font-size: 1.5em;">🚀 Don't Miss Out: Limited-Time Discount!</h2>
+  <p style="margin-bottom: 20px; font-size: 1.1em;">Join thousands of developers mastering agentic AI. Lifetime access + certificate included.</p>
+  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6566789&u=https%3A%2F%2Fwww.udemy.com%2Fthe-complete-agentic-ai-engineering-course&intsrc=APIG_26324" class="inline-block bg-green-600 hover:bg-green-800 text-white font-bold py-4 px-8 rounded-lg text-xl transition duration-300 shadow-lg" target="_blank" rel="noopener sponsored">Enroll Now & Save 90% 💰</a>
 </div>
 
 *Disclosure: This is an affiliate link.*

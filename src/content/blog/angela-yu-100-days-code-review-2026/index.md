@@ -114,6 +114,11 @@ Videos are professionally produced, with clear audio, visuals, and downloadable 
 ### Cost-Effective Education
 At its sale price, it's an affordable alternative to expensive coding bootcamps, offering comparable depth.
 
+<div style="text-align: center; margin: 25px 0; padding: 15px; border: 2px solid #ffc107; border-radius: 10px; background-color: #fff3cd;">
+  <p style="margin-bottom: 10px; font-weight: bold; color: #856404;">Still deciding? 👀</p>
+  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.2776760&u=https%3A%2F%2Fwww.udemy.com%2F100-days-of-code&intsrc=APIG_26324" class="inline-block bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded" target="_blank" rel="noopener sponsored">Check Course Details on Udemy</a>
+</div>
+
 ## Cons of the 100 Days of Code Python Bootcamp
 
 ### Time-Intensive Commitment
@@ -184,8 +189,10 @@ Commit to the 100 days, build your projects, and leverage the community. By the 
 
 **Ready to Enroll? Get the Course Now!**
 
-<div style="text-align: center; margin: 20px 0;">
-<a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.2776760&u=https%3A%2F%2Fwww.udemy.com%2F100-days-of-code&intsrc=APIG_26324" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-block" target="_blank" rel="noopener sponsored">Enroll in 100 Days of Code™: The Complete Python Pro Bootcamp</a>
+<div style="text-align: center; margin: 30px 0; padding: 25px; border: 3px solid #28a745; border-radius: 15px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  <h2 style="margin-bottom: 15px; color: #28a745; font-size: 1.5em;">🚀 Don't Miss Out: Limited-Time Discount!</h2>
+  <p style="margin-bottom: 20px; font-size: 1.1em;">Start your Python journey today with lifetime access and a certificate.</p>
+  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.2776760&u=https%3A%2F%2Fwww.udemy.com%2F100-days-of-code&intsrc=APIG_26324" class="inline-block bg-green-600 hover:bg-green-800 text-white font-bold py-4 px-8 rounded-lg text-xl transition duration-300 shadow-lg" target="_blank" rel="noopener sponsored">Enroll Now & Save 90% 💰</a>
 </div>
 
 *Disclosure: This is an affiliate link. We earn a commission at no extra cost to you, helping support our site.*
