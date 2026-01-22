@@ -35,7 +35,9 @@ In the rapidly evolving landscape of artificial intelligence, agentic AI systems
 
 To get a firsthand perspective, check out this comprehensive YouTube review of the course:
 
-<iframe width="601" height="338" src="https://www.youtube.com/embed/LSk5KaEGVk4?start=10" title="AI Engineer Agentic Track: The Complete Agent & MCP Course by Ed Donner and Ligency - Course Review" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe width="100%" height="415" src="https://www.youtube.com/embed/LSk5KaEGVk4?start=10" title="AI Engineer Agentic Track: The Complete Agent & MCP Course by Ed Donner and Ligency - Course Review" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+Credit: Youtube an John Krohn Channel
 
 ## Table of Contents
 
@@ -43,7 +45,7 @@ To get a firsthand perspective, check out this comprehensive YouTube review of t
 
 ## What is the AI Engineer Agentic Track: The Complete Agent & MCP Course on Udemy?
 
-<a id="course.6566789" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6566789&u=https%3A%2F%2Fwww.udemy.com%2Fthe-complete-agentic-ai-engineering-course&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6566789_2e8a_10.jpg" border="0" alt=""/></a>
+<a id="course.6566789" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6566789&u=https%3A%2F%2Fwww.udemy.com%2Fthe-complete-agentic-ai-engineering-course&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6566789_2e8a_10.jpg" alt="AI Engineer Agentic Track" width="750" height="422"></a>
 
 Created by Ed Donner, a renowned prompt engineer and AI educator, and Ligency, a company specializing in AI agent development, this Udemy course teaches how to build and deploy agentic AI systems using MCP. It covers theoretical foundations, practical implementations, and real-world applications, making it suitable for developers looking to advance in AI engineering.
 

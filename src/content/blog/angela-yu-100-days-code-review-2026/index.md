@@ -25,7 +25,7 @@ As we step into 2026, Python's role in AI-driven industries makes bootcamps like
 
 To get a firsthand perspective, check out this comprehensive YouTube review of the course:
 
-<iframe width="601" height="338" src="https://www.youtube.com/embed/KBYN6_-YTFU" title="100 Days of Code: The Complete Python Pro Bootcamp 2025 by Angela Yu (Udemy) - Course Review" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe width="100%" height="415" src="https://www.youtube.com/embed/KBYN6_-YTFU" title="100 Days of Code: The Complete Python Pro Bootcamp 2025 by Angela Yu (Udemy) - Course Review" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## Table of Contents
 
@@ -33,7 +33,7 @@ To get a firsthand perspective, check out this comprehensive YouTube review of t
 
 ## What is the 100 Days of Code: The Complete Python Pro Bootcamp on Udemy?
 
-<a id="course.2776760" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.2776760&u=https%3A%2F%2Fwww.udemy.com%2F100-days-of-code&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/2776760_f176_10.jpg" border="0" alt=""/></a>
+<a id="course.2776760" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.2776760&u=https%3A%2F%2Fwww.udemy.com%2F100-days-of-code&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/2776760_f176_10.jpg" alt="100 Days of Code" width="750" height="422"></a>
 
 Launched by Dr. Angela Yu, a renowned developer and educator, this Udemy course promises to transform beginners into proficient Python programmers through a structured 100-day journey. Each day involves about an hour of video content and practical coding exercises, culminating in over 100 unique projects.
 

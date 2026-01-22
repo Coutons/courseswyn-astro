@@ -54,7 +54,7 @@ Ed’s course features 8 production-ready projects that go beyond tutorials. You
 * **Pros:** Cutting-edge MCP integration; high-production value; active GitHub repo.
 * **Cons:** Requires a small budget for API credits to see the agents in full action.
 
-<a id="course.6566789" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6566789&u=https%3A%2F%2Fwww.udemy.com%2Fthe-complete-agentic-ai-engineering-course&intsrc=APIG_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6566789_2e8a_10.jpg" border="0" alt="Ed Donner AI Agentic Course"/></a>
+<a id="course.6566789" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6566789&u=https%3A%2F%2Fwww.udemy.com%2Fthe-complete-agentic-ai-engineering-course&intsrc=APIG_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6566789_2e8a_10.jpg" alt="Ed Donner AI Agentic Course" width="750" height="422"></a>
 **Enrollment:** 150k+ | **Rating:** 4.8/5 | **Verdict:** Essential Foundation.
 
 **What Students Are Saying:**
@@ -97,7 +97,7 @@ Enterprise AI demands reliability. Stemplicity emphasizes **guardrails and memor
 * **Pros:** Best coverage of LangGraph; heavy focus on production reliability.
 * **Cons:** The pace is fast; you might need to re-watch the "Custom Tools" section twice.
 
-<a id="course.6668705" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6668705&u=https%3A%2F%2Fwww.udemy.com%2Fbecome-an-ai-agent-workflow-automation-engineer&intsrc=APIG_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6668705_162e_5.jpg" border="0" alt="Stemplicity Masterclass"/></a>
+<a id="course.6668705" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6668705&u=https%3A%2F%2Fwww.udemy.com%2Fbecome-an-ai-agent-workflow-automation-engineer&intsrc=APIG_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6668705_162e_5.jpg" alt="Stemplicity Masterclass" width="750" height="422"></a>
 **Enrollment:** 20k+ | **Rating:** 4.7/5 | **Verdict:** Advanced Engineering.
 
 **What Students Are Saying:**
@@ -140,7 +140,7 @@ Diogo combines technical expertise with business acumen. You'll learn strategic 
 * **Pros:** Deep dive into Vector DBs (Pinecone/Weaviate); multimodal RAG coverage.
 * **Cons:** Very long (38+ hours); requires dedication to complete.
 
-<a id="course.6148645" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6148645&u=https%3A%2F%2Fwww.udemy.com%2Fgenerative-ai-rag&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6148645_08dd_3.jpg" border="0" alt="Diogo AI Courses"/></a>
+<a id="course.6148645" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6148645&u=https%3A%2F%2Fwww.udemy.com%2Fgenerative-ai-rag&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6148645_08dd_3.jpg" alt="Diogo AI Courses" width="750" height="422"></a>
 **Enrollment:** 10k+ | **Rating:** 4.5/5 | **Verdict:** The Data Specialist's Choice.
 
 **What Students Are Saying:**
@@ -167,7 +167,13 @@ Used Coupon Code: **UDEAFFHP22025** to Get Courses just for $10.99
 
 Dive into this comprehensive 4-hour workshop by Ed Donner, featuring hands-on demonstrations of MCP Protocol, CrewAI orchestration, and OpenAI Agents SDK. Perfect preview of the cutting-edge techniques you'll implement in your AI engineering journey – from autonomous agents to production-ready AI systems.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/LSk5KaEGVk4?start=7" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe width="100%" height="415"
+src="https://www.youtube.com/embed/LSk5KaEGVk4?start=7"
+title="Youtube AI Tutorials"
+frameborder="0"
+allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+allowfullscreen>
+</iframe>
 
 Credit: by Youtube and John Krohn Channel
 

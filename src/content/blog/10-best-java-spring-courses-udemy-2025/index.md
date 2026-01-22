@@ -69,7 +69,7 @@ Java Spring continues to dominate enterprise application development, with over 
 ## Detailed Course Reviews
 
 ### 1. Java Spring Framework, Spring Boot, Spring AI - Gen AI
-<a id="course.2167814" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.2167814&u=https%3A%2F%2Fwww.udemy.com%2Fspring-5-with-spring-boot-2&intsrc=PUI2_26324" target="_top" rel="nofollow sponsored"><img src="https://i.udemycdn.com/course/480x270/2167814_a0e6_5.jpg" border="0" alt="Java Spring Framework Spring Boot Spring AI Gen AI Course Udemy Telusko"/></a>
+<a id="course.2167814" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.2167814&u=https%3A%2F%2Fwww.udemy.com%2Fspring-5-with-spring-boot-2&intsrc=PUI2_26324" target="_top" rel="nofollow sponsored"><img src="https://i.udemycdn.com/course/480x270/2167814_a0e6_5.jpg" alt="Java Spring Framework Spring Boot Spring AI Gen AI Course Udemy Telusko" width="750" height="422"></a>
 
 **Instructor:** Telusko  
 **Rating:** 4.7/5 (20,000+ ratings)  
@@ -95,7 +95,7 @@ This course uniquely combines traditional Spring with modern AI, making it ideal
 ---
 
 ### 2. Spring Boot 4, Spring 7 & Hibernate for Beginners
-<a id="course.647428" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.647428&u=https%3A%2F%2Fwww.udemy.com%2Fspring-hibernate-tutorial&intsrc=PUI2_26324" target="_top" rel="nofollow sponsored"><img src="https://i.udemycdn.com/course/480x270/647428_be28_10.jpg" border="0" alt="Spring Boot 4, Spring 7 & Hibernate for Beginners"/></a>
+<a id="course.647428" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.647428&u=https%3A%2F%2Fwww.udemy.com%2Fspring-hibernate-tutorial&intsrc=PUI2_26324" target="_top" rel="nofollow sponsored"><img src="https://i.udemycdn.com/course/480x270/647428_be28_10.jpg" alt="Spring Boot 4, Spring 7 & Hibernate for Beginners" width="750" height="422"></a>
 
 **Instructor:** Chad Darby  
 **Rating:** 4.7/5 (55,000+ ratings)  
@@ -121,7 +121,7 @@ Chad Darby's clear explanations and updated content for the latest Spring versio
 ---
 
 ### 3. Java Spring Boot Full Stack: eCommerce Project Masterclass
-<a id="course.4298517" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.4298517&u=https%3A%2F%2Fwww.udemy.com%2Fspring-boot-using-intellij-build-a-real-world-project&intsrc=PUI2_26324" target="_top" rel="nofollow sponsored"><img src="https://i.udemycdn.com/course/480x270/4298517_aa5d_3.jpg" border="0" alt="Java Spring Boot Full Stack: eCommerce Project Masterclass"/></a>
+<a id="course.4298517" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.4298517&u=https%3A%2F%2Fwww.udemy.com%2Fspring-boot-using-intellij-build-a-real-world-project&intsrc=PUI2_26324" target="_top" rel="nofollow sponsored"><img src="https://i.udemycdn.com/course/480x270/4298517_aa5d_3.jpg" alt="Java Spring Boot Full Stack: eCommerce Project Masterclass" width="750" height="422"></a>
 
 **Instructor:** Faisal Memon  
 **Rating:** 4.6/5 (12,000+ ratings)  
@@ -147,7 +147,7 @@ Real-world project focus with eCommerce, highly practical for portfolio building
 ---
 
 ### 4. Master Spring, Spring Boot, REST, JPA, Hibernate
-<a id="course.4364200" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.4364200&u=https%3A%2F%2Fwww.udemy.com%2Fspring-springboot-jpa-hibernate-zero-to-master&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/4364200_0221_5.jpg" border="0" alt=""/></a>
+<a id="course.4364200" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.4364200&u=https%3A%2F%2Fwww.udemy.com%2Fspring-springboot-jpa-hibernate-zero-to-master&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/4364200_0221_5.jpg" alt="Spring Boot" width="750" height="422"></a>
 
 **Instructor:** Easy Bytes  
 **Rating:** 4.7/5 (8,000+ ratings)  
@@ -173,7 +173,7 @@ Comprehensive stack coverage from zero to master, with clear progression.
 ---
 
 ### 5. Spring AI: Build Java AI Apps, Chatbots & RAG Systems
-<a id="course.6946625" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6946625&u=https%3A%2F%2Fwww.udemy.com%2Fspring-ai-build-java-ai-apps-chatbots-rag-systems-2026&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6946625_1369_2.jpg" border="0" alt="Spring AI: Build Java AI Apps, Chatbots & RAG Systems"/></a>
+<a id="course.6946625" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6946625&u=https%3A%2F%2Fwww.udemy.com%2Fspring-ai-build-java-ai-apps-chatbots-rag-systems-2026&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6946625_1369_2.jpg" alt="Spring AI: Build Java AI Apps, Chatbots & RAG Systems" width="750" height="422"></a>
 
 **Instructor:** Rishabh Kumar Nigam  
 **Rating:** 4.8/5 (5,000+ ratings)  
@@ -199,7 +199,7 @@ Cutting-edge focus on Spring AI for 2026, perfect for AI enthusiasts.
 ---
 
 ### 6. Java Spring Boot Microservices eCommerce Project Masterclass
-<a id="course.6072261" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6072261&u=https%3A%2F%2Fwww.udemy.com%2Fjava-spring-boot-microservices-with-spring-cloud-k8s-docker&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6072261_4b0e.jpg" border="0" alt="Java Spring Boot Microservices eCommerce Project Masterclass"/></a>
+<a id="course.6072261" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6072261&u=https%3A%2F%2Fwww.udemy.com%2Fjava-spring-boot-microservices-with-spring-cloud-k8s-docker&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6072261_4b0e.jpg" alt="Java Spring Boot Microservices eCommerce Project Masterclass" width="750" height="422"></a>
 
 **Instructor:** Faisal Memon  
 **Rating:** 4.6/5 (6,000+ ratings)  
@@ -225,7 +225,7 @@ Advanced microservices focus with real eCommerce application.
 ---
 
 ### 7. Java In-Depth: Become a Complete Java Engineer!
-<a id="course.358540" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.358540&u=https%3A%2F%2Fwww.udemy.com%2Fjava-in-depth-become-a-complete-java-engineer&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/358540_d06b_18.jpg" border="0" alt="Java In-Depth: Become a Complete Java Engineer!"/></a>
+<a id="course.358540" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.358540&u=https%3A%2F%2Fwww.udemy.com%2Fjava-in-depth-become-a-complete-java-engineer&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/358540_d06b_18.jpg" alt="Java In-Depth: Become a Complete Java Engineer!" width="750" height="422"></a>
 
 **Instructor:** Dheeru Mundluru  
 **Rating:** 4.7/5 (30,000+ ratings)  
@@ -251,7 +251,7 @@ Comprehensive Java to Spring journey for full engineers.
 ---
 
 ### 8. Spring Boot 4 REST APIs: Building Modern REST APIs
-<a id="course.6270233" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6270233&u=https%3A%2F%2Fwww.udemy.com%2Fspring-boot-rest-apis&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6270233_987e.jpg" border="0" alt="Spring Boot 4 REST APIs: Building Modern REST APIs"/></a>
+<a id="course.6270233" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6270233&u=https%3A%2F%2Fwww.udemy.com%2Fspring-boot-rest-apis&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6270233_987e.jpg" alt="Spring Boot 4 REST APIs: Building Modern REST APIs" width="750" height="422"></a>
 
 **Instructor:** Chad Darby & Eric Roby  
 **Rating:** 4.7/5 (10,000+ ratings)  
@@ -277,7 +277,7 @@ Focused on REST APIs, essential for backend roles.
 ---
 
 ### 9. Build REST APIs with Spring Boot 4, Spring Security 7, & JWT
-<a id="course.6881019" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6881019&u=https%3A%2F%2Fwww.udemy.com%2Fjava-springboot-rest-api&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6881019_4d1f.jpg" border="0" alt="Build REST APIs with Spring Boot 4, Spring Security 7, & JWT"/></a>
+<a id="course.6881019" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6881019&u=https%3A%2F%2Fwww.udemy.com%2Fjava-springboot-rest-api&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/6881019_4d1f.jpg" alt="Build REST APIs with Spring Boot 4, Spring Security 7, & JWT" width="750" height="422"></a>
 
 **Instructor:** Ramesh Fadatare  
 **Rating:** 4.7/5 (4,000+ ratings)  
@@ -303,7 +303,7 @@ Security-focused API building for modern apps.
 ---
 
 ### 10. Spring Boot Microservices with Spring Cloud Beginner to Guru
-<a id="course.2313280" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.2313280&u=https%3A%2F%2Fwww.udemy.com%2Fspring-boot-microservices-with-spring-cloud-beginner-to-guru&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/2313280_a2fe_4.jpg" border="0" alt="Spring Boot Microservices with Spring Cloud Beginner to Guru"/></a>
+<a id="course.2313280" href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.2313280&u=https%3A%2F%2Fwww.udemy.com%2Fspring-boot-microservices-with-spring-cloud-beginner-to-guru&intsrc=PUI2_26324" target="_top"><img src="https://i.udemycdn.com/course/480x270/2313280_a2fe_4.jpg" alt="Spring Boot Microservices with Spring Cloud Beginner to Guru" width="750" height="422"></a>
 
 **Instructor:** John Thompson  
 **Rating:** 4.6/5 (18,000+ ratings)  
