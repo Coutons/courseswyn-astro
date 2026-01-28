@@ -10,7 +10,8 @@ interface Props {
   image?: any;
 }
 
-const { title, description, slug, pubDate, tags, image } = Astro.props;
+const { title, description, slug, pubDate, image } = Astro.props;
+const tags = Astro.props.tags ?? [];
 
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat('en-US', {
@@ -28,7 +29,7 @@ function tagToLabel(tag: string) {
 }
 ---
 
-<article class="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden group" itemscope itemtype="https://schema.org/BlogPosting">
+<article class="block border border-slate-700 rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group bg-gradient-to-br from-slate-800/80 to-slate-800/40 backdrop-blur-sm hover:border-blue-500/50" itemscope itemtype="https://schema.org/BlogPosting">
   {image && (
     <a href={`/${slug}/`} aria-label={`Read ${title}`}>
       <Image
@@ -36,35 +37,34 @@ function tagToLabel(tag: string) {
         alt={`${title} - course review and guide`}
         widths={[400, 800]}
         sizes="(max-width: 768px) 100vw, 400px"
-        class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
+        class="w-full h-48 object-cover group-hover:brightness-110 transition-all duration-300"
         itemprop="image"
       />
     </a>
   )}
 
-  <div class="p-4 flex flex-col h-full">
-    <div class="flex items-center justify-between gap-2 mb-3">
-      <time class="text-xs text-gray-500 font-medium" itemprop="datePublished">{formatDate(pubDate)}</time>
+  <div class="p-5 flex flex-col h-full">
+    <div class="flex items-center justify-between gap-2 mb-4">
+      <time class="text-xs text-slate-500 font-medium" itemprop="datePublished">{formatDate(pubDate)}</time>
       {tags.length > 0 && (
-        <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded whitespace-nowrap" itemprop="keywords">
+        <span class="text-xs bg-blue-500/20 border border-blue-500/30 text-blue-300 px-3 py-1 rounded-full font-semibold whitespace-nowrap" itemprop="keywords">
           {tagToLabel(tags[0])}
         </span>
       )}
     </div>
 
     <a href={`/${slug}/`} class="block">
-      <h3 class="text-sm font-semibold text-gray-900 mb-2 line-clamp-2 leading-tight hover:text-purple-600 transition-colors" itemprop="headline">{title}</h3>
+      <h3 class="text-base font-bold text-slate-100 mb-3 line-clamp-2 leading-tight hover:text-blue-400 transition-colors" itemprop="headline">{title}</h3>
     </a>
 
-    <p class="text-sm text-gray-600 mb-3 line-clamp-3 flex-grow" itemprop="description">{description}</p>
+    <p class="text-sm text-slate-400 mb-4 line-clamp-3 flex-grow" itemprop="description">{description}</p>
 
-    <a href={`/${slug}/`} class="inline-flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors">
+    <a href={`/${slug}/`} class="inline-flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 font-semibold transition-colors">
       Read article →
     </a>
     <meta itemprop="url" content={`https://courseswyn.com/${slug}/`} />
     <meta itemprop="author" content="CoursesWyn" />
   </div>
-</article>
 </article>
 
 <style>

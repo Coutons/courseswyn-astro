@@ -23,7 +23,7 @@ const currentPath = Astro.url.pathname;
 const segments = currentPath.split("/").filter(Boolean);
 const isHomepage = currentPath === "/";
 const isCouponPage = currentPath.startsWith("/coupon/");
-const isLightTheme = true;
+const isLightTheme = false;
 
 // Keep title as is - don't add extra text to maintain optimal SEO length
 const metaTitle = title;
@@ -33,7 +33,7 @@ const finalCanonical = canonical || new URL(currentPath, Astro.site).href;
 const allPosts = await fetchPosts();
 ---
 
-<html lang="en" class={`min-h-full ${isLightTheme ? 'bg-gray-50 text-gray-900' : 'bg-surface text-white'}`}>
+<html lang="en" class={`min-h-full bg-surface text-white`}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -192,7 +192,7 @@ const allPosts = await fetchPosts();
     </script>
 
     </head>
-  <body class={`min-h-screen antialiased ${isLightTheme ? 'bg-gray-50 text-gray-900' : 'bg-surface text-white'}`}>
+  <body class={`min-h-screen antialiased bg-surface text-white`}>
     <a
       href="#main"
       class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold"
@@ -203,114 +203,131 @@ const allPosts = await fetchPosts();
     >
     </div>
     <header
-      class={`sticky top-0 z-50 ${isLightTheme ? 'bg-white text-gray-900 border-b border-gray-200 shadow-sm' : 'border-b border-white/10 bg-gradient-to-r from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-xl shadow-lg shadow-indigo-500/5'}`}
+      class="sticky top-0 z-50 border-b border-slate-700 bg-slate-900/95 backdrop-blur-lg shadow-lg"
     >
       <div
-        class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4"
+        class="mx-auto max-w-6xl px-4 py-3"
       >
-        <a
-          href="/"
-          class="flex items-center gap-2 text-lg font-bold tracking-tight group"
-        >
-          <span
-            class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-purple-600 font-black border border-purple-200 group-hover:border-purple-300 group-hover:shadow-lg transition-all"
+      <div class="mx-auto max-w-7xl px-4">
+        <!-- Top row with logo and search -->
+        <div class="flex items-center justify-between gap-4 py-3">
+          <!-- Logo -->
+          <a
+            href="/"
+            class="flex items-center gap-2 text-lg font-bold tracking-tight group shrink-0"
           >
-            CW
-          </span>
-          <span class="hidden sm:inline text-purple-600">CoursesWyn</span>
-        </a>
-        <div class="hidden md:flex items-center gap-4 flex-1 max-w-2xl mx-6">
-          <!-- Categories Dropdown -->
+            <span
+              class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white font-black border border-blue-500 group-hover:border-blue-400 group-hover:shadow-lg group-hover:shadow-blue-500/30 transition-all"
+            >
+              CW
+            </span>
+            <span class="hidden sm:inline text-blue-400 font-bold">CoursesWyn</span>
+          </a>
+
+          <!-- Search Bar - Center (Desktop only) -->
+          <div class="hidden lg:flex flex-1 max-w-md justify-center">
+            <Search posts={allPosts} coupons={coupons} />
+          </div>
+
+          <!-- Mobile Menu Button + Dark Toggle -->
+          <div class="flex items-center gap-2 md:hidden">
+            <button
+              class="dark-toggle"
+              type="button"
+              aria-label="Toggle theme"
+            >
+              <svg class="sun-icon w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.536l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.606a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zm5.657-9.193a1 1 0 00-1.414 0l-.707.707A1 1 0 005.05 6.464l.707-.707a1 1 0 001.414-1.414zM5 6a1 1 0 100-2H4a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+              </svg>
+              <svg class="moon-icon w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+              </svg>
+            </button>
+            <button
+              class="p-2 hover:bg-slate-800 rounded-lg transition-all border border-transparent"
+              aria-label="Open menu"
+              onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
+            >
+              <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation Bar (Desktop) -->
+        <nav class="hidden md:flex items-center justify-between gap-8 py-3 bg-slate-900/60">
+          <!-- Left: Categories -->
           <div class="relative group">
-            <button class="flex items-center gap-2 px-3 py-2 text-sm font-medium ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/80 hover:text-white hover:bg-white/5'} rounded-lg transition-all border border-transparent ${isLightTheme ? 'hover:border-gray-300' : 'hover:border-white/10'}">
-              Categories
+            <button class="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-all border border-transparent hover:border-slate-700">
+              📚 All Categories
               <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            <div class="absolute top-full left-0 mt-2 w-64 ${isLightTheme ? 'bg-white border-gray-200' : 'bg-slate-800/95 backdrop-blur-xl border-white/10'} rounded-xl p-2 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-              <div class="grid grid-cols-2 gap-1">
-                <a href="/coupon/development/" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Development</a>
-                <a href="/coupon/business/" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Business</a>
-                <a href="/coupon/design/" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Design</a>
-                <a href="/coupon/it-&-software/" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">IT & Software</a>
-                <a href="/coupon/marketing/" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Marketing</a>
-                <a href="/coupon/office-productivity/" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Office Productivity</a>
-                <a href="/coupon/personal-development/" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Personal Development</a>
-                <a href="/coupon/photography-&-video/" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Photography & Video</a>
-    <a href="/coupon/finance-&-accounting/" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Finance & Accounting</a>
-    <a href="/coupon/teaching-&-academics/" class="block px-3 py-2 text-sm ${isLightTheme ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition">Teaching & Academics</a>
+            <div class="absolute top-full left-0 mt-2 w-80 bg-slate-800/95 backdrop-blur-xl border border-slate-700 rounded-xl p-3 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+              <div class="grid grid-cols-2 gap-2">
+                <a href="/coupon/development/" class="block px-3 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-blue-600/20 rounded-lg transition">💻 Development</a>
+                <a href="/coupon/business/" class="block px-3 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-blue-600/20 rounded-lg transition">💼 Business</a>
+                <a href="/coupon/design/" class="block px-3 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-blue-600/20 rounded-lg transition">🎨 Design</a>
+                <a href="/coupon/it-&-software/" class="block px-3 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-blue-600/20 rounded-lg transition">⚙️ IT & Software</a>
+                <a href="/coupon/marketing/" class="block px-3 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-blue-600/20 rounded-lg transition">📢 Marketing</a>
+                <a href="/coupon/office-productivity/" class="block px-3 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-blue-600/20 rounded-lg transition">📊 Office</a>
+                <a href="/coupon/personal-development/" class="block px-3 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-blue-600/20 rounded-lg transition">🌱 Personal Dev</a>
+                <a href="/coupon/photography-&-video/" class="block px-3 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-blue-600/20 rounded-lg transition">📸 Photography</a>
+              </div>
+              <div class="mt-2 pt-2 border-t border-slate-700">
+                <a href="/coupon/" class="block px-3 py-2 text-sm font-semibold text-blue-400 hover:text-blue-300 rounded-lg transition">View All Categories →</a>
               </div>
             </div>
           </div>
-          <Search posts={allPosts} coupons={coupons} />
-        </div>
-        <nav class="hidden gap-8 text-sm ${isLightTheme ? 'text-gray-700' : 'text-white/70'} md:flex items-center">
-          <a class="group relative font-medium transition-all duration-300 ${isLightTheme ? 'hover:text-purple-600' : 'hover:text-indigo-300'}" href="/coupon/">
-            90% OFF Coupons
-            <span class="absolute bottom-0 left-0 w-0 h-0.5 ${isLightTheme ? 'bg-gradient-to-r from-purple-500 to-purple-600' : 'bg-gradient-to-r from-indigo-400 to-purple-400'} group-hover:w-full transition-all duration-300"></span>
-          </a>
-          <a class="group relative font-medium transition-all duration-300 ${isLightTheme ? 'hover:text-purple-600' : 'hover:text-purple-300'}" href="/blog/">
-            Course Reviews
-            <span class="absolute bottom-0 left-0 w-0 h-0.5 ${isLightTheme ? 'bg-gradient-to-r from-purple-500 to-purple-600' : 'bg-gradient-to-r from-purple-400 to-pink-400'} group-hover:w-full transition-all duration-300"></span>
-          </a>
-          <a class="group relative font-medium transition-all duration-300 ${isLightTheme ? 'hover:text-purple-600' : 'hover:text-cyan-300'}" href="/about/">
-            About
-            <span class="absolute bottom-0 left-0 w-0 h-0.5 ${isLightTheme ? 'bg-gradient-to-r from-purple-500 to-purple-600' : 'bg-gradient-to-r from-cyan-400 to-blue-400'} group-hover:w-full transition-all duration-300"></span>
-          </a>
-          <a class="group relative font-medium transition-all duration-300 ${isLightTheme ? 'hover:text-purple-600' : 'hover:text-emerald-300'}" href="/contact-us/">
-            Contact
-            <span class="absolute bottom-0 left-0 w-0 h-0.5 ${isLightTheme ? 'bg-gradient-to-r from-purple-500 to-purple-600' : 'bg-gradient-to-r from-emerald-400 to-teal-400'} group-hover:w-full transition-all duration-300"></span>
-          </a>
+
+          <!-- Center: Main Navigation -->
+          <div class="flex items-center gap-8">
+            <a class="group relative text-sm font-semibold text-slate-300 hover:text-blue-400 transition-all" href="/coupon/">
+              🎁 Udemy Coupons
+              <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a class="group relative text-sm font-semibold text-slate-300 hover:text-blue-400 transition-all" href="/blog/">
+              ⭐ Course Reviews
+              <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a class="group relative text-sm font-semibold text-slate-300 hover:text-blue-400 transition-all" href="/about/">
+              ℹ️ About
+              <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 group-hover:w-full transition-all duration-300"></span>
+            </a>
+          </div>
+
+          <!-- Right: Search + Dark Toggle (Desktop) -->
+          <div class="flex items-center gap-4">
+            <button
+              class="dark-toggle px-2 py-2 rounded-lg hover:bg-slate-800 transition"
+              type="button"
+              aria-label="Toggle theme"
+            >
+              <svg class="sun-icon w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.536l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.606a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zm5.657-9.193a1 1 0 00-1.414 0l-.707.707A1 1 0 005.05 6.464l.707-.707a1 1 0 001.414-1.414zM5 6a1 1 0 100-2H4a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+              </svg>
+              <svg class="moon-icon w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+              </svg>
+            </button>
+          </div>
         </nav>
-
-        <!-- Mobile Menu Button -->
-        <button
-          class="md:hidden p-2 ${isLightTheme ? 'hover:bg-gray-100 hover:border-gray-300' : 'hover:bg-gradient-to-br hover:from-indigo-500/20 hover:to-purple-500/20 hover:border-indigo-500/30'} rounded-lg transition-all border border-transparent"
-          aria-label="Open menu"
-          onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
-        >
-          <svg class="w-6 h-6 ${isLightTheme ? 'text-gray-700' : 'text-white'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-        </button>
-
-        <button
-          class="dark-toggle"
-          type="button"
-          aria-label="Toggle theme"
-          onclick="__COURSESWYN_TOGGLE__()"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364-.707.707M6.343 17.657l-.707.707m12.728 0-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10 5 5 0 000-10z"
-            ></path>
-          </svg>
-        </button>
       </div>
-
-      <!-- Mobile Menu -->
-      <div id="mobile-menu" class="hidden md:hidden border-t ${isLightTheme ? 'border-gray-200 bg-white' : 'border-indigo-500/20 bg-gradient-to-b from-slate-800/95 via-slate-900/95 to-slate-900/95 backdrop-blur-xl'}">
+    </header>
+      <div id="mobile-menu" class="hidden md:hidden border-t border-slate-700 bg-slate-800/95 backdrop-blur-xl">
         <nav class="flex flex-col p-4 space-y-2">
-          <a href="/coupon/" class="block px-4 py-3 rounded-lg ${isLightTheme ? 'hover:bg-purple-50 hover:border-purple-200 text-gray-700 hover:text-purple-700 border border-transparent' : 'bg-gradient-to-r hover:from-indigo-500/20 hover:to-purple-500/20 text-white/70 hover:text-indigo-300 border border-transparent hover:border-indigo-500/30'} font-medium transition-all">
+          <a href="/coupon/" class="block px-4 py-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white border border-transparent hover:border-slate-700 font-medium transition-all">
             Free Coupons
           </a>
-          <a href="/blog/" class="block px-4 py-3 rounded-lg ${isLightTheme ? 'hover:bg-purple-50 hover:border-purple-200 text-gray-700 hover:text-purple-700 border border-transparent' : 'bg-gradient-to-r hover:from-purple-500/20 hover:to-pink-500/20 text-white/70 hover:text-purple-300 border border-transparent hover:border-purple-500/30'} font-medium transition-all">
+          <a href="/blog/" class="block px-4 py-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white border border-transparent hover:border-slate-700 font-medium transition-all">
             Course Reviews
           </a>
-          <a href="/about/" class="block px-4 py-3 rounded-lg ${isLightTheme ? 'hover:bg-purple-50 hover:border-purple-200 text-gray-700 hover:text-purple-700 border border-transparent' : 'bg-gradient-to-r hover:from-cyan-500/20 hover:to-blue-500/20 text-white/70 hover:text-cyan-300 border border-transparent hover:border-cyan-500/30'} font-medium transition-all">
+          <a href="/about/" class="block px-4 py-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white border border-transparent hover:border-slate-700 font-medium transition-all">
             About
           </a>
-          <a href="/contact-us/" class="block px-4 py-3 rounded-lg ${isLightTheme ? 'hover:bg-purple-50 hover:border-purple-200 text-gray-700 hover:text-purple-700 border border-transparent' : 'bg-gradient-to-r hover:from-emerald-500/20 hover:to-teal-500/20 text-white/70 hover:text-emerald-300 border border-transparent hover:border-emerald-500/30'} font-medium transition-all">
+          <a href="/contact-us/" class="block px-4 py-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white border border-transparent hover:border-slate-700 font-medium transition-all">
             Contact
           </a>
         </nav>
@@ -319,10 +336,10 @@ const allPosts = await fetchPosts();
 
     {
       !isHomepage && !isCouponPage && (
-        <nav aria-label="Breadcrumb" class={`mx-auto max-w-6xl px-4 py-4 border-b ${isLightTheme ? 'border-gray-200' : 'border-white/5'}`}>
+        <nav aria-label="Breadcrumb" class="mx-auto max-w-6xl px-4 py-3 border-b border-slate-700 bg-slate-800/30">
           <ol class="flex items-center gap-2 text-sm">
             <li>
-              <a href="/" class={`hover:text-purple-600 transition-colors font-medium ${isLightTheme ? 'text-gray-600' : 'text-white/60 hover:text-indigo-300'}`}>
+              <a href="/" class="hover:text-indigo-300 transition-colors font-medium text-white/60">
                 Home
               </a>
             </li>
@@ -335,9 +352,9 @@ const allPosts = await fetchPosts();
                 // For blog index: Home > Blog
                 return (
                   <>
-                    <li class={`${isLightTheme ? 'text-gray-400' : 'text-white/30'}`}>/</li>
+                    <li class="text-slate-500">/</li>
                     <li>
-                      <span class={`${isLightTheme ? 'text-gray-900' : 'text-white/70'} font-medium`}>
+                      <span class="text-slate-100 font-medium">
                         Blog
                       </span>
                     </li>
@@ -347,15 +364,15 @@ const allPosts = await fetchPosts();
                 // For blog posts: Home > Blog > Title
                 return (
                   <>
-                    <li class={`${isLightTheme ? 'text-gray-400' : 'text-white/30'}`}>/</li>
+                    <li class="text-slate-500">/</li>
                     <li>
-                      <a href="/blog/" class={`font-medium transition-colors ${isLightTheme ? 'text-gray-600 hover:text-purple-600' : 'text-white/60 hover:text-indigo-300'}`}>
+                      <a href="/blog/" class="font-medium transition-colors text-slate-300 hover:text-blue-400">
                         Blog
                       </a>
                     </li>
-                    <li class={`${isLightTheme ? 'text-gray-400' : 'text-white/30'}`}>/</li>
+                    <li class="text-slate-500">/</li>
                     <li>
-                      <span class={`${isLightTheme ? 'text-gray-900' : 'text-white/70'} font-medium`}>
+                      <span class="text-slate-100 font-medium">
                         {segments[0].replace(/-/g, " ")}
                       </span>
                     </li>
@@ -370,21 +387,21 @@ const allPosts = await fetchPosts();
 
                   return (
                     <>
-                      <li class={`${isLightTheme ? 'text-gray-400' : 'text-white/30'}`}>/</li>
+                      <li class="text-slate-500">/</li>
                       <li class="flex items-center gap-2">
                         {isLastSegment ? (
-                          <span class={`${isLightTheme ? 'text-gray-900' : 'text-white/70'} font-medium`}>
+                          <span class="text-slate-100 font-medium">
                             {displayText}
                           </span>
                         ) : (
                           <>
                             <a
                               href={linkHref}
-                              class={`font-medium transition-colors ${isLightTheme ? 'text-gray-600 hover:text-purple-600' : 'text-white/60 hover:text-indigo-300'}`}
+                              class="font-medium transition-colors text-slate-300 hover:text-blue-400"
                             >
                               {displayText}
                             </a>
-                            <span class={`${isLightTheme ? 'text-gray-400' : 'text-white/30'}`}>/</span>
+                            <span class="text-slate-500">/</span>
                           </>
                         )}
                       </li>
@@ -401,76 +418,76 @@ const allPosts = await fetchPosts();
     <main id="main" class="mx-auto max-w-6xl px-4 py-12">
       <slot />
     </main>
-    <footer class="border-t border-purple-200 bg-gradient-to-br from-purple-50 to-white text-purple-700">
-      <div class="mx-auto max-w-6xl px-4 py-12">
+    <footer class="border-t border-slate-700 bg-gradient-to-b from-slate-900 to-slate-950 text-slate-300">
+      <div class="mx-auto max-w-6xl px-4 py-16">
         <!-- Footer Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           <!-- About Widget -->
           <div>
-            <h3 class="text-purple-900 font-semibold mb-4">CoursesWyn</h3>
-            <p class="text-sm text-purple-600 mb-4">Independent Udemy course reviews and verified coupons to help you learn for free.</p>
-            <div class="flex gap-3 text-purple-500">
-              <a href="https://twitter.com/CoursesGift" class="hover:text-purple-700 transition" title="Twitter">
+            <h3 class="text-slate-100 font-bold text-lg mb-4">CoursesWyn</h3>
+            <p class="text-sm text-slate-400 mb-5 leading-relaxed">Independent Udemy course reviews and 50,000+ verified coupons to help you learn premium courses for free.</p>
+            <div class="flex gap-4 text-slate-400">
+              <a href="https://twitter.com/CoursesGift" class="hover:text-blue-400 transition-colors" title="Twitter">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2s9 5 20 5a9.5 9.5 0 00-9-5.5c4.75 2.25 9-0.5 11-4.5a17.54 17.54 0 001-4c0-.27 0-.52-.05-.78A12.07 12.07 0 0023 3"/></svg>
               </a>             
-              <a href="/rss.xml" class="hover:text-purple-700 transition" title="RSS Feed">
+              <a href="/rss.xml" class="hover:text-blue-400 transition-colors" title="RSS Feed">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
               </a>
             </div>
-            <p class="text-xs text-purple-500 mt-2">Follow our official Twitter for verified coupon updates, instructor Q&A sessions, and community discussions.</p>
+            <p class="text-xs text-slate-500 mt-3">Follow our Twitter for verified coupon updates and learning resources.</p>
           </div>
 
           <!-- Explore Widget -->
           <div>
-            <h4 class="text-purple-900 font-semibold mb-4">Explore</h4>
-            <ul class="space-y-2 text-sm">
-              <li><a href="/coupon/" class="text-purple-600 hover:text-purple-800 transition">90% OFF Coupons</a></li>
-              <li><a href="/blog/" class="text-purple-600 hover:text-purple-800 transition">Course Reviews</a></li>
-              <li><a href="/coupon/ai-courses/" class="text-purple-600 hover:text-purple-800 transition">AI Courses</a></li>
-              <li><a href="/coupon/python-courses/" class="text-purple-600 hover:text-purple-800 transition">Python Courses</a></li>
-              <li><a href="/coupon/development/web-development/" class="text-purple-600 hover:text-purple-800 transition">Web Development</a></li>
+            <h4 class="text-slate-100 font-bold text-lg mb-5">Explore</h4>
+            <ul class="space-y-3 text-sm">
+              <li><a href="/coupon/" class="text-slate-400 hover:text-blue-400 transition-colors">Udemy Coupons</a></li>
+              <li><a href="/blog/" class="text-slate-400 hover:text-blue-400 transition-colors">Course Reviews</a></li>
+              <li><a href="/coupon/ai-courses/" class="text-slate-400 hover:text-blue-400 transition-colors">AI Courses</a></li>
+              <li><a href="/coupon/python-courses/" class="text-slate-400 hover:text-blue-400 transition-colors">Python Courses</a></li>
+              <li><a href="/coupon/development/web-development/" class="text-slate-400 hover:text-blue-400 transition-colors">Web Development</a></li>
             </ul>
           </div>
 
           <!-- Company Widget -->
           <div>
-            <h4 class="text-purple-900 font-semibold mb-4">Company</h4>
-            <ul class="space-y-2 text-sm">
-              <li><a href="/about/" class="text-purple-600 hover:text-purple-800 transition">About Us</a></li>
-              <li><a href="/contact-us/" class="text-purple-600 hover:text-purple-800 transition">Contact</a></li>
-              <li><a href="/privacy/" class="text-purple-600 hover:text-purple-800 transition">Privacy Policy</a></li>
+            <h4 class="text-slate-100 font-bold text-lg mb-5">Company</h4>
+            <ul class="space-y-3 text-sm">
+              <li><a href="/about/" class="text-slate-400 hover:text-blue-400 transition-colors">About Us</a></li>
+              <li><a href="/contact-us/" class="text-slate-400 hover:text-blue-400 transition-colors">Contact</a></li>
+              <li><a href="/privacy/" class="text-slate-400 hover:text-blue-400 transition-colors">Privacy Policy</a></li>
             </ul>
           </div>
 
           <!-- Newsletter Widget -->
           <div>
-            <h4 class="text-purple-900 font-semibold mb-4">Newsletter</h4>
-            <p class="text-sm text-purple-600 mb-4">Get new 90% OFF coupons delivered to your inbox daily.</p>
-            <form class="space-y-2">
+            <h4 class="text-slate-100 font-bold text-lg mb-5">Stay Updated</h4>
+            <p class="text-sm text-slate-400 mb-4">Get new Udemy coupons delivered daily.</p>
+            <form class="space-y-3">
               <input
                 type="email"
                 placeholder="your@email.com"
-                class="w-full px-3 py-2 bg-white border border-purple-300 rounded-lg text-purple-900 placeholder-purple-400 focus:outline-none focus:border-purple-500 transition text-sm"
+                class="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition text-sm"
                 required
               />
               <button
                 type="submit"
-                class="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-2 rounded-lg transition text-sm"
+                class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold py-2.5 rounded-lg transition text-sm shadow-lg hover:shadow-blue-500/30"
               >
                 Subscribe
               </button>
             </form>
-            <p class="text-xs text-purple-500 mt-3">We respect your privacy. Unsubscribe at any time.</p>
+            <p class="text-xs text-slate-500 mt-3">We respect your privacy. Unsubscribe anytime.</p>
           </div>
         </div>
 
         <!-- Footer Bottom -->
-        <div class="border-t border-purple-200 pt-8">
+        <div class="border-t border-slate-700 pt-8 mt-8">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <p class="text-sm text-gray-900">
+            <p class="text-sm text-slate-400">
               © {new Date().getFullYear()} CoursesWyn. All rights reserved.
             </p>
-            <p class="text-xs text-gray-700">
+            <p class="text-xs text-slate-500">
               Affiliate disclosure: We earn commission from qualifying purchases through Udemy links at no extra cost to you.
             </p>
           </div>

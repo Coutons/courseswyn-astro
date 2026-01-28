@@ -3,197 +3,42 @@ import Layout from '../../layouts/Layout.astro';
 import DealCard from '../../components/coupon/DealCard.astro';
 import coupons from '../../data/coupons.json';
 
-const CATEGORY = 'Business';
+const CATEGORY = 'Business & Entrepreneurship';
 const ITEMS_PER_PAGE = 12;
-
-export async function getStaticPaths() {
-  return [{ params: {} }];
-}
-
-const businessCoupons = coupons.filter(c => c.category === 'Business' || c.title.toLowerCase().includes('business'));
-const totalCoupons = businessCoupons.length;
-const totalPages = Math.ceil(totalCoupons / ITEMS_PER_PAGE);
-const currentMonthYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-const couponsLast24h = businessCoupons.filter(c => {
-  const now = new Date();
-  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  return new Date(c.addedDate) >= oneDayAgo && new Date(c.addedDate) <= now;
-}).length;
-
-const couponsJSON = JSON.stringify(businessCoupons);
+export async function getStaticPaths(){ return [{ params: {} }]; }
+const bizCoupons = coupons.filter(c => c.subCategory === CATEGORY || c.category === 'Business');
+const totalCoupons = bizCoupons.length; const couponsLast24h = bizCoupons.filter(c=>{ const now=new Date(); const oneDayAgo=new Date(now.getTime()-24*60*60*1000); return new Date(c.addedDate)>=oneDayAgo && new Date(c.addedDate)<=now; }).length;
+const schema = { "@context":"https://schema.org", "@type":"ItemList", "name":"Best Business Courses - Free Udemy Coupons", "numberOfItems": Math.min(totalCoupons,20) };
+const couponsJSON = JSON.stringify(bizCoupons);
 ---
-
 <script define:vars={{ couponsJSON, ITEMS_PER_PAGE }}>
-  const couponsData = JSON.parse(couponsJSON);
-  let filteredCoupons = [...couponsData];
-  let currentPage = 1;
-
-  window.goToPage = function(page) {
-    currentPage = Math.max(1, Math.min(page, Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE)));
-    updateCouponsDisplay();
-    updatePagination();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  function updateCouponsDisplay() {
-    const grid = document.getElementById('coupons-grid');
-    if (!grid) return;
-    const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIdx = startIdx + ITEMS_PER_PAGE;
-    const pageItems = filteredCoupons.slice(startIdx, endIdx);
-    const cards = grid.querySelectorAll('[data-coupon-slug]');
-    cards.forEach(card => card.style.display = 'none');
-    pageItems.forEach(coupon => {
-      const card = grid.querySelector(`[data-coupon-slug="${coupon.slug}"]`);
-      if (card) card.style.display = '';
-    });
+  const couponsData = JSON.parse(couponsJSON); let currentPage=1; window.goToPage=(p)=>{ currentPage=Math.max(1,Math.min(p,Math.ceil(couponsData.length/ITEMS_PER_PAGE))); update(); window.scrollTo({top:document.getElementById('coupons-grid').offsetTop-100, behavior:'smooth'}); };
+  function update(){ const grid=document.getElementById('coupons-grid'); if(!grid) return; const s=(currentPage-1)*ITEMS_PER_PAGE; const e=s+ITEMS_PER_PAGE; document.querySelectorAll('[data-coupon-slug]').forEach(card=>{ const slug=card.getAttribute('data-coupon-slug'); card.style.display = couponsData.slice(s,e).some(c=>c.slug===slug)? '':'none'; }); const ctl=document.getElementById('pagination-controls'); if(ctl){ ctl.innerHTML=''; const tp=Math.ceil(couponsData.length/ITEMS_PER_PAGE); if(tp<=1) return; for(let i=1;i<=tp;i++){ const b=document.createElement('button'); b.textContent=String(i); b.className=`px-3 py-2 rounded ${i===currentPage? 'bg-amber-600 text-white':'bg-slate-800 text-slate-300'}`; b.onclick=()=>{ currentPage=i; update(); }; ctl.appendChild(b);} }
   }
-
-  function updatePagination() {
-    const totalPages = Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE);
-    const paginationControls = document.getElementById('pagination-controls');
-    if (paginationControls) {
-      paginationControls.innerHTML = '';
-      if (totalPages <= 1) return;
-      for (let i = 1; i <= totalPages; i++) {
-        const pageBtn = document.createElement('button');
-        pageBtn.textContent = String(i);
-        pageBtn.className = `px-3 py-2 rounded-lg transition ${i === currentPage ? 'bg-yellow-500/20 border border-yellow-500/50 text-white' : 'border border-white/10 hover:bg-white/5 text-white/70 hover:text-white'}`;
-        pageBtn.onclick = () => window.goToPage(i);
-        paginationControls.appendChild(pageBtn);
-      }
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    updateCouponsDisplay();
-    updatePagination();
-  });
+  document.addEventListener('DOMContentLoaded', update);
 </script>
 
-<Layout 
-  title={`Free Business & Entrepreneurship Courses - 100% Off Udemy Coupon Codes ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`}
-  description={`Browse ${totalCoupons}+ free business & entrepreneurship courses with 100% off Udemy coupon codes and discount deals. Learn leadership, marketing, finance, sales with verified daily updated coupon codes.`}
-  structuredData={{
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "name": `Free Business Udemy Coupons`,
-    "description": `${totalCoupons}+ verified 100% off Udemy business courses`,
-    "url": `https://courseswyn.com/coupon/business-courses/`,
-    "mainEntity": {
-      "@type": "AggregateOffer",
-      "name": `Free Business Courses with 100% Off Coupons`,
-      "price": "0",
-      "priceCurrency": "USD",
-      "offerCount": totalCoupons
-    }
-  }}
->
-  <section class="mb-16 relative">
-    <div class="absolute inset-0 -z-10">
-      <div class="absolute top-0 left-1/4 w-72 h-72 bg-yellow-500/20 rounded-full blur-3xl animate-pulse"></div>
-      <div class="absolute bottom-0 right-1/4 w-72 h-72 bg-rose-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
-    </div>
-
-    <div class="relative">
-      <h1 class="text-5xl md:text-6xl lg:text-7xl font-black text-black mb-2 leading-tight">
-        Best <strong>Business & Entrepreneurship</strong> Courses<br />
-        <span class="bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 bg-clip-text text-transparent">100% Off Udemy Coupons</span>
-      </h1>
-      <p class="text-lg md:text-xl text-yellow-300 font-semibold mb-6">Leadership, Marketing, Finance & Entrepreneurship - Free Verified Daily</p>
-
-      <p class="text-lg text-black/80 leading-relaxed mb-6 max-w-2xl">
-        Master <strong>business skills</strong> with {totalCoupons}+ verified 100% off Udemy coupons. Learn marketing, finance, leadership, project management, entrepreneurship with lifetime access. {couponsLast24h}+ new business courses daily.
-      </p>
-
-      <a href="#coupons-grid" class="inline-block px-8 py-4 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 hover:shadow-lg hover:shadow-yellow-500/50 text-white font-bold transition">
-        Browse {totalCoupons}+ Free Business Courses ↓
-      </a>
-    </div>
-  </section>
-
-  <section class="mb-16">
-    <h2 class="text-3xl md:text-4xl font-black text-black mb-8">
-      {totalCoupons}+ Free Business Courses with 100% Off Coupons
-    </h2>
-
-    <section class="deals-grid mb-12" id="coupons-grid">
-      {businessCoupons.map((c) => (
-        <div data-coupon-slug={c.slug}>
-          <DealCard
-            title={c.title}
-            description={c.description}
-            image={c.image}
-            price={c.price}
-            originalPrice={c.originalPrice}
-            discount={c.discount}
-            url={c.url}
-            provider={c.provider}
-            category={c.category}
-            rating={c.rating}
-            students={c.students}
-            verified={c.verified}
-            expiryDate={c.expiryDate}
-            slug={c.slug}
-          />
+<Layout title={`Best Business & Entrepreneurship Free Courses`} description={`Explore ${totalCoupons}+ free business courses with verified coupons.`}>
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+  <main>
+    <section class="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 py-20">
+      <div class="max-w-7xl mx-auto px-4 text-center">
+        <div class="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-amber-500/20 border border-amber-500/40 rounded-full">
+          <span class="text-amber-300">📈 {totalCoupons}+ Free Business Courses</span>
         </div>
-      ))}
+        <h1 class="text-4xl font-black text-white mb-4">Grow <span class="bg-gradient-to-r from-yellow-400 to-amber-400 bg-clip-text text-transparent">Business Skills</span> — For Free</h1>
+        <p class="text-slate-300 mb-8">Leadership, marketing, finance & entrepreneurship courses with verified free coupons. {couponsLast24h}+ new deals daily.</p>
+      </div>
     </section>
 
-    {totalPages > 1 && (
-      <nav class="flex justify-center gap-2 mb-12 flex-wrap" id="pagination-controls"></nav>
-    )}
-  </section>
+    <section class="max-w-7xl mx-auto px-4 py-16">
+      <h2 class="text-2xl font-black text-white mb-4">Top Business Courses</h2>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">{bizCoupons.slice(0,6).map(c=>(<div data-coupon-slug={c.slug}><DealCard {...c} /></div>))}</div>
+    </section>
 
-  <section class="mb-16 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-2xl p-8 border border-yellow-500/30 backdrop-blur-sm">
-    <h2 class="text-3xl font-black text-black mb-4">
-      Grow Your Business Skills Free
-    </h2>
-    <p class="text-black/80 mb-6">
-      Access {totalCoupons}+ verified 100% off business courses. Learn marketing, leadership, finance, entrepreneurship. Lifetime access. Certificates included.
-    </p>
-    <a href="#coupons-grid" class="inline-block px-8 py-4 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 hover:shadow-lg hover:shadow-yellow-500/50 text-black font-bold transition">
-      Browse All Free Business Courses Now →
-    </a>
-  </section>
-
-  <!-- Related Categories Navigation - Internal Linking -->
-  <section class="mb-16 border-t border-white/10 pt-12">
-    <h2 class="text-3xl font-black text-black mb-8">Explore More Free Udemy Coupon Categories</h2>
-    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <a href="/coupon/ai-courses/" class="group relative overflow-hidden rounded-xl p-6 bg-gradient-to-br from-violet-500/20 to-indigo-500/20 border border-violet-500/30 hover:border-violet-500/50 transition-all hover:shadow-lg hover:shadow-violet-500/20">
-        <div class="relative z-10">
-          <h3 class="text-lg font-black text-black mb-2 group-hover:text-indigo-300 transition">AI & Machine Learning</h3>
-          <p class="text-sm text-black/70 mb-4">Free AI courses with 100% off coupon codes. Learn ChatGPT, deep learning, NLP.</p>
-          <span class="inline-block text-violet-400 font-bold group-hover:translate-x-2 transition">Browse Free Courses →</span>
-        </div>
-      </a>
-      <a href="/coupon/python-courses/" class="group relative overflow-hidden rounded-xl p-6 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 hover:border-blue-500/50 transition-all hover:shadow-lg hover:shadow-blue-500/20">
-        <div class="relative z-10">
-          <h3 class="text-lg font-black text-black mb-2 group-hover:text-cyan-300 transition">Python & Web Dev</h3>
-          <p class="text-sm text-black/70 mb-4">Free programming courses with verified coupon codes. Learn web dev, Django, Flask.</p>
-          <span class="inline-block text-blue-400 font-bold group-hover:translate-x-2 transition">Browse Free Courses →</span>
-        </div>
-      </a>
-      <a href="/coupon/data-science/" class="group relative overflow-hidden rounded-xl p-6 bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 hover:border-green-500/50 transition-all hover:shadow-lg hover:shadow-green-500/20">
-        <div class="relative z-10">
-          <h3 class="text-lg font-black text-black mb-2 group-hover:text-emerald-300 transition">Data Science & ML</h3>
-          <p class="text-sm text-black/70 mb-4">Free data science courses with verified coupon codes. Learn Python, pandas, ML.</p>
-          <span class="inline-block text-green-400 font-bold group-hover:translate-x-2 transition">Browse Free Courses →</span>
-        </div>
-      </a>
-      <a href="/coupon/design-courses/" class="group relative overflow-hidden rounded-xl p-6 bg-gradient-to-br from-pink-500/20 to-rose-500/20 border border-pink-500/30 hover:border-pink-500/50 transition-all hover:shadow-lg hover:shadow-pink-500/20">
-        <div class="relative z-10">
-          <h3 class="text-lg font-black text-black mb-2 group-hover:text-rose-300 transition">Design & UI/UX</h3>
-          <p class="text-sm text-black/70 mb-4">Free design courses with verified coupon deals. Learn Figma, Photoshop, UI/UX.</p>
-          <span class="inline-block text-pink-400 font-bold group-hover:translate-x-2 transition">Browse Free Courses →</span>
-        </div>
-      </a>
-    </div>
-    <div class="mt-8 text-center">
-      <a href="/coupon/" class="inline-block px-8 py-4 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:shadow-lg hover:shadow-emerald-500/50 text-white font-bold transition">
-        View All 100% Off Udemy Coupons & Free Courses →
-      </a>
-    </div>
-  </section>
+    <section class="max-w-7xl mx-auto px-4 py-16">
+      <div id="coupons-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">{bizCoupons.map(c=>(<div data-coupon-slug={c.slug}><DealCard {...c} /></div>))}</div>
+      {Math.ceil(bizCoupons.length/ITEMS_PER_PAGE)>1 && (<nav id="pagination-controls" class="flex justify-center gap-2 mt-8"></nav>)}
+    </section>
+  </main>
 </Layout>
