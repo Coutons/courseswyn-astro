@@ -1,24 +1,24 @@
 ---
 import Fuse from "fuse.js";
 
-const posts: any[] = await Astro.props.posts || [];
-const coupons: any[] = await Astro.props.coupons || [];
+const posts: any[] = (await Astro.props.posts) || [];
+const coupons: any[] = (await Astro.props.coupons) || [];
 
 // Prepare coupon data for search
-const couponItems = coupons.map(coupon => ({
+const couponItems = coupons.map((coupon) => ({
   ...coupon,
   data: {
     title: coupon.title,
     description: coupon.description,
-    tags: [coupon.category, coupon.provider]
+    tags: [coupon.category, coupon.provider],
   },
-  type: 'coupon',
-  slug: `coupon/${coupon.slug}`
+  type: "coupon",
+  slug: `coupon/${coupon.slug}`,
 }));
 
-const blogItems = posts.map(post => ({
+const blogItems = posts.map((post) => ({
   ...post,
-  type: 'blog'
+  type: "blog",
 }));
 
 const allItems = [...blogItems, ...couponItems];
@@ -32,7 +32,7 @@ const fuseOptions = {
 const fuse = new Fuse(allItems, fuseOptions);
 ---
 
-<div id="search-container" class="relative group mb-8">
+<div id="search-container" class="relative group">
   <div class="relative">
     <input
       type="text"

@@ -1,1260 +1,842 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import Breadcrumb from '../../components/Breadcrumb.astro';
-import courses from '../../data/coupons.json';
-import { fetchPosts } from '../../lib/posts';
+import Layout from "../../layouts/Layout.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import DealCard from "../../components/coupon/DealCard.astro";
+import courses from "../../data/coupons.json";
+import { fetchPosts } from "../../lib/posts";
 
 export async function getStaticPaths() {
-  return courses.map(course => ({
+  // 1. Individual Course Paths
+  const coursePaths = courses.map((course) => ({
     params: { slug: course.slug },
-    props: { course }
+    props: { type: "course", course },
   }));
+
+  // 2. Category Paths (e.g., "development-courses")
+  const categories = [...new Set(courses.map((c) => c.category))];
+  const categoryPaths = categories.map((cat) => {
+    const slug = cat.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-courses";
+    const categoryCourses = courses.filter((c) => c.category === cat);
+    return {
+      params: { slug },
+      props: { type: "category", name: cat, courses: categoryCourses, slug },
+    };
+  });
+
+  // 3. SubCategory Paths (e.g., "ai-machine-learning-courses")
+  const subCategories = [
+    ...new Set(courses.map((c) => c.subCategory).filter(Boolean)),
+  ];
+  const subCategoryPaths = subCategories.map((sub) => {
+    const slug = sub.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-courses";
+    const subCourses = courses.filter((c) => c.subCategory === sub);
+    return {
+      params: { slug },
+      props: { type: "category", name: sub, courses: subCourses, slug },
+    };
+  });
+
+  // 4. Special Alias: "ai-courses" (Aggregates all AI related)
+  const aiCourses = courses.filter(
+    (c) =>
+      (c.subCategory && c.subCategory.includes("AI")) ||
+      c.title.includes("AI ") ||
+      c.category === "Data Science"
+  );
+  const aiPath = {
+    params: { slug: "ai-courses" },
+    props: {
+        type: "category",
+        name: "Artificial Intelligence (AI)",
+        courses: aiCourses,
+        slug: "ai-courses"
+    }
+  };
+
+  return [...coursePaths, ...categoryPaths, ...subCategoryPaths, aiPath];
 }
 
-const { course } = Astro.props;
+const { type, course, name, courses: catCourses, slug } = Astro.props;
 
-// Global function for extracting key skills from course descriptions
-const extractKeySkill = (description: string) => {
-  const desc = description.toLowerCase();
+// --- SHARED HELPERS ---
+const currentYear = new Date().getFullYear();
+const currentMonthYear = new Date().toLocaleDateString("en-US", {
+  month: "long",
+  year: "numeric",
+});
 
-  // Cybersecurity & Security
-  if (desc.includes('hacking') || desc.includes('penetration') || desc.includes('pentesting')) return 'ethical hacking & cybersecurity';
-  if (desc.includes('cybersecurity') || desc.includes('bug bounty') || desc.includes('vulnerability')) return 'cybersecurity & bug bounty';
-  if (desc.includes('network security') || desc.includes('firewall') || desc.includes('encryption')) return 'network security';
-
-  // Data Science & Analytics
-  if (desc.includes('machine learning') || desc.includes('deep learning') || desc.includes('neural network')) return 'machine learning & AI';
-  if (desc.includes('data science') || desc.includes('data analysis') || desc.includes('big data')) return 'data science & analytics';
-  if (desc.includes('data visualization') || desc.includes('tableau') || desc.includes('power bi')) return 'data visualization';
-  if (desc.includes('statistics') || desc.includes('statistical analysis') || desc.includes('probability')) return 'statistics & probability';
-
-  // Web Development
-  if (desc.includes('full stack') || desc.includes('full-stack')) return 'full-stack web development';
-  if (desc.includes('front-end') || desc.includes('frontend') || desc.includes('react') || desc.includes('vue') || desc.includes('angular')) return 'front-end development';
-  if (desc.includes('back-end') || desc.includes('backend') || desc.includes('node.js') || desc.includes('django') || desc.includes('laravel')) return 'back-end development';
-  if (desc.includes('html') || desc.includes('css') || desc.includes('responsive design')) return 'HTML/CSS & responsive design';
-
-  // Programming Languages
-  if (desc.includes('javascript') || desc.includes('js') || desc.includes('es6') || desc.includes('typescript')) return 'JavaScript & TypeScript';
-  if (desc.includes('python') && !desc.includes('hacking')) return 'Python programming';
-  if (desc.includes('java') || desc.includes('spring boot') || desc.includes('android')) return 'Java development';
-  if (desc.includes('c++') || desc.includes('c#') || desc.includes('dotnet')) return 'C++ & C# programming';
-
-  // AI & Emerging Tech
-  if (desc.includes('artificial intelligence') || desc.includes('chatgpt') || desc.includes('gpt') || desc.includes('openai')) return 'AI & ChatGPT';
-  if (desc.includes('generative ai') || desc.includes('dall-e') || desc.includes('stable diffusion')) return 'generative AI';
-  if (desc.includes('computer vision') || desc.includes('opencv') || desc.includes('image processing')) return 'computer vision';
-  if (desc.includes('nlp') || desc.includes('natural language processing') || desc.includes('text mining')) return 'NLP & text analytics';
-
-  // DevOps & Cloud
-  if (desc.includes('docker') || desc.includes('kubernetes') || desc.includes('container')) return 'Docker & containerization';
-  if (desc.includes('aws') || desc.includes('azure') || desc.includes('google cloud')) return 'cloud computing';
-  if (desc.includes('devops') || desc.includes('ci/cd') || desc.includes('jenkins')) return 'DevOps & CI/CD';
-
-  // Business & Design
-  if (desc.includes('digital marketing') || desc.includes('seo') || desc.includes('social media')) return 'digital marketing & SEO';
-  if (desc.includes('ui/ux') || desc.includes('user experience') || desc.includes('figma') || desc.includes('adobe xd')) return 'UI/UX design';
-  if (desc.includes('blockchain') || desc.includes('cryptocurrency') || desc.includes('web3')) return 'blockchain & Web3';
-
-  // Mobile Development
-  if (desc.includes('react native') || desc.includes('flutter') || desc.includes('mobile app')) return 'mobile app development';
-  if (desc.includes('ios') || desc.includes('swift') || desc.includes('xcode')) return 'iOS development';
-  if (desc.includes('android') || desc.includes('kotlin') || desc.includes('mobile development')) return 'Android development';
-
-  // Default fallback
-  return course.category;
+// --- COURSE LOGIC ---
+const extractKeySkill = (description) => {
+  const desc = (description || "").toLowerCase();
+  if (desc.includes("hacking") || desc.includes("penetration"))
+    return "ethical hacking & cybersecurity";
+  if (desc.includes("python")) return "Python programming";
+  if (desc.includes("javascript") || desc.includes("react"))
+    return "JavaScript development";
+  if (desc.includes("java")) return "Java development";
+  if (desc.includes("data science") || desc.includes("machine learning"))
+    return "data science & AI";
+  if (desc.includes("web development")) return "full-stack web development";
+  return course?.category || "Online Course";
 };
 
-// Generate SEO-optimized title with target keywords - keep full titles for maximum keywords
-const generateOptimizedTitle = (course: any) => {
-  // Extract key skill for title optimization
-  const extractKeySkillForTitle = (description: string) => {
-    const desc = description.toLowerCase();
-    if (desc.includes('hacking') || desc.includes('penetration')) return 'Ethical Hacking';
-    if (desc.includes('machine learning') || desc.includes('deep learning')) return 'Machine Learning';
-    if (desc.includes('data science') || desc.includes('data analysis')) return 'Data Science';
-    if (desc.includes('web development') || desc.includes('full stack')) return 'Web Development';
-    if (desc.includes('javascript') || desc.includes('react')) return 'JavaScript';
-    if (desc.includes('python') && !desc.includes('hacking')) return 'Python';
-    if (desc.includes('ai') || desc.includes('artificial intelligence')) return 'AI';
-    if (desc.includes('cybersecurity') || desc.includes('bug bounty')) return 'Cybersecurity';
-    return course.category;
-  };
+let title, description, canonical, structuredData, whatYouLearn, benefits, similarCourses, sampleTestimonials;
 
-  const keySkill = extractKeySkillForTitle(course.description);
-  // SEO-optimized title: [title - Udemy Course Review & Coupon]
-  // Keep full title for maximum keyword coverage and SEO value
-  return `${course.title} - Udemy Course Review & Coupon`;
-};
+if (type === "course") {
+  canonical = `https://courseswyn.com/coupon/${course.slug}/`;
+  title = `[Udemy Coupon] ${course.title}`;
+  description = `Get ${course.title} FREE with ${course.discount} OFF! ${course.rating} rated by ${course.students.toLocaleString()}+ students. Master ${extractKeySkill(course.description)} with lifetime access.`;
 
-const generateOptimizedDescription = (course: any) => {
-  // Create unique descriptions with full title, keeping within SEO limits
-  const keySkill = extractKeySkill(course.description);
-  const fullDesc = `Get ${course.title} FREE with ${course.discount} OFF! ${course.rating} rated by ${course.students.toLocaleString()}+ students. Master ${keySkill} skills with lifetime access & certificate. No credit card required. Best Udemy deal 2026!`;
-
-  return fullDesc;
-};
-
-const title = generateOptimizedTitle(course);
-const description = generateOptimizedDescription(course);
-const canonical = `https://courseswyn.com/coupon/${course.slug}/`;
-// Generate comprehensive long-tail keywords
-const generateLongTailKeywords = (course: any) => {
-  const baseKeywords = [
-    course.title,
-    course.category,
-    'Udemy coupon',
-    course.discount,
-    'free certificate',
-    course.instructor,
-    course.level,
-    'online course',
-    'professional certification'
-  ];
-
-  // Comprehensive Udemy keyword variations
-  const longTailVariations = [
-    `${course.title} udemy coupon`,
-    `${course.title} udemy discount`,
-    `${course.title} udemy free`,
-    `${course.title} coupon code`,
-    `${course.title} discount code`,
-    `${course.title} free course`,
-    `free ${course.title}`,
-    `${course.discount} off ${course.title}`,
-    `${course.title} certificate`,
-    `${course.title} ${course.level}`,
-    `learn ${course.category} online`,
-    `${course.category} course ${course.discount} off`,
-    `udemy ${course.category} course free`,
-    `${course.title} lifetime access`,
-    `${course.title} professional certificate`,
-    // Core Udemy keywords
-    'udemy coupon',
-    'udemy discount',
-    'udemy free',
-    'udemy deal',
-    'udemy course',
-    'udemy certificate',
-    '100% off udemy',
-    'udemy promo code',
-    'udemy voucher',
-    'free udemy courses',
-    'udemy discount code',
-    'udemy certification',
-    'udemy online courses',
-    'best udemy courses',
-    'udemy coupons 2026',
-    'udemy promo codes',
-    'udemy voucher codes',
-    'udemy discount codes',
-    'udemy free courses',
-    'udemy certification courses',
-    'udemy professional certificate',
-    'udemy lifetime access'
-  ];
-
-  return [...baseKeywords, ...longTailVariations].join(', ');
-};
-
-const keywords = generateLongTailKeywords(course);
-const allPosts = await fetchPosts();
-
-// Find related blog posts for course reviews
-const relatedPosts = allPosts
-  .filter(post =>
-    post.data.title.toLowerCase().includes(course.category.toLowerCase()) ||
-    post.data.title.toLowerCase().includes(extractKeySkill(course.description).toLowerCase()) ||
-    post.slug.includes(course.category.toLowerCase().replace(' ', '-'))
-  )
-  .slice(0, 3);
-
-// Enhanced JSON-LD structured data for full SEO
-const structuredData = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Course",
-      "name": course.title,
-      "description": course.description,
-      "image": course.image,
-      "provider": {
-        "@type": "Organization",
-        "name": "Udemy",
-        "url": "https://www.udemy.com"
-      },
-      "instructor": {
-        "@type": "Person",
-        "name": course.instructor
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": parseFloat(String(course.rating)),
-        "reviewCount": course.students,
-        "bestRating": 5,
-        "worstRating": 1
-      },
-      "review": {
-        "@type": "Review",
-        "author": {
-          "@type": "Person",
-          "name": "CoursesWyn Verified Review"
-        },
-        "reviewRating": {
-          "@type": "Rating",
-          "ratingValue": parseFloat(String(course.rating)),
-          "bestRating": 5,
-          "worstRating": 1
-        },
-        "reviewBody": `${course.title} receives ${course.rating} stars from ${course.students.toLocaleString()}+ students. This comprehensive ${course.category} course offers lifetime access and professional certification at a discounted price.`
-      },
-      "offers": {
-        "@type": "Offer",
-        "price": parseFloat(course.price.replace('$', '')),
-        "priceCurrency": "USD",
-        "availability": "https://schema.org/InStock",
-        "priceValidUntil": new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        "url": canonical,
-        "seller": {
+  structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Course",
+        name: course.title,
+        description: course.description,
+        educationalLevel: course.level || "Beginner to Advanced",
+        teaches: extractKeySkill(course.description),
+        timeRequired: course.duration
+          ? `PT${course.duration.replace(" hours", "H").replace(" mins", "M")}`
+          : undefined,
+        isAccessibleForFree: true,
+        provider: {
           "@type": "Organization",
-          "name": "CoursesWyn"
-        }
+          name: "Udemy",
+          url: "https://www.udemy.com",
+        },
+        offers: {
+          "@type": "Offer",
+          price: parseFloat(course.price.replace("$", "")),
+          priceCurrency: "USD",
+          url: canonical,
+          availability: "https://schema.org/InStock",
+          validFrom: new Date().toISOString(),
+        },
+        hasCourseInstance: {
+          "@type": "CourseInstance",
+          courseMode: "online",
+          instructor: { "@type": "Person", name: course.instructor },
+          courseWorkload: course.duration,
+        },
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: parseFloat(String(course.rating)),
+          reviewCount: course.students,
+          bestRating: 5,
+          worstRating: 1,
+        },
+        publisher: {
+          "@type": "Organization",
+          name: "CoursesWyn",
+          url: "https://courseswyn.com",
+          logo: {
+            "@type": "ImageObject",
+            url: "https://courseswyn.com/logo.png",
+          },
+        },
       },
-      "courseMode": "online",
-      "educationalUse": "professional development",
-      "teaches": course.category,
-      "educationalLevel": course.level,
-      "timeRequired": `PT${course.duration.replace(/\s*(hours?|hrs?)\s*/i, 'H').replace(/\s*(minutes?|mins?)\s*/i, 'M')}0S`,
-      "hasCourseInstance": {
-        "@type": "CourseInstance",
-        "courseMode": "online",
-        "courseWorkload": course.duration,
-        "instructor": {
-          "@type": "Person",
-          "name": course.instructor,
-          "jobTitle": `${course.category} Instructor`,
-          "knowsAbout": extractKeySkill(course.description)
-        },
-        "coursePrerequisites": course.level === 'Beginner' ? 'No prior experience required' : `Basic knowledge of ${course.category}`,
-        "teaches": extractKeySkill(course.description),
-        "educationalLevel": course.level,
-        "numberOfCredits": course.totalLectures,
-        "inLanguage": course.language || "en"
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: "https://courseswyn.com/",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Coupons",
+            item: "https://courseswyn.com/coupon/",
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: course.title,
+            item: canonical,
+          },
+        ],
       },
-      "about": {
-        "@type": "DefinedTerm",
-        "name": course.category,
-        "description": `Learn ${course.category} with comprehensive training covering essential skills and practical applications.`
-      }
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {
-          "@type": "ListItem",
-          "position": 1,
-          "name": "Home",
-          "item": "https://courseswyn.com/"
-        },
-        {
-          "@type": "ListItem",
-          "position": 2,
-          "name": "Coupons",
-          "item": "https://courseswyn.com/coupon/"
-        },
-        {
-          "@type": "ListItem",
-          "position": 3,
-          "name": course.category,
-          "item": `https://courseswyn.com/coupon/category/${course.category.toLowerCase().replace(/\s+/g, '-')}`
-        },
-        ...(course.subCategory ? [{
-          "@type": "ListItem",
-          "position": 4,
-          "name": course.subCategory,
-          "item": `https://courseswyn.com/coupon/${course.category.toLowerCase().replace(/\s+/g, '-')}/${course.subCategory.toLowerCase().replace(/\s+/g, '-')}`
-        }] : []),
-        {
-          "@type": "ListItem",
-          "position": course.subCategory ? 5 : 4,
-          "name": course.title,
-          "item": canonical
-        }
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": `Is the ${course.title} course worth it? ${course.title} Udemy review`,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `Yes! This ${course.category} course has excellent ratings (${course.rating} stars from ${course.students.toLocaleString()} students) and covers essential skills with lifetime access. The ${course.discount} discount makes it an exceptional value. Get ${course.title} Udemy coupon for the best deal.`
-          }
-        },
-        {
-          "@type": "Question",
-          "name": `${course.title} ${course.discount} off - is this a good deal?`,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `Absolutely! The ${course.discount} off ${course.title} Udemy discount makes this premium ${course.category} course available at an unbeatable price. Regular price would be much higher for this quality content with ${course.students.toLocaleString()}+ students enrolled.`
-          }
-        },
-        {
-          "@type": "Question",
-          "name": `Is ${course.title} Udemy free with coupon?`,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `Yes! Use our verified ${course.title} Udemy coupon to get this course completely free. The coupon code provides ${course.discount} off, making it free for new students. Don't miss this ${course.title} Udemy free offer!`
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Do I need prior experience to take this course?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `This course is designed for ${course.level.toLowerCase()} level students. ${course.level === 'Beginner' ? 'No prior experience required - perfect for beginners learning ' + course.category.toLowerCase() : 'Some basic knowledge in ' + course.category.toLowerCase() + ' is recommended but not mandatory'}.`
-          }
-        },
-        {
-          "@type": "Question",
-          "name": `Does ${course.title} include certificate? ${course.title} professional certification`,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `Yes! ${course.title} includes a professional certificate upon completion that you can add to your LinkedIn profile, resume, or portfolio. The Udemy certificate is recognized worldwide and demonstrates your ${course.category} proficiency.`
-          }
-        },
-        {
-          "@type": "Question",
-          "name": `${course.title} lifetime access - how long do I have access?`,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `${course.title} provides lifetime access! Once enrolled with our coupon, you can learn at your own pace and revisit the material anytime. No expiration dates or hidden fees for this ${course.title} Udemy course.`
-          }
-        },
-        {
-          "@type": "Question",
-          "name": `What will I learn in ${course.title}? ${extractKeySkill(course.description)} course content`,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `${course.title} teaches you ${extractKeySkill(course.description)} through ${course.totalLectures} comprehensive lectures. You'll master practical skills with hands-on projects and real-world applications. Perfect for ${course.level.toLowerCase()} level students looking to advance their ${course.category} career.`
-          }
-        },
-        {
-          "@type": "Question",
-          "name": `${course.title} instructor - who teaches this course?`,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `${course.title} is taught by ${course.instructor}, an experienced professional with expertise in ${course.category}. With ${course.students.toLocaleString()}+ students enrolled and excellent ${course.rating}⭐ ratings, this instructor provides high-quality education and ongoing support throughout the course.`
-          }
-        }
-      ]
-    },
-    {
-      "@type": "WebPage",
-      "@id": canonical,
-      "url": canonical,
-      "name": title,
-      "description": description,
-      "inLanguage": course.language || "en",
-      "datePublished": new Date().toISOString(),
-      "dateModified": new Date().toISOString(),
-      "publisher": {
-        "@type": "Organization",
-        "name": "CoursesWyn",
-        "url": "https://courseswyn.com",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://courseswyn.com/images/og-default.svg"
-        }
-      },
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://courseswyn.com/search?q={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
-    }
-  ]
-};
-
-// Find similar courses - show up to 6 courses
-const similarCourses = courses
-  .filter(c => c.category === course.category && c.slug !== course.slug)
-  .slice(0, 6);
-
-// Auto-generated content based on course data
-const generateWhatYouLearn = (course: any) => {
-  const baseSkills = [
-    `Master ${course.category} fundamentals and core concepts`,
-    "Learn industry-standard practices and techniques",
-    "Build practical projects with real-world applications",
-    "Understand modern approaches and best practices",
-    "Get hands-on experience with comprehensive exercises"
-  ];
-
-  // Add category-specific skills
-  const categorySkills: Record<string, string[]> = {
-    'python': [
-      "Write efficient Python code with proper syntax and structure",
-      "Work with Python data structures and algorithms",
-      "Create automation scripts and data processing applications"
     ],
-    'javascript': [
-      "Build interactive web applications with JavaScript",
-      "Master DOM manipulation and event handling",
-      "Create modern front-end and back-end solutions"
-    ],
-    'data-science': [
-      "Analyze and visualize complex datasets",
-      "Apply statistical methods and machine learning algorithms",
-      "Create predictive models and data-driven insights"
-    ],
-    'web-development': [
-      "Design and develop responsive websites",
-      "Implement modern web technologies and frameworks",
-      "Create full-stack applications with databases"
-    ],
-    'ai': [
-      "Understand artificial intelligence and machine learning concepts",
-      "Implement AI algorithms and neural networks",
-      "Build intelligent applications and automation systems"
-    ]
   };
 
-  const specificSkills = categorySkills[course.category] || [];
-  // Show all base skills + all category-specific skills for more comprehensive content
-  return [...baseSkills, ...specificSkills];
-};
-
-const generateRequirements = (course: any) => {
-  const baseRequirements = [
-    "Basic computer skills and internet access",
-    "Access to a computer or mobile device"
+  whatYouLearn = [
+    `Master essential ${course.category} concepts from scratch`,
+    "Build real-world projects to strengthen your portfolio",
+    "Understand industry-standard best practices",
+    `Gain proficiency in ${extractKeySkill(course.description)}`,
+    "Earn a certificate of completion from Udemy",
   ];
 
-  // Level-based requirements
-  if (course.level === 'Beginner') {
-    baseRequirements.push("No prior experience required - perfect for complete beginners");
-  } else if (course.level === 'Intermediate') {
-    baseRequirements.push(`Basic knowledge of ${course.category} recommended`);
-  } else {
-    baseRequirements.push(`Solid foundation in ${course.category} required`);
-  }
+  similarCourses = courses
+    .filter((c) => c.category === course.category && c.slug !== course.slug)
+    .slice(0, 4);
 
-  baseRequirements.push(`${course.language} proficiency for course materials`);
-
-  return baseRequirements;
-};
-
-const generateCurriculum = (course: any) => {
-  const baseCurriculum = [
+  sampleTestimonials = [
     {
-      "sectionTitle": "Course Introduction",
-      "lectures": ["Welcome and Course Overview", "Setting Up Your Environment", "Course Resources and Community"]
-    }
-  ];
-
-  // Category-specific curriculum
-  const categoryCurriculum: Record<string, any[]> = {
-    'python': [
-      {
-        "sectionTitle": "Python Fundamentals",
-        "lectures": ["Variables, Data Types, and Operators", "Control Flow and Loops", "Functions and Modules", "File Handling and Data Processing"]
-      },
-      {
-        "sectionTitle": "Advanced Python Concepts",
-        "lectures": ["Object-Oriented Programming", "Error Handling and Testing", "Libraries and Frameworks", "Final Project Development"]
-      }
-    ],
-    'javascript': [
-      {
-        "sectionTitle": "JavaScript Basics",
-        "lectures": ["Variables, Functions, and Scope", "DOM Manipulation", "Events and Event Handling", "Asynchronous Programming"]
-      },
-      {
-        "sectionTitle": "Modern JavaScript",
-        "lectures": ["ES6+ Features and Syntax", "React/Vue Framework Introduction", "API Integration", "Full-Stack Project"]
-      }
-    ],
-    'data-science': [
-      {
-        "sectionTitle": "Data Analysis Fundamentals",
-        "lectures": ["Data Collection and Cleaning", "Statistical Analysis", "Data Visualization", "Excel and Python for Data"]
-      },
-      {
-        "sectionTitle": "Machine Learning Applications",
-        "lectures": ["Supervised Learning Algorithms", "Model Evaluation", "Neural Networks", "Capstone Data Science Project"]
-      }
-    ]
-  };
-
-  const specificCurriculum = categoryCurriculum[course.category] || [
-    {
-      "sectionTitle": "Core Concepts and Skills",
-      "lectures": ["Fundamental Principles", "Practical Applications", "Advanced Techniques", "Real-World Projects"]
+      name: "Michael Chen",
+      rating: 5,
+      text: `This ${course.title} course was exactly what I needed. The instructor explains complex ${course.category} concepts clearly. Highly recommended!`,
     },
     {
-      "sectionTitle": "Advanced Topics",
-      "lectures": ["Specialized Skills", "Industry Best Practices", "Case Studies", "Final Assessment Project"]
-    }
+      name: "Sarah Johnson",
+      rating: 5,
+      text: `I've taken many Udemy courses on ${extractKeySkill(course.description)}, but this one stands out. The practical examples helped me land a job.`,
+    },
+    {
+      name: "David Smith",
+      rating: 4,
+      text: `Great value for money, especially with the 100% off coupon. The section on ${course.subCategory || course.category} was particularly helpful.`,
+    },
+    {
+      name: "Emily Davis",
+      rating: 5,
+      text: `Excellent structure and pacing. I went from zero to hero in ${course.category} thanks to this course. Lifetime access is a huge plus.`,
+    },
+  ].slice(0, 4);
+
+  benefits = [
+    `Boost your career in ${course.category} with in-demand skills`,
+    "Build a professional portfolio to show potential employers",
+    "Get certified and validate your expertise on LinkedIn",
+    `Master ${extractKeySkill(course.description)} with hands-on practice`,
   ];
-
-  return [...baseCurriculum, ...specificCurriculum];
-};
-
-const generateDescription = (course: any) => {
-  const levelText = course.level === 'Beginner' ? 'perfect for beginners with no prior experience' :
-                   course.level === 'Intermediate' ? 'ideal for those with basic knowledge looking to advance' :
-                   'designed for experienced professionals seeking mastery';
-
-  const skillFocus = course.category === 'python' ? 'Python programming, data manipulation, automation, and real-world applications' :
-                   course.category === 'javascript' ? 'JavaScript development, modern frameworks, and full-stack web development' :
-                   course.category === 'data-science' ? 'data analysis, statistical methods, machine learning, and predictive modeling' :
-                   course.category === 'web-development' ? 'web technologies, responsive design, and modern development practices' :
-                   course.category === 'ai' ? 'artificial intelligence, neural networks, and intelligent system development' :
-                   `professional ${course.category} skills and industry best practices`;
-
-  return `Master ${skillFocus} with this comprehensive Udemy ${course.category.toLowerCase()} course. ${levelText}, this Udemy program includes ${course.totalLectures} expertly crafted lectures spanning ${course.duration} of high-quality content. Learn from industry professionals and gain practical skills you can immediately apply in your career. This highly-rated Udemy course (${course.rating} stars from ${course.students.toLocaleString()}+ students) provides Udemy lifetime access, professional Udemy certification, and ongoing support. Transform your career with proven ${course.category.toLowerCase()} training from Udemy that delivers real results.`;
-};
-
-// Generate instructor bio dynamically
-const generateInstructorBio = (instructor: string) => {
-  const instructorBios: Record<string, string> = {
-    "Prof. Ryan Ahmed, Ph.D., MBA, Stemplicity Inc.": "Lead Instructor and AI Systems Architect at Stemplicity Inc., with 12+ years' experience building scalable AI agent workflows used in production environments. His published work includes peer-reviewed research on AI automation and contributions to open-source agent frameworks.",
-    "Joshua George, ClickSlice Ltd": "Experienced digital marketing expert and founder of ClickSlice Ltd, specializing in Facebook and Google Ads with over 8 years in performance marketing. Author of multiple Udemy bestsellers on digital advertising.",
-    "Kirill Eremenko, SuperDataScience Team, Ligency": "Data science educator and founder of SuperDataScience, with expertise in machine learning and AI. Has trained over 500,000 students worldwide through his comprehensive data science courses.",
-    "Colt Steele": "Full-stack developer and instructor with 10+ years of experience teaching coding. Known for his practical approach to web development and JavaScript mastery.",
-    "Hadelin de Ponteves": "Machine learning expert and co-founder of SuperDataScience, specializing in deep learning and neural networks. Published researcher in AI and data science applications.",
-    "Stephene Mareek": "AWS certified expert and cloud architect with extensive experience in DevOps and cloud solutions. Author of multiple AWS certification preparation courses.",
-    "Prof. Ryan Ahmed, Ph.D., MBA": "Lead Instructor and AI Systems Architect at Stemplicity Inc., with 12+ years' experience building scalable AI agent workflows used in production environments. His published work includes peer-reviewed research on AI automation and contributions to open-source agent frameworks.",
-    // Default bio for unknown instructors
-    "default": "Experienced professional instructor in their field, with proven track record of teaching high-quality courses and helping students achieve their learning goals."
-  };
-
-  // Try exact match first
-  if (instructorBios[instructor]) {
-    return instructorBios[instructor];
-  }
-
-  // Try partial match for instructors with variations
-  for (const [key, bio] of Object.entries(instructorBios)) {
-    if (instructor.includes(key.split(',')[0])) {
-      return bio;
-    }
-  }
-
-  return instructorBios["default"];
-};
-
-const instructorBio = generateInstructorBio(course.instructor || "Unknown Instructor");
-
-// Generate dynamic content
-const whatYouLearn = generateWhatYouLearn(course);
-const requirements = generateRequirements(course);
-const curriculum = generateCurriculum(course);
-const courseDescription = generateDescription(course);
-
-const generateRealisticTestimonials = (course: any) => {
-  const testimonialTemplates = {
-    'python': [
-      {
-        "name": "Sarah Chen",
-        "rating": 5,
-        "text": "As someone transitioning from Excel to Python for data analysis, this Udemy course was exactly what I needed. The instructor explains complex concepts in simple terms, and the hands-on projects helped me build confidence. I can now automate my entire data workflow and impress my colleagues with professional visualizations. This Udemy Python course is perfect for beginners looking to master data analysis!"
-      },
-      {
-        "name": "Marcus Rodriguez",
-        "rating": 5,
-        "text": "I've taken several Udemy Python courses, but this one stands out for its practical approach. The real-world projects are challenging but achievable, and the instructor's explanations are clear. I particularly loved the data visualization section - my reports now look professional and insightful. Worth every penny of the Udemy discount price!"
-      },
-      {
-        "name": "Jennifer Park",
-        "rating": 4,
-        "text": "Great Udemy course for learning Python data analysis! The curriculum is well-structured, starting from basics and building up to advanced topics. I appreciated the focus on practical applications rather than just theory. The only minor suggestion would be more exercises on data cleaning techniques, but overall excellent value for the Udemy coupon price."
-      },
-      {
-        "name": "Kevin Liu",
-        "rating": 5,
-        "text": "This Udemy Python certification completely transformed my career! I went from zero programming knowledge to building complex data analysis applications. The lifetime access to this Udemy course means I can always come back to refresh my skills. The instructor provides outstanding support and the projects are directly applicable to real work scenarios. Best Udemy Python course I've ever taken!"
-      }
-    ],
-    'javascript': [
-      {
-        "name": "David Kumar",
-        "rating": 5,
-        "text": "Finally understood JavaScript after struggling for months! This Udemy JavaScript course breaks down complex concepts like closures and async programming in ways that actually make sense. The projects are real-world applicable, and I built a complete web app by the end. The instructor's teaching style is engaging and patient. Perfect Udemy certification for developers looking to level up their JS skills."
-      },
-      {
-        "name": "Emily Watson",
-        "rating": 5,
-        "text": "From zero to building interactive web applications in 8 weeks! This Udemy JavaScript course is incredibly well-paced for beginners. I love how each module builds on the previous one, and the final project portfolio really boosted my confidence. The community support and regular updates make this Udemy course stand out. Definitely worth the Udemy coupon investment!"
-      },
-      {
-        "name": "Alex Thompson",
-        "rating": 4,
-        "text": "Solid JavaScript foundation course on Udemy. The instructor covers modern ES6+ features thoroughly, and the React integration section was particularly helpful. I wish there was more content on testing frameworks, but the core JavaScript knowledge I gained is excellent. Good pace for working professionals taking this Udemy JavaScript certification."
-      },
-      {
-        "name": "Sophia Martinez",
-        "rating": 5,
-        "text": "This Udemy JavaScript course completely changed how I think about web development! The instructor makes complex topics like promises and async/await crystal clear. I landed my first developer job thanks to the portfolio projects from this Udemy course. The Udemy certification carries real weight in job applications. If you're serious about JavaScript, this is the Udemy course to take!"
-      }
-    ],
-    'data-science': [
-      {
-        "name": "Dr. Maria Santos",
-        "rating": 5,
-        "text": "As a PhD researcher, I've used many statistical tools, but this Udemy data science course opened my eyes to modern data science workflows. The Python implementation of machine learning algorithms is explained beautifully, and the practical datasets helped me apply concepts immediately to my research. The visualization techniques alone are worth the Udemy course price!"
-      },
-      {
-        "name": "Robert Chen",
-        "rating": 5,
-        "text": "Career changer here! Went from marketing to data science in 4 months with this Udemy course. The step-by-step approach, real datasets, and business-focused case studies made complex topics accessible. I landed a junior data analyst role using skills from this Udemy data science certification. The instructor's industry insights are invaluable. Thank you for making data science approachable!"
-      },
-      {
-        "name": "Lisa Johnson",
-        "rating": 4,
-        "text": "Comprehensive data science overview with practical applications on Udemy. I particularly enjoyed the feature engineering and model evaluation sections. The Udemy course assumes some math background but explains concepts clearly. My only suggestion is more deep learning content, but for traditional ML techniques, this Udemy data science course is excellent. Great investment for career advancement."
-      },
-      {
-        "name": "Ahmed Hassan",
-        "rating": 5,
-        "text": "This Udemy data science certification is a game-changer! As someone with a business background, I was intimidated by data science, but this Udemy course made it accessible. The real-world projects and industry-relevant case studies gave me confidence. I now lead data initiatives at my company. The Udemy lifetime access means I can always revisit complex topics. Absolutely recommend this Udemy data science course!"
-      }
-    ],
-    'default': [
-      {
-        "name": "Michael Torres",
-        "rating": 5,
-        "text": "Transformative learning experience! The instructor's expertise shines through in every lecture, and the hands-on projects helped me build a professional portfolio. I gained practical skills that I immediately applied at work. The course structure is perfect for busy professionals, with lifetime access allowing me to revisit complex topics. Highly recommended for serious learners!"
-      },
-      {
-        "name": "Rachel Green",
-        "rating": 5,
-        "text": "This course exceeded all my expectations. The content is current, well-organized, and taught by someone who clearly knows their field deeply. I appreciated the focus on real-world applications over theoretical concepts. The supportive community and regular updates make this more than just a course - it's an ongoing learning resource. Worth every moment invested!"
-      },
-      {
-        "name": "James Wilson",
-        "rating": 4,
-        "text": "Solid course with practical value. The instructor explains complex topics clearly, and the projects helped reinforce learning. I would have liked more advanced topics, but for building fundamental skills, this is excellent. The pacing works well for working professionals, and the certificate adds credibility to my resume. Good overall value for the discounted price."
-      }
-    ]
-  };
-
-  return (testimonialTemplates as any)[course.category] || testimonialTemplates['default'];
-};
-
-// Generate realistic testimonials based on course category
-const sampleTestimonials = generateRealisticTestimonials(course);
+} else {
+    // --- CATEGORY LOGIC ---
+    canonical = `https://courseswyn.com/coupon/${slug}/`;
+    title = `Top ${name} Courses & Coupons - Free Udemy Deals (${currentYear})`;
+    description = `Browse the best verified ${name} courses with 100% OFF coupons. Learn ${name} from top-rated instructors for free. Updated ${currentMonthYear}.`;
+    
+    // Schema for CollectionPage
+    structuredData = {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: title,
+        description: description,
+        url: canonical,
+         breadcrumb: {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://courseswyn.com/" },
+            { "@type": "ListItem", position: 2, name: "Coupons", item: "https://courseswyn.com/coupon/" },
+            { "@type": "ListItem", position: 3, name: name, item: canonical },
+          ],
+        },
+    };
+}
 ---
 
+{type === "course" ? (
 <Layout
   title={title}
   description={description}
   canonical={canonical}
-  keywords={keywords}
   ogImage={course.image}
   structuredData={structuredData}
- >
+>
+  <div class="bg-slate-950 min-h-screen pb-24 md:pb-12 font-sans">
+    <!-- Top Bar Navigation (Breadcrumb) -->
+    <div class="bg-slate-900 border-b border-slate-800">
+      <div class="max-w-7xl mx-auto px-4 py-3">
+        <Breadcrumb
+          category={course.category}
+          subCategory={course.subCategory}
+          courseTitle={course.title}
+        />
+      </div>
+    </div>
 
-  <Breadcrumb
-    category={course.category}
-    subCategory={course.subCategory}
-    courseTitle={course.title}
-  />
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- LEFT CONTENT COLUMN (8/12) -->
+        <div class="lg:col-span-8 space-y-8">
+          <!-- Modern HERO Section -->
+          <div
+            class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-2xl relative overflow-hidden group"
+          >
+            <div
+              class="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-600/20 transition-all duration-700"
+            >
+            </div>
 
+            <div
+              class="flex flex-col md:flex-row gap-6 items-start relative z-10"
+            >
+              <div class="w-full md:w-1/3 flex-shrink-0">
+                <img
+                  src={course.image}
+                  alt={course.title}
+                  class="w-full rounded-2xl shadow-lg border border-slate-600/50 aspect-video object-cover"
+                />
+              </div>
+              <div class="flex-1">
+                <div class="flex flex-wrap gap-2 mb-3">
+                  <span
+                    class="bg-blue-600/20 text-blue-300 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/30 uppercase tracking-wider"
+                    >{course.category}</span
+                  >
+                  {
+                    course.subCategory && (
+                      <span class="bg-purple-600/20 text-purple-300 text-xs font-bold px-3 py-1 rounded-full border border-purple-500/30 uppercase tracking-wider">
+                        {course.subCategory}
+                      </span>
+                    )
+                  }
+                </div>
+                <h1
+                  class="text-2xl sm:text-3xl font-black text-white mb-3 leading-tight"
+                >
+                  {course.title}
+                </h1>
+                <p class="text-slate-400 text-sm sm:text-base mb-4">
+                  {course.description}
+                </p>
 
-  <!-- Completely New Modern Design -->
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-
-    <!-- Simple Course Header -->
-    <div class="bg-white border-b border-gray-200 py-8 mb-8">
-      <div class="max-w-6xl mx-auto px-4">
-        <div class="flex flex-col lg:flex-row gap-6">
-          <!-- Course Image -->
-          <div class="lg:w-1/4 flex-shrink-0">
-            <img
-              src={course.image}
-              alt={course.title}
-              class="w-full rounded-lg shadow-md"
-              loading="lazy"
-            />
-          </div>
-
-          <!-- Course Info -->
-          <div class="lg:w-3/4">
-            <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">{course.title} - Udemy Course Review & Coupon</h1>
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-              <div class="text-sm text-gray-600">
-                <strong>Published:</strong> {new Date(course.addedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}<br>
-                <strong>Last Updated:</strong> {new Date(course.addedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}<br>
-                <em>This page is reviewed regularly to ensure course details and coupon information remain accurate.</em>
+                <div
+                  class="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-300"
+                >
+                  <div class="flex items-center gap-1 text-yellow-400">
+                    <span class="text-lg">★</span>
+                    <span>{course.rating}</span>
+                    <span class="text-slate-500"
+                      >({course.students.toLocaleString()} students)</span
+                    >
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span>👤</span>
+                    <span>{course.instructor}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span>📅</span>
+                    <span class="sr-only">Last updated on</span>
+                     <time datetime={new Date(course.addedDate).toISOString()}>
+                      Updated {new Date(course.addedDate).toLocaleDateString()}
+                    </time>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <h2 class="text-lg font-semibold text-gray-900 mb-3">Key Takeaways</h2>
-              <ul class="list-disc list-inside text-gray-700 space-y-1">
-                <li><strong>Course Title:</strong> {course.title}</li>
-                <li><strong>Primary Focus:</strong> {extractKeySkill(course.description)}</li>
-                {course.category === 'AI & Machine Learning' && course.subCategory === 'Agentic AI' ? (
-                 <li><strong>Core Tools:</strong> OpenAI Agents SDK, LangGraph, N8N, CrewAI, AutoGen, CoPilot, ChatGPT Agents, MCP</li>
-                 ) : null}
-                <li><strong>Duration:</strong> {course.duration}</li>
-                <li><strong>Lectures:</strong> {course.totalLectures}</li>
-                <li><strong>Rating:</strong> {course.rating} stars from {course.students.toLocaleString()}+ students</li>
-                <li><strong>Instructor:</strong> {course.instructor}</li>
-                <li><strong>Discount:</strong> {course.discount} off coupon available</li>
+          </div>
+
+          <!-- What You'll Learn (High Priority & Semantic) -->
+          <div
+             class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 sm:p-8"
+           >
+             <h2
+               class="text-xl font-bold text-white mb-6 flex items-center gap-2"
+             >
+               <span class="bg-green-500/10 text-green-400 p-2 rounded-lg"
+                 >⚡</span
+               > What You'll Learn
+             </h2>
+             <p class="text-slate-400 mb-4 text-sm leading-relaxed">
+               By enrolling in <strong>{course.title}</strong>, you will master the following skills and concepts designed to enhance your expertise in {course.category}:
+             </p>
+             <ul class="grid sm:grid-cols-2 gap-4">
+               {
+                 whatYouLearn.map((item) => (
+                   <li class="flex gap-3 items-start">
+                     <svg
+                       class="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5"
+                       fill="none"
+                       stroke="currentColor"
+                       viewBox="0 0 24 24"
+                     >
+                       <path
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         stroke-width="2"
+                         d="M5 13l4 4L19 7"
+                       />
+                     </svg>
+                     <span class="text-slate-300 text-sm leading-relaxed">
+                       {item}
+                     </span>
+                   </li>
+                 ))
+               }
+             </ul>
+           </div>
+
+          <!-- Description & Career Benefits (Expanded) -->
+          <div
+            class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 sm:p-8"
+          >
+            <h2 class="text-xl font-bold text-white mb-4">
+              Course Description
+            </h2>
+            <div
+              class="prose prose-invert prose-sm sm:prose-base max-w-none text-slate-300"
+            >
+              <p class="mb-4">{course.description}</p>
+              
+               <h3 class="text-lg font-bold text-white mt-6 mb-3">Reasons to Enroll in {course.title}</h3>
+              <p>
+                This comprehensive course is specifically designed for individuals aiming to
+                master {course.category}. The curriculum of <strong>{course.title}</strong> covers everything from
+                fundamental principles to advanced techniques, ensuring a robust educational foundation.
+                With {course.totalLectures} lectures and {course.duration} of on-demand video,
+                students will have extensive resources to master {extractKeySkill(course.description)}.
+              </p>
+
+              <h3 class="text-lg font-bold text-white mt-6 mb-3">Professional & Career Benefits</h3>
+              <p class="text-sm mb-3">Upon completion of this course, students will achieve the following professional advantages:</p>
+               <ul class="list-disc pl-5 space-y-2 mt-2">
+                {benefits.map(benefit => (
+                    <li>{benefit}</li>
+                ))}
+              </ul>
+
+              <h3 class="text-lg font-bold text-white mt-6 mb-3">Target Audience for {course.title}</h3>
+              <p>
+                  This course is expertly tailored for:
+              </p>
+              <ul class="list-disc pl-5 space-y-2 mt-2">
+                  <li>Beginners looking to start a new career in {course.category}.</li>
+                  <li>Experienced professionals seeking to upgrade their skills in {extractKeySkill(course.description)}.</li>
+                  <li>Students wanting to earn a certification in {course.category}.</li>
               </ul>
             </div>
-            <p class="text-gray-600 mb-6 text-lg leading-relaxed">{course.description.split('.')[0]}.</p>
-
-
-
-
-
-            <!-- Modern Prominent CTA Button -->
-            <div class="bg-gradient-to-r from-red-500 via-red-600 to-red-700 p-6 rounded-2xl shadow-2xl border border-red-400">
-              <a href={course.url} target="_blank" rel="nofollow noopener noreferrer" class="block w-full bg-gradient-to-r from-red-500 via-pink-500 to-purple-600 hover:from-red-600 hover:via-pink-600 hover:to-purple-700 text-white font-black py-4 px-6 rounded-xl text-center text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl animate-pulse border-2 border-yellow-400">
-                Enroll in {course.title} now with {course.discount.replace('-', '')} off.
-              </a>
-              <div class="flex items-center justify-center gap-4 mt-4 text-sm text-white">
-                <span class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                  </svg>
-                  Lifetime Access
-                </span>
-                <span class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                  </svg>
-                  Certificate Included
-                </span>
-                <span class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                  </svg>
-                  30-Day Money Back
-                </span>
-              </div>
-            </div>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Content Layout -->
-    <div class="max-w-7xl mx-auto px-4 pb-16">
-      <div class="flex flex-col lg:flex-row gap-8">
-
-        <!-- Sidebar -->
-        <aside class="lg:w-1/4 lg:order-2">
-          <div class="sticky top-8 space-y-6">
-
-            <!-- Modern Coupon Card -->
-            <div class="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden transform hover:scale-105 transition-all duration-300">
-              <!-- Animated Header with Discount Badge -->
-              <div class="relative bg-gradient-to-br from-red-500 via-pink-500 to-purple-600 text-white p-8 overflow-hidden">
-                <div class="absolute top-0 right-0 w-20 h-20 bg-yellow-400 rounded-full -mr-10 -mt-10 opacity-20 animate-pulse"></div>
-                <div class="absolute bottom-0 left-0 w-16 h-16 bg-white rounded-full -ml-8 -mb-8 opacity-10"></div>
-
-                <div class="text-center relative z-10">
-                  <div class="inline-block bg-yellow-400 text-red-600 font-black text-3xl px-4 py-2 rounded-full mb-4 shadow-lg transform rotate-3">
-                    🔥 {course.discount} OFF
-                  </div>
-                  <div class="text-5xl font-black mb-2 text-white drop-shadow-lg">{course.price}</div>
-                  <div class="text-red-100 line-through text-xl">Was {course.originalPrice}</div>
-                  <div class="mt-4 space-y-2">
-                    <div class="text-sm bg-white/20 backdrop-blur-sm rounded-full px-4 py-1 inline-block">
-                      💰 Save {course.discount.replace('OFF', '')} Today!
-                    </div>
-                    <div class="text-xs bg-red-500 text-white rounded-full px-3 py-1 inline-block animate-pulse">
-                      ⚡ Limited Time Deal - Ends Soon!
-                    </div>
+          <!-- Instructor & Requirements (Contextualized) -->
+          <div class="grid md:grid-cols-2 gap-8">
+            <div
+              class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6"
+            >
+              <h3 class="text-lg font-bold text-white mb-4">
+                👨‍🏫 Course Instructor
+              </h3>
+              <div class="flex items-center gap-4 mb-3">
+                <div
+                  class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center text-xl font-bold text-slate-500 border border-slate-700"
+                >
+                  {(course.instructor || "I").charAt(0)}
+                </div>
+                <div>
+                  <div class="font-bold text-white">{course.instructor}</div>
+                  <div class="text-xs text-slate-500">
+                    Subject Matter Expert
                   </div>
                 </div>
               </div>
-
-              <!-- Course Features with Icons -->
-              <div class="p-6 bg-gradient-to-b from-gray-50 to-white">
-                {course.verified && (
-                  <div class="flex items-center justify-center bg-green-500 text-white px-4 py-2 rounded-full mb-6 shadow-lg">
-                    <svg class="w-5 h-5 mr-2 animate-bounce" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="font-bold text-sm">✓ VERIFIED TODAY</span>
-                  </div>
-                )}
-
-                <div class="grid grid-cols-1 gap-4 mb-6">
-                  <div class="flex items-center bg-blue-50 p-3 rounded-xl border border-blue-100">
-                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
-                      <span class="text-white font-bold text-lg">⏱️</span>
-                    </div>
-                    <div>
-                      <div class="text-xs text-blue-600 font-semibold uppercase tracking-wide">Duration</div>
-                      <div class="text-gray-900 font-bold">{course.duration}</div>
-                    </div>
-                  </div>
-
-                  <div class="flex items-center bg-purple-50 p-3 rounded-xl border border-purple-100">
-                    <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
-                      <span class="text-white font-bold text-lg">📚</span>
-                    </div>
-                    <div>
-                      <div class="text-xs text-purple-600 font-semibold uppercase tracking-wide">Lectures</div>
-                      <div class="text-gray-900 font-bold">{course.totalLectures}</div>
-                    </div>
-                  </div>
-
-                  <div class="flex items-center bg-green-50 p-3 rounded-xl border border-green-100">
-                    <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mr-3">
-                      <span class="text-white font-bold text-lg">🎯</span>
-                    </div>
-                    <div>
-                      <div class="text-xs text-green-600 font-semibold uppercase tracking-wide">Level</div>
-                      <div class="text-gray-900 font-bold">{course.level}</div>
-                    </div>
-                  </div>
-
-                  <div class="flex items-center bg-orange-50 p-3 rounded-xl border border-orange-100">
-                    <div class="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
-                      <span class="text-white font-bold text-lg">🌐</span>
-                    </div>
-                    <div>
-                      <div class="text-xs text-orange-600 font-semibold uppercase tracking-wide">Language</div>
-                      <div class="text-gray-900 font-bold">{course.language}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Benefits List -->
-                <div class="space-y-3 mb-6">
-                  <div class="flex items-center text-green-600">
-                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="text-sm font-medium">Lifetime Access</span>
-                  </div>
-                  <div class="flex items-center text-green-600">
-                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="text-sm font-medium">Professional Certificate</span>
-                  </div>
-                  <div class="flex items-center text-green-600">
-                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="text-sm font-medium">30-Day Money Back</span>
-                  </div>
-                  <div class="flex items-center text-green-600">
-                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="text-sm font-medium">Mobile & Desktop Access</span>
-                  </div>
-                </div>
-
-                <!-- Certificate Badge -->
-                <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-2xl text-center shadow-lg">
-                  <div class="text-2xl mb-1">🎓</div>
-                  <div class="text-sm font-bold uppercase tracking-wide">Professional Udemy Certificate</div>
-                  <div class="text-xs opacity-90 mt-1">Add to LinkedIn & Resume</div>
-                </div>
-              </div>
+              <p class="text-sm text-slate-400 leading-relaxed">
+               Your instructor, <strong>{course.instructor}</strong>, is an experienced professional with a passion for teaching {
+                  course.category
+                }. They are highly rated by students for their clear teaching style and practical
+                real-world examples.
+              </p>
             </div>
 
-          </div>
-        </aside>
-
-        <!-- Main Content -->
-        <div class="lg:w-3/4 lg:order-1">
-
-          <!-- Why Choose This Course - Moved to Top -->
-          <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 mb-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">Why Choose {course.title}</h2>
-    <p class="text-gray-700 mb-6">This segment explains core differentiators — instructor expertise, curriculum relevance, project-based modules, and student outcomes — that make this course an industry-aligned choice.</p>
-            <div class="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 class="text-lg font-semibold text-gray-800 mb-3">🎓 Professional {course.category} Certification</h3>
-                <p class="text-gray-700 mb-4">Get recognized {course.category} certification from Udemy. This {course.title} course provides industry-standard {extractKeySkill(course.description)} skills that employers look for in {course.level.toLowerCase()} level professionals.</p>
-
-                <h3 class="text-lg font-semibold text-gray-800 mb-3">⏰ Flexible Learning Schedule</h3>
-                <p class="text-gray-700 mb-4">Learn {course.category} at your own pace with lifetime access to this {course.title} Udemy course. Complete the {course.totalLectures} lectures in {course.duration} with no deadlines or pressure.</p>
-              </div>
-              <div>
-                <h3 class="text-lg font-semibold text-gray-800 mb-3">💼 Career Advancement</h3>
-                <p class="text-gray-700 mb-4">By completing hands-on modules that cover OpenAI Agents SDK, LangGraph and n8n workflow automation, students acquire practical deployment skills that align with industry job requirements.</p>
-
-                <h3 class="text-lg font-semibold text-gray-800 mb-3">⭐ Top-Rated Instructor</h3>
-                <p class="text-gray-700 mb-4">Learn from {course.instructor}, an expert instructor with proven track record in teaching {course.category}. This {course.title} Udemy course has earned {course.rating} stars from thousands of students.</p>
-              </div>
-            </div>
-            <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
-              <p class="text-gray-800 font-medium text-center">🎯 <strong>{course.discount} OFF {course.title}</strong> - Limited Time Udemy Coupon for Professional {course.category} Training</p>
+            <div
+              class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6"
+            >
+              <h3 class="text-lg font-bold text-white mb-4">
+                📋 Prerequisites & Requirements
+              </h3>
+               <p class="text-slate-400 text-sm mb-3">To successfully complete this course, students should meet the following prerequisites:</p>
+              <ul class="space-y-2">
+                <li class="flex gap-2 text-sm text-slate-400">
+                  <span class="text-blue-500">•</span> No prior knowledge is required (Beginner friendly).
+                </li>
+                <li class="flex gap-2 text-sm text-slate-400">
+                  <span class="text-blue-500">•</span> A computer with stable internet access.
+                </li>
+                <li class="flex gap-2 text-sm text-slate-400">
+                  <span class="text-blue-500">•</span> A willingness to learn and practice new concepts.
+                </li>
+              </ul>
             </div>
           </div>
 
-          <!-- Instructor Info -->
-          <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">About the Instructor</h2>
-
-           <div class="bg-gray-50 rounded-lg p-4 mb-4">
-
-             <h3 class="text-lg font-semibold text-gray-900 mb-2">Content Review Information</h3>
-
-             <p class="text-gray-700">This page is published and maintained by the CoursesWyn editorial team. Our editorial team consists of experienced educators and content specialists with over 10 years of combined experience in online education and course curation. We hold advanced degrees in Education Technology and have reviewed thousands of courses to ensure quality and relevance.</p>
-
-           </div>
-            <div class="flex items-center gap-4">
-              <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                {course.instructor?.charAt(0) || 'I'}
-              </div>
-              <div>
-                <h3 class="text-xl font-semibold text-gray-900">{course.instructor}</h3>
-                <p class="text-gray-600">{instructorBio}</p>
-              </div>
-            </div>
-          </div>
-
-  <!-- What You'll Learn & Course Overview -->
-  <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 mb-8">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">What you'll learn in this {course.category} course</h2>
-    <div class="grid md:grid-cols-2 gap-4 mb-8">
-      {whatYouLearn.slice(0, 8).map((item: string) => (
-        <div class="flex items-start">
-          <svg class="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-          </svg>
-          <span class="text-gray-700 leading-relaxed">{item}</span>
-        </div>
-      ))}
-    </div>
-
-    <!-- Course Description -->
-    <div class="border-t border-gray-100 pt-6">
-      <h3 class="text-xl font-semibold text-gray-900 mb-4">Course Description & Overview</h3>
-      <div class="prose prose-gray max-w-none">
-        <p class="text-gray-700 mb-4 leading-relaxed">{course.description}</p>
-        <p class="text-gray-700 leading-relaxed mb-6">{courseDescription}</p>
-
-        <!-- Course Stats -->
-        <div class="bg-gray-50 rounded-lg p-4">
-          <h4 class="font-semibold text-gray-900 mb-3">Course Specifications:</h4>
-          <div class="grid md:grid-cols-2 gap-4 text-sm">
-            <div><strong>Last Updated:</strong> {course.addedDate}</div>
-            <div><strong>Skill Level:</strong> {course.level}</div>
-            <div><strong>Duration:</strong> {course.duration}</div>
-            <div><strong>Lectures:</strong> {course.totalLectures}</div>
-            <div><strong>Language:</strong> {course.language}</div>
-            <div><strong>Certificate:</strong> Yes, Udemy Certificate</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-
-  <!-- Curriculum -->
-  <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 mb-8">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-gray-900">Course content</h2>
-      <div class="text-sm text-gray-600">
-        {curriculum.reduce((total: number, section: any) => total + section.lectures.length, 0)} lectures • {course.duration}
-      </div>
-    </div>
-    <div class="space-y-3">
-      {curriculum.map((section: any) => (
-        <details class="group border border-gray-200 rounded-lg overflow-hidden hover:shadow-sm transition-shadow">
-          <summary class="flex items-center justify-between p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-            <div class="flex items-center">
-              <svg class="w-5 h-5 text-gray-400 mr-3 group-open:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-              <span class="font-medium text-gray-900">{section.sectionTitle}</span>
-            </div>
-            <span class="text-gray-500 text-sm">{section.lectures.length} lectures</span>
-          </summary>
-          <div class="border-t border-gray-100">
-            {section.lectures.map((lecture: string) => (
-              <div class="flex items-center p-3 hover:bg-gray-25 transition-colors">
-                <svg class="w-4 h-4 text-purple-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                </svg>
-                <span class="text-gray-700 text-sm">{lecture}</span>
-              </div>
-            ))}
-          </div>
-        </details>
-      ))}
-    </div>
-  </div>
-
-  <!-- Course FAQ & Requirements -->
-  <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 mb-8">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">Course Requirements & FAQ</h2>
-
-    <!-- Requirements Section -->
-    <div class="mb-8">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">What are the requirements for this {course.category} course?</h3>
-      <div class="bg-gray-50 rounded-lg p-4">
-        <ul class="space-y-2">
-          {requirements.map((req: string) => (
-            <li class="flex items-start text-sm">
-              <span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              <span class="text-gray-700 leading-relaxed">{req}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-
-    <!-- FAQ Section -->
-    <div class="space-y-4">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Frequently Asked Questions about {course.title}</h3>
-
-      <div class="border border-gray-200 rounded-lg">
-        <details class="group">
-          <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-            <h4 class="text-base font-semibold text-gray-900 pr-4">Is {course.title} worth it? Complete Udemy review</h4>
-            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </summary>
-          <div class="px-4 pb-4">
-            <p class="text-gray-700 leading-relaxed">This course has {course.rating}⭐ stars from {course.students.toLocaleString()}+ students. It provides comprehensive {extractKeySkill(course.description)} training with lifetime access and professional certification. The current {course.discount} discount makes it an unbeatable value for quality online education.</p>
-          </div>
-        </details>
-      </div>
-
-      <div class="border border-gray-200 rounded-lg">
-        <details class="group">
-          <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-            <h4 class="text-base font-semibold text-gray-900 pr-4">Do I get a certificate after completing {course.title}?</h4>
-            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </summary>
-          <div class="px-4 pb-4">
-            <p class="text-gray-700 leading-relaxed">Yes! Upon completion, you'll receive a professional Udemy certificate that you can add to your LinkedIn, resume, or portfolio. This industry-recognized certification demonstrates your expertise in {course.category} and is valued by employers worldwide.</p>
-          </div>
-        </details>
-      </div>
-
-      <div class="border border-gray-200 rounded-lg">
-        <details class="group">
-          <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-            <h4 class="text-base font-semibold text-gray-900 pr-4">How long do I have access to this Udemy course?</h4>
-            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </summary>
-          <div class="px-4 pb-4">
-            <p class="text-gray-700 leading-relaxed">Lifetime access! Once you enroll with our coupon, you can learn at your own pace, revisit materials anytime, and access updates. No expiration dates or recurring fees - your Udemy course enrollment is permanent.</p>
-          </div>
-        </details>
-      </div>
-
-      <div class="border border-gray-200 rounded-lg">
-        <details class="group">
-          <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-            <h4 class="text-base font-semibold text-gray-900 pr-4">Who is the instructor for {course.title}?</h4>
-            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </summary>
-          <div class="px-4 pb-4">
-            <p class="text-gray-700 leading-relaxed">{course.instructor} is a highly experienced {course.category} professional with expertise in {extractKeySkill(course.description)}. With {course.students.toLocaleString()}+ students taught and excellent ratings, they provide clear instruction, practical examples, and ongoing support throughout your learning journey.</p>
-          </div>
-        </details>
-      </div>
-    </div>
-  </div>
-
-  <!-- Enhanced Student Reviews & Testimonials with Long Tail Keywords -->
-  <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 mb-8">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-gray-900">{course.title} Udemy Reviews 2026 - Real Student Experiences & Testimonials</h2>
-      <div class="flex items-center space-x-4">
-        <div class="flex items-center">
-          <div class="flex mr-2">
-            {[...Array(5)].map((_, i) => (
-              <span class={`text-sm ${i < Math.floor(parseFloat(String(course.rating))) ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
-            ))}
-          </div>
-          <span class="text-lg font-bold text-gray-900">{course.rating}</span>
-          <span class="text-gray-600 ml-1">average rating • {course.students.toLocaleString()}+ verified Udemy reviews</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Long Tail Keyword Rich Introduction -->
-    <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-8 border border-blue-100">
-      <h3 class="text-xl font-bold text-gray-900 mb-4">Why Students Love This {course.title} Udemy Course Review 2026</h3>
-      <p class="text-gray-700 leading-relaxed mb-4">
-        Discover why {course.students.toLocaleString()}+ students have chosen this comprehensive {course.category} Udemy course for their professional development.
-        Read authentic {course.title} Udemy reviews from real students who have transformed their careers through this highly-rated online course.
-        Whether you're looking for <strong>{course.title} free Udemy coupon</strong>, <strong>{course.discount} off {course.title}</strong> deal, or comprehensive
-        {course.category} training, these {course.title} Udemy testimonials showcase the quality education and practical skills you'll gain.
-      </p>
-      <div class="grid md:grid-cols-3 gap-4 text-center">
-        <div class="bg-white rounded-lg p-4 shadow-sm">
-          <div class="text-2xl font-bold text-blue-600">{course.students.toLocaleString()}+</div>
-          <div class="text-sm text-gray-600">Students Enrolled</div>
-        </div>
-        <div class="bg-white rounded-lg p-4 shadow-sm">
-          <div class="text-2xl font-bold text-green-600">{course.rating}⭐</div>
-          <div class="text-sm text-gray-600">Average Rating</div>
-        </div>
-        <div class="bg-white rounded-lg p-4 shadow-sm">
-          <div class="text-2xl font-bold text-purple-600">100%</div>
-          <div class="text-sm text-gray-600">Lifetime Access</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Enhanced Testimonials with Long Tail Keywords -->
-    <div class="grid md:grid-cols-2 gap-6 mb-8">
-      {sampleTestimonials.slice(0, 2).map((testimonial: any, index: number) => (
-        <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <div class="flex items-center mb-4">
-            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
-              {testimonial.name.charAt(0)}
-            </div>
-            <div>
-              <div class="font-bold text-gray-900">{testimonial.name}</div>
-              <div class="flex items-center">
-                <div class="flex mr-2">
-                  {[...Array(5)].map((_, i) => (
-                    <span class={`text-sm ${i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
-                  ))}
-                </div>
-                <span class="text-sm text-gray-600">Verified Udemy Student</span>
-              </div>
-            </div>
-          </div>
-          <p class="text-gray-700 leading-relaxed italic mb-3">"{testimonial.text}"</p>
-          <div class="text-xs text-gray-500">
-            {index === 0 && `Real ${course.title} Udemy review from career changer`}
-            {index === 1 && `${course.category} professional recommends this Udemy course`}
-            {index === 2 && `Beginner-friendly ${course.title} Udemy experience`}
-            {index === 3 && `Advanced ${course.category} skills through Udemy training`}
-          </div>
-        </div>
-      ))}
-    </div>
-
-    <div class="text-center">
-      <p class="text-gray-600 mb-4">Students completing this course gain documented project experience with modern AI tools, applicable to professional job functions in AI systems engineering.</p>
-      <a href={course.url} target="_blank" rel="nofollow noopener noreferrer" class="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg hover:shadow-xl transform hover:scale-105">
-        🚀 ENROLL NOW & READ ALL REVIEWS
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-        </svg>
-      </a>
-    </div>
-  </div>
-
-  <!-- Course Reviews & Blog Posts -->
-  {relatedPosts.length > 0 && (
-    <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
-      <h2 class="text-2xl font-bold text-gray-900 mb-6">📝 Detailed {course.category} Course Reviews & Guides</h2>
-      <p class="text-gray-600 mb-6">Read comprehensive reviews, comparisons, and expert analysis of {course.category} courses to find the perfect learning path for your career goals.</p>
-      <div class="space-y-6">
-        {relatedPosts.map((post) => (
-          <article class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-            <div class="flex gap-4">
-              <img
-                src={post.data.image.src}
-                alt={post.data.title}
-                class="w-24 h-24 rounded-lg object-cover flex-shrink-0"
-                loading="lazy"
-              />
-              <div class="flex-1">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
-                  <a href={`/blog/${post.slug}`}>{post.data.title}</a>
-                </h3>
-                <p class="text-gray-600 mb-3 line-clamp-2">{post.data.description}</p>
-                <div class="flex items-center gap-4 text-sm text-gray-500">
-                  <span>📅 {post.data.pubDate.toLocaleDateString()}</span>
-                  <span>🏷️ {post.data.tags?.[0] || course.category}</span>
-                </div>
-                <a href={`/blog/${post.slug}`} class="inline-flex items-center gap-2 text-blue-600 font-medium hover:text-blue-800 transition-colors mt-2">
-                  Read Full Review →
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
-  )}
-
-  <!-- Recommended Similar Courses -->
-  {similarCourses.length > 0 && (
-    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 mb-8">
-      <h2 class="text-2xl font-bold text-gray-900 mb-6">Recommended Related Courses</h2>
-      <p class="text-gray-600 mb-6">These courses expand your agent engineering expertise by covering adjacent skills like Generative AI architectures, advanced prompt strategies, and RAG workflows.</p>
-      <div class="grid md:grid-cols-3 gap-6">
-        {similarCourses.map((similar) => (
-          <a
-            href={`/coupon/${similar.slug}`}
-            class="block bg-gray-50 border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:border-blue-300 transition-all duration-200 overflow-hidden group"
+          <!-- Restored Student Reviews & Testimonials -->
+          <div
+            class="bg-slate-900 border border-slate-700 rounded-lg shadow-sm p-8 mb-8"
           >
-            <div class="relative">
-              <img
-                src={similar.image}
-                alt={`${similar.title} - Best ${extractKeySkill(similar.description)} Udemy course with ${similar.discount} discount`}
-                class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-200"
-                loading="lazy"
-              />
-              <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded font-bold">
-                {similar.discount} OFF
-              </div>
-              {similar.verified && (
-                <div class="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded font-bold">
-                  ✓ Verified
-                </div>
-              )}
+             <div class="flex items-center justify-between mb-6">
+              <h2 class="text-2xl font-bold text-white">
+                Real Student Experiences & Testimonials
+              </h2>
+               <div class="flex items-center gap-2">
+                    <span class="text-yellow-400">★★★★★</span>
+                    <span class="text-slate-400 text-sm">{course.rating} Rating</span>
+               </div>
             </div>
-            <div class="p-4">
-              <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight hover:text-blue-600 transition-colors">{similar.title}</h3>
-              <p class="text-xs text-gray-500 mb-2">by {similar.instructor}</p>
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center">
-                  <span class="text-yellow-400 text-sm mr-1">★</span>
-                  <span class="text-xs font-medium text-gray-900">{similar.rating}</span>
-                  <span class="text-xs text-gray-500 ml-1">({similar.students.toLocaleString()})</span>
-                </div>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-lg font-bold text-blue-600">{similar.price}</span>
-                <span class="text-xs text-gray-500 line-through">{similar.originalPrice}</span>
-              </div>
-            </div>
-          </a>
-        ))}
-      </div>
 
-      <div class="text-center mt-6">
-        <a href="/coupon/" class="inline-flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
-          View All Udemy Course Coupons
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
+            <p class="text-slate-400 text-sm mb-6">
+                Read what verified students are saying about their learning journey with <strong>{course.title}</strong>:
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-6">
+              {
+                sampleTestimonials.map((testimonial, index) => (
+                  <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center mb-4">
+                      <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
+                        {testimonial.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div class="font-bold text-white text-sm">
+                          {testimonial.name}
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-yellow-400 text-xs">★★★★★</span>
+                          <span class="text-xs text-slate-500 ml-2">
+                            Verified Student
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <p class="text-slate-300 text-sm leading-relaxed italic">
+                      "{testimonial.text}"
+                    </p>
+                  </div>
+                ))
+              }
+            </div>
+
+            <div class="text-center mt-8">
+              <p class="text-slate-400 text-sm mb-4">
+                Join over <strong class="text-white"
+                  >{course.students.toLocaleString()}</strong
+                > students who have already enrolled in this top-rated course.
+              </p>
+              <a
+                href={course.url}
+                target="_blank"
+                rel="nofollow noopener noreferrer"
+                class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg transition-colors border border-slate-600 text-sm"
+              >
+                Read All Reviews on Udemy
+              </a>
+            </div>
+          </div>
+
+          <!-- FAQ Section (AI Optimized) -->
+           <div
+            class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 sm:p-8"
+          >
+            <h2 class="text-xl font-bold text-white mb-6">
+              Frequently Asked Questions about {course.title}
+            </h2>
+            <p class="text-slate-400 text-sm mb-6">
+                Common questions regarding the enrollment process, certification, and requirements for this <strong>{course.category}</strong> course:
+            </p>
+            <div
+              class="space-y-4"
+              itemscope
+              itemtype="https://schema.org/FAQPage"
+            >
+              <details
+                class="group bg-slate-950/50 rounded-xl border border-slate-800 open:border-blue-500/30 transition-all"
+                itemscope
+                itemprop="mainEntity"
+                itemtype="https://schema.org/Question"
+              >
+                <summary
+                  class="flex justify-between items-center p-4 cursor-pointer font-medium text-slate-200"
+                  itemprop="name"
+                >
+                  Is the {course.title} Udemy course free?
+                  <span class="transition-transform group-open:rotate-180"
+                    >▼</span
+                  >
+                </summary>
+                <div
+                  class="p-4 pt-0 text-slate-400 text-sm leading-relaxed border-t border-slate-800/0 group-open:border-slate-800/50"
+                  itemscope
+                  itemprop="acceptedAnswer"
+                  itemtype="https://schema.org/Answer"
+                >
+                  <div itemprop="text">
+                    Yes, this coupon provides **100% off** for the {
+                      course.title
+                    } course on Udemy. It is currently verified as active and valid.
+                  </div>
+                </div>
+              </details>
+
+              <details
+                class="group bg-slate-950/50 rounded-xl border border-slate-800 open:border-blue-500/30 transition-all"
+                itemscope
+                itemprop="mainEntity"
+                itemtype="https://schema.org/Question"
+              >
+                <summary
+                  class="flex justify-between items-center p-4 cursor-pointer font-medium text-slate-200"
+                  itemprop="name"
+                >
+                  Do I get a certificate for {course.title}?
+                  <span class="transition-transform group-open:rotate-180"
+                    >▼</span
+                  >
+                </summary>
+                <div
+                  class="p-4 pt-0 text-slate-400 text-sm leading-relaxed border-t border-slate-800/0 group-open:border-slate-800/50"
+                  itemscope
+                  itemprop="acceptedAnswer"
+                  itemtype="https://schema.org/Answer"
+                >
+                  <div itemprop="text">
+                    Yes, upon completing the course, Udemy will issue a
+                    **Certificate of Completion** which you can download and add
+                    to your LinkedIn profile.
+                  </div>
+                </div>
+              </details>
+
+              <details
+                class="group bg-slate-950/50 rounded-xl border border-slate-800 open:border-blue-500/30 transition-all"
+                itemscope
+                itemprop="mainEntity"
+                itemtype="https://schema.org/Question"
+              >
+                <summary
+                  class="flex justify-between items-center p-4 cursor-pointer font-medium text-slate-200"
+                  itemprop="name"
+                >
+                  What are the requirements for {course.title}?
+                  <span class="transition-transform group-open:rotate-180"
+                    >▼</span
+                  >
+                </summary>
+                <div
+                  class="p-4 pt-0 text-slate-400 text-sm leading-relaxed border-t border-slate-800/0 group-open:border-slate-800/50"
+                  itemscope
+                  itemprop="acceptedAnswer"
+                  itemtype="https://schema.org/Answer"
+                >
+                  <div itemprop="text">
+                    There are no specific prerequisites. You just need a
+                    computer, an internet connection, and a willingness to learn {
+                      course.category
+                    }.
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT SIDEBAR (Sticky) (4/12) -->
+        <div class="lg:col-span-4 relative">
+          <div class="sticky top-6 space-y-6">
+            <!-- COUPON CARD -->
+            <div
+              class="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-1 border border-blue-500/50 shadow-2xl shadow-blue-900/20"
+            >
+              <div
+                class="bg-slate-950/90 rounded-xl p-6 text-center backdrop-blur-sm"
+              >
+                <div
+                  class="inline-block bg-green-500/10 text-green-400 text-xs font-bold px-3 py-1 rounded-full mb-4 border border-green-500/20 animate-pulse"
+                  title="Verified by CoursesWyn Automated System"
+                >
+                  ● VERIFIED ACTIVE by CoursesWyn
+                </div>
+
+                <div class="flex items-center justify-center gap-3 mb-2">
+                  <span class="text-4xl font-black text-white tracking-tight"
+                    >{course.price}</span
+                  >
+                  <span class="text-lg text-slate-500 line-through decoration-2"
+                    >{course.originalPrice}</span
+                  >
+                </div>
+                <div class="text-blue-400 text-sm font-bold mb-6">
+                  {course.discount} Discount Applied
+                </div>
+
+                <a
+                  href={course.url}
+                  target="_blank"
+                  rel="nofollow noopener noreferrer"
+                  class="block w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-lg py-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  ENROLL NOW ➤
+                </a>
+                <p class="text-xs text-slate-500 mt-4">
+                  30-Day Money-Back Guarantee • Lifetime Access
+                </p>
+              </div>
+            </div>
+
+            <!-- Course Specs -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <h3
+                class="font-bold text-white mb-4 text-sm uppercase tracking-wide text-slate-400"
+              >
+                Course Specs
+              </h3>
+              <div class="space-y-3 text-sm">
+                <div
+                  class="flex justify-between text-slate-300 border-b border-slate-800 pb-2"
+                >
+                  <span>Duration</span>
+                  <span class="font-bold text-white">{course.duration}</span>
+                </div>
+                <div
+                  class="flex justify-between text-slate-300 border-b border-slate-800 pb-2"
+                >
+                  <span>Lectures</span>
+                  <span class="font-bold text-white"
+                    >{course.totalLectures}</span
+                  >
+                </div>
+                <div
+                  class="flex justify-between text-slate-300 border-b border-slate-800 pb-2"
+                >
+                  <span>Level</span>
+                  <span class="font-bold text-white">{course.level}</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                  <span>Language</span>
+                  <span class="font-bold text-white">{course.language}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Similar Courses Link (Enhanced) -->
+            {
+              similarCourses.length > 0 && (
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                  <h3 class="font-bold text-white mb-4 flex items-center gap-2">
+                    <span class="text-blue-500">🔥</span> Top Rated{" "}
+                    {course.category} Courses
+                  </h3>
+                  <div class="space-y-6">
+                    {similarCourses.map((sim) => (
+                      <a
+                        href={`/coupon/${sim.slug}`}
+                        class="block group bg-slate-800 rounded-xl overflow-hidden border border-slate-700 hover:border-blue-500 transition-colors shadow-lg"
+                      >
+                        <div class="relative h-32 overflow-hidden">
+                          <img
+                            src={sim.image}
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            alt={`Best ${sim.title} Course Coupon`}
+                          />
+                          <div class="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded">
+                            {sim.discount} OFF
+                          </div>
+                        </div>
+                        <div class="p-4">
+                          <h4 class="text-sm font-bold text-white leading-tight mb-2 group-hover:text-blue-400 transition-colors">
+                            {sim.title}
+                          </h4>
+                          <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1">
+                              <span class="text-yellow-400 text-xs">★</span>
+                              <span class="text-xs text-slate-400">
+                                {sim.rating}
+                              </span>
+                            </div>
+                            <span class="text-green-400 text-xs font-bold">
+                              Free Coupon
+                            </span>
+                          </div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOBILE STICKY FOOTER CTA -->
+    <div
+      class="fixed bottom-0 left-0 right-0 p-4 bg-slate-950/90 backdrop-blur-lg border-t border-slate-800 z-50 lg:hidden"
+    >
+      <div class="flex gap-3 items-center max-w-lg mx-auto">
+        <div class="flex-1">
+          <div class="text-xs text-slate-400 line-through">
+            {course.originalPrice}
+          </div>
+          <div class="text-xl font-black text-white leading-none">
+            {course.price}
+          </div>
+        </div>
+        <a
+          href={course.url}
+          target="_blank"
+          rel="nofollow noopener noreferrer"
+          class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg flex-1 text-center"
+        >
+          ENROLL NOW
         </a>
       </div>
     </div>
-  )}
-
-      </div>
-    </div>
-
-  </div> <!-- end content layout -->
+  </div>
 </Layout>
+) : (
+<Layout
+  title={title}
+  description={description}
+  canonical={canonical}
+  structuredData={structuredData}
+>
+  <main>
+    <section class="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 py-20">
+      <div class="max-w-7xl mx-auto px-4 text-center">
+         <div class="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-blue-500/20 border border-blue-500/40 rounded-full">
+            <span class="text-blue-300">⚡ Verified {name} Coupons</span>
+         </div>
+         <h1 class="text-4xl font-black text-white mb-4">
+            Best <span class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">{name}</span> Courses & Coupons
+         </h1>
+         <p class="text-slate-300 mb-8 max-w-2xl mx-auto text-lg leading-relaxed">
+             Master {name} with our curated list of {catCourses.length} top-rated courses.
+             All deals are verified active for {currentMonthYear}.
+             Start learning skills in {name} today with 100% OFF coupons.
+         </p>
+         <div class="flex gap-4 justify-center mb-12">
+            <a href="#browse-courses" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/20">
+                Browse Deals
+            </a>
+         </div>
+      </div>
+    </section>
+
+    <!-- AI Optimized Intro Section -->
+    <section class="max-w-7xl mx-auto px-4 py-8">
+        <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 sm:p-8">
+            <h2 class="text-xl font-bold text-white mb-4">Why Learn {name}?</h2>
+             <p class="text-slate-400 leading-relaxed mb-4">
+                <strong>{name}</strong> is one of the most sough-after skills in today's job market.
+                Whether you are a beginner looking to start a new career or a professional aiming to upskill,
+                mastering {name} can open doors to exciting opportunities.
+            </p>
+             <p class="text-slate-400 leading-relaxed">
+                Our automated system constantly scans and verifies the best Udemy coupons for {name}, ensuring you get access to premium education for free.
+                Below you will find a list of courses sorted by popularity and rating.
+            </p>
+        </div>
+    </section>
+
+    <section id="browse-courses" class="max-w-7xl mx-auto px-4 py-16">
+      <h2 class="text-2xl font-black text-white mb-4 flex items-center gap-3">
+        <span>📚</span> Available {name} Courses
+      </h2>
+      <p class="text-slate-400 mb-8">
+        Found {catCourses.length} verified free coupons for <strong>{name}</strong>.
+      </p>
+      
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {
+          catCourses.map((c) => (
+             <div class="transform hover:-translate-y-1 transition-transform duration-300">
+              <DealCard {...c} />
+            </div>
+          ))
+        }
+      </div>
+    </section>
+  </main>
+</Layout>
+)}
