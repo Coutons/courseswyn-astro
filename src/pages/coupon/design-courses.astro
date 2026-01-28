@@ -1,42 +1,140 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import DealCard from '../../components/coupon/DealCard.astro';
-import coupons from '../../data/coupons.json';
+import Layout from "../../layouts/Layout.astro";
+import DealCard from "../../components/coupon/DealCard.astro";
+import coupons from "../../data/coupons.json";
 
-const CATEGORY = 'Design';
-const ITEMS_PER_PAGE = 12; export async function getStaticPaths(){ return [{ params: {} }]; }
-const dCoupons = coupons.filter(c=> c.subCategory===CATEGORY || c.category === 'Design');
-const totalCoupons = dCoupons.length; const couponsLast24h = dCoupons.filter(c=>{ const now=new Date(); const oneDayAgo=new Date(now.getTime()-24*60*60*1000); return new Date(c.addedDate)>=oneDayAgo && new Date(c.addedDate)<=now; }).length;
-const schema={"@context":"https://schema.org","@type":"ItemList","name":"Best Design Courses - Free Udemy Coupons","numberOfItems":Math.min(totalCoupons,20)}; const couponsJSON = JSON.stringify(dCoupons);
+const CATEGORY = "Design";
+const ITEMS_PER_PAGE = 12;
+export async function getStaticPaths() {
+  return [{ params: {} }];
+}
+const dCoupons = coupons.filter(
+  (c) => c.subCategory === CATEGORY || c.category === "Design",
+);
+const totalCoupons = dCoupons.length;
+const couponsLast24h = dCoupons.filter((c) => {
+  const now = new Date();
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  return new Date(c.addedDate) >= oneDayAgo && new Date(c.addedDate) <= now;
+}).length;
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "Best Design Courses - Free Udemy Coupons",
+  numberOfItems: Math.min(totalCoupons, 20),
+};
+const couponsJSON = JSON.stringify(dCoupons);
+const showPagination = Math.ceil(dCoupons.length / ITEMS_PER_PAGE) > 1;
 ---
+
 <script define:vars={{ couponsJSON, ITEMS_PER_PAGE }}>
-  const couponsData = JSON.parse(couponsJSON); let currentPage=1; window.goToPage=(p)=>{ currentPage=Math.max(1,Math.min(p,Math.ceil(couponsData.length/ITEMS_PER_PAGE))); update(); window.scrollTo({top:document.getElementById('coupons-grid').offsetTop-100, behavior:'smooth'}); };
-  function update(){ const grid=document.getElementById('coupons-grid'); if(!grid) return; const s=(currentPage-1)*ITEMS_PER_PAGE; const e=s+ITEMS_PER_PAGE; document.querySelectorAll('[data-coupon-slug]').forEach(card=>{ const slug=card.getAttribute('data-coupon-slug'); card.style.display = couponsData.slice(s,e).some(c=>c.slug===slug)? '':'none'; }); const ctr=document.getElementById('pagination-controls'); if(ctr){ ctr.innerHTML=''; const tp=Math.ceil(couponsData.length/ITEMS_PER_PAGE); if(tp<=1) return; for(let i=1;i<=tp;i++){ const b=document.createElement('button'); b.textContent=String(i); b.className=`px-3 py-2 rounded ${i===currentPage? 'bg-pink-600 text-white':'bg-slate-800 text-slate-300'}`; b.onclick=()=>{ currentPage=i; update(); }; ctr.appendChild(b);} }
+  const couponsData = JSON.parse(couponsJSON);
+  let currentPage = 1;
+  window.goToPage = (p) => {
+    currentPage = Math.max(
+      1,
+      Math.min(p, Math.ceil(couponsData.length / ITEMS_PER_PAGE)),
+    );
+    update();
+    window.scrollTo({
+      top: document.getElementById("coupons-grid").offsetTop - 100,
+      behavior: "smooth",
+    });
+  };
+  function update() {
+    const grid = document.getElementById("coupons-grid");
+    if (!grid) return;
+    const s = (currentPage - 1) * ITEMS_PER_PAGE;
+    const e = s + ITEMS_PER_PAGE;
+    document.querySelectorAll("[data-coupon-slug]").forEach((card) => {
+      const slug = card.getAttribute("data-coupon-slug");
+      card.style.display = couponsData.slice(s, e).some((c) => c.slug === slug)
+        ? ""
+        : "none";
+    });
+    const ctr = document.getElementById("pagination-controls");
+    if (ctr) {
+      ctr.innerHTML = "";
+      const tp = Math.ceil(couponsData.length / ITEMS_PER_PAGE);
+      if (tp <= 1) return;
+      for (let i = 1; i <= tp; i++) {
+        const b = document.createElement("button");
+        b.textContent = String(i);
+        b.className = `px-3 py-2 rounded ${i === currentPage ? "bg-pink-600 text-white" : "bg-slate-800 text-slate-300"}`;
+        b.onclick = () => {
+          currentPage = i;
+          update();
+        };
+        ctr.appendChild(b);
+      }
+    }
   }
-  document.addEventListener('DOMContentLoaded', update);
+  document.addEventListener("DOMContentLoaded", update);
 </script>
 
-<Layout title={`Best Design & UI/UX Free Courses`} description={`Explore ${totalCoupons}+ free design courses with verified coupons.`}>
+<Layout
+  title={`Best Design & UI/UX Free Courses`}
+  description={`Explore ${totalCoupons}+ free design courses with verified coupons.`}
+>
   <script type="application/ld+json" set:html={JSON.stringify(schema)} />
   <main>
-    <section class="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 py-20">
+    <section
+      class="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 py-20"
+    >
       <div class="max-w-7xl mx-auto px-4 text-center">
-        <div class="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-pink-500/20 border border-pink-500/40 rounded-full">
-          <span class="text-pink-300">🎨 {totalCoupons}+ Free Design Courses</span>
+        <div
+          class="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-pink-500/20 border border-pink-500/40 rounded-full"
+        >
+          <span class="text-pink-300"
+            >🎨 {totalCoupons}+ Free Design Courses</span
+          >
         </div>
-        <h1 class="text-4xl font-black text-white mb-4">Create <span class="bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">Design & UI/UX</span> — For Free</h1>
-        <p class="text-slate-300 mb-8">Learn Figma, Photoshop, UI/UX and graphic design with verified free coupons. {couponsLast24h}+ new deals daily.</p>
+        <h1 class="text-4xl font-black text-white mb-4">
+          Create <span
+            class="bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent"
+            >Design & UI/UX</span
+          > — For Free
+        </h1>
+        <p class="text-slate-300 mb-8">
+          Learn Figma, Photoshop, UI/UX and graphic design with verified free
+          coupons. {couponsLast24h}+ new deals daily.
+        </p>
       </div>
     </section>
 
     <section class="max-w-7xl mx-auto px-4 py-16">
-      <h2 class="text-2xl font-black text-white mb-4">Featured Design Courses</h2>
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">{dCoupons.slice(0,6).map(c=>(<div data-coupon-slug={c.slug}><DealCard {...c} /></div>))}</div>
+      <h2 class="text-2xl font-black text-white mb-4">
+        Featured Design Courses
+      </h2>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {
+          dCoupons.slice(0, 6).map((c) => (
+            <div data-coupon-slug={c.slug}>
+              <DealCard {...c} />
+            </div>
+          ))
+        }
+      </div>
     </section>
 
     <section class="max-w-7xl mx-auto px-4 py-16">
-      <div id="coupons-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">{dCoupons.map(c=>(<div data-coupon-slug={c.slug}><DealCard {...c} /></div>))}</div>
-      {Math.ceil(dCoupons.length/ITEMS_PER_PAGE)>1 && (<nav id="pagination-controls" class="flex justify-center gap-2 mt-8"></nav>)}
+      <div id="coupons-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {
+          dCoupons.map((c) => (
+            <div data-coupon-slug={c.slug}>
+              <DealCard {...c} />
+            </div>
+          ))
+        }
+      </div>
+      {
+        showPagination && (
+          <nav
+            id="pagination-controls"
+            class="flex justify-center gap-2 mt-8"
+          />
+        )
+      }
     </section>
   </main>
 </Layout>
