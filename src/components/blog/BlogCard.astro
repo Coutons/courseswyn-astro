@@ -6,12 +6,15 @@ interface Props {
   description: string;
   slug: string;
   pubDate: Date;
+  updatedAt?: Date;
   tags: string[];
   image?: any;
 }
 
-const { title, description, slug, pubDate, image } = Astro.props;
+const { title, description, slug, pubDate, updatedAt, image } = Astro.props;
 const tags = Astro.props.tags ?? [];
+const displayDate = updatedAt || pubDate;
+const isUpdated = !!updatedAt;
 
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat("en-US", {
@@ -42,7 +45,7 @@ function tagToLabel(tag: string) {
     {
       image && (
         <div class="md:w-2/5 lg:w-1/3 shrink-0 overflow-hidden relative">
-          <a href={`/${slug}/`} class="block h-full aspect-video md:aspect-auto">
+          <a href={`/${slug}/`} class="block h-full aspect-video md:aspect-auto" aria-label={`Read ${title}`}>
              <Image
               src={image}
               alt={`${title} - expert course review`}
@@ -74,8 +77,11 @@ function tagToLabel(tag: string) {
            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
            </svg>
-           <time class="text-xs text-slate-400 font-semibold tracking-wide" itemprop="datePublished">
-             {formatDate(pubDate)}
+           {isUpdated && (
+             <span class="text-[10px] bg-green-600/20 text-green-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-green-500/30">Updated</span>
+           )}
+           <time class="text-xs text-slate-400 font-semibold tracking-wide" itemprop={isUpdated ? "dateModified" : "datePublished"}>
+             {formatDate(displayDate)}
            </time>
         </div>
         <span class="text-slate-700">•</span>

@@ -43,13 +43,16 @@ const isCategoryPage = segments[0] === "category";
 
 let categoryTag: string | null = null;
 let categoryPosts = [] as Awaited<ReturnType<typeof fetchPosts>>;
-let categoryMeta: {
-  title: string;
-  description: string;
-  canonical: string;
-} | undefined = undefined;
+let categoryMeta:
+  | {
+      title: string;
+      description: string;
+      canonical: string;
+    }
+  | undefined = undefined;
 
-let post: Awaited<ReturnType<typeof fetchPosts>>[number] | undefined = undefined;
+let post: Awaited<ReturnType<typeof fetchPosts>>[number] | undefined =
+  undefined;
 let Content:
   | Awaited<
       ReturnType<Awaited<ReturnType<typeof fetchPosts>>[number]["render"]>
@@ -98,92 +101,90 @@ if (isCategoryPage) {
       {
         "@type": "BlogPosting",
         "@id": canonical,
-        "headline": post.data.title,
-        "description": post.data.description,
-        "image": post.data.image
+        headline: post.data.title,
+        description: post.data.description,
+        image: post.data.image
           ? [new URL(post.data.image.src, site).toString()]
           : [`${site}/images/og-default.svg`],
-        "datePublished": post.data.pubDate.toISOString(),
-        "dateModified": post.data.pubDate.toISOString(),
-        "author": {
+        datePublished: post.data.pubDate.toISOString(),
+        dateModified: post.data.pubDate.toISOString(),
+        author: {
           "@type": "Organization",
-          "name": "CoursesWyn",
-          "url": site,
-          "logo": `${site}/images/og-default.svg`
+          name: "CoursesWyn",
+          url: site,
+          logo: `${site}/images/og-default.svg`,
         },
-        "publisher": {
+        publisher: {
           "@type": "Organization",
-          "name": "CoursesWyn",
-          "url": site,
-          "logo": {
+          name: "CoursesWyn",
+          url: site,
+          logo: {
             "@type": "ImageObject",
-            "url": `${site}/images/og-default.svg`,
-            "width": 400,
-            "height": 400
+            url: `${site}/images/og-default.svg`,
+            width: 400,
+            height: 400,
           },
-          "sameAs": [
-            "https://courseswyn.com"
-          ]
+          sameAs: ["https://courseswyn.com"],
         },
-        "mainEntityOfPage": {
+        mainEntityOfPage: {
           "@type": "WebPage",
           "@id": canonical,
         },
-        "articleSection": post.data.tags?.[0] || "Education",
-        "keywords": post.data.tags?.join(", ") || "",
-        "wordCount": 1500, // Approximate word count
-        "inLanguage": "en-US",
-        "isFamilyFriendly": true,
-        "copyrightHolder": {
+        articleSection: post.data.tags?.[0] || "Education",
+        keywords: post.data.tags?.join(", ") || "",
+        wordCount: 1500, // Approximate word count
+        inLanguage: "en-US",
+        isFamilyFriendly: true,
+        copyrightHolder: {
           "@type": "Organization",
-          "name": "CoursesWyn"
-        }
+          name: "CoursesWyn",
+        },
       },
       // Breadcrumb Navigation
       {
         "@type": "BreadcrumbList",
-        "itemListElement": [
+        itemListElement: [
           {
             "@type": "ListItem",
-            "position": 1,
-            "name": "Home",
-            "item": site
+            position: 1,
+            name: "Home",
+            item: site,
           },
           {
             "@type": "ListItem",
-            "position": 2,
-            "name": "Blog",
-            "item": `${site}/blog/`
+            position: 2,
+            name: "Blog",
+            item: `${site}/blog/`,
           },
           {
             "@type": "ListItem",
-            "position": 3,
-            "name": post.data.title,
-            "item": canonical
-          }
-        ]
+            position: 3,
+            name: post.data.title,
+            item: canonical,
+          },
+        ],
       },
       // WebPage Schema
       {
         "@type": "WebPage",
         "@id": canonical,
-        "url": canonical,
-        "name": post.data.title,
-        "description": post.data.description,
-        "inLanguage": "en-US",
-        "datePublished": post.data.pubDate.toISOString(),
-        "dateModified": post.data.pubDate.toISOString(),
-        "publisher": {
+        url: canonical,
+        name: post.data.title,
+        description: post.data.description,
+        inLanguage: "en-US",
+        datePublished: post.data.pubDate.toISOString(),
+        dateModified: post.data.pubDate.toISOString(),
+        publisher: {
           "@type": "Organization",
-          "name": "CoursesWyn",
-          "url": site
+          name: "CoursesWyn",
+          url: site,
         },
-        "potentialAction": {
+        potentialAction: {
           "@type": "ReadAction",
-          "target": canonical
-        }
-      }
-    ]
+          target: canonical,
+        },
+      },
+    ],
   };
 }
 ---
@@ -223,11 +224,16 @@ if (isCategoryPage) {
                 </span>
               </div>
               <h3 class="mt-4 text-lg font-bold text-slate-100">
-                <a href={`/${post.slug}/`} class="hover:text-blue-400 transition-colors">
+                <a
+                  href={`/${post.slug}/`}
+                  class="hover:text-blue-400 transition-colors"
+                >
                   {post.data.title}
                 </a>
               </h3>
-              <p class="mt-2 text-sm text-slate-400 line-clamp-2">{post.data.description}</p>
+              <p class="mt-2 text-sm text-slate-400 line-clamp-2">
+                {post.data.description}
+              </p>
               <div class="mt-4 flex gap-3 text-sm">
                 <a
                   class="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
@@ -249,14 +255,26 @@ if (isCategoryPage) {
       ogImage={post.data.image?.src}
       structuredData={structuredData || undefined}
     >
-
-
       <article class="mx-auto max-w-4xl space-y-10 bg-gradient-to-br from-slate-800/60 to-slate-800/30 border border-slate-700 p-10 rounded-2xl shadow-lg backdrop-blur-sm">
         <header class="space-y-5 border-b border-slate-700 pb-8">
-          <div class="flex items-center gap-4 text-sm text-slate-500 font-medium">
-            <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
-            <span class="text-slate-600">•</span>
-            <span>Last updated: {formatDate(post.data.pubDate)}</span>
+          <div class="flex items-center gap-2 text-xs text-slate-500">
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            <span>
+              Last updated:{" "}
+              {formatDate(post.data.updatedAt || post.data.pubDate)}
+            </span>
           </div>
           <h1 class="text-5xl font-bold text-slate-100">{post.data.title}</h1>
           <div class="flex flex-wrap gap-3">
@@ -267,8 +285,6 @@ if (isCategoryPage) {
             ))}
           </div>
         </header>
-
-
 
         {post.data.affiliate_links && post.data.affiliate_links.length > 0 && (
           <section class="space-y-4 rounded-lg border border-blue-500/40 bg-blue-500/10 p-6 backdrop-blur-sm">

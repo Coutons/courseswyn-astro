@@ -2,7 +2,11 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 
 export async function fetchPosts() {
   const posts = await getCollection('blog');
-  return posts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+  return posts.sort((a: CollectionEntry<'blog'>, b: CollectionEntry<'blog'>) => {
+    const dateA = a.data.updatedAt || a.data.pubDate;
+    const dateB = b.data.updatedAt || b.data.pubDate;
+    return dateB.getTime() - dateA.getTime();
+  });
 }
 
 export const PAGE_SIZE = 8;
@@ -40,7 +44,7 @@ export function getRelatedPosts(
 ) {
   const related = posts.filter((post) => {
     if (post.id === current.id) return false;
-    return post.data.tags.some((tag) => current.data.tags.includes(tag));
+    return post.data.tags.some((tag: string) => current.data.tags.includes(tag));
   });
 
   return related.slice(0, limit);
