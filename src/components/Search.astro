@@ -1,11 +1,10 @@
 ---
 import Fuse from "fuse.js";
 
-const posts: any[] = (await Astro.props.posts) || [];
-const coupons: any[] = (await Astro.props.coupons) || [];
+const { id = "default", posts = [], coupons = [] } = Astro.props;
 
 // Prepare coupon data for search
-const couponItems = coupons.map((coupon) => ({
+const couponItems = (await coupons).map((coupon: any) => ({
   ...coupon,
   data: {
     title: coupon.title,
@@ -16,7 +15,7 @@ const couponItems = coupons.map((coupon) => ({
   slug: `coupon/${coupon.slug}`,
 }));
 
-const blogItems = posts.map((post) => ({
+const blogItems = (await posts).map((post: any) => ({
   ...post,
   type: "blog",
 }));
@@ -28,15 +27,13 @@ const fuseOptions = {
   threshold: 0.3,
   includeScore: true,
 };
-
-const fuse = new Fuse(allItems, fuseOptions);
 ---
 
-<div id="search-container" class="relative group">
+<div id={`search-container-${id}`} class="relative group">
   <div class="relative">
     <input
       type="text"
-      id="search-input"
+      id={`search-input-${id}`}
       placeholder="Search courses, reviews, topics..."
       class="w-full rounded-lg border border-slate-700 bg-slate-800/50 px-4 py-3 pl-11 text-sm text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
     />
@@ -58,74 +55,52 @@ const fuse = new Fuse(allItems, fuseOptions);
     </div>
   </div>
   <div
-    id="search-results"
+    id={`search-results-${id}`}
     class="absolute top-full left-0 right-0 mt-2 hidden rounded-lg border border-slate-700 bg-slate-900 shadow-2xl overflow-hidden z-50"
   >
-    <div class="max-h-96 overflow-y-auto p-2 space-y-2" id="results-container">
+    <div
+      class="max-h-96 overflow-y-auto p-2 space-y-2"
+      id={`results-container-${id}`}
+    >
     </div>
   </div>
 </div>
 
-<script is:inline define:vars={{ allItems, fuseOptions }}>
-  window.SEARCH_POSTS = allItems;
-  window.FUSE_OPTIONS = fuseOptions;
-</script>
+<script is:inline define:vars={{ allItems, fuseOptions, id }}>
+  // Initialize search for this specific ID
+  (function () {
+    const searchInput = document.getElementById(`search-input-${id}`);
+    const searchResults = document.getElementById(`search-results-${id}`);
+    const resultsContainer = document.getElementById(`results-container-${id}`);
 
-<script>
-  import Fuse from "fuse.js";
+    if (!searchInput || !searchResults || !resultsContainer) return;
 
-  // Extend Window interface for custom properties
-  declare global {
-    interface Window {
-      SEARCH_POSTS: any[];
-      FUSE_OPTIONS: any;
-      SEARCH_FUSE_OPTIONS: any;
-    }
-  }
+    // Use a unique property on window if needed, or just keep it local
+    const fuse = new (window.Fuse || (window.Fuse = Fuse))(
+      allItems,
+      fuseOptions,
+    );
 
-  const searchInput = document.getElementById(
-    "search-input",
-  ) as HTMLInputElement;
-  const searchResults = document.getElementById("search-results");
-  const resultsContainer = document.getElementById("results-container");
+    // Placeholder Animation
+    const placeholders = [
+      "Search courses...",
+      "Python",
+      "Machine Learning",
+      "Angela Yu",
+      "JavaScript",
+      "Data Science",
+    ];
+    let placeholderIndex = 0;
 
-  // Placeholder Animation
-  const placeholders = [
-    "Search courses...",
-    "Python",
-    "Machine Learning",
-    "Angela Yu",
-    "JavaScript",
-    "Data Science",
-  ];
-  let placeholderIndex = 0;
-
-  function rotatePlaceholder() {
-    placeholderIndex = (placeholderIndex + 1) % placeholders.length;
-    if (searchInput) {
+    function rotatePlaceholder() {
+      placeholderIndex = (placeholderIndex + 1) % placeholders.length;
       searchInput.setAttribute("placeholder", placeholders[placeholderIndex]);
     }
-  }
 
-  setInterval(rotatePlaceholder, 3000);
-
-  // Search Functionality
-  // Wait for window variables if necessary, though inline script runs first
-  const posts = window.SEARCH_POSTS;
-  const fuseOptions = window.SEARCH_FUSE_OPTIONS || window.FUSE_OPTIONS;
-
-  if (
-    posts &&
-    fuseOptions &&
-    searchInput &&
-    searchResults &&
-    resultsContainer
-  ) {
-    const fuse = new Fuse(posts, fuseOptions);
+    const intervalId = setInterval(rotatePlaceholder, 3000);
 
     searchInput.addEventListener("input", (e) => {
-      const target = e.target as HTMLInputElement;
-      const query = target.value.trim();
+      const query = e.target.value.trim();
 
       if (query.length < 2) {
         searchResults.classList.add("hidden");
@@ -136,24 +111,24 @@ const fuse = new Fuse(allItems, fuseOptions);
 
       if (results.length === 0) {
         resultsContainer.innerHTML =
-          '<p class="text-slate-400">No results found</p>';
+          '<p class="text-slate-400 p-3 text-center">No results found</p>';
       } else {
         resultsContainer.innerHTML = results
           .slice(0, 5)
-          .map((result: any) => {
-            const post = result.item;
-            const tags = post.data.tags
-              .map((tag: string) => {
+          .map((result) => {
+            const item = result.item;
+            const tags = item.data.tags
+              .map((tag) => {
                 const label = tag
                   .replace(/-/g, " ")
                   .replace(/\b\w/g, (l) => l.toUpperCase());
-                return `<span class="tag-pill">${label}</span>`;
+                return `<span class="inline-flex items-center rounded-full bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-[10px] text-blue-300">${label}</span>`;
               })
               .join(" ");
 
             return `
-            <a href="/${post.slug}/" class="block rounded-lg p-3 hover:bg-slate-800/50 transition-colors">
-              <h3 class="text-sm font-medium text-slate-100 line-clamp-1">${post.data.title}</h3>
+            <a href="/${item.slug}/" class="block rounded-lg p-3 hover:bg-slate-800/50 transition-colors">
+              <h3 class="text-sm font-medium text-slate-100 line-clamp-1">${item.data.title}</h3>
               <div class="mt-1 flex flex-wrap gap-1">${tags}</div>
             </a>
           `;
@@ -166,10 +141,15 @@ const fuse = new Fuse(allItems, fuseOptions);
 
     // Hide results when clicking outside
     document.addEventListener("click", (e) => {
-      const target = e.target as Node;
-      if (!searchInput.contains(target) && !searchResults.contains(target)) {
+      if (
+        !searchInput.contains(e.target) &&
+        !searchResults.contains(e.target)
+      ) {
         searchResults.classList.add("hidden");
       }
     });
-  }
+
+    // Cleanup interval if element is removed (though it's a static page)
+    // Optional: MutationObserver or just let it run.
+  })();
 </script>
