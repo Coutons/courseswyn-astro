@@ -92,7 +92,7 @@ With **50,000+ enrollments** and a **4.6/5 rating**, this is the **ultimate no-c
 - **Enrollment:** 50,000+ students  
 - **Rating:** 4.6/5  
 - **Duration:** 32.5 hours  
-- **Last Updated:** January 2025  
+- **Last Updated:** February 2026 
 - **Best for:** Marketers, entrepreneurs, side hustlers, content creators  
 
 **[Enroll Now: The Complete AI Guide - 50+ Tools, Monetization & No-Code Apps →](https://trk.udemy.com/YRJWDr)**

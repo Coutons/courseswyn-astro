@@ -76,7 +76,7 @@ Java Spring continues to dominate enterprise application development, with over 
 **Students:** 200,000+  
 **Price:** $99.99 (Frequently on sale for $14.99)  
 **Length:** 30 hours of video  
-**Last Updated:** January 2026  
+**Last Updated:** February 2026  
 
 #### What You'll Learn:
 - Java Spring Framework fundamentals
@@ -232,7 +232,7 @@ Advanced microservices focus with real eCommerce application.
 **Students:** 250,000+  
 **Price:** $119.99 (Frequently on sale for $17.99)  
 **Length:** 60 hours of video  
-**Last Updated:** January 2026  
+**Last Updated:** February 2026  
 
 #### What You'll Learn:
 - Advanced Java concepts
