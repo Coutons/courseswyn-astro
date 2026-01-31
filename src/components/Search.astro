@@ -66,7 +66,7 @@ const fuseOptions = {
   </div>
   <div
     id={`search-results-${id}`}
-    class="absolute top-full left-0 right-0 mt-2 hidden rounded-lg border border-slate-700 bg-slate-900 shadow-2xl overflow-hidden z-50"
+    class="absolute top-full left-0 right-0 mt-2 hidden rounded-lg border border-slate-700 bg-slate-900 shadow-2xl overflow-hidden z-50 min-w-[500px]"
   >
     <div
       class="max-h-96 overflow-y-auto p-2 space-y-2"
@@ -76,7 +76,7 @@ const fuseOptions = {
   </div>
 </div>
 
-<script>
+<script is:inline define:vars={{ allItems, fuseOptions, id }}>
   // Load Fuse.js from CDN
   const script = document.createElement('script');
   script.src = 'https://cdn.jsdelivr.net/npm/fuse.js@7.1.0';
@@ -84,163 +84,112 @@ const fuseOptions = {
   document.head.appendChild(script);
 
   function initializeSearch() {
-    // Initialize all search instances
-    document.querySelectorAll('[id^="search-container-"]').forEach(container => {
-      const id = container.id.replace('search-container-', '');
-      const searchInput = document.getElementById(`search-input-${id}`) as HTMLInputElement;
-      const searchResults = document.getElementById(`search-results-${id}`);
-      const resultsContainer = document.getElementById(`results-container-${id}`);
+    // Initialize search for this specific ID
+    const searchInput = document.getElementById(`search-input-${id}`);
+    const searchResults = document.getElementById(`search-results-${id}`);
+    const resultsContainer = document.getElementById(`results-container-${id}`);
 
-      if (!searchInput || !searchResults || !resultsContainer) {
-        console.log(`Search elements not found for ID: ${id}`);
+    if (!searchInput || !searchResults || !resultsContainer) {
+      console.log(`Search elements not found for ID: ${id}`);
+      return;
+    }
+
+    // Use real data from Astro props
+    const realItems = allItems;
+
+    // @ts-ignore - Fuse is loaded from CDN
+    const fuse = new window.Fuse(realItems, fuseOptions);
+
+    // Placeholder Animation
+    const placeholders = [
+      "Search courses...",
+      "Python", 
+      "Machine Learning",
+      "Angela Yu",
+      "JavaScript",
+      "Data Science",
+      "SOLIDWORKS",
+      "API Testing",
+      "Final Cut Pro",
+      "AI Courses"
+    ];
+    let placeholderIndex = 0;
+
+    function rotatePlaceholder() {
+      if (searchInput) {
+        placeholderIndex = (placeholderIndex + 1) % placeholders.length;
+        searchInput.setAttribute("placeholder", placeholders[placeholderIndex]);
+      }
+    }
+
+    const intervalId = setInterval(rotatePlaceholder, 3000);
+
+    // Search handler
+    searchInput.addEventListener("input", (e) => {
+      const query = e.target.value.trim();
+
+      if (query.length < 2) {
+        searchResults.classList.add("hidden");
         return;
       }
 
-      // Real data from coupons and posts
-      const realItems = [
-        {
-          data: { title: "Python for Beginners", description: "Learn Python programming from scratch", tags: ["python", "programming"] },
-          slug: "blog/python-for-beginners",
-          type: "blog"
-        },
-        {
-          data: { title: "JavaScript Masterclass", description: "Complete JavaScript course with projects", tags: ["javascript", "web"] },
-          slug: "blog/javascript-masterclass", 
-          type: "blog"
-        },
-        {
-          data: { title: "SOLIDWORKS SECRETS Course - From Beginner To Advanced 2026", description: "Become SOLIDWORKS INDUSTRY PROFESSIONAL With 12 Hours Actionable Course", tags: ["Teaching & Academics", "Udemy"] },
-          slug: "coupon/ultimate-hands-on-3d-cad-modelling-solidworks-course",
-          type: "coupon"
-        },
-        {
-          data: { title: "The Data Engineer Bootcamp 2026", description: "Complete data engineering bootcamp with real projects", tags: ["Development", "Udemy"] },
-          slug: "coupon/the-data-engineer-bootcamp-2026",
-          type: "coupon"
-        },
-        {
-          data: { title: "Final Cut Pro X - Beginner To Advanced (FCP MASTERY 2026)", description: "Master video editing with Final Cut Pro X", tags: ["Design", "Udemy"] },
-          slug: "coupon/final-cut-pro-x-beginner-to-advanced-fcp-mastery-2026",
-          type: "coupon"
-        },
-        {
-          data: { title: "API Testing with Python 3 & PyTest, Backend Automation 2026", description: "Learn API testing and automation with Python", tags: ["IT & Software", "Udemy"] },
-          slug: "coupon/api-testing-with-python-3-pytest-backend-automation-2026",
-          type: "coupon"
-        },
-        {
-          data: { title: "Data Science & AI Masters 2026 - From Python To Gen AI", description: "Complete data science and AI masterclass", tags: ["Development", "Udemy"] },
-          slug: "coupon/data-science-ai-masters-2026-python-gen-ai",
-          type: "coupon"
-        },
-        {
-          data: { title: "Angela Yu's 100 Days of Code Python Bootcamp Review", description: "Complete review of Angela Yu's Python course", tags: ["Python", "Review"] },
-          slug: "angela-yu-100-days-code-review-2026",
-          type: "blog"
-        },
-        {
-          data: { title: "Best Udemy Agentic AI and AI Agents Courses for 2026", description: "Top AI agent courses on Udemy reviewed", tags: ["AI", "Review"] },
-          slug: "best-udemy-agentic-ai-courses-2026",
-          type: "blog"
-        }
-      ];
-
       // @ts-ignore - Fuse is loaded from CDN
-      const fuse = new (window as any).Fuse(realItems, {
-        keys: ["data.title", "data.description", "data.tags"],
-        threshold: 0.3,
-        includeScore: true,
-      });
+      const results = fuse.search(query);
 
-      // Placeholder Animation
-      const placeholders = [
-        "Search courses...",
-        "Python", 
-        "Machine Learning",
-        "Angela Yu",
-        "JavaScript",
-        "Data Science",
-      ];
-      let placeholderIndex = 0;
+      if (results.length === 0) {
+        resultsContainer.innerHTML = '<p class="text-slate-400 p-3 text-center">No results found</p>';
+      } else {
+        resultsContainer.innerHTML = results
+          .slice(0, 8) // Show more results since we have more data
+          .map((result) => {
+            const item = result.item;
+            const tags = (item.data?.tags || [])
+              .slice(0, 3)
+              .map((tag) => {
+                const label = tag
+                  .replace(/-/g, " ")
+                  .replace(/\b\w/g, (l) => l.toUpperCase());
+                return `<span class="inline-flex items-center rounded-full bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-[10px] text-blue-300">${label}</span>`;
+              })
+              .join(" ");
 
-      function rotatePlaceholder() {
-        if (searchInput) {
-          placeholderIndex = (placeholderIndex + 1) % placeholders.length;
-          searchInput.setAttribute("placeholder", placeholders[placeholderIndex]);
-        }
+            const title = item.data?.title || 'Untitled';
+            const slug = item.slug || '#';
+            const type = item.type || 'blog';
+            const typeLabel = type === 'coupon' ? '🎫 Coupon' : '📝 Review';
+            const typeColor = type === 'coupon' ? 'bg-green-500/10 border-green-500/20 text-green-300' : 'bg-blue-500/10 border-blue-500/20 text-blue-300';
+
+            return `
+            <a href="/${slug}/" class="block rounded-lg p-3 hover:bg-slate-800/50 transition-colors">
+              <div class="flex items-start justify-between gap-2">
+                <h3 class="text-sm font-medium text-slate-100 line-clamp-2 flex-1">${title}</h3>
+                <span class="inline-flex items-center rounded-full ${typeColor} px-2 py-0.5 text-[10px] font-medium whitespace-nowrap">${typeLabel}</span>
+              </div>
+              <div class="mt-2 flex flex-wrap gap-1">${tags}</div>
+            </a>
+          `;
+          })
+          .join("");
       }
 
-      const intervalId = setInterval(rotatePlaceholder, 3000);
+      searchResults.classList.remove("hidden");
+    });
 
-      // Search handler
-      searchInput.addEventListener("input", (e) => {
-        const target = e.target as HTMLInputElement;
-        const query = target.value.trim();
+    // Hide results when clicking outside
+    document.addEventListener("click", (e) => {
+      if (
+        searchInput &&
+        searchResults &&
+        !searchInput.contains(e.target) &&
+        !searchResults.contains(e.target)
+      ) {
+        searchResults.classList.add("hidden");
+      }
+    });
 
-        if (query.length < 2) {
-          searchResults.classList.add("hidden");
-          return;
-        }
-
-        // @ts-ignore - Fuse is loaded from CDN
-        const results = fuse.search(query);
-
-        if (results.length === 0) {
-          resultsContainer.innerHTML = '<p class="text-slate-400 p-3 text-center">No results found</p>';
-        } else {
-          resultsContainer.innerHTML = results
-            .slice(0, 5)
-            .map((result: any) => {
-              const item = result.item;
-              const tags = (item.data?.tags || [])
-                .slice(0, 3)
-                .map((tag: string) => {
-                  const label = tag
-                    .replace(/-/g, " ")
-                    .replace(/\b\w/g, (l: string) => l.toUpperCase());
-                  return `<span class="inline-flex items-center rounded-full bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-[10px] text-blue-300">${label}</span>`;
-                })
-                .join(" ");
-
-              const title = item.data?.title || 'Untitled';
-              const slug = item.slug || '#';
-              const type = item.type || 'blog';
-              const typeLabel = type === 'coupon' ? '🎫 Coupon' : '📝 Review';
-              const typeColor = type === 'coupon' ? 'bg-green-500/10 border-green-500/20 text-green-300' : 'bg-blue-500/10 border-blue-500/20 text-blue-300';
-
-              return `
-              <a href="/${slug}/" class="block rounded-lg p-3 hover:bg-slate-800/50 transition-colors">
-                <div class="flex items-start justify-between gap-2">
-                  <h3 class="text-sm font-medium text-slate-100 line-clamp-2 flex-1">${title}</h3>
-                  <span class="inline-flex items-center rounded-full ${typeColor} px-2 py-0.5 text-[10px] font-medium whitespace-nowrap">${typeLabel}</span>
-                </div>
-                <div class="mt-2 flex flex-wrap gap-1">${tags}</div>
-              </a>
-            `;
-            })
-            .join("");
-        }
-
-        searchResults.classList.remove("hidden");
-      });
-
-      // Hide results when clicking outside
-      document.addEventListener("click", (e) => {
-        const target = e.target as Node;
-        if (
-          searchInput &&
-          searchResults &&
-          !searchInput.contains(target) &&
-          !searchResults.contains(target)
-        ) {
-          searchResults.classList.add("hidden");
-        }
-      });
-
-      // Cleanup
-      window.addEventListener('beforeunload', () => {
-        if (intervalId) clearInterval(intervalId);
-      });
+    // Cleanup
+    window.addEventListener('beforeunload', () => {
+      if (intervalId) clearInterval(intervalId);
     });
   }
 </script>
