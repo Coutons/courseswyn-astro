@@ -1,3 +1,4 @@
+import typography from '@tailwindcss/typography';
 import tailwindcssAnimated from 'tailwindcss-animated';
 
 /** @type {import('tailwindcss').Config} */
@@ -7,29 +8,51 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'IBM Plex Mono', 'monospace'],
       },
       colors: {
-        mint: {
-          300: '#8CFFD8',
-          400: '#5CFFDD',
-          500: '#2FFFD8',
-          600: '#14D7B2',
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
         },
-        midnight: '#020617',
-        surface: '#080C20',
-        card: '#0F162E',
-        accent: '#44FFC4',
-      },
-      boxShadow: {
-        glow: '0 0 30px rgba(47, 255, 216, 0.35)',
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
       },
       backgroundImage: {
-        'grid-mesh':
-          'radial-gradient(circle at 1px 1px, rgba(79, 255, 210, 0.35) 1px, transparent 0)',
+        'glow-gradient': 'radial-gradient(circle at center, rgba(59, 130, 246, 0.15) 0%, transparent 70%)',
       },
     },
   },
-  plugins: [tailwindcssAnimated],
+  plugins: [
+    typography,
+    tailwindcssAnimated,
+  ],
 };

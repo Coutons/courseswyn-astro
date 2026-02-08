@@ -1,0 +1,165 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import { fetchPosts, formatDate } from "../../lib/posts";
+
+export async function getStaticPaths({ paginate }) {
+  const posts = await fetchPosts();
+  const sortedPosts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+  
+  return paginate(sortedPosts, { pageSize: 15 });
+}
+
+const { page } = Astro.props;
+const posts = page.data;
+
+const title = `Udemy Course Reviews & Learning Guides - Page ${page.currentPage} | Courses Wyn`;
+const description = "Browse all Udemy Courses guides, tutorials, comparisons, and reviews. Find the best Udemy Courses for your project.";
+const canonical = page.currentPage === 1 
+  ? "https://courseswyn.com/blog/" 
+  : `https://courseswyn.com/blog/page/${page.currentPage}/`;
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  headline: title,
+  description: description,
+  blogPost: posts.map((post) => ({
+      "@type": "BlogPosting",
+      headline: post.data.title,
+      description: post.data.description,
+      url: `https://courseswyn.com/${post.slug}/`,
+      datePublished: post.data.pubDate.toISOString(),
+      author: {
+        "@type": "Organization",
+        name: "CoursesWyn",
+      },
+      image: post.data.image || "https://courseswyn.com/images/og-default.svg",
+  })),
+};
+---
+
+<MainLayout
+  title={title}
+  description={description}
+  canonical={canonical}
+  structuredData={structuredData}
+>
+  <section class="border-b border-border relative overflow-hidden">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(142_71%_45%_/_0.06),_transparent_60%)]"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 relative">
+      <p class="text-xs font-mono text-primary uppercase tracking-widest mb-3">$ ls ~/guides/ -la</p>
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground tracking-tight mb-4">All Udemy Courses Guides & Tutorials</h1>
+      <p class="text-lg text-muted-foreground max-w-2xl">
+        {page.total} in-depth guides covering Udemy courses, comparisons, setup tutorials, and more.
+      </p>
+    </div>
+  </section>
+
+  <section class="border-b border-border bg-card/50 sticky top-16 z-40 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div class="flex flex-wrap gap-2">
+          <button type="button" class="text-xs font-mono px-3 py-1.5 rounded border transition-colors bg-primary/10 text-primary border-primary/30">All ({page.total})</button>
+          <button type="button" class="text-xs font-mono px-3 py-1.5 rounded border transition-colors text-muted-foreground border-border hover:text-foreground hover:border-muted-foreground">Reviews</button>
+          <button type="button" class="text-xs font-mono px-3 py-1.5 rounded border transition-colors text-muted-foreground border-border hover:text-foreground hover:border-muted-foreground">Comparisons</button>
+          <button type="button" class="text-xs font-mono px-3 py-1.5 rounded border transition-colors text-muted-foreground border-border hover:text-foreground hover:border-muted-foreground">Tutorials</button>
+        </div>
+        <div class="relative w-full sm:w-64">
+           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+           <input type="text" placeholder="Search guides..." class="w-full pl-9 pr-3 py-1.5 text-sm font-mono bg-background border border-border rounded text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-12 md:py-16 dot-matrix">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 gap-4">
+        {
+          posts.map((post) => (
+            <div class="rounded-lg border border-border bg-card overflow-hidden hover:border-primary/30 transition-all cursor-pointer group">
+              <div class="flex items-center gap-2 px-4 py-2 border-b border-border bg-card">
+                <div class="flex gap-1.5">
+                  <div class="w-2.5 h-2.5 rounded-full bg-red-500/70"></div>
+                  <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/70"></div>
+                  <div class="w-2.5 h-2.5 rounded-full bg-green-500/70"></div>
+                </div>
+                <span class="text-xs font-mono text-muted-foreground ml-2">/{post.slug}</span>
+              </div>
+              <a href={`/${post.slug}/`} class="block p-5">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="text-[10px] font-mono font-semibold tracking-widest px-2 py-0.5 rounded border text-primary bg-primary/10 border-primary/20">GUIDE</span>
+                   { post.data.tags && post.data.tags.includes('Featured') && (
+                      <span class="text-[10px] font-mono font-semibold tracking-widest text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">FEATURED</span>
+                   )}
+                </div>
+                <h3 class="text-base font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                  {post.data.title}
+                </h3>
+                <p class="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-4">
+                  {post.data.description}
+                </p>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3 text-xs text-muted-foreground font-mono">
+                    <span class="flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                      {formatDate(post.data.pubDate)}
+                    </span>
+                  </div>
+                  <span class="text-primary text-xs font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                    Read
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+                  </span>
+                </div>
+              </a>
+            </div>
+          ))
+        }
+      </div>
+
+      {/* Pagination Controls */}
+      {page.lastPage > 1 && (
+        <div class="mt-12 flex justify-center items-center gap-4">
+          <nav class="flex space-x-2" aria-label="Pagination">
+            {page.url.prev && (
+              <a
+                href={page.url.prev}
+                class="px-4 py-2 border border-border rounded-lg hover:bg-card hover:border-primary/50 text-muted-foreground hover:text-foreground transition-all duration-300"
+              >
+                Previous
+              </a>
+            )}
+
+            {Array.from({ length: page.lastPage }, (_, i) => i + 1).map(
+              (pageNum) => (
+                <a
+                  href={pageNum === 1 ? '/blog/' : `/blog/page/${pageNum}/`}
+                  class={`px-4 py-2 border rounded-lg transition-all duration-300 ${
+                    pageNum === page.currentPage
+                      ? "bg-primary text-primary-foreground border-primary font-semibold"
+                      : "border-border hover:bg-card hover:border-primary/50 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {pageNum}
+                </a>
+              ),
+            )}
+
+            {page.url.next && (
+              <a
+                href={page.url.next}
+                class="px-4 py-2 border border-border rounded-lg hover:bg-card hover:border-primary/50 text-muted-foreground hover:text-foreground transition-all duration-300"
+              >
+                Next
+              </a>
+            )}
+          </nav>
+
+          <p class="text-sm text-muted-foreground font-medium font-mono">
+            Page {page.currentPage} of {page.lastPage}
+          </p>
+        </div>
+      )}
+    </div>
+  </section>
+</MainLayout>

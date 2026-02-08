@@ -1,6 +1,6 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import AffiliateLink from "../components/AffiliateLink.astro";
+import MainLayout from '../layouts/MainLayout.astro';
+import type { CollectionEntry } from 'astro:content';
 import {
   fetchPosts,
   formatDate,
@@ -191,7 +191,7 @@ if (isCategoryPage) {
 
 {
   isCategoryPage && categoryMeta ? (
-    <Layout
+    <MainLayout
       title={categoryMeta.title}
       description={categoryMeta.description}
       canonical={categoryMeta.canonical}
@@ -246,87 +246,128 @@ if (isCategoryPage) {
           </article>
         ))}
       </section>
-    </Layout>
+    </MainLayout>
   ) : post && Content ? (
-    <Layout
+    <MainLayout
       title={post.data.title}
       description={post.data.description}
       canonical={canonical}
       ogImage={post.data.image?.src}
       structuredData={structuredData || undefined}
     >
-      <article class="mx-auto max-w-4xl space-y-10 bg-gradient-to-br from-slate-800/60 to-slate-800/30 border border-slate-700 p-10 rounded-2xl shadow-lg backdrop-blur-sm">
-        <header class="space-y-5 border-b border-slate-700 pb-8">
-          <div class="flex items-center gap-2 text-xs text-slate-500">
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <span>
-              Last updated:{" "}
+      <article class="max-w-3xl mx-auto px-6 py-12 dot-matrix">
+        <div class="mb-10">
+          <div class="flex flex-wrap items-center gap-3 text-xs mb-6">
+            <span class="font-mono font-semibold tracking-widest text-primary bg-primary/10 px-2.5 py-1 rounded border border-primary/20">
+              REVIEW
+            </span>
+            <span class="text-muted-foreground flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 2v4"></path>
+                <path d="M16 2v4"></path>
+                <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+                <path d="M3 10h18"></path>
+              </svg>
               {formatDate(post.data.updatedAt || post.data.pubDate)}
             </span>
+            <span class="text-muted-foreground flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              15 min read
+            </span>
           </div>
-          <h1 class="text-5xl font-bold text-slate-100">{post.data.title}</h1>
-          <div class="flex flex-wrap gap-3">
+
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-6 tracking-tight text-balance">
+            {post.data.title}
+          </h1>
+          <p class="text-lg text-muted-foreground leading-relaxed">
+            {post.data.description}
+          </p>
+        </div>
+
+        <hr class="border-border mb-12" />
+
+        <div class="prose prose-lg prose-invert max-w-none prose-p:text-muted-foreground prose-p:leading-[1.8] prose-p:mb-6 prose-headings:font-bold prose-headings:text-foreground prose-headings:tracking-tight prose-h1:text-3xl prose-h1:mt-12 prose-h1:mb-6 prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:pb-3 prose-h2:border-b prose-h2:border-border prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-h4:text-lg prose-h4:mt-6 prose-h4:mb-2 prose-a:text-primary prose-a:font-medium prose-a:no-underline hover:prose-a:underline prose-a:transition-colors prose-strong:text-foreground prose-strong:font-semibold prose-ul:my-6 prose-ul:pl-0 prose-ol:my-6 prose-ol:pl-0 prose-li:my-2 prose-li:pl-2 prose-li:text-muted-foreground prose-li:leading-relaxed [&_ul]:list-none [&_ul>li]:relative [&_ul>li]:pl-6 [&_ul>li:before]:content-['-'] [&_ul>li:before]:absolute [&_ul>li:before]:left-0 [&_ul>li:before]:text-primary [&_ul>li:before]:font-mono [&_ul>li:before]:font-bold [&_ol]:list-decimal [&_ol]:pl-6 prose-code:bg-secondary prose-code:text-foreground prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-[0.9em] prose-code:font-mono prose-code:before:content-none prose-code:after:content-none prose-pre:bg-card prose-pre:text-foreground prose-pre:rounded-lg prose-pre:overflow-x-auto prose-pre:p-6 prose-pre:my-8 prose-pre:border prose-pre:border-border [&_pre_code]:bg-transparent [&_pre_code]:text-foreground [&_pre_code]:p-0 [&_pre_code]:text-sm [&_pre_code]:leading-relaxed prose-table:w-full prose-table:my-8 prose-table:overflow-hidden prose-table:rounded-lg prose-table:border prose-table:border-border [&_table]:border-collapse [&_thead]:bg-secondary [&_thead_tr]:border-b [&_thead_tr]:border-border prose-th:px-4 prose-th:py-3 prose-th:text-left prose-th:text-xs prose-th:font-semibold prose-th:text-foreground prose-th:uppercase prose-th:tracking-wide prose-th:font-mono prose-th:border-0 prose-td:px-4 prose-td:py-3 prose-td:text-muted-foreground prose-td:text-sm prose-td:border-0 prose-td:border-t prose-td:border-border [&_tbody_tr]:transition-colors [&_tbody_tr:hover]:bg-secondary/50 prose-blockquote:border-l-2 prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:my-8 prose-blockquote:rounded-r-lg prose-blockquote:not-italic prose-blockquote:text-muted-foreground prose-hr:my-12 prose-hr:border-border prose-img:rounded-lg prose-img:border prose-img:border-border prose-img:my-8">
+          <Content />
+        </div>
+
+        <div class="mt-16">
+          <div class="bg-card rounded-lg border border-border border-primary/20 overflow-hidden">
+            <div class="flex items-center gap-3 px-4 py-2.5 bg-secondary/50 border-b border-border">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
+              </div>
+              <span class="text-[11px] font-mono text-muted-foreground tracking-wide">
+                ~/courses/{post.slug}/get-started
+              </span>
+            </div>
+            <div class="p-6">
+              <div class="text-center">
+                <h3 class="text-2xl font-bold text-foreground tracking-tight mb-3">
+                  Ready to master AI coding?
+                </h3>
+                <p class="text-muted-foreground mb-8 max-w-lg mx-auto text-sm leading-relaxed">
+                  Start your journey today with the best Claude Code courses on Udemy.
+                </p>
+                <a
+                  href="https://trk.udemy.com/c/6564357/3193860/39854"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors text-sm"
+                >
+                  Get Started Now
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"></path>
+                  </svg>
+                </a>
+                <p class="text-muted-foreground text-xs mt-4 font-mono">
+                  // up to 90% off for new students
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-12 pt-8 border-t border-border">
+          <h4 class="text-xs font-mono text-primary uppercase tracking-widest mb-4">
+            // related topics
+          </h4>
+          <div class="flex flex-wrap gap-2">
             {post.data.tags.map((tag) => (
-              <a class="tag-pill" href={`/category/${tag}/`}>
+              <a
+                href={`/category/${tag}/`}
+                class="bg-secondary text-muted-foreground px-3 py-1.5 rounded-md text-xs font-mono border border-border hover:text-foreground transition-colors"
+              >
                 {tagToLabel(tag)}
               </a>
             ))}
           </div>
-        </header>
-
-        {post.data.affiliate_links && post.data.affiliate_links.length > 0 && (
-          <section class="space-y-4 rounded-lg border border-blue-500/40 bg-blue-500/10 p-6 backdrop-blur-sm">
-            <h2 class="text-lg font-bold text-slate-100">
-              ✅ Recommended Udemy Courses
-            </h2>
-            <div class="flex flex-wrap gap-3">
-              {post.data.affiliate_links.map((link) => (
-                <AffiliateLink url={link.url} text={link.text} />
-              ))}
-            </div>
-            <p class="text-xs text-slate-400">
-              Links include Udemy affiliate tracking via trk.udemy.com
-            </p>
-          </section>
-        )}
-
-        <div class="article-body">
-          <Content />
         </div>
 
-        {related.length ? (
-          <section class="space-y-4">
-            <h2 class="text-2xl font-semibold text-white">Related rundowns</h2>
-            <div class="grid gap-4 md:grid-cols-2">
-              {related.map((item) => (
-                <a
-                  class="card border-white/5 bg-surface/70"
-                  href={`/${item.slug}/`}
-                >
-                  <p class="text-xs uppercase tracking-[0.3em] text-white/50">
-                    {formatDate(item.data.pubDate)}
-                  </p>
-                  <p class="mt-2 text-lg font-semibold text-white">
-                    {item.data.title}
-                  </p>
-                </a>
-              ))}
+        <div class="mt-12 pt-8 border-t border-border">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-primary/10 rounded-md flex items-center justify-center border border-primary/20">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
+                <polyline points="4 17 10 11 4 5"></polyline>
+                <line x1="12" x2="20" y1="19" y2="19"></line>
+              </svg>
             </div>
-          </section>
-        ) : null}
+            <div>
+              <p class="font-semibold text-foreground text-sm">CoursesWyn Team</p>
+              <p class="text-muted-foreground text-xs mt-1">
+                Expert reviews and learning guides. We test every course we recommend.
+              </p>
+            </div>
+          </div>
+          <p class="mt-6 text-muted-foreground text-xs font-mono">
+            // last updated: {formatDate(post.data.updatedAt || post.data.pubDate)}. Disclosure: This article may contain affiliate links.
+          </p>
+        </div>
       </article>
-    </Layout>
+    </MainLayout>
   ) : null
 }

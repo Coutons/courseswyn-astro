@@ -5,176 +5,113 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
-  --surface: #0f172a;
-  --surface-alt: #1e293b;
-  --surface-card: #1e293b;
-  --text: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --accent-primary: #3b82f6;
-  --accent-secondary: #8b5cf6;
-  --accent-success: #10b981;
-  --border-color: #334155;
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 142.1 70.6% 45.3%;
+  --primary-foreground: 144.9 80.4% 10%;
+
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 142.4 71.8% 29.2%;
 }
 
-html,
-body {
-  font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', sans-serif;
-  background-color: var(--surface);
-  color: var(--text);
-  min-height: 100%;
+html {
+  scroll-behavior: smooth;
 }
 
 body {
+  @apply bg-background text-foreground antialiased font-sans;
   margin: 0;
   padding: 0;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
 }
 
-main {
-  min-height: 60vh;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
 }
 
-.prose :where(a) {
-  color: var(--mint);
-  text-decoration: underline;
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
 }
 
-.prose :where(code) {
-  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--secondary));
+  border: 1px solid hsl(var(--border));
+  border-radius: 9999px;
 }
 
-.gradient-border {
-  position: relative;
-  border-radius: 1.5rem;
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted));
 }
 
-.gradient-border::after {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.6), rgba(6, 182, 212, 0.4), rgba(99, 102, 241, 0.5));
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
+/* Typography Overrides */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply tracking-tight font-bold text-white;
 }
 
-@layer components {  
-  .deals-grid {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+code {
+  @apply font-mono text-sm;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+}
+
+@layer components {
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  .badge {
-    @apply inline-flex items-center gap-2 rounded-full bg-blue-500/20 border border-blue-500/30 px-3 py-1 text-xs font-semibold text-blue-300 uppercase tracking-wide;
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:pointer-events-none;
   }
 
-  .tag-pill {
-    @apply inline-flex items-center gap-2 rounded-full bg-blue-500/10 border border-blue-500/20 px-3 py-1 text-sm text-blue-300 transition hover:border-blue-500/40 hover:bg-blue-500/20;
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30;
+  }
+
+  .btn-outline {
+    @apply border border-border bg-transparent hover:bg-accent hover:text-accent-foreground;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent hover:bg-accent hover:text-accent-foreground text-muted-foreground;
   }
 
   .card {
-    @apply rounded-xl border border-slate-700 bg-slate-800/50 p-5 backdrop-blur-sm hover:border-slate-600 transition-all duration-300 hover:bg-slate-800/70 hover:shadow-lg hover:shadow-blue-500/10;
+    @apply bg-card text-card-foreground border border-border rounded-xl p-6 transition-all duration-200 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5;
   }
 
-  .button-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30;
+  .nav-link {
+    @apply text-sm font-medium text-muted-foreground hover:text-foreground transition-colors;
   }
 
-  .button-ghost {
-    @apply inline-flex items-center gap-2 rounded-lg border border-slate-700 px-6 py-3 text-slate-300 transition hover:border-slate-600 hover:text-slate-100 hover:bg-slate-700/50;
-  }
-
-  .dark-toggle {
-    @apply inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-800/50 text-slate-300 transition hover:border-slate-600 hover:bg-slate-700;
-  }
-
-  .article-body {
-    color: #cbd5e1;
-    line-height: 1.8;
-    font-size: 1rem;
-  }
-
-  .article-body p {
-    margin: 0 0 1.2rem;
-  }
-
-  .article-body h2,
-  .article-body h3,
-  .article-body h4 {
-    font-weight: 700;
-    color: #f1f5f9;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-  }
-
-  .article-body a {
-    color: #3b82f6;
-    text-decoration: underline;
-    transition: color 0.2s;
-  }
-
-  .article-body a:hover {
-    color: #60a5fa;
-    text-decoration: none;
-  }
-
-  .article-body blockquote {
-    border-left: 4px solid #3b82f6;
-    padding-left: 1rem;
-    padding: 1rem;
-    color: #cbd5e1;
-    font-style: italic;
-    background: rgba(59, 130, 246, 0.05);
-  }
-
-  .article-body strong {
-    color: #f1f5f9;
-    font-weight: 700;
-  }
-
-  .article-body ul,
-  .article-body ol {
-    margin: 1rem 0;
-    padding-left: 1.5rem;
-    line-height: 1.8;
-  }
-
-  .article-body ul {
-    list-style: disc;
-  }
-
-  .article-body ul ul,
-  .article-body ol ul {
-    list-style: circle;
-  }
-
-  .article-body ol {
-    list-style: decimal;
-  }
-
-  .article-body table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1.5rem 0;
-    font-size: 0.95rem;
-  }
-
-  .article-body table th,
-  .article-body table td {
-    border: 1px solid #334155;
-    padding: 0.75rem 1rem;
-    text-align: left;
-  }
-
-  .article-body table thead {
-    background: rgba(59, 130, 246, 0.1);
-    color: #cbd5e1;
+  .dot-matrix {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
 }

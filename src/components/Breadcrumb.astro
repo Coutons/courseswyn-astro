@@ -1,13 +1,13 @@
 ---
 interface Props {
   category?: string;
-  subCategory?: string;
+  subcategory?: string;
   courseTitle?: string;
   isCategoryPage?: boolean;
   isSubCategoryPage?: boolean;
 }
 
-const { category, subCategory, courseTitle, isCategoryPage, isSubCategoryPage } = Astro.props;
+const { category, subcategory, courseTitle, isCategoryPage, isSubCategoryPage } = Astro.props;
 ---
 
 <nav aria-label="Breadcrumb" class="mx-auto max-w-6xl px-4 py-4 border-b border-slate-700">
@@ -42,20 +42,20 @@ const { category, subCategory, courseTitle, isCategoryPage, isSubCategoryPage } 
         </li>
       </>
     )}
-    {subCategory && (
+    {subcategory && (
       <>
         <li class="text-slate-500">/</li>
         <li>
           {isSubCategoryPage ? (
             <span class="font-medium text-slate-100">
-              {subCategory}
+              {subcategory}
             </span>
           ) : (
             <a
-              href={`/coupon/${category!.toLowerCase().replace(/\s+/g, '-')}/${subCategory.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and').replace(/\//g, '-')}`}
+              href={`/coupon/${category!.toLowerCase().replace(/\s+/g, '-')}/${subcategory.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and').replace(/\//g, '-')}`}
               class="hover:text-blue-400 transition-colors font-medium text-slate-300"
             >
-              {subCategory}
+              {subcategory}
             </a>
           )}
         </li>
@@ -75,7 +75,7 @@ const { category, subCategory, courseTitle, isCategoryPage, isSubCategoryPage } 
 </nav>
 
 <!-- Schema Markup -->
-{category || subCategory ? (
+{category || subcategory ? (
   <script type="application/ld+json" set:html={
     JSON.stringify({
       "@context": "https://schema.org",
@@ -99,15 +99,15 @@ const { category, subCategory, courseTitle, isCategoryPage, isSubCategoryPage } 
           "name": category.replace(/-/g, " "),
           "item": `https://courseswyn.com/coupon/${category.toLowerCase().replace(/\s+/g, '-')}/`
         }] : []),
-        ...(subCategory && category ? [{
+        ...(subcategory && category ? [{
           "@type": "ListItem",
           "position": 4,
-          "name": subCategory,
-          "item": `https://courseswyn.com/coupon/${category.toLowerCase().replace(/\s+/g, '-')}/${subCategory.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and').replace(/\//g, '-')}/`
+          "name": subcategory,
+          "item": `https://courseswyn.com/coupon/${category.toLowerCase().replace(/\s+/g, '-')}/${subcategory.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and').replace(/\//g, '-')}/`
         }] : []),
         ...(courseTitle ? [{
           "@type": "ListItem",
-          "position": subCategory ? (category ? 5 : 4) : (category ? 4 : 3),
+          "position": subcategory ? (category ? 5 : 4) : (category ? 4 : 3),
           "name": courseTitle,
           "item": `https://courseswyn.com/coupon/${courseTitle.toLowerCase().replace(/\s+/g, '-')}`
         }] : [])
