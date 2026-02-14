@@ -1,23 +1,4 @@
 ---
-interface DealProps {
-  title: string;
-  description?: string;
-  image?: string;
-  provider?: string;
-  instructor?: string;
-  category?: string;
-  rating?: number;
-  students?: number;
-  price?: string;
-  originalPrice?: string;
-  discount?: string;
-  url?: string;
-  verified?: boolean;
-  expiryDate?: string;
-  slug?: string;
-  language?: string;
-  variant?: "card" | "list";
-}
 const {
   title,
   description,
@@ -31,7 +12,6 @@ const {
   students,
   price,
   originalPrice,
-  url,
   verified = false,
   expiresAt: expNew,
   expiryDate: expOld,
@@ -77,7 +57,7 @@ function calculateDiscount(
   return undefined;
 }
 
-// Course Schema for SEO
+// SEO-optimized Course Schema
 const courseSchema = {
   "@context": "https://schema.org",
   "@type": "Course",
@@ -125,19 +105,19 @@ const courseSchema = {
 };
 ---
 
-<script type="application/ld+json" set:html={JSON.stringify(courseSchema)} />
+<script is:inline type="application/ld+json" set:html={JSON.stringify(courseSchema)} />
 
 <article
-  class={`coupon-card relative group bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden transition-all duration-500 hover:border-primary/50 hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.2)] flex ${variant === 'list' ? 'flex-col md:flex-row' : 'flex-col h-full'} ${className}`}
+  class={`coupon-card relative group bg-card border border-border rounded-2xl overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-[0_8px_24px_-8px_hsl(var(--primary)_/_0.18)] flex ${variant === 'list' ? 'flex-col md:flex-row' : 'flex-col h-full'} ${variant === 'compact' ? 'max-h-64' : ''} ${className}`}
   data-title={title?.toLowerCase()}
   data-instructor={instructor?.toLowerCase()}
   data-category={category?.toLowerCase()}
   data-description={description?.toLowerCase()}
 >
-  <!-- Image Section -->
+  <!-- Compact Image Section -->
   <a
     href={slug ? `/coupon/${slug}/` : "#"}
-    class={`block relative overflow-hidden bg-slate-950 shadow-inner ${variant === 'list' ? 'aspect-video md:aspect-[4/3] md:w-64 lg:w-72 flex-shrink-0' : 'aspect-video'}`}
+    class={`block relative overflow-hidden bg-background shadow-inner ${variant === 'list' ? 'aspect-video md:aspect-[4/3] md:w-48 lg:w-56 flex-shrink-0' : variant === 'compact' ? 'aspect-video h-32' : 'aspect-video h-40'}`}
   >
     {
       image ? (
@@ -145,100 +125,94 @@ const courseSchema = {
           src={image}
           alt={title}
           loading="lazy"
-          class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 group-hover:brightness-110"
+          class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 group-hover:brightness-110"
         />
       ) : (
-        <div class="w-full h-full flex items-center justify-center text-slate-700 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.05),transparent)]">
-          <span class="text-xs font-mono uppercase tracking-widest opacity-50">No Course Media</span>
+        <div class="w-full h-full flex items-center justify-center text-muted-foreground bg-[radial-gradient(circle_at_center,hsl(var(--primary)_/_0.06),transparent)]">
+          <span class="text-[10px] font-mono uppercase tracking-widest opacity-60">No Course Media</span>
         </div>
       )
     }
 
-    <!-- Premium Badges -->
-    <div class="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
+    <!-- SEO-optimized Badges -->
+    <div class="absolute top-2 left-2 flex flex-col gap-1.5 pointer-events-none">
        {calculatedDiscount && (
-          <div class="bg-primary text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase shadow-2xl backdrop-blur-md border border-white/10">
+          <div class="bg-primary text-white text-[9px] font-black px-2 py-0.5 rounded-md uppercase shadow-lg backdrop-blur-sm border border-white/10">
             {calculatedDiscount} OFF
           </div>
        )}
        {verified && (
-          <div class="bg-slate-950/80 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase shadow-2xl backdrop-blur-md border border-emerald-500/20 flex items-center gap-1">
-            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Verified
+          <div class="bg-card/85 text-primary text-[9px] font-bold px-2 py-0.5 rounded-md uppercase shadow-lg backdrop-blur-sm border border-primary/20 flex items-center gap-1">
+            <span class="w-1 h-1 bg-primary rounded-full animate-pulse"></span> Verified
           </div>
        )}
     </div>
 
-    {expiresAt && (
-      <div class="absolute bottom-4 right-4 bg-slate-950/60 backdrop-blur-md text-slate-300 text-[9px] font-mono font-bold px-3 py-1 rounded-full border border-white/5">
-        EXPIRES: {expiresAt.split('T')[0]}
+    {expiresAt && variant !== 'compact' && (
+      <div class="absolute bottom-2 right-2 bg-background/70 backdrop-blur-sm text-muted-foreground text-[8px] font-mono font-bold px-2 py-0.5 rounded-full border border-border">
+        {getDaysUntilExpiry(expiresAt) <= 3 ? 'EXPIRING SOON' : expiresAt.split('T')[0]}
       </div>
     )}
   </a>
 
-  <!-- Content Section -->
-  <div class={`p-6 flex-1 flex flex-col ${variant === 'list' ? 'md:justify-center' : ''}`}>
-    <div class="flex items-center gap-2 mb-3">
-       <span class="text-[10px] font-mono font-bold text-primary px-2 py-0.5 bg-primary/10 rounded-md border border-primary/20 uppercase tracking-tighter">
+  <!-- Optimized Content Section -->
+  <div class={`p-4 flex-1 flex flex-col ${variant === 'list' ? 'md:justify-center' : ''} ${variant === 'compact' ? 'p-3' : ''}`}>
+    <!-- Category Tags -->
+    <div class="flex items-center gap-2 mb-2">
+       <span class="text-[9px] font-mono font-bold text-primary px-1.5 py-0.5 bg-primary/10 rounded border border-primary/20 uppercase tracking-tighter">
         {category || "Course"}
        </span>
-       {subcategory && (
-         <span class="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-tighter">{subcategory}</span>
+       {subcategory && variant !== 'compact' && (
+         <span class="text-[9px] font-mono font-bold text-muted-foreground uppercase tracking-tighter">{subcategory}</span>
        )}
     </div>
 
-    <a href={slug ? `/coupon/${slug}/` : "#"} class={`group/title block mb-2 ${variant === 'list' ? '' : 'h-12 overflow-hidden'}`}>
-      <h3 class={`text-base font-black text-white leading-tight group-hover/title:text-primary transition-colors ${variant === 'list' ? 'text-lg md:text-xl' : 'line-clamp-2'}`}>
+    <!-- SEO-optimized Title -->
+    <a href={slug ? `/coupon/${slug}/` : "#"} class={`group/title block mb-2 ${variant === 'list' ? '' : variant === 'compact' ? 'h-8 overflow-hidden' : 'h-10 overflow-hidden'}`}>
+      <h3 class={`text-sm font-black text-foreground leading-tight group-hover/title:text-primary transition-colors ${variant === 'list' ? 'text-base md:text-lg' : variant === 'compact' ? 'text-xs line-clamp-2' : 'line-clamp-2'}`}>
         {title}
       </h3>
     </a>
 
     {variant === 'list' && description && (
-      <p class="text-slate-400 text-sm leading-relaxed line-clamp-2 mb-4 opacity-80 group-hover:opacity-100 transition-opacity hidden md:block">
+      <p class="text-muted-foreground text-sm leading-relaxed line-clamp-2 mb-3 opacity-80 group-hover:opacity-100 transition-opacity hidden md:block">
         {description}
       </p>
     )}
     
     {variant === 'card' && description && (
-      <p class="text-slate-400 text-xs leading-relaxed line-clamp-2 mb-6 opacity-80 group-hover:opacity-100 transition-opacity">
+      <p class="text-muted-foreground text-xs leading-relaxed line-clamp-2 mb-3 opacity-80 group-hover:opacity-100 transition-opacity">
         {description}
       </p>
     )}
 
-    <!-- Meta Info & CTA Split -->
-    <div class={`flex ${variant === 'list' ? 'flex-col md:flex-row md:items-center md:justify-between border-t border-slate-800/50 pt-4 mt-2' : 'flex-col mt-auto'}`}>
-      <div class={`flex items-center gap-6 mb-4 ${variant === 'list' ? 'md:mb-0' : 'justify-between py-4 border-y border-slate-800/50 mb-6'}`}>
-         <div class="flex items-center gap-1.5 text-yellow-500">
-            <span class="text-lg">★</span>
-            <span class="text-xs font-black text-white leading-none">{rating || "5.0"}</span>
+    <!-- Compact Meta Info -->
+    <div class={`flex items-center justify-between ${variant === 'list' ? 'flex-col md:flex-row md:items-center md:justify-between border-t border-border pt-3 mt-auto' : variant === 'compact' ? 'py-2 border-t border-border mt-auto' : 'py-3 border-t border-border mt-auto'}`}>
+      <div class={`flex items-center gap-4 ${variant === 'compact' ? 'gap-3' : ''}`}>
+         <div class="flex items-center gap-1 text-yellow-500">
+           <span class="text-sm">★</span>
+           <span class="text-[10px] font-black text-foreground leading-none">{rating || "5.0"}</span>
          </div>
-         <div class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-tight">
-            {students ? (students >= 1000 ? `${Math.floor(students / 1000)}K+ ENROLLED` : `${students} ENROLLED`) : "NEW LISTING"}
+         <div class="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-tight">
+           {students ? (students >= 1000 ? `${Math.floor(students / 1000)}k+` : `${students}`) : "NEW"}
          </div>
-         {variant === 'list' && (
-           <div class="hidden sm:flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-tight">
-             <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-             </svg>
-             {language || "English"}
-           </div>
-         )}
       </div>
 
-      <div class={`flex items-center gap-4 ${variant === 'list' ? 'flex-1 md:flex-initial' : 'justify-between pb-2 pt-2'}`}>
+      <div class={`flex items-center gap-3 ${variant === 'compact' ? 'gap-2' : ''}`}>
          <div class="flex flex-col">
-            <span class="text-[10px] font-mono font-black text-slate-600 line-through leading-none mb-1">
+            <span class="text-[9px] font-mono font-black text-muted-foreground line-through leading-none mb-0.5">
                {originalPrice ? (String(originalPrice).startsWith('$') ? originalPrice : `$${originalPrice}`) : ""}
             </span>
-            <span class={`text-white leading-none tracking-tighter uppercase font-black ${variant === 'list' ? 'text-2xl' : 'text-xl'}`}>
+            <span class={`text-foreground leading-none tracking-tighter uppercase font-black ${variant === 'compact' ? 'text-sm' : 'text-base'}`}>
                {calculatedDiscount === "-100%" ? "FREE" : (price ? (String(price).startsWith('$') ? price : `$${price}`) : "FREE")}
             </span>
          </div>
          
          <a
           href={slug ? `/coupon/${slug}/` : "#"}
-          class={`flex items-center justify-center bg-slate-800 hover:bg-primary text-white font-black uppercase tracking-widest transition-all shadow-xl hover:shadow-primary/30 rounded-2xl ${variant === 'list' ? 'px-8 py-3.5 text-xs flex-1 md:flex-initial' : 'w-full py-4 text-[11px]'}`}
+          class={`flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest transition-all shadow-lg hover:shadow-primary/20 rounded-xl ${variant === 'list' ? 'px-6 py-2.5 text-[10px] flex-1 md:flex-initial' : variant === 'compact' ? 'px-4 py-2 text-[9px]' : 'w-full py-2.5 text-[10px]'}`}
          >
-          Claim Deal
+          {variant === 'compact' ? 'GET' : 'Claim Deal'}
          </a>
       </div>
     </div>

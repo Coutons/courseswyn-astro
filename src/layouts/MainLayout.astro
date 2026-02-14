@@ -1,7 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions';
 import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
 import '../styles/global.css';
 
 interface Props {
@@ -10,6 +9,8 @@ interface Props {
   canonical?: string;
   ogImage?: string;
   structuredData?: any;
+  type?: string;
+  robots?: string;
 }
 
 const { 
@@ -17,43 +18,118 @@ const {
   description = "100% Off Udemy Coupons 2026 | Free Udemy Courses - CoursesWyn",
   canonical,
   ogImage,
-  structuredData
+  structuredData,
+  type = "website",
+  robots = "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
 } = Astro.props;
+
+const siteUrl = "https://courseswyn.com";
+const canonicalUrl = canonical || siteUrl;
+const ogImageUrl = ogImage || `${siteUrl}/og-homepage.jpg`;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <meta name="generator" content={Astro.generator} />
-    <meta name="description" content={description} />
-    <title>{title}</title>
     
-    {canonical && <link rel="canonical" href={canonical} />}
+    <!-- Primary Meta Tags -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    <meta name="author" content="CoursesWyn" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href={canonicalUrl} />
     
     <!-- Open Graph -->
+    <meta property="og:type" content={type} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    {ogImage && <meta property="og:image" content={ogImage} />}
-    {canonical && <meta property="og:url" content={canonical} />}
-    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="CoursesWyn" />
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@courseswyn" />
+    <meta name="twitter:creator" content="@courseswyn" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+    
+    <!-- Additional Meta -->
+    <meta name="theme-color" content="#06b6d4" />
+    <meta name="msapplication-TileColor" content="#06b6d4" />
+    <meta name="keywords" content="udemy coupons, udemy coupon code, udemy free courses, best udemy deals, udemy discount courses, free online courses, programming courses" />
     
     <!-- Structured Data -->
     {structuredData && (
-      <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+      <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
     )}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Performance Optimizations -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="//img-c.udemycdn.com" />
+    <link rel="dns-prefetch" href="//www.udemy.com" />
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    
+    <!-- RSS Feed -->
+    <link rel="alternate" type="application/rss+xml" title="CoursesWyn RSS Feed" href="/rss.xml" />
+    
+    <!-- Client Router for SPA-like navigation -->
     <ClientRouter />
   </head>
+  
   <body class="bg-background text-foreground font-sans antialiased selection:bg-primary/20 selection:text-primary">
     <Header />
+    
     <main class="min-h-screen">
       <slot />
     </main>
-    <Footer />
+    
+    <!-- Minimal Footer - Copyright Only -->
+    <footer class="border-t border-border bg-card py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col items-center gap-2 text-xs text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} CoursesWyn. All rights reserved.</p>
+          <p>Affiliate disclosure: We earn commissions from qualifying purchases.</p>
+        </div>
+      </div>
+    </footer>
+    
+    <!-- Performance monitoring -->
+    <script>
+      // Performance optimizations
+      if ('serviceWorker' in navigator) {
+        // Register service worker for caching (optional)
+        navigator.serviceWorker.register('/sw.js').catch(() => {
+          // Service worker registration failed
+        });
+      }
+      
+      // Lazy loading optimization hint
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          // Preload critical resources during idle time
+          const preloadLink = document.createElement('link');
+          preloadLink.rel = 'preload';
+          preloadLink.href = '/api/popular-courses';
+          preloadLink.as = 'fetch';
+          document.head.appendChild(preloadLink);
+        });
+      }
+    </script>
   </body>
 </html>

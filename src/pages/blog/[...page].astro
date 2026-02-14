@@ -2,15 +2,15 @@
 import MainLayout from "../../layouts/MainLayout.astro";
 import { fetchPosts, formatDate } from "../../lib/posts";
 
-export async function getStaticPaths({ paginate }) {
+export async function getStaticPaths({ paginate }: { paginate: any }) {
   const posts = await fetchPosts();
   const sortedPosts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
   
   return paginate(sortedPosts, { pageSize: 15 });
 }
 
-const { page } = Astro.props;
-const posts = page.data;
+const { page } = Astro.props as { page: any };
+const posts: any[] = page?.data ?? [];
 
 const title = `Udemy Course Reviews & Learning Guides - Page ${page.currentPage} | Courses Wyn`;
 const description = "Browse all Udemy Courses guides, tutorials, comparisons, and reviews. Find the best Udemy Courses for your project.";
@@ -23,7 +23,7 @@ const structuredData = {
   "@type": "Blog",
   headline: title,
   description: description,
-  blogPost: posts.map((post) => ({
+  blogPost: posts.map((post: any) => ({
       "@type": "BlogPosting",
       headline: post.data.title,
       description: post.data.description,

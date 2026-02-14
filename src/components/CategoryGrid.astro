@@ -1,0 +1,186 @@
+---
+import categories from '../data/categories.json';
+import coupons from '../data/coupons.json';
+
+// Helper function to get category icon
+function getCategoryIcon(categoryName: string): string {
+  const name = categoryName.toLowerCase();
+  if (name.includes('it') || name.includes('software')) return '💻';
+  if (name.includes('web') || name.includes('development')) return '⚛️';
+  if (name.includes('data') || name.includes('science')) return '📊';
+  if (name.includes('business')) return '📈';
+  if (name.includes('design')) return '🎨';
+  if (name.includes('marketing')) return '�';
+  if (name.includes('personal') || name.includes('development')) return '�';
+  if (name.includes('photography') || name.includes('video')) return '�';
+  if (name.includes('health') || name.includes('fitness')) return '🏃';
+  if (name.includes('music')) return '�';
+  if (name.includes('teaching') || name.includes('academics')) return '🎓';
+  if (name.includes('lifestyle')) return '🌟';
+  if (name.includes('engineering')) return '⚙️';
+  if (name.includes('social') || name.includes('science')) return '👥';
+  if (name.includes('humanities')) return '�';
+  if (name.includes('math') || name.includes('science')) return '🔬';
+  if (name.includes('test') || name.includes('prep')) return '✍️';
+  if (name.includes('language')) return '🗣️';
+  if (name.includes('office') || name.includes('productivity')) return '📊';
+  return '📚';
+}
+
+// Get courses for each category
+function getCategoryCourses(categorySlug: string, limit: number = 8) {
+  // Convert category slug to match actual data format
+  const categoryMap: Record<string, string> = {
+    'it-and-software': 'it & software',
+    'web-development': 'web development', 
+    'data-science': 'data science',
+    'business': 'business',
+    'design': 'design',
+    'marketing': 'marketing',
+    'personal-development': 'personal development',
+    'photography-and-video': 'photography & video'
+  };
+  
+  const expectedCategory = categoryMap[categorySlug] || categorySlug.replace(/-/g, ' ');
+  
+  return coupons
+    .filter((coupon: any) => {
+      const categoryLower = coupon.category?.toLowerCase() || '';
+      const subcategoryLower = coupon.subcategory?.toLowerCase() || '';
+      
+      // Check both category and subcategory, handle HTML encoded ampersand
+      return categoryLower === expectedCategory || 
+             subcategoryLower === expectedCategory ||
+             categoryLower.includes(expectedCategory) ||
+             subcategoryLower.includes(expectedCategory) ||
+             categoryLower.includes(expectedCategory.replace('&', '&amp;')) ||
+             subcategoryLower.includes(expectedCategory.replace('&', '&amp;'));
+    })
+    .slice(0, limit);
+}
+
+void getCategoryCourses;
+---
+
+<!-- Categories Section -->
+<section id="categories" class="py-16 bg-card">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Section Header -->
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold text-foreground mb-4">
+        📚 Browse <strong class="text-foreground">Free Udemy Courses</strong> by Category
+      </h2>
+      <p class="text-xl text-muted-foreground max-w-3xl mx-auto">
+        Discover <strong class="text-foreground">100% off Udemy coupons</strong> and <strong class="text-foreground">free courses</strong> across 8 comprehensive categories. 
+        Each category features verified <strong class="text-foreground">Udemy coupon codes</strong> with lifetime access to premium learning.
+      </p>
+    </div>
+    
+    <!-- Categories Grid - Compact 2x4 Layout -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+      {categories.map((category) => {
+        const categoryIcon = getCategoryIcon(category.name);
+        
+        return (
+          <a 
+            href={`/category/${category.slug}`}
+            class="group bg-background rounded-xl p-6 text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-border hover:border-primary/30"
+          >
+            {/* Category Icon */}
+            <div class="w-16 h-16 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 group-hover:scale-110 transition-transform">
+              {categoryIcon}
+            </div>
+            
+            {/* Category Name */}
+            <h3 class="font-bold text-lg text-foreground mb-2 group-hover:text-primary transition-colors">
+              {category.name}
+            </h3>
+            
+            {/* Course Count */}
+            <div class="text-sm text-muted-foreground mb-3">
+              {category.courseCount.toLocaleString()}+ courses
+            </div>
+            
+            {/* Featured Courses Preview */}
+            <div class="space-y-2 mb-4">
+              {category.featuredCourses.slice(0, 2).map((course: string) => (
+                <div class="text-xs text-muted-foreground line-clamp-1">
+                  • {course}
+                </div>
+              ))}
+            </div>
+            
+            {/* Keywords */}
+            <div class="flex flex-wrap gap-1 justify-center mb-4">
+              {category.keywords.slice(0, 3).map((keyword: string) => (
+                <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                  {keyword}
+                </span>
+              ))}
+            </div>
+            
+            {/* CTA Button */}
+            <div class="text-center">
+              <span class="text-primary font-medium text-sm group-hover:text-primary/80 transition-colors">
+                Browse Category →
+              </span>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+    
+    <!-- Bottom CTA -->
+    <div class="text-center">
+      <div class="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-8 border border-primary/20">
+        <h3 class="text-2xl font-bold text-foreground mb-4">
+          Can't Find What You're Looking For?
+        </h3>
+        <p class="text-muted-foreground mb-6 max-w-2xl mx-auto">
+          Browse our complete collection of {categories.reduce((sum, cat) => sum + cat.courseCount, 0).toLocaleString()}+ free courses 
+          across all categories or use our advanced search to find exactly what you need.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a 
+            href="/coupon" 
+            class="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-lg font-medium transition-all"
+          >
+            View All Categories
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </a>
+          <a 
+            href="/coupon" 
+            class="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground px-6 py-3 rounded-lg font-medium transition-all"
+          >
+            Browse All Coupons
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Structured Data for Categories -->
+<script is:inline type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "Course Categories",
+  "description": "Browse free Udemy courses by category",
+  "numberOfItems": {categories.length},
+  "itemListElement": {categories.map((category, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "name": category.name,
+    "description": category.description,
+    "url": `https://courseswyn.com/category/${category.slug}`
+  }))}
+}
+</script>

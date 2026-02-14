@@ -1,0 +1,173 @@
+---
+import coupons from '../data/coupons.json';
+
+// Get expiring deals (48-hour urgency filtering)
+function getExpiringDeals() {
+  const now = new Date();
+  const fortyEightHoursLater = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+  
+  return coupons
+    .filter((coupon: any) => {
+      if (!coupon.expiresAt) return false;
+      const expiryDate = new Date(coupon.expiresAt as string);
+      return expiryDate > now && expiryDate <= fortyEightHoursLater;
+    })
+    .slice(0, 8);
+}
+
+const expiringDeals = getExpiringDeals();
+
+// Enhanced structured data for expiring deals
+const expiringDealsSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "Expiring Udemy Deals",
+  "description": "Limited-time Udemy coupons expiring within 48 hours",
+  "numberOfItems": expiringDeals.length,
+  "itemListElement": expiringDeals.map((deal: any, index: number) => ({
+    "@type": "Offer",
+    "position": index + 1,
+    "itemOffered": {
+      "@type": "Course",
+      "name": deal.title,
+      "description": deal.description,
+      "provider": {
+        "@type": "Organization",
+        "name": deal.provider
+      }
+    },
+    "price": deal.price === 0 ? "Free" : `$${deal.price}`,
+    "priceCurrency": "USD",
+    "availabilityEnds": deal.expiresAt,
+    "url": `https://courseswyn.com/coupon/${deal.slug}`
+  }))
+};
+---
+
+<!-- Expiring Deals Section - Compact -->
+<section id="expiring" class="py-12 bg-background">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Section Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h2 class="text-2xl font-bold text-foreground mb-2">
+          ⏰ Expiring Soon
+        </h2>
+        <p class="text-muted-foreground">
+          Udemy coupons expiring within 48 hours - grab these free courses now!
+        </p>
+      </div>
+      <a href="/coupon/expiring" class="text-primary hover:text-primary/80 text-sm font-medium">
+        View All →
+      </a>
+    </div>
+    
+    {expiringDeals.length > 0 ? (
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {expiringDeals.map((deal: any, index: number) => {
+          const expiryDate = new Date(deal.expiresAt as string);
+          const hoursLeft = Math.max(0, Math.floor((expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60)));
+          const isUrgent = hoursLeft < 12;
+          
+          return (
+            <div class="bg-card rounded-lg border border-border overflow-hidden hover:border-red-500/50 transition-all group">
+              
+              {/* Course Image - Compact */}
+              <div class="relative h-32 overflow-hidden">
+                <img 
+                  src={deal.image} 
+                  alt={deal.title}
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                />
+                
+                {/* Urgency Badge */}
+                {index === 0 && (
+                  <div class="absolute top-2 left-2">
+                    <span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                      🔥 URGENT
+                    </span>
+                  </div>
+                )}
+                
+                {/* Time Left Badge */}
+                <div class="absolute top-2 right-2">
+                  <span class={`px-2 py-1 rounded-full text-xs font-bold ${
+                    isUrgent 
+                      ? 'bg-red-500 text-white' 
+                      : 'bg-orange-500 text-white'
+                  }`}>
+                    {hoursLeft}h left
+                  </span>
+                </div>
+                
+                {/* Expiry Date */}
+                <div class="absolute bottom-2 left-2 bg-background/90 backdrop-blur px-2 py-1 rounded-full border border-border">
+                  <div class="text-xs font-medium">
+                    {expiryDate.toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Course Content - Compact */}
+              <div class="p-4">
+                <h3 class="font-semibold text-sm text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                  {deal.title}
+                </h3>
+                
+                <div class="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                  {deal.rating && (
+                    <div class="flex items-center gap-1">
+                      <span class="text-amber-400">★</span>
+                      <span>{deal.rating}</span>
+                    </div>
+                  )}
+                  {deal.students && (
+                    <span>{deal.students > 1000 ? `${(deal.students/1000).toFixed(1)}k` : deal.students}</span>
+                  )}
+                </div>
+                
+                <a 
+                  href={`/coupon/${deal.slug}`}
+                  class={`w-full py-2 rounded-md text-xs font-medium transition-all text-center block ${
+                    isUrgent 
+                      ? 'bg-red-500 hover:bg-red-600 text-white' 
+                      : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                  }`}
+                >
+                  Claim Now
+                </a>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    ) : (
+      <div class="text-center py-8">
+        <div class="bg-muted/30 rounded-lg p-6 max-w-md mx-auto">
+          <svg class="w-12 h-12 text-muted-foreground mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <h3 class="text-lg font-semibold text-foreground mb-2">No Expiring Deals</h3>
+          <p class="text-sm text-muted-foreground">
+            Check back soon for new udemy coupons with limited-time offers
+          </p>
+        </div>
+      </div>
+    )}
+    
+    <!-- Bottom CTA - Compact -->
+    <div class="text-center">
+      <a href="/coupon/" class="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground px-6 py-2 rounded-lg text-sm font-medium transition-colors">
+        Browse All Active Coupons
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Structured Data -->
+<script is:inline type="application/ld+json" set:html={JSON.stringify(expiringDealsSchema)} />

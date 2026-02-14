@@ -5,13 +5,13 @@
 @tailwind utilities;
 
 :root {
-  --background: 222.2 84% 4.9%;
+  --background: 220 13% 11%;
   --foreground: 210 40% 98%;
 
-  --card: 222.2 84% 4.9%;
+  --card: 220 13% 13%;
   --card-foreground: 210 40% 98%;
 
-  --popover: 222.2 84% 4.9%;
+  --popover: 220 13% 13%;
   --popover-foreground: 210 40% 98%;
 
   --primary: 142.1 70.6% 45.3%;
@@ -46,7 +46,7 @@ body {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -54,13 +54,13 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--secondary));
+  background: hsl(var(--muted));
   border: 1px solid hsl(var(--border));
-  border-radius: 9999px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted));
+  background: hsl(var(--muted-foreground));
 }
 
 /* Typography Overrides */
@@ -70,11 +70,11 @@ h3,
 h4,
 h5,
 h6 {
-  @apply tracking-tight font-bold text-white;
+  @apply tracking-tight font-bold text-foreground;
 }
 
 code {
-  @apply font-mono text-sm;
+  @apply font-mono text-sm bg-muted px-1.5 py-0.5 rounded;
 }
 
 .gradient-text {
@@ -87,31 +87,80 @@ code {
   }
 
   .btn {
-    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:pointer-events-none;
   }
 
   .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30;
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transform hover:-translate-y-0.5;
   }
 
   .btn-outline {
-    @apply border border-border bg-transparent hover:bg-accent hover:text-accent-foreground;
+    @apply border-2 border-border bg-transparent hover:bg-primary hover:text-primary-foreground;
   }
 
   .btn-ghost {
-    @apply bg-transparent hover:bg-accent hover:text-accent-foreground text-muted-foreground;
+    @apply bg-transparent hover:bg-muted hover:text-foreground text-muted-foreground;
   }
 
   .card {
-    @apply bg-card text-card-foreground border border-border rounded-xl p-6 transition-all duration-200 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5;
+    @apply bg-card text-card-foreground border-2 border-border rounded-2xl p-6 transition-all duration-200 hover:border-primary/30 hover:shadow-lg transform hover:-translate-y-1;
   }
 
   .nav-link {
-    @apply text-sm font-medium text-muted-foreground hover:text-foreground transition-colors;
+    @apply text-sm font-medium text-muted-foreground hover:text-foreground transition-colors relative;
   }
 
-  .dot-matrix {
-    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-    background-size: 24px 24px;
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    transition: width 0.3s ease;
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  .hero-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .card-pattern {
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
+  }
+
+  .floating-animation {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .pulse-animation {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
   }
 }

@@ -1,0 +1,131 @@
+---
+// src/components/ExpiryDisplay.astro
+const { course } = Astro.props;
+
+// Safe expiry calculation - no fake countdown
+const now = new Date();
+const expiryDate = new Date(course.expiresAt);
+const isExpired = expiryDate < now;
+
+// Format date for display
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
+};
+---
+
+<!-- Safe Expiry Display - No Fake Countdown -->
+<section class="expiry-section">
+  {isExpired ? (
+    <div class="expired-notice">
+      <div class="expired-header">
+        <span class="expired-icon">⚠️</span>
+        <h3>Coupon Expired</h3>
+      </div>
+      <div class="expired-details">
+        <p>This coupon expired on <strong>{formatDate(expiryDate)}</strong></p>
+        <div class="expired-actions">
+          <h4>Check out these active Python deals:</h4>
+          <!-- Related active courses will be inserted here -->
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div class="active-notice">
+      <div class="expiry-info">
+        <div class="expiry-badge">
+          <span class="badge-icon">✅</span>
+          <div class="badge-content">
+            <strong>Active Coupon</strong>
+            <span class="expiry-date">Expires: {formatDate(expiryDate)}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="verification-info">
+        <span class="verified-text">✓ Verified {course.lastVerified}</span>
+      </div>
+    </div>
+  )}
+</section>
+
+<style>
+.expiry-section {
+  @apply bg-slate-900/40 border border-slate-800/70 rounded-[1.75rem] p-6 backdrop-blur-xl;
+}
+
+.expired-notice {
+  @apply space-y-4;
+}
+
+.expired-header {
+  @apply flex items-center gap-2;
+}
+
+.expired-icon {
+  @apply text-orange-500 text-xl;
+}
+
+.expired-header h3 {
+  @apply text-lg font-bold text-foreground;
+}
+
+.expired-details {
+  @apply space-y-3;
+}
+
+.expired-actions {
+  @apply p-4 bg-slate-950/40 border border-slate-800/70 rounded-2xl;
+}
+
+.expired-actions h4 {
+  @apply font-medium text-foreground mb-2;
+}
+
+.active-notice {
+  @apply space-y-4;
+}
+
+.expiry-info {
+  @apply space-y-3;
+}
+
+.expiry-badge {
+  @apply flex items-center gap-3 p-3 bg-primary/10 border border-primary/20 rounded-2xl;
+}
+
+.badge-icon {
+  @apply text-primary text-xl;
+}
+
+.badge-content {
+  @apply flex flex-col;
+}
+
+.expiry-date {
+  @apply text-sm text-slate-400;
+}
+
+.urgency-notice {
+  @apply flex items-center gap-2 p-3 bg-orange-500/10 border border-orange-500/20 rounded-2xl;
+}
+
+.urgency-icon {
+  @apply text-orange-500;
+}
+
+.urgency-text {
+  @apply text-sm font-medium text-orange-300;
+}
+
+.verification-info {
+  @apply text-center text-sm text-slate-400;
+}
+
+.verified-text {
+  @apply font-medium;
+}
+</style>

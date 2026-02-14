@@ -1,109 +1,130 @@
 ---
 import MainLayout from "../../layouts/MainLayout.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
-import DealCard from "../../components/coupon/DealCard.astro";
 import courses from "../../data/coupons.json";
-import { fetchPosts } from "../../lib/posts";
+
+type CouponCourse = {
+  id?: string;
+  slug: string;
+  title: string;
+  description?: string;
+  provider?: string;
+  instructor?: string;
+  price?: string | number;
+  originalPrice?: string | number;
+  discount?: string;
+  rating?: string | number;
+  students?: number;
+  duration?: string;
+  level?: string;
+  language?: string;
+  category?: string;
+  subcategory?: string;
+  subCategory?: string;
+  url: string;
+  image?: string;
+  content?: string;
+  coupon?: string;
+  learn?: string[];
+  requirements?: string[];
+};
 
 export async function getStaticPaths() {
   // 1. Individual Course Paths
-  const coursePaths = courses.filter(c => c.slug).map((course) => ({
+  const coursePaths = courses.filter((c: any) => c.slug).map((course: any) => ({
     params: { slug: course.slug },
     props: { type: "course", course },
   }));
 
-  // 2. Category Paths (e.g., "development-courses")
-  const categories = [...new Set(courses.map((c) => c.category).filter(Boolean))];
-  const categoryPaths = categories.map((cat) => {
-    const slug = cat.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-courses";
-    const categoryCourses = courses.filter((c) => c.category === cat);
-    return {
-      params: { slug },
-      props: { type: "category", name: cat, courses: categoryCourses, slug },
-    };
-  });
-
-  // 3. SubCategory Paths (e.g., "ai-machine-learning-courses")
-  const subCategories = [
-    ...new Set(courses.map((c) => c.subcategory || c.subCategory).filter(Boolean)),
-  ];
-  const subCategoryPaths = subCategories.map((sub) => {
-    const slug = sub.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-courses";
-    const subCourses = courses.filter((c) => (c.subcategory || c.subCategory) === sub);
-    return {
-      params: { slug },
-      props: { type: "category", name: sub, courses: subCourses, slug },
-    };
-  });
-
   // 4. Categorical Aliases (Resolving homepage 404s)
+  // NOTE: On GitHub Pages we can't serve 301 redirects. To keep semantic boundaries clean,
+  // we only keep a small set of legacy alias URLs here and render them as redirect-stub pages
+  // that point to their dedicated hub pages (root-level routes).
   const aliasDefinitions = [
     { 
       slug: "python-courses", 
       name: "Python Programming", 
-      filter: (c) => c.title?.toLowerCase().includes("python") || c.category?.includes("Python") || (c.subCategory || c.subcategory)?.includes("Python")
+      target: "/python-udemy-coupons/",
+      filter: (c: any) => c.title?.toLowerCase().includes("python") || c.category?.includes("Python") || (c.subCategory || c.subcategory)?.includes("Python")
     },
     { 
       slug: "web-development-courses", 
       name: "Web Development", 
-      filter: (c) => c.category === "Development" || c.title?.toLowerCase().includes("web dev") || c.title?.toLowerCase().includes("react") || c.title?.toLowerCase().includes("javascript")
+      target: "/web-development-udemy-coupons/",
+      filter: (c: any) => c.category === "Development" || c.title?.toLowerCase().includes("web dev") || c.title?.toLowerCase().includes("react") || c.title?.toLowerCase().includes("javascript")
     },
     { 
       slug: "cloud-computing-courses", 
       name: "Cloud Computing & AWS", 
-      filter: (c) => c.category === "IT & Software" && (c.title?.toLowerCase().includes("cloud") || c.title?.toLowerCase().includes("aws") || c.title?.toLowerCase().includes("azure"))
+      target: "/",
+      filter: (c: any) => c.category === "IT & Software" && (c.title?.toLowerCase().includes("cloud") || c.title?.toLowerCase().includes("aws") || c.title?.toLowerCase().includes("azure"))
     },
     { 
       slug: "data-analytics-courses", 
       name: "Data Science & Analytics", 
-      filter: (c) => c.category === "Data Science" || c.title?.toLowerCase().includes("analytics") || c.title?.toLowerCase().includes("data")
+      target: "/data-science-udemy-coupons/",
+      filter: (c: any) => c.category === "Data Science" || c.title?.toLowerCase().includes("analytics") || c.title?.toLowerCase().includes("data")
     },
     { 
       slug: "software-testing-courses", 
       name: "Software Testing & QA", 
-      filter: (c) => c.category === "Software Testing" || c.title?.toLowerCase().includes("testing") || c.title?.toLowerCase().includes("selenium")
+      target: "/",
+      filter: (c: any) => c.category === "Software Testing" || c.title?.toLowerCase().includes("testing") || c.title?.toLowerCase().includes("selenium")
     },
     { 
       slug: "digital-marketing-courses", 
       name: "Digital Marketing & SEO", 
-      filter: (c) => c.category === "Marketing" || c.title?.toLowerCase().includes("seo") || c.title?.toLowerCase().includes("marketing")
+      target: "/",
+      filter: (c: any) => c.category === "Marketing" || c.title?.toLowerCase().includes("seo") || c.title?.toLowerCase().includes("marketing")
     },
     { 
       slug: "java-mobile-courses", 
       name: "Java & Mobile Development", 
-      filter: (c) => c.title?.toLowerCase().includes("java") || c.title?.toLowerCase().includes("android") || c.title?.toLowerCase().includes("flutter") || c.title?.toLowerCase().includes("ios")
+      target: "/",
+      filter: (c: any) => c.title?.toLowerCase().includes("java") || c.title?.toLowerCase().includes("android") || c.title?.toLowerCase().includes("flutter") || c.title?.toLowerCase().includes("ios")
     },
     {
       slug: "ai-courses",
       name: "Artificial Intelligence (AI)",
-      filter: (c) => (c.subCategory || c.subcategory)?.includes("AI") || c.title?.toLowerCase().includes("ai ") || c.category === "Data Science"
+      target: "/",
+      filter: (c: any) => (c.subCategory || c.subcategory)?.includes("AI") || c.title?.toLowerCase().includes("ai ") || c.category === "Data Science"
     }
   ];
 
-  const aliasPaths = aliasDefinitions.map(alias => ({
+  const aliasWithTargets = aliasDefinitions.filter((a) => a.target && a.target !== "/");
+
+  const aliasPaths = aliasWithTargets.map(alias => ({
     params: { slug: alias.slug },
     props: {
       type: "category",
       name: alias.name,
       courses: courses.filter(alias.filter),
-      slug: alias.slug
+      slug: alias.slug,
+      target: alias.target
     }
   }));
 
-  return [...coursePaths, ...categoryPaths, ...subCategoryPaths, ...aliasPaths];
+  return [...coursePaths, ...aliasPaths];
 }
 
-const { type, course, name, courses: catCourses, slug } = Astro.props;
+const { type, course, name } = Astro.props as {
+  type: 'course' | 'category';
+  course?: unknown;
+  name?: string;
+  courses?: any[];
+  slug?: string;
+  target?: string;
+};
+const couponCourse = (course ?? {}) as CouponCourse;
 
 // --- SHARED HELPERS ---
-const currentYear = new Date().getFullYear();
 const currentMonthYear = new Date().toLocaleDateString("en-US", {
   month: "long",
   year: "numeric",
 });
 
 // --- COURSE LOGIC ---
-const extractKeySkill = (description, title = "") => {
+const extractKeySkill = (description: string, title = "") => {
   const content = ((description || "") + " " + (title || "")).toLowerCase();
   if (content.includes("hacking") || content.includes("penetration") || content.includes("cybersecurity"))
     return "ethical hacking & cybersecurity";
@@ -125,23 +146,93 @@ const extractKeySkill = (description, title = "") => {
     return "financial trading & technical analysis";
   if (content.includes("excel") || content.includes("spreadsheet") || content.includes("data analysis"))
     return "advanced data analysis & Excel automation";
-  return course?.category || "professional skill development";
+  return couponCourse?.category || "professional skill development";
 };
 
-let title, description, canonical, structuredData, whatYouLearn, similarCourses, sampleTestimonials, prerequisites, discountAmount, displayPrice, displayOriginalPrice;
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const renderMarkdownLite = (input: string) => {
+  const text = (input || "").replace(/\r\n?/g, "\n");
+  const lines = text.split("\n");
+  const htmlParts: string[] = [];
+  let currentPara: string[] = [];
+  let inList = false;
+
+  const flushParagraph = () => {
+    if (currentPara.length === 0) return;
+    const paragraphText = escapeHtml(currentPara.join(" ")).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    htmlParts.push(`<p>${paragraphText}</p>`);
+    currentPara = [];
+  };
+
+  const closeList = () => {
+    if (!inList) return;
+    htmlParts.push("</ul>");
+    inList = false;
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+
+    if (!line) {
+      flushParagraph();
+      closeList();
+      continue;
+    }
+
+    const bulletMatch = line.match(/^[-*]\s+(.*)$/);
+    if (bulletMatch) {
+      flushParagraph();
+      if (!inList) {
+        htmlParts.push('<ul class="list-disc pl-6">');
+        inList = true;
+      }
+      const itemText = escapeHtml(bulletMatch[1]).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      htmlParts.push(`<li>${itemText}</li>`);
+      continue;
+    }
+
+    closeList();
+    currentPara.push(line);
+  }
+
+  flushParagraph();
+  closeList();
+
+  return htmlParts.join("\n");
+};
+
+let title = "";
+let description = "";
+let canonical = "";
+let structuredData: any;
+let whatYouLearn: string[] | undefined;
+let prerequisites: string[] | undefined;
+let discountAmount: string | undefined;
+let displayPrice: string | undefined;
+let displayOriginalPrice: string | undefined;
+let similarCoursesList: any[] = [];
+const categoryName = name ?? "Courses";
+const categoryTarget = (Astro.props as { target?: string })?.target;
 
 if (type === "course" && course) {
-  const p = typeof course.price === "string" ? parseFloat(course.price.replace(/[^\d.-]/g, "")) : course.price;
-  const op = typeof course.originalPrice === "string" ? parseFloat(course.originalPrice.replace(/[^\d.-]/g, "")) : course.originalPrice;
+  const p = typeof couponCourse.price === "string" ? parseFloat(couponCourse.price.replace(/[^\d.-]/g, "")) : couponCourse.price;
+  const op = typeof couponCourse.originalPrice === "string" ? parseFloat(couponCourse.originalPrice.replace(/[^\d.-]/g, "")) : couponCourse.originalPrice;
   
-  displayPrice = String(course.price || "").startsWith("$") ? course.price : `$${course.price}`;
-  displayOriginalPrice = String(course.originalPrice || "").startsWith("$") ? course.originalPrice : `$${course.originalPrice}`;
+  displayPrice = String(couponCourse.price || "").startsWith("$") ? String(couponCourse.price) : `$${couponCourse.price}`;
+  displayOriginalPrice = String(couponCourse.originalPrice || "").startsWith("$") ? String(couponCourse.originalPrice) : `$${couponCourse.originalPrice}`;
 
-  let rawDiscount = course.discount || "";
+  let rawDiscount = couponCourse.discount || "";
   if (!rawDiscount) {
-    if (p === 0 || p < 0.1 || String(course.price).toLowerCase().includes("free")) {
+    if (p === 0 || (typeof p === "number" && p < 0.1) || String(couponCourse.price).toLowerCase().includes("free")) {
       rawDiscount = "100%";
-    } else if (op > 0) {
+    } else if (typeof op === "number" && typeof p === "number" && op > 0) {
       rawDiscount = `${Math.round(((op - p) / op) * 100)}%`;
     }
   }
@@ -149,33 +240,30 @@ if (type === "course" && course) {
   const cleanDiscount = rawDiscount?.replace("-", "") || "100%";
   discountAmount = cleanDiscount.includes("%") ? cleanDiscount : `${cleanDiscount} OFF`;
 
-  canonical = `https://courseswyn.com/coupon/${course.slug}/`;
-  title = `Coupon - ${course.title}`;
+  canonical = `https://courseswyn.com/coupon/${couponCourse.slug}/`;
+  title = `Coupon - ${couponCourse.title}`;
   
-  // SEO-killer Meta Description Logic
-  const seoSkill = extractKeySkill(course.description);
-  
-  description = `${course.description}. this is applicable in ${course.category} with udemy coupon code offers for ${currentMonthYear}`;
+  description = `${couponCourse.description || ""}. this is applicable in ${couponCourse.category} with udemy coupon code offers for ${currentMonthYear}`;
 
   structuredData = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Course",
-        "name": course.title,
-        "description": course.description,
-        "educationalLevel": course.level || "All Levels",
-        "teaches": [course.category, course.subCategory, extractKeySkill(course.description)].filter(Boolean),
-        "abstract": course.description,
+        "name": couponCourse.title,
+        "description": couponCourse.description,
+        "educationalLevel": couponCourse.level || "All Levels",
+        "teaches": [couponCourse.category, couponCourse.subcategory || couponCourse.subCategory, extractKeySkill(couponCourse.description || "")].filter(Boolean),
+        "abstract": couponCourse.description,
         "audience": {
           "@type": "Audience",
           "audienceType": "Learner"
         },
-        "inLanguage": course.language || "English",
-        "timeRequired": course.duration
-          ? `PT${course.duration?.replace(" hours", "H")?.replace(" mins", "M")}`
+        "inLanguage": couponCourse.language || "English",
+        "timeRequired": couponCourse.duration
+          ? `PT${couponCourse.duration?.replace(" hours", "H")?.replace(" mins", "M")}`
           : undefined,
-        "isAccessibleForFree": course.discount === "-100%",
+        "isAccessibleForFree": couponCourse.discount === "-100%",
         "provider": {
           "@type": "Organization",
           "name": "Udemy",
@@ -183,7 +271,7 @@ if (type === "course" && course) {
         },
         "offers": {
           "@type": "Offer",
-          "price": course.originalPrice === 0 ? "0" : (course.price || "0"),
+          "price": couponCourse.originalPrice === 0 ? "0" : (couponCourse.price || "0"),
           "priceCurrency": "USD",
           "url": canonical,
           "availability": "https://schema.org/InStock",
@@ -195,15 +283,15 @@ if (type === "course" && course) {
           "courseMode": "online",
           "instructor": { 
              "@type": "Person", 
-             "name": course.instructor,
+             "name": couponCourse.instructor,
              "jobTitle": "Udemy Instructor"
           },
-          "courseWorkload": course.duration,
+          "courseWorkload": couponCourse.duration,
         },
         "aggregateRating": {
           "@type": "AggregateRating",
-          "ratingValue": parseFloat(String(course.rating)),
-          "reviewCount": course.students,
+          "ratingValue": parseFloat(String(couponCourse.rating || 0)),
+          "reviewCount": couponCourse.students,
           "bestRating": 5,
           "worstRating": 1,
         },
@@ -235,7 +323,7 @@ if (type === "course" && course) {
           {
             "@type": "ListItem",
             "position": 3,
-            "name": course.title,
+            "name": couponCourse.title,
             "item": canonical,
           },
         ],
@@ -243,89 +331,42 @@ if (type === "course" && course) {
     ],
   };
 
-  whatYouLearn = course.learn?.length > 0 ? course.learn : [
-    `Master essential ${course.category} concepts from scratch`,
-    "Build real-world projects to strengthen your portfolio",
-    "Understand industry-standard best practices",
-    `Gain proficiency in ${extractKeySkill(course.description, course.title)}`,
-    "Earn a certificate of completion from Udemy",
-  ];
+  whatYouLearn = Array.isArray(couponCourse.learn) ? couponCourse.learn.filter(Boolean) : [];
+  prerequisites = Array.isArray(couponCourse.requirements) ? couponCourse.requirements.filter(Boolean) : [];
 
-  similarCourses = courses
-    .filter((c) => c.category === course.category && c.slug !== course.slug)
+  similarCoursesList = (courses as any[])
+    .filter((c: any) => c.category === couponCourse.category && c.slug !== couponCourse.slug)
     .slice(0, 4);
+}
 
-  sampleTestimonials = [
-    {
-      name: "Michael Chen",
-      rating: 5,
-      text: `This ${course.title} course was exactly what I needed. The instructor explains complex ${course.category} concepts clearly. Highly recommended!`,
-    },
-    {
-      name: "Sarah Johnson",
-      rating: 5,
-      text: `I've taken many Udemy courses on ${extractKeySkill(course.description, course.title)}, but this one stands out. The practical examples helped me land a job.`,
-    },
-    {
-      name: "David Smith",
-      rating: 4,
-      text: `Great value for money. The section on ${course.subcategory || course.category} was particularly helpful.`,
-    },
-    {
-      name: "Emily Davis",
-      rating: 5,
-      text: `Excellent structure and pacing. I went from zero to hero in ${course.category} thanks to this course. Lifetime access is a huge plus.`,
-    },
-  ].slice(0, 4);
-
-  prerequisites = course.requirements?.length > 0 ? course.requirements : [
-    `No prior experience in ${course.category} is necessary.`,
-    "A computer with reliable internet access.",
-    "Dedication to master the skills presented in the course."
-  ];
-} else {
-    // --- CATEGORY LOGIC ---
-    canonical = `https://courseswyn.com/coupon/${slug}/`;
-    title = `Top ${name} Courses & Coupons - Free Udemy Deals (${currentYear})`;
-    description = `Browse the best verified ${name} courses with 100% OFF coupons. Learn ${name} from top-rated instructors for free. Updated ${currentMonthYear}.`;
-    
-    // Schema for CollectionPage
-    structuredData = {
-        "@context": "https://schema.org",
-        "@type": "CollectionPage",
-        name: title,
-        description: description,
-        url: canonical,
-         breadcrumb: {
-          "@type": "BreadcrumbList",
-          itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: "https://courseswyn.com/" },
-            { "@type": "ListItem", position: 2, name: "Coupons", item: "https://courseswyn.com/coupon/" },
-            { "@type": "ListItem", position: 3, name: name, item: canonical },
-          ],
-        },
-    };
+if (type === "category") {
+  const targetPath = typeof categoryTarget === 'string' && categoryTarget ? categoryTarget : '/';
+  canonical = `https://courseswyn.com${targetPath}`;
+  title = `Redirecting… | CoursesWyn`;
+  description = `This page has moved. Redirecting you to the best ${categoryName} coupons hub.`;
+  structuredData = undefined;
 }
 ---
 
 {type === "course" && course && (
 <MainLayout
-  title={title}
-  description={description}
+  title={title || couponCourse.title}
+  description={description || (couponCourse.description ?? "")}
   canonical={canonical}
-  ogImage={course.image}
+  ogImage={couponCourse.image || ""}
   structuredData={structuredData}
 >
   <!-- Background Accents -->
-  <div class="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.05),transparent_50%)] pointer-events-none"></div>
+  <div class="fixed inset-0 bg-background"></div>
+  <div class="fixed inset-0 bg-[radial-gradient(1100px_circle_at_20%_0%,rgba(34,197,94,0.08),transparent_55%)] pointer-events-none"></div>
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
     <!-- Breadcrumb -->
     <div class="mb-8 opacity-60 hover:opacity-100 transition-opacity">
       <Breadcrumb
-        category={course.category}
-        subCategory={course.subCategory}
-        courseTitle={course.title}
+        category={couponCourse.category}
+        subcategory={couponCourse.subcategory || couponCourse.subCategory}
+        courseTitle={couponCourse.title}
       />
     </div>
 
@@ -334,141 +375,139 @@ if (type === "course" && course) {
       <div class="lg:col-span-8 space-y-12">
         
         <!-- HIGH-END HERO SECTION -->
-        <section class="relative group">
-          <div class="absolute -inset-1 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-          <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 relative overflow-hidden shadow-2xl">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-            
-            <div class="flex flex-col xl:flex-row gap-8 items-start relative z-10">
-              <div class="w-full xl:w-2/5 flex-shrink-0">
-                <div class="relative aspect-video rounded-2xl overflow-hidden border border-slate-700 shadow-lg group/img">
-                  <img
-                    src={course.image}
-                    alt={course.title}
-                    class="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-110"
-                  />
-                  <div class="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent"></div>
-                  <div class="absolute top-4 left-4">
-                     <span class="bg-primary text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase shadow-xl">
-                      {course.discount} OFF
-                     </span>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="flex-1">
-                <div class="flex items-center gap-3 mb-5">
-                  <span class="inline-flex items-center gap-1.5 bg-blue-500/10 text-blue-400 text-[10px] font-mono font-bold px-3 py-1 rounded-full border border-blue-500/20 uppercase tracking-widest">
-                    <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
-                    {course.category}
-                  </span>
-                  {course.subcategory && (
-                    <span class="bg-slate-800/80 text-slate-400 text-[10px] font-mono font-bold px-3 py-1 rounded-full border border-slate-700 uppercase tracking-widest">
-                      {course.subcategory}
-                    </span>
-                  )}
-                </div>
-                
-                <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-6 leading-[1.1] tracking-tight">
-                  {course.title}
-                </h1>
-                
-                <div class="flex flex-wrap items-center gap-6 text-sm mb-4">
-                  <div class="flex items-center gap-2">
-                    <div class="flex items-center text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]">
-                       <span class="text-xl">★</span>
-                       <span class="ml-1 text-white font-bold">{course.rating}</span>
-                    </div>
-                    <span class="text-slate-500">({course.students?.toLocaleString() || '0'} students)</span>
-                  </div>
-                  <div class="flex items-center gap-2 text-slate-300 bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-700">
-                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <span class="font-mono">{course.duration || "Self-paced"}</span>
-                  </div>
-                </div>
-              </div>
+        <section id="course-overview" class="bg-card/60 border border-border rounded-[1.75rem] p-6 sm:p-10 backdrop-blur-xl scroll-mt-32">
+          <div class="flex flex-wrap items-center gap-2 mb-4">
+            <span class="inline-flex items-center gap-2 bg-primary/10 text-primary text-[11px] font-black px-3 py-1.5 rounded-full border border-primary/20 uppercase tracking-wider">
+              <span class="w-2 h-2 bg-primary rounded-full"></span>
+              {couponCourse.category}
+            </span>
+            {(couponCourse.subcategory || couponCourse.subCategory) && (
+              <span class="inline-flex items-center gap-2 bg-muted/40 text-foreground text-[11px] font-black px-3 py-1.5 rounded-full border border-border uppercase tracking-wider">
+                {couponCourse.subcategory || couponCourse.subCategory}
+              </span>
+            )}
+            <span class="inline-flex items-center gap-2 bg-red-500/10 text-red-200 text-[11px] font-black px-3 py-1.5 rounded-full border border-red-500/20 uppercase tracking-wider">
+              {couponCourse.discount || discountAmount}
+            </span>
+          </div>
+
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.08] text-white">
+            {couponCourse.title}
+          </h1>
+
+          <div class="mt-4 text-muted-foreground text-base sm:text-lg leading-relaxed space-y-3">
+            {(couponCourse.description || "")
+              .split(/\n{2,}/)
+              .map((para: string) => para.trim())
+              .filter(Boolean)
+              .map((para: string) => (
+                <p>{para}</p>
+              ))}
+          </div>
+
+          <div class="mt-6 flex flex-wrap items-center gap-3 text-sm">
+            <div class="inline-flex items-center gap-2 text-foreground">
+              <span class="text-yellow-300 font-black">★ {couponCourse.rating || 0}</span>
+              <span class="text-muted-foreground">Based on {couponCourse.students?.toLocaleString() || '0'} Udemy students</span>
             </div>
+            <span class="text-muted-foreground">|</span>
+            <span class="text-muted-foreground">Created by <span class="text-foreground font-semibold">{couponCourse.instructor}</span></span>
+            {couponCourse.duration && (
+              <>
+                <span class="text-muted-foreground">|</span>
+                <span class="text-muted-foreground">{couponCourse.duration}</span>
+              </>
+            )}
           </div>
         </section>
 
-        <!-- Dynamic Grid Content -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <!-- What You'll Learn -->
-          {whatYouLearn && whatYouLearn.length > 0 && (
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 hover:border-primary/30 transition-colors">
-              <h2 class="text-xl font-bold font-mono text-white mb-6 flex items-center gap-3">
-                <span class="text-primary">&gt;_</span> What You'll Learn
-              </h2>
-              <ul class="space-y-4">
-                {whatYouLearn.map((item) => (
-                  <li class="flex gap-4 items-start group">
-                    <div class="w-2 h-2 rounded-full bg-primary mt-2 group-hover:scale-150 transition-transform"></div>
-                    <span class="text-slate-300 text-sm leading-relaxed">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <!-- Prerequisites -->
-          {prerequisites && prerequisites.length > 0 && (
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 hover:border-primary/30 transition-colors">
-              <h2 class="text-xl font-bold font-mono text-white mb-6 flex items-center gap-3">
-                <span class="text-primary">&gt;_</span> Requirements
-              </h2>
-              <ul class="space-y-4">
-                {prerequisites.map((item) => (
-                  <li class="flex gap-4 items-start group">
-                    <div class="w-2 h-2 rounded-full border border-primary mt-2 group-hover:bg-primary transition-colors"></div>
-                    <span class="text-slate-300 text-sm leading-relaxed">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+        <!-- Sticky Udemy-like tabs -->
+        <div class="sticky top-[64px] z-40 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 bg-background/90 backdrop-blur-xl border-y border-border">
+          <nav class="flex gap-6 overflow-x-auto py-3 text-sm font-semibold text-muted-foreground">
+            <a href="#course-overview" data-tab-link="course-overview" class="tab-link whitespace-nowrap hover:text-foreground">Overview</a>
+            <a href="#what-you-learn" data-tab-link="what-you-learn" class="tab-link whitespace-nowrap hover:text-foreground">What you’ll learn</a>
+            <a href="#requirements" data-tab-link="requirements" class="tab-link whitespace-nowrap hover:text-foreground">Requirements</a>
+            <a href="#course-details" data-tab-link="course-details" class="tab-link whitespace-nowrap hover:text-foreground">Details</a>
+            <a href="#faq" data-tab-link="faq" class="tab-link whitespace-nowrap hover:text-foreground">FAQ</a>
+          </nav>
         </div>
 
-        <!-- Dedicated Description Section: Data Driven -->
-        <section class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 relative overflow-hidden">
+        <!-- What You'll Learn -->
+        {whatYouLearn && whatYouLearn.length > 0 && (
+          <section id="what-you-learn" class="bg-card/60 border border-border rounded-[1.75rem] p-6 sm:p-10 backdrop-blur-xl scroll-mt-32">
+            <h2 class="text-2xl font-black text-white">What you’ll learn</h2>
+            <div class="mt-6 space-y-3">
+              {whatYouLearn.map((item: string) => (
+                <div class="flex gap-4 items-start">
+                  <div class="mt-0.5 w-6 h-6 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  </div>
+                  <div class="text-foreground font-semibold text-sm leading-relaxed">{item}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <!-- Requirements -->
+        {prerequisites && prerequisites.length > 0 && (
+          <section id="requirements" class="bg-card/60 border border-border rounded-[1.75rem] p-6 sm:p-10 backdrop-blur-xl scroll-mt-32">
+            <h2 class="text-2xl font-black text-white">Requirements</h2>
+            <div class="mt-6 space-y-3">
+              {prerequisites.map((item: string) => (
+                <div class="flex gap-4 items-start">
+                  <div class="mt-0.5 w-6 h-6 rounded-lg bg-muted/30 border border-border flex items-center justify-center flex-shrink-0">
+                    <svg class="w-3.5 h-3.5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  </div>
+                  <div class="text-foreground font-semibold text-sm leading-relaxed">{item}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <!-- Course details -->
+        <section id="course-details" class="bg-card/60 border border-border rounded-[1.75rem] p-6 sm:p-10 backdrop-blur-xl relative overflow-hidden scroll-mt-32">
           <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl"></div>
-          <h2 class="text-2xl font-black text-white mb-8 flex items-center gap-3">
-            <span class="text-primary tracking-tighter">/</span> 
-            Course Details & Curriculum
-          </h2>
-          <div class="prose prose-invert prose-slate max-w-none text-slate-300 leading-relaxed font-medium">
-             <div class="bg-slate-950/30 p-6 sm:p-8 rounded-2xl border-l-4 border-primary/40">
-               {course.content ? (
-                 <div set:html={course.content} class="course-content-rich" />
-               ) : (
-                 <div class="space-y-4">
-                   {course.description?.split('\n').filter(Boolean).map(para => (
-                     <p>{para}</p>
-                   ))}
-                 </div>
-               )}
-             </div>
+          <h2 class="text-2xl font-black text-white">Course details</h2>
+          <div class="mt-6 prose prose-invert prose-slate max-w-none text-muted-foreground leading-relaxed font-medium prose-p:my-4 prose-li:my-1 prose-ul:my-4 prose-ul:space-y-2">
+            {couponCourse.content ? (
+              <div set:html={renderMarkdownLite(couponCourse.content)} class="course-content-rich" />
+            ) : (
+              <div class="space-y-4">
+                {(couponCourse.description || "")
+                  .split(/\n{2,}/)
+                  .map((para: string) => para.trim())
+                  .filter(Boolean)
+                  .map((para: string) => (
+                    <p>{para}</p>
+                  ))}
+              </div>
+            )}
           </div>
         </section>
 
         <!-- Instructor Section -->
-        <section class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 overflow-hidden relative">
+        <section class="bg-card/60 border border-border rounded-[1.75rem] p-6 sm:p-10 backdrop-blur-xl overflow-hidden relative">
           <div class="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl"></div>
           <h2 class="text-2xl font-black text-white mb-8">Author and Instructor</h2>
           <div class="flex flex-col md:flex-row gap-8 items-center md:items-start text-center md:text-left">
             <div class="relative group">
-              <div class="absolute -inset-2 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full blur opacity-20 group-hover:opacity-40 transition"></div>
-              <div class="w-32 h-32 rounded-full bg-slate-800 flex items-center justify-center text-4xl font-black text-white border-2 border-slate-700 relative z-10 uppercase">
-                {course.instructor?.charAt(0)}
+              <div class="absolute -inset-2 bg-gradient-to-r from-primary/40 to-emerald-400/30 rounded-full blur opacity-20 group-hover:opacity-40 transition"></div>
+              <div class="w-32 h-32 rounded-full bg-muted/30 flex items-center justify-center text-4xl font-black text-white border-2 border-border relative z-10 uppercase">
+                {couponCourse.instructor?.charAt(0)}
               </div>
             </div>
             <div class="flex-1">
-              <h3 class="text-xl font-bold text-white mb-2">{course.instructor}</h3>
-              <p class="text-primary font-mono text-sm mb-4 tracking-tighter uppercase font-bold">Expert at {course.provider}</p>
-              <div class="prose prose-invert prose-sm max-w-none text-slate-400">
+              <h3 class="text-xl font-bold text-white mb-2">{couponCourse.instructor}</h3>
+              <p class="text-muted-foreground text-sm mb-4 font-semibold">Provider: {couponCourse.provider}</p>
+              <div class="prose prose-invert prose-sm max-w-none text-muted-foreground">
                 <p>
-                  With years of hands-on experience in <strong>{course.category}</strong>, {course.instructor} has dedicated thousands of hours to teaching 
+                  With years of hands-on experience in <strong>{couponCourse.category}</strong>, {couponCourse.instructor} has dedicated thousands of hours to teaching 
                   and mentorship. This course is the culmination of industry best practices and a proven curriculum that has helped 
                   thousands of students transition into professional roles.
                 </p>
@@ -477,45 +516,33 @@ if (type === "course" && course) {
           </div>
         </section>
 
-        <!-- Student Reviews -->
-        <section>
-          <div class="flex items-center justify-between mb-8">
-             <h2 class="text-2xl font-black text-white font-mono tracking-tighter uppercase">Community Feedback</h2>
-             <div class="flex items-center gap-1 text-yellow-500 text-lg">
-                {[...Array(5)].map(() => <span>★</span>)}
-             </div>
-          </div>
-          <div class="grid sm:grid-cols-2 gap-6">
-            {sampleTestimonials?.map((review) => (
-              <div class="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-6 transition-all hover:bg-slate-800 group">
-                <div class="flex items-center gap-4 mb-4">
-                   <div class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-primary font-bold border border-slate-700">
-                    {review.name.charAt(0)}
-                   </div>
-                   <div>
-                    <p class="font-bold text-white text-sm">{review.name}</p>
-                    <p class="text-[10px] text-slate-500 font-mono">Verified Enrollment</p>
-                   </div>
-                </div>
-                <p class="text-slate-400 text-xs leading-relaxed italic group-hover:text-slate-300 transition-colors">
-                  "{review.text}"
-                </p>
-              </div>
-            ))}
+        <section class="bg-card/60 border border-border rounded-[1.75rem] p-6 sm:p-10 backdrop-blur-xl">
+          <h2 class="text-2xl font-black text-white mb-4">Platform snapshot</h2>
+          <p class="text-muted-foreground text-sm leading-relaxed">
+            Ratings and enrollment counts shown on this page are aggregate figures from Udemy.
+            We do not publish first-party user reviews here.
+          </p>
+          <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-background/40 border border-border rounded-2xl p-5">
+              <div class="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-black">Average rating</div>
+              <div class="mt-2 text-white font-black text-2xl">★ {couponCourse.rating}</div>
+            </div>
+            <div class="bg-background/40 border border-border rounded-2xl p-5">
+              <div class="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-black">Based on</div>
+              <div class="mt-2 text-white font-black text-2xl">{couponCourse.students?.toLocaleString() || '0'}</div>
+              <div class="text-muted-foreground text-xs">Udemy students</div>
+            </div>
           </div>
         </section>
 
         <!-- FAQ Implementation -->
-        <section class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10">
-          <h2 class="text-2xl font-black text-white mb-8 flex items-center gap-3">
-             <span class="w-2 h-8 bg-primary rounded-full"></span>
-             Common Questions
-          </h2>
+        <section id="faq" class="bg-card/60 border border-border rounded-[1.75rem] p-6 sm:p-10 backdrop-blur-xl scroll-mt-32">
+          <h2 class="text-2xl font-black text-white">FAQ</h2>
           <div class="space-y-4">
             {[
-              { 
-                q: `Is the "${course.title}" course truly ${String(discountAmount).includes("100%") ? "free" : "discounted"}?`, 
-                a: `Yes. By utilizing our verified ${discountAmount} coupon, you can enroll in "${course.title}" ${String(discountAmount).includes("100%") ? "without spending a single dollar" : "at a massive discount"}. This grants you lifetime access to all course materials and updates.` 
+              {
+                q: `Is the "${couponCourse.title}" course truly ${String(discountAmount).includes("100%") ? "free" : "discounted"}?`, 
+                a: `Yes. By utilizing our verified ${discountAmount} coupon, you can enroll in "${couponCourse.title}" ${String(discountAmount).includes("100%") ? "without spending a single dollar" : "at a massive discount"}. This grants you lifetime access to all course materials and updates.` 
               },
               { 
                 q: "Do I qualify for a certificate upon completion?", 
@@ -526,14 +553,14 @@ if (type === "course" && course) {
                 a: "Udemy coupons have strict enrollment limits and time windows. If this code expires, we recommend bookmarking this page and checking back daily, as we refresh our deals constantly to find the latest active discounts." 
               }
             ].map((faq) => (
-              <details class="group bg-slate-800/30 border border-slate-800 rounded-2xl overflow-hidden transition-all hover:border-primary/50">
+              <details class="group bg-background/40 border border-border rounded-2xl overflow-hidden transition-all hover:border-primary/35">
                 <summary class="flex justify-between items-center p-5 cursor-pointer list-none">
                   <span class="text-sm font-bold text-white group-open:text-primary transition-colors">{faq.q}</span>
-                  <div class="w-6 h-6 rounded-lg bg-slate-700 flex items-center justify-center group-open:rotate-180 transition-transform">
+                  <div class="w-8 h-8 rounded-xl bg-muted/30 border border-border flex items-center justify-center group-open:rotate-180 transition-transform">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                   </div>
                 </summary>
-                <div class="px-5 pb-5 text-sm text-slate-400 leading-relaxed border-t border-slate-800/50 pt-3">
+                <div class="px-5 pb-5 text-sm text-muted-foreground leading-relaxed border-t border-border pt-4">
                   {faq.a}
                 </div>
               </details>
@@ -546,27 +573,39 @@ if (type === "course" && course) {
       <div class="lg:col-span-4 space-y-8">
         
         <!-- STICKY REDESIGNED CTA -->
-        <div class="sticky top-8 bg-slate-900 border border-slate-700 rounded-3xl p-8 shadow-[0_0_50px_-12px_rgba(59,130,246,0.3)] overflow-hidden">
+        <div class="sticky top-8 bg-card/60 border border-border rounded-[1.75rem] p-6 backdrop-blur-xl shadow-2xl overflow-hidden">
           <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+
+          <div class="relative aspect-video rounded-2xl overflow-hidden border border-border mb-5">
+            <img src={couponCourse.image} alt={couponCourse.title} class="w-full h-full object-cover" loading="lazy" />
+            <div class="absolute inset-0 bg-gradient-to-t from-background/70 via-background/20 to-transparent"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="w-14 h-14 rounded-full bg-background/70 border border-border flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" class="text-white">
+                  <path d="M8 5v14l11-7z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
           
           <div class="relative z-10 text-center mb-8">
-             <div class="flex items-center justify-center gap-3 mb-2 opacity-50">
-                <span class="text-2xl font-bold text-slate-400 line-through">{displayOriginalPrice}</span>
-                <span class="px-2 py-0.5 bg-red-500/20 text-red-400 text-[10px] font-black rounded-md border border-red-500/30 uppercase">Save {discountAmount}</span>
+             <div class="flex items-center justify-center gap-3 mb-2">
+                <span class="text-sm font-semibold text-muted-foreground line-through">{displayOriginalPrice}</span>
+                <span class="px-2 py-0.5 bg-red-500/15 text-red-200 text-[10px] font-black rounded-md border border-red-500/25 uppercase">Save {discountAmount}</span>
              </div>
-             <div class="text-6xl font-black text-white tracking-tighter mb-2">
+             <div class="text-5xl sm:text-6xl font-black text-white tracking-tight mb-2">
                 {String(discountAmount).includes("100%") ? "FREE" : displayPrice}
              </div>
-             <p class="text-primary font-mono text-xs font-bold uppercase tracking-[0.2em]">{String(discountAmount).includes("100%") ? "Verified 100% OFF Code" : "Verified Discount Code"}</p>
+             <p class="text-muted-foreground text-xs font-semibold">{String(discountAmount).includes("100%") ? "Verified 100% OFF" : "Verified discount"}</p>
           </div>
 
           <a
-            href={course.url}
+            href={couponCourse.url}
             target="_blank"
             rel="nofollow noopener noreferrer"
-            class="block w-full bg-primary hover:bg-primary/90 text-white font-black py-5 px-6 rounded-2xl text-center transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-primary/20 mb-6 text-lg uppercase tracking-tight"
+            class="block w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black py-4 px-6 rounded-2xl text-center shadow-lg shadow-primary/20 mb-6 text-base"
           >
-            {course.discount === "-100%" ? "ENROLL FOR FREE 🚀" : "CLAIM DISCOUNT 🚀"}
+            {couponCourse.discount === "-100%" ? "ENROLL FOR FREE" : "CLAIM DISCOUNT"}
           </a>
 
           <div class="space-y-4 mb-8">
@@ -576,20 +615,20 @@ if (type === "course" && course) {
               { icon: "📱", text: "Access on Mobile/TV" },
               { icon: "🔄", text: "Latest Updated Course" }
             ].map((item) => (
-              <div class="flex items-center gap-3 text-sm text-slate-300 font-medium">
-                <span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center border border-slate-700">{item.icon}</span>
+              <div class="flex items-center gap-3 text-sm text-muted-foreground font-medium">
+                <span class="w-8 h-8 rounded-lg bg-muted/30 flex items-center justify-center border border-border">{item.icon}</span>
                 {item.text}
               </div>
             ))}
           </div>
 
           <!-- Click to reveal logic -->
-          <div class="pt-6 border-t border-slate-800">
-             <div class="coupon-container group cursor-pointer" data-coupon-reveal data-code={course.coupon}>
-                <p class="text-center text-[10px] text-slate-500 font-black uppercase tracking-widest mb-3 italic">Claim Your Discount Code</p>
-                <div class="relative bg-slate-950 border-2 border-dashed border-slate-700/50 group-hover:border-primary/50 rounded-xl py-4 flex flex-col items-center gap-1 transition-all">
-                   <span class="coupon-text filter blur-[4px] select-none text-xl font-black text-slate-400 group-hover:text-slate-300">XXXXXXXX</span>
-                   <div class="absolute inset-0 flex items-center justify-center opacity-100 group-hover:opacity-0 transition-opacity">
+          <div class="pt-6 border-t border-border">
+             <div class="coupon-container group cursor-pointer" data-coupon-reveal data-code={couponCourse.coupon}>
+                <p class="text-center text-[10px] text-muted-foreground font-black uppercase tracking-widest mb-3 italic">Claim Your Discount Code</p>
+                <div class="relative bg-background/40 border-2 border-dashed border-border group-hover:border-primary/50 rounded-xl py-4 flex flex-col items-center gap-1 transition-all">
+                   <span class="coupon-text filter blur-[4px] select-none text-xl font-black text-muted-foreground group-hover:text-white">XXXXXXXX</span>
+                  <div class="absolute inset-0 flex items-center justify-center opacity-100 group-hover:opacity-0 transition-opacity">
                       <span class="bg-primary text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg">CLICK TO SHOW</span>
                    </div>
                    <p class="text-[10px] items-center gap-1 text-primary font-bold feedback-text flex">
@@ -602,19 +641,19 @@ if (type === "course" && course) {
         </div>
 
         <!-- Similar Courses Grid -->
-        {similarCourses && similarCourses.length > 0 && (
-          <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
+        {similarCoursesList.length > 0 && (
+          <div class="bg-card/60 border border-border rounded-[1.75rem] p-6 backdrop-blur-xl shadow-xl">
             <h3 class="font-black text-white text-lg mb-6 flex items-center gap-2">
-              <span class="w-1.5 h-6 bg-cyan-500 rounded-full"></span>
+              <span class="w-1.5 h-6 bg-primary rounded-full"></span>
               Recommended
             </h3>
             <div class="flex flex-col gap-5">
-              {similarCourses.map((sim) => (
+              {similarCoursesList.map((sim) => (
                 <a
                   href={`/coupon/${sim.slug}`}
-                  class="flex gap-4 p-3 bg-slate-800/30 hover:bg-slate-800 border border-slate-700/50 rounded-2xl group transition-all"
+                  class="flex gap-4 p-3 bg-background/40 hover:bg-background/60 border border-border rounded-2xl group transition-all"
                 >
-                  <div class="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-slate-700">
+                  <div class="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-border">
                     <img
                       src={sim.image}
                       class="w-full h-full object-cover group-hover:scale-110 transition-transform"
@@ -626,10 +665,10 @@ if (type === "course" && course) {
                       {sim.title}
                     </h4>
                     <div class="flex items-center justify-between">
-                       <span class="text-[10px] font-bold text-cyan-400">FREE</span>
+                       <span class="text-[10px] font-bold text-primary">FREE</span>
                        <div class="flex items-center gap-1">
                           <span class="text-yellow-500 text-[10px]">★</span>
-                          <span class="text-[10px] text-slate-500 font-bold">{sim.rating}</span>
+                          <span class="text-[10px] text-muted-foreground font-bold">{sim.rating}</span>
                        </div>
                     </div>
                   </div>
@@ -643,10 +682,10 @@ if (type === "course" && course) {
   </div>
 
   <!-- PREMIUM MOBILE CTA -->
-  <div class="fixed bottom-0 left-0 right-0 p-4 bg-slate-950/80 backdrop-blur-xl border-t border-slate-800 z-50 lg:hidden rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+  <div class="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-xl border-t border-border z-50 lg:hidden rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
     <div class="flex gap-4 items-center max-w-lg mx-auto">
       <div class="flex-1">
-        <div class="text-[10px] text-slate-500 font-black uppercase tracking-widest line-through mb-1">
+        <div class="text-[10px] text-muted-foreground font-black uppercase tracking-widest line-through mb-1">
            {displayOriginalPrice}
         </div>
         <div class="text-2xl font-black text-white">
@@ -655,10 +694,10 @@ if (type === "course" && course) {
         </div>
       </div>
       <a
-        href={course.url}
+        href={couponCourse.url}
         target="_blank"
         rel="nofollow noopener noreferrer"
-        class="bg-primary hover:bg-primary/90 text-white font-black py-4 px-10 rounded-2xl flex-1 text-center shadow-lg shadow-primary/20 text-sm"
+        class="bg-primary hover:bg-primary/90 text-primary-foreground font-black py-4 px-10 rounded-2xl flex-1 text-center shadow-lg shadow-primary/20 text-sm"
       >
         GET DEAL
       </a>
@@ -666,6 +705,69 @@ if (type === "course" && course) {
   </div>
 
 <script is:inline>
+  function setupStickyTabs() {
+    const tabLinks = Array.from(document.querySelectorAll('.tab-link'));
+    if (tabLinks.length === 0) return;
+
+    const sectionIds = tabLinks
+      .map((a) => a.getAttribute('data-tab-link'))
+      .filter(Boolean);
+
+    const sections = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+
+    const setActive = (id) => {
+      tabLinks.forEach((a) => {
+        const aId = a.getAttribute('data-tab-link');
+        if (aId === id) {
+          a.classList.add('text-foreground');
+          a.classList.remove('text-muted-foreground');
+        } else {
+          a.classList.remove('text-foreground');
+          a.classList.add('text-muted-foreground');
+        }
+      });
+    };
+
+    tabLinks.forEach((a) => {
+      a.addEventListener('click', (e) => {
+        const id = a.getAttribute('data-tab-link');
+        if (!id) return;
+        const el = document.getElementById(id);
+        if (!el) return;
+        e.preventDefault();
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', `#${id}`);
+        setActive(id);
+      });
+    });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => (b.intersectionRatio ?? 0) - (a.intersectionRatio ?? 0))[0];
+        if (!visible?.target?.id) return;
+        setActive(visible.target.id);
+      },
+      {
+        root: null,
+        threshold: [0.2, 0.35, 0.5, 0.65],
+        rootMargin: '-96px 0px -60% 0px',
+      },
+    );
+
+    sections.forEach((s) => observer.observe(s));
+
+    const initialId = window.location.hash?.replace('#', '');
+    if (initialId && sectionIds.includes(initialId)) {
+      setActive(initialId);
+    } else {
+      setActive('course-overview');
+    }
+  }
+
   function setupCouponReveal() {
     const containers = document.querySelectorAll('[data-coupon-reveal]');
     containers.forEach(container => {
@@ -680,14 +782,14 @@ if (type === "course" && course) {
         navigator.clipboard.writeText(code);
         
         // Reveal style
-        textSpan.classList.remove('blur-[4px]', 'text-slate-400');
+        textSpan.classList.remove('blur-[4px]', 'text-muted-foreground');
         textSpan.textContent = code;
         textSpan.classList.add('font-black', 'text-white', 'tracking-[0.1em]');
         
         const wrapper = this.querySelector('.relative');
         if (wrapper) {
           wrapper.classList.remove('border-dashed');
-          wrapper.classList.add('border-solid', 'border-primary/50', 'bg-slate-900');
+          wrapper.classList.add('border-solid', 'border-primary/50', 'bg-card');
         }
         
         const overlay = this.querySelector('.absolute.inset-0');
@@ -704,212 +806,47 @@ if (type === "course" && course) {
   }
 
   // Run on initial load
+  setupStickyTabs();
   setupCouponReveal();
   // Support Astro View Transitions if enabled
-  document.addEventListener('astro:after-swap', setupCouponReveal);
+  document.addEventListener('astro:after-swap', () => {
+    setupStickyTabs();
+    setupCouponReveal();
+  });
 </script>
 </MainLayout>
 )}
 
-{type === "category" && (
+{(type as 'course' | 'category') === "category" && (
 <MainLayout
   title={title}
   description={description}
   canonical={canonical}
   structuredData={structuredData}
+  robots="noindex, follow"
 >
-  <!-- Background Accents -->
-  <div class="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.05),transparent_50%)] pointer-events-none"></div>
+  <meta http-equiv="refresh" content={`0;url=${canonical}`} />
 
-  <!-- Premium Hero Section -->
-  <section class="relative overflow-hidden pt-20 pb-16 border-b border-slate-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      <div class="flex flex-col lg:flex-row gap-12 items-center">
-        <div class="flex-1 text-center lg:text-left">
-          <div class="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full backdrop-blur-sm">
-            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-            <span class="text-blue-400 text-xs font-mono font-bold tracking-[0.2em] uppercase">Verified {name} Database</span>
-          </div>
-          
-          <h1 class="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-6 tracking-tighter leading-[0.9]">
-            Premium <span class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">{name}</span> Coupons
-          </h1>
-          
-          <p class="text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed font-medium">
-            Master {name} with curated 100% OFF coupons for {catCourses?.length || '0'} top-rated courses. 
-            All deals are verified active for {currentMonthYear}.
-          </p>
-
-          <div class="flex justify-center lg:justify-start flex-wrap gap-4">
-             <div class="px-6 py-3 bg-slate-900 border border-slate-800 rounded-2xl text-xs font-mono text-slate-500 flex items-center gap-2">
-                <span class="text-primary">$</span> grep --{slug} --free-only
-             </div>
-          </div>
-        </div>
-
-        <!-- Terminal Info Card -->
-        <div class="w-full lg:w-1/3 flex-shrink-0">
-          <div class="bg-slate-900/50 backdrop-blur-md rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
-            <div class="flex items-center gap-3 px-4 py-3 bg-slate-800/50 border-b border-slate-800">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-red-500/40"></span>
-                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/40"></span>
-                <span class="w-2.5 h-2.5 rounded-full bg-green-500/40"></span>
-              </div>
-              <span class="text-[10px] font-mono text-slate-500 tracking-widest uppercase">{slug}.md</span>
-            </div>
-            <div class="p-6 space-y-4">
-              <div class="text-[11px] text-slate-400 leading-relaxed font-mono">
-                <p class="mb-3 text-slate-300 font-bold"># CATEGORY: {name.toUpperCase()}</p>
-                <p class="mb-3">
-                  System detected {catCourses?.length || '0'} deals matching your interest in {name}.
-                </p>
-                <div class="p-3 bg-slate-950/50 rounded-xl border border-slate-800">
-                  <span class="text-primary">&gt;</span> Found: <span class="text-blue-400">{catCourses?.length || '0'}</span> Active
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  <div class="min-h-[60vh] flex items-center justify-center px-4">
+    <div class="max-w-xl w-full bg-card/60 border border-border rounded-[1.75rem] p-8 backdrop-blur-xl">
+      <div class="text-[11px] uppercase tracking-[0.22em] text-muted-foreground font-black">Moved</div>
+      <h1 class="mt-2 text-2xl sm:text-3xl font-black text-white">Redirecting to the hub page…</h1>
+      <p class="mt-3 text-sm text-muted-foreground leading-relaxed">
+        This legacy URL is kept for compatibility. The canonical hub for <strong>{categoryName}</strong> is now:
+      </p>
+      <a class="mt-4 inline-flex items-center justify-center w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black py-3 px-5 rounded-2xl shadow-lg shadow-primary/20" href={canonical}>
+        Go to hub
+      </a>
+      <p class="mt-4 text-xs text-muted-foreground">
+        If you are not redirected automatically, use the button above.
+      </p>
     </div>
-  </section>
-
-  <!-- Filter Bar -->
-  <section class="sticky top-[64px] z-40 border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div class="flex flex-wrap gap-2">
-          <button data-filter="all" class="filter-btn text-xs font-mono px-4 py-2 rounded-xl border transition-all bg-primary text-white border-primary shadow-lg shadow-primary/20">
-            All ({catCourses?.length || '0'})
-          </button>
-          <button data-filter="verified" class="filter-btn text-xs font-mono px-4 py-2 rounded-xl border transition-all text-slate-400 border-slate-800 hover:text-white hover:border-slate-700">
-            Verified ({catCourses?.length || '0'})
-          </button>
-        </div>
-        <div class="relative w-full sm:w-80">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500">
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.3-4.3"></path>
-          </svg>
-          <input 
-            id="category-search"
-            type="text" 
-            placeholder={`Search ${name} deals...`}
-            class="w-full pl-11 pr-4 py-3 text-sm font-mono bg-slate-900 border border-slate-800 rounded-2xl text-white placeholder:text-slate-600 focus:outline-none focus:border-primary/50 transition-all font-bold"
-          />
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Coupons List -->
-  <section class="py-12 md:py-16 dot-matrix">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div id="category-coupons-container" class="flex flex-col gap-6">
-        {catCourses?.map((coupon) => (
-          <DealCard {...coupon} class="category-coupon-card" variant="list" />
-        ))}
-      </div>
-
-      <!-- No Results Message -->
-      <div id="no-cat-results" class="hidden text-center py-12">
-        <div class="bg-card rounded-lg border border-border p-8">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-12 w-12 text-muted-foreground mx-auto mb-4">
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.3-4.3"></path>
-          </svg>
-          <h3 class="text-lg font-semibold text-foreground mb-2">No results for this search</h3>
-          <p class="text-muted-foreground">Try removing filters or using broader terms.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ Section: Premium Alignment -->
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-800">
-     <div class="max-w-3xl mx-auto">
-        <h2 class="text-4xl font-black text-white mb-12 text-center tracking-tighter uppercase font-mono italic">/<span class="text-primary not-italic">faq</span>.txt</h2>
-        <div class="space-y-4">
-           {[
-             { q: `Are these ${name} courses really free?`, a: "Yes. Our scanner detects verified 100% OFF coupons and direct instructor promotions. When you enroll, you get full lifetime access to the course content on Udemy." },
-             { q: "How do I use the coupon codes?", a: "Click 'View Verified Deal' to visit the course page. If the coupon is still active, the discount will be applied automatically. Codes are first-come, first-served." },
-             { q: "Do these courses come with certificates?", a: "Yes. Enrolling in a course via a 100% OFF coupon entitles you to the same certificate of completion as a full-paying student." }
-           ].map(faq => (
-             <details class="group bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden transition-all hover:border-primary/50">
-               <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
-                 <h3 class="text-sm font-bold text-white uppercase tracking-tight font-mono">{faq.q}</h3>
-                 <span class="text-primary transition-transform group-open:rotate-180">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
-                 </span>
-               </summary>
-               <div class="px-6 pb-6 text-sm text-slate-400 leading-relaxed font-medium border-t border-slate-800/50 pt-4">
-                 {faq.a}
-               </div>
-             </details>
-           ))}
-        </div>
-     </div>
-  </section>
+  </div>
 
   <script is:inline>
-    function setupCategoryFilters() {
-      const searchInput = document.getElementById('category-search');
-      const couponCards = document.querySelectorAll('.category-coupon-card');
-      const noResults = document.getElementById('no-cat-results');
-      const filterButtons = document.querySelectorAll('.filter-btn');
-      
-      let currentFilter = 'all';
-
-      function filterAndSearch() {
-        let visibleCount = 0;
-        const searchTerm = searchInput?.value.toLowerCase() || '';
-
-        couponCards.forEach(card => {
-          const title = card.dataset.title || '';
-          const instructor = card.dataset.instructor || '';
-          const description = card.dataset.description || '';
-          
-          const matchesSearch = !searchTerm || 
-            title.includes(searchTerm) || 
-            instructor.includes(searchTerm) || 
-            description.includes(searchTerm);
-
-          const matchesFilter = currentFilter === 'all' || currentFilter === 'verified';
-
-          if (matchesSearch && matchesFilter) {
-            card.style.display = '';
-            visibleCount++;
-          } else {
-            card.style.display = 'none';
-          }
-        });
-
-        if (noResults) {
-          noResults.style.display = visibleCount === 0 ? 'block' : 'none';
-        }
-      }
-
-      if (searchInput) {
-        searchInput.addEventListener('input', filterAndSearch);
-      }
-
-      filterButtons.forEach(button => {
-        button.addEventListener('click', () => {
-          currentFilter = button.dataset.filter || 'all';
-          filterButtons.forEach(btn => {
-            btn.classList.remove('bg-primary', 'text-white', 'border-primary', 'shadow-lg', 'shadow-primary/20');
-            btn.classList.add('text-slate-400', 'border-slate-800');
-          });
-          button.classList.remove('text-slate-400', 'border-slate-800');
-          button.classList.add('bg-primary', 'text-white', 'border-primary', 'shadow-lg', 'shadow-primary/20');
-          filterAndSearch();
-        });
-      });
-    }
-
-    setupCategoryFilters();
-    document.addEventListener('astro:after-swap', setupCategoryFilters);
+    const canonicalLink = document.querySelector('link[rel="canonical"]');
+    const target = canonicalLink?.getAttribute('href');
+    if (target) window.location.replace(target);
   </script>
 </MainLayout>
 )}

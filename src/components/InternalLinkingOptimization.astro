@@ -1,0 +1,310 @@
+---
+// src/components/InternalLinkingOptimization.astro
+const { course } = Astro.props;
+
+const categorySlug = String(course.category ?? '')
+  .trim()
+  .toLowerCase()
+  .replace(/\s+/g, '-');
+
+// Strategic internal linking for authority distribution
+const internalLinks = {
+  categoryLink: `/${categorySlug}/`,
+  beginnerGuide: `/beginner-${categorySlug}-guide/`,
+  bestOfPage: `/best-${categorySlug}-courses/`,
+  freePage: `/free-${categorySlug}-courses/`,
+  relatedCourses: course.relatedCourses.slice(0, 3),
+  supportingPages: [
+    `/learn-${categorySlug}-online/`,
+    `/career-${categorySlug}-path/`,
+    `/vs-${categorySlug}-alternatives/`,
+  ].filter(Boolean),
+};
+---
+
+<!-- Strategic Internal Linking - Authority Distribution -->
+<section class="internal-linking">
+  <div class="section-header">
+    <h2>🔗 Explore More {course.category} Resources</h2>
+    <p class="section-subtitle">Comprehensive learning paths and guides</p>
+  </div>
+
+  <div class="link-grid">
+    <!-- Primary Category Link -->
+    <div class="link-card primary">
+      <div class="link-header">
+        <span class="link-icon">📚</span>
+        <h3>Main Category</h3>
+      </div>
+      <div class="link-content">
+        <a href={internalLinks.categoryLink} class="main-link">
+          <span class="link-title">All {course.category} Courses</span>
+          <span class="link-description">Complete collection of verified coupons</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Beginner Guide -->
+    <div class="link-card">
+      <div class="link-header">
+        <span class="link-icon">🎯</span>
+        <h3>Beginner's Guide</h3>
+      </div>
+      <div class="link-content">
+        <a href={internalLinks.beginnerGuide} class="secondary-link">
+          <span class="link-title">Learn {course.category} from Scratch</span>
+          <span class="link-description">Step-by-step learning path</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Best Of Page -->
+    <div class="link-card">
+      <div class="link-header">
+        <span class="link-icon">⭐</span>
+        <h3>Top Rated</h3>
+      </div>
+      <div class="link-content">
+        <a href={internalLinks.bestOfPage} class="secondary-link">
+          <span class="link-title">Best {course.category} Courses</span>
+          <span class="link-description">Highest rated and reviewed</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Free Courses -->
+    <div class="link-card">
+      <div class="link-header">
+        <span class="link-icon">🆓</span>
+        <h3>Free Options</h3>
+      </div>
+      <div class="link-content">
+        <a href={internalLinks.freePage} class="secondary-link">
+          <span class="link-title">Free {course.category} Courses</span>
+          <span class="link-description">100% off verified coupons</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supporting Pages Grid -->
+  <div class="supporting-section">
+    <h3>📖 Supporting Resources</h3>
+    <div class="supporting-grid">
+      {internalLinks.supportingPages.map((page: string) => (
+        <a href={page} class="supporting-link">
+          {page.includes('/learn-') && '📚 Learning Resources'}
+          {page.includes('/career-') && '💼 Career Information'}
+          {page.includes('/vs-') && '⚖️ Course Comparisons'}
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <!-- Related Courses -->
+  <div class="related-section">
+    <h3>🔗 Related Courses</h3>
+    <div class="related-courses">
+      {internalLinks.relatedCourses.map((relatedCourse: string) => (
+        <a href={`/courses/${relatedCourse}/`} class="related-course">
+          <div class="course-info">
+            <h4 class="course-title">{relatedCourse.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}</h4>
+            <span class="course-category">{course.category}</span>
+          </div>
+          <div class="course-stats">
+            <span class="stat">🔥 Popular</span>
+            <span class="stat">✅ Verified</span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <!-- Authority Flow Visualization -->
+  <div class="authority-flow">
+    <h3>🎯 Learning Path</h3>
+    <div class="flow-diagram">
+      <div class="flow-step active">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h4>Current Course</h4>
+          <p>{course.title}</p>
+        </div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h4>Practice Projects</h4>
+          <p>Apply your skills</p>
+        </div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h4>Advanced Topics</h4>
+          <p>Specialized learning</p>
+        </div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <h4>Career Ready</h4>
+          <p>Job market preparation</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.internal-linking {
+  @apply bg-slate-900/40 border border-slate-800/70 rounded-[1.75rem] p-6 backdrop-blur-xl;
+}
+
+.section-header {
+  @apply mb-6;
+}
+
+.section-header h2 {
+  @apply text-2xl font-bold text-foreground mb-2;
+}
+
+.section-subtitle {
+  @apply text-slate-400;
+}
+
+.link-grid {
+  @apply grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6;
+}
+
+.link-card {
+  @apply bg-slate-950/40 border border-slate-800/70 rounded-2xl p-4 hover:border-primary/30 transition-colors;
+}
+
+.link-card.primary {
+  @apply bg-primary/10 border-primary/20 hover:bg-primary/15;
+}
+
+.link-header {
+  @apply flex items-center gap-2 mb-3;
+}
+
+.link-icon {
+  @apply text-xl;
+}
+
+.link-header h3 {
+  @apply font-semibold text-foreground;
+}
+
+.link-content {
+  @apply space-y-2;
+}
+
+.main-link {
+  @apply block p-3 bg-slate-950/40 border border-slate-800/70 rounded-2xl hover:border-primary/30 transition-colors;
+}
+
+.secondary-link {
+  @apply block p-3 bg-slate-950/30 border border-slate-800/70 rounded-2xl hover:border-primary/30 transition-colors;
+}
+
+.link-title {
+  @apply font-medium text-foreground block;
+}
+
+.link-description {
+  @apply text-sm text-slate-400;
+}
+
+.supporting-section {
+  @apply mb-6;
+}
+
+.supporting-section h3 {
+  @apply text-lg font-semibold text-foreground mb-4;
+}
+
+.supporting-grid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-3;
+}
+
+.supporting-link {
+  @apply flex items-center gap-2 p-3 bg-slate-950/30 border border-slate-800/70 rounded-2xl hover:border-primary/30 transition-colors text-foreground;
+}
+
+.related-section {
+  @apply mb-6;
+}
+
+.related-section h3 {
+  @apply text-lg font-semibold text-foreground mb-4;
+}
+
+.related-courses {
+  @apply grid md:grid-cols-2 lg:grid-cols-3 gap-4;
+}
+
+.related-course {
+  @apply flex items-center gap-3 p-4 bg-slate-950/30 border border-slate-800/70 rounded-2xl hover:border-primary/30 transition-colors;
+}
+
+.course-info {
+  @apply flex-1;
+}
+
+.course-title {
+  @apply font-medium text-foreground mb-1;
+}
+
+.course-category {
+  @apply text-sm text-slate-400;
+}
+
+.course-stats {
+  @apply flex gap-2 text-xs;
+}
+
+.stat {
+  @apply px-2 py-1 bg-slate-900/60 border border-slate-800/70 rounded-full text-slate-400;
+}
+
+.authority-flow {
+  @apply mb-6;
+}
+
+.authority-flow h3 {
+  @apply text-lg font-semibold text-foreground mb-4;
+}
+
+.flow-diagram {
+  @apply flex items-center justify-between flex-wrap gap-2;
+}
+
+.flow-step {
+  @apply flex flex-col items-center p-3 bg-slate-950/30 border border-slate-800/70 rounded-2xl min-w-[120px];
+}
+
+.flow-step.active {
+  @apply bg-primary/10 border-primary/30;
+}
+
+.step-number {
+  @apply w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold mb-2;
+}
+
+.step-content h4 {
+  @apply font-medium text-foreground text-sm mb-1;
+}
+
+.step-content p {
+  @apply text-xs text-muted-foreground text-center;
+}
+
+.flow-arrow {
+  @apply text-slate-500 text-xl;
+}
+</style>

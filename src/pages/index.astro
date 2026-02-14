@@ -1,446 +1,156 @@
 ---
 import MainLayout from '../layouts/MainLayout.astro';
-import { fetchPosts } from "../lib/posts";
-import coupons from "../data/coupons.json";
+import HeroSection from '../components/HeroSection.astro';
+import HomepageIntro from '../components/HomepageIntro.astro';
+import CouponSystemExplained from '../components/CouponSystemExplained.astro';
+import CoursesWynDifference from '../components/CoursesWynDifference.astro';
+import CategoryGrid from '../components/CategoryGrid.astro';
+import ExpiringDeals from '../components/ExpiringDeals.astro';
+import PopularCourses from '../components/PopularCourses.astro';
+import TrustSection from '../components/TrustSection.astro';
+import InternalLinksBlock from '../components/InternalLinksBlock.astro';
+import FAQSection from '../components/FAQSection.astro';
+import Newsletter from '../components/Newsletter.astro';
+import coupons from '../data/coupons.json';
 
-const allPosts = await fetchPosts();
-const featuredPosts = allPosts.slice(0, 3);
-// Take first 6 coupons for the grid
-const featuredCoupons = coupons.slice(0, 6);
-const totalCoupons = coupons.length;
-
-function getCurrentMonthYear(): string {
-  const now = new Date();
-  const options: Intl.DateTimeFormatOptions = {
-    month: "long",
-    year: "numeric",
-  };
-  return now.toLocaleDateString("en-US", options);
-}
-
-
-const currentMonthYear = getCurrentMonthYear();
+// Get current date for dynamic content
 const now = new Date();
 const currentMonth = now.toLocaleDateString('en-US', { month: 'long' });
 const currentYear = now.getFullYear();
+const totalCoupons = coupons.length;
+const lastUpdated = now.toISOString().split('T')[0]; // YYYY-MM-DD format
 
-const schema = {
+// Enhanced structured data for homepage
+const homepageSchema = {
   "@context": "https://schema.org",
   "@graph": [
     {
       "@type": "WebSite",
       name: "CoursesWyn - 100% Off Udemy Coupons",
       url: "https://courseswyn.com",
-      description: `Get ${totalCoupons}+ verified 100% free Udemy coupons and discount codes in ${currentMonthYear}. Save money on premium courses with lifetime access.`,
+      description: `Get ${totalCoupons}+ verified 100% free Udemy coupons and discount codes in ${currentMonth} ${currentYear}. Save money on premium courses with lifetime access.`,
+      dateModified: lastUpdated,
+      mainEntityOfPage: {
+        "@type": "WebPage",
+        "@id": "https://courseswyn.com/"
+      },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: "https://courseswyn.com/coupon/?q={search_term}",
+        "query-input": "required name=search_term"
+      }
     },
     {
       "@type": "Organization",
       name: "CoursesWyn",
       url: "https://courseswyn.com",
       description: `${totalCoupons}+ free Udemy coupons & course reviews`,
+      logo: {
+        "@type": "ImageObject",
+        url: "https://courseswyn.com/logo.png",
+        width: 512,
+        height: 512
+      },
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "customer service",
+        url: "https://courseswyn.com/contact"
+      },
+      sameAs: [
+        "https://twitter.com/courseswyn",
+        "https://facebook.com/courseswyn"
+      ]
     },
-  ],
+    {
+      "@type": "ItemList",
+      name: "Latest Udemy Coupons",
+      description: `Collection of ${totalCoupons}+ verified Udemy coupons and free courses`,
+      numberOfItems: totalCoupons,
+      dateModified: lastUpdated,
+      itemListElement: coupons.slice(0, 10).map((coupon, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        url: `https://courseswyn.com/coupon/${coupon.slug}`,
+        item: {
+          "@type": "Course",
+          name: coupon.title,
+          description: coupon.description,
+          provider: {
+            "@type": "Organization",
+            name: coupon.provider
+          },
+          offers: {
+            "@type": "Offer",
+            price: coupon.price === 0 ? "0" : coupon.price.toString(),
+            priceCurrency: "USD",
+            availability: "https://schema.org/InStock",
+            validFrom: coupon.createdAt,
+            url: `https://courseswyn.com/coupon/${coupon.slug}`
+          }
+        }
+      }))
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: "https://courseswyn.com/"
+        }
+      ]
+    }
+  ]
 };
+
+// SEO-optimized title and description
+const pageTitle = `Udemy Coupons ${currentMonth} ${currentYear} – 100% Working Coupon Codes & Free Courses | CoursesWyn`;
+const pageDescription = `Find verified Udemy coupons and 100% off coupon codes updated daily. Get free courses with lifetime access. Limited-time deals on Python, React, AWS, and more. Save money on premium education.`;
 ---
 
 <MainLayout 
-  title={`Best Udemy Coupons ${currentMonthYear} — 100% Off & Free Courses | CoursesWyn`}
-  description={`Find the best Udemy coupons for your learning path. Compare 100% off deals, free courses, and verified discounts for Python, React, AWS, and more.`}
+  title={pageTitle}
+  description={pageDescription}
+  canonical="https://courseswyn.com/"
+  ogImage="https://courseswyn.com/og-homepage.jpg"
+  structuredData={homepageSchema}
 >
-  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
 
-  <!-- HERO SECTION -->
-  <section class="relative overflow-hidden border-b border-border">
-    <div class="absolute inset-0 dot-matrix-glow"></div>
-    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(142_71%_45%_/_0.08),_transparent_60%)]"></div>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-20 relative">
-      <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-        
-        <!-- Left Content -->
-        <div class="flex-1">
-          <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground tracking-tight leading-[1.1] mb-6">
-            Expert insights into <span class="text-primary">{totalCoupons}+ Udemy Coupons</span>
-          </h1>
-          <p class="text-lg text-muted-foreground leading-relaxed mb-4">
-            Compare verified 100% off coupons, free courses, and instructor discounts.
-            No marketing fluff — just real savings for developers and learners.
-          </p>
-          <p class="text-base text-muted-foreground leading-relaxed mb-10">
-            We verify coupons for Python, Web Development, Docker, AI, and more. 
-            Updated <strong>{currentMonth} {currentYear}</strong> with authentic codes.
-          </p>
-          <div class="flex flex-col sm:flex-row gap-3">
-            <a href="/coupon/" class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-md font-medium transition-colors text-sm">
-              View All {totalCoupons} Free Coupons
-            </a>
-          </div>
-        </div>
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="Breadcrumb" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <ol class="flex items-center space-x-2 text-sm text-muted-foreground">
+      <li>
+        <a href="/" class="hover:text-foreground transition-colors">Home</a>
+      </li>
+      <li aria-current="page" class="text-foreground font-medium">Udemy Coupons</li>
+    </ol>
+  </nav>
 
-        <!-- Right Side List (Top Categories/Instructors) -->
-        <div class="w-full lg:w-[420px] shrink-0 flex flex-col gap-4">
-          <a href="/coupon/python-courses" class="bg-card rounded-lg border border-border p-5 flex items-center gap-4 hover:border-primary/30 transition-all group">
-            <div class="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center border border-border shrink-0">
-               <span class="text-xl">🐍</span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <h3 class="font-semibold text-foreground mb-0.5">Python Courses</h3>
-              <div class="flex items-center gap-1.5 mb-1">
-                <span class="text-amber-400">★★★★★</span>
-                <span class="text-sm font-medium text-foreground">4.9</span>
-              </div>
-              <p class="text-xs text-muted-foreground truncate">Data Science · Web Apps · Automation</p>
-            </div>
-            <span class="text-xs text-primary font-medium shrink-0 flex items-center gap-1 group-hover:gap-1.5 transition-all">
-              Free <span class="group-hover:translate-x-0.5 transition-transform">→</span>
-            </span>
-          </a>
+  <HeroSection 
+    totalCoupons={totalCoupons}
+    currentMonth={currentMonth}
+    currentYear={currentYear}
+  />
 
-          <a href="/coupon/it-software-courses" class="bg-card rounded-lg border border-border p-5 flex items-center gap-4 hover:border-primary/30 transition-all group">
-            <div class="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center border border-border shrink-0">
-               <span class="text-xl">💻</span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <h3 class="font-semibold text-foreground mb-0.5">IT & Cyber Security</h3>
-              <div class="flex items-center gap-1.5 mb-1">
-                <span class="text-amber-400">★★★★★</span>
-                <span class="text-sm font-medium text-foreground">4.8</span>
-              </div>
-              <p class="text-xs text-muted-foreground truncate">Ethical Hacking · CompTIA · Networking</p>
-            </div>
-            <span class="text-xs text-primary font-medium shrink-0 flex items-center gap-1 group-hover:gap-1.5 transition-all">
-              Free <span class="group-hover:translate-x-0.5 transition-transform">→</span>
-            </span>
-          </a>
+  <CategoryGrid />
 
-          <a href="/coupon/development-courses" class="bg-card rounded-lg border border-border p-5 flex items-center gap-4 hover:border-primary/30 transition-all group">
-            <div class="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center border border-border shrink-0">
-               <span class="text-xl">⚛️</span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <h3 class="font-semibold text-foreground mb-0.5">Full Stack Dev</h3>
-              <div class="flex items-center gap-1.5 mb-1">
-                <span class="text-amber-400">★★★★★</span>
-                <span class="text-sm font-medium text-foreground">5.0</span>
-              </div>
-              <p class="text-xs text-muted-foreground truncate">React · Node.js · Cloud Architecture</p>
-            </div>
-            <span class="text-xs text-primary font-medium shrink-0 flex items-center gap-1 group-hover:gap-1.5 transition-all">
-              Free <span class="group-hover:translate-x-0.5 transition-transform">→</span>
-            </span>
-          </a>
-          
-          <a href="/coupon/web-development-courses" class="bg-card rounded-lg border border-border p-5 flex items-center gap-4 hover:border-primary/30 transition-all group">
-            <div class="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center border border-border shrink-0">
-               <span class="text-xl">⚛️</span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <h3 class="font-semibold text-foreground mb-0.5">Web Development</h3>
-              <div class="flex items-center gap-1.5 mb-1">
-                <span class="text-amber-400">★★★★☆</span>
-                <span class="text-sm font-medium text-foreground">4.7</span>
-              </div>
-              <p class="text-xs text-muted-foreground truncate">React · Next.js · Node.js · Full Stack</p>
-            </div>
-            <span class="text-xs text-primary font-medium shrink-0 flex items-center gap-1 group-hover:gap-1.5 transition-all">
-              Free Coupon <span class="group-hover:translate-x-0.5 transition-transform">→</span>
-            </span>
-          </a>
+  <ExpiringDeals />
 
-          
-        </div>
-      </div>
-    </div>
-  </section>
+  <PopularCourses />
 
-  <!-- MARQUEE SECTION -->
-  <section class="py-8 border-b border-border overflow-hidden bg-background">
-     <div class="relative [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
-        <div class="flex animate-marquee gap-12 w-max items-center">
-           {[
-             { name: "Python", icon: "🐍" },
-             { name: "React", icon: "⚛️" },
-             { name: "AWS", icon: "☁️" },
-             { name: "Docker", icon: "🐳" },
-             { name: "Java", icon: "☕" },
-             { name: "JavaScript", icon: "📜" },
-             { name: "Excel", icon: "📊" },
-             { name: "Marketing", icon: "📢" },
-             { name: "Design", icon: "🎨" }
-           ].map(tech => (
-              <div class="flex items-center gap-2.5 shrink-0 opacity-50 hover:opacity-100 transition-opacity duration-300 cursor-default">
-                 <span class="text-xl">{tech.icon}</span>
-                 <span class="text-sm font-medium text-muted-foreground whitespace-nowrap">{tech.name}</span>
-              </div>
-           ))}
-            {[
-             { name: "Python", icon: "🐍" },
-             { name: "React", icon: "⚛️" },
-             { name: "AWS", icon: "☁️" },
-             { name: "Docker", icon: "🐳" },
-             { name: "Java", icon: "☕" },
-             { name: "JavaScript", icon: "📜" },
-             { name: "Excel", icon: "📊" },
-             { name: "Marketing", icon: "📢" },
-             { name: "Design", icon: "🎨" }
-           ].map(tech => (
-              <div class="flex items-center gap-2.5 shrink-0 opacity-50 hover:opacity-100 transition-opacity duration-300 cursor-default">
-                 <span class="text-xl">{tech.icon}</span>
-                 <span class="text-sm font-medium text-muted-foreground whitespace-nowrap">{tech.name}</span>
-              </div>
-           ))}
-        </div>
-     </div>
-  </section>
+  <HomepageIntro />
 
-  <!-- FEATURED GUIDE INTRO -->
-  <section class="py-12 md:py-16 border-b border-border relative overflow-hidden">
-     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_hsl(142_71%_45%_/_0.06),_transparent_60%)]"></div>
-     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <a href="/best-udemy-agentic-ai-courses-2026" class="w-full text-left group block">
-           <div class="bg-card rounded-lg border border-border overflow-hidden transition-all group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/5">
-              <div class="flex items-center gap-3 px-4 py-2.5 bg-secondary/50 border-b border-border">
-                 <div class="flex items-center gap-1.5">
-                    <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
-                 </div>
-                 <span class="text-[11px] font-mono text-muted-foreground tracking-wide">
-                    ~/featured/best-udemy-agentic-ai-courses-2026
-                 </span>
-              </div>
-              <div>
-                 <div class="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-4 py-1.5 flex items-center gap-2 border-b border-border">
-                    <span class="text-xs font-mono font-semibold text-primary tracking-wider uppercase">Featured Guide</span>
-                    <span class="text-xs text-muted-foreground font-mono ml-auto hidden sm:inline">{currentMonth} {currentYear} · 10 min read</span>
-                 </div>
-                 <div class="p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-6">
-                    <div class="flex-1 min-w-0">
-                       <h2 class="text-2xl md:text-3xl font-bold text-foreground tracking-tight mb-3 group-hover:text-primary transition-colors">
-                          Best Agentic AI Courses on Udemy (2026)
-                       </h2>
-                       <p class="text-muted-foreground leading-relaxed mb-4 max-w-2xl">
-                          Master AI Agents, AutoGen, and LangChain with these top-rated courses. Verified content for the next generation of AI development.
-                       </p>
-                    </div>
-                    <div class="flex-shrink-0">
-                       <span class="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2.5 rounded-md font-medium transition-colors text-sm group-hover:gap-3">
-                          Read Guide <span>→</span>
-                       </span>
-                    </div>
-                 </div>
-              </div>
-           </div>
-        </a>
-     </div>
-  </section>
+  <CouponSystemExplained />
 
-  <!-- GRID SECTION ("What will you learn?") -->
-  <section class="py-20 border-b border-border dot-matrix">
-     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="mb-12">
-           <p class="text-xs font-mono text-primary uppercase tracking-widest mb-3">$ ls ~/categories/</p>
-           <h2 class="text-3xl md:text-4xl font-bold text-foreground tracking-tight mb-4 text-balance">
-              What will you learn today?
-           </h2>
-           <p class="text-muted-foreground max-w-2xl">
-              Start your career in tech. Here are the most popular categories developers are learning right now.
-           </p>
-        </div>
-        
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-           {/* CATEGORY CARDS */}
-           {[
-             { name: "IT & Software", icon: "💻", desc: "Cybersecurity, Network Engineering, and IT Support. Get certified today.", slug: "it-software-courses" },
-             { name: "Development", icon: "📂", desc: "Software engineering, web apps, and system architecture. The core of tech.", slug: "development-courses" },
-             { name: "Programming Languages", icon: "📜", desc: "Python, JavaScript, Java, and C++. Master the syntax and logic.", slug: "programming-languages-courses" },
-             { name: "Office Productivity", icon: "📊", desc: "Excel, Microsoft 365, and productivity tools. Become an efficiency expert.", slug: "office-productivity-courses" },
-             { name: "Business", icon: "📈", desc: "Entrepreneurship, Finance, and Strategy. Build your corporate edge.", slug: "business-courses" },
-             { name: "Marketing", icon: "📢", desc: "SEO, Digital Marketing, and Social Media. Drive growth for any brand.", slug: "marketing-courses" },
-           ].map(cat => (
-             <a href={`/coupon/${cat.slug}`} class="block group">
-                <div class="bg-card rounded-lg border border-border overflow-hidden hover:border-primary/40 transition-all h-full">
-                   <div class="flex items-center gap-3 px-4 py-2.5 bg-secondary/50 border-b border-border">
-                      <div class="flex items-center gap-1.5">
-                         <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
-                         <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
-                         <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
-                      </div>
-                      <span class="text-[11px] font-mono text-muted-foreground tracking-wide">~/learn/{cat.slug}</span>
-                   </div>
-                   <div class="p-6 flex flex-col h-full">
-                      <div class="flex items-start justify-between mb-4">
-                         <div class="w-10 h-10 bg-primary/10 rounded-md flex items-center justify-center text-primary border border-primary/20 text-xl">
-                            {cat.icon}
-                         </div>
-                         <span class="text-xs font-mono text-muted-foreground">
-                            <span class="text-foreground font-semibold">Free</span> Coupon
-                         </span>
-                      </div>
-                      <h3 class="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">{cat.name}</h3>
-                      <p class="text-sm text-muted-foreground leading-relaxed mb-5 flex-1">{cat.desc}</p>
-                      <div class="pt-4 border-t border-border flex items-center justify-between">
-                         <span class="text-xs text-muted-foreground font-mono">100+ Courses</span>
-                         <span class="text-primary text-xs font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
-                            Browse <span class="group-hover:translate-x-0.5 transition-transform">→</span>
-                         </span>
-                      </div>
-                   </div>
-                </div>
-             </a>
-           ))}
-        </div>
-     </div>
-  </section>
+  <CoursesWynDifference />
 
-  <!-- DEALS SECTION -->
-  <section id="deals" class="py-20 border-b border-border bg-card">
-     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="mb-12">
-           <p class="text-xs font-mono text-primary uppercase tracking-widest mb-3">$ curl --deals --exclusive</p>
-           <h2 class="text-3xl font-bold text-foreground tracking-tight mb-4">Today's Best Udemy Deals</h2>
-           <p class="text-muted-foreground max-w-2xl">Limited-time coupons and discounts. Save big on premium courses.</p>
-        </div>
+  <TrustSection />
 
-        <div class="grid md:grid-cols-3 gap-6">
-           {featuredCoupons.slice(0, 3).map((coupon, index) => {
-             const price = coupon.price;
-             const originalPrice = coupon.originalPrice;
-             
-             const p = typeof price === "string" ? parseFloat(price.replace(/[^\d.-]/g, "")) : price;
-             const op = typeof originalPrice === "string" ? parseFloat(originalPrice.replace(/[^\d.-]/g, "")) : originalPrice;
-             
-             let calculatedDiscount = "";
-             if (p === 0 || p < 0.1 || String(price).toLowerCase().includes("free")) {
-               calculatedDiscount = "100%";
-             } else if (op > 0) {
-               calculatedDiscount = `${Math.round(((op - p) / op) * 100)}%`;
-             }
+  <InternalLinksBlock />
 
-             return (
-               <div class="bg-card rounded-lg border border-border overflow-hidden transition-all hover:border-primary/50 group flex flex-col h-full">
-                  <div class="flex items-center gap-3 px-4 py-2.5 bg-secondary/50 border-b border-border">
-                     <div class="flex items-center gap-1.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
-                        <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
-                        <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
-                     </div>
-                     <span class="text-[11px] font-mono text-muted-foreground tracking-wide truncate">
-                        ~/deals/{coupon.slug.substring(0, 20)}...
-                     </span>
-                  </div>
-                  {index === 0 && (
-                    <div class="bg-primary text-primary-foreground text-center py-1.5 text-[10px] font-mono font-semibold tracking-widest">
-                       EDITOR'S CHOICE
-                    </div>
-                  )}
-                  <div class="p-6 flex flex-col h-full">
-                     <div class="flex items-start gap-4 mb-5">
-                        <div class="w-10 h-10 rounded bg-secondary flex items-center justify-center text-xl shrink-0 border border-border">
-                           {coupon.title.toLowerCase().includes('python') ? '🐍' : 
-                            coupon.title.toLowerCase().includes('javascript') ? '📜' : 
-                            coupon.title.toLowerCase().includes('react') ? '⚛️' : 
-                            coupon.title.toLowerCase().includes('aws') ? '☁️' : '🎓'}
-                        </div>
-                        <div>
-                           <h3 class="text-base font-semibold text-foreground line-clamp-2 leading-snug mb-1" title={coupon.title}>{coupon.title}</h3>
-                           <p class="text-xs text-muted-foreground">{coupon.instructor || coupon.provider}</p>
-                        </div>
-                     </div>
-                     
-                     <div class="mt-auto">
-                       <div class="flex items-baseline gap-3 mb-5">
-                          <span class="text-2xl font-bold text-foreground font-mono">
-                            {calculatedDiscount === "100%" ? "Free" : (typeof price === 'number' ? `$${price}` : price)}
-                          </span>
-                          {op > 0 && <span class="text-muted-foreground line-through text-xs">${typeof originalPrice === 'number' ? `$${originalPrice}` : originalPrice}</span>}
-                          {calculatedDiscount && calculatedDiscount !== "0%" && (
-                              <span class="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-mono font-bold border border-primary/20">{calculatedDiscount} OFF</span>
-                          )}
-                       </div>
-                       <ul class="flex flex-col gap-2 mb-6">
-                          <li class="flex items-center gap-2 text-xs text-muted-foreground">
-                             <span class="text-primary">✓</span> Lifetime Access
-                          </li>
-                          <li class="flex items-center gap-2 text-xs text-muted-foreground">
-                             <span class="text-primary">✓</span> {coupon.students?.toLocaleString() || '0'} Students
-                          </li>
-                       </ul>
-                       <a href={`/coupon/${coupon.slug}`} class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-md font-medium transition-colors text-sm bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20">
-                          Get Coupon <span>→</span>
-                       </a>
-                     </div>
-                  </div>
-               </div>
-             );
-           })}
-        </div>
-     </div>
-  </section>
+  <FAQSection />
 
-  <!-- GUIDES LIST (Terminal text style) -->
-  <section id="guides" class="py-20 border-b border-border dot-matrix">
-     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="mb-12">
-           <p class="text-xs font-mono text-primary uppercase tracking-widest mb-3">$ ls ~/guides/</p>
-           <h2 class="text-3xl font-bold text-foreground tracking-tight mb-4 text-balance">Guides & Tutorials</h2>
-           <p class="text-muted-foreground max-w-2xl">Technical guides to help you start your learning journey.</p>
-        </div>
-        
-        <div class="grid md:grid-cols-2 lg:grid-cols-1 gap-4">
-           {featuredPosts.map((post) => (
-             <div class="bg-card rounded-lg border border-border overflow-hidden hover:border-primary/30 transition-all cursor-pointer group">
-                <div class="flex items-center gap-3 px-4 py-2.5 bg-secondary/50 border-b border-border">
-                   <div class="flex items-center gap-1.5">
-                      <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
-                      <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
-                      <span class="w-2.5 h-2.5 rounded-full bg-muted-foreground/20"></span>
-                   </div>
-                   <span class="text-[11px] font-mono text-muted-foreground tracking-wide">/{post.slug}</span>
-                </div>
-                <a href={`/${post.slug}/`} class="block p-5">
-                   <div class="flex items-center gap-2 mb-3">
-                      <span class="text-[10px] font-mono font-semibold tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20 uppercase">
-                         {post.data.tags[0] || "Guide"}
-                      </span>
-                      <span class="text-[10px] text-muted-foreground">{new Date(post.data.pubDate).toLocaleDateString()}</span>
-                   </div>
-                   <h3 class="text-base font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                      {post.data.title}
-                   </h3>
-                   <p class="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-4">
-                      {post.data.description}
-                   </p>
-                   <div class="flex items-center justify-between">
-                      <span class="text-xs text-muted-foreground font-mono">Read Article</span>
-                      <span class="text-primary text-xs font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
-                         Read <span>→</span>
-                      </span>
-                   </div>
-                </a>
-             </div>
-           ))}
-        </div>
-        
-        <div class="mt-10 text-center">
-           <a href="/blog" class="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground px-6 py-3 rounded-md font-medium transition-colors text-sm border border-border group">
-              View All Guides <span>→</span>
-           </a>
-        </div>
-     </div>
-  </section>
-
-  <!-- CTA SECTION -->
-  <section id="selfhost" class="py-20 bg-card border-b border-border">
-     <div class="text-center px-4">
-        <p class="text-sm font-mono text-primary uppercase tracking-widest mb-3">// ready to learn?</p>
-        <h3 class="text-2xl font-bold text-foreground mb-3 text-balance">Stop paying full price. Start learning for free.</h3>
-        <p class="text-muted-foreground max-w-xl mx-auto mb-6 text-sm leading-relaxed">
-           A single free coupon can save you $100+. Join thousands of developers learning Python, AWS, and more for free.
-        </p>
-        <a href="/coupon/" class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-md font-medium transition-colors text-sm">
-           Get Free Coupons
-        </a>
-     </div>
-  </section>
+  <Newsletter />
 
 </MainLayout>
