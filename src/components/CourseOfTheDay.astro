@@ -1,0 +1,135 @@
+---
+import coupons from '../data/coupons.json';
+
+// Get the most recent course as "Course of the Day"
+const courseOfDay = coupons
+  .sort((a: any, b: any) => {
+    const dateA = new Date(a.createdAt || 0).getTime();
+    const dateB = new Date(b.createdAt || 0).getTime();
+    return dateB - dateA;
+  })[0];
+---
+
+<section class="py-16 bg-[#1a1d29]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Section Header -->
+    <div class="text-center mb-12">
+      <h2 class="text-4xl font-bold text-white">
+        Course of the Day
+      </h2>
+    </div>
+
+    <!-- Horizontal Card -->
+    <div class="bg-[#242938] rounded-2xl overflow-hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-0">
+        <!-- Left: Course Image (40%) -->
+        <div class="lg:col-span-2 relative aspect-video lg:aspect-auto">
+          <img 
+            src={courseOfDay.image} 
+            alt={courseOfDay.title}
+            class="w-full h-full object-cover"
+            loading="lazy"
+          />
+        </div>
+        
+        <!-- Right: Course Details (60%) -->
+        <div class="lg:col-span-3 p-8 lg:p-10 flex flex-col justify-center">
+          <!-- Title -->
+          <h3 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+            {courseOfDay.title}
+          </h3>
+          
+          <!-- Platform -->
+          <div class="flex items-center gap-2 mb-4">
+            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+            </svg>
+            <span class="text-gray-400">Udemy</span>
+          </div>
+          
+          <!-- Description -->
+          <p class="text-gray-400 mb-6 line-clamp-2">
+            {courseOfDay.description || 'Master Python, Machine Learning, DL, MLOps, and Gen AI through hands-on projects to become a Full-Stack AI Engineer'}
+          </p>
+          
+          <!-- Meta Info -->
+          <div class="flex items-center gap-6 mb-6 text-sm">
+            {/* Duration */}
+            <div class="flex items-center gap-2 text-gray-400">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+              </svg>
+              <span>32h</span>
+            </div>
+            
+            {/* Rating */}
+            {courseOfDay.rating && (
+              <div class="flex items-center gap-2 text-gray-400">
+                <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+                <span>{courseOfDay.rating}</span>
+              </div>
+            )}
+            
+            {/* Students */}
+            {courseOfDay.students && (
+              <div class="flex items-center gap-2 text-gray-400">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                </svg>
+                <span>{courseOfDay.students > 1000 ? `${(courseOfDay.students/1000).toFixed(1)}k` : courseOfDay.students}</span>
+              </div>
+            )}
+          </div>
+          
+          <!-- Tags -->
+          {courseOfDay.category && (
+            <div class="flex flex-wrap gap-2 mb-6">
+              <span class="px-3 py-1 bg-[#1a1d29] text-gray-300 text-xs rounded-lg">
+                {courseOfDay.category}
+              </span>
+              <span class="px-3 py-1 bg-[#1a1d29] text-gray-300 text-xs rounded-lg">
+                English
+              </span>
+            </div>
+          )}
+          
+          <!-- Price & CTA -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              {courseOfDay.price === 0 ? (
+                // FREE Case
+                <>
+                  {courseOfDay.originalPrice && (
+                    <span class="text-gray-500 line-through text-lg">
+                      ${courseOfDay.originalPrice}
+                    </span>
+                  )}
+                  <span class="text-3xl font-bold text-red-500">FREE</span>
+                </>
+              ) : (
+                // PAID Case
+                <>
+                  {courseOfDay.originalPrice && (
+                    <span class="text-gray-500 line-through text-lg">
+                      ${courseOfDay.originalPrice}
+                    </span>
+                  )}
+                  <span class="text-3xl font-bold text-white">${courseOfDay.price}</span>
+                </>
+              )}
+            </div>
+            
+            <a 
+              href={`/coupon/${courseOfDay.slug}`}
+              class="px-8 py-3 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition-colors font-semibold"
+            >
+              Get Course
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,74 @@
+---
+import { getCollection } from 'astro:content';
+
+// Fetch 3 latest blog posts for "Popular Topics"
+const allPosts = await getCollection('blog');
+const topics = allPosts
+  .sort((a, b) => new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf())
+  .slice(0, 3);
+
+function formatDate(date: Date) {
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+---
+
+<section class="py-16 bg-[#1a1d29]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Section Header -->
+    <div class="text-center mb-12">
+      <h2 class="text-4xl font-bold text-white mb-3">
+        Popular Topics
+      </h2>
+      <p class="text-gray-400 text-lg">
+        Explore the latest reviews and insights from our blog
+      </p>
+    </div>
+
+    <!-- 3 Large Cards from Blog -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      {topics.map((post) => (
+        <a 
+          href={`/blog/${post.slug}`}
+          class="group block bg-[#242938] rounded-2xl overflow-hidden transition-all duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl h-full flex flex-col"
+        >
+          <!-- Topic Image -->
+          <div class="relative aspect-video overflow-hidden">
+            <img 
+              src={post.data.image?.src || post.data.image || 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&h=400&fit=crop'} 
+              alt={post.data.title}
+              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+              loading="lazy"
+            />
+          </div>
+          
+          <!-- Topic Content -->
+          <div class="p-6 flex flex-col flex-grow">
+            <h3 class="font-semibold text-xl text-white mb-3 group-hover:text-green-400 transition-colors line-clamp-2">
+              {post.data.title}
+            </h3>
+            <p class="text-gray-400 text-sm mt-auto">
+              {formatDate(post.data.pubDate)}
+            </p>
+          </div>
+        </a>
+      ))}
+    </div>
+
+    <!-- Load More Button -->
+    <div class="text-center">
+      <a 
+        href="/blog"
+        class="px-8 py-3 bg-[#242938] text-white rounded-lg hover:bg-[#2d3748] transition-colors font-medium inline-flex items-center gap-2 border border-[#2d3748] hover:border-green-500"
+      >
+        View All Posts
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>

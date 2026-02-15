@@ -1,0 +1,150 @@
+---
+import coupons from '../data/coupons.json';
+
+// Get latest 6 courses for featured section (3x2 grid)
+const featuredCourses = coupons
+  .sort((a: any, b: any) => {
+    const dateA = new Date(a.createdAt || 0).getTime();
+    const dateB = new Date(b.createdAt || 0).getTime();
+    return dateB - dateA;
+  })
+  .slice(0, 6);
+
+// Helper function to get time ago
+function getTimeAgo(date: string) {
+  const now = new Date();
+  const created = new Date(date);
+  const diffMs = now.getTime() - created.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  
+  if (diffHours < 1) return 'about 1 hour ago';
+  if (diffHours < 24) return `about ${diffHours} hours ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `about ${diffDays} days ago`;
+}
+---
+
+<section class="py-16 bg-[#1a1d29]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Section Header -->
+    <div class="text-center mb-12">
+      <h2 class="text-4xl font-bold text-white mb-3">
+        Featured Free Udemy Courses
+      </h2>
+      <p class="text-gray-400 text-lg">
+        Handpicked premium courses now available for free! These courses are regularly updated with fresh content and exclusive coupon codes.
+      </p>
+    </div>
+
+    <!-- 3x2 Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      {featuredCourses.map((course) => {
+        const isFree = course.price === 0;
+        const discount = course.originalPrice && course.price 
+          ? Math.round((1 - course.price / course.originalPrice) * 100)
+          : 100;
+        
+        return (
+          <a 
+            href={`/coupon/${course.slug}`}
+            class="group block bg-[#242938] rounded-2xl overflow-hidden transition-all duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl"
+          >
+            <!-- Course Image with Badges -->
+            <div class="relative aspect-video overflow-hidden">
+              <img 
+                src={course.image} 
+                alt={course.title}
+                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                loading="lazy"
+              />
+              
+              {/* Time Badge - Top Left */}
+              <div class="absolute top-3 left-3">
+                <span class="px-3 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg">
+                  {getTimeAgo(course.createdAt)}
+                </span>
+              </div>
+              
+              {/* Duration Badge - Top Right */}
+              <div class="absolute top-3 right-3">
+                <span class="px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-lg">
+                  Duration: {course.duration || '10 hours'}
+                </span>
+              </div>
+            </div>
+            
+            <!-- Course Content -->
+            <div class="p-5">
+              {/* Title */}
+              <h3 class="font-semibold text-lg text-white line-clamp-2 leading-snug mb-4 group-hover:text-green-400 transition-colors min-h-[3.5rem]">
+                {course.title}
+              </h3>
+              
+              {/* Price Display Logic - Strictly from JSON */}
+              <div class="flex items-center gap-2">
+                {course.price === 0 ? (
+                  // Case: FREE
+                  <>
+                     {course.originalPrice && (
+                       <span class="text-gray-500 line-through text-sm">
+                         ${course.originalPrice}
+                       </span>
+                     )}
+                     <span class="text-red-500 font-bold text-xl">
+                       Free
+                     </span>
+                  </>
+                ) : (
+                  // Case: PAID (Display actual price if not 0)
+                  <>
+                    {course.originalPrice && (
+                      <span class="text-gray-500 line-through text-sm">
+                        ${course.originalPrice}
+                      </span>
+                    )}
+                    <span class="text-white font-bold text-xl">
+                      ${course.price}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+
+    <!-- Load More Button -->
+    <div class="text-center mt-12">
+      <a 
+        href="/coupon"
+        id="load-more-btn"
+        class="group px-8 py-3 bg-[#242938] text-white rounded-lg hover:bg-[#2d3748] transition-all duration-300 font-medium inline-flex items-center gap-2 border border-[#2d3748] hover:border-green-500"
+      >
+        <span>Load More Courses</span>
+        <svg class="w-4 h-4 group-hover:translate-y-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  // Simple Load More Interaction using is:inline to ensure it runs
+  const loadMoreBtn = document.getElementById('load-more-btn');
+  
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', (e) => {
+      e.preventDefault(); // Prevent immediate navigation
+      
+      const span = loadMoreBtn.querySelector('span');
+      if (span) span.innerText = 'Loading...';
+      
+      // Navigate after small delay to show feedback
+      setTimeout(() => {
+        window.location.href = '/coupon';
+      }, 500);
+    });
+  }
+</script>

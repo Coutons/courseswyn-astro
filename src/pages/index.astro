@@ -1,16 +1,14 @@
 ---
 import MainLayout from '../layouts/MainLayout.astro';
 import HeroSection from '../components/HeroSection.astro';
-import HomepageIntro from '../components/HomepageIntro.astro';
-import CouponSystemExplained from '../components/CouponSystemExplained.astro';
-import CoursesWynDifference from '../components/CoursesWynDifference.astro';
-import CategoryGrid from '../components/CategoryGrid.astro';
-import ExpiringDeals from '../components/ExpiringDeals.astro';
-import PopularCourses from '../components/PopularCourses.astro';
-import TrustSection from '../components/TrustSection.astro';
-import InternalLinksBlock from '../components/InternalLinksBlock.astro';
-import FAQSection from '../components/FAQSection.astro';
-import Newsletter from '../components/Newsletter.astro';
+import FeaturedCourses from '../components/FeaturedCourses.astro';
+import PopularTopics from '../components/PopularTopics.astro';
+import CourseOfTheDay from '../components/CourseOfTheDay.astro';
+import UdemyPromo from '../components/UdemyPromo.astro';
+import PlatformSection from '../components/PlatformSection.astro';
+import CategoryList from '../components/CategoryList.astro';
+import Footer from '../components/Footer.astro';
+import SeoContent from '../components/SeoContent.astro';
 import coupons from '../data/coupons.json';
 
 // Get current date for dynamic content
@@ -26,131 +24,82 @@ const homepageSchema = {
   "@graph": [
     {
       "@type": "WebSite",
-      name: "CoursesWyn - 100% Off Udemy Coupons",
+      name: "CoursesWyn",
       url: "https://courseswyn.com",
-      description: `Get ${totalCoupons}+ verified 100% free Udemy coupons and discount codes in ${currentMonth} ${currentYear}. Save money on premium courses with lifetime access.`,
-      dateModified: lastUpdated,
-      mainEntityOfPage: {
-        "@type": "WebPage",
-        "@id": "https://courseswyn.com/"
-      },
+      description: "The #1 source for verified Udemy coupons and free online courses.",
       potentialAction: {
         "@type": "SearchAction",
-        target: "https://courseswyn.com/coupon/?q={search_term}",
-        "query-input": "required name=search_term"
+        target: "https://courseswyn.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
       }
     },
     {
-      "@type": "Organization",
-      name: "CoursesWyn",
-      url: "https://courseswyn.com",
-      description: `${totalCoupons}+ free Udemy coupons & course reviews`,
-      logo: {
-        "@type": "ImageObject",
-        url: "https://courseswyn.com/logo.png",
-        width: 512,
-        height: 512
-      },
-      contactPoint: {
-        "@type": "ContactPoint",
-        contactType: "customer service",
-        url: "https://courseswyn.com/contact"
-      },
-      sameAs: [
-        "https://twitter.com/courseswyn",
-        "https://facebook.com/courseswyn"
-      ]
-    },
-    {
-      "@type": "ItemList",
-      name: "Latest Udemy Coupons",
-      description: `Collection of ${totalCoupons}+ verified Udemy coupons and free courses`,
-      numberOfItems: totalCoupons,
-      dateModified: lastUpdated,
-      itemListElement: coupons.slice(0, 10).map((coupon, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        url: `https://courseswyn.com/coupon/${coupon.slug}`,
-        item: {
-          "@type": "Course",
-          name: coupon.title,
-          description: coupon.description,
-          provider: {
-            "@type": "Organization",
-            name: coupon.provider
-          },
-          offers: {
-            "@type": "Offer",
-            price: coupon.price === 0 ? "0" : coupon.price.toString(),
-            priceCurrency: "USD",
-            availability: "https://schema.org/InStock",
-            validFrom: coupon.createdAt,
-            url: `https://courseswyn.com/coupon/${coupon.slug}`
-          }
-        }
-      }))
-    },
-    {
-      "@type": "BreadcrumbList",
-      itemListElement: [
+      "@type": "FAQPage",
+      "mainEntity": [
         {
-          "@type": "ListItem",
-          position: 1,
-          name: "Home",
-          item: "https://courseswyn.com/"
+          "@type": "Question",
+          "name": "How do I redeem a Udemy coupon?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Simply find a course you like on CoursesWyn, click the 'Redeem' button, and you will be redirected to Udemy. The coupon code will be automatically applied at checkout."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are these free courses legitimate?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! Instructors generate these 100% OFF coupons to promote their new courses. It is a legitimate way to get premium education for free."
+          }
         }
       ]
     }
   ]
 };
 
-// SEO-optimized title and description
-const pageTitle = `Udemy Coupons ${currentMonth} ${currentYear} – 100% Working Coupon Codes & Free Courses | CoursesWyn`;
-const pageDescription = `Find verified Udemy coupons and 100% off coupon codes updated daily. Get free courses with lifetime access. Limited-time deals on Python, React, AWS, and more. Save money on premium education.`;
+// SEO-optimized title and description (Unique & Powerful)
+const pageTitle = `100% OFF Udemy Coupons & Daily Free Courses ${currentYear} | CoursesWyn`;
+const pageDescription = `Unlock premium education for free. CoursesWyn provides ${totalCoupons}+ verified 100% OFF Udemy coupons daily. Master Python, React, Business, and more with free certification courses.`;
+const ogTitle = "Unlock Premium Knowledge: 100% Free Udemy Courses & Coupons";
+const ogDescription = "Stop paying for online courses. Get lifetime access to top-rated Udemy courses for FREE with our daily verified coupons.";
 ---
 
 <MainLayout 
   title={pageTitle}
   description={pageDescription}
+  ogTitle={ogTitle}
+  ogDescription={ogDescription}
   canonical="https://courseswyn.com/"
-  ogImage="https://courseswyn.com/og-homepage.jpg"
   structuredData={homepageSchema}
 >
 
-  <!-- Breadcrumb Navigation -->
-  <nav aria-label="Breadcrumb" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-    <ol class="flex items-center space-x-2 text-sm text-muted-foreground">
-      <li>
-        <a href="/" class="hover:text-foreground transition-colors">Home</a>
-      </li>
-      <li aria-current="page" class="text-foreground font-medium">Udemy Coupons</li>
-    </ol>
-  </nav>
+  <!-- Section 1: Hero -->
+  <HeroSection />
 
-  <HeroSection 
-    totalCoupons={totalCoupons}
-    currentMonth={currentMonth}
-    currentYear={currentYear}
-  />
+  <!-- Section 2: Platform / Trusted By -->
+  <PlatformSection />
 
-  <CategoryGrid />
+  <!-- Section 3: Udemy Personal Plan Promo -->
+  <UdemyPromo />
 
-  <ExpiringDeals />
+  <!-- Section 4: Featured Courses -->
+  <FeaturedCourses />
 
-  <PopularCourses />
+  <!-- Section 5: Course of the Day -->
+  <CourseOfTheDay />
 
-  <HomepageIntro />
+  <!-- Section 6: Popular Topics -->
+  <PopularTopics />
 
-  <CouponSystemExplained />
+  <!-- Section 7: Categories -->
+  <CategoryList />
 
-  <CoursesWynDifference />
+  <!-- Section 8: SEO Silo Content (FAQs & About) -->
+  <SeoContent />
 
-  <TrustSection />
-
-  <InternalLinksBlock />
-
-  <FAQSection />
-
-  <Newsletter />
+  <Footer />
 
 </MainLayout>
+
+
+

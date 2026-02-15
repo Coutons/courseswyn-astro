@@ -1,0 +1,70 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import { getCollection } from 'astro:content';
+
+// Fetch all blog posts for topics
+const allPosts = await getCollection('blog');
+const topics = allPosts.sort((a, b) => new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf());
+
+function formatDate(date: Date) {
+  return new Date(date).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+}
+
+const pageTitle = "Topics | CoursesWyn";
+---
+
+<MainLayout title={pageTitle}>
+  <div class="bg-[#1a1d29] min-h-screen py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Header -->
+      <div class="text-center mb-16">
+        <h1 class="text-4xl font-bold text-white mb-4">Topics</h1>
+      </div>
+
+      <!-- Topics Grid (Blog Posts) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {topics.map((post) => (
+          <a 
+            href={`/${post.slug}/`}
+            class="group block bg-[#242938] rounded-xl overflow-hidden hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-green-900/10 h-full flex flex-col"
+          >
+            <!-- Image -->
+            <div class="relative aspect-[16/9] overflow-hidden bg-gray-800">
+              <img 
+                src={post.data.image?.src || post.data.image || 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&h=400&fit=crop'} 
+                alt={post.data.title}
+                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+              />
+              <!-- Tag Badge (Optional but nice) -->
+              <div class="absolute bottom-3 left-3">
+                 {post.data.tags && post.data.tags[0] && (
+                    <span class="bg-[#1a1d29]/90 backdrop-blur text-white text-xs font-bold px-2 py-1 rounded border border-gray-600">
+                      {post.data.tags[0]}
+                    </span>
+                 )}
+              </div>
+            </div>
+            
+            <!-- Content -->
+            <div class="p-6 flex flex-col flex-grow">
+              <h3 class="font-bold text-lg text-white mb-3 group-hover:text-green-400 transition-colors line-clamp-2 leading-tight">
+                {post.data.title}
+              </h3>
+              
+              <div class="mt-auto pt-4 border-t border-[#2d3748] flex items-center justify-between text-xs text-gray-500">
+                <span>{formatDate(post.data.pubDate)}</span>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+
+    </div>
+  </div>
+</MainLayout>

@@ -1,858 +1,340 @@
 ---
 import MainLayout from "../../layouts/MainLayout.astro";
-import Breadcrumb from "../../components/Breadcrumb.astro";
 import courses from "../../data/coupons.json";
-
-type CouponCourse = {
-  id?: string;
-  slug: string;
-  title: string;
-  description?: string;
-  provider?: string;
-  instructor?: string;
-  price?: string | number;
-  originalPrice?: string | number;
-  discount?: string;
-  rating?: string | number;
-  students?: number;
-  duration?: string;
-  level?: string;
-  language?: string;
-  category?: string;
-  subcategory?: string;
-  subCategory?: string;
-  url: string;
-  image?: string;
-  content?: string;
-  coupon?: string;
-  learn?: string[];
-  requirements?: string[];
-};
+import CourseCard from "../../components/CourseCard.astro";
 
 export async function getStaticPaths() {
-  // 1. Individual Course Paths
-  const coursePaths = courses.filter((c: any) => c.slug).map((course: any) => ({
+  return courses.filter((c: any) => c.slug).map((course: any) => ({
     params: { slug: course.slug },
-    props: { type: "course", course },
+    props: { course },
   }));
-
-  // 4. Categorical Aliases (Resolving homepage 404s)
-  // NOTE: On GitHub Pages we can't serve 301 redirects. To keep semantic boundaries clean,
-  // we only keep a small set of legacy alias URLs here and render them as redirect-stub pages
-  // that point to their dedicated hub pages (root-level routes).
-  const aliasDefinitions = [
-    { 
-      slug: "python-courses", 
-      name: "Python Programming", 
-      target: "/python-udemy-coupons/",
-      filter: (c: any) => c.title?.toLowerCase().includes("python") || c.category?.includes("Python") || (c.subCategory || c.subcategory)?.includes("Python")
-    },
-    { 
-      slug: "web-development-courses", 
-      name: "Web Development", 
-      target: "/web-development-udemy-coupons/",
-      filter: (c: any) => c.category === "Development" || c.title?.toLowerCase().includes("web dev") || c.title?.toLowerCase().includes("react") || c.title?.toLowerCase().includes("javascript")
-    },
-    { 
-      slug: "cloud-computing-courses", 
-      name: "Cloud Computing & AWS", 
-      target: "/",
-      filter: (c: any) => c.category === "IT & Software" && (c.title?.toLowerCase().includes("cloud") || c.title?.toLowerCase().includes("aws") || c.title?.toLowerCase().includes("azure"))
-    },
-    { 
-      slug: "data-analytics-courses", 
-      name: "Data Science & Analytics", 
-      target: "/data-science-udemy-coupons/",
-      filter: (c: any) => c.category === "Data Science" || c.title?.toLowerCase().includes("analytics") || c.title?.toLowerCase().includes("data")
-    },
-    { 
-      slug: "software-testing-courses", 
-      name: "Software Testing & QA", 
-      target: "/",
-      filter: (c: any) => c.category === "Software Testing" || c.title?.toLowerCase().includes("testing") || c.title?.toLowerCase().includes("selenium")
-    },
-    { 
-      slug: "digital-marketing-courses", 
-      name: "Digital Marketing & SEO", 
-      target: "/",
-      filter: (c: any) => c.category === "Marketing" || c.title?.toLowerCase().includes("seo") || c.title?.toLowerCase().includes("marketing")
-    },
-    { 
-      slug: "java-mobile-courses", 
-      name: "Java & Mobile Development", 
-      target: "/",
-      filter: (c: any) => c.title?.toLowerCase().includes("java") || c.title?.toLowerCase().includes("android") || c.title?.toLowerCase().includes("flutter") || c.title?.toLowerCase().includes("ios")
-    },
-    {
-      slug: "ai-courses",
-      name: "Artificial Intelligence (AI)",
-      target: "/",
-      filter: (c: any) => (c.subCategory || c.subcategory)?.includes("AI") || c.title?.toLowerCase().includes("ai ") || c.category === "Data Science"
-    },
-    {
-      slug: "artificial-intelligence-ai--courses",
-      name: "Artificial Intelligence (AI)",
-      target: "/data-science-udemy-coupons/",
-      filter: (c: any) => (c.subCategory || c.subcategory)?.includes("AI") || c.title?.toLowerCase().includes("ai ") || c.category === "Data Science"
-    }
-  ];
-
-  const aliasWithTargets = aliasDefinitions.filter((a) => a.target && a.target !== "/");
-
-  const aliasPaths = aliasWithTargets.map(alias => ({
-    params: { slug: alias.slug },
-    props: {
-      type: "category",
-      name: alias.name,
-      courses: courses.filter(alias.filter),
-      slug: alias.slug,
-      target: alias.target
-    }
-  }));
-
-  return [...coursePaths, ...aliasPaths];
 }
 
-const { type, course, name } = Astro.props as {
-  type: 'course' | 'category';
-  course?: unknown;
-  name?: string;
-  courses?: any[];
-  slug?: string;
-  target?: string;
-};
-const couponCourse = (course ?? {}) as CouponCourse;
+const { course } = Astro.props;
 
-// --- SHARED HELPERS ---
-const currentMonthYear = new Date().toLocaleDateString("en-US", {
-  month: "long",
-  year: "numeric",
+// Data Logic
+const relatedCourses = courses
+  .filter((c: any) => c.category === course.category && c.slug !== course.slug)
+  .sort(() => 0.5 - Math.random())
+  .slice(0, 4);
+
+// --- SHARED DATA ---
+const date = new Date();
+const currentMonth = date.toLocaleDateString('en-US', { month: 'long' });
+const currentYear = date.getFullYear();
+const isFree = course.price === 0 || course.price === "Free";
+
+const faqs = isFree ? [
+  {
+    q: `Is ${course.title} really free?`,
+    a: `Yes, ${course.title} is completely free with our exclusive coupon code. You can enroll for $0.`
+  },
+  {
+    q: "How do I get this course for free?",
+    a: 'Click the "Get Course" button on this page to access the course with our 100% OFF coupon code applied automatically.'
+  },
+  {
+    q: `How long is this free course?`,
+    a: `The course is approximately ${course.duration || 'a few hours'} long and you get full lifetime access once enrolled.`
+  }
+] : [
+  {
+    q: `Is there a discount for ${course.title}?`,
+    a: `Yes, we provide the best verified Udemy coupon for ${course.title}. You can get it at the lowest possible price.`
+  },
+  {
+    q: "How do I apply the coupon code?",
+    a: 'Simply click the "Get Course" button. The best available discount code is applied automatically to your link.'
+  },
+  {
+    q: `How long is this course?`,
+    a: `${course.title} is approximately ${course.duration || 'a few hours'} long with comprehensive content.`
+  }
+];
+
+// Add a general FAQ that's always relevant
+faqs.push({
+  q: `What will I learn in ${course.title}?`,
+  a: `${course.title} by ${course.instructor || 'expert instructors'}. You will master key skills in ${course.category}.`
 });
 
-// --- COURSE LOGIC ---
-const extractKeySkill = (description: string, title = "") => {
-  const content = ((description || "") + " " + (title || "")).toLowerCase();
-  if (content.includes("hacking") || content.includes("penetration") || content.includes("cybersecurity"))
-    return "ethical hacking & cybersecurity";
-  if (content.includes("python") || content.includes("django") || content.includes("flask")) 
-    return "Python programming & back-end development";
-  if (content.includes("javascript") || content.includes("react") || content.includes("next.js") || content.includes("typescript"))
-    return "modern JavaScript & front-end development";
-  if (content.includes("java") && !content.includes("javascript")) 
-    return "enterprise Java development & Spring Boot";
-  if (content.includes("data science") || content.includes("machine learning") || content.includes("deep learning") || content.includes("artificial intelligence"))
-    return "data science, machine learning & AI";
-  if (content.includes("web development") || content.includes("full stack") || content.includes("fullstack"))
-    return "full-stack web development";
-  if (content.includes("aws") || content.includes("azure") || content.includes("cloud computing"))
-    return "cloud computing & architectural engineering";
-  if (content.includes("digital marketing") || content.includes("seo") || content.includes("social media"))
-    return "digital marketing & conversion rate optimization";
-  if (content.includes("trading") || content.includes("stock market") || content.includes("finance"))
-    return "financial trading & technical analysis";
-  if (content.includes("excel") || content.includes("spreadsheet") || content.includes("data analysis"))
-    return "advanced data analysis & Excel automation";
-  return couponCourse?.category || "professional skill development";
+// --- SEO LOGIC ---
+const nextMonthDate = new Date();
+nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+const priceValidUntil = nextMonthDate.toISOString().split('T')[0];
+// "SEO Killer" Title: Priority on [Title] + Coupon + Date
+// Truncate course title if too long to keep total under 70 chars
+const shortTitle = course.title.length > 50 ? course.title.substring(0, 47) + "..." : course.title;
+const pageTitle = `${shortTitle} Coupon - ${currentMonth} ${currentYear}`;
+
+const pageDescription = `Verified Udemy coupon for ${course.title}. ${isFree ? 'Get it for 100% OFF today.' : 'Get the maximum discount.'} Updated for ${currentMonth} ${currentYear}.`;
+
+// JSON-LD Course Schema
+const courseSchema = {
+  "@context": "https://schema.org",
+  "@type": "Course",
+  "name": course.title,
+  "description": course.description?.substring(0, 160),
+  "provider": {
+    "@type": "Organization",
+    "name": "Udemy",
+    "sameAs": "https://www.udemy.com"
+  },
+  "image": course.image,
+  "offers": {
+    "@type": "Offer",
+    "price": isFree ? "0" : course.price,
+    "priceCurrency": "USD",
+    "priceValidUntil": priceValidUntil,
+    "availability": "https://schema.org/InStock",
+    "url": Astro.url.href
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": course.rating || 4.5,
+    "reviewCount": course.students || 100
+  }
 };
 
-const escapeHtml = (value: string) =>
-  value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-
-const renderMarkdownLite = (input: string) => {
-  const text = (input || "").replace(/\r\n?/g, "\n");
-  const lines = text.split("\n");
-  const htmlParts: string[] = [];
-  let currentPara: string[] = [];
-  let inList = false;
-
-  const flushParagraph = () => {
-    if (currentPara.length === 0) return;
-    const paragraphText = escapeHtml(currentPara.join(" ")).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-    htmlParts.push(`<p>${paragraphText}</p>`);
-    currentPara = [];
-  };
-
-  const closeList = () => {
-    if (!inList) return;
-    htmlParts.push("</ul>");
-    inList = false;
-  };
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-
-    if (!line) {
-      flushParagraph();
-      closeList();
-      continue;
+// JSON-LD Breadcrumb Schema
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": Astro.site
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Udemy Coupon Code",
+      "item": `${Astro.site}udemy-coupon-code`
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": course.title,
+      "item": Astro.url.href
     }
-
-    const bulletMatch = line.match(/^[-*]\s+(.*)$/);
-    if (bulletMatch) {
-      flushParagraph();
-      if (!inList) {
-        htmlParts.push('<ul class="list-disc pl-6">');
-        inList = true;
-      }
-      const itemText = escapeHtml(bulletMatch[1]).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-      htmlParts.push(`<li>${itemText}</li>`);
-      continue;
-    }
-
-    closeList();
-    currentPara.push(line);
-  }
-
-  flushParagraph();
-  closeList();
-
-  return htmlParts.join("\n");
+  ]
 };
 
-let title = "";
-let description = "";
-let canonical = "";
-let structuredData: any;
-let whatYouLearn: string[] | undefined;
-let prerequisites: string[] | undefined;
-let discountAmount: string | undefined;
-let displayPrice: string | undefined;
-let displayOriginalPrice: string | undefined;
-let similarCoursesList: any[] = [];
-const categoryName = name ?? "Courses";
-const categoryTarget = (Astro.props as { target?: string })?.target;
-
-if (type === "course" && course) {
-  const p = typeof couponCourse.price === "string" ? parseFloat(couponCourse.price.replace(/[^\d.-]/g, "")) : couponCourse.price;
-  const op = typeof couponCourse.originalPrice === "string" ? parseFloat(couponCourse.originalPrice.replace(/[^\d.-]/g, "")) : couponCourse.originalPrice;
-  
-  displayPrice = String(couponCourse.price || "").startsWith("$") ? String(couponCourse.price) : `$${couponCourse.price}`;
-  displayOriginalPrice = String(couponCourse.originalPrice || "").startsWith("$") ? String(couponCourse.originalPrice) : `$${couponCourse.originalPrice}`;
-
-  let rawDiscount = couponCourse.discount || "";
-  if (!rawDiscount) {
-    if (p === 0 || (typeof p === "number" && p < 0.1) || String(couponCourse.price).toLowerCase().includes("free")) {
-      rawDiscount = "100%";
-    } else if (typeof op === "number" && typeof p === "number" && op > 0) {
-      rawDiscount = `${Math.round(((op - p) / op) * 100)}%`;
+// JSON-LD FAQ Schema
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map(f => ({
+    "@type": "Question",
+    "name": f.q,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": f.a
     }
-  }
-
-  const cleanDiscount = rawDiscount?.replace("-", "") || "100%";
-  discountAmount = cleanDiscount.includes("%") ? cleanDiscount : `${cleanDiscount} OFF`;
-
-  canonical = `https://courseswyn.com/coupon/${couponCourse.slug}/`;
-  title = `Coupon - ${couponCourse.title}`;
-  
-  description = `${couponCourse.description || ""}. this is applicable in ${couponCourse.category} with udemy coupon code offers for ${currentMonthYear}`;
-
-  structuredData = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Course",
-        "name": couponCourse.title,
-        "description": couponCourse.description,
-        "educationalLevel": couponCourse.level || "All Levels",
-        "teaches": [couponCourse.category, couponCourse.subcategory || couponCourse.subCategory, extractKeySkill(couponCourse.description || "")].filter(Boolean),
-        "abstract": couponCourse.description,
-        "audience": {
-          "@type": "Audience",
-          "audienceType": "Learner"
-        },
-        "inLanguage": couponCourse.language || "English",
-        "timeRequired": couponCourse.duration
-          ? `PT${couponCourse.duration?.replace(" hours", "H")?.replace(" mins", "M")}`
-          : undefined,
-        "isAccessibleForFree": couponCourse.discount === "-100%",
-        "provider": {
-          "@type": "Organization",
-          "name": "Udemy",
-          "url": "https://www.udemy.com",
-        },
-        "offers": {
-          "@type": "Offer",
-          "price": couponCourse.originalPrice === 0 ? "0" : (couponCourse.price || "0"),
-          "priceCurrency": "USD",
-          "url": canonical,
-          "availability": "https://schema.org/InStock",
-          "validFrom": new Date().toISOString(),
-          "category": "PaidEducationalContent"
-        },
-        "hasCourseInstance": {
-          "@type": "CourseInstance",
-          "courseMode": "online",
-          "instructor": { 
-             "@type": "Person", 
-             "name": couponCourse.instructor,
-             "jobTitle": "Udemy Instructor"
-          },
-          "courseWorkload": couponCourse.duration,
-        },
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": parseFloat(String(couponCourse.rating || 0)),
-          "reviewCount": couponCourse.students,
-          "bestRating": 5,
-          "worstRating": 1,
-        },
-        "publisher": {
-          "@type": "Organization",
-          "name": "CoursesWyn",
-          "url": "https://courseswyn.com",
-          "logo": {
-            "@type": "ImageObject",
-            "url": "https://courseswyn.com/logo.png",
-          },
-        },
-      },
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          {
-            "@type": "ListItem",
-            "position": 1,
-            "name": "Home",
-            "item": "https://courseswyn.com/",
-          },
-          {
-            "@type": "ListItem",
-            "position": 2,
-            "name": "Coupons",
-            "item": "https://courseswyn.com/coupon/",
-          },
-          {
-            "@type": "ListItem",
-            "position": 3,
-            "name": couponCourse.title,
-            "item": canonical,
-          },
-        ],
-      },
-    ],
-  };
-
-  whatYouLearn = Array.isArray(couponCourse.learn) ? couponCourse.learn.filter(Boolean) : [];
-  prerequisites = Array.isArray(couponCourse.requirements) ? couponCourse.requirements.filter(Boolean) : [];
-
-  similarCoursesList = (courses as any[])
-    .filter((c: any) => c.category === couponCourse.category && c.slug !== couponCourse.slug)
-    .slice(0, 4);
-}
-
-if (type === "category") {
-  const targetPath = typeof categoryTarget === 'string' && categoryTarget ? categoryTarget : '/';
-  canonical = `https://courseswyn.com${targetPath}`;
-  title = `Redirecting… | CoursesWyn`;
-  description = `This page has moved. Redirecting you to the best ${categoryName} coupons hub.`;
-  structuredData = undefined;
-}
+  }))
+};
 ---
 
-{type === "course" && course && (
-<MainLayout
-  title={title || couponCourse.title}
-  description={description || (couponCourse.description ?? "")}
-  canonical={canonical}
-  ogImage={couponCourse.image || ""}
-  structuredData={structuredData}
->
-  <!-- Background Accents -->
-  <div class="fixed inset-0 bg-background"></div>
-  <div class="fixed inset-0 bg-[radial-gradient(1100px_circle_at_20%_0%,rgba(34,197,94,0.08),transparent_55%)] pointer-events-none"></div>
+<MainLayout title={pageTitle} description={pageDescription}>
+  <script type="application/ld+json" set:html={JSON.stringify(courseSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+  <div class="bg-[#1a1d29] min-h-screen pb-20 pt-10 px-4">
+    <div class="max-w-4xl mx-auto space-y-10">
 
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
-    <!-- Breadcrumb -->
-    <div class="mb-8 opacity-60 hover:opacity-100 transition-opacity">
-      <Breadcrumb
-        category={couponCourse.category}
-        subcategory={couponCourse.subcategory || couponCourse.subCategory}
-        courseTitle={couponCourse.title}
-      />
-    </div>
+      <!-- 1. IMAGE COURSES -->
+      <section class="relative">
+        <img 
+            src={course.image} 
+            alt={course.title} 
+            class="w-full rounded-2xl shadow-2xl border border-[#2d3748]" 
+        />
+        <div class="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg text-xs text-gray-300">
+            {course.createdAt ? "7 minutes ago" : "Newly Added"}
+        </div>
+        <button class="absolute top-4 right-4 p-2 bg-black/40 backdrop-blur-md rounded-full text-white hover:text-red-500 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        </button>
+      </section>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-      <!-- LEFT CONTENT COLUMN -->
-      <div class="lg:col-span-8 space-y-12">
-        
-        <!-- HIGH-END HERO SECTION -->
-        <section id="course-overview" class="bg-card/60 border border-border rounded-[1.75rem] p-6 sm:p-10 backdrop-blur-xl scroll-mt-32">
-          <div class="flex flex-wrap items-center gap-2 mb-4">
-            <span class="inline-flex items-center gap-2 bg-primary/10 text-primary text-[11px] font-black px-3 py-1.5 rounded-full border border-primary/20 uppercase tracking-wider">
-              <span class="w-2 h-2 bg-primary rounded-full"></span>
-              {couponCourse.category}
+      <!-- 2. UDEMY - DURATION - STUDENT - LANGUAGE - PRICE -->
+      <section class="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-[#2d3748]">
+        <div class="flex flex-wrap gap-2">
+            <span class="flex items-center gap-2 bg-[#1f2937] px-3 py-2 rounded-lg text-sm font-medium text-gray-300 border border-[#2d3748]">
+                <span class="text-xs">💼</span> Udemy
             </span>
-            {(couponCourse.subcategory || couponCourse.subCategory) && (
-              <span class="inline-flex items-center gap-2 bg-muted/40 text-foreground text-[11px] font-black px-3 py-1.5 rounded-full border border-border uppercase tracking-wider">
-                {couponCourse.subcategory || couponCourse.subCategory}
-              </span>
-            )}
-            <span class="inline-flex items-center gap-2 bg-red-500/10 text-red-200 text-[11px] font-black px-3 py-1.5 rounded-full border border-red-500/20 uppercase tracking-wider">
-              {couponCourse.discount || discountAmount}
+            <span class="flex items-center gap-2 bg-[#1f2937] px-3 py-2 rounded-lg text-sm font-medium text-gray-300 border border-[#2d3748]">
+                <span class="text-xs">🕒</span> {course.duration || "N/A"}
             </span>
-          </div>
+            <span class="flex items-center gap-2 bg-[#1f2937] px-3 py-2 rounded-lg text-sm font-medium text-gray-300 border border-[#2d3748]">
+                <span class="text-xs">👁️</span> {course.students || 0}
+            </span>
+            <span class="flex items-center gap-2 bg-[#1f2937] px-3 py-2 rounded-lg text-sm font-medium text-gray-300 border border-[#2d3748]">
+                <span class="text-xs">🌐</span> English
+            </span>
+        </div>
+        <div class="bg-[#242938] px-4 py-2 rounded-xl border border-[#2d3748] flex items-center gap-3">
+            <span class="text-gray-500 line-through text-sm">${course.originalPrice || "84.99"}</span>
+            <span class="text-[#00c853] font-bold text-2xl">
+                {course.price === 0 || course.price === "Free" ? "$0" : `$${course.price}`}
+            </span>
+        </div>
+      </section>
 
-          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.08] text-white">
-            {couponCourse.title}
-          </h1>
+      <!-- 3. CATEGORY AND SUB CATEGORY -->
+      <section class="flex items-center gap-2 text-sm">
+        <a href="/categories" class="bg-[#242938] px-4 py-2 rounded-lg text-gray-300 hover:text-white border border-[#2d3748]">
+            {course.category}
+        </a>
+        <span class="text-gray-600">›</span>
+        <span class="bg-[#242938] px-4 py-2 rounded-lg text-gray-300 border border-[#2d3748]">
+            {course.subcategory || (course.subCategory || "General")}
+        </span>
+      </section>
 
-          <div class="mt-4 text-muted-foreground text-base sm:text-lg leading-relaxed space-y-3">
-            {(couponCourse.description || "")
-              .split(/\n{2,}/)
-              .map((para: string) => para.trim())
-              .filter(Boolean)
-              .map((para: string) => (
-                <p>{para}</p>
-              ))}
-          </div>
-
-          <div class="mt-6 flex flex-wrap items-center gap-3 text-sm">
-            <div class="inline-flex items-center gap-2 text-foreground">
-              <span class="text-yellow-300 font-black">★ {couponCourse.rating || 0}</span>
-              <span class="text-muted-foreground">Based on {couponCourse.students?.toLocaleString() || '0'} Udemy students</span>
-            </div>
-            <span class="text-muted-foreground">|</span>
-            <span class="text-muted-foreground">Created by <span class="text-foreground font-semibold">{couponCourse.instructor}</span></span>
-            {couponCourse.duration && (
-              <>
-                <span class="text-muted-foreground">|</span>
-                <span class="text-muted-foreground">{couponCourse.duration}</span>
-              </>
-            )}
-          </div>
-        </section>
-
-        <!-- Sticky Udemy-like tabs -->
-        <div class="sticky top-[64px] z-40 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 bg-background/90 backdrop-blur-xl border-y border-border">
-          <nav class="flex gap-6 overflow-x-auto py-3 text-sm font-semibold text-muted-foreground">
-            <a href="#course-overview" data-tab-link="course-overview" class="tab-link whitespace-nowrap hover:text-foreground">Overview</a>
-            <a href="#what-you-learn" data-tab-link="what-you-learn" class="tab-link whitespace-nowrap hover:text-foreground">What you’ll learn</a>
-            <a href="#requirements" data-tab-link="requirements" class="tab-link whitespace-nowrap hover:text-foreground">Requirements</a>
-            <a href="#course-details" data-tab-link="course-details" class="tab-link whitespace-nowrap hover:text-foreground">Details</a>
-            <a href="#faq" data-tab-link="faq" class="tab-link whitespace-nowrap hover:text-foreground">FAQ</a>
-          </nav>
+      <!-- 3. DETAIL KURUS DARI DATA COUPON.JSON -->
+      <section class="space-y-10">
+        <div>
+            <h1 class="text-3xl md:text-5xl font-black text-white leading-tight mb-4">
+                {course.title}
+            </h1>
+            <p class="text-lg text-gray-400 italic">
+                {course.description}
+            </p>
         </div>
 
-        <!-- What You'll Learn -->
-        {whatYouLearn && whatYouLearn.length > 0 && (
-          <section id="what-you-learn" class="bg-card/60 border border-border rounded-[1.75rem] p-6 sm:p-10 backdrop-blur-xl scroll-mt-32">
-            <h2 class="text-2xl font-black text-white">What you’ll learn</h2>
-            <div class="mt-6 space-y-3">
-              {whatYouLearn.map((item: string) => (
-                <div class="flex gap-4 items-start">
-                  <div class="mt-0.5 w-6 h-6 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                  </div>
-                  <div class="text-foreground font-semibold text-sm leading-relaxed">{item}</div>
-                </div>
-              ))}
-            </div>
-          </section>
+        {course.learn && course.learn.length > 0 && (
+          <div class="bg-[#242938] p-6 rounded-2xl border border-[#2d3748]">
+            <h2 class="text-xl font-bold text-white mb-6">What you'll learn in this Udemy Course</h2>
+            <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {course.learn.map((item: string) => (
+                    <li class="flex items-start gap-3 text-sm text-gray-300">
+                        <span class="text-[#00c853] flex-shrink-0">✓</span>
+                        {item}
+                    </li>
+                ))}
+            </ul>
+          </div>
         )}
 
-        <!-- Requirements -->
-        {prerequisites && prerequisites.length > 0 && (
-          <section id="requirements" class="bg-card/60 border border-border rounded-[1.75rem] p-6 sm:p-10 backdrop-blur-xl scroll-mt-32">
-            <h2 class="text-2xl font-black text-white">Requirements</h2>
-            <div class="mt-6 space-y-3">
-              {prerequisites.map((item: string) => (
-                <div class="flex gap-4 items-start">
-                  <div class="mt-0.5 w-6 h-6 rounded-lg bg-muted/30 border border-border flex items-center justify-center flex-shrink-0">
-                    <svg class="w-3.5 h-3.5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                  </div>
-                  <div class="text-foreground font-semibold text-sm leading-relaxed">{item}</div>
-                </div>
-              ))}
+        {course.requirements && course.requirements.length > 0 && (
+            <div class="space-y-4">
+                <h2 class="text-2xl font-bold text-white">Udemy Coupon Requirements</h2>
+                <ul class="list-disc pl-6 space-y-2 text-gray-300">
+                    {course.requirements.map((req: string) => (
+                        <li>{req}</li>
+                    ))}
+                </ul>
             </div>
-          </section>
         )}
 
-        <!-- Course details -->
-        <section id="course-details" class="bg-card/60 border border-border rounded-[1.75rem] p-6 sm:p-10 backdrop-blur-xl relative overflow-hidden scroll-mt-32">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl"></div>
-          <h2 class="text-2xl font-black text-white">Course details</h2>
-          <div class="mt-6 prose prose-invert prose-slate max-w-none text-muted-foreground leading-relaxed font-medium prose-p:my-4 prose-li:my-1 prose-ul:my-4 prose-ul:space-y-2">
-            {couponCourse.content ? (
-              <div set:html={renderMarkdownLite(couponCourse.content)} class="course-content-rich" />
-            ) : (
-              <div class="space-y-4">
-                {(couponCourse.description || "")
-                  .split(/\n{2,}/)
-                  .map((para: string) => para.trim())
-                  .filter(Boolean)
-                  .map((para: string) => (
-                    <p>{para}</p>
-                  ))}
-              </div>
-            )}
-          </div>
-        </section>
+        {course.content && (
+            <div class="space-y-6">
+                <h2 class="text-2xl font-bold text-white">About This Udemy Coupon</h2>
+                <div class="prose prose-invert max-w-none text-gray-300 leading-relaxed prose-headings:text-white prose-a:text-[#00c853] prose-strong:text-white" set:html={course.content} />
+            </div>
+        )}
+      </section>
 
-        <!-- Instructor Section -->
-        <section class="bg-card/60 border border-border rounded-[1.75rem] p-6 sm:p-10 backdrop-blur-xl overflow-hidden relative">
-          <div class="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl"></div>
-          <h2 class="text-2xl font-black text-white mb-8">Author and Instructor</h2>
-          <div class="flex flex-col md:flex-row gap-8 items-center md:items-start text-center md:text-left">
-            <div class="relative group">
-              <div class="absolute -inset-2 bg-gradient-to-r from-primary/40 to-emerald-400/30 rounded-full blur opacity-20 group-hover:opacity-40 transition"></div>
-              <div class="w-32 h-32 rounded-full bg-muted/30 flex items-center justify-center text-4xl font-black text-white border-2 border-border relative z-10 uppercase">
-                {couponCourse.instructor?.charAt(0)}
-              </div>
+      <!-- 4. TOMBOL ENROLL -->
+      <section class="pt-6 relative group">
+        <div class="absolute -inset-1 bg-gradient-to-r from-[#00c853] to-[#00e676] rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+        <a 
+            href={course.url} 
+            target="_blank" 
+            rel="nofollow noopener"
+            class="relative w-full flex flex-col items-center justify-center gap-1 bg-[#00c853] hover:bg-[#00b24a] text-white font-bold py-6 rounded-2xl transition-all shadow-2xl shadow-[#00c853]/40 border border-[#00e676]/30"
+        >
+            <div class="flex items-center gap-3">
+                <span class="text-2xl tracking-tight uppercase">Get This Udemy Coupon</span>
+                <svg class="w-6 h-6 transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
             </div>
-            <div class="flex-1">
-              <h3 class="text-xl font-bold text-white mb-2">{couponCourse.instructor}</h3>
-              <p class="text-muted-foreground text-sm mb-4 font-semibold">Provider: {couponCourse.provider}</p>
-              <div class="prose prose-invert prose-sm max-w-none text-muted-foreground">
-                <p>
-                  With years of hands-on experience in <strong>{couponCourse.category}</strong>, {couponCourse.instructor} has dedicated thousands of hours to teaching 
-                  and mentorship. This course is the culmination of industry best practices and a proven curriculum that has helped 
-                  thousands of students transition into professional roles.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+            <span class="text-xs text-white/80 font-medium uppercase tracking-widest">
+                Verified & Working {currentMonth} {currentYear} • Limited Time Offer
+            </span>
+        </a>
+        <div class="mt-4 flex items-center justify-center gap-6 text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em]">
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#00c853] rounded-full animate-pulse"></span> 100% Verified</span>
+            <span class="flex items-center gap-1.5">🛡️ SECURE ACCESS</span>
+            <span class="flex items-center gap-1.5">⚡ FAST REDEEM</span>
+        </div>
+      </section>
 
-        <section class="bg-card/60 border border-border rounded-[1.75rem] p-6 sm:p-10 backdrop-blur-xl">
-          <h2 class="text-2xl font-black text-white mb-4">Platform snapshot</h2>
-          <p class="text-muted-foreground text-sm leading-relaxed">
-            Ratings and enrollment counts shown on this page are aggregate figures from Udemy.
-            We do not publish first-party user reviews here.
-          </p>
-          <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="bg-background/40 border border-border rounded-2xl p-5">
-              <div class="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-black">Average rating</div>
-              <div class="mt-2 text-white font-black text-2xl">★ {couponCourse.rating}</div>
-            </div>
-            <div class="bg-background/40 border border-border rounded-2xl p-5">
-              <div class="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-black">Based on</div>
-              <div class="mt-2 text-white font-black text-2xl">{couponCourse.students?.toLocaleString() || '0'}</div>
-              <div class="text-muted-foreground text-xs">Udemy students</div>
-            </div>
-          </div>
-        </section>
+      <div class="h-px bg-[#2d3748] w-full"></div>
 
-        <!-- FAQ Implementation -->
-        <section id="faq" class="bg-card/60 border border-border rounded-[1.75rem] p-6 sm:p-10 backdrop-blur-xl scroll-mt-32">
-          <h2 class="text-2xl font-black text-white">FAQ</h2>
-          <div class="space-y-4">
-            {[
-              {
-                q: `Is the "${couponCourse.title}" course truly ${String(discountAmount).includes("100%") ? "free" : "discounted"}?`, 
-                a: `Yes. By utilizing our verified ${discountAmount} coupon, you can enroll in "${couponCourse.title}" ${String(discountAmount).includes("100%") ? "without spending a single dollar" : "at a massive discount"}. This grants you lifetime access to all course materials and updates.` 
-              },
-              { 
-                q: "Do I qualify for a certificate upon completion?", 
-                a: `Yes. When you enroll with a ${discountAmount} coupon provided by CoursesWyn, you follow the same path as a paid student and are eligible for the official completion certificate from Udemy.` 
-              },
-              { 
-                q: "What happens if the coupon code expires?", 
-                a: "Udemy coupons have strict enrollment limits and time windows. If this code expires, we recommend bookmarking this page and checking back daily, as we refresh our deals constantly to find the latest active discounts." 
-              }
-            ].map((faq) => (
-              <details class="group bg-background/40 border border-border rounded-2xl overflow-hidden transition-all hover:border-primary/35">
-                <summary class="flex justify-between items-center p-5 cursor-pointer list-none">
-                  <span class="text-sm font-bold text-white group-open:text-primary transition-colors">{faq.q}</span>
-                  <div class="w-8 h-8 rounded-xl bg-muted/30 border border-border flex items-center justify-center group-open:rotate-180 transition-transform">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                  </div>
-                </summary>
-                <div class="px-5 pb-5 text-sm text-muted-foreground leading-relaxed border-t border-border pt-4">
-                  {faq.a}
+      <!-- 5. SIMILAR COURSE -->
+      <section>
+        <h2 class="text-2xl font-bold text-white mb-8">Related Udemy Coupon Codes</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {relatedCourses.map((c: any) => <CourseCard course={c} />)}
+        </div>
+        <div class="mt-10 flex justify-center">
+            <a href="/udemy-coupon-code" class="bg-[#1f2937] hover:bg-[#2d3748] text-white px-8 py-3 rounded-xl border border-[#2d3748] flex items-center gap-2 font-bold transition-all">
+                Load More
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </a>
+        </div>
+      </section>
+
+      <!-- 6. FAQS -->
+      <section>
+        <h2 class="text-3xl font-bold text-white mb-8">Frequently Asked Questions</h2>
+        <div class="space-y-6">
+            {faqs.map(faq => (
+                <div class="group border-b border-[#2d3748] pb-6">
+                    <h3 class="text-[#00c853] font-bold text-lg mb-3 leading-snug">
+                        {faq.q}
+                    </h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">
+                        {faq.a}
+                    </p>
                 </div>
-              </details>
             ))}
-          </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
-      <!-- RIGHT SIDEBAR -->
-      <div class="lg:col-span-4 space-y-8">
-        
-        <!-- STICKY REDESIGNED CTA -->
-        <div class="sticky top-8 bg-card/60 border border-border rounded-[1.75rem] p-6 backdrop-blur-xl shadow-2xl overflow-hidden">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-
-          <div class="relative aspect-video rounded-2xl overflow-hidden border border-border mb-5">
-            <img src={couponCourse.image} alt={couponCourse.title} class="w-full h-full object-cover" loading="lazy" />
-            <div class="absolute inset-0 bg-gradient-to-t from-background/70 via-background/20 to-transparent"></div>
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="w-14 h-14 rounded-full bg-background/70 border border-border flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" class="text-white">
-                  <path d="M8 5v14l11-7z"></path>
-                </svg>
-              </div>
+      <!-- 7. COURSE INFORMATION -->
+      <section class="bg-[#242938] border border-[#2d3748] rounded-3xl p-8 shadow-2xl">
+        <h2 class="text-2xl font-bold text-white mb-8">Course Information</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+            <div>
+                <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Platform</p>
+                <p class="text-white font-bold text-xl">Udemy</p>
             </div>
-          </div>
-          
-          <div class="relative z-10 text-center mb-8">
-             <div class="flex items-center justify-center gap-3 mb-2">
-                <span class="text-sm font-semibold text-muted-foreground line-through">{displayOriginalPrice}</span>
-                <span class="px-2 py-0.5 bg-red-500/15 text-red-200 text-[10px] font-black rounded-md border border-red-500/25 uppercase">Save {discountAmount}</span>
-             </div>
-             <div class="text-5xl sm:text-6xl font-black text-white tracking-tight mb-2">
-                {String(discountAmount).includes("100%") ? "FREE" : displayPrice}
-             </div>
-             <p class="text-muted-foreground text-xs font-semibold">{String(discountAmount).includes("100%") ? "Verified 100% OFF" : "Verified discount"}</p>
-          </div>
-
-          <a
-            href={couponCourse.url}
-            target="_blank"
-            rel="nofollow noopener noreferrer"
-            class="block w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black py-4 px-6 rounded-2xl text-center shadow-lg shadow-primary/20 mb-6 text-base"
-          >
-            {couponCourse.discount === "-100%" ? "ENROLL FOR FREE" : "CLAIM DISCOUNT"}
-          </a>
-
-          <div class="space-y-4 mb-8">
-            {[
-              { icon: "✨", text: "Lifetime Access" },
-              { icon: "🏆", text: "Official Certificate" },
-              { icon: "📱", text: "Access on Mobile/TV" },
-              { icon: "🔄", text: "Latest Updated Course" }
-            ].map((item) => (
-              <div class="flex items-center gap-3 text-sm text-muted-foreground font-medium">
-                <span class="w-8 h-8 rounded-lg bg-muted/30 flex items-center justify-center border border-border">{item.icon}</span>
-                {item.text}
-              </div>
-            ))}
-          </div>
-
-          <!-- Click to reveal logic -->
-          <div class="pt-6 border-t border-border">
-             <div class="coupon-container group cursor-pointer" data-coupon-reveal data-code={couponCourse.coupon}>
-                <p class="text-center text-[10px] text-muted-foreground font-black uppercase tracking-widest mb-3 italic">Claim Your Discount Code</p>
-                <div class="relative bg-background/40 border-2 border-dashed border-border group-hover:border-primary/50 rounded-xl py-4 flex flex-col items-center gap-1 transition-all">
-                   <span class="coupon-text filter blur-[4px] select-none text-xl font-black text-muted-foreground group-hover:text-white">XXXXXXXX</span>
-                  <div class="absolute inset-0 flex items-center justify-center opacity-100 group-hover:opacity-0 transition-opacity">
-                      <span class="bg-primary text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg">CLICK TO SHOW</span>
-                   </div>
-                   <p class="text-[10px] items-center gap-1 text-primary font-bold feedback-text flex">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="animate-bounce"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
-                      REVEAL & COPY
-                   </p>
+            <div>
+                <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Duration</p>
+                <p class="text-white font-bold text-xl">{course.duration || "N/A"}</p>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Language</p>
+                <p class="text-white font-bold text-xl">English</p>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Category</p>
+                <p class="text-white font-bold text-lg">{course.category} • {course.subcategory || "General"}</p>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Rating</p>
+                <div class="flex items-center gap-2">
+                    <span class="text-yellow-400 text-lg">⭐</span>
+                    <span class="text-white font-bold text-xl">{course.rating || "N/A"} <span class="text-gray-500 text-sm font-medium">({course.students?.toLocaleString() || 0} enrolled)</span></span>
                 </div>
-             </div>
-          </div>
-        </div>
-
-        <!-- Similar Courses Grid -->
-        {similarCoursesList.length > 0 && (
-          <div class="bg-card/60 border border-border rounded-[1.75rem] p-6 backdrop-blur-xl shadow-xl">
-            <h3 class="font-black text-white text-lg mb-6 flex items-center gap-2">
-              <span class="w-1.5 h-6 bg-primary rounded-full"></span>
-              Recommended
-            </h3>
-            <div class="flex flex-col gap-5">
-              {similarCoursesList.map((sim) => (
-                <a
-                  href={`/coupon/${sim.slug}`}
-                  class="flex gap-4 p-3 bg-background/40 hover:bg-background/60 border border-border rounded-2xl group transition-all"
-                >
-                  <div class="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-border">
-                    <img
-                      src={sim.image}
-                      class="w-full h-full object-cover group-hover:scale-110 transition-transform"
-                      alt={sim.title}
-                    />
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <h4 class="text-xs font-bold text-white mb-2 line-clamp-2 leading-tight group-hover:text-primary transition-colors">
-                      {sim.title}
-                    </h4>
-                    <div class="flex items-center justify-between">
-                       <span class="text-[10px] font-bold text-primary">FREE</span>
-                       <div class="flex items-center gap-1">
-                          <span class="text-yellow-500 text-[10px]">★</span>
-                          <span class="text-[10px] text-muted-foreground font-bold">{sim.rating}</span>
-                       </div>
-                    </div>
-                  </div>
-                </a>
-              ))}
             </div>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-
-  <!-- PREMIUM MOBILE CTA -->
-  <div class="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-xl border-t border-border z-50 lg:hidden rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
-    <div class="flex gap-4 items-center max-w-lg mx-auto">
-      <div class="flex-1">
-        <div class="text-[10px] text-muted-foreground font-black uppercase tracking-widest line-through mb-1">
-           {displayOriginalPrice}
+            <div>
+                <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Price</p>
+                <div class="flex items-center gap-2 font-bold text-xl">
+                    <span class={`${course.price === 0 || course.price === "Free" ? 'text-[#00c853]' : 'text-white'}`}>
+                        {course.price === 0 || course.price === "Free" ? 'FREE' : `$${course.price}`}
+                    </span>
+                    <span class="text-gray-500 line-through text-lg mb-0.5">${course.originalPrice || "84.99"}</span>
+                </div>
+            </div>
         </div>
-        <div class="text-2xl font-black text-white">
-           {String(discountAmount).includes("100%") ? "FREE" : displayPrice}
-           <span class="text-primary text-xs ml-1 font-bold">{discountAmount}</span>
-        </div>
-      </div>
-      <a
-        href={couponCourse.url}
-        target="_blank"
-        rel="nofollow noopener noreferrer"
-        class="bg-primary hover:bg-primary/90 text-primary-foreground font-black py-4 px-10 rounded-2xl flex-1 text-center shadow-lg shadow-primary/20 text-sm"
-      >
-        GET DEAL
-      </a>
+      </section>
+
     </div>
   </div>
-
-<script is:inline>
-  function setupStickyTabs() {
-    const tabLinks = Array.from(document.querySelectorAll('.tab-link'));
-    if (tabLinks.length === 0) return;
-
-    const sectionIds = tabLinks
-      .map((a) => a.getAttribute('data-tab-link'))
-      .filter(Boolean);
-
-    const sections = sectionIds
-      .map((id) => document.getElementById(id))
-      .filter(Boolean);
-
-    const setActive = (id) => {
-      tabLinks.forEach((a) => {
-        const aId = a.getAttribute('data-tab-link');
-        if (aId === id) {
-          a.classList.add('text-foreground');
-          a.classList.remove('text-muted-foreground');
-        } else {
-          a.classList.remove('text-foreground');
-          a.classList.add('text-muted-foreground');
-        }
-      });
-    };
-
-    tabLinks.forEach((a) => {
-      a.addEventListener('click', (e) => {
-        const id = a.getAttribute('data-tab-link');
-        if (!id) return;
-        const el = document.getElementById(id);
-        if (!el) return;
-        e.preventDefault();
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        history.replaceState(null, '', `#${id}`);
-        setActive(id);
-      });
-    });
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => (b.intersectionRatio ?? 0) - (a.intersectionRatio ?? 0))[0];
-        if (!visible?.target?.id) return;
-        setActive(visible.target.id);
-      },
-      {
-        root: null,
-        threshold: [0.2, 0.35, 0.5, 0.65],
-        rootMargin: '-96px 0px -60% 0px',
-      },
-    );
-
-    sections.forEach((s) => observer.observe(s));
-
-    const initialId = window.location.hash?.replace('#', '');
-    if (initialId && sectionIds.includes(initialId)) {
-      setActive(initialId);
-    } else {
-      setActive('course-overview');
-    }
-  }
-
-  function setupCouponReveal() {
-    const containers = document.querySelectorAll('[data-coupon-reveal]');
-    containers.forEach(container => {
-      container.addEventListener('click', function() {
-        const code = this.getAttribute('data-code');
-        const textSpan = this.querySelector('.coupon-text');
-        const feedback = this.querySelector('.feedback-text');
-        
-        if (!code || !textSpan || !feedback) return;
-
-        // Copy to clipboard
-        navigator.clipboard.writeText(code);
-        
-        // Reveal style
-        textSpan.classList.remove('blur-[4px]', 'text-muted-foreground');
-        textSpan.textContent = code;
-        textSpan.classList.add('font-black', 'text-white', 'tracking-[0.1em]');
-        
-        const wrapper = this.querySelector('.relative');
-        if (wrapper) {
-          wrapper.classList.remove('border-dashed');
-          wrapper.classList.add('border-solid', 'border-primary/50', 'bg-card');
-        }
-        
-        const overlay = this.querySelector('.absolute.inset-0');
-        if (overlay) overlay.classList.add('hidden');
-        
-        // Feedback
-        feedback.innerHTML = '<span class="text-green-500">✓ COPIED TO CLIPBOARD</span>';
-        
-        setTimeout(() => {
-          feedback.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="animate-bounce"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg> RE-COPY CODE';
-        }, 3000);
-      });
-    });
-  }
-
-  // Run on initial load
-  setupStickyTabs();
-  setupCouponReveal();
-  // Support Astro View Transitions if enabled
-  document.addEventListener('astro:after-swap', () => {
-    setupStickyTabs();
-    setupCouponReveal();
-  });
-</script>
 </MainLayout>
-)}
 
-{(type as 'course' | 'category') === "category" && (
-<MainLayout
-  title={title}
-  description={description}
-  canonical={canonical}
-  structuredData={structuredData}
-  robots="noindex, follow"
->
-  <meta http-equiv="refresh" content={`0;url=${canonical}`} />
-
-  <div class="min-h-[60vh] flex items-center justify-center px-4">
-    <div class="max-w-xl w-full bg-card/60 border border-border rounded-[1.75rem] p-8 backdrop-blur-xl">
-      <div class="text-[11px] uppercase tracking-[0.22em] text-muted-foreground font-black">Moved</div>
-      <h1 class="mt-2 text-2xl sm:text-3xl font-black text-white">Redirecting to the hub page…</h1>
-      <p class="mt-3 text-sm text-muted-foreground leading-relaxed">
-        This legacy URL is kept for compatibility. The canonical hub for <strong>{categoryName}</strong> is now:
-      </p>
-      <a class="mt-4 inline-flex items-center justify-center w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black py-3 px-5 rounded-2xl shadow-lg shadow-primary/20" href={canonical}>
-        Go to hub
-      </a>
-      <p class="mt-4 text-xs text-muted-foreground">
-        If you are not redirected automatically, use the button above.
-      </p>
-    </div>
-  </div>
-
-  <script is:inline>
-    const canonicalLink = document.querySelector('link[rel="canonical"]');
-    const target = canonicalLink?.getAttribute('href');
-    if (target) window.location.replace(target);
-  </script>
-</MainLayout>
-)}

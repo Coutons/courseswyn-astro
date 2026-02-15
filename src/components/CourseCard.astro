@@ -1,0 +1,90 @@
+---
+const { course } = Astro.props;
+
+// LOGIC DATA HARGA SUNGGUHAN (SESUAI JSON)
+// price: Harga akhir (bisa 0, bisa 9.99)
+// originalPrice: Harga asli sebelum diskon (bisa 19.99, 84.99)
+
+const price = course.price; // Harga jual
+const originalPrice = course.originalPrice; // Harga coret
+
+// Hitung % Diskon jika ada original price
+let discountBadge = "";
+if (originalPrice && originalPrice > price) {
+    if (price === 0) {
+        discountBadge = "100% OFF";
+    } else {
+        const percent = Math.round(((originalPrice - price) / originalPrice) * 100);
+        discountBadge = `${percent}% OFF`;
+    }
+} else if (price === 0) {
+    discountBadge = "100% OFF"; // Fallback kalau originalPrice kosong tapi price 0
+}
+---
+
+<a href={`/coupon/${course.slug}`} class="group block bg-[#242938] border border-[#2d3748] rounded-2xl overflow-hidden hover:border-green-500 hover:shadow-xl hover:shadow-green-500/10 hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
+  <!-- Image -->
+  <div class="relative aspect-video overflow-hidden">
+    <img 
+        src={course.image} 
+        alt={course.title} 
+        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+        loading="lazy" 
+    />
+    <div class="absolute inset-0 bg-gradient-to-t from-[#1a1d29] via-transparent to-transparent opacity-60"></div>
+    
+    <!-- Time Badge / Discount -->
+    {discountBadge && (
+        <div class="absolute top-2 left-2 flex gap-1">
+            <span class="bg-[#1a1d29]/90 backdrop-blur-sm text-green-400 text-xs font-bold px-2 py-1 rounded border border-green-500/30">
+                {discountBadge}
+            </span>
+        </div>
+    )}
+
+    <!-- Duration Badge (Bottom Right - Mockup/If available) -->
+    <!-- Jika ada field duration, tampilkan. Jika tidak, hide atau mock -->
+    {course.duration && (
+        <div class="absolute bottom-2 right-2 bg-black/70 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] text-white font-medium flex items-center gap-1">
+            <svg class="w-3 h-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {course.duration}
+        </div>
+    )}
+  </div>
+  
+  <!-- Content -->
+  <div class="p-4 flex flex-col flex-grow">
+      <div class="flex items-center gap-2 mb-2 text-xs text-gray-400">
+        <span class="bg-[#1a1d29] px-2 py-1 rounded border border-[#2d3748] truncate max-w-[50%]">
+            {course.category}
+        </span>
+        <span>•</span>
+        <span>{new Date(course.createdAt).toLocaleDateString()}</span>
+      </div>
+      
+      <h3 class="font-bold text-white text-md mb-2 leading-tight group-hover:text-green-400 transition-colors line-clamp-2">
+        {course.title}
+      </h3>
+      
+      <div class="mt-auto pt-3 border-t border-[#2d3748] flex justify-between items-center">
+        <!-- Rating -->
+        <div class="flex items-center gap-1 text-yellow-500 text-xs">
+           <span>★</span>
+           <span class="font-bold">4.8</span> <!-- Mock rating jika data tidak ada -->
+           <span class="text-gray-500">(1.2k)</span>
+        </div>
+        
+        <!-- Price Display Corrected -->
+        <div class="flex items-center gap-2">
+           {originalPrice && originalPrice > price && (
+              <span class="text-gray-500 line-through text-xs">${originalPrice}</span>
+           )}
+           <span class={`${price === 0 ? 'text-green-400' : 'text-white'} font-bold text-lg`}>
+                {price === 0 ? 'Free' : `$${price}`}
+           </span>
+        </div>
+      </div>
+  </div>
+</a>

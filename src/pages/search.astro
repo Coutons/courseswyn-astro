@@ -1,0 +1,162 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import CourseCard from '../components/CourseCard.astro';
+import coupons from '../data/coupons.json';
+
+// Get unique categories for filters
+const categories = [...new Set(coupons.map(c => c.category))].sort();
+
+---
+
+<MainLayout title="Search Courses | CoursesWyn" description="Search thousands of free Udemy coupons and courses.">
+  <div class="bg-[#1a1d29] min-h-screen pb-20">
+    
+    <!-- Header -->
+    <div class="bg-[#1a1d29] border-b border-[#2d3748] pt-8 pb-4 relative z-30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-bold text-white mb-6">Search Results</h1>
+        
+        <!-- Search Input Repetition -->
+         <div class="relative max-w-2xl">
+            <input 
+              type="text" 
+              id="search-page-input"
+              placeholder="Search for another course..." 
+              class="w-full bg-[#151720] border border-[#2d3748] rounded-xl px-4 py-3 pl-11 text-gray-200 focus:outline-none focus:border-green-500 transition-all shadow-inner" 
+            />
+            <button class="absolute left-3 top-3.5 text-gray-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </button>
+            <svg class="w-6 h-6 absolute left-4 top-4.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+         </form>
+      </div>
+
+      <div id="search-status" class="text-center mb-8">
+        <h1 class="text-2xl font-bold text-white mb-2">Search Results</h1>
+        <p class="text-gray-400" id="results-count">Searching...</p>
+      </div>
+
+      <!-- Results Grid -->
+      <div id="results-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Results injected here -->
+      </div>
+
+      <!-- No Results State -->
+      <div id="no-results" class="hidden text-center py-20">
+         <div class="inline-flex items-center justify-center w-20 h-20 bg-[#242938] rounded-full mb-6 text-gray-500">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+         </div>
+         <h3 class="text-xl font-bold text-white mb-2">No courses found</h3>
+         <p class="text-gray-400 max-w-md mx-auto">We couldn't find any courses matching your search. Try different keywords or browse our categories.</p>
+      </div>
+
+    </div>
+  </div>
+</MainLayout>
+
+<!-- Client Side Script for Static Search -->
+<script define:vars={{ initialCoupons: coupons }}>
+  // Data passed from server build time to client script
+  const allCoupons = initialCoupons;
+
+  function initSearch() {
+      console.log('Search initialized'); // Debug
+      const urlParams = new URLSearchParams(window.location.search);
+      const query = (urlParams.get('q') || '').toLowerCase().trim();
+      
+      const statusEl = document.getElementById('search-status');
+      const countEl = document.getElementById('results-count');
+      const gridEl = document.getElementById('results-grid');
+      const noResultsEl = document.getElementById('no-results');
+      const inputPageEl = document.getElementById('search-page-input');
+
+      // Update input value if exists
+      if(inputPageEl) {
+        inputPageEl.value = query;
+      }
+
+      if (!query) {
+          if (countEl) countEl.textContent = 'Please enter a keyword to search.';
+          if (gridEl) gridEl.innerHTML = '';
+          return;
+      }
+
+      if (countEl) countEl.textContent = `Searching for "${query}"...`;
+
+      // Filter Logic - Robust
+      const results = allCoupons.filter(course => {
+          const titleMap = (course.title || '').toLowerCase();
+          const categoryMap = (course.category || '').toLowerCase();
+          return titleMap.includes(query) || categoryMap.includes(query);
+      });
+
+      console.log(`Found ${results.length} results for ${query}`); // Debug
+
+      if (results.length === 0) {
+          if (countEl) countEl.textContent = `0 results for "${query}"`;
+          if (gridEl) gridEl.innerHTML = '';
+          if (noResultsEl) noResultsEl.classList.remove('hidden');
+      } else {
+          if (countEl) countEl.textContent = `Found ${results.length} results for "${query}"`;
+          if (noResultsEl) noResultsEl.classList.add('hidden');
+          
+          // Render Results
+          if (gridEl) {
+            gridEl.innerHTML = results.map(course => {
+                const price = course.price;
+                const originalPrice = course.originalPrice;
+                let discountBadge = "";
+                
+                // Logic Diskon JS
+                if (originalPrice && originalPrice > price) {
+                   if (price === 0) discountBadge = "100% OFF";
+                   else {
+                      const percent = Math.round(((originalPrice - price) / originalPrice) * 100);
+                      discountBadge = `${percent}% OFF`;
+                   }
+                } else if (price === 0) {
+                   discountBadge = "100% OFF";
+                }
+
+                return `
+                <a href="/coupon/${course.slug}" class="group block bg-[#242938] border border-[#2d3748] rounded-2xl overflow-hidden hover:border-green-500 hover:shadow-xl hover:shadow-green-500/10 hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
+                  <div class="relative aspect-video overflow-hidden">
+                      <img src="${course.image}" alt="${course.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+                      <div class="absolute inset-0 bg-gradient-to-t from-[#1a1d29] via-transparent to-transparent opacity-60"></div>
+                      ${discountBadge ? `<div class="absolute top-2 left-2 flex gap-1"><span class="bg-[#1a1d29]/90 backdrop-blur-sm text-green-400 text-xs font-bold px-2 py-1 rounded border border-green-500/30">${discountBadge}</span></div>` : ''}
+                  </div>
+                  <div class="p-4 flex flex-col flex-grow">
+                      <div class="flex items-center gap-2 mb-2 text-xs text-gray-400">
+                          <span class="bg-[#1a1d29] px-2 py-1 rounded border border-[#2d3748] truncate max-w-[50%]">${course.category}</span>
+                          <span>•</span>
+                          <span>${new Date(course.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <h3 class="font-bold text-white text-md mb-2 leading-tight group-hover:text-green-400 transition-colors line-clamp-2">${course.title}</h3>
+                      <div class="mt-auto pt-3 border-t border-[#2d3748] flex justify-between items-center">
+                          <div class="flex items-center gap-1 text-yellow-500 text-xs"><span>★</span><span class="font-bold">4.8</span><span class="text-gray-500">(1.2k)</span></div>
+                          <div class="flex items-center gap-2">
+                             ${originalPrice && originalPrice > price ? `<span class="text-gray-500 line-through text-xs">$${originalPrice}</span>` : ''}
+                             <span class="${price === 0 ? 'text-green-400' : 'text-white'} font-bold text-lg">${price === 0 ? 'Free' : '$'+price}</span>
+                          </div>
+                      </div>
+                  </div>
+                </a>
+                `;
+            }).join('');
+          }
+      }
+      
+      // Hide loading spinner if it exists
+      const loadingEl = document.getElementById('loading');
+      if(loadingEl) loadingEl.classList.add('hidden');
+  }
+
+  // Run on load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSearch);
+  } else {
+    initSearch();
+  }
+  
+
+</script>

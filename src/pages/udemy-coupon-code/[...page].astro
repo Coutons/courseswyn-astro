@@ -1,0 +1,259 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import coupons from "../../data/coupons.json";
+import DealCard from "../../components/coupon/DealCard.astro";
+
+export async function getStaticPaths({ paginate }: { paginate: any }) {
+  const sortedCoupons = coupons.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return paginate(sortedCoupons, { pageSize: 12 });
+}
+
+const { page } = Astro.props as { page: any };
+const totalCoupons = coupons.length;
+
+// --- SEO DYNAMIC DATA ---
+const date = new Date();
+const currentMonth = date.toLocaleDateString('en-US', { month: 'long' });
+const currentYear = date.getFullYear();
+const todayDate = date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+
+// Dynamic Page Title & Description
+// KEYWORD FOCUS: "Udemy Coupon Code"
+const pageTitle = `Udemy Coupon Code ${currentMonth} ${currentYear} | 100% OFF Verified`;
+const pageDescription = `Get the latest Udemy Coupon Code for ${currentMonth} ${currentYear}. 100% OFF verified Udemy Coupon Code updated daily for Python, Web Dev, & more.`;
+
+// 1. Featured Data
+const featuredCoupons = coupons.filter((c: any) => c.rating >= 4.5).sort(() => 0.5 - Math.random()).slice(0, 4);
+
+// 2. Categories Data
+const categories = [
+  { name: "Business", count: 20, icon: "📊" },
+  { name: "Design", count: 11, icon: "🎨" },
+  { name: "Development", count: 11, icon: "💻" },
+  { name: "IT & Software", count: 8, icon: "🖥️" },
+  { name: "Marketing", count: 15, icon: "📈" },
+  { name: "Personal Development", count: 16, icon: "🎓" },
+  { name: "Photography & Video", count: 8, icon: "📷" },
+  { name: "Music", count: 6, icon: "🎵" }, 
+];
+
+// 3. FAQ Data
+const faqs = [
+  { q: "Are Udemy coupon codes really free?", a: "Yes! Our Udemy coupon codes make premium courses completely free. No hidden fees, no subscriptions required." },
+  { q: "How often are new Udemy coupons added?", a: "We add new Udemy coupon codes daily. Our featured courses are updated every 24 hours." },
+  { q: "What subjects are covered in free Udemy courses?", a: "Our free Udemy courses cover programming, web development, design, business, marketing, data science, and more." },
+  { q: "How do I use Udemy coupon codes?", a: "Click on any course you like, and you'll be redirected to Udemy with our coupon code automatically applied." },
+  { q: "Do Udemy coupon codes expire?", a: "Yes, Udemy coupon codes have expiration dates. We update our listings regularly." },
+  { q: "Can I get a certificate with free courses?", a: "Yes! Most free Udemy courses include completion certificates." }
+];
+
+// --- SCHEMA MARKUP (JSON-LD) ---
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map(f => ({
+    "@type": "Question",
+    "name": f.q,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": f.a
+    }
+  }))
+};
+
+const collectionSchema = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": pageTitle,
+  "description": pageDescription,
+  "url": Astro.url.href,
+  "numberOfItems": totalCoupons,
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": (page?.data ?? []).map((c: any, index: number) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "url": `https://courseswyn.com/coupon/${c.slug}`,
+      "name": c.title
+    }))
+  }
+};
+---
+
+<MainLayout title={pageTitle} description={pageDescription}>
+  
+  <!-- SEO Schemas -->
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />
+
+  <div class="fixed inset-0 bg-[#0f111a] -z-50"></div>
+
+  <!-- SECTION 1: HERO STATS -->
+  <header class="pt-20 pb-16 relative overflow-hidden">
+     <div class="max-w-5xl mx-auto px-4 text-center z-10 relative">
+        <h1 class="text-4xl md:text-6xl font-black mb-6 leading-tight text-white">
+           <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#10b981] to-[#3b82f6]">Udemy Coupon Code</span><br/>
+           100% OFF & Verified
+        </h1>
+        <p class="text-xl md:text-2xl text-gray-300 font-medium mb-6">
+           Updated for <span class="text-[#10b981] underline decoration-wavy underline-offset-4">{currentMonth} {currentYear}</span>
+        </p>
+        <p class="text-gray-400 max-w-2xl mx-auto leading-relaxed mb-10 text-lg">
+           Looking for a valid <strong>Udemy Coupon Code</strong>? Join {totalCoupons.toLocaleString()}+ students using our daily verified codes to get <strong>premium courses for free</strong>.
+        </p>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 max-w-3xl mx-auto border-t border-b border-[#2d3748] py-8">
+            <div>
+               <div class="text-4xl font-black text-[#10b981]">{totalCoupons}</div>
+               <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Active Coupons</div>
+            </div>
+             <div>
+               <div class="text-4xl font-black text-[#10b981]">Daily</div>
+               <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Updates</div>
+            </div>
+             <div>
+               <div class="text-4xl font-black text-[#10b981]">100%</div>
+               <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Verified</div>
+            </div>
+             <div>
+               <div class="text-4xl font-black text-[#10b981]">$0</div>
+               <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Cost</div>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+           <a href="#latest" class="px-8 py-4 bg-[#10b981] hover:bg-green-600 text-white font-bold rounded-xl transition-all shadow-xl shadow-green-500/20 transform hover:-translate-y-1">
+              Browse Latest Deals
+           </a>
+           <a href="#categories" class="px-8 py-4 bg-[#1f2937] border border-[#374151] hover:border-[#10b981] text-white font-bold rounded-xl transition-all hover:bg-[#374151]">
+              Explore Categories
+           </a>
+        </div>
+     </div>
+  </header>
+
+  <!-- SECTION 2: FEATURED -->
+  <section class="py-12 bg-[#151720]">
+     <div class="max-w-6xl mx-auto px-4">
+        <div class="flex iems-center gap-3 mb-6">
+           <span class="w-1.5 h-8 bg-[#10b981] rounded-full"></span>
+           <h2 class="text-2xl font-bold text-white">Featured Premium Courses</h2>
+        </div>
+        <div class="flex flex-col gap-4">
+           {featuredCoupons.map(coupon => (
+              <DealCard {...coupon} variant="list" />
+           ))}
+        </div>
+     </div>
+  </section>
+
+  <!-- SECTION 3: LATEST -->
+  <section id="latest" class="py-12 bg-[#151720]">
+     <div class="max-w-6xl mx-auto px-4">
+        <div class="flex items-center gap-3 mb-6">
+           <span class="w-1.5 h-8 bg-blue-500 rounded-full"></span>
+           <h2 class="text-2xl font-bold text-white">Latest Added Coupons</h2>
+        </div>
+        <div class="flex flex-col gap-4">
+           {(page?.data ?? []).map((coupon: any) => (
+              <DealCard {...coupon} variant="list" />
+           ))}
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex justify-center mt-12 gap-2">
+            {page.url.prev && (
+               <a href={page.url.prev} class="px-6 py-3 bg-[#1f2937] border border-[#374151] rounded-lg text-white hover:bg-[#374151] font-bold transition-all">Previous Page</a>
+            )}
+             <span class="px-6 py-3 bg-[#10b981] text-white font-bold rounded-lg shadow-lg border border-[#10b981]">{page.currentPage}</span>
+            {page.url.next && (
+               <a href={page.url.next} class="px-6 py-3 bg-[#1f2937] border border-[#374151] rounded-lg text-white hover:bg-[#374151] font-bold transition-all">Next Page</a>
+            )}
+        </div>
+     </div>
+  </section>
+
+  <!-- SECTION 4: CATEGORIES -->
+  <section id="categories" class="py-16 bg-[#0f111a]">
+     <div class="max-w-6xl mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-white mb-2">Populer Categories</h2>
+            <p class="text-gray-400">Find the right course for your career path.</p>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+           {categories.map(cat => (
+              <a href={`/courses/category/${cat.name}`} class="flex items-center gap-3 p-4 bg-[#1f2937] border border-[#374151] rounded-xl hover:border-[#10b981] hover:bg-[#2d3748] transition-all group">
+                 <span class="text-2xl">{cat.icon}</span>
+                 <div>
+                    <h3 class="text-white font-bold text-sm group-hover:text-[#10b981] transition-colors">{cat.name}</h3>
+                    <span class="text-gray-500 text-xs">{cat.count} Deals</span>
+                 </div>
+              </a>
+           ))}
+        </div>
+     </div>
+  </section>
+
+  <!-- SECTION 5: FAQ -->
+  <section class="py-16 bg-[#151720]">
+     <div class="max-w-6xl mx-auto px-4">
+        <h2 class="text-3xl font-bold text-white text-center mb-12">Frequently Asked Questions</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+           {faqs.map(faq => (
+              <div class="bg-[#1f2937] p-8 rounded-xl border border-[#374151] hover:shadow-lg transition-shadow">
+                 <h3 class="text-[#10b981] font-bold text-lg mb-3">{faq.q}</h3>
+                 <p class="text-gray-400 text-sm leading-relaxed">{faq.a}</p>
+              </div>
+           ))}
+        </div>
+     </div>
+  </section>
+
+  <!-- Section 6: SEO Content -->
+  <section class="py-16 bg-[#1a1d29] border-t border-[#2d3748]">
+    <div class="max-w-4xl mx-auto px-4 prose prose-invert prose-lg">
+      <h2 class="text-3xl font-bold text-white text-center mb-8">About Udemy Coupon Code</h2>
+      
+      <div class="text-gray-400 space-y-6 leading-relaxed text-base">
+        <p>
+          Welcome to CoursesWyn, your #1 source for the latest <strong>Udemy Coupon Code</strong>. In a world where education costs are rising, finding a working <strong>Udemy Coupon Code</strong> can save you thousands of dollars. We bridge the gap between instructors and students by aggregating 100% OFF deals.
+        </p>
+
+        <h3 class="text-white font-bold text-xl">What is a Udemy Coupon Code?</h3>
+        <p>
+          A <strong>Udemy Coupon Code</strong> is a special promotional link or text generated by instructors. When applied, these codes can discount a course price down to $0 (Free). These <strong>Udemy Coupon Codes</strong> are 100% legal and verified. However, they are often time-sensitive.
+        </p>
+
+        <h3 class="text-white font-bold text-xl">How to use a Udemy Coupon Code?</h3>
+        <p>
+           Using a <strong>Udemy Coupon Code</strong> from our site is simple. Just click on any course offering, and the code is automatically applied. No need to copy-paste multiple strings. We verify every <strong>Udemy Coupon Code</strong> daily to ensure you never face an expired link.
+        </p>
+
+        <h3 class="text-white font-bold text-xl">Why choose our platform?</h3>
+        <ul class="grid grid-cols-1 md:grid-cols-2 gap-4 list-none pl-0">
+           <li class="bg-[#1f2937] p-4 rounded-lg border border-[#374151]">
+              <strong class="text-[#10b981] block mb-1">Daily Updates</strong>
+              New coupons are added every hour, 24/7.
+           </li>
+           <li class="bg-[#1f2937] p-4 rounded-lg border border-[#374151]">
+              <strong class="text-[#10b981] block mb-1">Quality Assurance</strong>
+              We filter out low-rated courses. Only 4.0+ ratings allowed.
+           </li>
+           <li class="bg-[#1f2937] p-4 rounded-lg border border-[#374151]">
+              <strong class="text-[#10b981] block mb-1">No Ads/Spam</strong>
+              Direct links to Udemy. No redirect loops.
+           </li>
+           <li class="bg-[#1f2937] p-4 rounded-lg border border-[#374151]">
+              <strong class="text-[#10b981] block mb-1">Community Driven</strong>
+              Our users report expired codes instantly.
+           </li>
+        </ul>
+
+        <p class="text-sm mt-8 pt-6 border-t border-[#2d3748] text-center">
+           <em><strong>Disclaimer:</strong> We are not affiliated with Udemy.com. All logos and trademarks belong to their respective owners. We merely aggregate publicly available coupons to help students save money.</em>
+        </p>
+      </div>
+    </div>
+  </section>
+
+</MainLayout>
