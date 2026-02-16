@@ -4,7 +4,12 @@ import coupons from "../../data/coupons.json";
 import DealCard from "../../components/coupon/DealCard.astro";
 
 export async function getStaticPaths({ paginate }: { paginate: any }) {
-  const sortedCoupons = coupons.sort((a, b) => new Date(b.createdAt || new Date()).getTime() - new Date(a.createdAt || new Date()).getTime());
+  // Sort coupons by createdAt, but give coupons without dates a default old date
+  const sortedCoupons = coupons.sort((a, b) => {
+    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0; // Old date for missing dates
+    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0; // Old date for missing dates
+    return dateB - dateA; // Descending order (newest first)
+  });
   return paginate(sortedCoupons, { pageSize: 12 });
 }
 
