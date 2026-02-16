@@ -93,7 +93,7 @@ So come join me on this comprehensive 6-week journey. By the end, you will have 
 - Project 8: Capstone—build a Trading Floor with 4 Agents making autonomous trades, powered by 6 MCP servers and 44 tools!
 
 **Ideal students**:
-- Well, perhaps I’m biased, but I’d say: anyone and everyone! If you’re fascinated in the potential of Agents and hungry to have the skills to create powerful Agentic AI – then you’ve come to the right place. While it’s most suited to those with programming experience, I’ve designed the course to work for all backgrounds.
+- Well, perhaps I'm biased, but I'd say: anyone and everyone! If you're fascinated in the potential of Agents and hungry to have the skills to create powerful Agentic AI – then you've come to the right place. While it's most suited to those with programming experience, I've designed the course to work for all backgrounds.
 
 ### Limitations to Consider
 - Not ideal if you want purely no-code automation
