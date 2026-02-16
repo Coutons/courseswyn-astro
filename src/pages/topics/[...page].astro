@@ -1,0 +1,179 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths({ paginate }) {
+  const allPosts = await getCollection('blog');
+  const sortedPosts = allPosts.sort((a, b) => new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf());
+  
+  return paginate(sortedPosts, { pageSize: 12 });
+}
+
+const { page } = Astro.props;
+
+function formatDate(date: Date) {
+  return new Date(date).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+}
+
+const faqs = [
+  {
+    question: "How reliable are these course reviews?",
+    answer: "Our reviews are conducted by experts and verified students who have completed the courses. we analyze course content, instructor quality, and real-world applicability to help you make informed decisions."
+  },
+  {
+    question: "Do you only review free courses?",
+    answer: "No, while we specialize in 100% OFF coupons, we review both free and premium courses to ensures you get the best value, whether you're using a discount code or investing in your education."
+  },
+  {
+    question: "How often do you update the topics and reviews?",
+    answer: "We update our topics and course reviews daily to reflect the latest course updates, new instructor materials, and newly released coupons."
+  },
+  {
+    question: "Can I request a review for a specific course?",
+    answer: "Yes! You can contact us through our contact page to request a review for any Udemy course. Our team will evaluate the request based on community interest."
+  }
+];
+
+const pageTitle = `Free Udemy Course Reviews & Expert Topics${page.currentPage > 1 ? ` - Page ${page.currentPage}` : ''} - Stay Updated | CoursesWyn`;
+const pageDescription = "Expert insights, roadmaps, and honest reviews of the best Udemy courses. Find the perfect course for your career with our in-depth analysis and daily updates.";
+
+// Structured Data: ItemList
+const itemListSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "Expert Course Reviews & Topics",
+  "itemListElement": page.data.map((post, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "url": `https://courseswyn.com/${post.slug}/`,
+    "name": post.data.title
+  }))
+};
+
+// Structured Data: FAQPage
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map(faq => ({
+    "@type": "Question",
+    "name": faq.question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": faq.answer
+    }
+  }))
+};
+
+const combinedSchema = [itemListSchema, faqSchema];
+---
+
+<MainLayout 
+  title={pageTitle} 
+  description={pageDescription}
+  structuredData={combinedSchema}
+>
+  <div class="bg-[#1a1d29] min-h-screen pb-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
+      
+      <!-- Header -->
+      <div class="text-center mb-16">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-6">Expert Course Reviews & Topics</h1>
+        <p class="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+          Unlock your potential with our deep dives into the best learning paths. Stay ahead with daily updates on tech trends, career roadmaps, and verified course reviews.
+        </p>
+      </div>
+
+      <!-- Topics Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        {page.data.map((post) => (
+          <a 
+            href={`/${post.slug}/`}
+            class="group block bg-[#242938] rounded-2xl overflow-hidden hover:-translate-y-1 transition-all duration-300 shadow-lg border border-[#2d3748] hover:border-green-500/50 flex flex-col h-full"
+          >
+            <div class="relative aspect-[16/9] overflow-hidden">
+              <img 
+                src={post.data.image?.src || post.data.image || 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&h=400&fit=crop'} 
+                alt={post.data.title}
+                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+              />
+              {post.data.tags && post.data.tags[0] && (
+                <div class="absolute top-4 left-4">
+                  <span class="bg-[#1a1d29]/80 backdrop-blur-md text-green-400 text-[10px] font-bold px-2 py-1 rounded-md border border-green-500/30 uppercase tracking-wider">
+                    {post.data.tags[0]}
+                  </span>
+                </div>
+              )}
+            </div>
+            
+            <div class="p-6 flex flex-col flex-grow">
+              <h3 class="font-bold text-xl text-white mb-3 group-hover:text-green-400 transition-colors line-clamp-2 leading-tight">
+                {post.data.title}
+              </h3>
+              <p class="text-gray-400 text-sm line-clamp-3 mb-4 flex-grow">
+                {post.data.description}
+              </p>
+              
+              <div class="pt-4 border-t border-[#2d3748] flex items-center justify-between text-xs text-gray-500">
+                <span class="flex items-center gap-2">
+                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                   {formatDate(post.data.pubDate)}
+                </span>
+                <span class="text-green-500 font-bold group-hover:translate-x-1 transition-transform">Read More →</span>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex justify-center mt-12 mb-20">
+        <div class="flex items-center gap-2 bg-[#242938] p-2 rounded-xl border border-[#2d3748]">
+            {page.url.prev ? (
+                <a href={page.url.prev} class="px-4 h-10 flex items-center gap-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#1a1d29] transition-all text-sm font-bold">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    Prev
+                </a>
+            ) : null}
+
+             <span class="px-4 py-2 font-bold text-green-400 bg-[#1a1d29] rounded-lg border border-[#2d3748] text-sm">
+                Page {page.currentPage} of {page.lastPage}
+             </span>
+
+            {page.url.next ? (
+                <a href={page.url.next} class="px-4 h-10 flex items-center gap-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#1a1d29] transition-all text-sm font-bold">
+                    Next
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7-7"/></svg>
+                </a>
+            ) : null}
+        </div>
+      </div>
+
+      <!-- FAQ Section -->
+      <div class="border-t border-[#2d3748] pt-24">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl font-bold text-white mb-4">Common Questions About Course Reviews</h2>
+          <p class="text-gray-400">Everything you need to know about our in-depth analysis and expert topics.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {faqs.map((faq) => (
+            <div class="bg-[#242938] border border-[#2d3748] p-8 rounded-2xl">
+              <h3 class="text-green-500 text-lg font-bold mb-4">
+                {faq.question}
+              </h3>
+              <p class="text-gray-400 leading-relaxed text-sm">
+                {faq.answer}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</MainLayout>

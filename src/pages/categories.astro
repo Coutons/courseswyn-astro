@@ -1,62 +1,125 @@
 ---
 import MainLayout from '../layouts/MainLayout.astro';
+import CategoryCard from '../components/category/CategoryCard.astro';
 import coupons from '../data/coupons.json';
 
-// Get all unique categories
-const categories = [...new Set(coupons.map(c => c.category))].sort();
+// Get and process category data
+const categoryData = [...new Set(coupons.map(c => c.category))].sort().map(category => {
+  const categoryCoupons = coupons.filter(c => c.category === category);
+  const subcategories = [...new Set(categoryCoupons.map(c => c.subcategory))].filter(Boolean).sort() as string[];
+  
+  return {
+    name: category,
+    courseCount: categoryCoupons.length,
+    subcategories
+  };
+});
 
-// Icons mapping (Extended)
-const categoryIcons = {
-  'Development': '<path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />',
-  'Business': '<path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />',
-  'IT & Software': '<path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />',
-  'Design': '<path d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />',
-  'Marketing': '<path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />',
-  'Personal Development': '<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />',
-  'Photography': '<path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />',
-  'Music': '<path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />'
+const faqs = [
+  {
+    question: "How many course categories do you have?",
+    answer: "We currently have 13 main categories covering various subjects from programming and design to business and marketing. Each category contains multiple subcategories for more specific topics."
+  },
+  {
+    question: "What are the most popular categories?",
+    answer: "Our most popular categories include Programming & Development, Web Design, Business & Entrepreneurship, Digital Marketing, Data Science, and Graphic Design. Each category offers hundreds of free courses."
+  },
+  {
+    question: "How do I find courses in a specific category?",
+    answer: "Click on any category card above to browse courses in that subject area. You can also use the search function on our homepage to find specific courses by keywords."
+  },
+  {
+    question: "Are all courses in these categories free?",
+    answer: "Yes! All courses listed in our categories are available for free using our exclusive coupon codes. No hidden fees or subscriptions required."
+  }
+];
+
+// Structured Data: ItemList for categories
+const itemListSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListElement": categoryData.map((data, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "name": data.name,
+    "url": `https://courseswyn.com/courses/category/${data.name}`
+  }))
 };
 
-const pageTitle = "Browse All Course Categories | CoursesWyn";
-const pageDescription = "Explore thousands of free Udemy courses by category. Development, Business, Design, Marketing, and more.";
+// Structured Data: FAQPage
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map(faq => ({
+    "@type": "Question",
+    "name": faq.question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": faq.answer
+    }
+  }))
+};
+
+const combinedSchema = [itemListSchema, faqSchema];
+
+const pageTitle = "Free Udemy Course Categories - Browse Courses by Subject | CoursesWyn";
+const pageDescription = "Explore thousands of 100% OFF free Udemy courses organized by category. Verified daily: Development, Business, Design, Marketing, and more. Get your free certification today!";
 ---
 
-<MainLayout title={pageTitle} description={pageDescription}>
-  <div class="bg-[#1a1d29] min-h-screen py-20 border-b border-[#2d3748]">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <div class="text-center mb-16">
-        <h1 class="text-4xl md:text-5xl font-bold text-white mb-6">Browse Categories</h1>
-        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
-          Find the perfect course for your career. Browse our extensive collection of 100% OFF coupons by topic.
+<MainLayout 
+  title={pageTitle} 
+  description={pageDescription}
+  structuredData={combinedSchema}
+  ogTitle="Browse Free Udemy Course Categories - 100% OFF Coupons"
+  ogDescription="Stop paying for courses! Explore 13+ categories and thousands of premium Udemy courses for free with our daily updated coupons."
+>
+  <div class="bg-[#0b0e14] min-h-screen pb-20">
+    <!-- Header Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+      <div class="text-center">
+        <h1 class="text-5xl md:text-6xl font-extrabold text-[#98a3f8] mb-6 tracking-tight">
+          Free Udemy Course Categories
+        </h1>
+        <p class="text-2xl md:text-3xl text-gray-300 font-medium mb-8">
+          Explore Thousands of Free Courses Organized by Subject
+        </p>
+        <p class="text-lg text-gray-500 max-w-4xl mx-auto leading-relaxed">
+          Discover premium Udemy courses completely free! Browse by category to find exactly what you want to learn. From programming and design to business and marketing - we have {categoryData.length}+ categories with thousands of free courses.
         </p>
       </div>
+    </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {categories.map((category) => {
-            const count = coupons.filter(c => c.category === category).length;
-            return (
-                <a href={`/courses/category/${category}`} class="group relative bg-[#242938] border border-[#2d3748] rounded-2xl p-6 hover:border-green-500 hover:-translate-y-1 transition-all duration-300">
-                    <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity"></div>
-                    
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="w-12 h-12 rounded-xl bg-[#1a1d29] flex items-center justify-center text-green-500 border border-[#2d3748] group-hover:border-green-500/50 transition-colors">
-                            <span set:html={categoryIcons[category as keyof typeof categoryIcons] ? `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">${categoryIcons[category as keyof typeof categoryIcons]}</svg>` : `<span class="text-xl font-bold">${category.charAt(0)}</span>`}></span>
-                        </div>
-                        <span class="bg-[#1a1d29] text-gray-400 text-xs font-bold px-2 py-1 rounded border border-[#2d3748] group-hover:text-green-500 group-hover:border-green-500/30 transition-colors">
-                            {count} Courses
-                        </span>
-                    </div>
-
-                    <h3 class="text-xl font-bold text-white mb-2 group-hover:text-green-400 transition-colors">{category}</h3>
-                    <p class="text-sm text-gray-500">
-                        View verified coupons for {category}
-                    </p>
-                </a>
-            )
-        })}
+    <!-- Categories Grid -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-32">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {categoryData.map((data) => (
+          <CategoryCard 
+            category={data.name} 
+            subcategories={data.subcategories} 
+            courseCount={data.courseCount} 
+          />
+        ))}
       </div>
+    </div>
 
+    <!-- FAQ Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-[#2d3748] pt-24">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold text-white mb-4">Frequently Asked Questions</h2>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {faqs.map((faq) => (
+          <div class="bg-[#151720] border border-[#2d3748] p-8 rounded-2xl">
+            <h3 class="text-[#059669] text-xl font-bold mb-4">
+              {faq.question}
+            </h3>
+            <p class="text-gray-400 leading-relaxed">
+              {faq.answer}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   </div>
 </MainLayout>
