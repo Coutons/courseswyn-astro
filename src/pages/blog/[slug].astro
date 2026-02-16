@@ -1,0 +1,113 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import { getCollection, type CollectionEntry } from "astro:content";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+  const validPosts = posts.filter(post => post.slug && typeof post.slug === 'string');
+
+  return validPosts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props as { post: CollectionEntry<'blog'> };
+const { data } = post;
+
+// Render the content
+const { Content } = await post.render();
+
+const title = data.title;
+const description = data.description;
+const canonical = `https://courseswyn.com/blog/${post.slug}/`;
+const ogImage = data.image?.src;
+
+// Article structured data (always included)
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: title,
+  description: description,
+  url: canonical,
+  datePublished: data.pubDate.toISOString(),
+  dateModified: (data.updatedAt || data.pubDate).toISOString(),
+  author: {
+    "@type": "Organization",
+    name: "CoursesWyn",
+    url: "https://courseswyn.com",
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "CoursesWyn",
+    url: "https://courseswyn.com",
+    logo: {
+      "@type": "ImageObject",
+      url: "https://courseswyn.com/logo.png",
+    },
+  },
+  image: ogImage ? { "@type": "ImageObject", url: ogImage } : undefined,
+};
+
+// Use article schema as default
+const structuredData = articleSchema;
+---
+
+<MainLayout
+  title={title}
+  description={description}
+  canonical={canonical}
+  ogImage={ogImage}
+  structuredData={structuredData}
+>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <article class="prose prose-invert prose-lg max-w-none">
+      <header class="mb-12">
+        <h1 class="text-4xl sm:text-5xl font-black text-white mb-4">{title}</h1>
+        <p class="text-lg text-muted-foreground">{description}</p>
+        <div class="text-sm text-muted-foreground mt-2">
+          <time datetime={data.pubDate.toISOString()}>
+            {data.pubDate.toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </time>
+          {data.updatedAt && data.updatedAt > data.pubDate && (
+            <span class="ml-2">
+              (Updated{" "}
+              {data.updatedAt.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+              )
+            </span>
+          )}
+        </div>
+      </header>
+
+      <div class="prose-headings">
+        <Content />
+      </div>
+
+      {data.affiliate_links && data.affiliate_links.length > 0 && (
+        <section class="mt-16">
+          <h2 class="text-2xl font-black text-white mb-8">Recommended Courses</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {data.affiliate_links.map((link: any) => (
+              <a
+                href={link.url}
+                target="_blank"
+                rel="nofollow noopener noreferrer"
+                class="block p-6 bg-card/60 border border-border rounded-2xl hover:bg-card/80 transition-all group"
+              >
+                <span class="text-primary font-bold">{link.text}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+    </article>
+  </div>
+</MainLayout>
