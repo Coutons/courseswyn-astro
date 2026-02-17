@@ -1,0 +1,227 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import coupons from '../../data/coupons.json';
+import CourseCard from '../../components/CourseCard.astro';
+
+export async function getStaticPaths({ paginate }: { paginate: any }) {
+  // Sort coupons by updatedAt
+  const sortedCoupons = coupons.sort((a: any, b: any) => {
+    const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return dateB - dateA;
+  });
+  return paginate(sortedCoupons, { pageSize: 16 });
+}
+
+const { page } = Astro.props as { page: any };
+const totalCoupons = coupons.length;
+
+// Get all categories with counts
+const categoryIcons = {
+  "Development": "",
+  "Business": "",
+  "IT & Software": "",
+  "Design": "",
+  "Marketing": "",
+  "Personal Development": "",
+  "Photography & Video": "",
+  "Music": ""
+};
+
+const uniqueCategories = [...new Set(coupons.map((c: any) => c.category))].sort();
+const categories = uniqueCategories.map((category: any) => ({
+  name: category,
+  count: coupons.filter((c: any) => c.category === category).length,
+  icon: categoryIcons[category as keyof typeof categoryIcons] || ""
+}));
+
+const pageTitle = `Online Courses Coupon Codes and Discounts`;
+const pageDescription = `Find the best online courses coupon codes and discounts for 2026. Get verified online courses for free or at huge discounts. Save money on premium online courses with our exclusive coupon codes.`;
+
+// FAQ Data
+const faqs = [
+  { q: "What are online courses coupon codes?", a: "Online courses coupon codes are special promotional codes that allow you to get discounts or free access to premium online courses. These codes are provided by course platforms or instructors as part of their marketing strategy." },
+  { q: "How do I use online courses coupon codes?", a: "Simply click on any course you're interested in, and the coupon code will be automatically applied during checkout. Some codes may require manual entry at the payment stage." },
+  { q: "Are online courses coupon codes legitimate?", a: "Yes, legitimate online courses coupon codes are provided directly by course platforms like Udemy, Coursera, or by instructors. We only verify and list codes from reputable sources." },
+  { q: "Can I get online courses for free?", a: "Yes! Many online courses offer 100% off coupon codes periodically. We regularly update our listings with the latest free course opportunities." },
+  { q: "How long do online courses coupon codes last?", a: "Coupon codes typically have expiration dates ranging from a few days to several months. We recommend using them as soon as possible to avoid missing out on great deals." },
+  { q: "What types of online courses have coupon codes?", a: "You can find coupon codes for various categories including programming, business, design, marketing, data science, personal development, and more." },
+  { q: "Can I get a certificate with discounted online courses?", a: "Yes, most online courses include completion certificates even when using coupon codes. The certificate is the same as full-price students." },
+  { q: "How often are new online courses coupon codes added?", a: "We update our database daily with new coupon codes and discounts. Check back regularly for the latest deals on online courses." }
+];
+
+// SEO & Schema
+const schemaData = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": pageTitle,
+  "description": pageDescription,
+  "url": Astro.url.href,
+  "mainEntity": {
+     "@type": "ItemList",
+     "itemListElement": categories.map((category: any, index: any) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "url": `https://courseswyn.com/courses/category/${encodeURIComponent(category.name)}`,
+      "name": category.name
+    }))
+  },
+  "faq": faqs.map(f => ({
+    "@type": "Question",
+    "name": f.q,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": f.a
+    }
+  }))
+};
+---
+
+<MainLayout title={pageTitle} description={pageDescription}>
+  <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+
+  <div class="bg-[#1c252e] min-h-screen pb-20">
+
+    <!-- Header / Filter Section -->
+    <div class="bg-[#1c252e] pt-8 pb-4 relative z-30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+         <!-- Top Tabs -->
+         <div class="flex justify-center mb-8">
+            <div class="flex items-center bg-[#1c252e] rounded-xl p-1 gap-1 border border-[#2d3748]">
+                <a href="/topics" class="flex items-center gap-2 px-6 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#1a1d29] transition-all text-sm font-medium">
+                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                   My Interests
+                </a>
+                <div class="flex items-center gap-2 px-6 py-2 rounded-lg bg-[#1a1d29] text-[#10b981] shadow-lg text-sm font-bold border border-[#2d3748]">
+                    All Courses
+                </div>
+                <a href="/udemy-coupon-code" class="flex items-center gap-2 px-6 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#1a1d29] transition-all text-sm font-medium">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5s-3.332.477-4.5 1.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 18 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    Latest Deals
+                 </a>
+                <a href="/courses/category/Free" class="flex items-center gap-2 px-6 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#1a1d29] transition-all text-sm font-medium">
+                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                   Free Courses
+                </a>
+            </div>
+         </div>
+
+         <!-- Controls Row (Search Left, Sort Right) -->
+         <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+
+             <!-- Search Bar (Left) -->
+             <div class="relative w-full md:w-96 group">
+                <form action="/search" method="GET">
+                    <input
+                    type="text"
+                    name="q"
+                    placeholder="Search all courses..."
+                    class="w-full bg-[#1c252e] border border-[#2d3748] rounded-lg px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-green-500 transition-all font-sans text-sm shadow-inner"
+                    />
+                    <button type="submit" class="absolute right-3 top-2.5 text-[#10b981] hover:text-green-400 transition-colors bg-transparent border-none p-0 cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </button>
+                </form>
+             </div>
+
+             <!-- Right Controls (Grid/List & Filters) -->
+             <div class="flex items-center gap-4">
+                <!-- Grid/List Toggle -->
+                <div class="flex items-center bg-[#1c252e] rounded-lg p-1 border border-[#2d3748]">
+                   <button class="p-2 rounded bg-[#2d3748] text-white">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002 2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002 2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                   </button>
+                   <button class="p-2 rounded text-gray-400 hover:text-white">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
+                   </button>
+                </div>
+
+                <!-- Filters & Sort -->
+                <div class="flex items-center gap-3">
+                   <button class="flex items-center gap-2 text-white font-bold text-sm bg-transparent">
+                      Filters
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                   </button>
+                   <div class="h-4 w-px bg-[#2d3748]"></div>
+                   <button class="flex items-center gap-2 text-white font-bold text-sm bg-transparent">
+                      Sort by: Date
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                   </button>
+                </div>
+             </div>
+         </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+
+      <!-- Course Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {(page?.data ?? []).map((course: any) => (
+           <CourseCard course={course} />
+        ))}
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex justify-center mt-12 mb-20 gap-2">
+        {page.url.prev && (
+          <a href={page.url.prev} class="px-6 py-3 bg-[#1f2937] border border-[#374151] rounded-lg text-white hover:bg-[#374151] font-bold transition-all">Previous Page</a>
+        )}
+        <span class="px-6 py-3 bg-[#10b981] text-white font-bold rounded-lg shadow-lg border border-[#10b981]">{page.currentPage}</span>
+        {page.url.next && (
+          <a href={page.url.next} class="px-6 py-3 bg-[#1f2937] border border-[#374151] rounded-lg text-white hover:bg-[#374151] font-bold transition-all">Next Page</a>
+        )}
+      </div>
+
+      <!-- Items count text -->
+      <div class="text-center mb-20">
+        <p class="text-gray-400 text-sm">
+          Showing {page.startIndex + 1} to {Math.min(page.endIndex, totalCoupons)} of {totalCoupons.toLocaleString()} items
+        </p>
+      </div>
+
+      <!-- Description text -->
+      <div class="text-center mb-20">
+        <h2 class="text-gray-500 text-sm font-medium">
+          Discover thousands of free online courses with exclusive coupon codes. Save up to 100% on premium courses from top platforms.
+        </h2>
+      </div>
+
+      <!-- Categories Section -->
+      <div class="mt-16 mb-20">
+        <div class="max-w-6xl mx-auto px-4">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="w-1.5 h-8 bg-[#1c252e] rounded-full"></span>
+            <h2 class="text-2xl font-bold text-white">Popular Categories</h2>
+          </div>
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+             {categories.map((cat: any) => (
+                <a href={`/courses/category/${encodeURIComponent(cat.name)}`} class="flex items-center gap-3 p-4 bg-[#1c252e] border border-[#374151] rounded-xl hover:border-[#10b981] hover:bg-[#2d3748] transition-all group">
+                   <div>
+                      <h3 class="text-white font-bold text-sm group-hover:text-[#10b981] transition-colors">{cat.name}</h3>
+                      <span class="text-gray-500 text-xs">{cat.count} Courses</span>
+                   </div>
+                </a>
+             ))}
+          </div>
+        </div>
+      </div>
+
+      <!-- FAQ Section -->
+      <div class="mt-16 mb-20">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-white mb-2">Frequently Asked Questions</h2>
+            <p class="text-gray-400">Everything you need to know about online courses coupon codes</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+           {faqs.map((faq, index) => (
+              <div class="bg-[#1c252e] p-6 rounded-xl border border-[#2d3748] hover:shadow-lg transition-shadow">
+                 <h3 class="text-[#10b981] font-bold text-lg mb-3">{faq.q}</h3>
+                 <p class="text-gray-400 text-sm leading-relaxed">{faq.a}</p>
+              </div>
+           ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</MainLayout>

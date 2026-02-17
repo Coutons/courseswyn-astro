@@ -4,10 +4,10 @@ import coupons from "../../data/coupons.json";
 import DealCard from "../../components/coupon/DealCard.astro";
 
 export async function getStaticPaths({ paginate }: { paginate: any }) {
-  // Sort coupons by createdAt, but give coupons without dates a default old date
+  // Sort coupons by updatedAt, but give coupons without dates a default old date
   const sortedCoupons = coupons.sort((a, b) => {
-    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0; // Old date for missing dates
-    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0; // Old date for missing dates
+    const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0; // Old date for missing dates
+    const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0; // Old date for missing dates
     return dateB - dateA; // Descending order (newest first)
   });
   return paginate(sortedCoupons, { pageSize: 12 });
@@ -30,17 +30,24 @@ const pageDescription = `Get the latest Udemy Coupon Code for ${currentMonth} ${
 // 1. Featured Data
 const featuredCoupons = coupons.filter((c: any) => c.rating >= 4.5).sort(() => 0.5 - Math.random()).slice(0, 4);
 
-// 2. Categories Data
-const categories = [
-  { name: "Business", count: 20, icon: "📊" },
-  { name: "Design", count: 11, icon: "🎨" },
-  { name: "Development", count: 11, icon: "💻" },
-  { name: "IT & Software", count: 8, icon: "🖥️" },
-  { name: "Marketing", count: 15, icon: "📈" },
-  { name: "Personal Development", count: 16, icon: "🎓" },
-  { name: "Photography & Video", count: 8, icon: "📷" },
-  { name: "Music", count: 6, icon: "🎵" }, 
-];
+// 2. Categories Data - Calculate from actual coupons
+const categoryIcons = {
+  "Development": "",
+  "Business": "", 
+  "IT & Software": "",
+  "Design": "",
+  "Marketing": "",
+  "Personal Development": "",
+  "Photography & Video": "",
+  "Music": ""
+};
+
+const uniqueCategories = [...new Set(coupons.map(c => c.category))].sort();
+const categories = uniqueCategories.map(category => ({
+  name: category,
+  count: coupons.filter(c => c.category === category).length,
+  icon: categoryIcons[category as keyof typeof categoryIcons] || ""
+}));
 
 // 3. FAQ Data
 const faqs = [
@@ -91,7 +98,7 @@ const collectionSchema = {
   <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
   <script type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />
 
-  <div class="fixed inset-0 bg-[#0f111a] -z-50"></div>
+  <div class="fixed inset-0 bg-[#1c252e] -z-50"></div>
 
   <!-- SECTION 1: HERO STATS -->
   <header class="pt-20 pb-16 relative overflow-hidden">
@@ -138,7 +145,7 @@ const collectionSchema = {
   </header>
 
   <!-- SECTION 2: FEATURED -->
-  <section class="py-12 bg-[#151720]">
+  <section class="py-12 bg-[#1c252e]">
      <div class="max-w-6xl mx-auto px-4">
         <div class="flex iems-center gap-3 mb-6">
            <span class="w-1.5 h-8 bg-[#10b981] rounded-full"></span>
@@ -153,7 +160,7 @@ const collectionSchema = {
   </section>
 
   <!-- SECTION 3: LATEST -->
-  <section id="latest" class="py-12 bg-[#151720]">
+  <section id="latest" class="py-12 bg-[#1c252e]">
      <div class="max-w-6xl mx-auto px-4">
         <div class="flex items-center gap-3 mb-6">
            <span class="w-1.5 h-8 bg-blue-500 rounded-full"></span>
@@ -175,14 +182,28 @@ const collectionSchema = {
                <a href={page.url.next} class="px-6 py-3 bg-[#1f2937] border border-[#374151] rounded-lg text-white hover:bg-[#374151] font-bold transition-all">Next Page</a>
             )}
         </div>
+        
+        <!-- Items count text -->
+        <div class="text-center mt-8">
+            <p class="text-gray-500 text-sm font-medium">
+              Showing 1 to 12 of {totalCoupons.toLocaleString()} items
+            </p>
+        </div>
+        
+        <!-- Description text -->
+        <div class="text-center mt-6">
+            <h2 class="text-gray-500 text-sm font-medium">
+              Discover thousands of free online courses with exclusive coupon codes. Save up to 100% on premium courses from top platforms.
+            </h2>
+        </div>
      </div>
   </section>
 
   <!-- SECTION 4: CATEGORIES -->
-  <section id="categories" class="py-16 bg-[#0f111a]">
+  <section id="categories" class="py-16 bg-[#1c252e]">
      <div class="max-w-6xl mx-auto px-4">
         <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-white mb-2">Populer Categories</h2>
+            <h2 class="text-3xl font-bold text-white mb-2">Popular Categories</h2>
             <p class="text-gray-400">Find the right course for your career path.</p>
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -200,7 +221,7 @@ const collectionSchema = {
   </section>
 
   <!-- SECTION 5: FAQ -->
-  <section class="py-16 bg-[#151720]">
+  <section class="py-16 bg-[#1c252e]">
      <div class="max-w-6xl mx-auto px-4">
         <h2 class="text-3xl font-bold text-white text-center mb-12">Frequently Asked Questions</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -215,7 +236,7 @@ const collectionSchema = {
   </section>
 
   <!-- Section 6: SEO Content -->
-  <section class="py-16 bg-[#1a1d29] border-t border-[#2d3748]">
+  <section class="py-16 bg-[#1c252e] border-t border-[#2d3748]">
     <div class="max-w-4xl mx-auto px-4 prose prose-invert prose-lg">
       <h2 class="text-3xl font-bold text-white text-center mb-8">About Udemy Coupon Code</h2>
       

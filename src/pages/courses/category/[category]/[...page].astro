@@ -3,12 +3,12 @@ import MainLayout from '../../../../layouts/MainLayout.astro';
 import coupons from '../../../../data/coupons.json';
 import CourseCard from '../../../../components/CourseCard.astro';
 
-export async function getStaticPaths({ paginate }) {
+export async function getStaticPaths({ paginate }: { paginate: any }) {
   const categories = [...new Set(coupons.map(c => c.category))];
   
   return categories.flatMap(category => {
     const filteredCourses = coupons.filter(c => c.category === category);
-    filteredCourses.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    filteredCourses.sort((a, b) => new Date(b.updatedAt || new Date()).getTime() - new Date(a.updatedAt || new Date()).getTime());
     
     return paginate(filteredCourses, {
       params: { category },
@@ -32,7 +32,7 @@ const schemaData = {
   "url": Astro.url.href,
   "mainEntity": {
      "@type": "ItemList",
-     "itemListElement": allCourses.map((course, index) => ({
+     "itemListElement": allCourses.map((course: any, index: number) => ({
       "@type": "ListItem",
       "position": index + 1,
       "url": `https://courseswyn.com/coupon/${course.slug}`,
@@ -50,7 +50,7 @@ const topCategories = ["Development", "Business", "IT & Software", "Design", "Ma
   <div class="bg-[#1a1d29] min-h-screen pb-20">
     
     <!-- Header / Filter Section (Matching Screenshot) -->
-    <div class="bg-[#1a1d29] pt-8 pb-4 relative z-30">
+    <div class="bg-[#1c252e] pt-8 pb-4 relative z-30">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
          <!-- Top Tabs (Screenshot Style) -->
@@ -84,7 +84,7 @@ const topCategories = ["Development", "Business", "IT & Software", "Design", "Ma
                     type="text" 
                     name="q"
                     placeholder={`Search in ${category}...`}
-                    class="w-full bg-[#1a1d29] border border-[#2d3748] rounded-lg px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-green-500 transition-all font-sans text-sm shadow-inner" 
+                    class="w-full bg-[#1c252e] border border-[#2d3748] rounded-lg px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-green-500 transition-all font-sans text-sm shadow-inner" 
                     />
                     <button type="submit" class="absolute right-3 top-2.5 text-[#10b981] hover:text-green-400 transition-colors bg-transparent border-none p-0 cursor-pointer">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -95,8 +95,8 @@ const topCategories = ["Development", "Business", "IT & Software", "Design", "Ma
              <!-- Right Controls (Grid/List & Filters) -->
              <div class="flex items-center gap-4">
                 <!-- Grid/List Toggle -->
-                <div class="flex items-center bg-[#242938] rounded-lg p-1 border border-[#2d3748]">
-                   <button class="p-2 rounded bg-[#2d3748] text-white">
+                <div class="flex items-center bg-[#1c252e] rounded-lg p-1 border border-[#2d3748]">
+                   <button class="p-2 rounded bg-[#1c252e] text-white">
                       <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                    </button>
                    <button class="p-2 rounded text-gray-400 hover:text-white">
@@ -126,7 +126,7 @@ const topCategories = ["Development", "Business", "IT & Software", "Design", "Ma
       
       <!-- Course Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {allCourses.map(course => (
+        {allCourses.map((course: any) => (
            <CourseCard course={course} />
         ))}
       </div>

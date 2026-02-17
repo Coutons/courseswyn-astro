@@ -12,20 +12,47 @@ const {
   category, 
   subcategory,
   duration, 
-  lastUpdated, 
+  updatedAt, // Add updatedAt to the props
   language = "English",
   variant = "list" 
 } = Astro.props;
 
-// Date Logic (Mock "about 1 hour ago" for freshness)
-const timeAgo = "about 1 hour ago"; 
+// Date Logic (Calculate time ago from actual updatedAt date)
+function getTimeAgo(dateString: string | undefined) {
+  if (!dateString) return "Newly Added";
+  
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+  
+  if (diffDays > 0) {
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  } else if (diffHours > 0) {
+    return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  } else {
+    return "Just now";
+  }
+}
+
+const timeAgo = getTimeAgo(updatedAt);
+
+// Format students number
+function formatStudents(num: number | string | undefined) {
+  if (!num) return "0";
+  const n = typeof num === 'string' ? parseInt(num) : num;
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+  return n.toString();
+}
 
 // Category Breadcrumb String
 const categoryString = subcategory ? `${category} > ${subcategory}` : category;
 
 ---
 
-<article class="flex flex-col md:flex-row bg-[#151b24] border border-[#2d3748] rounded-xl overflow-hidden hover:border-[#10b981] transition-all duration-300 group">
+<article class="flex flex-col md:flex-row bg-[#1c252e] border border-[#2d3748] rounded-xl overflow-hidden hover:border-[#10b981] transition-all duration-300 group">
   
   <!-- Left: Image -->
   <div class="relative w-full md:w-72 h-48 md:h-auto flex-shrink-0">
@@ -84,7 +111,7 @@ const categoryString = subcategory ? `${category} > ${subcategory}` : category;
         <!-- Students -->
         <span class="flex items-center gap-1 bg-[#1f2937] px-2 py-1 rounded border border-[#374151]">
            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-           {students || 0}
+           {formatStudents(students)}
         </span>
     </div>
     

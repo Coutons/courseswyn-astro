@@ -2,14 +2,14 @@
 import MainLayout from '../../layouts/MainLayout.astro';
 import { getCollection } from 'astro:content';
 
-export async function getStaticPaths({ paginate }) {
+export async function getStaticPaths({ paginate }: { paginate: any }) {
   const allPosts = await getCollection('blog');
-  const sortedPosts = allPosts.sort((a, b) => new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf());
+  const sortedPosts = allPosts.sort((a: any, b: any) => new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf());
   
   return paginate(sortedPosts, { pageSize: 12 });
 }
 
-const { page } = Astro.props;
+const { page } = Astro.props as { page: any };
 
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString('en-US', {
@@ -46,7 +46,7 @@ const itemListSchema = {
   "@context": "https://schema.org",
   "@type": "ItemList",
   "name": "Expert Course Reviews & Topics",
-  "itemListElement": page.data.map((post, index) => ({
+  "itemListElement": page.data.map((post: any, index: number) => ({
     "@type": "ListItem",
     "position": index + 1,
     "url": `https://courseswyn.com/${post.slug}/`,
@@ -76,7 +76,7 @@ const combinedSchema = [itemListSchema, faqSchema];
   description={pageDescription}
   structuredData={combinedSchema}
 >
-  <div class="bg-[#1a1d29] min-h-screen pb-20">
+  <div class="bg-[#1c252e] min-h-screen pb-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
       
       <!-- Header -->
@@ -89,10 +89,10 @@ const combinedSchema = [itemListSchema, faqSchema];
 
       <!-- Topics Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-        {page.data.map((post) => (
+        {page.data.map((post: any) => (
           <a 
             href={`/${post.slug}/`}
-            class="group block bg-[#242938] rounded-2xl overflow-hidden hover:-translate-y-1 transition-all duration-300 shadow-lg border border-[#2d3748] hover:border-green-500/50 flex flex-col h-full"
+            class="group block bg-[#1c252e] rounded-2xl overflow-hidden hover:-translate-y-1 transition-all duration-300 shadow-lg border border-[#2d3748] hover:border-green-500/50 flex flex-col h-full"
           >
             <div class="relative aspect-[16/9] overflow-hidden">
               <img 
@@ -103,7 +103,7 @@ const combinedSchema = [itemListSchema, faqSchema];
               />
               {post.data.tags && post.data.tags[0] && (
                 <div class="absolute top-4 left-4">
-                  <span class="bg-[#1a1d29]/80 backdrop-blur-md text-green-400 text-[10px] font-bold px-2 py-1 rounded-md border border-green-500/30 uppercase tracking-wider">
+                  <span class="bg-[#1c252e]/80 backdrop-blur-md text-green-400 text-[10px] font-bold px-2 py-1 rounded-md border border-green-500/30 uppercase tracking-wider">
                     {post.data.tags[0]}
                   </span>
                 </div>
@@ -132,7 +132,7 @@ const combinedSchema = [itemListSchema, faqSchema];
 
       <!-- Pagination -->
       <div class="flex justify-center mt-12 mb-20">
-        <div class="flex items-center gap-2 bg-[#242938] p-2 rounded-xl border border-[#2d3748]">
+        <div class="flex items-center gap-2 bg-[#1c252e] p-2 rounded-xl border border-[#2d3748]">
             {page.url.prev ? (
                 <a href={page.url.prev} class="px-4 h-10 flex items-center gap-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#1a1d29] transition-all text-sm font-bold">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
@@ -162,7 +162,7 @@ const combinedSchema = [itemListSchema, faqSchema];
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           {faqs.map((faq) => (
-            <div class="bg-[#242938] border border-[#2d3748] p-8 rounded-2xl">
+            <div class="bg-[#1c252e] border border-[#2d3748] p-8 rounded-2xl">
               <h3 class="text-green-500 text-lg font-bold mb-4">
                 {faq.question}
               </h3>
