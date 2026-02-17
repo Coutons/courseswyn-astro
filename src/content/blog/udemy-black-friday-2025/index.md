@@ -268,7 +268,7 @@ We've analyzed the current 2025 course catalog to bring you the **25 highest-rat
 
 **Udemy Black Friday 2025** is the biggest sale of the year. These prices won't return until next year.
 
-**Related:** Check out our [Top AI Integration Courses](/top-ai-integration-courses-on-udemy/) and [Best Python Courses](/top-10-python-courses-on-udemy/) for more learning options.
+**Related:** Check out our [Top AI Integration Courses](/blog/top-ai-integration-courses-on-udemy/) and [Best Python Courses](/blog/top-10-python-courses-on-udemy/) for more learning options.
 
 **Act now before November 28, 2025!**
 

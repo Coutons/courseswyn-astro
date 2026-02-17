@@ -26,4 +26,4 @@ Neal's course is excellent because it includes practice exams that are very simi
 
 A great option if you want a broader overview of the AWS ecosystem beyond just the architect role.
 
-[Get AWS Coupons](/coupon/aws-certification-courses)
+[Get AWS Coupons and IT Certification Courses](/topics/best-udemy-courses/it-certifications)

@@ -14,12 +14,6 @@ tags:
 image: ../../../assets/images/digital-marketing-with-ai-2026.jpg
 ---
 
-![Digital Marketing with AI Full Course for Beginners in 2026](../../../assets/images/digital-marketing-with-ai-2026.jpg "Digital Marketing with AI Full Course for Beginners in 2026")
-
-## Table of Contents
-
-<!-- toc -->
-
 ## Digital Marketing with AI in 2026: What Beginners Must Know
 
 Digital marketing in 2026 is no longer manual, repetitive, or guess-based. Artificial Intelligence has fundamentally transformed how marketers create content, optimize SEO, manage ads, analyze data, and scale campaigns.

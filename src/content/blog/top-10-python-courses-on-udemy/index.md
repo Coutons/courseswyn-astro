@@ -6,13 +6,13 @@ updatedAt: 2026-02-08T00:00:00.000Z
 image: ../../../assets/images/100-Days-of-Code-Python-Bootcamp.jpg
 tags: ["Python", "Development"]
 affiliate_links:
-  - text: "100 Days of Code: The Complete Python Pro Bootcamp"
+  - text: "100 Days of Code™: The Complete Python Pro Bootcamp"
     url: "https://www.udemy.com/course/100-days-of-code/"
   - text: "Complete Python Bootcamp: Go from zero to hero in Python"
     url: "https://www.udemy.com/course/complete-python-bootcamp/"
 ---
 
-## 1. 100 Days of Code: The Complete Python Pro Bootcamp
+## 1. 100 Days of Code™: The Complete Python Pro Bootcamp
 
 **Instructor:** Dr. Angela Yu
 
@@ -40,4 +40,4 @@ If you are learning Python specifically for Data Science, skip the general cours
 *   **Best For:** Aspiring Data Scientists.
 *   **Our Rating:** 9/10
 
-[View all Python Coupons here](/coupon/python-courses)
+[View all Python Coupons here](/topics/best-udemy-courses/python)

@@ -30,6 +30,9 @@ export default defineConfig({
         },
       ],
     ],
+    // Ensure proper UTF-8 handling for special characters
+    smartypants: true,
+    gfm: true,
   },
   experimental: {
     svgo: true,

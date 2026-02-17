@@ -7,10 +7,6 @@ tags:
 image: ../../../assets/images/top-blender-courses-2026.jpg
 ---
 
-![Top 8 Blender Courses on Udemy 2026](../../../assets/images/top-blender-courses-2026.jpg "Top 8 Blender Courses on Udemy 2026")
-
-*Top 8 Blender Courses on Udemy 2026 — deep reviews, Blender 4.5+ features, real earnings, and which course fits your goal.*
-
 ## Table of Contents
 - [1. Complete Blender Creator](#1-complete-blender-creator)
 - [2. Blender Character Creator for Video Games](#2-blender-character-creator)

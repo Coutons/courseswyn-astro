@@ -13,7 +13,7 @@ affiliate_links: []
 The easiest way to get paid Udemy courses for free is by using 100% OFF coupon codes. Instructors release these coupons to gain initial traction and reviews for their courses.
 
 **How it works:**
-*   Check [CoursesWyn.com](/coupon/) daily.
+*   Check [CoursesWyn.com](/udemy-coupon-code/) daily.
 *   Click on a course you like.
 *   If the coupon is active, the price on Udemy will show as **Free**.
 *   Enroll immediately—coupons often have a limit of 1000 redemptions.

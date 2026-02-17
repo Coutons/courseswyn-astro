@@ -32,4 +32,4 @@ Angela's teaching style is unmatched for clarity. This course covers everything 
 
 If you prefer a university-professor style, go with **Colt Steele**. If you prefer a visual, workshop style, go with **Angela Yu**.
 
-[See Web Dev Coupons](/coupon/web-development-courses)
+[See Web Dev Coupons](/topics/best-udemy-courses/web-development)

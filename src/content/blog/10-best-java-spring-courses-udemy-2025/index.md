@@ -12,8 +12,6 @@ image: ../../../assets/images/spring-boot-udemy-courses.jpg
 
 # 10 Best Java Spring Courses on Udemy (2026)
 
-![10 Best Java Spring Courses on Udemy (2026)](../../../assets/images/spring-boot-udemy-courses.jpg)
-
 The Spring Framework continues to be a cornerstone of Java enterprise development, and mastering it can significantly boost your career. After evaluating dozens of courses, we've compiled this list of the best Java Spring courses on Udemy for 2026.
 
 ### Quick Verdict

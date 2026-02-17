@@ -32,4 +32,4 @@ If there is no site-wide sale, you can often trigger a discount for yourself:
 
 ## Conclusion
 
-Patience pays off. If a course isn't $10-$15 right now, just wait a few days. Or better yet, check [CoursesWyn](/coupon/) for a 100% OFF coupon.
+Patience pays off. If a course isn't $10-$15 right now, just wait a few days. Or better yet, check [CoursesWyn](/udemy-coupon-code/) for a 100% OFF coupon.
