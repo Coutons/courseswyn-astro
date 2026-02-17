@@ -1,21 +1,34 @@
 ---
 import MainLayout from "../../layouts/MainLayout.astro";
-import { fetchPosts, formatDate } from "../../lib/posts";
+import { getCollection } from "astro:content";
 
 export async function getStaticPaths({ paginate }: { paginate: any }) {
-  const posts = await fetchPosts();
-  const sortedPosts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-  
-  return paginate(sortedPosts, { pageSize: 15 });
+  const posts = await getCollection('blog');
+  const sortedPosts = posts.sort((a, b) => {
+    const dateA = a.data.updatedAt || a.data.pubDate;
+    const dateB = b.data.updatedAt || b.data.pubDate;
+    return dateB.getTime() - dateA.getTime();
+  });
+
+  return paginate(sortedPosts, { pageSize: 6 });
 }
 
 const { page } = Astro.props as { page: any };
 const posts: any[] = page?.data ?? [];
 
+// Date formatting function
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+}
+
 const title = `Udemy Course Reviews & Learning Guides - Page ${page.currentPage} | Courses Wyn`;
 const description = "Browse all Udemy Courses guides, tutorials, comparisons, and reviews. Find the best Udemy Courses for your project.";
-const canonical = page.currentPage === 1 
-  ? "https://courseswyn.com/blog/" 
+const canonical = page.currentPage === 1
+  ? "https://courseswyn.com/blog/"
   : `https://courseswyn.com/blog/page/${page.currentPage}/`;
 
 const structuredData = {
@@ -24,16 +37,16 @@ const structuredData = {
   headline: title,
   description: description,
   blogPost: posts.map((post: any) => ({
-      "@type": "BlogPosting",
-      headline: post.data.title,
-      description: post.data.description,
-      url: `https://courseswyn.com/${post.slug}/`,
-      datePublished: post.data.pubDate.toISOString(),
-      author: {
-        "@type": "Organization",
-        name: "CoursesWyn",
-      },
-      image: post.data.image || "https://courseswyn.com/images/og-default.svg",
+    "@type": "BlogPosting",
+    headline: post.data.title,
+    description: post.data.description,
+    url: `https://courseswyn.com/${post.slug}/`,
+    datePublished: post.data.pubDate.toISOString(),
+    author: {
+      "@type": "Organization",
+      name: "CoursesWyn",
+    },
+    image: post.data.image || "https://courseswyn.com/images/og-default.svg",
   })),
 };
 ---
@@ -44,122 +57,175 @@ const structuredData = {
   canonical={canonical}
   structuredData={structuredData}
 >
-  <section class="border-b border-border relative overflow-hidden">
-    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(142_71%_45%_/_0.06),_transparent_60%)]"></div>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 relative">
-      <p class="text-xs font-mono text-primary uppercase tracking-widest mb-3">$ ls ~/guides/ -la</p>
-      <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground tracking-tight mb-4">All Udemy Courses Guides & Tutorials</h1>
-      <p class="text-lg text-muted-foreground max-w-2xl">
-        {page.total} in-depth guides covering Udemy courses, comparisons, setup tutorials, and more.
-      </p>
-    </div>
-  </section>
+  <div class="bg-[#1c252e] min-h-screen pb-20">
 
-  <section class="border-b border-border bg-card/50 sticky top-16 z-40 backdrop-blur-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div class="flex flex-wrap gap-2">
-          <button type="button" class="text-xs font-mono px-3 py-1.5 rounded border transition-colors bg-primary/10 text-primary border-primary/30">All ({page.total})</button>
-          <button type="button" class="text-xs font-mono px-3 py-1.5 rounded border transition-colors text-muted-foreground border-border hover:text-foreground hover:border-muted-foreground">Reviews</button>
-          <button type="button" class="text-xs font-mono px-3 py-1.5 rounded border transition-colors text-muted-foreground border-border hover:text-foreground hover:border-muted-foreground">Comparisons</button>
-          <button type="button" class="text-xs font-mono px-3 py-1.5 rounded border transition-colors text-muted-foreground border-border hover:text-foreground hover:border-muted-foreground">Tutorials</button>
-        </div>
-        <div class="relative w-full sm:w-64">
-           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-           <input type="text" placeholder="Search guides..." class="w-full pl-9 pr-3 py-1.5 text-sm font-mono bg-background border border-border rounded text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors" />
+    <!-- Header Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+      <div class="text-center">
+        <h1 class="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
+          Udemy Course Reviews &
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#10b981] to-[#3b82f6]">Learning Guides</span>
+        </h1>
+        <p class="text-xl md:text-2xl text-gray-300 font-medium mb-6">
+          Expert Insights, Tutorials & Reviews • {page.currentPage > 1 ? `Page ${page.currentPage}` : 'Latest Posts'}
+        </p>
+        <p class="text-gray-400 max-w-3xl mx-auto leading-relaxed mb-10 text-lg">
+          Browse our comprehensive collection of Udemy course reviews, learning guides, tutorials, and expert insights to help you choose the perfect courses for your skill development journey.
+        </p>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 max-w-3xl mx-auto border-t border-b border-[#2d3748] py-8">
+          <div>
+            <div class="text-4xl font-black text-[#10b981]">{posts.length}</div>
+            <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Posts This Page</div>
+          </div>
+          <div>
+            <div class="text-4xl font-black text-[#10b981]">{page.currentPage}</div>
+            <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Current Page</div>
+          </div>
+          <div>
+            <div class="text-4xl font-black text-[#10b981]">{page.lastPage}</div>
+            <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Total Pages</div>
+          </div>
+          <div>
+            <div class="text-4xl font-black text-[#10b981]">{page.total}</div>
+            <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Total Posts</div>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    <!-- Blog Posts Grid -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <div class="flex items-center gap-3 mb-8">
+        <span class="w-1.5 h-8 bg-[#10b981] rounded-full"></span>
+        <h2 class="text-2xl font-bold text-white">Latest Articles</h2>
+      </div>
 
-  <section class="py-12 md:py-16 dot-matrix">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 gap-4">
-        {
-          posts.map((post) => (
-            <div class="rounded-lg border border-border bg-card overflow-hidden hover:border-primary/30 transition-all cursor-pointer group">
-              <div class="flex items-center gap-2 px-4 py-2 border-b border-border bg-card">
-                <div class="flex gap-1.5">
-                  <div class="w-2.5 h-2.5 rounded-full bg-red-500/70"></div>
-                  <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/70"></div>
-                  <div class="w-2.5 h-2.5 rounded-full bg-green-500/70"></div>
-                </div>
-                <span class="text-xs font-mono text-muted-foreground ml-2">/{post.slug}</span>
-              </div>
-              <a href={`/${post.slug}/`} class="block p-5">
-                <div class="flex items-center gap-2 mb-3">
-                  <span class="text-[10px] font-mono font-semibold tracking-widest px-2 py-0.5 rounded border text-primary bg-primary/10 border-primary/20">GUIDE</span>
-                   { post.data.tags && post.data.tags.includes('Featured') && (
-                      <span class="text-[10px] font-mono font-semibold tracking-widest text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">FEATURED</span>
-                   )}
-                </div>
-                <h3 class="text-base font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                  {post.data.title}
-                </h3>
-                <p class="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-4">
-                  {post.data.description}
-                </p>
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3 text-xs text-muted-foreground font-mono">
-                    <span class="flex items-center gap-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                      {formatDate(post.data.pubDate)}
+      {posts.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          {posts.map((post: any) => (
+            <a
+              href={`/${post.slug}/`}
+              class="group block bg-[#28323d] border border-[#2d3748] rounded-2xl overflow-hidden hover:border-[#10b981] hover:shadow-xl hover:shadow-[#10b981]/10 transition-all duration-300 hover:-translate-y-2"
+            >
+              <!-- Image -->
+              <div class="relative aspect-[16/9] overflow-hidden">
+                <img
+                  src={post.data.image?.src || post.data.image || 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&h=400&fit=crop'}
+                  alt={post.data.title}
+                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
+                {post.data.tags && post.data.tags[0] && (
+                  <div class="absolute top-4 left-4">
+                    <span class="bg-[#1c252e]/80 backdrop-blur-md text-green-400 text-[10px] font-bold px-2 py-1 rounded-md border border-green-500/30 uppercase tracking-wider">
+                      {post.data.tags[0]}
                     </span>
                   </div>
-                  <span class="text-primary text-xs font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
-                    Read
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+                )}
+              </div>
+
+              <!-- Content -->
+              <div class="p-6">
+                <div class="flex items-center gap-2 mb-3 text-xs text-gray-400">
+                  <span class="bg-[#1f2937] px-2 py-1 rounded border border-[#374151] truncate max-w-[50%]">
+                    {post.data.category || 'Article'}
+                  </span>
+                  <span>•</span>
+                  <span>{formatDate(post.data.pubDate)}</span>
+                </div>
+
+                <h3 class="font-bold text-white text-lg mb-3 leading-tight group-hover:text-[#10b981] transition-colors line-clamp-2">
+                  {post.data.title}
+                </h3>
+
+                <p class="text-gray-400 text-sm leading-relaxed line-clamp-3 mb-4">
+                  {post.data.description}
+                </p>
+
+                <!-- Read More -->
+                <div class="flex items-center justify-between">
+                  <span class="inline-block px-4 py-2 bg-[#10b981]/10 border border-[#10b981]/30 text-[#10b981] text-xs font-bold rounded-lg group-hover:bg-[#10b981] group-hover:text-white transition-all">
+                    Read Article →
                   </span>
                 </div>
-              </a>
-            </div>
-          ))
-        }
-      </div>
-
-      {/* Pagination Controls */}
-      {page.lastPage > 1 && (
-        <div class="mt-12 flex justify-center items-center gap-4">
-          <nav class="flex space-x-2" aria-label="Pagination">
-            {page.url.prev && (
-              <a
-                href={page.url.prev}
-                class="px-4 py-2 border border-border rounded-lg hover:bg-card hover:border-primary/50 text-muted-foreground hover:text-foreground transition-all duration-300"
-              >
-                Previous
-              </a>
-            )}
-
-            {Array.from({ length: page.lastPage }, (_, i) => i + 1).map(
-              (pageNum) => (
-                <a
-                  href={pageNum === 1 ? '/blog/' : `/blog/page/${pageNum}/`}
-                  class={`px-4 py-2 border rounded-lg transition-all duration-300 ${
-                    pageNum === page.currentPage
-                      ? "bg-primary text-primary-foreground border-primary font-semibold"
-                      : "border-border hover:bg-card hover:border-primary/50 text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {pageNum}
-                </a>
-              ),
-            )}
-
-            {page.url.next && (
-              <a
-                href={page.url.next}
-                class="px-4 py-2 border border-border rounded-lg hover:bg-card hover:border-primary/50 text-muted-foreground hover:text-foreground transition-all duration-300"
-              >
-                Next
-              </a>
-            )}
-          </nav>
-
-          <p class="text-sm text-muted-foreground font-medium font-mono">
-            Page {page.currentPage} of {page.lastPage}
-          </p>
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-16">
+          <div class="text-gray-400 text-lg mb-4">No blog posts found</div>
+          <a href="/" class="inline-block px-6 py-3 bg-[#10b981] text-white rounded-lg hover:bg-[#059669] transition-colors">
+            Back to Home
+          </a>
         </div>
       )}
-    </div>
-  </section>
+
+      <!-- Pagination -->
+      <div class="flex justify-center">
+        <div class="flex items-center gap-2 bg-[#28323d] p-2 rounded-xl border border-[#2d3748]">
+          {page.url.prev ? (
+            <a href={page.url.prev} class="px-4 h-10 flex items-center gap-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#1c252e] transition-all text-sm font-bold">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+              Previous
+            </a>
+          ) : null}
+
+          <span class="px-4 h-10 flex items-center rounded-lg bg-[#10b981] text-white font-bold text-sm">
+            Page {page.currentPage} of {page.lastPage}
+          </span>
+
+          {page.url.next ? (
+            <a href={page.url.next} class="px-4 h-10 flex items-center gap-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#1c252e] transition-all text-sm font-bold">
+              Next
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </a>
+          ) : null}
+        </div>
+      </div>
+    </section>
+
+    <!-- SEO Content Section -->
+    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+      <div class="prose prose-invert prose-lg max-w-none">
+        <h2 class="text-3xl font-bold text-white text-center mb-8">Expert Udemy Course Guides & Reviews</h2>
+
+        <div class="text-gray-400 space-y-6 leading-relaxed text-base">
+          <p>
+            Welcome to CoursesWyn's comprehensive blog featuring expert reviews, detailed guides, and insights into the best Udemy courses. Our experienced team analyzes thousands of courses to bring you honest reviews and practical learning guides.
+          </p>
+
+          <h3 class="text-white font-bold text-xl">What You'll Find in Our Blog</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+            <div class="bg-[#28323d] border border-[#2d3748] rounded-xl p-6">
+              <h4 class="text-[#10b981] font-bold text-lg mb-3">📋 Course Reviews</h4>
+              <p class="text-gray-300 text-sm">In-depth reviews of popular Udemy courses with pros, cons, and honest feedback from real students.</p>
+            </div>
+            <div class="bg-[#28323d] border border-[#2d3748] rounded-xl p-6">
+              <h4 class="text-[#10b981] font-bold text-lg mb-3">🛣️ Learning Paths</h4>
+              <p class="text-gray-300 text-sm">Structured learning roadmaps to help you master specific skills and technologies.</p>
+            </div>
+            <div class="bg-[#28323d] border border-[#2d3748] rounded-xl p-6">
+              <h4 class="text-[#10b981] font-bold text-lg mb-3">💡 Tutorials</h4>
+              <p class="text-gray-300 text-sm">Step-by-step tutorials and guides for common development tasks and challenges.</p>
+            </div>
+            <div class="bg-[#28323d] border border-[#2d3748] rounded-xl p-6">
+              <h4 class="text-[#10b981] font-bold text-lg mb-3">🔍 Comparisons</h4>
+              <p class="text-gray-300 text-sm">Detailed comparisons between similar courses to help you choose the best option.</p>
+            </div>
+          </div>
+
+          <h3 class="text-white font-bold text-xl">Why Trust Our Reviews?</h3>
+          <p>
+            Our blog content is created by experienced developers, educators, and Udemy course experts who have personally taken and reviewed hundreds of courses. We provide honest, unbiased opinions to help you make informed learning decisions.
+          </p>
+
+          <p class="text-sm mt-8 pt-6 border-t border-[#2d3748] text-center">
+            <em><strong>Disclaimer:</strong> We are not affiliated with Udemy.com. All logos and trademarks belong to their respective owners. We merely provide educational content to help students make informed decisions.</em>
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </div>
 </MainLayout>

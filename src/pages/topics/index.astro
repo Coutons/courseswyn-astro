@@ -1,0 +1,394 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import coupons from '../../data/coupons.json';
+
+// Get unique categories and their stats
+const categories = [...new Set(coupons.map((course: any) => course.category))].filter(cat => cat).sort();
+const categoryData = categories.map(category => {
+  const categoryCourses = coupons.filter((course: any) => course.category === category);
+  const totalCourses = categoryCourses.length;
+  const avgRating = totalCourses > 0
+    ? (categoryCourses.reduce((sum: number, course: any) => sum + (course.rating || 0), 0) / totalCourses).toFixed(1)
+    : '0';
+
+  return {
+    name: category,
+    slug: category.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-'),
+    totalCourses,
+    avgRating: parseFloat(avgRating),
+    topCourse: categoryCourses.sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))[0],
+    type: 'category'
+  };
+});
+
+// Get popular subcategories (top 50 by course count)
+const subcategoryData = coupons.reduce((acc: any, course: any) => {
+  if (course.subcategory) {
+    if (!acc[course.subcategory]) {
+      acc[course.subcategory] = { name: course.subcategory, count: 0, courses: [] };
+    }
+    acc[course.subcategory].count++;
+    acc[course.subcategory].courses.push(course);
+  }
+  return acc;
+}, {});
+
+const popularSubcategories = Object.values(subcategoryData)
+  .sort((a: any, b: any) => b.count - a.count)
+  .slice(0, 50)
+  .map((sub: any) => {
+    const avgRating = sub.courses.length > 0
+      ? (sub.courses.reduce((sum: number, course: any) => sum + (course.rating || 0), 0) / sub.courses.length).toFixed(1)
+      : '0';
+
+    return {
+      name: sub.name,
+      slug: sub.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-'),
+      totalCourses: sub.count,
+      avgRating: parseFloat(avgRating),
+      topCourse: sub.courses.sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))[0],
+      type: 'subcategory'
+    };
+  });
+
+// Category descriptions and icons
+const categoryInfo = {
+  'Business': {
+    description: 'Master business skills, entrepreneurship, management, and professional development.',
+    icon: '�',
+    color: 'from-blue-500 to-indigo-600'
+  },
+  'Design': {
+    description: 'Learn graphic design, UI/UX, web design, and creative tools.',
+    icon: '🎨',
+    color: 'from-purple-500 to-pink-500'
+  },
+  'Development': {
+    description: 'Become a software developer with programming languages and frameworks.',
+    icon: '💻',
+    color: 'from-green-500 to-teal-500'
+  },
+  'Finance & Accounting': {
+    description: 'Learn financial analysis, accounting, investing, and business finance.',
+    icon: '�',
+    color: 'from-green-600 to-emerald-600'
+  },
+  'IT & Software': {
+    description: 'Master IT infrastructure, software development, and technical skills.',
+    icon: '⚙️',
+    color: 'from-gray-600 to-gray-800'
+  },
+  'Marketing': {
+    description: 'Digital marketing, social media, SEO, and marketing strategies.',
+    icon: '�',
+    color: 'from-orange-500 to-red-500'
+  },
+  'Music': {
+    description: 'Music production, audio engineering, and musical instruments.',
+    icon: '�',
+    color: 'from-pink-500 to-purple-600'
+  },
+  'Office Productivity': {
+    description: 'Microsoft Office, Google Workspace, and productivity tools.',
+    icon: '�',
+    color: 'from-blue-600 to-indigo-600'
+  },
+  'Personal Development': {
+    description: 'Self-improvement, leadership, communication, and personal growth.',
+    icon: '🌱',
+    color: 'from-yellow-500 to-orange-500'
+  },
+  'Photography & Video': {
+    description: 'Photography, videography, editing, and visual storytelling.',
+    icon: '�',
+    color: 'from-purple-600 to-indigo-700'
+  }
+};
+
+// SEO data
+const pageTitle = 'Best Udemy Courses by Category | Free Premium Courses with Certificates';
+const pageDescription = 'Explore the best Udemy courses by category. Get premium courses for FREE with 100% OFF coupons in Python, React, JavaScript, Data Science, and more.';
+
+const topicsSchema = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": pageTitle,
+  "description": pageDescription,
+  "url": "https://courseswyn.com/topics/",
+  "mainEntity": {
+    "@type": "ItemList",
+    "numberOfItems": categoryData.length,
+    "itemListElement": categoryData.map((cat, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "url": `https://courseswyn.com/topics/best-udemy-courses/${cat.slug}`,
+      "name": `Best ${cat.name} Udemy Courses`
+    }))
+  }
+};
+---
+
+<MainLayout title={pageTitle} description={pageDescription}>
+
+  <!-- SEO Schema -->
+  <script type="application/ld+json" set:html={JSON.stringify(topicsSchema)} />
+
+  <div class="bg-[#1c252e] min-h-screen pb-20">
+
+    <!-- Header Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+      <div class="text-center">
+        <h1 class="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
+          Best Udemy Courses <br/>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#10b981] to-[#3b82f6]">by Category</span>
+        </h1>
+        <p class="text-xl md:text-2xl text-gray-300 font-medium mb-6">
+          Premium Courses for FREE • 100% OFF Coupons
+        </p>
+        <p class="text-gray-400 max-w-3xl mx-auto leading-relaxed mb-10 text-lg">
+          Discover the best Udemy courses organized by category. Get lifetime access to premium courses with certificates, all completely FREE using our verified discount coupons.
+        </p>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 max-w-3xl mx-auto border-t border-b border-[#2d3748] py-8">
+          <div>
+            <div class="text-4xl font-black text-[#10b981]">{categories.length}</div>
+            <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Categories</div>
+          </div>
+          <div>
+            <div class="text-4xl font-black text-[#10b981]">{Object.keys(subcategoryData).length}+</div>
+            <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Subcategories</div>
+          </div>
+          <div>
+            <div class="text-4xl font-black text-[#10b981]">{coupons.length.toLocaleString()}+</div>
+            <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Total Courses</div>
+          </div>
+          <div>
+            <div class="text-4xl font-black text-[#10b981]">100%</div>
+            <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Free Access</div>
+          </div>
+        </div>
+
+        <!-- Search CTA -->
+        <div class="flex justify-center">
+          <a href="#categories" class="inline-block px-8 py-4 bg-[#10b981] hover:bg-[#059669] text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+            Browse Categories
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories Grid -->
+    <section id="categories" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-white mb-4">Explore Course Categories</h2>
+        <p class="text-gray-400">Find the perfect courses for your learning journey</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-16">
+        {categoryData.map((category) => {
+          const info = categoryInfo[category.name as keyof typeof categoryInfo] || {
+            description: `Learn ${category.name} with premium courses and expert instructors.`,
+            icon: '📚',
+            color: 'from-gray-500 to-gray-600'
+          };
+
+          return (
+            <a
+              href={`/topics/best-udemy-courses/${category.slug}`}
+              class="group block bg-[#28323d] border border-[#2d3748] rounded-2xl overflow-hidden hover:border-[#10b981] hover:shadow-xl hover:shadow-[#10b981]/10 transition-all duration-300 hover:-translate-y-2"
+            >
+              <!-- Header with icon and gradient -->
+              <div class={`bg-gradient-to-r ${info.color} p-6 text-white`}>
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="text-3xl">{info.icon}</span>
+                  <h3 class="text-xl font-bold">{category.name}</h3>
+                </div>
+                <div class="flex items-center gap-4 text-sm">
+                  <span class="bg-white/20 px-2 py-1 rounded-full">
+                    {category.totalCourses} courses
+                  </span>
+                  <span class="bg-white/20 px-2 py-1 rounded-full">
+                    ⭐ {category.avgRating}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div class="p-6">
+                <p class="text-gray-400 text-sm leading-relaxed mb-4">
+                  {info.description}
+                </p>
+
+                {category.topCourse && (
+                  <div class="border-t border-[#2d3748] pt-4">
+                    <p class="text-xs text-gray-500 mb-1">Top Course:</p>
+                    <p class="text-white text-sm font-medium line-clamp-2">
+                      {category.topCourse.title}
+                    </p>
+                    {category.topCourse.rating && (
+                      <div class="flex items-center gap-1 mt-1">
+                        <span class="text-yellow-400 text-xs">⭐</span>
+                        <span class="text-gray-400 text-xs">{category.topCourse.rating}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <!-- CTA -->
+                <div class="mt-4 text-center">
+                  <span class="inline-block px-4 py-2 bg-[#10b981]/10 border border-[#10b981]/30 text-[#10b981] text-xs font-bold rounded-lg group-hover:bg-[#10b981] group-hover:text-white transition-all">
+                    View Courses →
+                  </span>
+                </div>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+
+      <!-- Popular Subcategories -->
+      <div class="mt-20">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold text-white mb-4">Popular Subcategories</h2>
+          <p class="text-gray-400">Explore specific topics within each category</p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {popularSubcategories.slice(0, 30).map((subcategory: any) => (
+            <a
+              href={`/topics/best-udemy-courses/${subcategory.slug}`}
+              class="group block bg-[#28323d] border border-[#2d3748] rounded-xl p-4 hover:border-[#10b981] hover:shadow-lg transition-all hover:-translate-y-1"
+            >
+              <div class="text-center">
+                <h3 class="text-white font-semibold text-sm mb-2 group-hover:text-[#10b981] transition-colors">
+                  {subcategory.name}
+                </h3>
+                <div class="flex items-center justify-center gap-2 text-xs text-gray-400">
+                  <span>{subcategory.totalCourses} courses</span>
+                  <span>⭐ {subcategory.avgRating}</span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+
+        {popularSubcategories.length > 30 && (
+          <div class="text-center mt-8">
+            <p class="text-gray-400 text-sm mb-4">
+              Showing top 30 subcategories. {popularSubcategories.length - 30} more available.
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+
+    <!-- Why Choose Section -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <div class="bg-[#28323d] border border-[#2d3748] rounded-2xl p-8 md:p-12">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold text-white mb-4">Why Choose Our Course Categories?</h2>
+          <p class="text-gray-400">Organized learning paths for every skill level</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="text-center">
+            <div class="w-16 h-16 bg-[#10b981]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-[#10b981]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Organized by Topic</h3>
+            <p class="text-gray-400">Find exactly what you need with our carefully organized course categories and subtopics.</p>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 bg-[#10b981]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-[#10b981]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Quality Assured</h3>
+            <p class="text-gray-400">Only the highest-rated courses from verified instructors make it to our curated collections.</p>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 bg-[#10b981]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-[#10b981]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Always Free</h3>
+            <p class="text-gray-400">Get premium education completely free with our regularly updated discount coupons.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Popular Skills -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-white mb-4">Popular Skills to Learn</h2>
+        <p class="text-gray-400">Trending technologies and in-demand skills</p>
+      </div>
+      <div class="flex flex-wrap justify-center gap-3">
+        {[
+          'Python', 'JavaScript', 'React', 'Data Science', 'Machine Learning',
+          'Web Development', 'Java', 'Node.js', 'SQL', 'Git', 'Docker', 'AWS'
+        ].map((skill) => (
+          <a
+            href={`/search?q=${skill}`}
+            class="bg-[#28323d] border border-[#2d3748] px-4 py-2 rounded-full text-sm text-gray-300 hover:text-white hover:border-[#10b981] hover:bg-[#10b981]/10 transition-all"
+          >
+            {skill}
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- SEO Content -->
+    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+      <div class="prose prose-invert prose-lg max-w-none">
+        <h2 class="text-3xl font-bold text-white text-center mb-8">Master Any Skill with Free Udemy Courses</h2>
+
+        <div class="text-gray-400 space-y-6 leading-relaxed text-base">
+          <p>
+            Welcome to CoursesWyn's comprehensive course directory, where you can explore premium Udemy courses organized by category. Whether you're looking to start a new career, upskill for your current job, or simply learn something new, we have the perfect courses for you.
+          </p>
+
+          <h3 class="text-white font-bold text-xl">How Our Course Categories Work</h3>
+          <p>
+            Each category page features carefully curated courses that have been reviewed and rated by thousands of students. We only include courses with high ratings and positive feedback, ensuring you get the best learning experience possible.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+            <div class="bg-[#28323d] border border-[#2d3748] rounded-xl p-6">
+              <h4 class="text-[#10b981] font-bold text-lg mb-3">🎯 Curated Selection</h4>
+              <p class="text-gray-300 text-sm">We hand-pick only the highest-quality courses with 4.0+ star ratings and comprehensive content.</p>
+            </div>
+            <div class="bg-[#28323d] border border-[#2d3748] rounded-xl p-6">
+              <h4 class="text-[#10b981] font-bold text-lg mb-3">💰 Always Free</h4>
+              <p class="text-gray-300 text-sm">Access premium courses completely free using our verified Udemy discount coupons.</p>
+            </div>
+            <div class="bg-[#28323d] border border-[#2d3748] rounded-xl p-6">
+              <h4 class="text-[#10b981] font-bold text-lg mb-3">📜 Certificates</h4>
+              <p class="text-gray-300 text-sm">Earn recognized certificates that you can add to your resume and LinkedIn profile.</p>
+            </div>
+            <div class="bg-[#28323d] border border-[#2d3748] rounded-xl p-6">
+              <h4 class="text-[#10b981] font-bold text-lg mb-3">🔄 Lifetime Access</h4>
+              <p class="text-gray-300 text-sm">Keep access to your courses forever, even after completing them.</p>
+            </div>
+          </div>
+
+          <h3 class="text-white font-bold text-xl">Getting Started</h3>
+          <p>
+            Simply browse the categories above and click on any topic that interests you. Each category page will show you the best courses available, complete with ratings, descriptions, and enrollment instructions.
+          </p>
+
+          <p class="text-sm mt-8 pt-6 border-t border-[#2d3748] text-center">
+            <em><strong>Disclaimer:</strong> We are not affiliated with Udemy.com. All logos and trademarks belong to their respective owners. We merely aggregate publicly available coupons to help students save money on education.</em>
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+</MainLayout>

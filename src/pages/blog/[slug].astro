@@ -60,54 +60,138 @@ const structuredData = articleSchema;
   ogImage={ogImage}
   structuredData={structuredData}
 >
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <article class="prose prose-invert prose-lg max-w-none">
-      <header class="mb-12">
-        <h1 class="text-4xl sm:text-5xl font-black text-white mb-4">{title}</h1>
-        <p class="text-lg text-muted-foreground">{description}</p>
-        <div class="text-sm text-muted-foreground mt-2">
-          <time datetime={data.pubDate.toISOString()}>
-            {data.pubDate.toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </time>
-          {data.updatedAt && data.updatedAt > data.pubDate && (
-            <span class="ml-2">
-              (Updated{" "}
-              {data.updatedAt.toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-              )
-            </span>
+  <div class="bg-[#1c252e] min-h-screen pb-20">
+
+    <!-- Header Section -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+      <!-- Breadcrumb -->
+      <nav class="mb-8">
+        <ol class="flex items-center gap-2 text-sm text-gray-400">
+          <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
+          <li class="text-gray-600">/</li>
+          <li><a href="/blog" class="hover:text-white transition-colors">Blog</a></li>
+          <li class="text-gray-600">/</li>
+          <li class="text-white">{title}</li>
+        </ol>
+      </nav>
+
+      <!-- Article Header -->
+      <header class="text-center mb-12">
+        <div class="flex items-center justify-center gap-2 mb-4 text-xs text-gray-400">
+          <span class="bg-[#28323d] px-3 py-1 rounded border border-[#2d3748]">
+            {(data as any).category || 'Article'}
+          </span>
+          {data.tags && data.tags.length > 0 && (
+            <>
+              <span>•</span>
+              {data.tags.slice(0, 3).map((tag: string) => (
+                <span class="bg-[#10b981]/20 text-[#10b981] px-2 py-1 rounded text-xs">
+                  {tag}
+                </span>
+              ))}
+            </>
           )}
         </div>
-      </header>
 
-      <div class="prose-headings">
+        <h1 class="text-3xl md:text-5xl font-black text-white mb-6 leading-tight">
+          {title}
+        </h1>
+
+        <p class="text-xl text-gray-300 font-medium mb-8 max-w-3xl mx-auto">
+          {description}
+        </p>
+
+        <!-- Meta Info -->
+        <div class="flex items-center justify-center gap-6 text-sm text-gray-400 border-t border-[#2d3748] pt-8">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span>{new Date(data.pubDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>5 min read</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            <span>CoursesWyn Team</span>
+          </div>
+        </div>
+      </header>
+    </div>
+
+    <!-- Article Content -->
+    <article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <!-- Featured Image -->
+      {data.image && (
+        <div class="mb-12">
+          <div class="relative aspect-[16/9] overflow-hidden rounded-2xl">
+            <img
+              src={typeof data.image === 'string' ? data.image : data.image?.src || 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&h=400&fit=crop'}
+              alt={title}
+              class="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+      )}
+
+      <!-- Article Body -->
+      <div class="prose prose-invert prose-lg max-w-none">
         <Content />
       </div>
-
-      {data.affiliate_links && data.affiliate_links.length > 0 && (
-        <section class="mt-16">
-          <h2 class="text-2xl font-black text-white mb-8">Recommended Courses</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {data.affiliate_links.map((link: any) => (
-              <a
-                href={link.url}
-                target="_blank"
-                rel="nofollow noopener noreferrer"
-                class="block p-6 bg-card/60 border border-border rounded-2xl hover:bg-card/80 transition-all group"
-              >
-                <span class="text-primary font-bold">{link.text}</span>
-              </a>
-            ))}
-          </div>
-        </section>
-      )}
     </article>
+
+    <!-- Article Footer -->
+    <footer class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+      <div class="border-t border-[#2d3748] pt-12">
+        <!-- Tags -->
+        {data.tags && data.tags.length > 0 && (
+          <div class="mb-8">
+            <h3 class="text-white font-bold mb-4">Related Topics</h3>
+            <div class="flex flex-wrap gap-2">
+              {data.tags.map((tag: string) => (
+                <span class="bg-[#28323d] border border-[#2d3748] px-3 py-1 rounded-full text-sm text-gray-300 hover:border-[#10b981] transition-colors">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- Share & Navigation -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 pt-8 border-t border-[#2d3748]">
+          <div class="flex items-center gap-4">
+            <span class="text-gray-400 text-sm">Share this article:</span>
+            <div class="flex gap-2">
+              <button class="w-8 h-8 bg-[#28323d] border border-[#2d3748] rounded hover:border-[#10b981] transition-colors flex items-center justify-center">
+                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
+                </svg>
+              </button>
+              <button class="w-8 h-8 bg-[#28323d] border border-[#2d3748] rounded hover:border-[#10b981] transition-colors flex items-center justify-center">
+                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex gap-4">
+            <a href="/blog" class="px-6 py-3 bg-[#28323d] border border-[#2d3748] text-white rounded-lg hover:border-[#10b981] transition-colors text-sm font-medium">
+              ← Back to Blog
+            </a>
+            <a href="/" class="px-6 py-3 bg-[#10b981] text-white rounded-lg hover:bg-[#059669] transition-colors text-sm font-medium">
+              Explore Courses →
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
   </div>
 </MainLayout>
