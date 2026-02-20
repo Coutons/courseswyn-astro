@@ -12,346 +12,603 @@ export async function getStaticPaths() {
 
 const { course } = Astro.props;
 
-// Data Logic
+// ─────────────────────────────────────────────
+// RELATED COURSES
+// ─────────────────────────────────────────────
 const relatedCourses = courses
   .filter((c: any) => c.category === course.category && c.slug !== course.slug)
   .sort(() => 0.5 - Math.random())
   .slice(0, 4);
 
-// --- SHARED DATA ---
+// ─────────────────────────────────────────────
+// SHARED DATA
+// ─────────────────────────────────────────────
 const date = new Date();
 const currentMonth = date.toLocaleDateString('en-US', { month: 'long' });
 const currentYear = date.getFullYear();
 const isFree = course.price === 0 || course.price === "Free";
 
+// ─────────────────────────────────────────────
+// FIX 1: TIMESTAMP
+// Pakai updatedAt (kapan coupon diupdate), bukan createdAt (kapan kursus dibuat).
+// Kalau updatedAt tidak ada, fallback ke createdAt.
+// Kalau keduanya tidak ada, tampil "Newly Added".
+// ─────────────────────────────────────────────
+function getRelativeTime(dateStr: string): string {
+  if (!dateStr) return "Newly Added";
+  const now = new Date();
+  const past = new Date(dateStr);
+  const diffMs = now.getTime() - past.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffMins < 1)   return "Just now";
+  if (diffMins < 60)  return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffDays < 7)   return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  return past.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+// updatedAt = kapan coupon/data diupdate → ini yang relevan untuk badge
+const timeAgo = getRelativeTime(course.updatedAt || course.createdAt);
+
+// ─────────────────────────────────────────────
+// FIX 2: PRICE LOGIC
+// originalPrice = harga asli Udemy  (e.g. $109.99)
+// price         = harga setelah kupon (e.g. $10.99) atau 0 jika free
+// savedAmount   = selisih yang benar-benar dihemat user
+// ─────────────────────────────────────────────
+const originalPrice = Number(course.originalPrice || 84.99);
+const currentPrice  = isFree ? 0 : Number(course.price || 0);
+const savedAmount   = (originalPrice - currentPrice).toFixed(2);   // e.g. "99.00"
+const discountPct   = Math.round(((originalPrice - currentPrice) / originalPrice) * 100); // e.g. 90
+
+// ─────────────────────────────────────────────
+// TAGS — hanya dari category, subcategory, course.tags
+// TIDAK dari course.learn[] karena hasilnya tidak relevan
+// ─────────────────────────────────────────────
+const rawTags: string[] = [
+  course.category,
+  course.subcategory || course.subCategory,
+  ...(Array.isArray(course.tags) ? course.tags : []),
+].filter((t): t is string => Boolean(t) && t.trim().length > 0);
+const uniqueTags = [...new Set(rawTags)];
+
+// ─────────────────────────────────────────────
+// FAQs
+// ─────────────────────────────────────────────
 const faqs = isFree ? [
   {
     q: `Is ${course.title} really free?`,
-    a: `Yes, ${course.title} is completely free with our exclusive coupon code. You can enroll for $0.`
+    a: `Yes! ${course.title} is completely free with our exclusive 100% OFF coupon code. You can enroll for $0 and get lifetime access including all future updates.`
   },
   {
     q: "How do I get this course for free?",
-    a: 'Click the "Get Course" button on this page to access the course with our 100% OFF coupon code applied automatically.'
+    a: `Click the "Get Udemy Coupon" button on this page. The 100% OFF discount is applied automatically — no manual copy-paste needed. You'll be redirected to Udemy checkout with $0 price.`
   },
   {
-    q: `How long is this free course?`,
-    a: `The course is approximately ${course.duration || 'a few hours'} long and you get full lifetime access once enrolled.`
+    q: `How long is the ${course.category} free course?`,
+    a: `${course.title} is approximately ${course.duration || 'a few hours'} long. Once enrolled with the free coupon, you get lifetime access to learn at your own pace.`
   }
 ] : [
   {
     q: `Is there a discount for ${course.title}?`,
-    a: `Yes, we provide the best verified Udemy coupon for ${course.title}. You can get it at the lowest possible price.`
+    a: `Yes! Instead of paying $${originalPrice}, you can get ${course.title} for just $${currentPrice} with our verified coupon — saving you $${savedAmount} (${discountPct}% OFF) today.`
   },
   {
     q: "How do I apply the coupon code?",
-    a: 'Simply click the "Get Course" button. The best available discount code is applied automatically to your link.'
+    a: `Simply click the "Get Udemy Coupon" button on this page. The discount is applied automatically to your checkout link — no manual entry needed.`
   },
   {
-    q: `How long is this course?`,
-    a: `${course.title} is approximately ${course.duration || 'a few hours'} long with comprehensive content.`
+    q: `How long is ${course.title}?`,
+    a: `${course.title} is approximately ${course.duration || 'a few hours'} long. Udemy gives you lifetime access so you can learn at your own pace and revisit content anytime.`
   }
 ];
 
-// Add a general FAQ that's always relevant
+// FAQ ke-4: diperkaya dari course.learn[] agar unik per halaman
+const learnSummary = course.learn?.slice(0, 3)
+  .map((l: string) => l.replace(/^[✓✅•\-*]\s*/, ''))
+  .join('; ')
+  || `key skills in ${course.category}`;
+
 faqs.push({
   q: `What will I learn in ${course.title}?`,
-  a: `${course.title} by ${course.instructor || 'expert instructors'}. You will master key skills in ${course.category}.`
+  a: `In ${course.title} by ${course.instructor || 'expert instructors'}, you will learn: ${learnSummary}. The course covers ${course.subcategory || course.category} with ${course.duration} of hands-on content.`
 });
 
-// --- SEO LOGIC ---
+// FAQ ke-5: informational query "What is?"
+faqs.push({
+  q: `What is ${course.title}?`,
+  a: `${course.title} is a ${course.duration} online course on Udemy taught by ${course.instructor || 'an expert instructor'}. It covers ${course.category} with a ${course.rating || '4.5'} star rating from ${course.students?.toLocaleString() || '100+'} enrolled students. Use our verified coupon to access it ${isFree ? 'for free' : `at $${currentPrice} (${discountPct}% OFF)`}.`
+});
+
+// ─────────────────────────────────────────────
+// SEO — TITLE & DESCRIPTION
+// FIX 3: Truncate di word boundary — cegah "Antigra..." di SERP
+// ─────────────────────────────────────────────
+function truncateAtWord(str: string, maxLen: number): string {
+  if (str.length <= maxLen) return str;
+  const sub = str.substring(0, maxLen);
+  const lastSpace = sub.lastIndexOf(' ');
+  return lastSpace > 0 ? sub.substring(0, lastSpace) : sub;
+}
+const shortTitle    = truncateAtWord(course.title, 50);
+const pageTitle     = `${shortTitle} Coupon - ${currentMonth} ${currentYear}`;
+const firstLearn    = course.learn?.[0]?.replace(/^[✓✅•\-*]\s*/, '') || '';
+const pageDescription = `Get ${course.title} (${course.duration}) ${isFree ? 'for FREE — 100% OFF' : `at $${currentPrice} — ${discountPct}% OFF`} with verified Udemy coupon. ${firstLearn ? `${firstLearn}.` : ''} Updated ${currentMonth} ${currentYear}.`;
+
+// Coupon valid until end of next month
 const nextMonthDate = new Date();
 nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
 const priceValidUntil = nextMonthDate.toISOString().split('T')[0];
-// "SEO Killer" Title: Priority on [Title] + Coupon + Date
-// Truncate course title if too long to keep total under 70 chars
-const shortTitle = course.title.length > 50 ? course.title.substring(0, 47) + "..." : course.title;
-const pageTitle = `${shortTitle} Coupon - ${currentMonth} ${currentYear}`;
 
-const pageDescription = `Verified Udemy coupon for ${course.title}. ${isFree ? 'Get it for 100% OFF today.' : 'Get the maximum discount.'} Updated for ${currentMonth} ${currentYear}.`;
-
-// JSON-LD Course Schema
+// ─────────────────────────────────────────────
+// SCHEMA — Course
+// ─────────────────────────────────────────────
 const courseSchema = {
   "@context": "https://schema.org",
   "@type": "Course",
   "name": course.title,
-  "description": course.description?.substring(0, 160),
+  "description": course.description,
   "provider": {
     "@type": "Organization",
     "name": "Udemy",
     "sameAs": "https://www.udemy.com"
   },
+  "instructor": {
+    "@type": "Person",
+    "name": course.instructor || "Udemy Instructor"
+  },
   "image": course.image,
+  "inLanguage": course.language || "en",
   "offers": {
     "@type": "Offer",
-    "price": isFree ? "0" : course.price,
+    "price": isFree ? "0" : String(currentPrice),
     "priceCurrency": "USD",
     "priceValidUntil": priceValidUntil,
     "availability": "https://schema.org/InStock",
-    "url": Astro.url.href
+    "url": Astro.url.href,
+    "category": course.category
   },
   "aggregateRating": {
     "@type": "AggregateRating",
     "ratingValue": course.rating || 4.5,
-    "reviewCount": course.students || 100
+    "ratingCount": course.students || 100,   // FIX: ratingCount bukan reviewCount
+    "bestRating": "5",
+    "worstRating": "1"
   }
 };
 
-// JSON-LD Breadcrumb Schema
+// ─────────────────────────────────────────────
+// SCHEMA — Breadcrumb (di schema tetap 4 level, tapi visual TIDAK ditampilkan
+// karena section category chips di bawah meta badges sudah berfungsi sebagai breadcrumb visual)
+// ─────────────────────────────────────────────
 const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": Astro.site
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Udemy Coupon Code",
-      "item": `${Astro.site}udemy-coupon-code`
-    },
-    {
-      "@type": "ListItem",
-      "position": 3,
-      "name": course.title,
-      "item": Astro.url.href
-    }
+    { "@type": "ListItem", "position": 1, "name": "Home",             "item": Astro.site },
+    { "@type": "ListItem", "position": 2, "name": "Udemy Coupon Code","item": `${Astro.site}udemy-coupon-code` },
+    { "@type": "ListItem", "position": 3, "name": course.category,    "item": `${Astro.site}courses/category/${encodeURIComponent(course.category)}` },
+    { "@type": "ListItem", "position": 4, "name": course.title,       "item": Astro.url.href }
   ]
 };
 
-// JSON-LD FAQ Schema
+// ─────────────────────────────────────────────
+// SCHEMA — FAQ
+// ─────────────────────────────────────────────
 const faqSchema = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": faqs.map(f => ({
     "@type": "Question",
     "name": f.q,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": f.a
-    }
+    "acceptedAnswer": { "@type": "Answer", "text": f.a }
   }))
 };
 ---
 
 <MainLayout title={pageTitle} description={pageDescription}>
+  <!-- JSON-LD Schemas -->
   <script type="application/ld+json" set:html={JSON.stringify(courseSchema)} />
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
   <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+
   <div class="bg-[#1c252e] min-h-screen pb-20 pt-10 px-4">
     <div class="max-w-4xl mx-auto space-y-10">
 
-      <!-- 1. IMAGE COURSES -->
+      <!-- ══════════════════════════════════════
+           1. COURSE IMAGE
+      ══════════════════════════════════════ -->
       <section class="relative">
-        <img 
-            src={course.image} 
-            alt={course.title} 
-            class="w-full rounded-2xl shadow-2xl border border-[#2d3748]" 
+        <img
+          src={course.image}
+          alt={`${course.title} - Free Udemy Course`}
+          class="w-full rounded-2xl shadow-2xl border border-[#2d3748]"
+          loading="eager"
+          width="480"
+          height="270"
         />
+        <!-- FIX 1: updatedAt bukan createdAt — menampilkan kapan coupon diupdate -->
         <div class="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg text-xs text-gray-300">
-            {course.createdAt ? "7 minutes ago" : "Newly Added"}
+          {timeAgo}
         </div>
-        <button class="absolute top-4 right-4 p-2 bg-black/40 backdrop-blur-md rounded-full text-white hover:text-red-500 transition-colors">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        <button
+          aria-label="Save to wishlist"
+          class="absolute top-4 right-4 p-2 bg-black/40 backdrop-blur-md rounded-full text-white hover:text-red-500 transition-colors"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
         </button>
       </section>
 
-      <!-- 2. UDEMY - DURATION - STUDENT - LANGUAGE - PRICE -->
+      <!-- ══════════════════════════════════════
+           2. META BADGES + PRICE
+      ══════════════════════════════════════ -->
       <section class="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-[#2d3748]">
         <div class="flex flex-wrap gap-2">
-            <span class="flex items-center gap-2 bg-[#1f2937] px-3 py-2 rounded-lg text-sm font-medium text-gray-300 border border-[#2d3748]">
-                <span class="text-xs">💼</span> Udemy
-            </span>
-            <span class="flex items-center gap-2 bg-[#1f2937] px-3 py-2 rounded-lg text-sm font-medium text-gray-300 border border-[#2d3748]">
-                <span class="text-xs">🕒</span> {course.duration || "N/A"}
-            </span>
-            <span class="flex items-center gap-2 bg-[#1f2937] px-3 py-2 rounded-lg text-sm font-medium text-gray-300 border border-[#2d3748]">
-                <span class="text-xs">👁️</span> {course.students || 0}
-            </span>
-            <span class="flex items-center gap-2 bg-[#1f2937] px-3 py-2 rounded-lg text-sm font-medium text-gray-300 border border-[#2d3748]">
-                <span class="text-xs">🌐</span> {course.language || "English"}
-            </span>
+          <span class="flex items-center gap-2 bg-[#1f2937] px-3 py-2 rounded-lg text-sm font-medium text-gray-300 border border-[#2d3748]">
+            <span class="text-xs">💼</span> Udemy
+          </span>
+          <span class="flex items-center gap-2 bg-[#1f2937] px-3 py-2 rounded-lg text-sm font-medium text-gray-300 border border-[#2d3748]">
+            <span class="text-xs">🕒</span> {course.duration || "N/A"}
+          </span>
+          <span class="flex items-center gap-2 bg-[#1f2937] px-3 py-2 rounded-lg text-sm font-medium text-gray-300 border border-[#2d3748]">
+            <span class="text-xs">👥</span> {course.students?.toLocaleString() || 0} students
+          </span>
+          <span class="flex items-center gap-2 bg-[#1f2937] px-3 py-2 rounded-lg text-sm font-medium text-gray-300 border border-[#2d3748]">
+            <span class="text-xs">🌐</span> {course.language || "English"}
+          </span>
         </div>
+        <!-- FIX 2: price yang benar — originalPrice dicoret, currentPrice yang hijau -->
         <div class="bg-[#242938] px-4 py-2 rounded-xl border border-[#2d3748] flex items-center gap-3">
-            <span class="text-gray-500 line-through text-sm">${course.originalPrice || "84.99"}</span>
-            <span class="text-[#00c853] font-bold text-2xl">
-                {course.price === 0 || course.price === "Free" ? "$0" : `$${course.price}`}
-            </span>
+          <span class="text-gray-500 line-through text-sm">${originalPrice.toFixed(2)}</span>
+          <span class="text-[#00c853] font-bold text-2xl">
+            {isFree ? "FREE" : `$${currentPrice}`}
+          </span>
         </div>
       </section>
 
-      <!-- 3. CATEGORY AND SUB CATEGORY -->
+      <!-- ══════════════════════════════════════
+           3. CATEGORY CHIPS
+           Ini sudah berfungsi sebagai breadcrumb visual — tidak ada duplikat
+      ══════════════════════════════════════ -->
       <section class="flex items-center gap-2 text-sm">
-        <a href="/categories" class="bg-[#1c252e] px-4 py-2 rounded-lg text-gray-300 hover:text-white border border-[#2d3748]">
-            {course.category}
+        <a
+          href="/categories"
+          class="bg-[#1c252e] px-4 py-2 rounded-lg text-gray-300 hover:text-white border border-[#2d3748] transition-colors"
+        >
+          {course.category}
         </a>
         <span class="text-gray-600">›</span>
         <span class="bg-[#1c252e] px-4 py-2 rounded-lg text-gray-300 border border-[#2d3748]">
-            {course.subcategory || (course.subCategory || "General")}
+          {course.subcategory || course.subCategory || "General"}
         </span>
       </section>
 
-      <!-- 3. DETAIL KURUS DARI DATA COUPON.JSON -->
-      <section class="space-y-10">
-        <div>
-            <h1 class="text-3xl md:text-5xl font-black text-white leading-tight mb-4">
-                {course.title}
-            </h1>
-            <p class="text-lg text-gray-400 italic">
-                {course.description}
-            </p>
-        </div>
-
-        {course.learn && course.learn.length > 0 && (
-          <div class="bg-[#1c252e] p-6 rounded-2xl border border-[#2d3748]">
-            <h2 class="text-xl font-bold text-white mb-6">What you'll learn in this Udemy Course</h2>
-            <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {course.learn.map((item: string) => (
-                    <li class="flex items-start gap-3 text-sm text-gray-300">
-                        <span class="text-[#00c853] flex-shrink-0">✓</span>
-                        {item}
-                    </li>
-                ))}
-            </ul>
-          </div>
-        )}
-
-        {course.requirements && course.requirements.length > 0 && (
-            <div class="space-y-4">
-                <h2 class="text-2xl font-bold text-white">Udemy Coupon Requirements</h2>
-                <ul class="list-disc pl-6 space-y-2 text-gray-300">
-                    {course.requirements.map((req: string) => (
-                        <li>{req}</li>
-                    ))}
-                </ul>
-            </div>
-        )}
-
-        {course.content && (
-            <div class="space-y-6">
-                <h2 class="text-2xl font-bold text-white">About This Udemy Coupon</h2>
-                <div class="bg-[#1c252e] border border-[#2d3748] rounded-2xl p-6 md:p-8">
-                    <style>
-                        /* Override inline styles that conflict with prose */
-                        .prose-invert [style*="font-size"] { font-size: inherit !important; }
-                        .prose-invert [style*="color"] { color: inherit !important; }
-                        .prose-invert [style*="background"] { background: inherit !important; }
-                        .prose-invert [style*="margin"] { margin: inherit !important; }
-                        .prose-invert [style*="padding"] { padding: inherit !important; }
-                        .prose-invert [style*="text-align"] { text-align: inherit !important; }
-                        .prose-invert [style*="font-weight"] { font-weight: inherit !important; }
-                        .prose-invert [style*="line-height"] { line-height: inherit !important; }
-                        /* Force consistent text color */
-                        .prose-invert * { color: rgb(209 213 219) !important; }
-                        .prose-invert strong, .prose-invert b { color: rgb(255 255 255) !important; font-weight: 700 !important; }
-                        .prose-invert h1, .prose-invert h2, .prose-invert h3, .prose-invert h4, .prose-invert h5, .prose-invert h6 { color: rgb(255 255 255) !important; font-weight: 700 !important; }
-                        .prose-invert a { color: rgb(0 200 131) !important; }
-                        .prose-invert a:hover { color: rgb(16 185 129) !important; }
-                    </style>
-                    <div class="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed prose-headings:text-white prose-headings:font-bold prose-headings:mb-4 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-gray-300 prose-p:leading-relaxed prose-p:mb-4 prose-ul:text-gray-300 prose-ol:text-gray-300 prose-li:text-gray-300 prose-li:mb-2 prose-strong:text-white prose-strong:font-bold prose-a:text-[#00c853] prose-a:hover:text-[#10b981] prose-a:no-underline hover:prose-a:underline prose-blockquote:text-gray-400 prose-blockquote:border-l-[#00c853] prose-blockquote:pl-4 prose-code:text-[#00c853] prose-code:bg-[#1a1d29] prose-code:px-2 prose-code:py-1 prose-code:rounded prose-pre:bg-[#1a1d29] prose-pre:border prose-pre:border-[#2d3748] prose-hr:border-[#2d3748]" set:html={course.content} />
-                </div>
-            </div>
-        )}
+      <!-- ══════════════════════════════════════
+           4. TITLE & DESCRIPTION
+      ══════════════════════════════════════ -->
+      <section class="space-y-4">
+        <h1 class="text-3xl md:text-5xl font-black text-white leading-tight">
+          {course.title}
+        </h1>
+        <p class="text-lg text-gray-400 italic leading-relaxed">
+          {course.description}
+        </p>
       </section>
 
-      <!-- 4. TOMBOL ENROLL -->
-      <section class="pt-6">
+      <!-- ══════════════════════════════════════
+           5. WHAT YOU'LL LEARN
+      ══════════════════════════════════════ -->
+      {course.learn && course.learn.length > 0 && (
+        <div class="bg-[#1c252e] p-6 rounded-2xl border border-[#2d3748]">
+          <h2 class="text-xl font-bold text-white mb-6">What you'll learn in this Udemy Course</h2>
+          <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {course.learn.map((item: string) => (
+              <li class="flex items-start gap-3 text-sm text-gray-300">
+                <span class="text-[#00c853] flex-shrink-0 mt-0.5">✓</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <!-- ══════════════════════════════════════
+           6. REQUIREMENTS
+      ══════════════════════════════════════ -->
+      {course.requirements && course.requirements.length > 0 && (
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold text-white">Udemy Coupon Requirements</h2>
+          <ul class="list-disc pl-6 space-y-2 text-gray-300">
+            {course.requirements.map((req: string) => (
+              <li>{req}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <!-- ══════════════════════════════════════
+           7. ABOUT THIS COURSE (rich HTML content)
+      ══════════════════════════════════════ -->
+      {course.content && (
+        <div class="space-y-6">
+          <h2 class="text-2xl font-bold text-white">About This Udemy Coupon</h2>
+          <div class="bg-[#1c252e] border border-[#2d3748] rounded-2xl p-6 md:p-8">
+            <style>
+              .prose-invert [style*="font-size"]   { font-size: inherit !important; }
+              .prose-invert [style*="color"]        { color: inherit !important; }
+              .prose-invert [style*="background"]   { background: inherit !important; }
+              .prose-invert [style*="margin"]       { margin: inherit !important; }
+              .prose-invert [style*="padding"]      { padding: inherit !important; }
+              .prose-invert [style*="text-align"]   { text-align: inherit !important; }
+              .prose-invert [style*="font-weight"]  { font-weight: inherit !important; }
+              .prose-invert [style*="line-height"]  { line-height: inherit !important; }
+              .prose-invert *                        { color: rgb(209 213 219) !important; }
+              .prose-invert strong, .prose-invert b  { color: rgb(255 255 255) !important; font-weight: 700 !important; }
+              .prose-invert h1, .prose-invert h2, .prose-invert h3,
+              .prose-invert h4, .prose-invert h5, .prose-invert h6 { color: rgb(255 255 255) !important; font-weight: 700 !important; }
+              .prose-invert a                        { color: rgb(0 200 131) !important; }
+              .prose-invert a:hover                  { color: rgb(16 185 129) !important; }
+            </style>
+            <div
+              class="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed
+                     prose-headings:text-white prose-headings:font-bold prose-headings:mb-4
+                     prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg
+                     prose-p:text-gray-300 prose-p:leading-relaxed prose-p:mb-4
+                     prose-ul:text-gray-300 prose-ol:text-gray-300
+                     prose-li:text-gray-300 prose-li:mb-2
+                     prose-strong:text-white prose-strong:font-bold
+                     prose-a:text-[#00c853] prose-a:hover:text-[#10b981] prose-a:no-underline hover:prose-a:underline
+                     prose-blockquote:text-gray-400 prose-blockquote:border-l-[#00c853] prose-blockquote:pl-4
+                     prose-code:text-[#00c853] prose-code:bg-[#1a1d29] prose-code:px-2 prose-code:py-1 prose-code:rounded
+                     prose-pre:bg-[#1a1d29] prose-pre:border prose-pre:border-[#2d3748]
+                     prose-hr:border-[#2d3748]"
+              set:html={course.content}
+            />
+          </div>
+        </div>
+      )}
+
+      <!-- ══════════════════════════════════════
+           NEW: URGENCY BANNER
+           FIX 2: savedAmount = originalPrice - currentPrice (bukan originalPrice saja)
+      ══════════════════════════════════════ -->
+      <section class="bg-gradient-to-r from-[#0f2027] via-[#1a2a1a] to-[#1c252e] border border-[#059669]/30 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <p class="text-[#00c853] font-bold text-xs uppercase tracking-widest mb-1">⚡ Limited Time Offer</p>
+          <p class="text-white font-bold text-lg">
+            Coupon valid until end of {currentMonth} {currentYear}
+          </p>
+          <p class="text-gray-400 text-sm mt-1">
+            Don't miss out — grab this {course.category} course before the coupon expires.
+          </p>
+        </div>
+        <div class="text-right flex-shrink-0">
+          <p class="text-gray-500 text-xs uppercase tracking-widest mb-1">You save</p>
+          <!-- savedAmount = selisih yang BENAR: originalPrice - currentPrice -->
+          <p class="text-[#00c853] font-black text-3xl">${savedAmount}</p>
+          <p class="text-gray-500 text-xs mt-0.5">{discountPct}% OFF original price</p>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════
+           8. CTA BUTTON
+      ══════════════════════════════════════ -->
+      <section class="pt-2">
         <a
-            href={course.url}
-            target="_blank"
-            rel="nofollow noopener"
-            class="w-full flex items-center justify-center gap-3 bg-[#059669] hover:bg-[#047857] text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg border border-[#10b981]/20"
+          href={course.url}
+          target="_blank"
+          rel="nofollow noopener"
+          class="w-full flex items-center justify-center gap-3 bg-[#059669] hover:bg-[#047857] text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg border border-[#10b981]/20"
         >
-            <span class="text-lg uppercase tracking-wide">Get Udemy Coupon</span>
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          <span class="text-lg uppercase tracking-wide">Get Udemy Coupon</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
         </a>
         <div class="mt-3 flex items-center justify-center gap-4 text-[10px] text-gray-500 font-bold uppercase tracking-[0.1em]">
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#059669] rounded-full"></span> 100% Verified</span>
-            <span class="flex items-center gap-1.5">🛡️ SECURE ACCESS</span>
-            <span class="flex items-center gap-1.5">⚡ FAST REDEEM</span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 bg-[#059669] rounded-full"></span> 100% Verified
+          </span>
+          <span class="flex items-center gap-1.5">🛡️ SECURE ACCESS</span>
+          <span class="flex items-center gap-1.5">⚡ FAST REDEEM</span>
         </div>
       </section>
 
-      <div class="h-px bg-[#1c252e] w-full"></div>
+      <div class="h-px bg-[#2d3748] w-full"></div>
 
-      <!-- 5. SIMILAR COURSE -->
-      <section>
-        <h2 class="text-2xl font-bold text-white mb-8">Related Udemy Coupon Codes</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {relatedCourses.map((c: any) => <CourseCard course={c} />)}
-        </div>
-        <div class="mt-10 flex justify-center">
-            <a href="/udemy-coupon-code" class="bg-[#1f2937] hover:bg-[#2d3748] text-white px-8 py-3 rounded-xl border border-[#2d3748] flex items-center gap-2 font-bold transition-all">
-                Load More
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </a>
-        </div>
+      <!-- ══════════════════════════════════════
+           NEW: WHAT IS [COURSE TITLE]? — Informational SEO
+      ══════════════════════════════════════ -->
+      <section class="space-y-4">
+        <h2 class="text-2xl font-bold text-white">What is {course.title}?</h2>
+        <p class="text-gray-400 leading-relaxed">
+          <strong class="text-white">{course.title}</strong> is a {course.duration} online course on Udemy
+          taught by <strong class="text-white">{course.instructor || "an expert instructor"}</strong>.
+          It covers <strong class="text-white">{course.subcategory || course.category}</strong> and is designed
+          for learners who want to {course.learn?.[0]?.replace(/^[✓✅•\-*]\s*/, '').toLowerCase() || `master ${course.category}`}.
+          With <strong class="text-white">{course.students?.toLocaleString() || "hundreds of"} students</strong> enrolled
+          and a <strong class="text-[#00c853]">{course.rating || "4.5"} star rating</strong>, it is one of the
+          top-rated courses in {course.subcategory || course.category} on Udemy.
+          Use the coupon above to access it {isFree ? "completely free" : `at ${discountPct}% OFF ($${currentPrice})`}.
+        </p>
       </section>
 
-      <!-- 6. FAQS -->
-      <section>
-        <h2 class="text-3xl font-bold text-white mb-8">Frequently Asked Questions</h2>
-        <div class="space-y-6">
-            {faqs.map(faq => (
-                <div class="group border-b border-[#2d3748] pb-6">
-                    <h3 class="text-[#00c853] font-bold text-lg mb-3 leading-snug">
-                        {faq.q}
-                    </h3>
-                    <p class="text-sm text-gray-400 leading-relaxed">
-                        {faq.a}
-                    </p>
-                </div>
-            ))}
-        </div>
-      </section>
+      <!-- ══════════════════════════════════════
+           NEW: INSTRUCTOR SECTION
+           (tanpa link — halaman /instructor/ tidak ada)
+      ══════════════════════════════════════ -->
+      {course.instructor && (
+        <section class="bg-[#1c252e] border border-[#2d3748] rounded-2xl p-6">
+          <h2 class="text-2xl font-bold text-white mb-4">About the Instructor</h2>
+          <div class="flex items-start gap-4">
+            <div class="w-14 h-14 rounded-full bg-gradient-to-br from-[#059669] to-[#1a3a5c] flex items-center justify-center flex-shrink-0 text-white font-bold text-xl select-none">
+              {course.instructor.charAt(0).toUpperCase()}
+            </div>
+            <div class="flex-1">
+              <h3 class="text-white font-bold text-xl leading-tight">{course.instructor}</h3>
+              <p class="text-[#00c853] text-sm font-medium mt-0.5">
+                Udemy Instructor · {course.category} Expert
+              </p>
+              <p class="text-gray-400 text-sm mt-3 leading-relaxed">
+                {course.instructorBio ||
+                  `${course.instructor} is an expert instructor on Udemy specializing in
+                  ${course.category}. Their course "${course.title}" has helped
+                  ${course.students?.toLocaleString() || "hundreds of"} students master
+                  ${course.subcategory || course.category} with a
+                  ${course.rating || "4.5"} star rating.`
+                }
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
-      <!-- 7. COURSE INFORMATION -->
+      <!-- ══════════════════════════════════════
+           9. COURSE INFORMATION TABLE
+      ══════════════════════════════════════ -->
       <section class="bg-[#1c252e] border border-[#2d3748] rounded-3xl p-8 shadow-2xl">
         <h2 class="text-2xl font-bold text-white mb-8">Course Information</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
-            <div>
-                <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Platform</p>
-                <p class="text-white font-bold text-xl">Udemy</p>
+          <div>
+            <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Platform</p>
+            <p class="text-white font-bold text-xl">Udemy</p>
+          </div>
+          <div>
+            <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Instructor</p>
+            <p class="text-white font-bold text-xl">{course.instructor || "Udemy Instructor"}</p>
+          </div>
+          <div>
+            <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Duration</p>
+            <p class="text-white font-bold text-xl">{course.duration || "N/A"}</p>
+          </div>
+          <div>
+            <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Language</p>
+            <p class="text-white font-bold text-xl">{course.language || "English"}</p>
+          </div>
+          <div class="md:col-span-2">
+            <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Category</p>
+            <p class="text-white font-bold text-lg">
+              {course.category} · {course.subcategory || course.subCategory || "General"}
+            </p>
+          </div>
+          <div>
+            <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Rating</p>
+            <div class="flex items-center gap-2">
+              <span class="text-yellow-400 text-lg">⭐</span>
+              <span class="text-white font-bold text-xl">
+                {course.rating || "N/A"}
+                <span class="text-gray-500 text-sm font-medium">
+                  ({course.students?.toLocaleString() || 0} enrolled)
+                </span>
+              </span>
             </div>
-            <div>
-                <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Instructor</p>
-                <p class="text-white font-bold text-xl">{course.instructor || "Udemy Instructor"}</p>
+          </div>
+          <!-- FIX 2: Price row — currentPrice vs originalPrice dengan selisih yang benar -->
+          <div>
+            <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Price</p>
+            <div class="flex items-center gap-2 font-bold text-xl">
+              <span class={isFree ? 'text-[#00c853]' : 'text-white'}>
+                {isFree ? "FREE" : `$${currentPrice}`}
+              </span>
+              <span class="text-gray-500 line-through text-lg">${originalPrice.toFixed(2)}</span>
+              <span class="text-xs text-[#00c853] font-bold bg-[#00c853]/10 px-2 py-0.5 rounded-full">
+                -{discountPct}%
+              </span>
             </div>
-            <div>
-                <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Duration</p>
-                <p class="text-white font-bold text-xl">{course.duration || "N/A"}</p>
-            </div>
-            <div>
-                <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Language</p>
-                <p class="text-white font-bold text-xl">{course.language || "English"}</p>
-            </div>
+          </div>
+          {course.updatedAt && (
             <div class="md:col-span-2">
-                <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Category</p>
-                <p class="text-white font-bold text-lg">{course.category} • {course.subcategory || "General"}</p>
+              <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Last Updated</p>
+              <p class="text-white font-bold text-lg">
+                {new Date(course.updatedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </p>
             </div>
-            <div>
-                <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Rating</p>
-                <div class="flex items-center gap-2">
-                    <span class="text-yellow-400 text-lg">⭐</span>
-                    <span class="text-white font-bold text-xl">{course.rating || "N/A"} <span class="text-gray-500 text-sm font-medium">({course.students?.toLocaleString() || 0} enrolled)</span></span>
-                </div>
+          )}
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════
+           NEW: TAGS
+           Sumber: category + subcategory + course.tags dari JSON
+           TIDAK dari course.learn[]
+      ══════════════════════════════════════ -->
+      {uniqueTags.length > 0 && (
+        <section>
+          <h2 class="text-xl font-bold text-white mb-4">Related Topics</h2>
+          <div class="flex flex-wrap gap-2">
+            {uniqueTags.map((tag: string) => (
+              <a
+                href={`/search?q=${encodeURIComponent(tag)}`}
+                class="bg-[#1f2937] hover:bg-[#2d3748] text-gray-400 hover:text-white
+                       px-3 py-1.5 rounded-lg text-sm border border-[#2d3748]
+                       transition-all hover:border-[#059669]/50"
+              >
+                #{tag}
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- ══════════════════════════════════════
+           NEW: TRUST SIGNAL
+      ══════════════════════════════════════ -->
+      <section class="flex items-center gap-3 text-sm text-gray-500 border-t border-[#2d3748] pt-6">
+        <span>Also available on:</span>
+        <a
+          href="https://trk.udemy.com/c/6564357/3775958/39854"
+          rel="nofollow noopener"
+          target="_blank"
+          class="text-[#00c853] hover:underline font-medium"
+        >
+          Udemy.com ↗
+        </a>
+      </section>
+
+      <!-- ══════════════════════════════════════
+           10. RELATED COURSES
+      ══════════════════════════════════════ -->
+      <section>
+        <h2 class="text-2xl font-bold text-white mb-8">Related Udemy Coupon Codes</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {relatedCourses.map((c: any) => <CourseCard course={c} />)}
+        </div>
+        <div class="mt-10 flex justify-center">
+          <a
+            href="/udemy-coupon-code"
+            class="bg-[#1f2937] hover:bg-[#2d3748] text-white px-8 py-3 rounded-xl
+                   border border-[#2d3748] flex items-center gap-2 font-bold transition-all"
+          >
+            Load More
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </a>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════
+           11. FAQ SECTION
+      ══════════════════════════════════════ -->
+      <section>
+        <h2 class="text-3xl font-bold text-white mb-8">Frequently Asked Questions</h2>
+        <div class="space-y-6">
+          {faqs.map(faq => (
+            <div class="border-b border-[#2d3748] pb-6">
+              <h3 class="text-[#00c853] font-bold text-lg mb-3 leading-snug">
+                {faq.q}
+              </h3>
+              <p class="text-sm text-gray-400 leading-relaxed">
+                {faq.a}
+              </p>
             </div>
-            <div>
-                <p class="text-gray-500 text-xs font-bold uppercase mb-2 tracking-widest">Price</p>
-                <div class="flex items-center gap-2 font-bold text-xl">
-                    <span class={`${course.price === 0 || course.price === "Free" ? 'text-[#00c853]' : 'text-white'}`}>
-                        {course.price === 0 || course.price === "Free" ? 'FREE' : `$${course.price}`}
-                    </span>
-                    <span class="text-gray-500 line-through text-lg mb-0.5">${course.originalPrice || "84.99"}</span>
-                </div>
-            </div>
+          ))}
         </div>
       </section>
 
     </div>
   </div>
 </MainLayout>
-
