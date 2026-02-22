@@ -6,8 +6,6 @@
 [![Astro](https://img.shields.io/badge/Astro-5.0-FF5D01)](https://astro.build)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC)](https://tailwindcss.com)
 
-![CoursesWyn](https://raw.githubusercontent.com/Coutons/courseswyn-astro/main/src/assets/images/generative-ai-dashboard.svg)
-
 **🚀 Live Site**: [https://courseswyn.com](https://courseswyn.com)  
 **📊 Stack**: Astro 5 + Tailwind CSS + Markdown + Schema.org LD+JSON + TypeScript  
 **🎯 Focus**: Independent Udemy course reviews with real-time data (Updated February 2026)
