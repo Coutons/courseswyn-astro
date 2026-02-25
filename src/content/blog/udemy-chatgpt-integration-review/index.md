@@ -4,7 +4,7 @@ description: "Udemy is now integrated with ChatGPT. Discover how to access 290,0
 pubDate: 2026-02-12T00:00:00.000Z
 updatedAt: 2026-02-12T00:00:00.000Z
 image: ../../../assets/images/udemy-chatgpt-integration.jpg
-tags: ["Udemy ChatGPT", "ChatGPT courses", "AI learning", "Udemy app"]
+tags: ["ChatGPT", "ChatGPT courses", "AI learning", "Udemy"]
 canonical: "https://courseswyn.com/blog/udemy-chatgpt-integration-review"
 ---
 

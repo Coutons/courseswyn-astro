@@ -4,15 +4,22 @@ import { getCollection } from 'astro:content';
 // Fetch 3 latest blog posts for "Popular Topics"
 const allPosts = await getCollection('blog');
 const topics = allPosts
-  .sort((a, b) => new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf())
+  .sort((a, b) => {
+    const dateA = a.data.updatedAt || a.data.pubDate;
+    const dateB = b.data.updatedAt || b.data.pubDate;
+    return dateB.getTime() - dateA.getTime();
+  })
   .slice(0, 3);
 
-function formatDate(date: Date) {
-  return new Date(date).toLocaleDateString('en-US', {
+function formatDate(post: any) {
+  const isUpdated = !!post.data.updatedAt;
+  const date = post.data.updatedAt || post.data.pubDate;
+  const formatted = new Date(date).toLocaleDateString('en-US', {
     year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric'
   });
+  return isUpdated ? `Updated ${formatted}` : formatted;
 }
 ---
 
@@ -51,7 +58,7 @@ function formatDate(date: Date) {
               {post.data.title}
             </h3>
             <p class="text-gray-400 text-sm mt-auto">
-              {formatDate(post.data.pubDate)}
+              {formatDate(post)}
             </p>
           </div>
         </a>

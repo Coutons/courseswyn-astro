@@ -4,7 +4,6 @@ description: 'Explore the top Udemy agentic AI and AI agents courses for 2026. M
 pubDate: 2025-12-22T10:00:00.000Z
 updatedAt: 2026-01-31T10:00:00.000Z
 tags:
-  - AI
   - Agentic AI
   - AI Agents
   - LangGraph

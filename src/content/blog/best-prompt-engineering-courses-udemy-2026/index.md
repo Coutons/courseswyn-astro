@@ -4,8 +4,8 @@ description: 'Discover the best prompt engineering courses on Udemy for 2026. Fr
 pubDate: 2025-11-25T09:40:39.666Z
 updatedAt: 2026-02-21T00:00:00.000Z
 tags:
-  - udemy courses
   - prompt engineering
+  - udemy courses
   - ai courses
   - chatgpt courses
   - 2026 courses

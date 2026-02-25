@@ -13,12 +13,15 @@ const latestPosts = posts
   .slice(0, 12); // Show 12 posts per page for blog index
 
 // Date formatting function
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat('en-US', {
+function formatDate(post: any) {
+  const isUpdated = !!post.data.updatedAt;
+  const date = post.data.updatedAt || post.data.pubDate;
+  const formatted = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   }).format(date);
+  return isUpdated ? `Updated ${formatted}` : formatted;
 }
 
 const title = "Udemy Course Reviews & Learning Guides | Courses Wyn";
@@ -129,7 +132,7 @@ const structuredData = {
                     Article
                   </span>
                   <span>•</span>
-                  <span>{formatDate(post.data.pubDate)}</span>
+                  <span>{formatDate(post)}</span>
                 </div>
 
                 <h3 class="font-bold text-white text-lg mb-3 leading-tight group-hover:text-[#10b981] transition-colors line-clamp-2">

@@ -4,7 +4,6 @@ description: 'Discover the best AWS AI courses on Udemy for 2026. From the AWS C
 pubDate: 2026-02-20T11:00:00.000Z
 updatedAt: 2026-02-20T11:00:00.000Z
 tags:
-  - AWS
   - AWS AI
   - AWS Certified AI Practitioner
   - AIF-C01
