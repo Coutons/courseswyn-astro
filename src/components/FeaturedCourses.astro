@@ -52,76 +52,129 @@ function getTimeAgo(date: string) {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       {featuredCourses.map((course) => {
         const isFree = course.price === 0;
-        const discount = course.originalPrice && course.price 
-          ? Math.round((1 - course.price / course.originalPrice) * 100)
-          : 100;
+        const price = course.price;
+        const originalPrice = course.originalPrice;
+        const saveAmount = originalPrice && originalPrice > price ? Math.round(originalPrice - price) : 0;
+        
+        const subcategorySlug = course.subcategory ? course.subcategory.toLowerCase().replace(/\s+/g, '-') : '';
+        const categorySlug = course.category ? course.category.toLowerCase().replace(/\s+/g, '-') : '';
+        const badgeLink = course.subcategory ? `/courses/subcategory/${subcategorySlug}` : `/courses/category/${categorySlug}`;
+        
+        const isTopRated = course.rating >= 4.7;
         
         return (
-          <a 
-            href={`/coupon/${course.slug}`}
-            class="group block bg-[#28323d] rounded-2xl overflow-hidden transition-all duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl"
-          >
+          <div class="group relative bg-[#28323d] border border-white/5 rounded-2xl overflow-hidden transition-all duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl hover:border-green-500/30 flex flex-col">
+            <!-- Detail Link Wrapper -->
+            <a href={`/coupon/${course.slug}`} class="absolute inset-0 z-0"></a>
+            
             <!-- Course Image with Badges -->
-            <div class="relative aspect-video overflow-hidden">
+            <div class="relative aspect-video overflow-hidden z-10">
               <img 
                 src={course.image} 
                 alt={course.title}
-                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 pointer-events-none"
                 loading="lazy"
               />
+              <div class="absolute inset-0 bg-gradient-to-t from-[#1a1d29] via-transparent to-transparent opacity-60"></div>
               
-              {/* Time Badge - Top Left */}
-              <div class="absolute top-3 left-3">
-                <span class="px-3 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg">
-                  {getTimeAgo(course.updatedAt || new Date().toISOString())}
-                </span>
-              </div>
-              
-              {/* Duration Badge - Top Right */}
-              <div class="absolute top-3 right-3">
-                <span class="px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-lg">
-                  Duration: {course.duration || '10 hours'}
+              {/* Top Right Badges */}
+              <div class="absolute top-3 right-3 flex flex-col gap-1.5 z-20">
+                {isTopRated && (
+                    <span class="bg-yellow-500 text-black text-[9px] font-black px-2 py-1 rounded shadow-xl uppercase border border-white/10">
+                        TOP RATED
+                    </span>
+                )}
+                <span class="bg-[#242938]/80 backdrop-blur-md text-white text-[10px] font-medium px-2 py-1 rounded border border-white/10 shadow-lg">
+                  {course.duration || '10 hours'}
                 </span>
               </div>
             </div>
             
             <!-- Course Content -->
-            <div class="p-5">
+            <div class="p-6 flex flex-col flex-grow">
+              <div class="flex items-center gap-2 mb-2 text-[10px] text-gray-500 font-bold uppercase tracking-wider leading-none">
+                <span>{getTimeAgo(course.updatedAt || new Date().toISOString())}</span>
+                <span class="w-1 h-1 bg-gray-600 rounded-full"></span>
+                <a 
+                    href={badgeLink}
+                    class="text-[#10b981] hover:underline relative z-20"
+                    onclick="event.stopPropagation()"
+                >
+                    {course.subcategory || course.category}
+                </a>
+              </div>
+
               {/* Title */}
-              <h3 class="font-semibold text-lg text-white line-clamp-2 leading-snug mb-4 group-hover:text-green-400 transition-colors min-h-[3.5rem]">
+              <h3 class="font-bold text-lg text-white line-clamp-2 leading-tight mb-2 group-hover:text-green-400 transition-colors relative z-10 min-h-[3rem]">
                 {course.title}
               </h3>
+
+              <div class="flex items-center gap-2 mb-4 text-[11px] text-gray-400">
+                <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <span class="truncate">By {course.instructor || "Expert Instructor"}</span>
+              </div>
+
+              <p class="text-gray-400 text-xs leading-relaxed line-clamp-2 mb-5 opacity-80">
+                {course.description || course.seoDescription || "Master this subject with expert-led tutorials and practical hands-on experience."}
+              </p>
               
-              {/* Price Display Logic - Strictly from JSON */}
-              <div class="flex items-center gap-2">
-                {course.price === 0 ? (
-                  // Case: FREE
-                  <>
-                     {course.originalPrice && (
-                       <span class="text-gray-500 line-through text-sm">
-                         ${course.originalPrice}
-                       </span>
-                     )}
-                     <span class="text-red-500 font-bold text-xl">
-                       Free
-                     </span>
-                  </>
-                ) : (
-                  // Case: PAID (Display actual price if not 0)
-                  <>
-                    {course.originalPrice && (
-                      <span class="text-gray-500 line-through text-sm">
-                        ${course.originalPrice}
+              <div class="mt-auto">
+                  <div class="pt-4 border-t border-[#374151]/50 flex justify-between items-center mb-5">
+                    <div class="flex items-center gap-2">
+                      <div class="flex items-center text-yellow-500 text-sm">
+                        <span class="font-bold">★</span>
+                        <span class="ml-1 font-bold text-gray-100">{course.rating || "4.8"}</span>
+                      </div>
+                      <span class="text-gray-500 text-[10px] bg-[#1a1d29] px-2 py-1 rounded border border-[#2d3748] font-medium">
+                        {course.students?.toLocaleString() || "1.2k"}+
                       </span>
-                    )}
-                    <span class="text-white font-bold text-xl">
-                      ${course.price}
-                    </span>
-                  </>
-                )}
+                    </div>
+                  </div>
+                  
+                  {/* Price & CTA Area */}
+                  <div class="flex flex-col gap-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            {originalPrice && originalPrice > price && (
+                                <span class="text-gray-500 line-through text-[12px] font-medium">${originalPrice}</span>
+                            )}
+                            <span class={`font-bold text-2xl ${price === 0 ? 'text-[#10b981] animate-pulse drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'text-white'}`}>
+                                {price === 0 ? 'FREE' : `$${price}`}
+                            </span>
+                        </div>
+                        <span class="text-[#10b981] text-[10px] font-bold flex items-center gap-1 uppercase tracking-wider">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                            Verified
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-3">
+                        {saveAmount > 0 ? (
+                            <span class="text-[10px] font-bold text-orange-400 bg-orange-400/10 px-2.5 py-1 rounded border border-orange-400/20 uppercase tracking-tight">
+                                {price === 0 ? "100% OFF" : `${Math.round(((originalPrice - price) / originalPrice) * 100)}% OFF`}
+                            </span>
+                        ) : price === 0 ? (
+                            <span class="text-[10px] font-bold text-red-500 bg-red-500/10 px-2.5 py-1 rounded border border-red-500/20 uppercase tracking-tight">100% OFF</span>
+                        ) : <div/>}
+
+                        <a 
+                          href={course.url} 
+                          target="_blank" 
+                          rel="nofollow noopener"
+                          class="relative z-20 px-5 py-2.5 bg-gradient-to-r from-[#059669] to-[#10b981] text-white text-[11px] font-bold rounded-xl shadow-lg shadow-green-500/10 hover:shadow-green-500/25 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-widest group/btn"
+                        >
+                          <span>Get Coupon</span>
+                          <svg class="w-4 h-4 transition-transform group-hover/btn:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                          </svg>
+                        </a>
+                    </div>
+                  </div>
               </div>
             </div>
-          </a>
+          </div>
         );
       })}
     </div>

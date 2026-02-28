@@ -1,6 +1,7 @@
 ---
 import MainLayout from "../layouts/MainLayout.astro";
 import { getCollection, type CollectionEntry } from "astro:content";
+import AuthorBox from "../components/AuthorBox.astro";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
@@ -31,9 +32,9 @@ const articleSchema = {
   datePublished: data.pubDate.toISOString(),
   dateModified: (data.updatedAt || data.pubDate).toISOString(),
   author: {
-    "@type": "Organization",
-    name: "CoursesWyn",
-    url: "https://courseswyn.com",
+    "@type": "Person",
+    name: "Josh Smith",
+    url: "mailto:coutonscom@gmail.com",
   },
   publisher: {
     "@type": "Organization",
@@ -63,7 +64,11 @@ const structuredData = articleSchema;
       <header class="mb-12">
         <h1 class="text-4xl sm:text-5xl font-black text-white mb-4">{title}</h1>
         <p class="text-lg text-muted-foreground">{description}</p>
-        <div class="flex items-center gap-6 text-sm text-gray-400 border-t border-[#2d3748] pt-8 mt-4">
+        <div class="flex flex-wrap items-center gap-6 text-sm text-gray-400 border-t border-[#2d3748] pt-8 mt-4">
+          <div class="flex items-center gap-2">
+            <img src="/assets/authors/josh-smith.png" alt="Josh Smith" class="w-6 h-6 rounded-full object-cover border border-[#10b981]/30" />
+            <span>By <span class="text-white font-medium">Josh Smith</span></span>
+          </div>
           <div class="flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -84,6 +89,8 @@ const structuredData = articleSchema;
       <div class="prose-headings">
         <Content />
       </div>
+
+      <AuthorBox />
 
       {data.affiliate_links && data.affiliate_links.length > 0 && (
         <section class="mt-16">

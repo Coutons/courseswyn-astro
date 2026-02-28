@@ -1,6 +1,7 @@
 ---
 import MainLayout from "../../layouts/MainLayout.astro";
 import { getCollection, type CollectionEntry } from "astro:content";
+import AuthorBox from "../../components/AuthorBox.astro";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
@@ -49,9 +50,9 @@ const articleSchema = {
   datePublished: data.pubDate.toISOString(),
   dateModified: (data.updatedAt || data.pubDate).toISOString(),
   author: {
-    "@type": "Organization",
-    name: "CoursesWyn",
-    url: "https://courseswyn.com",
+    "@type": "Person",
+    name: "Josh Smith",
+    url: "mailto:coutonscom@gmail.com",
   },
   publisher: {
     "@type": "Organization",
@@ -123,13 +124,16 @@ const structuredData = articleSchema;
           {description}
         </p>
 
-        <!-- Meta Info -->
-        <div class="flex items-center justify-center gap-6 text-sm text-gray-400 border-t border-[#2d3748] pt-8">
+        <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-400 border-t border-[#2d3748] pt-8">
+          <div class="flex items-center gap-2">
+            <img src="/assets/authors/josh-smith.png" alt="Josh Smith" class="w-6 h-6 rounded-full object-cover border border-[#10b981]/30" />
+            <span>By <span class="text-white font-medium">Josh Smith</span></span>
+          </div>
           <div class="flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
-            <span>Published: {new Date(data.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+            <span>{new Date(data.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
           </div>
           {data.updatedAt && (
             <div class="flex items-center gap-2">
@@ -139,12 +143,6 @@ const structuredData = articleSchema;
               <span class="text-[#10b981]">Updated: {new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
             </div>
           )}
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <span>5 min read</span>
-          </div>
         </div>
       </header>
     </div>
@@ -168,6 +166,8 @@ const structuredData = articleSchema;
       <div class="prose prose-invert prose-lg max-w-none mb-16 [&_a]:text-[#10b981] [&_a]:font-medium [&_a]:no-underline [&_a:hover]:text-[#34d399] [&_a:hover]:underline [&_a]:transition-colors">
         <Content />
       </div>
+
+      <AuthorBox />
 
       <!-- Subtle Course Recommendation - Article Context -->
       <div class="bg-gradient-to-r from-[#10b981]/5 to-[#3b82f6]/5 border border-[#10b981]/20 rounded-2xl p-8 mb-16">
