@@ -10,8 +10,10 @@ export async function getStaticPaths({ paginate }: { paginate: any }) {
     const filteredCourses = coupons.filter(c => c.subcategory === subcategory);
     filteredCourses.sort((a, b) => new Date(b.updatedAt || new Date()).getTime() - new Date(a.updatedAt || new Date()).getTime());
     
+    const safeSubcategorySlug = subcategory ? String(subcategory).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'uncategorized';
+
     return paginate(filteredCourses, {
-      params: { subcategory: subcategory?.toLowerCase().replace(/\s+/g, '-') },
+      params: { subcategory: safeSubcategorySlug },
       props: { originalSubcategory: subcategory },
       pageSize: 16
     });

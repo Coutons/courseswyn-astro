@@ -10,15 +10,17 @@ export async function getStaticPaths({ paginate }: { paginate: any }) {
     const filteredCourses = coupons.filter(c => c.category === category);
     filteredCourses.sort((a, b) => new Date(b.updatedAt || new Date()).getTime() - new Date(a.updatedAt || new Date()).getTime());
     
+    const safeCategorySlug = category ? String(category).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'uncategorized';
+
     return paginate(filteredCourses, {
-      params: { category },
+      params: { category: safeCategorySlug },
+      props: { originalCategory: category },
       pageSize: 16
     });
   });
 }
 
-const { page } = Astro.props;
-const { category } = Astro.params;
+const { page, originalCategory: category } = Astro.props;
 const allCourses = page.data;
 const pageTitle = `Free ${category} Courses - Coupon Codes${page.currentPage > 1 ? ` - Page ${page.currentPage}` : ''}`;
 const pageDescription = `Get the best ${category} courses for free or 90% off. Verified Udemy coupons for ${category}, programming, and design. Start learning ${category} today without breaking the bank.`;
