@@ -60,12 +60,10 @@ function getTimeAgo(date: string) {
         const categorySlug = course.category ? course.category.toLowerCase().replace(/\s+/g, '-') : '';
         const badgeLink = course.subcategory ? `/courses/subcategory/${subcategorySlug}` : `/courses/category/${categorySlug}`;
         
-        const isTopRated = course.rating >= 4.7;
+        const isTopRated = (course.rating || 0) >= 4.7;
         
         return (
           <div class="group relative bg-[#28323d] border border-white/5 rounded-2xl overflow-hidden transition-all duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl hover:border-green-500/30 flex flex-col">
-            <!-- Detail Link Wrapper -->
-            <a href={`/coupon/${course.slug}`} class="absolute inset-0 z-0"></a>
             
             <!-- Course Image with Badges -->
             <div class="relative aspect-video overflow-hidden z-10">
@@ -95,25 +93,23 @@ function getTimeAgo(date: string) {
               <div class="flex items-center gap-2 mb-2 text-[10px] text-gray-500 font-bold uppercase tracking-wider leading-none">
                 <span>{getTimeAgo(course.updatedAt || new Date().toISOString())}</span>
                 <span class="w-1 h-1 bg-gray-600 rounded-full"></span>
-                <a 
-                    href={badgeLink}
-                    class="text-[#10b981] hover:underline relative z-20"
-                    onclick="event.stopPropagation()"
-                >
-                    {course.subcategory || course.category}
-                </a>
+                <span>{course.subcategory || course.category}</span>
               </div>
 
               {/* Title */}
-              <h3 class="font-bold text-lg text-white line-clamp-2 leading-tight mb-2 group-hover:text-green-400 transition-colors relative z-10 min-h-[3rem]">
-                {course.title}
+              <h3 class="font-bold text-lg text-white line-clamp-2 leading-tight mb-2 group-hover:text-green-400 transition-colors relative z-30 cursor-pointer">
+                <a href={`/coupon/${course.slug}`} class="hover:text-green-400 transition-colors block w-full">
+                  {course.title}
+                </a>
               </h3>
 
               <div class="flex items-center gap-2 mb-4 text-[11px] text-gray-400">
                 <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
-                <span class="truncate">By {course.instructor || "Expert Instructor"}</span>
+                <span class="truncate">
+                  By {course.instructor || "Expert Instructor"}
+                </span>
               </div>
 
               <p class="text-gray-400 text-xs leading-relaxed line-clamp-2 mb-5 opacity-80">
