@@ -8,8 +8,12 @@ const categoryData = [...new Set(coupons.map(c => c.category))].sort().map(categ
   const categoryCoupons = coupons.filter(c => c.category === category);
   const subcategories = [...new Set(categoryCoupons.map(c => c.subcategory))].filter(Boolean).sort() as string[];
   
+  // Create URL-safe slug for category (matching routing logic)
+  const categorySlug = category ? String(category).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'uncategorized';
+  
   return {
     name: category,
+    slug: categorySlug,
     courseCount: categoryCoupons.length,
     subcategories
   };
@@ -42,7 +46,7 @@ const itemListSchema = {
     "@type": "ListItem",
     "position": index + 1,
     "name": data.name,
-    "url": `https://courseswyn.com/courses/category/${data.name}`
+    "url": `https://courseswyn.com/courses/category/${data.slug}`
   }))
 };
 

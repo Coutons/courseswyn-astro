@@ -8,6 +8,9 @@ interface Props {
 const { category, subcategories, courseCount } = Astro.props;
 const displaySubcategories = subcategories.slice(0, 6);
 const remainingCount = subcategories.length - 6;
+
+// Create URL-safe slug for category (matching routing logic)
+const categorySlug = category ? String(category).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'uncategorized';
 ---
 
 <div class="bg-[#1c252e]/50 border border-[#283046] rounded-2xl p-6 flex flex-col h-full hover:border-[#383d4f] transition-all group">
@@ -29,7 +32,7 @@ const remainingCount = subcategories.length - 6;
       {displaySubcategories.map((sub) => (
         <li>
           <a 
-            href={`/courses/category/${category}?topic=${sub}`} 
+            href={`/courses/category/${categorySlug}?topic=${sub}`} 
             class="text-gray-300 hover:text-white text-sm font-medium transition-colors"
           >
             {sub}
@@ -47,7 +50,7 @@ const remainingCount = subcategories.length - 6;
   <!-- Footer Link -->
   <div class="pt-6 border-t border-[#1c252e]/50">
     <a 
-      href={`/courses/category/${category}`} 
+      href={`/courses/category/${categorySlug}`} 
       class="text-xs font-bold text-green-500 hover:text-green-400 tracking-wider transition-colors uppercase"
     >
       VIEW ALL {category} COURSES
