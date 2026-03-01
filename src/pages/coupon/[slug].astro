@@ -378,6 +378,142 @@ const faqSchema = {
       )}
 
       <!-- ══════════════════════════════════════
+           NEW: COURSE COMPARISON SECTION
+      ══════════════════════════════════════ -->
+      <section class="bg-[#1c252e] border border-[#2d3748] rounded-3xl p-8 shadow-2xl">
+        <h2 class="text-2xl font-bold text-white mb-8">Course Comparison</h2>
+        <p class="text-gray-400 mb-6">Compare this course with other {course.subcategory || course.subCategory || course.category} courses</p>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-[#2d3748]">
+                <th class="text-left text-gray-400 font-medium py-3 px-4">Course</th>
+                <th class="text-center text-gray-400 font-medium py-3 px-4">Rating</th>
+                <th class="text-center text-gray-400 font-medium py-3 px-4">Students</th>
+                <th class="text-center text-gray-400 font-medium py-3 px-4">Duration</th>
+                <th class="text-center text-gray-400 font-medium py-3 px-4">Price</th>
+                <th class="text-center text-gray-400 font-medium py-3 px-4">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Current Course -->
+              <tr class="border-b border-[#2d3748]/50 bg-[#1a1d29]">
+                <td class="py-4 px-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-[#059669] rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      ✓
+                    </div>
+                    <div>
+                      <p class="text-white font-medium text-sm leading-tight max-w-xs truncate">
+                        {course.title}
+                      </p>
+                      <p class="text-gray-500 text-xs">Current Course</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center py-4 px-4">
+                  <div class="flex items-center justify-center gap-1">
+                    <span class="text-yellow-400">⭐</span>
+                    <span class="text-white font-medium">{course.rating || "4.5"}</span>
+                  </div>
+                </td>
+                <td class="text-center py-4 px-4">
+                  <span class="text-gray-300">{course.students?.toLocaleString() || "0"}</span>
+                </td>
+                <td class="text-center py-4 px-4">
+                  <span class="text-gray-300">{course.duration || "N/A"}</span>
+                </td>
+                <td class="text-center py-4 px-4">
+                  <span class="text-[#00c853] font-bold">
+                    {isFree ? "FREE" : `$${currentPrice}`}
+                  </span>
+                </td>
+                <td class="text-center py-4 px-4">
+                  <span class="text-gray-500 text-xs">-</span>
+                </td>
+              </tr>
+
+              <!-- Top Courses in Subcategory/Category -->
+              {courses
+                .filter((c: any) => {
+                  const currentSubcategory = course.subcategory || course.subCategory;
+                  const comparisonSubcategory = c.subcategory || c.subCategory;
+                  
+                  // Prioritize subcategory match if both courses have subcategories
+                  if (currentSubcategory && comparisonSubcategory) {
+                    return comparisonSubcategory === currentSubcategory && c.slug !== course.slug;
+                  }
+                  // Fallback to category match
+                  return c.category === course.category && c.slug !== course.slug;
+                })
+                .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
+                .slice(0, 3)
+                .map((comparisonCourse: any) => {
+                  const compIsFree = comparisonCourse.price === 0 || comparisonCourse.price === "Free";
+                  const compCurrentPrice = compIsFree ? 0 : Number(comparisonCourse.price || 0);
+                  return (
+                    <tr class="border-b border-[#2d3748]/50 hover:bg-[#1a1d29]/50 transition-colors">
+                      <td class="py-4 px-4">
+                        <div class="flex items-center gap-3">
+                          <img
+                            src={comparisonCourse.image}
+                            alt={comparisonCourse.title}
+                            class="w-8 h-8 rounded object-cover flex-shrink-0"
+                            loading="lazy"
+                          />
+                          <div>
+                            <p class="text-gray-300 font-medium text-sm leading-tight max-w-xs truncate">
+                              {comparisonCourse.title}
+                            </p>
+                            <p class="text-gray-500 text-xs">Alternative</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-center py-4 px-4">
+                        <div class="flex items-center justify-center gap-1">
+                          <span class="text-yellow-400">⭐</span>
+                          <span class="text-gray-300 font-medium">{comparisonCourse.rating || "N/A"}</span>
+                        </div>
+                      </td>
+                      <td class="text-center py-4 px-4">
+                        <span class="text-gray-400">{comparisonCourse.students?.toLocaleString() || "0"}</span>
+                      </td>
+                      <td class="text-center py-4 px-4">
+                        <span class="text-gray-400">{comparisonCourse.duration || "N/A"}</span>
+                      </td>
+                      <td class="text-center py-4 px-4">
+                        <span class="text-[#00c853] font-bold">
+                          {compIsFree ? "FREE" : `$${compCurrentPrice}`}
+                        </span>
+                      </td>
+                      <td class="text-center py-4 px-4">
+                        <a
+                          href={`/coupon/${comparisonCourse.slug}`}
+                          class="bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold py-1.5 px-3 rounded-lg transition-colors"
+                        >
+                          View
+                        </a>
+                      </td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-6 pt-6 border-t border-[#2d3748]">
+          <p class="text-gray-400 text-sm text-center">
+            Can't decide? Compare more courses in our
+            <a href={`/courses/category/${course.category?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'development'}`}
+               class="text-[#00c853] hover:text-[#10b981] font-medium">
+              {course.category} category →
+            </a>
+          </p>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════
            NEW: URGENCY BANNER
            FIX 2: savedAmount = originalPrice - currentPrice (bukan originalPrice saja)
       ══════════════════════════════════════ -->
