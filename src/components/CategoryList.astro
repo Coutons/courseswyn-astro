@@ -4,6 +4,11 @@ import coupons from '../data/coupons.json';
 // Extract unique categories and take top 8
 const categories = [...new Set(coupons.map(c => c.category))].slice(0, 8);
 
+// Create URL-safe slugs for categories (matching the routing logic)
+const categorySlugs = categories.map(category => 
+  category ? String(category).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'uncategorized'
+);
+
 const categoryIcons: Record<string, string> = {
   'Development': '<path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />',
   'Business': '<path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />',
@@ -32,9 +37,9 @@ const categoryIcons: Record<string, string> = {
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-      {categories.map((category) => (
+      {categories.map((category, index) => (
         <a filter-search
-          href={`/courses/category/${category}`} 
+          href={`/courses/category/${categorySlugs[index]}`} 
           class="flex items-center gap-3 p-4 bg-[#1c252e] border border-[#2d3748] rounded-xl hover:border-green-500 hover:shadow-lg hover:shadow-green-500/10 transition-all group"
         >
           <div class="w-10 h-10 rounded-lg bg-[#242938] flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
