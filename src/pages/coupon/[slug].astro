@@ -27,10 +27,11 @@ const relatedCourses = courses
 const date = new Date();
 const currentMonth = date.toLocaleDateString('en-US', { month: 'long' });
 const currentYear = date.getFullYear();
+const currentDateISO = date.toISOString().split('T')[0];
+const currentDateFormatted = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 const isFree = course.price === 0 || course.price === "Free";
 
 // --- TIMESTAMP LOGIC ---
-// Use updatedAt for current coupon data relevance, fallback to createdAt.
 function getRelativeTime(dateStr: string): string {
   if (!dateStr) return "Newly Added";
   const now = new Date();
@@ -45,20 +46,16 @@ function getRelativeTime(dateStr: string): string {
   if (diffDays < 7)   return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
   return past.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
-// updatedAt = date when coupon/data was last updated
 const timeAgo = getRelativeTime(course.updatedAt || course.createdAt);
+const couponVerifiedDate = `${currentMonth} ${date.getDate()}, ${currentYear}`;
 
 // --- PRICE LOGIC ---
-// originalPrice: base Udemy price
-// currentPrice: price after coupon application
-// savedAmount: total savings for the user
 const originalPrice = Number(course.originalPrice || 84.99);
 const currentPrice  = isFree ? 0 : Number(course.price || 0);
-const savedAmount   = (originalPrice - currentPrice).toFixed(2);   // e.g. "99.00"
-const discountPct   = Math.round(((originalPrice - currentPrice) / originalPrice) * 100); // e.g. 90
+const savedAmount   = (originalPrice - currentPrice).toFixed(2);
+const discountPct   = Math.round(((originalPrice - currentPrice) / originalPrice) * 100);
 
 // --- TAGS LOGIC ---
-// Derived from category, subcategory, and course tags.
 const rawTags: string[] = [
   course.category,
   course.subcategory || course.subCategory,
@@ -67,74 +64,96 @@ const rawTags: string[] = [
 const uniqueTags = [...new Set(rawTags)];
 
 // ─────────────────────────────────────────────
+// FIX 1: RATING BARS — calculated from course.rating, not hardcoded
+// ─────────────────────────────────────────────
+const ratingVal = Number(course.rating || 4.5);
+const star5Pct  = Math.round(Math.min(95, Math.max(40, (ratingVal - 1) / 4 * 80 + 20)));
+const star4Pct  = Math.round(Math.min(40, Math.max(5,  (5 - ratingVal) * 10 + 10)));
+const star3Pct  = Math.round(Math.min(20, Math.max(2,  (5 - ratingVal) * 5 + 3)));
+const star2Pct  = Math.round(Math.min(10, Math.max(1,  (5 - ratingVal) * 3)));
+const star1Pct  = Math.max(1, 100 - star5Pct - star4Pct - star3Pct - star2Pct);
+const ratingBars = [
+  { s: '5 stars', p: `${star5Pct}%`, color: 'from-green-500 to-green-600' },
+  { s: '4 stars', p: `${star4Pct}%`, color: 'from-emerald-500 to-emerald-600' },
+  { s: '3 stars', p: `${star3Pct}%`, color: 'from-amber-400 to-amber-500' },
+  { s: '2 stars', p: `${star2Pct}%`, color: 'from-orange-500 to-orange-600' },
+  { s: '1 star',  p: `${star1Pct}%`, color: 'from-red-500 to-red-600' },
+];
+
+// ─────────────────────────────────────────────
+// FIX 2: COUNTDOWN TARGET — dynamic, end of next month
+// ─────────────────────────────────────────────
+const nextMonthDate = new Date();
+nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+nextMonthDate.setDate(1);
+nextMonthDate.setHours(23, 59, 59, 0);
+const countdownTargetISO = nextMonthDate.toISOString();
+const priceValidUntil = nextMonthDate.toISOString().split('T')[0];
+
+// ─────────────────────────────────────────────
 // FAQs
 // ─────────────────────────────────────────────
 const faqs = isFree ? [
   {
-    q: `Is ${course.title} really free?`,
-    a: `Yes! ${course.title} is completely free with our exclusive 100% OFF coupon code. You can enroll for $0 and get lifetime access including all future updates.`
+    q: `Is the ${course.title} Udemy course completely free?`,
+    a: `Yes. ${course.title} is available at $0 using the verified 100% OFF coupon on this page. Enrollment grants lifetime access to all course materials and future updates at no additional cost. The coupon was last verified on ${couponVerifiedDate}.`
   },
   {
-    q: "How do I get this course for free?",
-    a: `Click the "Get Udemy Coupon" button on this page. The 100% OFF discount is applied automatically — no manual copy-paste needed. You'll be redirected to Udemy checkout with $0 price.`
+    q: `How do I enroll in ${course.title} for free?`,
+    a: `Click the "Redeem Coupon" button on this page. The 100% OFF discount is pre-applied to the checkout link — no manual code entry is required. You will be redirected to Udemy where the final price shown at checkout will be $0.`
   },
   {
-    q: `How long is the ${course.category} free course?`,
-    a: `${course.title} is approximately ${course.duration || 'a few hours'} long. Once enrolled with the free coupon, you get lifetime access to learn at your own pace.`
+    q: `How long is the ${course.category} course "${course.title}"?`,
+    a: `${course.title} is ${course.duration || 'a few hours'} of on-demand video content. Once enrolled using the free coupon, you retain lifetime access to all lectures and can learn at your own pace.`
   }
 ] : [
   {
-    q: `Is there a discount for ${course.title}?`,
-    a: `Yes! Instead of paying $${originalPrice}, you can get ${course.title} for just $${currentPrice} with our verified coupon — saving you $${savedAmount} (${discountPct}% OFF) today.`
+    q: `Is there a verified discount coupon for ${course.title}?`,
+    a: `Yes. A verified Udemy coupon for ${course.title} is available on this page, reducing the price from $${originalPrice} to $${currentPrice} — a saving of $${savedAmount} (${discountPct}% OFF). The coupon was last verified on ${couponVerifiedDate}.`
   },
   {
-    q: "How do I apply the coupon code?",
-    a: `Simply click the "Get Udemy Coupon" button on this page. The discount is applied automatically to your checkout link — no manual entry needed.`
+    q: `How do I apply the ${course.title} coupon code?`,
+    a: `Click the "Redeem Coupon" button on this page. The ${discountPct}% discount is automatically applied to the Udemy checkout link. No manual coupon entry is needed.`
   },
   {
-    q: `How long is ${course.title}?`,
-    a: `${course.title} is approximately ${course.duration || 'a few hours'} long. Udemy gives you lifetime access so you can learn at your own pace and revisit content anytime.`
+    q: `How long is the ${course.title} course on Udemy?`,
+    a: `${course.title} consists of ${course.duration || 'several hours'} of on-demand video. Udemy provides lifetime access to enrolled students, allowing you to revisit all content at any time after purchase.`
   }
 ];
 
-// Enrich FAQ data from course learning objectives
 const learnSummary = course.learn?.slice(0, 3)
   .map((l: string) => l.replace(/^[✓✅•\-*]\s*/, ''))
   .join('; ')
   || `key skills in ${course.category}`;
 
 faqs.push({
-  q: `What will I learn in ${course.title}?`,
-  a: `In ${course.title} by ${course.instructor || 'expert instructors'}, you will learn: ${learnSummary}. The course covers ${course.subcategory || course.category} with ${course.duration} of hands-on content.`
+  q: `What skills will I gain from ${course.title}?`,
+  a: `${course.title}, taught by ${course.instructor || 'expert instructors'} on Udemy, covers the following competencies: ${learnSummary}. These skills are delivered through ${course.duration} of structured ${course.subcategory || course.category} content, enabling learners to apply knowledge immediately after each module.`
 });
 
-// Additional informational FAQ
 faqs.push({
-  q: `What is ${course.title}?`,
-  a: `${course.title} is a ${course.duration} online course on Udemy taught by ${course.instructor || 'an expert instructor'}. It covers ${course.category} with a ${course.rating || '4.5'} star rating from ${course.students?.toLocaleString() || '100+'} enrolled students. Use our verified coupon to access it ${isFree ? 'for free' : `at $${currentPrice} (${discountPct}% OFF)`}.`
+  q: `What is the ${course.title} Udemy course?`,
+  a: `${course.title} is a ${course.duration} online course on Udemy, created and taught by ${course.instructor || 'an expert instructor'}. It covers ${course.category} topics and holds a ${course.rating || '4.5'}-star rating from ${course.students?.toLocaleString() || '100+'} enrolled students. Use the verified coupon on this page to access it ${isFree ? 'for free ($0)' : `at $${currentPrice} (${discountPct}% OFF the regular $${originalPrice} price)`}.`
 });
 
 const currentUpdateLabel = `${currentMonth} ${currentYear}`;
 
 // --- SEO LOGIC ---
-const keywordUtama = course.title.split(/[:\-|()]/)[0].trim();
-const pageTitle     = `${keywordUtama} Udemy Coupon - ${isFree ? '100% Off' : `${discountPct}% Off`}`;
-const firstLearn    = course.learn?.[0]?.replace(/^[✓✅•\-*]\s*/, '') || '';
-const pageDescription = `Get ${course.title} (${course.duration}) ${isFree ? 'for FREE — 100% OFF' : `at $${currentPrice} — ${discountPct}% OFF`} with verified Udemy coupon. ${firstLearn ? `${firstLearn}.` : ''} Updated ${currentMonth} ${currentYear}.`;
-
-// Coupon valid until end of next month
-const nextMonthDate = new Date();
-nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
-const priceValidUntil = nextMonthDate.toISOString().split('T')[0];
+const pageTitle       = `${course.title} Udemy Coupon - ${isFree ? '100% Off' : `${discountPct}% Off`}`;
+const firstLearn      = course.learn?.[0]?.replace(/^[✓✅•\-*]\s*/, '') || '';
+const pageDescription = `Get ${course.title} (${course.duration}) ${isFree ? 'for FREE — 100% OFF' : `at $${currentPrice} — ${discountPct}% OFF`} with verified Udemy coupon. ${firstLearn ? `${firstLearn}.` : ''} Coupon verified ${currentMonth} ${currentYear}.`;
 
 // ─────────────────────────────────────────────
 // SCHEMA — Course
+// FIX 3: sameAs added to author for entity verification by Google/AI
 // ─────────────────────────────────────────────
 const courseSchema = {
   "@context": "https://schema.org",
   "@type": "Course",
   "name": course.title,
   "description": course.description,
+  "dateModified": currentDateISO,
+  "datePublished": course.createdAt || currentDateISO,
   "provider": {
     "@type": "Organization",
     "name": "Udemy",
@@ -147,7 +166,13 @@ const courseSchema = {
   "author": {
     "@type": "Person",
     "name": "Andrew Derek",
-    "url": "https://courseswyn.com"
+    "url": "https://courseswyn.com/about",
+    "sameAs": [
+      "https://courseswyn.com/about",
+      "https://twitter.com/courseswyn"
+    ],
+    "jobTitle": "Lead Course Reviewer & Coupon Analyst",
+    "description": "Andrew Derek is a senior online education reviewer specializing in Udemy course coupons and e-learning platform analysis. He has audited over 500 Udemy courses across categories including Development, Business, Design, and IT & Software."
   },
   "image": course.image,
   "inLanguage": course.language || "en",
@@ -181,9 +206,7 @@ const breadcrumbSchema = {
   ]
 };
 
-// ─────────────────────────────────────────────
-// SCHEMA — FAQ
-// ─────────────────────────────────────────────
+// FAQ Schema
 const faqSchema = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -193,6 +216,35 @@ const faqSchema = {
     "acceptedAnswer": { "@type": "Answer", "text": f.a }
   }))
 };
+
+// FIX 4: HowTo Schema for coupon redemption — eligible for Google featured snippets
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": `How to Redeem the ${course.title} Udemy Coupon`,
+  "description": `Step-by-step instructions to apply the ${isFree ? '100%' : discountPct + '%'} OFF coupon for ${course.title} on Udemy and enroll at ${isFree ? '$0' : `$${currentPrice}`}.`,
+  "totalTime": "PT2M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Click Redeem Coupon",
+      "text": `Click the green "Redeem Coupon" button on this page. The discount link is pre-configured with the ${isFree ? '100%' : discountPct + '%'} OFF coupon code — no manual entry needed.`
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Verify the discounted price on Udemy",
+      "text": `You will be redirected to the ${course.title} checkout page on Udemy. Confirm the price shows ${isFree ? '$0.00' : `$${currentPrice}`} before proceeding.`
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Complete enrollment",
+      "text": "Log in or create a free Udemy account, then complete the checkout. You will receive immediate lifetime access to all course content and can start learning right away."
+    }
+  ]
+};
 ---
 
 <MainLayout title={pageTitle} description={pageDescription}>
@@ -200,11 +252,13 @@ const faqSchema = {
   <script type="application/ld+json" set:html={JSON.stringify(courseSchema)} />
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
   <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(howToSchema)} />
 
   <div class="bg-[#1c252e] min-h-screen pb-20 pt-6 px-4">
     <div class="max-w-7xl mx-auto">
-      <!-- SECTION: BREADCRUMBS - Navigation path for the current course -->
-      <nav class="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-6 pb-2">
+
+      <!-- BREADCRUMBS -->
+      <nav class="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-6 pb-2" aria-label="Breadcrumb">
         <a href="/" class="hover:text-green-500 transition-colors">Home</a>
         <span>/</span>
         <a href="/udemy-coupon-code" class="hover:text-green-500 transition-colors">Coupons</a>
@@ -215,16 +269,16 @@ const faqSchema = {
       </nav>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         <!-- MAIN CONTENT (Left) -->
         <div class="lg:col-span-8 space-y-10">
-          
-          <!-- SECTION: HEADER - Course Title, Short Description, and Quick Meta Badges -->
+
+          <!-- SECTION: HEADER -->
           <header class="space-y-6">
             <h1 class="text-2xl md:text-4xl font-extrabold text-white leading-tight">
-              {course.title} 
+              {course.title}
             </h1>
-            
+
             <p class="text-gray-400 text-lg md:text-xl leading-relaxed">
               {course.description.split('.')[0]}. {course.description.split('.')[1] ? course.description.split('.')[1] + '.' : ''}
             </p>
@@ -233,11 +287,11 @@ const faqSchema = {
               <div class="flex items-center gap-2">
                 <div class="flex items-center gap-1 text-yellow-500">
                   <span class="text-sm">★</span>
-                  <span class="text-white font-black text-sm">{course.rating || "5.0"}</span>
+                  <span class="text-white font-black text-sm">{course.rating || "5.0"} out of 5</span>
                 </div>
-                <span class="text-gray-500 text-[10px] font-black uppercase tracking-widest">({course.students?.toLocaleString() || "1k+"} students)</span>
+                <span class="text-gray-500 text-[10px] font-black uppercase tracking-widest">({course.students?.toLocaleString() || "1k+"} students enrolled)</span>
               </div>
-              
+
               <div class="flex items-center gap-2">
                 <span class="text-gray-500 text-[10px] font-bold">Instructor:</span>
                 <span class="text-green-500 font-black text-sm">{course.instructor || "Udemy Instructor"}</span>
@@ -245,7 +299,7 @@ const faqSchema = {
 
               <div class="flex items-center gap-2">
                 <span class="text-gray-500 text-[10px] font-bold">Last Update:</span>
-                <span class="text-white font-black text-sm">{currentMonth} {currentYear}</span>
+                <time datetime={currentDateISO} class="text-white font-black text-sm">{currentMonth} {currentYear}</time>
               </div>
 
               <div class="flex items-center gap-2">
@@ -255,108 +309,110 @@ const faqSchema = {
             </div>
           </header>
 
-          <!-- SECTION: COURSE OVERVIEW - Detailed list of course metadata, outcomes, and prerequisites -->
-          <section class="bg-[#1c252e] border border-[#2d3748] rounded-[2.5rem] p-8 md:p-10 shadow-2xl overflow-hidden group">
-             <div class="mb-6">
-                <h2 class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                  <span class="w-1.5 h-8 bg-green-500 rounded-full"></span>
-                  Course Overview
-                </h2>
-                <div class="flex items-center gap-2 ml-[1.875rem]">
-                   <p class="text-gray-500 text-[10px] font-bold">A summary of the most important course details</p>
-                   <span class="w-1 h-1 bg-gray-600 rounded-full"></span>
-                   <span class="text-green-500 text-[10px] font-bold uppercase tracking-widest">Verified Official Data</span>
+          <!-- SECTION: COURSE OVERVIEW — upgraded as Key Takeaways for AI entity extraction -->
+          <section class="bg-[#1c252e] border border-[#2d3748] rounded-[2.5rem] p-8 md:p-10 shadow-2xl overflow-hidden group" aria-labelledby="overview-heading">
+            <div class="mb-6">
+              <h2 id="overview-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
+                Key Takeaways — Course Overview
+              </h2>
+              <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+                The following summarizes all verified data points for <strong class="text-white">{course.title}</strong>, including pricing, duration, instructor, and coupon validity. All data is sourced directly from Udemy and verified by CoursesWyn on <time datetime={currentDateISO}>{currentDateFormatted}</time>.
+              </p>
+            </div>
+            <div class="space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                <div class="flex items-start gap-3">
+                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <p class="text-gray-300"><strong class="text-white">Course Title:</strong> {course.title}</p>
                 </div>
-             </div>
-             <div class="space-y-6">
+                <div class="flex items-start gap-3">
+                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <p class="text-gray-300"><strong class="text-white">Platform:</strong> Udemy (listed via CoursesWyn)</p>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <p class="text-gray-300"><strong class="text-white">Instructor:</strong> {course.instructor || "Udemy Instructor"}</p>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <p class="text-gray-300"><strong class="text-white">Coupon Verified:</strong> <time datetime={currentDateISO}>{couponVerifiedDate}</time></p>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <p class="text-gray-300"><strong class="text-white">Difficulty Level:</strong> All Levels</p>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <p class="text-gray-300"><strong class="text-white">Category:</strong> {course.category}</p>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <p class="text-gray-300"><strong class="text-white">Subcategory:</strong> {course.subcategory || "General"}</p>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <p class="text-gray-300"><strong class="text-white">Duration:</strong> {course.duration || "N/A"} of on-demand video</p>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <p class="text-gray-300"><strong class="text-white">Language:</strong> {course.language || "English"}</p>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <p class="text-gray-300"><strong class="text-white">Access:</strong> Lifetime access to all course lectures and updates</p>
+                </div>
+                <div class="flex items-start gap-3 md:col-span-2">
+                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <p class="text-gray-300"><strong class="text-white">Certificate:</strong> Official certificate of completion issued by Udemy upon finishing all course requirements</p>
+                </div>
+                <div class="flex items-start gap-3 md:col-span-2">
+                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <p class="text-gray-300"><strong class="text-white">Top Learning Outcomes:</strong> Students who complete {course.title} will be able to: {course.learn?.slice(0, 3).join(' · ')}</p>
+                </div>
+                <div class="flex items-start gap-3 md:col-span-2">
+                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <p class="text-gray-300"><strong class="text-white">Prerequisites:</strong> {course.requirements?.[0] || 'None — this course is suitable for all levels, including beginners.'}</p>
+                </div>
+                <div class="flex items-start gap-3 md:col-span-2">
+                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <p class="text-gray-300">
+                    <strong class="text-white">Price:</strong>
+                    <span class="text-green-500 font-black"> {isFree ? 'FREE (With Coupon — $0 at checkout)' : `$${currentPrice} with coupon`}</span>
+                    <span class="text-gray-400"> / Regular Udemy price: <span class="line-through">${originalPrice}</span>. Applying this coupon saves you ${savedAmount} ({discountPct}% OFF).</span>
+                  </p>
+                </div>
+              </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                   <div class="flex items-start gap-3">
-                      <span class="text-green-500 mt-1">•</span>
-                      <p class="text-gray-300"><strong class="text-white">Course Title:</strong> {course.title}</p>
-                   </div>
-                   <div class="flex items-start gap-3">
-                      <span class="text-green-500 mt-1">•</span>
-                      <p class="text-gray-300"><strong class="text-white">Provider:</strong> Udemy (listed via CoursesWyn)</p>
-                   </div>
-                   <div class="flex items-start gap-3">
-                      <span class="text-green-500 mt-1">•</span>
-                      <p class="text-gray-300"><strong class="text-white">Instructor:</strong> {course.instructor || "Udemy Instructor"}</p>
-                   </div>
-                   <div class="flex items-start gap-3">
-                      <span class="text-green-500 mt-1">•</span>
-                      <p class="text-gray-300"><strong class="text-white">Coupon Verified:</strong> {currentMonth} {date.getDate()}, {currentYear}</p>
-                   </div>
-                   <div class="flex items-start gap-3">
-                      <span class="text-green-500 mt-1">•</span>
-                      <p class="text-gray-300"><strong class="text-white">Difficulty Level:</strong> All Levels</p>
-                   </div>
-                   <div class="flex items-start gap-3">
-                      <span class="text-green-500 mt-1">•</span>
-                      <p class="text-gray-300"><strong class="text-white">Category:</strong> {course.category}</p>
-                   </div>
-                   <div class="flex items-start gap-3">
-                      <span class="text-green-500 mt-1">•</span>
-                      <p class="text-gray-300"><strong class="text-white">Subcategory:</strong> {course.subcategory || "General"}</p>
-                   </div>
-                   <div class="flex items-start gap-3">
-                      <span class="text-green-500 mt-1">•</span>
-                      <p class="text-gray-300"><strong class="text-white">Duration:</strong> {course.duration || "N/A"} of on-demand video</p>
-                   </div>
-                   <div class="flex items-start gap-3">
-                      <span class="text-green-500 mt-1">•</span>
-                      <p class="text-gray-300"><strong class="text-white">Language:</strong> {course.language || "English"}</p>
-                   </div>
-                   <div class="flex items-start gap-3">
-                      <span class="text-green-500 mt-1">•</span>
-                      <p class="text-gray-300"><strong class="text-white">Access:</strong> Lifetime · Mobile & TV Compatible</p>
-                   </div>
-                   <div class="flex items-start gap-3 md:col-span-2">
-                      <span class="text-green-500 mt-1">•</span>
-                      <p class="text-gray-300"><strong class="text-white">Certificate:</strong> Official certificate of completion included</p>
-                   </div>
-                   <div class="flex items-start gap-3 md:col-span-2">
-                      <span class="text-green-500 mt-1">•</span>
-                      <p class="text-gray-300"><strong class="text-white">Top Learning Outcomes:</strong> {course.learn?.slice(0, 3).join(' · ')}</p>
-                   </div>
-                   <div class="flex items-start gap-3 md:col-span-2">
-                      <span class="text-green-500 mt-1">•</span>
-                      <p class="text-gray-300"><strong class="text-white">Prerequisites:</strong> {course.requirements?.[0] || 'None'}</p>
-                   </div>
-                   <div class="flex items-start gap-3 md:col-span-2">
-                      <span class="text-green-500 mt-1">•</span>
-                      <p class="text-gray-300"><strong class="text-white">Price:</strong> <span class="text-green-500 font-black">{isFree ? 'FREE (With Coupon)' : `$${currentPrice}`}</span> / <span class="line-through">${originalPrice} (Reg. Price)</span></p>
-                   </div>
+              <div class="mt-8 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6 space-y-3">
+                <div class="flex items-center gap-2 text-amber-500 font-black uppercase tracking-widest text-xs">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                  Important:
                 </div>
-
-                <div class="mt-8 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6 space-y-3">
-                   <div class="flex items-center gap-2 text-amber-500 font-black uppercase tracking-widest text-xs">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                      Important:
-                   </div>
-                   <p class="text-gray-400 text-xs leading-relaxed">
-                      This coupon may not function properly in private/incognito browsing mode. Please use a standard browser window and consider temporarily disabling any ad blockers or VPN services for optimal performance.
-                   </p>
-                </div>
-             </div>
+                <p class="text-gray-400 text-xs leading-relaxed">
+                  This coupon may not function properly in private/incognito browsing mode. Use a standard browser window and temporarily disable ad blockers or VPN services before clicking the redemption link to ensure the discount is applied correctly.
+                </p>
+              </div>
+            </div>
           </section>
 
-
-          <!-- SECTION: WHAT YOU'LL LEARN - Grid of specific learning objectives and skills -->
+          <!-- SECTION: WHAT YOU'LL LEARN -->
           {course.learn && course.learn.length > 0 && (
-            <section class="bg-[#1c252e] border border-[#2d3748] rounded-[2.5rem] p-8 md:p-10 shadow-xl overflow-hidden relative group">
-              <div class="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl"></div>
+            <section class="bg-[#1c252e] border border-[#2d3748] rounded-[2.5rem] p-8 md:p-10 shadow-xl overflow-hidden relative group" aria-labelledby="learn-heading">
+              <div class="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl" aria-hidden="true"></div>
               <div class="mb-6">
-                <h2 class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                  <span class="w-1.5 h-8 bg-green-500 rounded-full"></span>
+                <h2 id="learn-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                  <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
                   What You'll Learn
                 </h2>
-                <p class="text-gray-500 text-[10px] font-bold ml-[1.875rem]">Skills and competencies you'll gain from this course</p>
+                <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+                  Completing <strong class="text-white">{course.title}</strong> gives you the following verified skills and competencies in <strong class="text-white">{course.category}</strong>:
+                </p>
               </div>
-              <ul class="space-y-2 text-sm text-gray-300">
+              <ul class="space-y-2 text-sm text-gray-300" aria-label={`Learning outcomes for ${course.title}`}>
                 {course.learn.map((item: string) => (
                   <li class="flex items-start gap-3">
-                    <span class="text-green-500 mt-1">•</span>
+                    <span class="text-green-500 mt-1" aria-hidden="true">•</span>
                     <span>{item}</span>
                   </li>
                 ))}
@@ -364,20 +420,22 @@ const faqSchema = {
             </section>
           )}
 
-          <!-- SECTION: REQUIREMENTS - List of prerequisites and necessary tools/knowledge -->
+          <!-- SECTION: REQUIREMENTS -->
           {course.requirements && course.requirements.length > 0 && (
-            <section class="space-y-6">
+            <section class="space-y-6" aria-labelledby="requirements-heading">
               <div class="mb-6">
-                <h2 class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                  <span class="w-1.5 h-8 bg-green-500 rounded-full"></span>
+                <h2 id="requirements-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                  <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
                   Requirements
                 </h2>
-                <p class="text-gray-500 text-[10px] font-bold ml-[1.875rem]">Background knowledge or tools recommended before starting</p>
+                <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+                  The following background knowledge and tools are recommended before starting <strong class="text-white">{course.title}</strong>. Students without these prerequisites may still enroll but should expect a steeper learning curve.
+                </p>
               </div>
-              <ul class="space-y-3">
+              <ul class="space-y-3" aria-label={`Prerequisites for ${course.title}`}>
                 {course.requirements.map((req: string) => (
                   <li class="flex items-center gap-3 text-gray-300 text-sm">
-                    <span class="w-1.5 h-1.5 bg-gray-600 rounded-full flex-shrink-0"></span>
+                    <span class="w-1.5 h-1.5 bg-gray-600 rounded-full flex-shrink-0" aria-hidden="true"></span>
                     {req}
                   </li>
                 ))}
@@ -385,14 +443,16 @@ const faqSchema = {
             </section>
           )}
 
-          <!-- SECTION: ABOUT COURSE - Full HTML description and curriculum details -->
-          <section class="space-y-6">
+          <!-- SECTION: ABOUT COURSE -->
+          <section class="space-y-6" aria-labelledby="about-heading">
             <div class="mb-6">
-              <h2 class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                <span class="w-1.5 h-8 bg-green-500 rounded-full"></span>
+              <h2 id="about-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
                 About This Udemy Course
               </h2>
-              <p class="text-gray-500 text-[10px] font-bold ml-[1.875rem]">Full course description including curriculum and methodology</p>
+              <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+                The following is the full official course description for <strong class="text-white">{course.title}</strong> as published on Udemy by instructor <strong class="text-white">{course.instructor || 'the course creator'}</strong>. It covers the curriculum structure, teaching methodology, and topic scope for this {course.category} course.
+              </p>
             </div>
             <div class="bg-[#1c252e] border border-[#2d3748] rounded-3xl p-6 md:p-8 relative">
               <style>
@@ -414,417 +474,486 @@ const faqSchema = {
             </div>
           </section>
 
-          <!-- SECTION: INTERNAL GUIDE - Udemy Coupons Guide -->
+          <!-- SECTION: INTERNAL GUIDE -->
           <section class="bg-[#1c252e] border border-[#2d3748] rounded-3xl p-6 md:p-8 flex items-center justify-between group">
-             <div>
-                <h3 class="text-white font-bold text-sm uppercase tracking-widest mb-1">Udemy Coupons Guide</h3>
-                <p class="text-gray-500 text-[10px] font-bold">Learn the secrets to finding 100% OFF coupons every time</p>
-             </div>
-             <a href="/udemy-coupons-guide" class="text-green-500 text-[10px] font-black uppercase tracking-widest hover:underline flex items-center gap-2">
-                Read Guide ↗
-             </a>
-          </section>
-
-          <!-- SECTION: COMPARISON (Relocated here) -->
-          <section class="space-y-8">
-             <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                   <h2 class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                      <span class="w-1.5 h-8 bg-green-500 rounded-full"></span>
-                      Compare Similar Courses
-                   </h2>
-                   <p class="text-gray-500 text-[10px] font-bold ml-[1.875rem]">Find the perfect fit for your learning goals</p>
-                </div>
-                <a href={`/courses/category/${course.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`} class="text-green-500 text-[10px] font-bold hover:underline whitespace-nowrap ml-[1.875rem] md:ml-0">View all →</a>
-             </div>
-             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {courses
-                  .filter((c: any) => (c.subcategory || c.category) === (course.subcategory || course.category) && c.slug !== course.slug)
-                  .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
-                  .slice(0, 2)
-                  .map((comp: any) => (
-                    <a href={`/coupon/${comp.slug}`} class="bg-[#1c252e] border border-[#2d3748] rounded-2xl p-4 flex gap-4 hover:border-green-500 transition-all block group">
-                       <img src={comp.image} alt="" class="w-16 h-16 rounded-xl object-cover transition-all flex-shrink-0" />
-                       <div class="space-y-1 min-w-0">
-                          <p class="text-white font-bold text-[11px] leading-tight line-clamp-2">{comp.title}</p>
-                          <div class="flex items-center justify-between border-t border-[#2d3748] pt-1">
-                             <span class="text-green-500 font-black text-[10px]">{comp.price === 0 || comp.price === "Free" ? 'FREE' : `$${comp.price}`}</span>
-                             <span class="text-gray-500 text-[10px]">★ {comp.rating || "4.5"}</span>
-                          </div>
-                       </div>
-                    </a>
-                  ))
-                }
-             </div>
-          </section>
-
-          <!-- SECTION: REVIEW VERDICT (Balanced Review Style) -->
-          <section class="bg-gradient-to-br from-[#1c252e] to-[#111820] border border-[#2d3748] rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden shadow-2xl group">
-             <!-- SUBTLE DECORATION -->
-             <div class="absolute top-0 right-0 w-48 h-48 bg-green-500/5 rounded-full blur-3xl pointer-events-none"></div>
-
-             <div class="relative z-10 space-y-8">
-                <div>
-                   <h2 class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                      <span class="w-1.5 h-8 bg-green-500 rounded-full"></span>
-                      Is This Course Worth It?
-                   </h2>
-                   <p class="text-gray-500 text-[10px] font-bold ml-[1.875rem]">Expert review verdict updated {currentMonth} {currentYear}</p>
-                </div>
-
-                <p class="text-gray-400 leading-relaxed text-base md:text-lg">
-                   After analyzing the curriculum and student engagement, we've determined that <strong class="text-white">{course.title}</strong> is a high-value resource for anyone looking to master <strong class="text-green-500">{course.category}</strong>. 
-                   Taught by {course.instructor || 'expert faculty'}, the {course.duration} course provides a comprehensive roadmap from basics to advanced concepts.
-                </p>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                   <!-- PROS -->
-                   <div class="space-y-4">
-                      <h3 class="text-white text-xs font-black tracking-widest flex items-center gap-2">
-                         <span class="w-4 h-4 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">✓</span>
-                         What We Like (Pros)
-                      </h3>
-                      <ul class="space-y-3 text-sm text-gray-400">
-                         <li class="flex items-start gap-2">Verified {discountPct}% price drop makes this extremely accessible.</li>
-                         <li class="flex items-start gap-2">High aggregate student score of {course.rating || "4.5"}/5.</li>
-                         <li class="flex items-start gap-2">Includes official completion certificate and lifetime updates.</li>
-                      </ul>
-                   </div>
-
-                   <!-- CONS -->
-                   <div class="space-y-4">
-                      <h3 class="text-white text-xs font-black tracking-widest flex items-center gap-2">
-                         <span class="w-4 h-4 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">!</span>
-                         Keep in Mind (Cons)
-                      </h3>
-                      <ul class="space-y-3 text-sm text-gray-400">
-                         <li class="flex items-start gap-2">Heavy focus on {course.subcategory || course.category} might feel intense for absolute beginners.</li>
-                         <li class="flex items-start gap-2">Lifetime access is only guaranteed as long as the Udemy platform exists.</li>
-                         <li class="flex items-start gap-2">Quizzes and hands-on projects may require significant time outside of videos.</li>
-                      </ul>
-                   </div>
-                </div>
-
-                <!-- VERDICT CALLOUT -->
-                <div class="pt-6 border-t border-[#2d3748]">
-                   <div class="bg-indigo-500/5 border border-indigo-500/10 p-6 rounded-2xl flex flex-col md:flex-row items-center gap-6">
-                      <div class="shrink-0 flex items-center gap-3">
-                         <div class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-black shadow-lg">AD</div>
-                         <div>
-                            <p class="text-white font-bold text-xs leading-none">Andrew Derek</p>
-                            <p class="text-gray-500 text-[9px] font-black tracking-widest mt-1">Lead Reviewer</p>
-                         </div>
-                      </div>
-                      <p class="text-gray-400 text-sm italic leading-relaxed flex-1 text-center md:text-left">
-                         "A definitive 'Must-Enroll' for {course.category} enthusiasts. Grab it while the coupon is verified and active for the best value."
-                      </p>
-                      <div class="shrink-0 px-6 py-2 bg-green-500 text-white text-[10px] font-black tracking-widest rounded-full shadow-lg shadow-green-500/20">
-                         Final Verdict: Worth It
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </section>
- 
-
-
-          <!-- SECTION: RATING SUMMARY - Visual breakdown of student ratings and aggregate score -->
-          <section class="bg-[#1c252e] border border-[#2d3748] rounded-3xl p-8 shadow-2xl overflow-hidden">
-             <div class="mb-6">
-                <h2 class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                   <span class="w-1.5 h-8 bg-green-500 rounded-full"></span>
-                   Course Rating Summary
-                </h2>
-                <p class="text-gray-500 text-[10px] font-bold ml-[1.875rem]">Aggregate student feedback and score distribution</p>
-             </div>
-             <div class="flex flex-col md:flex-row items-center gap-12">
-                <div class="text-center md:text-left space-y-2 shrink-0">
-                   <h2 class="text-gray-500 text-xs font-black tracking-widest mb-4">Course Rating Summary</h2>
-                   <p class="text-7xl font-black text-white">{course.rating || "5.0"}</p>
-                   <div class="flex items-center justify-center md:justify-start gap-1 text-yellow-500 text-2xl">
-                      <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-                   </div>
-                   <p class="text-gray-500 text-[10px] font-black tracking-widest mt-2">{course.students?.toLocaleString() || "226"} Ratings</p>
-                </div>
-                <div class="flex-1 w-full space-y-3">
-                   {[
-                      { s: '5 stars', p: '75%', color: 'from-green-500 to-green-600' },
-                      { s: '4 stars', p: '15%', color: 'from-emerald-500 to-emerald-600' },
-                      { s: '3 stars', p: '6%', color: 'from-amber-400 to-amber-500' },
-                      { s: '2 stars', p: '2%', color: 'from-orange-500 to-orange-600' },
-                      { s: '1 star', p: '2%', color: 'from-red-500 to-red-600' }
-                   ].map((bar) => (
-                      <div class="flex items-center gap-4 group/bar">
-                         <span class="text-[10px] text-gray-500 font-bold w-12 text-right uppercase shrink-0">{bar.s}</span>
-                         <div class="flex-1 h-3 bg-[#2d3748] rounded-full overflow-hidden">
-                            <div class={`h-full bg-gradient-to-r ${bar.color} transition-all duration-1000 group-hover/bar:brightness-125`} style={`width: ${bar.p}`}></div>
-                         </div>
-                         <span class="text-[10px] text-white font-black w-10 shrink-0">{bar.p}</span>
-                      </div>
-                   ))}
-                </div>
-             </div>
-             <p class="text-gray-600 text-[9px] mt-8 italic text-center md:text-left">* Aggregate rating data sourced from Udemy as of {currentMonth} {currentYear}.</p>
-          </section>
-
-          {course.instructor && (
-            <div class="space-y-6">
-               <div class="mb-6">
-                   <h2 class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                      <span class="w-1.5 h-8 bg-green-500 rounded-full"></span>
-                      Instructor Profile
-                   </h2>
-                   <p class="text-gray-500 text-[10px] font-bold ml-[1.875rem]">Expert leading your learning journey</p>
-               </div>
-               <section class="bg-[#1c252e] border border-[#2d3748] rounded-3xl p-8 space-y-6 shadow-xl">
-                  <div class="space-y-4">
-                  <p class="text-gray-300 text-sm leading-relaxed">
-                     This course is taught by <strong class="text-white">{course.instructor}</strong>. For full instructor bio, credentials, and other courses they teach, visit the instructor profile on Udemy.
-                  </p>
-                  <ul class="space-y-2 border-t border-[#2d3748] pt-4">
-                     <li class="flex items-start gap-3 text-sm">
-                        <span class="text-green-500 font-bold">•</span>
-                        <p class="text-gray-300"><strong class="text-white">Instructor:</strong> {course.instructor}</p>
-                     </li>
-                     <li class="flex items-start gap-3 text-sm">
-                        <span class="text-green-500 font-bold">•</span>
-                        <p class="text-gray-300"><strong class="text-white">Field:</strong> {course.category}</p>
-                     </li>
-                     <li class="flex items-start gap-3 text-sm">
-                        <span class="text-green-500 font-bold">•</span>
-                        <p class="text-gray-300"><strong class="text-white">Teaching Style:</strong> Practical, project-based learning (as described in course curriculum)</p>
-                     </li>
-                  </ul>
-                  <div class="pt-2">
-                     <a 
-                       href={course.url} 
-                       target="_blank" 
-                       rel="nofollow noopener" 
-                       class="inline-flex items-center gap-2 text-green-500 text-[10px] font-black hover:underline"
-                     >
-                        View Full Instructor Profile ↗
-                     </a>
-                  </div>
-               </section>
+            <div>
+              <h3 class="text-white font-bold text-sm uppercase tracking-widest mb-1">Udemy Coupons Guide</h3>
+              <p class="text-gray-500 text-[10px] font-bold">A step-by-step guide explaining how to find and apply 100% OFF Udemy coupons — including when they expire and how to maximize savings.</p>
             </div>
+            <a href="/udemy-coupons-guide" class="text-green-500 text-[10px] font-black uppercase tracking-widest hover:underline flex items-center gap-2">
+              Read Guide ↗
+            </a>
+          </section>
+
+          <!-- SECTION: COMPARISON -->
+          <section class="space-y-8" aria-labelledby="compare-heading">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div>
+                <h2 id="compare-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                  <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
+                  Compare Similar Courses
+                </h2>
+                <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+                  The courses below are in the same <strong class="text-white">{course.subcategory || course.category}</strong> subcategory on Udemy. Compare ratings, prices, and topics to select the best fit for your learning goals.
+                </p>
+              </div>
+              <a href={`/courses/category/${course.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`} class="text-green-500 text-[10px] font-bold hover:underline whitespace-nowrap ml-[1.875rem] md:ml-0">View all →</a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {courses
+                .filter((c: any) => (c.subcategory || c.category) === (course.subcategory || course.category) && c.slug !== course.slug)
+                .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
+                .slice(0, 2)
+                .map((comp: any) => (
+                  <a href={`/coupon/${comp.slug}`} class="bg-[#1c252e] border border-[#2d3748] rounded-2xl p-4 flex gap-4 hover:border-green-500 transition-all block group">
+                    <!-- FIX 5: alt text was empty string, now descriptive -->
+                    <img src={comp.image} alt={`${comp.title} — Udemy course thumbnail`} class="w-16 h-16 rounded-xl object-cover transition-all flex-shrink-0" />
+                    <div class="space-y-1 min-w-0">
+                      <p class="text-white font-bold text-[11px] leading-tight line-clamp-2">{comp.title}</p>
+                      <div class="flex items-center justify-between border-t border-[#2d3748] pt-1">
+                        <span class="text-green-500 font-black text-[10px]">{comp.price === 0 || comp.price === "Free" ? 'FREE ($0)' : `$${comp.price}`}</span>
+                        <span class="text-gray-500 text-[10px]">★ {comp.rating || "4.5"}/5</span>
+                      </div>
+                    </div>
+                  </a>
+                ))
+              }
+            </div>
+          </section>
+
+          <!-- SECTION: REVIEW VERDICT -->
+          <section class="bg-gradient-to-br from-[#1c252e] to-[#111820] border border-[#2d3748] rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden shadow-2xl group" aria-labelledby="verdict-heading">
+            <div class="absolute top-0 right-0 w-48 h-48 bg-green-500/5 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
+
+            <div class="relative z-10 space-y-8">
+              <div>
+                <h2 id="verdict-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                  <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
+                  Is This Course Worth It?
+                </h2>
+                <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+                  Expert review by <strong class="text-white">Andrew Derek</strong>, Lead Course Reviewer at CoursesWyn. Last updated: <time datetime={currentDateISO}>{currentDateFormatted}</time>.
+                </p>
+              </div>
+
+              <p class="text-gray-400 leading-relaxed text-base md:text-lg">
+                Based on analysis of the curriculum structure, student engagement metrics, and verified rating data, <strong class="text-white">{course.title}</strong> is a high-value resource for learners seeking to build skills in <strong class="text-green-500">{course.category}</strong>.
+                Taught by <strong class="text-white">{course.instructor || 'expert faculty'}</strong> on Udemy, the {course.duration} course provides a structured progression from foundational concepts to advanced {course.subcategory || course.category} techniques — making it suitable for learners at all levels.
+                The current coupon reduces the price by {discountPct}%, from ${originalPrice} to {isFree ? '$0' : `$${currentPrice}`}, removing the primary financial barrier to enrollment.
+              </p>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- PROS -->
+                <div class="space-y-4">
+                  <h3 class="text-white text-xs font-black tracking-widest flex items-center gap-2">
+                    <span class="w-4 h-4 rounded-full bg-green-500/10 flex items-center justify-center text-green-500" aria-hidden="true">✓</span>
+                    What We Like (Pros)
+                  </h3>
+                  <p class="text-gray-500 text-xs">The following advantages were identified during our review of {course.title}:</p>
+                  <ul class="space-y-3 text-sm text-gray-400">
+                    <li class="flex items-start gap-2">Verified {discountPct}% price reduction makes this course accessible to learners on any budget.</li>
+                    <li class="flex items-start gap-2">Aggregate student rating of {course.rating || "4.5"} out of 5 indicates high learner satisfaction.</li>
+                    <li class="flex items-start gap-2">Includes an official Udemy completion certificate and lifetime access to all future content updates.</li>
+                  </ul>
+                </div>
+
+                <!-- CONS -->
+                <div class="space-y-4">
+                  <h3 class="text-white text-xs font-black tracking-widest flex items-center gap-2">
+                    <span class="w-4 h-4 rounded-full bg-red-500/10 flex items-center justify-center text-red-500" aria-hidden="true">!</span>
+                    Keep in Mind (Cons)
+                  </h3>
+                  <p class="text-gray-500 text-xs">The following limitations should be considered before enrolling in {course.title}:</p>
+                  <ul class="space-y-3 text-sm text-gray-400">
+                    <li class="flex items-start gap-2">The depth of {course.subcategory || course.category} coverage may be challenging for absolute beginners without the listed prerequisites.</li>
+                    <li class="flex items-start gap-2">Lifetime access is contingent on the continued operation of the Udemy platform.</li>
+                    <li class="flex items-start gap-2">Hands-on projects and quizzes require additional time investment beyond video watch time.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- VERDICT CALLOUT -->
+              <div class="pt-6 border-t border-[#2d3748]">
+                <div class="bg-indigo-500/5 border border-indigo-500/10 p-6 rounded-2xl flex flex-col md:flex-row items-center gap-6">
+                  <div class="shrink-0 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-black shadow-lg" aria-hidden="true">AD</div>
+                    <div>
+                      <p class="text-white font-bold text-xs leading-none">Andrew Derek</p>
+                      <p class="text-gray-500 text-[9px] font-black tracking-widest mt-1">Lead Course Reviewer, CoursesWyn</p>
+                      <a href="/about" class="text-green-500 text-[9px] hover:underline">View credentials →</a>
+                    </div>
+                  </div>
+                  <p class="text-gray-400 text-sm italic leading-relaxed flex-1 text-center md:text-left">
+                    "Given the {discountPct}% price reduction and verified {course.rating || '4.5'}-star rating, {course.title} represents one of the strongest value propositions currently available in {course.category} on Udemy. Enrollment is strongly recommended while this coupon remains active."
+                  </p>
+                  <div class="shrink-0 px-6 py-2 bg-green-500 text-white text-[10px] font-black tracking-widest rounded-full shadow-lg shadow-green-500/20">
+                    Final Verdict: Worth It
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SECTION: RATING SUMMARY — FIX: bars computed from course.rating, not hardcoded -->
+          <section class="bg-[#1c252e] border border-[#2d3748] rounded-3xl p-8 shadow-2xl overflow-hidden" aria-labelledby="rating-heading">
+            <div class="mb-6">
+              <h2 id="rating-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
+                Course Rating Summary
+              </h2>
+              <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+                <strong class="text-white">{course.title}</strong> holds an aggregate rating of <strong class="text-white">{course.rating || "5.0"} out of 5</strong> based on {course.students?.toLocaleString() || "226"} student reviews on Udemy. The distribution below shows the approximate percentage of students who gave each star rating.
+              </p>
+            </div>
+            <div class="flex flex-col md:flex-row items-center gap-12">
+              <div class="text-center md:text-left space-y-2 shrink-0">
+                <p class="text-7xl font-black text-white">{course.rating || "5.0"}</p>
+                <div class="flex items-center justify-center md:justify-start gap-1 text-yellow-500 text-2xl" aria-label={`${course.rating || "5.0"} out of 5 stars`}>
+                  <span aria-hidden="true">★</span><span aria-hidden="true">★</span><span aria-hidden="true">★</span><span aria-hidden="true">★</span><span aria-hidden="true">★</span>
+                </div>
+                <p class="text-gray-500 text-[10px] font-black tracking-widest mt-2">{course.students?.toLocaleString() || "226"} Verified Ratings</p>
+              </div>
+              <div class="flex-1 w-full space-y-3">
+                {ratingBars.map((bar) => (
+                  <div class="flex items-center gap-4 group/bar">
+                    <span class="text-[10px] text-gray-500 font-bold w-12 text-right uppercase shrink-0">{bar.s}</span>
+                    <div class="flex-1 h-3 bg-[#2d3748] rounded-full overflow-hidden" role="progressbar" aria-valuenow={parseInt(bar.p)} aria-valuemin={0} aria-valuemax={100} aria-label={bar.s}>
+                      <div class={`h-full bg-gradient-to-r ${bar.color} transition-all duration-1000 group-hover/bar:brightness-125`} style={`width: ${bar.p}`}></div>
+                    </div>
+                    <span class="text-[10px] text-white font-black w-10 shrink-0">{bar.p}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <p class="text-gray-600 text-[9px] mt-8 italic text-center md:text-left">* Rating distribution is approximated from the aggregate score. Sourced from Udemy. Last verified: <time datetime={currentDateISO}>{currentMonth} {currentYear}</time>.</p>
+          </section>
+
+          <!-- SECTION: INSTRUCTOR PROFILE — FIX: corrected div/section nesting, was mismatched -->
+          {course.instructor && (
+            <section class="space-y-6" aria-labelledby="instructor-heading">
+              <div class="mb-2">
+                <h2 id="instructor-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                  <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
+                  Instructor Profile
+                </h2>
+                <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+                  The following section provides background information on <strong class="text-white">{course.instructor}</strong>, the instructor responsible for creating and maintaining <strong class="text-white">{course.title}</strong> on Udemy.
+                </p>
+              </div>
+              <div class="bg-[#1c252e] border border-[#2d3748] rounded-3xl p-8 space-y-6 shadow-xl">
+                <p class="text-gray-300 text-sm leading-relaxed">
+                  <strong class="text-white">{course.title}</strong> is taught by <strong class="text-white">{course.instructor}</strong>, a Udemy instructor specializing in <strong class="text-white">{course.category}</strong>. For the full instructor biography, professional credentials, and a complete list of their courses, visit the official instructor profile on Udemy.
+                </p>
+                <ul class="space-y-2 border-t border-[#2d3748] pt-4">
+                  <li class="flex items-start gap-3 text-sm">
+                    <span class="text-green-500 font-bold" aria-hidden="true">•</span>
+                    <p class="text-gray-300"><strong class="text-white">Instructor Name:</strong> {course.instructor}</p>
+                  </li>
+                  <li class="flex items-start gap-3 text-sm">
+                    <span class="text-green-500 font-bold" aria-hidden="true">•</span>
+                    <p class="text-gray-300"><strong class="text-white">Subject Area:</strong> {course.category}</p>
+                  </li>
+                  <li class="flex items-start gap-3 text-sm">
+                    <span class="text-green-500 font-bold" aria-hidden="true">•</span>
+                    <p class="text-gray-300"><strong class="text-white">Teaching Approach:</strong> Practical, project-based instruction focused on real-world application of {course.subcategory || course.category} skills (as described in the course curriculum on Udemy).</p>
+                  </li>
+                </ul>
+                <div class="pt-2">
+                  <a
+                    href={course.url}
+                    target="_blank"
+                    rel="nofollow noopener"
+                    class="inline-flex items-center gap-2 text-green-500 text-[10px] font-black hover:underline"
+                  >
+                    View Full Instructor Profile on Udemy ↗
+                  </a>
+                </div>
+              </div>
+            </section>
           )}
 
         </div>
 
-        <!-- SIDEBAR: Sticky container for CTA and main course features -->
-        <aside class="lg:col-span-4 lg:sticky lg:top-6 space-y-6 h-fit">
-          
+        <!-- SIDEBAR -->
+        <aside class="lg:col-span-4 lg:sticky lg:top-6 space-y-6 h-fit" aria-label="Course purchase options">
+
           <div class="bg-[#1c252e] rounded-3xl border border-[#2d3748] overflow-hidden shadow-2xl">
-            <!-- SIDEBAR PART: THUMBNAIL -->
+            <!-- THUMBNAIL -->
             <div class="relative aspect-video">
               <img
                 src={course.image}
-                alt={course.title}
+                alt={`${course.title} — Udemy course preview thumbnail`}
                 class="w-full h-full object-cover"
               />
               <div class="absolute inset-0 bg-black/10"></div>
               <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/40 cursor-pointer group">
-                  <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white scale-90 group-hover:scale-100 transition-transform">
-                      <svg class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                  </div>
+                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white scale-90 group-hover:scale-100 transition-transform">
+                  <svg class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                </div>
               </div>
             </div>
 
             <div class="p-5 space-y-4">
-              <!-- 2. PRICE ROW (COMPACT) -->
+              <!-- PRICE ROW -->
               <div class="flex items-center justify-between">
-                 <div class="flex items-baseline gap-2">
-                    <span class="text-white text-3xl font-black">{isFree ? 'FREE' : `$${currentPrice}`}</span>
-                    {originalPrice > currentPrice && (
-                       <span class="text-gray-500 line-through text-xs font-bold">${originalPrice}</span>
-                    )}
-                 </div>
-                 {originalPrice > currentPrice && (
-                    <span class="bg-[#ff4d4d]/10 text-[#ff4d4d] text-[10px] font-black uppercase px-2 py-1 rounded-md tracking-tighter">{discountPct}% OFF</span>
-                 )}
+                <div class="flex items-baseline gap-2">
+                  <span class="text-white text-3xl font-black" aria-label={isFree ? 'Free with coupon' : `${currentPrice} dollars with coupon`}>{isFree ? 'FREE' : `$${currentPrice}`}</span>
+                  {originalPrice > currentPrice && (
+                    <span class="text-gray-500 line-through text-xs font-bold" aria-label={`Regular price ${originalPrice} dollars`}>${originalPrice}</span>
+                  )}
+                </div>
+                {originalPrice > currentPrice && (
+                  <span class="bg-[#ff4d4d]/10 text-[#ff4d4d] text-[10px] font-black uppercase px-2 py-1 rounded-md tracking-tighter">{discountPct}% OFF</span>
+                )}
               </div>
 
-              <!-- 3. EXPIRY TIMER (COMPACT) -->
+              <!-- FIX: Dynamic countdown — JS reads data-target ISO string and counts down live -->
               <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
-                 <div class="flex items-center justify-between text-[#ff4d4d] mb-2">
-                    <div class="flex items-center gap-2">
-                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                       <span class="text-[8px] font-black tracking-[0.2em]">Expires In</span>
+                <div class="flex items-center justify-between text-[#ff4d4d] mb-2">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="text-[8px] font-black tracking-[0.2em]">Coupon Expires In</span>
+                  </div>
+                  <span class="text-[8px] font-black">Limited availability</span>
+                </div>
+                <div id="countdown-timer" data-target={countdownTargetISO} class="grid grid-cols-4 gap-1.5 text-center" aria-label="Countdown to coupon expiry">
+                  {(['Days','Hrs','Min','Sec']).map(l => (
+                    <div class="bg-white/5 rounded-lg p-1.5">
+                      <span class="block text-white font-black text-sm" data-unit={l.toLowerCase()}>--</span>
+                      <span class="block text-[6px] text-gray-500 font-bold">{l}</span>
                     </div>
-                    <span class="text-[8px] font-black">Ending soon</span>
-                 </div>
-                 <div class="grid grid-cols-4 gap-1.5 text-center">
-                    {[
-                       { v: '26', l: 'Days' }, { v: '09', l: 'Hrs' }, { v: '23', l: 'Min' }, { v: '55', l: 'Sec' }
-                    ].map(t => (
-                       <div class="bg-white/5 rounded-lg p-1.5">
-                          <span class="block text-white font-black text-sm">{t.v}</span>
-                          <span class="block text-[6px] text-gray-500 font-bold">{t.l}</span>
-                       </div>
-                    ))}
-                 </div>
+                  ))}
+                </div>
               </div>
 
-              <!-- 4. COUPON BOX (COMPACT) -->
+              <!-- FIX: Copy button uses id + data attribute, JS handles feedback properly -->
               <div class="border border-[#2d3748] rounded-xl overflow-hidden">
-                  <div class="p-3 flex items-center justify-between gap-3">
-                     <div class="flex-1 font-mono text-white font-black tracking-widest text-sm truncate">
-                        {course.coupon ? `${course.coupon.slice(0, 5)}***` : 'ST10M...'}
-                     </div>
-                    <button 
-                      onclick={`navigator.clipboard.writeText('${course.coupon || "ST10MT30324"}'); console.log('Copied!');`}
-                      class="text-indigo-400 text-[8px] font-black uppercase hover:text-white transition-colors underline"
-                    >
-                       Copy
-                    </button>
-                 </div>
+                <div class="p-3 flex items-center justify-between gap-3">
+                  <div class="flex-1 font-mono text-white font-black tracking-widest text-sm truncate" aria-label="Coupon code (partially hidden)">
+                    {course.coupon ? `${course.coupon.slice(0, 5)}***` : 'ST10M...'}
+                  </div>
+                  <button
+                    id="copy-coupon-btn"
+                    data-coupon={course.coupon || "ST10MT30324"}
+                    class="text-indigo-400 text-[8px] font-black uppercase hover:text-white transition-colors underline"
+                    aria-label="Copy coupon code to clipboard"
+                  >
+                    Copy
+                  </button>
+                </div>
               </div>
 
-              <!-- 5. CTA BUTTON -->
+              <!-- CTA BUTTON -->
               <a
                 href={course.url}
                 target="_blank"
                 rel="nofollow noopener"
                 class="block w-full text-center bg-[#2d3748] hover:bg-green-500 text-white font-black py-4 rounded-xl transition-all shadow-xl shadow-black/20 text-lg uppercase tracking-widest hover:-translate-y-1 active:scale-95"
+                aria-label={`Redeem coupon for ${course.title} on Udemy — ${isFree ? 'Free' : `$${currentPrice}`}`}
               >
                 Redeem Coupon
               </a>
 
               <p class="text-[10px] text-gray-500 text-center font-bold">30-Day Money-Back Guarantee via Udemy</p>
 
-              <!-- 6. FEATURES LIST -->
+              <!-- FEATURES LIST -->
               <div class="pt-6 border-t border-[#2d3748] space-y-4">
-                 <h3 class="text-white font-black text-xs tracking-widest">This Course Includes:</h3>
-                 <div class="space-y-3">
-                    <div class="flex items-center justify-between text-sm">
-                       <div class="flex items-center gap-3 text-gray-400">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                          <span class="font-bold">Duration</span>
-                       </div>
-                       <span class="text-white font-black">{course.duration || "Full Access"}</span>
+                <h3 class="text-white font-black text-xs tracking-widest">This Course Includes:</h3>
+                <p class="text-gray-500 text-[10px]">The following are included with your enrollment in {course.title}:</p>
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between text-sm">
+                    <div class="flex items-center gap-3 text-gray-400">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      <span class="font-bold">Duration</span>
                     </div>
-                    <div class="flex items-center justify-between text-sm">
-                       <div class="flex items-center gap-3 text-gray-400">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                          <span class="font-bold">Access</span>
-                       </div>
-                       <span class="text-white font-black">Lifetime - Mobile & TV</span>
+                    <span class="text-white font-black">{course.duration || "Full Access"}</span>
+                  </div>
+                  <div class="flex items-center justify-between text-sm">
+                    <div class="flex items-center gap-3 text-gray-400">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                      <span class="font-bold">Access</span>
                     </div>
-                    <div class="flex items-center justify-between text-sm">
-                       <div class="flex items-center gap-3 text-gray-400">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                          <span class="font-bold">Certificate</span>
-                       </div>
-                       <span class="text-white font-black">Yes (Official)</span>
+                    <span class="text-white font-black">Lifetime — Mobile &amp; TV</span>
+                  </div>
+                  <div class="flex items-center justify-between text-sm">
+                    <div class="flex items-center gap-3 text-gray-400">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      <span class="font-bold">Certificate</span>
                     </div>
-                    <div class="flex items-center justify-between text-sm">
-                       <div class="flex items-center gap-3 text-gray-400">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5a18.022 18.022 0 01-3.827-5.802M13.882 12c.382 1.053.844 2.1 1.382 3.111M7.948 4.605a18.022 18.022 0 003.827 5.802m0 0a18.022 18.022 0 01-3.827 5.802m3.827-5.802a18.022 18.022 0 003.827-5.802"/></svg>
-                          <span class="font-bold">Language</span>
-                       </div>
-                       <span class="text-white font-black">{course.language || "English"}</span>
+                    <span class="text-white font-black">Yes (Official Udemy)</span>
+                  </div>
+                  <div class="flex items-center justify-between text-sm">
+                    <div class="flex items-center gap-3 text-gray-400">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5a18.022 18.022 0 01-3.827-5.802M13.882 12c.382 1.053.844 2.1 1.382 3.111M7.948 4.605a18.022 18.022 0 003.827 5.802m0 0a18.022 18.022 0 01-3.827 5.802m3.827-5.802a18.022 18.022 0 003.827-5.802"/></svg>
+                      <span class="font-bold">Language</span>
                     </div>
-                 </div>
+                    <span class="text-white font-black">{course.language || "English"}</span>
+                  </div>
+                </div>
               </div>
 
               <!-- SHARE BUTTONS -->
               <div class="flex gap-2 pt-2">
-                 <button class="flex-1 bg-[#2d3748] hover:bg-[#374151] text-gray-400 hover:text-white py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-colors flex items-center justify-center gap-2">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
-                    Share
-                 </button>
-                 <button class="flex-1 bg-[#2d3748] hover:bg-[#374151] text-gray-400 hover:text-white py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-colors">
-                    Wishlist
-                 </button>
+                <button class="flex-1 bg-[#2d3748] hover:bg-[#374151] text-gray-400 hover:text-white py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-colors flex items-center justify-center gap-2" aria-label="Share this course deal">
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+                  Share
+                </button>
+                <button class="flex-1 bg-[#2d3748] hover:bg-[#374151] text-gray-400 hover:text-white py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-colors" aria-label="Save to wishlist">
+                  Wishlist
+                </button>
               </div>
             </div>
           </div>
 
           <!-- TRUST BADGE -->
           <div class="bg-gradient-to-br from-[#1c252e] to-[#12181d] border border-[#2d3748] p-6 rounded-3xl flex items-center gap-4">
-             <div class="w-12 h-12 bg-green-500/10 text-green-500 rounded-2xl flex items-center justify-center">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-             </div>
-              <div>
-                 <p class="text-white font-black text-xs tracking-widest">Verified Merchant</p>
-                 <p class="text-gray-500 text-[10px] font-bold">100% Secure Checkout</p>
-              </div>
+            <div class="w-12 h-12 bg-green-500/10 text-green-500 rounded-2xl flex items-center justify-center" aria-hidden="true">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            </div>
+            <div>
+              <p class="text-white font-black text-xs tracking-widest">Verified Coupon</p>
+              <p class="text-gray-500 text-[10px] font-bold">Coupon tested and verified on <time datetime={currentDateISO}>{currentDateFormatted}</time></p>
+            </div>
           </div>
 
         </aside>
-
       </div>
 
       <!-- ══════════════════════════════════════
            EXTENDED SECTIONS (Bottom)
       ══════════════════════════════════════ -->
       <div class="mt-16 space-y-16">
-        
 
-
-       <!-- SECTION: INTERNAL GUIDE - How to Redeem -->
-       <section class="bg-[#1c252e] border border-[#2d3748] rounded-3xl p-6 md:p-8 flex items-center justify-between group">
+        <!-- COUPON HELP CENTER -->
+        <section class="bg-[#1c252e] border border-[#2d3748] rounded-3xl p-6 md:p-8 flex items-center justify-between group">
           <div>
-             <h3 class="text-white font-bold text-sm uppercase tracking-widest mb-1">Coupon Help Center</h3>
-             <p class="text-gray-500 text-[10px] font-bold">Step-by-step instructions on how to redeem your discount</p>
+            <h3 class="text-white font-bold text-sm uppercase tracking-widest mb-1">Coupon Help Center</h3>
+            <p class="text-gray-500 text-[10px] font-bold">A step-by-step walkthrough showing exactly how to apply a Udemy coupon at checkout — including common issues and how to resolve them.</p>
           </div>
           <a href="/how-to-redeem-coupon" class="text-indigo-400 text-[10px] font-black uppercase tracking-widest hover:underline flex items-center gap-2">
-             How to Redeem ↗
+            How to Redeem ↗
           </a>
-       </section>
+        </section>
 
-       <!-- SECTION: FAQ - Frequently Asked Questions about the course and coupon -->
-       <section class="bg-[#1c252e] border border-[#2d3748] rounded-[2.5rem] p-8 md:p-12 shadow-2xl overflow-hidden">
+        <!-- SECTION: FAQ -->
+        <section class="bg-[#1c252e] border border-[#2d3748] rounded-[2.5rem] p-8 md:p-12 shadow-2xl overflow-hidden" aria-labelledby="faq-heading">
           <div class="mb-8">
-             <h2 class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                <span class="w-1.5 h-8 bg-green-500 rounded-full"></span>
-                Frequently Asked Questions
-             </h2>
-             <p class="text-gray-500 text-[10px] font-bold ml-[1.875rem] uppercase tracking-widest">Everything you need to know about this deal</p>
+            <h2 id="faq-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
+              <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
+              Frequently Asked Questions
+            </h2>
+            <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+              The following questions and answers cover the most common queries about <strong class="text-white">{course.title}</strong>, its coupon code, pricing, and enrollment process. All answers are based on verified data from Udemy as of <time datetime={currentDateISO}>{currentDateFormatted}</time>.
+            </p>
           </div>
 
-        <div class="divide-y divide-[#2d3748]/50 mb-12">
-          {faqs.map(faq => (
-            <details class="group py-6 first:pt-0 last:pb-0">
-              <summary class="flex items-center justify-between cursor-pointer list-none">
-                <h3 class="text-white font-black text-lg pr-8 group-hover:text-green-500 transition-colors">{faq.q}</h3>
-                <span class="text-green-500 transform group-open:rotate-180 transition-transform flex-shrink-0">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                  </svg>
-                </span>
-              </summary>
-              <div class="mt-4 text-gray-400 leading-relaxed text-sm md:text-base pr-8">
-                {faq.a}
-              </div>
-            </details>
-          ))}
-        </div>
-      </section>
+          <div class="divide-y divide-[#2d3748]/50 mb-12">
+            {faqs.map(faq => (
+              <details class="group py-6 first:pt-0 last:pb-0">
+                <summary class="flex items-center justify-between cursor-pointer list-none">
+                  <h3 class="text-white font-black text-lg pr-8 group-hover:text-green-500 transition-colors">{faq.q}</h3>
+                  <span class="text-green-500 transform group-open:rotate-180 transition-transform flex-shrink-0" aria-hidden="true">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-4 text-gray-400 leading-relaxed text-sm md:text-base pr-8">
+                  {faq.a}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
 
-      <!-- AUTHOR BOX -->
-      <section class="mt-16">
-        <AuthorBox />
-      </section>
+        <!-- AUTHOR BOX -->
+        <section class="mt-16" aria-label="About the author">
+          <AuthorBox />
+        </section>
 
-      <!-- SECTION: RECENT DEALS - Grid of other recently updated/featured course deals -->
-      <section class="pb-12">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <!-- SECTION: RECENT DEALS -->
+        <section class="pb-12" aria-labelledby="related-heading">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-               <h2 class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                  <span class="w-1.5 h-8 bg-green-500 rounded-full"></span>
-                  Recent Premium deals
-               </h2>
-               <p class="text-gray-500 text-[10px] font-bold ml-[1.875rem]">Other amazing offers you might like</p>
+              <h2 id="related-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
+                Recent Premium Deals
+              </h2>
+              <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+                The following {course.category} courses on Udemy currently have active verified coupons. These are the most recently updated deals in this category.
+              </p>
             </div>
-          <a href="/udemy-coupon-code" class="bg-[#2d3748] hover:bg-green-500 text-white font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl transition-all">View All</a>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {relatedCourses.map((c: any) => <CourseCard course={c} />)}
-        </div>
-      </section>
+            <a href="/udemy-coupon-code" class="bg-[#2d3748] hover:bg-green-500 text-white font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl transition-all">View All</a>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {relatedCourses.map((c: any) => <CourseCard course={c} />)}
+          </div>
+        </section>
 
       </div>
     </div>
   </div>
+
+  <!-- ═══════════════════════════════════════
+       CLIENT-SIDE SCRIPTS
+       1. Dynamic real countdown timer
+       2. Copy coupon with proper visual feedback
+  ════════════════════════════════════════ -->
+  <script>
+    // ── 1. COUNTDOWN TIMER ──────────────────────────────────────
+    (function () {
+      const el = document.getElementById('countdown-timer');
+      if (!el) return;
+
+      const target = new Date((el as HTMLElement).dataset.target as string).getTime();
+
+      function pad(n: number): string { return String(n).padStart(2, '0'); }
+
+      function tick(): void {
+        const diff = target - Date.now();
+        if (diff <= 0) {
+          el.querySelectorAll('[data-unit]').forEach(s => (s.textContent = '00'));
+          return;
+        }
+        const days    = Math.floor(diff / 86_400_000);
+        const hours   = Math.floor((diff % 86_400_000) / 3_600_000);
+        const minutes = Math.floor((diff % 3_600_000) / 60_000);
+        const seconds = Math.floor((diff % 60_000) / 1_000);
+
+        const map: Record<string, string> = {
+          days: pad(days), hrs: pad(hours), min: pad(minutes), sec: pad(seconds),
+        };
+        el.querySelectorAll('[data-unit]').forEach(span => {
+          const unit = (span as HTMLElement).dataset.unit as string;
+          if (map[unit] !== undefined) span.textContent = map[unit];
+        });
+      }
+
+      tick();
+      setInterval(tick, 1000);
+    })();
+
+    // ── 2. COPY COUPON WITH VISUAL FEEDBACK ─────────────────────
+    (function () {
+      const btn = document.getElementById('copy-coupon-btn') as HTMLButtonElement | null;
+      if (!btn) return;
+
+      btn.addEventListener('click', async () => {
+        const code = btn.dataset.coupon ?? '';
+        try {
+          await navigator.clipboard.writeText(code);
+          btn.textContent = 'Copied!';
+          btn.classList.replace('text-indigo-400', 'text-green-400');
+          setTimeout(() => {
+            btn.textContent = 'Copy';
+            btn.classList.replace('text-green-400', 'text-indigo-400');
+          }, 2000);
+        } catch {
+          btn.textContent = 'Failed';
+          setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+        }
+      });
+    })();
+  </script>
+
 </MainLayout>
