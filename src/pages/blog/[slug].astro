@@ -1,14 +1,14 @@
 ---
 import MainLayout from "../../layouts/MainLayout.astro";
-import { getCollection, type CollectionEntry } from "astro:content";
+import { getCollection, render, type CollectionEntry } from "astro:content";
 import AuthorBox from "../../components/AuthorBox.astro";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
-  const validPosts = posts.filter(post => post.slug && typeof post.slug === 'string');
+  const validPosts = posts.filter(post => post.id && typeof post.id === 'string');
 
   return validPosts.map((post) => ({
-    params: { slug: post.slug },
+    params: { slug: post.id },
     props: { post },
   }));
 }
@@ -17,11 +17,11 @@ const { post } = Astro.props as { post: CollectionEntry<'blog'> };
 const { data } = post;
 
 // Render the content
-const { Content } = await post.render();
+const { Content } = await render(post);
 
 const title = data.title;
 const description = data.description;
-const canonical = `https://courseswyn.com/blog/${post.slug}/`;
+const canonical = `https://courseswyn.com/blog/${post.id}/`;
 const ogImage = data.image?.src;
 
 // Get related courses based on tags (subtle recommendations)
