@@ -1,0 +1,65 @@
+---
+interface Props {
+  headings: { depth: number; slug: string; text: string }[];
+}
+
+const { headings = [] } = Astro.props;
+const filteredHeadings = headings.filter(h => h.depth > 1 && h.depth <= 3);
+---
+
+
+{filteredHeadings.length > 0 && (
+  <nav class="sticky top-28 hidden lg:block w-72 shrink-0 animate-in fade-in slide-in-from-right-4 duration-1000">
+
+    <div class="glass-card rounded-3xl p-8 border-white/10 shadow-2xl relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-20 h-20 bg-primary/5 blur-3xl rounded-full"></div>
+      <h3 class="text-white font-black text-[10px] uppercase tracking-[0.2em] mb-8 flex items-center gap-3 opacity-60">
+        <span class="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_rgba(16,185,129,1)]"></span>
+        Table of Contents
+      </h3>
+
+      <ul class="space-y-4 text-sm">
+        {filteredHeadings.map((h) => (
+          <li class={`${h.depth === 3 ? 'ml-4' : ''}`}>
+            <a
+              href={`#${h.slug}`}
+              class="toc-link block text-gray-400 hover:text-primary transition-all duration-300 border-l-2 border-transparent hover:border-primary pl-4 py-1.5 font-medium hover:translate-x-1"
+              data-slug={h.slug}
+            >
+              {h.text}
+            </a>
+
+          </li>
+        ))}
+      </ul>
+    </div>
+  </nav>
+)}
+
+<script>
+  const observerOptions = {
+    root: null,
+    rootMargin: '-10% 0px -80% 0px',
+    threshold: 0
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        document.querySelectorAll('.toc-link').forEach(link => {
+          link.classList.remove('text-white', 'border-primary');
+          link.classList.add('text-gray-400', 'border-transparent');
+          if (link.getAttribute('href') === `#${id}`) {
+            link.classList.add('text-white', 'border-primary');
+            link.classList.remove('text-gray-400', 'border-transparent');
+          }
+        });
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('h2[id], h3[id]').forEach((section) => {
+    observer.observe(section);
+  });
+</script>
