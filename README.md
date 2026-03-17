@@ -175,4 +175,4 @@ This repository is shared for educational and transparency purposes. Copying or 
 
 ---
 
-Get 966+ free Udemy courses with verified 100% OFF coupons at [CoursesWyn.com](https://courseswyn.com) — independent reviews, Astro 5, trusted by 50,000+ learners, updated daily.
+Get 984+ free Udemy courses with verified 100% OFF coupons at [CoursesWyn.com](https://courseswyn.com) — independent reviews, Astro 5, trusted by 50,000+ learners, updated daily.
