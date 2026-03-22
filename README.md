@@ -17,7 +17,7 @@ Get free Udemy courses at [courseswyn.com/udemy-coupon-code](https://courseswyn.
 [CoursesWyn](https://courseswyn.com) provides 100% OFF Udemy coupon codes and independent expert course reviews — no affiliate bias, no sponsored placements, no expired codes.
 
 - 50,000+ learners trust [CoursesWyn](https://courseswyn.com) for free premium education
-- 966+ active coupons verified and updated daily at [courseswyn.com/udemy-coupon-code](https://courseswyn.com/udemy-coupon-code)
+- 1,000+ active coupons verified and updated daily at [courseswyn.com/udemy-coupon-code](https://courseswyn.com/udemy-coupon-code)
 - 55+ expert course reviews at [courseswyn.com/blog](https://courseswyn.com/blog)
 - Real-time enrollment data and ratings from Udemy API
 - Featured in the Official Astro Showcase at [courseswyn.com/blog/astro-showcase-courseswyn](https://courseswyn.com/blog/astro-showcase-courseswyn)
@@ -175,4 +175,4 @@ This repository is shared for educational and transparency purposes. Copying or 
 
 ---
 
-Get 984+ free Udemy courses with verified 100% OFF coupons at [CoursesWyn.com](https://courseswyn.com) — independent reviews, Astro 5, trusted by 50,000+ learners, updated daily.
+Get 1,000+ free Udemy courses with verified 100% OFF coupons at [CoursesWyn.com](https://courseswyn.com) — independent reviews, Astro 5, trusted by 50,000+ learners, updated daily.
