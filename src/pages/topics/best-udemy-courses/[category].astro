@@ -1,435 +1,468 @@
 ---
+/**
+ * src/pages/topics/best-udemy-courses/[category].astro
+ *
+ * TARGET KEYWORD : "best udemy [category] courses", "free [category] courses udemy"
+ * BEDA DARI      : /topics/index → hub overview semua topik
+ *                  /category     → navigasi cepat semua kategori
+ *
+ * ANGLE UNIK     : Deep-dive per kategori — konten editorial spesifik,
+ *                  skill roadmap, career paths, FAQ per-kategori
+ */
+
 import MainLayout from '../../../layouts/MainLayout.astro';
 import CourseCard from '../../../components/CourseCard.astro';
 import coupons from '../../../data/coupons.json';
 
 export async function getStaticPaths() {
-  // Get unique categories and subcategories from coupons data
-  const coupons = await import('../../../data/coupons.json');
-  const categories = [...new Set(coupons.default.map((course: any) => course.category).filter((cat: any) => cat))];
-  const subcategories = [...new Set(coupons.default.map((course: any) => course.subcategory).filter((sub: any) => sub))];
+  const slugify = (text: string) =>
+    text.toString().toLowerCase().trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
 
-  // Combine categories and subcategories
-  const allTopics = [...new Set([...categories, ...subcategories])];
+  const data = await import('../../../data/coupons.json');
+  const categories    = [...new Set(data.default.map((c: any) => c.category).filter(Boolean))];
+  const subcategories = [...new Set(data.default.map((c: any) => c.subcategory).filter(Boolean))];
+  const allTopics     = [...new Set([...categories, ...subcategories])];
 
   return allTopics.map(topic => ({
-    params: { category: topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') },
-    props: {
-      category: topic,
-      originalCategory: topic
-    }
+    params: { category: slugify(String(topic)) },
+    props:  { category: topic, slug: slugify(String(topic)) },
   }));
 }
 
-const { category } = Astro.props as { category: string };
+const { category, slug } = Astro.props as { category: string; slug: string };
 
-// Format category name for display
-const formatCategoryName = (cat: string) => {
-  return cat.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-};
+const formatName = (s: string) =>
+  s.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-const displayCategory = formatCategoryName(category);
+const displayName = formatName(category);
 
-// Filter courses by category or subcategory (case-insensitive match)
-const categoryCourses = coupons.filter((course: any) => {
-  const courseCategory = course.category?.toLowerCase() || '';
-  const courseSubcategory = course.subcategory?.toLowerCase() || '';
-  const searchCategory = category.toLowerCase().replace(/-/g, ' ');
-
-  return courseCategory.includes(searchCategory) ||
-         courseSubcategory.includes(searchCategory) ||
-         courseCategory.includes(category.toLowerCase()) ||
-         courseSubcategory.includes(category.toLowerCase());
+// ── Filter courses ────────────────────────────────────────────────────────────
+const matched = coupons.filter((c: any) => {
+  const cat = c.category?.toLowerCase() || '';
+  const sub = c.subcategory?.toLowerCase() || '';
+  const q   = category.toLowerCase().replace(/-/g, ' ');
+  return cat.includes(q) || sub.includes(q) ||
+         cat.includes(category.toLowerCase()) ||
+         sub.includes(category.toLowerCase());
 });
 
-// Sort by rating and limit to top courses
-const topCourses = categoryCourses
+const topCourses = [...matched]
   .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
   .slice(0, 24);
 
-// Get current date for dynamic content
-const now = new Date();
+// ── Stats ─────────────────────────────────────────────────────────────────────
+const now          = new Date();
 const currentMonth = now.toLocaleDateString('en-US', { month: 'long' });
-const currentYear = now.getFullYear();
-
-// Get category stats
-const totalCourses = categoryCourses.length;
-const avgRating = categoryCourses.length > 0
-  ? (categoryCourses.reduce((sum: number, course: any) => sum + (course.rating || 0), 0) / categoryCourses.length).toFixed(1)
+const currentYear  = now.getFullYear();
+const totalCourses = matched.length;
+const rated        = matched.filter((c: any) => c.rating > 0);
+const avgRating    = rated.length
+  ? (rated.reduce((s: number, c: any) => s + c.rating, 0) / rated.length).toFixed(1)
   : '0';
 
-// Category-specific descriptions
-const categoryDescriptions = {
+// ── Editorial data per-kategori ───────────────────────────────────────────────
+const categoryEditorial: Record<string, {
+  intro:       string;
+  skills:      string[];
+  careerPaths: string[];
+  salaryRange: string;
+  timeToLearn: string;
+  whyNow:      string;
+}> = {
   'Python': {
-    intro: 'Python is one of the most popular programming languages in the world. Master Python programming with our curated selection of the best free Python courses on Udemy.',
-    skills: ['Data Analysis', 'Web Development', 'Machine Learning', 'Automation', 'Django', 'Flask', 'Data Science']
-  },
-  'React': {
-    intro: 'React is the most popular JavaScript library for building user interfaces. Learn React development with modern hooks, context API, and best practices.',
-    skills: ['Component Development', 'State Management', 'Hooks', 'Context API', 'Redux', 'Next.js', 'TypeScript']
+    intro:       'Python is the world\'s most popular programming language for 2024–2026. From data science to web development and AI, Python skills open doors across every technology sector.',
+    skills:      ['Data Analysis','Web Development','Machine Learning','Automation','Django','Flask','Data Science','APIs'],
+    careerPaths: ['Data Scientist','Backend Developer','ML Engineer','Automation Engineer','Data Analyst'],
+    salaryRange: '$80,000 – $150,000/year',
+    timeToLearn: '3–6 months to job-ready',
+    whyNow:      'Python is the primary language of the AI and data science revolution. Every major tech company uses Python for automation, ML pipelines, and backend services.',
   },
   'JavaScript': {
-    intro: 'JavaScript is the language of the web. Master modern JavaScript ES6+ with our comprehensive collection of the best JavaScript courses.',
-    skills: ['ES6+', 'Async Programming', 'DOM Manipulation', 'APIs', 'Node.js', 'TypeScript', 'Testing']
+    intro:       'JavaScript is the only language that runs natively in every web browser. It\'s essential for frontend development, and with Node.js, it powers the backend too.',
+    skills:      ['ES6+','Async Programming','DOM Manipulation','REST APIs','Node.js','TypeScript','React','Testing'],
+    careerPaths: ['Frontend Developer','Full-Stack Developer','Node.js Developer','React Developer'],
+    salaryRange: '$75,000 – $140,000/year',
+    timeToLearn: '4–8 months to job-ready',
+    whyNow:      'JavaScript developer demand has never been higher. The rise of web apps, PWAs, and serverless functions means JavaScript skills are needed everywhere.',
   },
-  'Web-Development': {
-    intro: 'Become a full-stack web developer with our comprehensive web development courses covering frontend, backend, and modern frameworks.',
-    skills: ['HTML/CSS', 'JavaScript', 'React', 'Node.js', 'Databases', 'APIs', 'Deployment']
+  'React': {
+    intro:       'React is the most widely-used JavaScript library for building modern user interfaces. Used by Facebook, Netflix, Airbnb, and thousands of startups worldwide.',
+    skills:      ['Components','Hooks','Context API','Redux','React Router','Next.js','TypeScript','Testing'],
+    careerPaths: ['React Developer','Frontend Engineer','Full-Stack Developer','UI Engineer'],
+    salaryRange: '$85,000 – $150,000/year',
+    timeToLearn: '2–4 months (after JavaScript basics)',
+    whyNow:      'React job postings consistently rank in the top 3 most-requested frontend skills. Next.js has made React the default choice for modern web applications.',
   },
-  'Data-Science': {
-    intro: 'Data Science combines statistics, programming, and domain expertise. Learn data analysis, machine learning, and visualization techniques.',
-    skills: ['Python', 'Statistics', 'Machine Learning', 'Data Visualization', 'SQL', 'Pandas', 'Tableau']
+  'Data Science': {
+    intro:       'Data Science combines statistics, programming, and domain expertise to extract meaningful insights from data. One of the highest-paying career paths in technology.',
+    skills:      ['Python','Statistics','Machine Learning','Data Visualization','SQL','Pandas','Tableau','Power BI'],
+    careerPaths: ['Data Scientist','Data Analyst','Business Intelligence Analyst','ML Engineer'],
+    salaryRange: '$90,000 – $160,000/year',
+    timeToLearn: '6–12 months to job-ready',
+    whyNow:      'Every company is now a data company. Data Scientists are among the top 5 most in-demand roles globally, with a projected 35% job growth over the next decade.',
   },
-  'Machine-Learning': {
-    intro: 'Learn AI, deep learning, and practical machine learning applications with hands-on projects and real-world datasets.',
-    skills: ['Neural Networks', 'Deep Learning', 'TensorFlow', 'PyTorch', 'Computer Vision', 'NLP', 'Scikit-learn']
+  'Machine Learning': {
+    intro:       'Machine Learning and AI are reshaping every industry. From recommendation systems to computer vision, ML skills are the most in-demand technical competency of the decade.',
+    skills:      ['Neural Networks','Deep Learning','TensorFlow','PyTorch','Computer Vision','NLP','Scikit-learn','Transformers'],
+    careerPaths: ['ML Engineer','AI Researcher','Data Scientist','Computer Vision Engineer','NLP Engineer'],
+    salaryRange: '$110,000 – $200,000/year',
+    timeToLearn: '6–12 months (after Python & statistics)',
+    whyNow:      'Generative AI has created an explosion in ML engineer demand. Companies are hiring ML practitioners at rates 3x higher than just two years ago.',
   },
-  'Java': {
-    intro: 'Enterprise Java development, Spring Framework, and Android apps. Master Java programming from basics to advanced concepts.',
-    skills: ['Spring Boot', 'Hibernate', 'Microservices', 'Android Development', 'JPA', 'REST APIs', 'Design Patterns']
+  'Web Development': {
+    intro:       'Web development encompasses everything needed to build websites and web applications — from HTML/CSS to full-stack frameworks. The foundational career path for most software developers.',
+    skills:      ['HTML/CSS','JavaScript','React','Node.js','Databases','REST APIs','Git','Deployment'],
+    careerPaths: ['Full-Stack Developer','Frontend Developer','Backend Developer','Web Designer'],
+    salaryRange: '$65,000 – $130,000/year',
+    timeToLearn: '6–12 months for full-stack',
+    whyNow:      'Web development is the most accessible path into tech. The barrier to entry is low, resources are abundant, and the job market remains consistently strong.',
   },
-  'C-Programming': {
-    intro: 'System programming, embedded systems, and low-level development. Learn C programming fundamentals and advanced concepts.',
-    skills: ['Pointers', 'Memory Management', 'Data Structures', 'Algorithms', 'Embedded Systems', 'Linux Programming']
-  },
-  'PHP': {
-    intro: 'Web development with PHP, Laravel, and backend programming. Build dynamic web applications with PHP frameworks.',
-    skills: ['Laravel', 'Symfony', 'CodeIgniter', 'MySQL', 'REST APIs', 'MVC Architecture', 'Security']
-  },
-  'Node-js': {
-    intro: 'Server-side JavaScript, APIs, and full-stack Node.js applications. Master backend development with Node.js and Express.',
-    skills: ['Express.js', 'MongoDB', 'REST APIs', 'GraphQL', 'Authentication', 'Real-time Apps', 'Microservices']
-  },
-  'Angular': {
-    intro: 'Enterprise web applications with Angular framework. Build scalable SPAs with Angular and TypeScript.',
-    skills: ['TypeScript', 'RxJS', 'NgRx', 'Angular Material', 'Testing', 'Performance', 'PWA']
-  },
-  'Vue-js': {
-    intro: 'Progressive web applications with Vue.js and modern frontend tools. Master Vue 3 with Composition API.',
-    skills: ['Composition API', 'Vue Router', 'Pinia', 'Nuxt.js', 'TypeScript', 'Testing', 'Performance']
-  },
-  'HTML-CSS': {
-    intro: 'Web design fundamentals, responsive layouts, and modern CSS. Master frontend development basics.',
-    skills: ['Responsive Design', 'Flexbox', 'Grid', 'SASS/SCSS', 'CSS Animations', 'Bootstrap', 'Tailwind CSS']
-  },
-  'SQL': {
-    intro: 'Database design, SQL queries, and data management. Learn to work with relational databases effectively.',
-    skills: ['MySQL', 'PostgreSQL', 'Database Design', 'Query Optimization', 'Stored Procedures', 'Indexing', 'Data Modeling']
-  },
-  'Git': {
-    intro: 'Version control, Git workflows, and collaborative development. Master Git for professional software development.',
-    skills: ['Git Commands', 'Branching', 'Merging', 'GitHub', 'GitLab', 'CI/CD', 'Code Reviews']
-  },
-  'Docker': {
-    intro: 'Containerization, deployment, and DevOps with Docker. Learn container technology for modern development.',
-    skills: ['Docker Images', 'Containers', 'Docker Compose', 'Kubernetes', 'CI/CD', 'Microservices', 'DevOps']
-  }
 };
 
-const categoryData = categoryDescriptions[category as keyof typeof categoryDescriptions] || {
-  intro: `Master ${displayCategory} with our carefully selected collection of the best ${displayCategory} courses on Udemy.`,
-  skills: ['Professional Development', 'Industry Best Practices', 'Practical Projects', 'Expert Instruction']
+// Fallback editorial for categories without explicit config
+const defaultEditorial = {
+  intro:       `Master ${displayName} with our curated selection of the highest-rated free Udemy courses. All taught by industry experts with real-world experience.`,
+  skills:      ['Professional Skills','Best Practices','Practical Projects','Industry Knowledge','Portfolio Building'],
+  careerPaths: ['Professional Practitioner','Specialist','Consultant','Team Lead'],
+  salaryRange: 'Varies by role and experience',
+  timeToLearn: 'Self-paced — typically 2–6 months',
+  whyNow:      `${displayName} skills are increasingly valued across industries. Starting with free Udemy courses lets you assess your interest before investing in advanced education.`,
 };
 
-// FAQ data for the category
+const editorial = categoryEditorial[category as keyof typeof categoryEditorial] || defaultEditorial;
+
+// ── Related topics for internal linking ───────────────────────────────────────
+const relatedTopicsMap: Record<string, string[]> = {
+  'Python':          ['data-science','machine-learning','django','flask','automation'],
+  'JavaScript':      ['react','node-js','typescript','vue-js','angular'],
+  'React':           ['javascript','typescript','next-js','node-js','redux'],
+  'Data Science':    ['python','machine-learning','sql','tableau','statistics'],
+  'Machine Learning':['python','data-science','tensorflow','pytorch','deep-learning'],
+  'Web Development': ['javascript','react','node-js','html-css','sql'],
+  'Java':            ['spring-boot','android','kotlin','microservices','maven'],
+  'SQL':             ['data-science','python','mysql','postgresql','database-design'],
+  'AWS':             ['docker','kubernetes','devops','linux','cloud-computing'],
+  'Docker':          ['kubernetes','aws','devops','linux','ci-cd'],
+};
+const relatedSlugs = relatedTopicsMap[category] || [];
+
+// ── FAQ per-kategori ──────────────────────────────────────────────────────────
 const faqs = [
   {
-    question: `Are these ${displayCategory} courses really free?`,
-    answer: `Yes! All ${displayCategory} courses featured here are available for FREE using verified Udemy coupon codes. These are legitimate promotional offers from instructors.`
+    q: `Are these free ${displayName} Udemy courses really free?`,
+    a: `Yes. All ${displayName} courses on CoursesWyn come with a verified 100% OFF Udemy coupon code. You get full lifetime access, all course materials, instructor Q&A, and a Udemy Certificate of Completion — at zero cost.`,
   },
   {
-    question: `What level are these ${displayCategory} courses?`,
-    answer: `We offer ${displayCategory} courses for all skill levels - from beginner to advanced. Each course listing includes the skill level information.`
+    q: `What skill level are these ${displayName} courses?`,
+    a: `We list ${displayName} courses for all skill levels — Beginner, Intermediate, and Advanced. Each course card shows the level, so you can filter by what's right for you. Complete beginners should start with foundational ${displayName} courses before moving to advanced topics.`,
   },
   {
-    question: `Do I get a certificate for ${displayCategory} courses?`,
-    answer: `Yes, you'll earn a certificate of completion for any ${displayCategory} course you finish, which you can add to your resume or LinkedIn profile.`
+    q: `How long does it take to learn ${displayName} on Udemy?`,
+    a: `${editorial.timeToLearn}. The exact time depends on your starting point and how many hours per week you commit. Most Udemy ${displayName} courses are 10–30 hours of content, which you can complete at your own pace.`,
   },
   {
-    question: `How long do ${displayCategory} course coupons last?`,
-    answer: `Udemy coupon codes typically expire within a few days to weeks. We regularly update our listings with fresh, working coupons.`
+    q: `Can I get a job after completing free ${displayName} Udemy courses?`,
+    a: `Free Udemy courses provide the same knowledge as paid ones. To maximise your job prospects, combine courses with portfolio projects, GitHub contributions, and networking. Many developers and data professionals have landed their first roles using Udemy-only skill stacks.`,
   },
   {
-    question: `Can I access ${displayCategory} courses on mobile?`,
-    answer: `Yes! Udemy offers mobile apps for iOS and Android, so you can learn ${displayCategory} anywhere, anytime.`
-  }
+    q: `How quickly do ${displayName} Udemy coupons expire?`,
+    a: `Udemy promotional coupons typically expire in 1–3 days. CoursesWyn updates ${displayName} coupons daily and removes expired ones automatically. If a course appears on this page, the coupon is currently active.`,
+  },
+  {
+    q: `Is a Udemy ${displayName} certificate recognised by employers?`,
+    a: `Udemy certificates are recognised as evidence of skill acquisition and self-initiative. They're especially valued in tech, marketing, and design roles. For maximum impact, list your Udemy ${displayName} certificate on LinkedIn alongside a portfolio project that demonstrates what you built with the skill.`,
+  },
 ];
 
-// SEO-optimized title and description with better keywords
-const pageTitle = `${totalCourses} Best ${displayCategory} Udemy Courses [Updated ${currentYear}] - Free ${displayCategory} Certification`;
-const pageDescription = `Discover ${totalCourses} best ${displayCategory} Udemy courses updated for ${currentYear}. Get premium ${displayCategory} courses for FREE with verified Udemy coupons. Learn ${displayCategory} online with certificates from expert instructors. Best ${displayCategory} tutorials ${currentYear}.`;
+// ── SEO ───────────────────────────────────────────────────────────────────────
+// Keyword angle: "best udemy [category] courses" + year — per-kategori, bukan homepage
+const pageTitle       = `Best ${displayName} Udemy Courses ${currentYear} — ${totalCourses}+ Free with Certificate`;
+const pageDescription = `Discover ${totalCourses}+ free ${displayName} Udemy courses for ${currentYear}. Verified 100% OFF coupons, ${avgRating}★ average rating, expert instructors. Learn ${displayName} online and earn a free certificate.`;
 
-// FAQ structured data for better SEO
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": faqs.map(faq => ({
-    "@type": "Question",
-    "name": faq.question,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": faq.answer
-    }
-  }))
-};
-
-// Breadcrumb structured data
 const breadcrumbSchema = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": "https://courseswyn.com/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Topics",
-      "item": "https://courseswyn.com/topics/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 3,
-      "name": `Best ${displayCategory} Udemy Courses`,
-      "item": Astro.url.href
-    }
-  ]
+  '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type':'ListItem', position:1, name:'Home',                                    item:'https://courseswyn.com/' },
+    { '@type':'ListItem', position:2, name:'Udemy Topics',                            item:'https://courseswyn.com/topics/' },
+    { '@type':'ListItem', position:3, name:`Best ${displayName} Udemy Courses`,       item:Astro.url.href },
+  ],
 };
 
+const collectionSchema = {
+  '@context': 'https://schema.org', '@type': 'CollectionPage',
+  name: pageTitle, description: pageDescription, url: Astro.url.href,
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: topCourses.length,
+    itemListElement: topCourses.map((c: any, i: number) => ({
+      '@type':'ListItem', position:i+1,
+      url:`https://courseswyn.com/coupon/${c.slug}`, name:c.title,
+    })),
+  },
+};
+
+const faqSchema = {
+  '@context': 'https://schema.org', '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({ '@type':'Question', name:f.q, acceptedAnswer:{ '@type':'Answer', text:f.a } })),
+};
+
+const combinedSchema = [breadcrumbSchema, collectionSchema, faqSchema];
 ---
 
-<MainLayout 
-  title={pageTitle} 
-  description={pageDescription} 
-  canonical={`https://courseswyn.com/topics/best-udemy-courses/${category.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-')}`}
+<MainLayout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={`https://courseswyn.com/topics/best-udemy-courses/${slug}`}
+  structuredData={combinedSchema}
 >
+<div class="bg-[#1c252e] min-h-screen pb-20">
 
-  <!-- SEO Schema -->
-  <script type="application/ld+json" set:html={JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "name": pageTitle,
-    "description": pageDescription,
-    "url": Astro.url.href,
-    "mainEntity": {
-      "@type": "ItemList",
-      "numberOfItems": topCourses.length,
-      "itemListElement": topCourses.map((course: any, index: number) => ({
-        "@type": "ListItem",
-        "position": index + 1,
-        "url": `https://courseswyn.com/coupon/${course.slug}`,
-        "name": course.title
-      }))
-    }
-  })} />
+  <!-- HERO -->
+  <header class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+    <!-- Breadcrumb -->
+    <nav aria-label="Breadcrumb" class="mb-8 flex items-center gap-2 text-sm text-gray-500 flex-wrap">
+      <a href="/" class="hover:text-[#10b981] transition-colors">Home</a>
+      <span aria-hidden="true">›</span>
+      <a href="/topics" class="hover:text-[#10b981] transition-colors">Udemy Topics</a>
+      <span aria-hidden="true">›</span>
+      <span class="text-gray-300" aria-current="page">{displayName}</span>
+    </nav>
 
-  <!-- FAQ Schema -->
-  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+    <div class="text-center">
+      <div class="inline-flex items-center gap-2 bg-[#10b981]/10 border border-[#10b981]/30 rounded-full px-4 py-1.5 mb-6">
+        <span class="w-2 h-2 bg-[#10b981] rounded-full animate-pulse"></span>
+        <span class="text-[#10b981] text-xs font-bold uppercase tracking-widest">
+          Updated {currentMonth} {currentYear} · Verified Coupons
+        </span>
+      </div>
 
-  <!-- Breadcrumb Schema -->
-  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+      <h1 class="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
+        Best <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#10b981] to-[#3b82f6]">{displayName}</span><br/>
+        Udemy Courses {currentYear}
+      </h1>
+      <p class="text-xl text-gray-300 font-medium mb-6">
+        {totalCourses}+ Free {displayName} Courses · Free Certificate · Expert Instructors
+      </p>
+      <p class="text-gray-400 max-w-3xl mx-auto leading-relaxed mb-10 text-lg">
+        {editorial.intro}
+      </p>
 
-  <div class="bg-[#1c252e] min-h-screen pb-20">
-
-    <!-- Header Section -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-      <div class="text-center">
-        <h1 class="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
-          Best <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#10b981] to-[#3b82f6]">{displayCategory}</span> Udemy Courses
-        </h1>
-        <p class="text-xl md:text-2xl text-gray-300 font-medium mb-6">
-          Free {displayCategory} Courses with Certificate • {currentYear}
-        </p>
-        <p class="text-gray-400 max-w-3xl mx-auto leading-relaxed mb-10 text-lg">
-          {categoryData.intro} All courses include lifetime access, certificates, and are taught by industry experts.
-        </p>
-
-        <!-- Category Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 max-w-3xl mx-auto border-t border-b border-[#2d3748] py-8">
+      <!-- Stats -->
+      <dl class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 max-w-3xl mx-auto border-t border-b border-[#2d3748] py-8">
+        {[
+          { v:`${totalCourses}+`,   l:'Free Courses' },
+          { v:`${avgRating}★`,     l:'Average Rating' },
+          { v:editorial.timeToLearn.split('–')[0].trim().replace(/[^0-9–]/g,'').split(/\s/)[0] + ' mo', l:'Avg. Time to Learn' },
+          { v:'100%',               l:'Free Access' },
+        ].map(s => (
           <div>
-            <div class="text-4xl font-black text-[#10b981]">{totalCourses}+</div>
-            <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Available Courses</div>
-          </div>
-          <div>
-            <div class="text-4xl font-black text-[#10b981]">{avgRating}★</div>
-            <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Average Rating</div>
-          </div>
-          <div>
-            <div class="text-4xl font-black text-[#10b981]">100%</div>
-            <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Free Access</div>
-          </div>
-          <div>
-            <div class="text-4xl font-black text-[#10b981]">∞</div>
-            <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mt-1">Lifetime Access</div>
-          </div>
-        </div>
-
-        <!-- CTA Button -->
-        <div class="flex justify-center">
-          <a href="#courses" class="inline-block px-8 py-4 bg-[#10b981] hover:bg-[#059669] text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
-            Browse {displayCategory} Courses
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Skills Section -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl font-bold text-white mb-4">What You'll Learn in {displayCategory}</h2>
-        <p class="text-gray-400">Master these essential {displayCategory} skills</p>
-      </div>
-      <div class="flex flex-wrap justify-center gap-3">
-        {categoryData.skills.map((skill: string) => (
-          <span class="bg-[#28323d] border border-[#2d3748] px-4 py-2 rounded-full text-sm text-gray-300 hover:text-white hover:border-[#10b981] transition-all">
-            {skill}
-          </span>
-        ))}
-      </div>
-    </div>
-
-    <!-- Courses Section -->
-    <section id="courses" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-      <div class="flex items-center gap-3 mb-8">
-        <span class="w-1.5 h-8 bg-[#10b981] rounded-full"></span>
-        <h2 class="text-2xl font-bold text-white">Top {displayCategory} Courses</h2>
-      </div>
-
-      {topCourses.length > 0 ? (
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-          {topCourses.map((course: any) => (
-            <CourseCard course={course} />
-          ))}
-        </div>
-      ) : (
-        <div class="text-center py-16">
-          <div class="text-gray-400 text-lg mb-4">No courses found for {displayCategory}</div>
-          <a href="/courses" class="inline-block px-6 py-3 bg-[#10b981] text-white rounded-lg hover:bg-[#059669] transition-colors">
-            Browse All Courses
-          </a>
-        </div>
-      )}
-
-      <!-- Load More / Pagination -->
-      {topCourses.length >= 24 && (
-        <div class="text-center">
-          <a href="/courses" class="inline-block px-8 py-4 bg-[#28323d] border border-[#2d3748] text-white rounded-xl hover:border-[#10b981] transition-all">
-            View All {displayCategory} Courses
-          </a>
-        </div>
-      )}
-    </section>
-
-    <!-- Why Choose Section -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-      <div class="bg-[#28323d] border border-[#2d3748] rounded-2xl p-8 md:p-12">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl font-bold text-white mb-4">Why Learn {displayCategory} with Udemy?</h2>
-          <p class="text-gray-400">Expert-led courses with proven results</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div class="text-center">
-            <div class="w-16 h-16 bg-[#10b981]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg class="w-8 h-8 text-[#10b981]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-              </svg>
-            </div>
-            <h3 class="text-xl font-bold text-white mb-2">Expert Instructors</h3>
-            <p class="text-gray-400">Learn from industry professionals with years of real-world experience in {displayCategory}.</p>
-          </div>
-          <div class="text-center">
-            <div class="w-16 h-16 bg-[#10b981]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg class="w-8 h-8 text-[#10b981]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-              </svg>
-            </div>
-            <h3 class="text-xl font-bold text-white mb-2">Hands-on Projects</h3>
-            <p class="text-gray-400">Build real {displayCategory} projects and applications that you can add to your portfolio.</p>
-          </div>
-          <div class="text-center">
-            <div class="w-16 h-16 bg-[#10b981]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg class="w-8 h-8 text-[#10b981]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-            <h3 class="text-xl font-bold text-white mb-2">Verified Certificates</h3>
-            <p class="text-gray-400">Earn recognized certificates that validate your {displayCategory} skills to employers.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FAQ Section -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl font-bold text-white mb-4">{displayCategory} Course FAQs</h2>
-        <p class="text-gray-400">Everything you need to know about learning {displayCategory}</p>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {faqs.map((faq: any) => (
-          <div class="bg-[#28323d] border border-[#2d3748] p-6 rounded-xl hover:shadow-lg transition-shadow">
-            <h3 class="text-[#10b981] font-bold text-lg mb-3">{faq.question}</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">{faq.answer}</p>
+            <dt class="text-3xl font-black text-[#10b981]">{s.v}</dt>
+            <dd class="text-gray-500 text-xs font-bold uppercase tracking-wider mt-1">{s.l}</dd>
           </div>
         ))}
-      </div>
-    </section>
+      </dl>
 
-    <!-- SEO Content Section -->
-    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-      <div class="prose prose-invert prose-lg max-w-none">
-        <h2 class="text-3xl font-bold text-white text-center mb-8">Master {displayCategory} with Free Udemy Courses</h2>
+      <a href="#courses"
+         class="inline-block px-8 py-4 bg-[#10b981] hover:bg-[#059669] text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+        Browse {displayName} Courses ↓
+      </a>
+    </div>
+  </header>
 
-        <div class="text-gray-400 space-y-6 leading-relaxed text-base">
-          <p>
-            Welcome to our comprehensive guide to the best <strong>{displayCategory} Udemy courses</strong> available for free. In today's competitive job market, having strong {displayCategory} skills is essential for career advancement. Our curated selection features only the highest-rated courses taught by industry experts.
-          </p>
-
-          <h3 class="text-white font-bold text-xl">Why Choose Our {displayCategory} Course Recommendations?</h3>
-          <ul class="grid grid-cols-1 md:grid-cols-2 gap-4 list-none pl-0">
-            <li class="bg-[#28323d] p-4 rounded-lg border border-[#2d3748]">
-              <strong class="text-[#10b981] block mb-1">Quality First</strong>
-              Only courses with 4.0+ star ratings and thousands of satisfied students.
-            </li>
-            <li class="bg-[#28323d] p-4 rounded-lg border border-[#2d3748]">
-              <strong class="text-[#10b981] block mb-1">Expert Instructors</strong>
-              Courses taught by professionals working at top tech companies.
-            </li>
-            <li class="bg-[#28323d] p-4 rounded-lg border border-[#2d3748]">
-              <strong class="text-[#10b981] block mb-1">Updated Content</strong>
-              Regularly updated courses that reflect current industry standards.
-            </li>
-            <li class="bg-[#28323d] p-4 rounded-lg border border-[#2d3748]">
-              <strong class="text-[#10b981] block mb-1">Practical Focus</strong>
-              Hands-on projects and real-world applications of {displayCategory}.
-            </li>
+  <!-- WHAT YOU'LL LEARN -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    <div class="bg-[#28323d] border border-[#2d3748] rounded-2xl p-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Skills -->
+        <div>
+          <h2 class="text-white font-bold text-lg mb-4">🎯 Skills You'll Learn</h2>
+          <div class="flex flex-wrap gap-2">
+            {editorial.skills.map((skill: string) => (
+              <span class="bg-[#1c252e] border border-[#2d3748] px-3 py-1 rounded-full text-sm text-gray-300 hover:text-[#10b981] hover:border-[#10b981] transition-all">
+                {skill}
+              </span>
+            ))}
+          </div>
+        </div>
+        <!-- Career paths -->
+        <div>
+          <h2 class="text-white font-bold text-lg mb-4">💼 Career Paths</h2>
+          <ul class="space-y-2">
+            {editorial.careerPaths.map((cp: string) => (
+              <li class="flex items-center gap-2 text-sm text-gray-400">
+                <span class="text-[#10b981]">→</span> {cp}
+              </li>
+            ))}
           </ul>
-
-          <h3 class="text-white font-bold text-xl">Start Your {displayCategory} Learning Journey Today</h3>
-          <p>
-            Don't wait to start building your {displayCategory} skills. With our free Udemy courses, you can learn at your own pace, earn valuable certificates, and advance your career. Browse our selection above and find the perfect course to kickstart your {displayCategory} journey.
-          </p>
-
-          <div class="bg-[#28323d] border border-[#2d3748] rounded-xl p-6 mt-8">
-            <h4 class="text-[#10b981] font-bold text-lg mb-3">🚀 Quick Start Guide</h4>
-            <ol class="text-gray-300 space-y-2">
-              <li><strong>Choose a course:</strong> Pick the {displayCategory} course that matches your skill level</li>
-              <li><strong>Click "Enroll":</strong> Use our verified coupon codes for free access</li>
-              <li><strong>Start learning:</strong> Complete modules at your own pace</li>
-              <li><strong>Earn certificate:</strong> Showcase your new {displayCategory} skills</li>
-            </ol>
+        </div>
+        <!-- Salary & time -->
+        <div class="space-y-5">
+          <div>
+            <h2 class="text-white font-bold text-lg mb-2">💰 Salary Range</h2>
+            <p class="text-[#10b981] font-bold text-xl">{editorial.salaryRange}</p>
           </div>
-
-          <p class="text-sm mt-8 pt-6 border-t border-[#2d3748] text-center">
-            <em><strong>Disclaimer:</strong> We are not affiliated with Udemy.com. All logos and trademarks belong to their respective owners. We merely aggregate publicly available coupons to help students save money on education.</em>
-          </p>
+          <div>
+            <h2 class="text-white font-bold text-lg mb-2">⏱️ Time to Learn</h2>
+            <p class="text-gray-400 text-sm">{editorial.timeToLearn}</p>
+          </div>
+          <div>
+            <h2 class="text-white font-bold text-lg mb-2">📈 Why Learn Now</h2>
+            <p class="text-gray-400 text-sm leading-relaxed">{editorial.whyNow}</p>
+          </div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- COURSES -->
+  <section id="courses" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    <div class="flex items-center gap-3 mb-8">
+      <span class="w-1.5 h-8 bg-[#10b981] rounded-full"></span>
+      <h2 class="text-2xl font-bold text-white">
+        Top Free {displayName} Udemy Courses — {currentYear}
+      </h2>
+    </div>
+
+    {topCourses.length > 0 ? (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+        {topCourses.map((course: any) => (
+          <CourseCard course={course} />
+        ))}
+      </div>
+    ) : (
+      <div class="text-center py-16">
+        <p class="text-gray-400 text-lg mb-4">No courses found for {displayName} right now.</p>
+        <p class="text-gray-500 text-sm mb-6">New coupons are added daily — check back soon, or browse a related topic.</p>
+        <a href="/topics" class="inline-block px-6 py-3 bg-[#10b981] text-white rounded-lg hover:bg-[#059669] transition-colors">
+          Browse All Topics
+        </a>
+      </div>
+    )}
+
+    {topCourses.length >= 24 && (
+      <div class="text-center">
+        <a href="/courses" class="inline-block px-8 py-4 bg-[#28323d] border border-[#2d3748] text-white rounded-xl hover:border-[#10b981] transition-all">
+          View All {displayName} Courses →
+        </a>
+      </div>
+    )}
+  </section>
+
+  <!-- RELATED TOPICS -->
+  {relatedSlugs.length > 0 && (
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="w-1.5 h-7 bg-[#10b981] rounded-full"></span>
+        <h2 class="text-xl font-bold text-white">Related Topics to Explore</h2>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        {relatedSlugs.map((s: string) => (
+          <a href={`/topics/best-udemy-courses/${s}`}
+             class="bg-[#28323d] border border-[#2d3748] px-4 py-2 rounded-full text-sm text-gray-300 hover:text-white hover:border-[#10b981] hover:bg-[#10b981]/10 transition-all font-medium capitalize">
+            {s.replace(/-/g, ' ')}
+          </a>
+        ))}
+      </div>
     </section>
+  )}
 
-  </div>
+  <!-- WHY LEARN HERE -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    <div class="bg-[#28323d] border border-[#2d3748] rounded-2xl p-8 md:p-12">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl font-bold text-white mb-3">Why Learn {displayName} with Free Udemy Courses?</h2>
+        <p class="text-gray-400">Everything included — at zero cost</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {[
+          { icon:'🎓', title:'Same as Paid Enrollment', body:`Free coupon enrollments give you identical access to paid students. Same ${displayName} lectures, resources, and the same certificate.` },
+          { icon:'🛠️', title:'Hands-on Projects',        body:`The best ${displayName} Udemy courses include real projects you can add to your portfolio to prove your skills to employers.` },
+          { icon:'📜', title:'Verified Certificate',      body:`Earn a Udemy Certificate of Completion for every ${displayName} course you finish. Add it to LinkedIn or your resume immediately.` },
+        ].map(item => (
+          <div class="text-center">
+            <div class="w-16 h-16 bg-[#10b981]/20 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+              {item.icon}
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">{item.title}</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">{item.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
 
+  <!-- FAQ -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold text-white mb-3">
+        Free {displayName} Udemy Course — FAQs
+      </h2>
+      <p class="text-gray-400">Everything you need to know before enrolling</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {faqs.map((faq) => (
+        <div class="bg-[#28323d] border border-[#2d3748] p-6 rounded-xl hover:border-[#10b981]/40 transition-colors">
+          <h3 class="text-[#10b981] font-bold text-base mb-3 leading-snug">{faq.q}</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">{faq.a}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- SEO PROSE -->
+  <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+    <div class="space-y-6 text-gray-400 leading-relaxed text-base">
+      <h2 class="text-3xl font-bold text-white text-center mb-2">
+        Master {displayName} with Free Udemy Courses in {currentYear}
+      </h2>
+
+      <p>
+        This page curates the <strong class="text-white">best free {displayName} Udemy courses</strong> available right now,
+        sorted by student rating. Every course comes with a verified 100% OFF coupon — you pay nothing and receive
+        full lifetime access plus a Udemy Certificate of Completion.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+        {[
+          { title:'Quality Filter',    body:`Only ${displayName} courses rated 4.0+ with proven student outcomes.` },
+          { title:'Expert Instructors', body:`Courses taught by practitioners with real-world ${displayName} experience.` },
+          { title:'Updated Coupons',   body:`Every ${displayName} coupon is verified and refreshed daily.` },
+          { title:'All Levels',         body:`${displayName} courses for beginners through to advanced practitioners.` },
+        ].map(item => (
+          <div class="bg-[#28323d] border border-[#2d3748] rounded-xl p-5">
+            <p class="text-[#10b981] font-bold text-sm mb-1">{item.title}</p>
+            <p class="text-gray-400 text-sm">{item.body}</p>
+          </div>
+        ))}
+      </div>
+
+      <h3 class="text-white font-bold text-xl">How to Start Learning {displayName} Today</h3>
+      <ol class="space-y-2 text-sm">
+        <li><strong class="text-white">1.</strong> Pick a course above that matches your current skill level.</li>
+        <li><strong class="text-white">2.</strong> Click "Enroll Free" — the 100% OFF coupon is pre-applied.</li>
+        <li><strong class="text-white">3.</strong> Create a free Udemy account if you don't have one.</li>
+        <li><strong class="text-white">4.</strong> Complete the course and download your certificate.</li>
+        <li><strong class="text-white">5.</strong> Build a portfolio project using what you learned.</li>
+      </ol>
+
+      <!-- Cross-links back to hub -->
+      <div class="bg-[#28323d] border border-[#2d3748] rounded-xl p-5 flex flex-wrap gap-4 items-center justify-between">
+        <div>
+          <p class="text-white font-bold text-sm mb-1">Looking for a full learning roadmap?</p>
+          <p class="text-gray-400 text-xs">Visit our topics hub for structured career paths using free Udemy courses.</p>
+        </div>
+        <a href="/topics" class="flex-shrink-0 px-5 py-2 bg-[#10b981] hover:bg-[#059669] text-white text-sm font-bold rounded-lg transition-all">
+          View Learning Paths →
+        </a>
+      </div>
+
+      <p class="text-xs pt-6 border-t border-[#2d3748] text-center text-gray-500">
+        <em><strong>Disclaimer:</strong> CoursesWyn is not affiliated with Udemy.com. All trademarks belong to their respective owners. We aggregate publicly available promotional coupon codes to help students access quality education at no cost.</em>
+      </p>
+    </div>
+  </section>
+
+</div>
 </MainLayout>
