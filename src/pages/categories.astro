@@ -19,14 +19,21 @@ const categoryData = [...new Set(coupons.map(c => c.category))].sort().map(categ
   };
 });
 
+// Calculate total stats
+const totalCourses = coupons.length;
+const totalSubcategories = categoryData.reduce((acc, cat) => acc + cat.subcategories.length, 0);
+
+// Get top 3 categories by course count
+const topCategories = [...categoryData].sort((a, b) => b.courseCount - a.courseCount).slice(0, 3);
+
 const faqs = [
   {
     question: "How many course categories do you have?",
-    answer: "We currently have 13 main categories covering various subjects from programming and design to business and marketing. Each category contains multiple subcategories for more specific topics."
+    answer: `We currently have ${categoryData.length} main categories covering various subjects from programming and design to business and marketing. Each category contains multiple subcategories for more specific topics.`
   },
   {
     question: "What are the most popular categories?",
-    answer: "Our most popular categories include Programming & Development, Web Design, Business & Entrepreneurship, Digital Marketing, Data Science, and Graphic Design. Each category offers hundreds of free courses."
+    answer: `Our most popular categories include ${topCategories.map(c => c.name).join(', ')}. Each category offers hundreds of free courses updated daily.`
   },
   {
     question: "How do I find courses in a specific category?",
@@ -35,8 +42,36 @@ const faqs = [
   {
     question: "Are all courses in these categories free?",
     answer: "Yes! All courses listed in our categories are available for free using our exclusive coupon codes. No hidden fees or subscriptions required."
+  },
+  {
+    question: "How often do you update course categories?",
+    answer: "We update our course listings daily, adding new free courses and removing expired coupons. Check back regularly to discover fresh learning opportunities."
+  },
+  {
+    question: "Can I get a certificate for free courses?",
+    answer: "Absolutely! All courses on our platform provide official Udemy certificates upon completion, completely free when you use our coupon codes."
   }
 ];
+
+// Structured Data: BreadcrumbList
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://courseswyn.com"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Categories",
+      "item": "https://courseswyn.com/categories"
+    }
+  ]
+};
 
 // Structured Data: ItemList for categories
 const itemListSchema = {
@@ -64,37 +99,92 @@ const faqSchema = {
   }))
 };
 
-const combinedSchema = [itemListSchema, faqSchema];
+// Structured Data: Organization/WebPage
+const webPageSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Free Udemy Course Categories",
+  "description": "Browse thousands of free Udemy courses organized by category. All courses are 100% free with verified coupon codes.",
+  "url": "https://courseswyn.com/categories",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "CoursesWyn",
+    "url": "https://courseswyn.com"
+  }
+};
 
-const pageTitle = "Free Udemy Course Categories - Browse Courses by Subject | CoursesWyn";
-const pageDescription = "Explore thousands of 100% OFF free Udemy courses organized by category. Verified daily: Development, Business, Design, Marketing, and more. Get your free certification today!";
+const combinedSchema = [breadcrumbSchema, itemListSchema, faqSchema, webPageSchema];
+
+const pageTitle = "Free Udemy Course Categories - Browse 100% OFF Courses by Subject | CoursesWyn";
+const pageDescription = `Explore ${totalCourses}+ free Udemy courses across ${categoryData.length} categories. Verified daily coupons for Development, Business, Design, Marketing & more. Get certified free today!`;
 ---
 
 <MainLayout 
   title={pageTitle} 
   description={pageDescription}
   structuredData={combinedSchema}
-  ogTitle="Browse Free Udemy Course Categories - 100% OFF Coupons"
+  ogTitle="Browse Free Udemy Course Categories - 100% OFF Coupons Daily"
   ogDescription="Stop paying for courses! Explore 13+ categories and thousands of premium Udemy courses for free with our daily updated coupons."
 >
   <div class="bg-[#1c252e] min-h-screen pb-20">
+    
+    <!-- Breadcrumb Navigation -->
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-4">
+      <ol class="flex items-center space-x-2 text-sm text-gray-400">
+        <li>
+          <a href="/" class="hover:text-[#98a3f8] transition-colors">Home</a>
+        </li>
+        <li class="flex items-center">
+          <span class="mx-2">/</span>
+          <span class="text-[#98a3f8] font-medium">Categories</span>
+        </li>
+      </ol>
+    </nav>
+
     <!-- Header Section -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
       <div class="text-center">
         <h1 class="text-5xl md:text-6xl font-extrabold text-[#98a3f8] mb-6 tracking-tight">
           Free Udemy Course Categories
         </h1>
         <p class="text-2xl md:text-3xl text-gray-300 font-medium mb-8">
-          Explore Thousands of Free Courses Organized by Subject
+          {totalCourses.toLocaleString()}+ Free Courses Across {categoryData.length} Categories
         </p>
-        <p class="text-lg text-gray-500 max-w-4xl mx-auto leading-relaxed">
-          Discover premium Udemy courses completely free! Browse by category to find exactly what you want to learn. From programming and design to business and marketing - we have {categoryData.length}+ categories with thousands of free courses.
+        <p class="text-lg text-gray-400 max-w-4xl mx-auto leading-relaxed mb-6">
+          Discover premium Udemy courses completely free! Browse by category to find exactly what you want to learn. From programming and design to business and marketing - we have {categoryData.length} major categories with {totalSubcategories}+ subcategories covering every skill you need.
         </p>
+        
+        <!-- Quick Stats -->
+        <div class="flex flex-wrap justify-center gap-8 mt-12 mb-8">
+          <div class="text-center">
+            <div class="text-4xl font-bold text-[#059669] mb-2">{totalCourses.toLocaleString()}+</div>
+            <div class="text-gray-400 text-sm uppercase tracking-wide">Free Courses</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-bold text-[#059669] mb-2">{categoryData.length}</div>
+            <div class="text-gray-400 text-sm uppercase tracking-wide">Main Categories</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-bold text-[#059669] mb-2">{totalSubcategories}+</div>
+            <div class="text-gray-400 text-sm uppercase tracking-wide">Subcategories</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-bold text-[#059669] mb-2">100%</div>
+            <div class="text-gray-400 text-sm uppercase tracking-wide">Free & Verified</div>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Categories Grid -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-32">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
+      <div class="mb-12">
+        <h2 class="text-3xl font-bold text-white mb-4 text-center">Browse All Course Categories</h2>
+        <p class="text-gray-400 text-center max-w-3xl mx-auto">
+          Select a category below to explore free courses. Each category is regularly updated with new 100% OFF Udemy coupons.
+        </p>
+      </div>
+      
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {categoryData.map((data) => (
           <CategoryCard 
@@ -106,15 +196,173 @@ const pageDescription = "Explore thousands of 100% OFF free Udemy courses organi
       </div>
     </div>
 
-    <!-- FAQ Section -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-[#2d3748] pt-24">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl font-bold text-white mb-4">Frequently Asked Questions</h2>
+    <!-- Most Popular Categories Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
+      <div class="bg-gradient-to-br from-[#2d3748] to-[#1c252e] border border-[#3d4758] rounded-2xl p-12">
+        <h2 class="text-3xl font-bold text-white mb-8 text-center">Most Popular Categories</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {topCategories.map((cat, index) => (
+            <a 
+              href={`/courses/category/${cat.slug}`}
+              class="group bg-[#1c252e] border border-[#2d3748] hover:border-[#98a3f8] rounded-xl p-6 transition-all duration-300 hover:transform hover:scale-105"
+            >
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-5xl font-bold text-[#059669] opacity-20">#{index + 1}</span>
+                <span class="text-[#98a3f8] text-sm font-medium">{cat.courseCount} courses</span>
+              </div>
+              <h3 class="text-xl font-bold text-white group-hover:text-[#98a3f8] mb-3 transition-colors">
+                {cat.name}
+              </h3>
+              <p class="text-gray-400 text-sm mb-4">
+                {cat.subcategories.length} subcategories available
+              </p>
+              <div class="text-[#059669] text-sm font-medium group-hover:underline">
+                Explore Free Courses →
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- Why Choose Our Categories Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-white mb-4">Why Choose CoursesWyn Categories?</h2>
+        <p class="text-gray-400 max-w-3xl mx-auto">
+          We organize thousands of free Udemy courses to help you find exactly what you need
+        </p>
       </div>
       
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-[#1c252e] border border-[#2d3748] rounded-xl p-6">
+          <div class="text-[#059669] text-3xl mb-4">📚</div>
+          <h3 class="text-xl font-bold text-white mb-3">Organized Learning</h3>
+          <p class="text-gray-400 text-sm">
+            All courses neatly organized by category and subcategory for easy navigation
+          </p>
+        </div>
+        
+        <div class="bg-[#1c252e] border border-[#2d3748] rounded-xl p-6">
+          <div class="text-[#059669] text-3xl mb-4">✅</div>
+          <h3 class="text-xl font-bold text-white mb-3">Verified Daily</h3>
+          <p class="text-gray-400 text-sm">
+            Every coupon code is verified daily to ensure 100% free access to courses
+          </p>
+        </div>
+        
+        <div class="bg-[#1c252e] border border-[#2d3748] rounded-xl p-6">
+          <div class="text-[#059669] text-3xl mb-4">🎓</div>
+          <h3 class="text-xl font-bold text-white mb-3">Real Certificates</h3>
+          <p class="text-gray-400 text-sm">
+            Get official Udemy certificates for all completed courses, absolutely free
+          </p>
+        </div>
+        
+        <div class="bg-[#1c252e] border border-[#2d3748] rounded-xl p-6">
+          <div class="text-[#059669] text-3xl mb-4">🔄</div>
+          <h3 class="text-xl font-bold text-white mb-3">Always Updated</h3>
+          <p class="text-gray-400 text-sm">
+            New free courses added daily across all categories, never miss an opportunity
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- How to Use Categories Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
+      <div class="bg-gradient-to-br from-[#98a3f8]/10 to-transparent border border-[#98a3f8]/20 rounded-2xl p-12">
+        <h2 class="text-3xl font-bold text-white mb-8 text-center">How to Find Your Perfect Course</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="text-center">
+            <div class="bg-[#98a3f8] text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">1</div>
+            <h3 class="text-xl font-bold text-white mb-3">Browse Categories</h3>
+            <p class="text-gray-400">
+              Click on any category card above to explore courses in your area of interest
+            </p>
+          </div>
+          
+          <div class="text-center">
+            <div class="bg-[#98a3f8] text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">2</div>
+            <h3 class="text-xl font-bold text-white mb-3">Choose Your Course</h3>
+            <p class="text-gray-400">
+              Find a course that matches your learning goals and skill level
+            </p>
+          </div>
+          
+          <div class="text-center">
+            <div class="bg-[#98a3f8] text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">3</div>
+            <h3 class="text-xl font-bold text-white mb-3">Get Free Access</h3>
+            <p class="text-gray-400">
+              Click the coupon button to enroll for free and start learning immediately
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEO Content Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
+      <div class="prose prose-invert max-w-none">
+        <div class="bg-[#1c252e] border border-[#2d3748] rounded-2xl p-12">
+          <h2 class="text-3xl font-bold text-white mb-6">Comprehensive Free Course Categories for Every Learner</h2>
+          
+          <div class="text-gray-400 space-y-4 leading-relaxed">
+            <p>
+              At CoursesWyn, we understand that effective learning starts with finding the right course. That's why we've organized over <strong class="text-white">{totalCourses.toLocaleString()} free Udemy courses</strong> into <strong class="text-white">{categoryData.length} comprehensive categories</strong>, making it easier than ever to discover courses that match your career goals and interests.
+            </p>
+            
+            <h3 class="text-2xl font-bold text-white mt-8 mb-4">Why Our Category System Works</h3>
+            <p>
+              Our category organization isn't just about grouping courses—it's about creating a learning pathway that makes sense. Each category contains carefully curated free courses with <strong class="text-white">100% OFF Udemy coupons</strong> that are verified daily. Whether you're looking to master <strong class="text-white">programming</strong>, enhance your <strong class="text-white">design skills</strong>, grow your <strong class="text-white">business acumen</strong>, or dive into <strong class="text-white">digital marketing</strong>, our categories help you find exactly what you need.
+            </p>
+            
+            <h3 class="text-2xl font-bold text-white mt-8 mb-4">Most In-Demand Categories</h3>
+            <p>
+              Based on user preferences and enrollment data, our most popular categories include <strong class="text-white">{topCategories.map(c => c.name).join(', ')}</strong>. These categories are constantly updated with fresh content, ensuring you have access to the latest industry-relevant courses without spending a penny.
+            </p>
+            
+            <h3 class="text-2xl font-bold text-white mt-8 mb-4">From Beginner to Expert</h3>
+            <p>
+              Every category on CoursesWyn features courses for all skill levels. Whether you're taking your first steps in <strong class="text-white">web development</strong>, looking to advance your <strong class="text-white">data science career</strong>, or mastering <strong class="text-white">entrepreneurship strategies</strong>, you'll find courses tailored to your current level and future aspirations.
+            </p>
+            
+            <h3 class="text-2xl font-bold text-white mt-8 mb-4">Quality Assurance</h3>
+            <p>
+              We don't just list any free course—every course in our categories is from <strong class="text-white">verified Udemy instructors</strong> and comes with our <strong class="text-white">quality guarantee</strong>. Plus, all courses include official Udemy certificates upon completion, adding real value to your resume and LinkedIn profile.
+            </p>
+            
+            <h3 class="text-2xl font-bold text-white mt-8 mb-4">Start Learning Today</h3>
+            <p>
+              With <strong class="text-white">{categoryData.length} main categories</strong> and <strong class="text-white">{totalSubcategories}+ subcategories</strong>, you're just one click away from transforming your career. Browse our categories above, find courses that excite you, and start learning for free—no credit card required, no hidden fees, just pure learning.
+            </p>
+          </div>
+          
+          <div class="mt-8 text-center">
+            <a 
+              href="/" 
+              class="inline-block bg-[#059669] hover:bg-[#047857] text-white font-bold py-4 px-8 rounded-xl transition-colors duration-300"
+            >
+              Browse All Free Courses →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-[#2d3748] pt-20">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold text-white mb-4">Frequently Asked Questions About Our Categories</h2>
+        <p class="text-gray-400 max-w-2xl mx-auto">
+          Everything you need to know about browsing and using our course categories
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
         {faqs.map((faq) => (
-          <div class="bg-[#1c252e] border border-[#2d3748] p-8 rounded-2xl">
+          <div class="bg-[#1c252e] border border-[#2d3748] p-8 rounded-2xl hover:border-[#98a3f8] transition-colors">
             <h3 class="text-[#059669] text-xl font-bold mb-4">
               {faq.question}
             </h3>
@@ -123,6 +371,32 @@ const pageDescription = "Explore thousands of 100% OFF free Udemy courses organi
             </p>
           </div>
         ))}
+      </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
+      <div class="bg-gradient-to-r from-[#98a3f8] to-[#059669] rounded-2xl p-12 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">
+          Ready to Start Learning?
+        </h2>
+        <p class="text-xl text-white/90 mb-8">
+          Choose a category and get instant access to thousands of free courses
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a 
+            href="/" 
+            class="bg-white text-[#98a3f8] hover:bg-gray-100 font-bold py-4 px-8 rounded-xl transition-colors duration-300"
+          >
+            View All Courses
+          </a>
+          <a 
+            href="/courses" 
+            class="bg-transparent border-2 border-white text-white hover:bg-white/10 font-bold py-4 px-8 rounded-xl transition-colors duration-300"
+          >
+            Trending Courses
+          </a>
+        </div>
       </div>
     </div>
   </div>
