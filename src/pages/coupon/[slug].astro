@@ -73,8 +73,8 @@ const star3Pct  = Math.round(Math.min(20, Math.max(2,  (5 - ratingVal) * 5 + 3))
 const star2Pct  = Math.round(Math.min(10, Math.max(1,  (5 - ratingVal) * 3)));
 const star1Pct  = Math.max(1, 100 - star5Pct - star4Pct - star3Pct - star2Pct);
 const ratingBars = [
-  { s: '5 stars', p: `${star5Pct}%`, color: 'from-green-500 to-green-600' },
-  { s: '4 stars', p: `${star4Pct}%`, color: 'from-emerald-500 to-emerald-600' },
+  { s: '5 stars', p: `${star5Pct}%`, color: 'from-emerald-500 to-emerald-600' },
+  { s: '4 stars', p: `${star4Pct}%`, color: 'from-cyan-500 to-cyan-600' },
   { s: '3 stars', p: `${star3Pct}%`, color: 'from-amber-400 to-amber-500' },
   { s: '2 stars', p: `${star2Pct}%`, color: 'from-orange-500 to-orange-600' },
   { s: '1 star',  p: `${star1Pct}%`, color: 'from-red-500 to-red-600' },
@@ -96,15 +96,15 @@ const priceValidUntil = nextMonthDate.toISOString().split('T')[0];
 const faqs = isFree ? [
   {
     q: `Is the ${course.title} Udemy course completely free?`,
-    a: `Yes. ${course.title} is available at $0 using the verified 100% OFF coupon on this page. Enrollment grants lifetime access to all course materials and future updates at no additional cost. The coupon was last verified on ${couponVerifiedDate}.`
+    a: `Yes! By using our 100% OFF coupon code, you can enroll in this course completely free on Udemy. No credit card required. Enrollment grants lifetime access to all course materials.`
   },
   {
-    q: `How do I enroll in ${course.title} for free?`,
-    a: `Click the "Redeem Coupon" button on this page. The 100% OFF discount is pre-applied to the checkout link — no manual code entry is required. You will be redirected to Udemy where the final price shown at checkout will be $0.`
+    q: `Will I get a certificate after completing this free Udemy course?`,
+    a: `Absolutely! Even with the free coupon, you will receive an official Udemy certificate of completion that you can share on LinkedIn and add to your resume.`
   },
   {
-    q: `How long is the ${course.category} course "${course.title}"?`,
-    a: `${course.title} is ${course.duration || 'a few hours'} of on-demand video content. Once enrolled using the free coupon, you retain lifetime access to all lectures and can learn at your own pace.`
+    q: `How long is this 100% OFF Udemy coupon code valid?`,
+    a: `Our verified Udemy coupon codes typically last 2-7 days or until redemption limits are reached. We update them daily, so grab ${course.title} while it's free!`
   }
 ] : [
   {
@@ -139,9 +139,9 @@ faqs.push({
 const currentUpdateLabel = `${currentMonth} ${currentYear}`;
 
 // --- SEO LOGIC ---
-const pageTitle       = `${course.title} Udemy Coupon - ${isFree ? '100% Off' : `${discountPct}% Off`}`;
+const pageTitle       = `${course.title} ${isFree ? 'Free Course - 100% OFF Udemy Coupon' : `Udemy Coupon - ${discountPct}% OFF`} | ${course.category} Course ${currentYear}`;
 const firstLearn      = course.learn?.[0]?.replace(/^[✓✅•\-*]\s*/, '') || '';
-const pageDescription = `Get ${course.title} (${course.duration}) ${isFree ? 'for FREE — 100% OFF' : `at $${currentPrice} — ${discountPct}% OFF`} with verified Udemy coupon. ${firstLearn ? `${firstLearn}.` : ''} Coupon verified ${currentMonth} ${currentYear}.`;
+const pageDescription = `Enroll in ${course.title} on Udemy ${isFree ? 'for FREE with our verified 100% OFF coupon code' : `with our verified ${discountPct}% OFF coupon code`}. Master key skills in ${course.category}. ${course.duration || 'Several hours'} of content. Certificate included. Updated ${currentMonth} ${currentYear}.`;
 
 // ─────────────────────────────────────────────
 // SCHEMA — Course
@@ -254,18 +254,23 @@ const howToSchema = {
   <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
   <script type="application/ld+json" set:html={JSON.stringify(howToSchema)} />
 
-  <div class="bg-[#1c252e] min-h-screen pb-20 pt-6 px-4">
+  <!-- Fixed Background & Glows -->
+  <div class="fixed inset-0 bg-[#0a0f16] -z-50"></div>
+  <div class="fixed top-0 left-[-10%] w-[700px] h-[700px] bg-emerald-500/10 rounded-full blur-[180px] mix-blend-screen pointer-events-none -z-40"></div>
+  <div class="fixed bottom-0 right-[-10%] w-[600px] h-[600px] bg-blue-600/8 rounded-full blur-[180px] mix-blend-screen pointer-events-none -z-40"></div>
+
+  <div class="min-h-screen pb-20 pt-10 px-4 relative">
     <div class="max-w-7xl mx-auto">
 
       <!-- BREADCRUMBS -->
-      <nav class="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-6 pb-2" aria-label="Breadcrumb">
-        <a href="/" class="hover:text-green-500 transition-colors">Home</a>
+      <nav class="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-8 pb-2 font-medium" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-emerald-400 transition-colors">Home</a>
         <span>/</span>
-        <a href="/udemy-coupon-code" class="hover:text-green-500 transition-colors">Coupons</a>
+        <a href="/udemy-coupon-code" class="hover:text-emerald-400 transition-colors">Coupons</a>
         <span>/</span>
-        <a href={`/courses/category/${course.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`} class="hover:text-green-500 transition-colors">{course.category}</a>
+        <a href={`/courses/category/${course.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`} class="hover:text-emerald-400 transition-colors">{course.category}</a>
         <span>/</span>
-        <span class="text-gray-300">{course.title}</span>
+        <span class="text-white font-semibold truncate max-w-[200px]">{course.title}</span>
       </nav>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -275,11 +280,11 @@ const howToSchema = {
 
           <!-- SECTION: HEADER -->
           <header class="space-y-6">
-            <h1 class="text-2xl md:text-4xl font-extrabold text-white leading-tight">
-              {course.title}
+            <h1 class="text-3xl md:text-5xl font-black text-white leading-[1.1] tracking-tighter mb-4">
+              Get {course.title} {isFree ? 'Free with 100% OFF' : `with ${discountPct}% OFF`} <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Udemy Coupon</span>
             </h1>
 
-            <p class="text-gray-400 text-lg md:text-xl leading-relaxed">
+            <p class="text-gray-400 text-lg md:text-xl leading-relaxed font-medium">
               {course.description.split('.')[0]}. {course.description.split('.')[1] ? course.description.split('.')[1] + '.' : ''}
             </p>
 
@@ -309,14 +314,15 @@ const howToSchema = {
             </div>
           </header>
 
-          <!-- SECTION: COURSE OVERVIEW — upgraded as Key Takeaways for AI entity extraction -->
-          <section class="bg-[#1c252e] border border-[#2d3748] rounded-[2.5rem] p-8 md:p-10 shadow-2xl overflow-hidden group" aria-labelledby="overview-heading">
-            <div class="mb-6">
-              <h2 id="overview-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
+          <!-- SECTION: COURSE OVERVIEW -->
+          <section class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 md:p-10 shadow-2xl overflow-hidden relative group" aria-labelledby="overview-heading">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -z-10 group-hover:bg-emerald-500/10 transition-all"></div>
+            <div class="mb-8">
+              <h2 id="overview-heading" class="text-xl md:text-2xl font-black text-white mb-3 flex items-center gap-3">
+                <span class="w-1.5 h-8 bg-gradient-to-b from-emerald-400 to-cyan-400 rounded-full" aria-hidden="true"></span>
                 Key Takeaways — Course Overview
               </h2>
-              <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+              <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed font-medium">
                 The following summarizes all verified data points for <strong class="text-white">{course.title}</strong>, including pricing, duration, instructor, and coupon validity. All data is sourced directly from Udemy and verified by CoursesWyn on <time datetime={currentDateISO}>{currentDateFormatted}</time>.
               </p>
             </div>
@@ -375,11 +381,11 @@ const howToSchema = {
                   <p class="text-gray-300"><strong class="text-white">Prerequisites:</strong> {course.requirements?.[0] || 'None — this course is suitable for all levels, including beginners.'}</p>
                 </div>
                 <div class="flex items-start gap-3 md:col-span-2">
-                  <span class="text-green-500 mt-1" aria-hidden="true">•</span>
+                  <span class="text-emerald-400 mt-1" aria-hidden="true">•</span>
                   <p class="text-gray-300">
                     <strong class="text-white">Price:</strong>
-                    <span class="text-green-500 font-black"> {isFree ? 'FREE (With Coupon — $0 at checkout)' : `$${currentPrice} with coupon`}</span>
-                    <span class="text-gray-400"> / Regular Udemy price: <span class="line-through">${originalPrice}</span>. Applying this coupon saves you ${savedAmount} ({discountPct}% OFF).</span>
+                    <span class="text-emerald-400 font-extrabold"> {isFree ? 'FREE (With Coupon — $0 at checkout)' : `$${currentPrice} with coupon`}</span>
+                    <span class="text-gray-500"> / Regular Udemy price: <span class="line-through">${originalPrice}</span>. Applying this coupon saves you ${savedAmount} ({discountPct}% OFF).</span>
                   </p>
                 </div>
               </div>
@@ -398,22 +404,22 @@ const howToSchema = {
 
           <!-- SECTION: WHAT YOU'LL LEARN -->
           {course.learn && course.learn.length > 0 && (
-            <section class="bg-[#1c252e] border border-[#2d3748] rounded-[2.5rem] p-8 md:p-10 shadow-xl overflow-hidden relative group" aria-labelledby="learn-heading">
-              <div class="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl" aria-hidden="true"></div>
+            <section class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 md:p-10 shadow-xl overflow-hidden relative group" aria-labelledby="learn-heading">
+              <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl" aria-hidden="true"></div>
               <div class="mb-6">
-                <h2 id="learn-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                  <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
+                <h2 id="learn-heading" class="text-xl md:text-2xl font-black text-white mb-3 flex items-center gap-3">
+                  <span class="w-1.5 h-8 bg-gradient-to-b from-emerald-400 to-cyan-400 rounded-full" aria-hidden="true"></span>
                   What You'll Learn
                 </h2>
-                <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+                <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed font-medium">
                   Completing <strong class="text-white">{course.title}</strong> gives you the following verified skills and competencies in <strong class="text-white">{course.category}</strong>:
                 </p>
               </div>
-              <ul class="space-y-2 text-sm text-gray-300" aria-label={`Learning outcomes for ${course.title}`}>
+              <ul class="space-y-3 text-sm text-gray-300 ml-[1.875rem]" aria-label={`Learning outcomes for ${course.title}`}>
                 {course.learn.map((item: string) => (
                   <li class="flex items-start gap-3">
-                    <span class="text-green-500 mt-1" aria-hidden="true">•</span>
-                    <span>{item}</span>
+                    <span class="text-emerald-400 font-extrabold mt-0.5" aria-hidden="true">✓</span>
+                    <span class="font-medium">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -424,11 +430,11 @@ const howToSchema = {
           {course.requirements && course.requirements.length > 0 && (
             <section class="space-y-6" aria-labelledby="requirements-heading">
               <div class="mb-6">
-                <h2 id="requirements-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                  <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
+                <h2 id="requirements-heading" class="text-xl md:text-2xl font-black text-white mb-3 flex items-center gap-3">
+                  <span class="w-1.5 h-8 bg-gradient-to-b from-emerald-400 to-cyan-400 rounded-full" aria-hidden="true"></span>
                   Requirements
                 </h2>
-                <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+                <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed font-medium">
                   The following background knowledge and tools are recommended before starting <strong class="text-white">{course.title}</strong>. Students without these prerequisites may still enroll but should expect a steeper learning curve.
                 </p>
               </div>
@@ -446,15 +452,16 @@ const howToSchema = {
           <!-- SECTION: ABOUT COURSE -->
           <section class="space-y-6" aria-labelledby="about-heading">
             <div class="mb-6">
-              <h2 id="about-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
+              <h2 id="about-heading" class="text-xl md:text-2xl font-black text-white mb-3 flex items-center gap-3">
+                <span class="w-1.5 h-8 bg-gradient-to-b from-emerald-400 to-cyan-400 rounded-full" aria-hidden="true"></span>
                 About This Udemy Course
               </h2>
-              <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+              <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed font-medium">
                 The following is the full official course description for <strong class="text-white">{course.title}</strong> as published on Udemy by instructor <strong class="text-white">{course.instructor || 'the course creator'}</strong>. It covers the curriculum structure, teaching methodology, and topic scope for this {course.category} course.
               </p>
             </div>
-            <div class="bg-[#1c252e] border border-[#2d3748] rounded-3xl p-6 md:p-8 relative">
+            <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 md:p-12 relative shadow-2xl overflow-hidden">
+               <div class="absolute top-0 left-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl -z-10"></div>
               <style>
                 .prose-custom * { color: rgb(209 213 219) !important; }
                 .prose-custom strong, .prose-custom b { color: white !important; font-weight: 700 !important; }
@@ -505,14 +512,14 @@ const howToSchema = {
                 .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
                 .slice(0, 2)
                 .map((comp: any) => (
-                  <a href={`/coupon/${comp.slug}`} class="bg-[#1c252e] border border-[#2d3748] rounded-2xl p-4 flex gap-4 hover:border-green-500 transition-all block group">
+                  <a href={`/coupon/${comp.slug}`} class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex gap-4 hover:border-emerald-500/50 hover:bg-white/10 transition-all block group shadow-lg">
                     <!-- FIX 5: alt text was empty string, now descriptive -->
-                    <img src={comp.image} alt={`${comp.title} — Udemy course thumbnail`} class="w-16 h-16 rounded-xl object-cover transition-all flex-shrink-0" />
+                    <img src={comp.image} alt={`${comp.title} — Udemy course thumbnail`} class="w-16 h-16 rounded-xl object-cover transition-all flex-shrink-0 group-hover:scale-105" />
                     <div class="space-y-1 min-w-0">
-                      <p class="text-white font-bold text-[11px] leading-tight line-clamp-2">{comp.title}</p>
-                      <div class="flex items-center justify-between border-t border-[#2d3748] pt-1">
-                        <span class="text-green-500 font-black text-[10px]">{comp.price === 0 || comp.price === "Free" ? 'FREE ($0)' : `$${comp.price}`}</span>
-                        <span class="text-gray-500 text-[10px]">★ {comp.rating || "4.5"}/5</span>
+                      <p class="text-white font-bold text-[11px] leading-tight line-clamp-2 group-hover:text-emerald-400 transition-colors">{comp.title}</p>
+                      <div class="flex items-center justify-between border-t border-white/10 pt-1">
+                        <span class="text-emerald-400 font-extrabold text-[10px]">{comp.price === 0 || comp.price === "Free" ? 'FREE ($0)' : `$${comp.price}`}</span>
+                        <span class="text-gray-500 text-[10px] font-bold">★ {comp.rating || "4.5"}/5</span>
                       </div>
                     </div>
                   </a>
@@ -522,22 +529,22 @@ const howToSchema = {
           </section>
 
           <!-- SECTION: REVIEW VERDICT -->
-          <section class="bg-gradient-to-br from-[#1c252e] to-[#111820] border border-[#2d3748] rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden shadow-2xl group" aria-labelledby="verdict-heading">
-            <div class="absolute top-0 right-0 w-48 h-48 bg-green-500/5 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
+          <section class="bg-gradient-to-br from-white/5 to-white/0 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden shadow-2xl group" aria-labelledby="verdict-heading">
+            <div class="absolute top-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
 
             <div class="relative z-10 space-y-8">
               <div>
-                <h2 id="verdict-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                  <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
+                <h2 id="verdict-heading" class="text-xl md:text-2xl font-black text-white mb-3 flex items-center gap-3">
+                  <span class="w-1.5 h-8 bg-gradient-to-b from-emerald-400 to-cyan-400 rounded-full" aria-hidden="true"></span>
                   Is This Course Worth It?
                 </h2>
-                <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+                <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed font-medium">
                   Expert review by <strong class="text-white">Andrew Derek</strong>, Lead Course Reviewer at CoursesWyn. Last updated: <time datetime={currentDateISO}>{currentDateFormatted}</time>.
                 </p>
               </div>
 
-              <p class="text-gray-400 leading-relaxed text-base md:text-lg">
-                Based on analysis of the curriculum structure, student engagement metrics, and verified rating data, <strong class="text-white">{course.title}</strong> is a high-value resource for learners seeking to build skills in <strong class="text-green-500">{course.category}</strong>.
+              <p class="text-gray-400 leading-relaxed text-base md:text-lg font-medium">
+                Based on analysis of the curriculum structure, student engagement metrics, and verified rating data, <strong class="text-white">{course.title}</strong> is a high-value resource for learners seeking to build skills in <strong class="text-emerald-400">{course.category}</strong>.
                 Taught by <strong class="text-white">{course.instructor || 'expert faculty'}</strong> on Udemy, the {course.duration} course provides a structured progression from foundational concepts to advanced {course.subcategory || course.category} techniques — making it suitable for learners at all levels.
                 The current coupon reduces the price by {discountPct}%, from ${originalPrice} to {isFree ? '$0' : `$${currentPrice}`}, removing the primary financial barrier to enrollment.
               </p>
@@ -545,48 +552,48 @@ const howToSchema = {
               <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- PROS -->
                 <div class="space-y-4">
-                  <h3 class="text-white text-xs font-black tracking-widest flex items-center gap-2">
-                    <span class="w-4 h-4 rounded-full bg-green-500/10 flex items-center justify-center text-green-500" aria-hidden="true">✓</span>
+                  <h3 class="text-white text-xs font-black tracking-widest flex items-center gap-2 uppercase">
+                    <span class="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-extrabold" aria-hidden="true">✓</span>
                     What We Like (Pros)
                   </h3>
-                  <p class="text-gray-500 text-xs">The following advantages were identified during our review of {course.title}:</p>
-                  <ul class="space-y-3 text-sm text-gray-400">
-                    <li class="flex items-start gap-2">Verified {discountPct}% price reduction makes this course accessible to learners on any budget.</li>
-                    <li class="flex items-start gap-2">Aggregate student rating of {course.rating || "4.5"} out of 5 indicates high learner satisfaction.</li>
-                    <li class="flex items-start gap-2">Includes an official Udemy completion certificate and lifetime access to all future content updates.</li>
+                  <p class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">The following advantages were identified:</p>
+                  <ul class="space-y-3 text-sm text-gray-400 font-medium">
+                    <li class="flex items-start gap-2">Verified {discountPct}% price reduction makes this course accessible on any budget.</li>
+                    <li class="flex items-start gap-2">Aggregate student rating of {course.rating || "4.5"} out of 5 indicates high satisfaction.</li>
+                    <li class="flex items-start gap-2">Includes an official Udemy completion certificate and lifetime access.</li>
                   </ul>
                 </div>
 
                 <!-- CONS -->
                 <div class="space-y-4">
-                  <h3 class="text-white text-xs font-black tracking-widest flex items-center gap-2">
-                    <span class="w-4 h-4 rounded-full bg-red-500/10 flex items-center justify-center text-red-500" aria-hidden="true">!</span>
+                  <h3 class="text-white text-xs font-black tracking-widest flex items-center gap-2 uppercase">
+                    <span class="w-5 h-5 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 font-extrabold" aria-hidden="true">!</span>
                     Keep in Mind (Cons)
                   </h3>
-                  <p class="text-gray-500 text-xs">The following limitations should be considered before enrolling in {course.title}:</p>
-                  <ul class="space-y-3 text-sm text-gray-400">
-                    <li class="flex items-start gap-2">The depth of {course.subcategory || course.category} coverage may be challenging for absolute beginners without the listed prerequisites.</li>
-                    <li class="flex items-start gap-2">Lifetime access is contingent on the continued operation of the Udemy platform.</li>
-                    <li class="flex items-start gap-2">Hands-on projects and quizzes require additional time investment beyond video watch time.</li>
+                  <p class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">The following limitations should be considered:</p>
+                  <ul class="space-y-3 text-sm text-gray-400 font-medium">
+                    <li class="flex items-start gap-2">The depth of {course.subcategory || course.category} coverage may be challenging for newcomers.</li>
+                    <li class="flex items-start gap-2">Lifetime access is contingent on the Udemy platform's operation.</li>
+                    <li class="flex items-start gap-2">Hands-on projects require additional time beyond video watch time.</li>
                   </ul>
                 </div>
               </div>
 
               <!-- VERDICT CALLOUT -->
-              <div class="pt-6 border-t border-[#2d3748]">
-                <div class="bg-indigo-500/5 border border-indigo-500/10 p-6 rounded-2xl flex flex-col md:flex-row items-center gap-6">
+              <div class="pt-6 border-t border-white/5">
+                <div class="bg-emerald-500/5 border border-emerald-500/10 p-6 rounded-2xl flex flex-col md:flex-row items-center gap-6">
                   <div class="shrink-0 flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-black shadow-lg" aria-hidden="true">AD</div>
+                    <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-emerald-500/20" aria-hidden="true">AD</div>
                     <div>
                       <p class="text-white font-bold text-xs leading-none">Andrew Derek</p>
-                      <p class="text-gray-500 text-[9px] font-black tracking-widest mt-1">Lead Course Reviewer, CoursesWyn</p>
-                      <a href="/about" class="text-green-500 text-[9px] hover:underline">View credentials →</a>
+                      <p class="text-gray-500 text-[9px] font-black tracking-widest mt-1 uppercase">Lead Reviewer</p>
+                      <a href="/about" class="text-emerald-400 text-[9px] hover:text-emerald-300 transition-colors font-bold mt-1 inline-block">View credentials →</a>
                     </div>
                   </div>
-                  <p class="text-gray-400 text-sm italic leading-relaxed flex-1 text-center md:text-left">
-                    "Given the {discountPct}% price reduction and verified {course.rating || '4.5'}-star rating, {course.title} represents one of the strongest value propositions currently available in {course.category} on Udemy. Enrollment is strongly recommended while this coupon remains active."
+                  <p class="text-gray-400 text-sm italic leading-relaxed flex-1 text-center md:text-left font-medium">
+                    "Given the {discountPct}% price reduction and verified {course.rating || '4.5'}-star rating, {course.title} represents one of the strongest value propositions currently available in {course.category}. Enrollment is recommended while this coupon remains active."
                   </p>
-                  <div class="shrink-0 px-6 py-2 bg-green-500 text-white text-[10px] font-black tracking-widest rounded-full shadow-lg shadow-green-500/20">
+                  <div class="shrink-0 px-6 py-2.5 bg-emerald-500 text-white text-[10px] font-black tracking-widest rounded-full shadow-xl shadow-emerald-500/20 uppercase">
                     Final Verdict: Worth It
                   </div>
                 </div>
@@ -595,77 +602,79 @@ const howToSchema = {
           </section>
 
           <!-- SECTION: RATING SUMMARY — FIX: bars computed from course.rating, not hardcoded -->
-          <section class="bg-[#1c252e] border border-[#2d3748] rounded-3xl p-8 shadow-2xl overflow-hidden" aria-labelledby="rating-heading">
-            <div class="mb-6">
-              <h2 id="rating-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
+          <section class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden relative group" aria-labelledby="rating-heading">
+            <div class="absolute bottom-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl -z-10"></div>
+            <div class="mb-8">
+              <h2 id="rating-heading" class="text-xl md:text-2xl font-black text-white mb-3 flex items-center gap-3">
+                <span class="w-1.5 h-8 bg-gradient-to-b from-emerald-400 to-cyan-400 rounded-full" aria-hidden="true"></span>
                 Course Rating Summary
               </h2>
-              <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+              <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed font-medium">
                 <strong class="text-white">{course.title}</strong> holds an aggregate rating of <strong class="text-white">{course.rating || "5.0"} out of 5</strong> based on {course.students?.toLocaleString() || "226"} student reviews on Udemy. The distribution below shows the approximate percentage of students who gave each star rating.
               </p>
             </div>
-            <div class="flex flex-col md:flex-row items-center gap-12">
+            <div class="flex flex-col md:flex-row items-center gap-12 relative z-10">
               <div class="text-center md:text-left space-y-2 shrink-0">
-                <p class="text-7xl font-black text-white">{course.rating || "5.0"}</p>
-                <div class="flex items-center justify-center md:justify-start gap-1 text-yellow-500 text-2xl" aria-label={`${course.rating || "5.0"} out of 5 stars`}>
+                <p class="text-7xl font-black text-white tracking-tighter">{course.rating || "5.0"}</p>
+                <div class="flex items-center justify-center md:justify-start gap-1 text-amber-400 text-2xl" aria-label={`${course.rating || "5.0"} out of 5 stars`}>
                   <span aria-hidden="true">★</span><span aria-hidden="true">★</span><span aria-hidden="true">★</span><span aria-hidden="true">★</span><span aria-hidden="true">★</span>
                 </div>
-                <p class="text-gray-500 text-[10px] font-black tracking-widest mt-2">{course.students?.toLocaleString() || "226"} Verified Ratings</p>
+                <p class="text-gray-500 text-[10px] font-black tracking-widest mt-2 uppercase">{course.students?.toLocaleString() || "226"} Verified Ratings</p>
               </div>
-              <div class="flex-1 w-full space-y-3">
+              <div class="flex-1 w-full space-y-4">
                 {ratingBars.map((bar) => (
                   <div class="flex items-center gap-4 group/bar">
                     <span class="text-[10px] text-gray-500 font-bold w-12 text-right uppercase shrink-0">{bar.s}</span>
-                    <div class="flex-1 h-3 bg-[#2d3748] rounded-full overflow-hidden" role="progressbar" aria-valuenow={parseInt(bar.p)} aria-valuemin={0} aria-valuemax={100} aria-label={bar.s}>
-                      <div class={`h-full bg-gradient-to-r ${bar.color} transition-all duration-1000 group-hover/bar:brightness-125`} style={`width: ${bar.p}`}></div>
+                    <div class="flex-1 h-2 bg-white/5 rounded-full overflow-hidden" role="progressbar" aria-valuenow={parseInt(bar.p)} aria-valuemin={0} aria-valuemax={100} aria-label={bar.s}>
+                      <div class={`h-full bg-gradient-to-r ${bar.color} transition-all duration-1000 group-hover/bar:brightness-125 shadow-[0_0_10px_rgba(16,185,129,0.3)]`} style={`width: ${bar.p}`}></div>
                     </div>
                     <span class="text-[10px] text-white font-black w-10 shrink-0">{bar.p}</span>
                   </div>
                 ))}
               </div>
             </div>
-            <p class="text-gray-600 text-[9px] mt-8 italic text-center md:text-left">* Rating distribution is approximated from the aggregate score. Sourced from Udemy. Last verified: <time datetime={currentDateISO}>{currentMonth} {currentYear}</time>.</p>
+            <p class="text-gray-600 text-[9px] mt-8 italic text-center md:text-left font-medium">* Rating distribution is approximated from the aggregate score. Sourced from Udemy. Last verified: <time datetime={currentDateISO}>{currentMonth} {currentYear}</time>.</p>
           </section>
 
           <!-- SECTION: INSTRUCTOR PROFILE — FIX: corrected div/section nesting, was mismatched -->
           {course.instructor && (
             <section class="space-y-6" aria-labelledby="instructor-heading">
               <div class="mb-2">
-                <h2 id="instructor-heading" class="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                  <span class="w-1.5 h-8 bg-green-500 rounded-full" aria-hidden="true"></span>
+                <h2 id="instructor-heading" class="text-xl md:text-2xl font-black text-white mb-3 flex items-center gap-3">
+                  <span class="w-1.5 h-8 bg-gradient-to-b from-emerald-400 to-cyan-400 rounded-full" aria-hidden="true"></span>
                   Instructor Profile
                 </h2>
-                <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed">
+                <p class="text-gray-400 text-sm ml-[1.875rem] leading-relaxed font-medium">
                   The following section provides background information on <strong class="text-white">{course.instructor}</strong>, the instructor responsible for creating and maintaining <strong class="text-white">{course.title}</strong> on Udemy.
                 </p>
               </div>
-              <div class="bg-[#1c252e] border border-[#2d3748] rounded-3xl p-8 space-y-6 shadow-xl">
-                <p class="text-gray-300 text-sm leading-relaxed">
+              <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 space-y-6 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -z-10"></div>
+                <p class="text-gray-300 text-sm leading-relaxed font-medium relative z-10">
                   <strong class="text-white">{course.title}</strong> is taught by <strong class="text-white">{course.instructor}</strong>, a Udemy instructor specializing in <strong class="text-white">{course.category}</strong>. For the full instructor biography, professional credentials, and a complete list of their courses, visit the official instructor profile on Udemy.
                 </p>
-                <ul class="space-y-2 border-t border-[#2d3748] pt-4">
+                <ul class="space-y-3 border-t border-white/5 pt-6 relative z-10">
                   <li class="flex items-start gap-3 text-sm">
-                    <span class="text-green-500 font-bold" aria-hidden="true">•</span>
+                    <span class="text-emerald-400 font-extrabold" aria-hidden="true">•</span>
                     <p class="text-gray-300"><strong class="text-white">Instructor Name:</strong> {course.instructor}</p>
                   </li>
                   <li class="flex items-start gap-3 text-sm">
-                    <span class="text-green-500 font-bold" aria-hidden="true">•</span>
+                    <span class="text-emerald-400 font-extrabold" aria-hidden="true">•</span>
                     <p class="text-gray-300"><strong class="text-white">Subject Area:</strong> {course.category}</p>
                   </li>
                   <li class="flex items-start gap-3 text-sm">
-                    <span class="text-green-500 font-bold" aria-hidden="true">•</span>
-                    <p class="text-gray-300"><strong class="text-white">Teaching Approach:</strong> Practical, project-based instruction focused on real-world application of {course.subcategory || course.category} skills (as described in the course curriculum on Udemy).</p>
+                    <span class="text-emerald-400 font-extrabold" aria-hidden="true">•</span>
+                    <p class="text-gray-300"><strong class="text-white">Teaching Approach:</strong> Practical, project-based instruction focused on real-world application of {course.subcategory || course.category} skills.</p>
                   </li>
                 </ul>
-                <div class="pt-2">
+                <div class="pt-2 relative z-10 text-center md:text-left">
                   <a
                     href={course.url}
                     target="_blank"
                     rel="nofollow noopener"
-                    class="inline-flex items-center gap-2 text-green-500 text-[10px] font-black hover:underline"
+                    class="inline-flex items-center gap-2 text-emerald-400 text-[10px] font-black uppercase tracking-widest hover:text-emerald-300 transition-colors"
                   >
-                    View Full Instructor Profile on Udemy ↗
+                    View Official Instructor Profile ↗
                   </a>
                 </div>
               </div>
@@ -675,9 +684,10 @@ const howToSchema = {
         </div>
 
         <!-- SIDEBAR -->
-        <aside class="lg:col-span-4 lg:sticky lg:top-6 space-y-6 h-fit" aria-label="Course purchase options">
+        <aside class="lg:col-span-4 lg:sticky lg:top-24 space-y-6 h-fit" aria-label="Course purchase options">
 
-          <div class="bg-[#1c252e] rounded-3xl border border-[#2d3748] overflow-hidden shadow-2xl">
+          <div class="bg-white/5 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 overflow-hidden shadow-2xl relative">
+            <div class="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none"></div>
             <!-- THUMBNAIL -->
             <div class="relative aspect-video">
               <img
@@ -697,13 +707,13 @@ const howToSchema = {
               <!-- PRICE ROW -->
               <div class="flex items-center justify-between">
                 <div class="flex items-baseline gap-2">
-                  <span class="text-white text-3xl font-black" aria-label={isFree ? 'Free with coupon' : `${currentPrice} dollars with coupon`}>{isFree ? 'FREE' : `$${currentPrice}`}</span>
+                  <span class="text-white text-4xl font-black tracking-tighter" aria-label={isFree ? 'Free with coupon' : `${currentPrice} dollars with coupon`}>{isFree ? 'FREE' : `$${currentPrice}`}</span>
                   {originalPrice > currentPrice && (
-                    <span class="text-gray-500 line-through text-xs font-bold" aria-label={`Regular price ${originalPrice} dollars`}>${originalPrice}</span>
+                    <span class="text-gray-500 line-through text-sm font-bold" aria-label={`Regular price ${originalPrice} dollars`}>${originalPrice}</span>
                   )}
                 </div>
                 {originalPrice > currentPrice && (
-                  <span class="bg-[#ff4d4d]/10 text-[#ff4d4d] text-[10px] font-black uppercase px-2 py-1 rounded-md tracking-tighter">{discountPct}% OFF</span>
+                  <span class="bg-red-500/20 text-red-400 text-[10px] font-black uppercase px-3 py-1.5 rounded-full border border-red-500/20 shadow-lg shadow-red-500/10">{discountPct}% OFF</span>
                 )}
               </div>
 
@@ -727,15 +737,15 @@ const howToSchema = {
               </div>
 
               <!-- FIX: Copy button uses id + data attribute, JS handles feedback properly -->
-              <div class="border border-[#2d3748] rounded-xl overflow-hidden">
-                <div class="p-3 flex items-center justify-between gap-3">
-                  <div class="flex-1 font-mono text-white font-black tracking-widest text-sm truncate" aria-label="Coupon code (partially hidden)">
+              <div class="border border-white/5 bg-white/5 rounded-xl overflow-hidden shadow-inner">
+                <div class="p-4 flex items-center justify-between gap-3">
+                  <div class="flex-1 font-mono text-emerald-400 font-black tracking-widest text-sm truncate uppercase" aria-label="Coupon code (partially hidden)">
                     {course.coupon ? `${course.coupon.slice(0, 5)}***` : 'ST10M...'}
                   </div>
                   <button
                     id="copy-coupon-btn"
                     data-coupon={course.coupon || "ST10MT30324"}
-                    class="text-indigo-400 text-[8px] font-black uppercase hover:text-white transition-colors underline"
+                    class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase px-3 py-1.5 rounded-lg border border-emerald-500/20 transition-all shadow-sm"
                     aria-label="Copy coupon code to clipboard"
                   >
                     Copy
@@ -748,7 +758,7 @@ const howToSchema = {
                 href={course.url}
                 target="_blank"
                 rel="nofollow noopener"
-                class="block w-full text-center bg-[#2d3748] hover:bg-green-500 text-white font-black py-4 rounded-xl transition-all shadow-xl shadow-black/20 text-lg uppercase tracking-widest hover:-translate-y-1 active:scale-95"
+                class="block w-full text-center bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-black py-4 rounded-xl transition-all shadow-xl shadow-emerald-500/20 text-lg uppercase tracking-widest hover:-translate-y-1 active:scale-95"
                 aria-label={`Redeem coupon for ${course.title} on Udemy — ${isFree ? 'Free' : `$${currentPrice}`}`}
               >
                 Redeem Coupon
