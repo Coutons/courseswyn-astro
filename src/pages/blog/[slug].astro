@@ -3,7 +3,6 @@ import MainLayout from "../../layouts/MainLayout.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
 import AuthorBox from "../../components/AuthorBox.astro";
 import ReadingProgress from "../../components/blog/ReadingProgress.astro";
-import StickyTOC from "../../components/blog/StickyTOC.astro";
 import udemyImage from '../../assets/images/Udemy Personal Plan Offers.png';
 
 
@@ -23,6 +22,11 @@ const { data } = post;
 
 // Render the content
 const { Content, headings } = await render(post);
+
+// Calculate reading time
+const wordsPerMinute = 200;
+const words = post.body ? post.body.split(/\s+/).length : 0;
+const readingTime = Math.ceil(words / wordsPerMinute);
 
 
 
@@ -96,108 +100,152 @@ const structuredData = articleSchema;
 >
   <ReadingProgress />
   
-  <div class="bg-[#1c252e] min-h-screen relative overflow-x-clip">
-    <!-- Nebula Background Glows -->
+  <div class="bg-[#0b111a] min-h-screen relative overflow-x-clip">
+    
+    <!-- Immersive Cinematic 100% Full Header Section -->
+    <div class="relative w-full min-h-[70vh] flex flex-col justify-end pt-32 pb-24 border-b border-white/5">
+      
+      <!-- 100% Full Width Background Image Overlay -->
+      {data.image && (
+        <div class="absolute inset-0 z-0 overflow-hidden">
+          <img
+            src={typeof data.image === 'string' ? data.image : data.image?.src}
+            alt={title}
+            class="w-full h-full object-cover scale-105 opacity-60"
+          />
+          <!-- Dark gradient overlay to blend into the background -->
+          <div class="absolute inset-0 bg-gradient-to-t from-[#0b111a] via-[#0b111a]/80 to-transparent"></div>
+          <div class="absolute inset-0 bg-gradient-to-r from-[#0b111a] via-transparent to-transparent opacity-80"></div>
+          <div class="absolute inset-0 backdrop-blur-[4px]"></div>
+        </div>
+      )}
 
-    <div class="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 blur-[120px] rounded-full pointer-events-none"></div>
-    <div class="absolute top-1/2 right-1/4 w-[600px] h-[600px] bg-accent/5 blur-[150px] rounded-full pointer-events-none"></div>
-
-    <!-- Immersive Header Section -->
-    <div class="relative pt-32 pb-20 border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav class="mb-12 flex justify-center">
-          <ol class="flex items-center gap-3 text-sm text-gray-500 bg-white/5 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full shadow-xl">
-            <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
-            <li class="opacity-30">/</li>
-            <li><a href="/blog" class="hover:text-white transition-colors">Articles</a></li>
-            <li class="opacity-30">/</li>
-            <li class="text-white font-medium truncate max-w-[200px]">{title}</li>
+      <div class="w-full max-w-[100rem] mx-auto px-4 sm:px-6 lg:px-12 relative z-10 w-full pl-0 lg:pl-20">
+        
+        <nav class="mb-10 w-full">
+          <ol class="flex items-center gap-3 text-sm text-gray-400">
+            <li><a href="/" class="hover:text-white hover:underline transition-colors font-bold">Home</a></li>
+            <li class="opacity-50">/</li>
+            <li><a href="/blog" class="hover:text-white hover:underline transition-colors font-bold">Articles</a></li>
+            <li class="opacity-50">/</li>
+            <li class="text-white font-medium truncate max-w-[200px] md:max-w-md">{title}</li>
           </ol>
         </nav>
 
-        <header class="max-w-4xl mx-auto text-center relative z-10">
-          <div class="flex items-center justify-center gap-3 mb-8">
-            <span class="bg-primary/20 text-primary px-4 py-1.5 rounded-full border border-primary/20 text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-              Article
+        <div class="max-w-6xl">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="bg-primary text-white px-4 py-1.5 rounded-sm text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20">
+              Featured Article
             </span>
-            {data.tags && data.tags.slice(0, 2).map((tag: string) => (
-              <span class="bg-white/5 text-gray-400 px-4 py-1.5 rounded-full border border-white/10 text-xs font-bold shadow-lg">
+            {data.tags && data.tags.slice(0, 3).map((tag: string) => (
+              <span class="bg-white/10 text-gray-300 px-3 py-1.5 rounded-sm border border-white/5 text-xs font-semibold tracking-wide backdrop-blur-md">
                 {tag}
               </span>
             ))}
           </div>
 
-          <h1 class="text-5xl md:text-6xl font-black text-white mb-8 leading-[1.05] tracking-tighter text-shadow-sm">
+          <h1 class="text-5xl md:text-7xl lg:text-7xl font-black text-white mb-8 leading-[1.1] tracking-tighter drop-shadow-2xl">
             {title}
           </h1>
 
-
-          <p class="text-xl md:text-2xl text-gray-400 font-medium mb-12 max-w-3xl mx-auto leading-relaxed italic">
-            "{description}"
+          <p class="text-xl md:text-3xl text-gray-300 font-medium mb-12 max-w-4xl leading-relaxed drop-shadow-lg border-l-4 border-primary pl-6">
+            {description}
           </p>
 
-          <div class="flex flex-wrap items-center justify-center gap-8 text-sm text-gray-500 pt-10 border-t border-white/10">
-            <div class="flex items-center gap-3 group cursor-pointer">
-              <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/30 group-hover:border-primary transition-all shadow-xl">
+          <div class="flex flex-wrap items-center gap-8 text-sm text-gray-400">
+            <div class="flex items-center gap-4 group cursor-pointer">
+              <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-primary/50 group-hover:border-primary transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]">
                 <img src="/assets/authors/andrew-derek.png" alt="Andrew Derek" class="w-full h-full object-cover" />
               </div>
               <div class="text-left">
-                <p class="text-white font-black leading-none mb-1">Andrew Derek</p>
-                <p class="text-[10px] uppercase tracking-widest opacity-60">Content Editor</p>
+                <p class="text-white font-black text-lg leading-none mb-1">Andrew Derek</p>
+                <p class="text-xs uppercase tracking-widest opacity-80 text-primary">Senior Content Editor</p>
               </div>
             </div>
             
-            <div class="h-8 w-px bg-white/10 hidden sm:block"></div>
+            <div class="h-10 w-px bg-white/20 hidden sm:block"></div>
 
-            <div class="flex items-center gap-2">
-              <span class="text-white/60">Published</span>
-              <span class="text-white font-bold">{new Date(data.pubDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="text-white font-bold">{new Date(data.pubDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+              </div>
+              <div class="text-gray-400 font-medium">{readingTime} MINUTE READ</div>
             </div>
 
             {data.updatedAt && (
-              <div class="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-xl border border-primary/20">
-                <span class="text-primary text-[10px] uppercase font-black tracking-tighter">Updated</span>
-                <span class="text-white font-bold text-xs">{new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-              </div>
+              <>
+                <div class="h-10 w-px bg-white/20 hidden sm:block"></div>
+                <div class="flex flex-col gap-1">
+                  <div class="flex items-center gap-2 bg-primary/20 px-3 py-1 rounded-md border border-primary/30">
+                    <span class="text-primary text-[10px] uppercase font-black tracking-widest text-shadow-sm">Last Updated</span>
+                  </div>
+                  <div class="text-white font-bold pl-1 text-sm">{new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+                </div>
+              </>
             )}
           </div>
-        </header>
+        </div>
       </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
-      <div class={`flex flex-col lg:flex-row gap-8 xl:gap-12 items-start ${headings.length > 0 ? 'justify-center' : 'justify-center'}`}>
-        
-        <!-- Left Sidebar Balancer (Conditional) -->
-        {headings.length > 0 && (
-          <div class="hidden 2xl:block w-72 shrink-0 pointer-events-none opacity-0"></div>
-        )}
+    <!-- 100% Width Article Content Container -->
+    <div class="w-full bg-[#0b111a] relative z-20 pb-20">
+      <div class="w-full max-w-[100rem] mx-auto px-4 sm:px-6 lg:px-12 py-16">
+        <div class="flex flex-col xl:flex-row gap-12 lg:gap-20">
 
-
-        <!-- Article Body in Glass Card -->
-        <div class={`flex-grow w-full ${headings.length > 0 ? 'max-w-4xl' : 'max-w-4xl mx-auto'}`}>
-          <div class="glass-card rounded-[3rem] p-8 md:p-20 relative overflow-hidden backdrop-blur-2xl border-white/10">
-
-
-            <div class="nebula-glow opacity-50"></div>
-            
-            <!-- Featured Image with Premium Treatment -->
-            {data.image && (
-              <div class="mb-16 -mx-8 md:-mx-16 -mt-8 md:-mt-16 relative group">
-                <div class="aspect-[21/9] overflow-hidden">
-                  <img
-                    src={typeof data.image === 'string' ? data.image : data.image?.src}
-                    alt={title}
-                    class="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-105"
-                  />
-                  <div class="absolute inset-0 bg-gradient-to-t from-[#1c252e] to-transparent opacity-60 hover:opacity-40 transition-opacity"></div>
-                </div>
+          <!-- 💎 SEO Killer Feature: Sticky Table of Contents -->
+          {headings && headings.length > 0 && (
+            <aside class="hidden xl:block w-72 shrink-0">
+              <div class="sticky top-32 bg-[#1c252e]/40 border border-white/5 rounded-[2rem] p-8 backdrop-blur-xl shadow-2xl overflow-y-auto max-h-[80vh] custom-scrollbar">
+                <h4 class="text-xs font-black uppercase tracking-widest text-primary mb-6 flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"></path></svg>
+                  Quick Navigation
+                </h4>
+                <nav>
+                  <ul class="space-y-4 text-sm font-medium">
+                    {headings.filter(h => h.depth === 2 || h.depth === 3).map((heading) => (
+                      <li class={`${heading.depth === 3 ? 'pl-4 border-l border-white/10 ml-2' : ''}`}>
+                        <a href={`#${heading.slug}`} class="text-gray-400 hover:text-white hover:translate-x-1 block transition-all line-clamp-2 leading-relaxed">
+                          {heading.text}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
               </div>
-            )}
+            </aside>
+          )}
 
-            <div class="prose-premium prose-invert max-w-none relative z-10 transition-all">
-              <Content />
-            </div>
+          <!-- Main Content Area -->
+          <div class="flex-1 min-w-0">
+            <div class="bg-transparent relative w-full">
+              
+              <!-- Mobile/Tablet Inline Table of Contents -->
+              {headings && headings.length > 0 && (
+                <div class="xl:hidden bg-[#1c252e]/40 border border-white/5 rounded-[2rem] p-8 backdrop-blur-xl shadow-xl mb-12">
+                  <h4 class="text-sm font-black uppercase tracking-widest text-primary mb-6 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"></path></svg>
+                    Table of Contents
+                  </h4>
+                  <nav>
+                    <ul class="space-y-4 text-sm font-medium">
+                      {headings.filter(h => h.depth === 2 || h.depth === 3).map((heading) => (
+                        <li class={`${heading.depth === 3 ? 'pl-4 border-l border-white/10 ml-2' : ''}`}>
+                          <a href={`#${heading.slug}`} class="text-gray-400 hover:text-white block transition-colors leading-relaxed">
+                            {heading.text}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </nav>
+                </div>
+              )}
+
+              <!-- Ensure prose min-w-full forces 100% width instead of prose 65ch constraint -->
+              <div class="prose-premium prose-invert min-w-full relative z-10 transition-all text-lg md:text-xl md:leading-relaxed">
+                <Content />
+              </div>
 
             <div class="mt-20 pt-12 border-t border-white/10 relative z-10">
               <AuthorBox />
@@ -264,6 +312,7 @@ const structuredData = articleSchema;
             </div>
 
           </div>
+          <!-- Close flex-1 content area -->
 
           <!-- Bottom Article Metadata -->
           <footer class="mt-16 space-y-12">
@@ -305,13 +354,10 @@ const structuredData = articleSchema;
             </div>
           </footer>
         </div>
-
-        <!-- Right Sticky TOC Sidebar -->
-        <StickyTOC headings={headings} />
-
       </div>
     </div>
   </div>
+</div>
 </MainLayout>
 
 
