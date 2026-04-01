@@ -3,219 +3,123 @@ import MainLayout from '../layouts/MainLayout.astro';
 import CategoryCard from '../components/category/CategoryCard.astro';
 import coupons from '../data/coupons.json';
 
+// Get and process category data
 const categoryData = [...new Set(coupons.map(c => c.category))].sort().map(category => {
   const categoryCoupons = coupons.filter(c => c.category === category);
   const subcategories = [...new Set(categoryCoupons.map(c => c.subcategory))].filter(Boolean).sort() as string[];
-  const categorySlug = category ? String(category).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'uncategorized';
-  return { name: category, slug: categorySlug, courseCount: categoryCoupons.length, subcategories };
+  
+  return {
+    name: category,
+    courseCount: categoryCoupons.length,
+    subcategories
+  };
 });
 
-const date = new Date();
-const currentMonth = date.toLocaleDateString('en-US', { month: 'long' });
-const currentYear = date.getFullYear();
-const todayDate = date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
-
-const totalCourses = coupons.length;
-const totalSubcategories = categoryData.reduce((acc, cat) => acc + cat.subcategories.length, 0);
-const topCategories = [...categoryData].sort((a, b) => b.courseCount - a.courseCount).slice(0, 3);
-
-const categoryIcons: Record<string, string> = {
-  "Development": `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>`,
-  "Business": `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>`,
-  "IT & Software": `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>`,
-  "Design": `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`,
-  "Marketing": `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>`,
-  "Personal Development": `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>`,
-  "Photography & Video": `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`,
-  "Music": `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>`,
-  "Finance & Accounting": `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
-  "Health & Fitness": `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>`,
-  "Language": `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>`,
-  "Teaching & Academics": `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>`,
-};
-const fallbackIcon = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`;
-
 const faqs = [
-  { question: "How many course categories do you have?", answer: `We currently have ${categoryData.length} main categories covering programming, design, business, marketing and more. Each category has multiple subcategories totalling ${totalSubcategories}+ specific topics.` },
-  { question: "What are the most popular categories?", answer: `Our most popular categories are ${topCategories.map(c => c.name).join(', ')}. Each offers hundreds of free courses with 100% OFF coupons updated daily.` },
-  { question: "How do I find courses in a specific category?", answer: "Click on any category card to browse courses in that subject. You can also use the search to find courses by keyword." },
-  { question: "Are all courses in these categories free?", answer: "Yes! All courses are available for free using our verified coupon codes. No hidden fees or subscriptions required." },
-  { question: "How often are course categories updated?", answer: "We update listings daily, adding new free courses and removing expired coupons. Check back regularly for fresh deals." },
-  { question: "Can I get a certificate for free courses?", answer: "Absolutely! All Udemy courses provide official completion certificates &mdash; completely free when you use our coupon codes." }
+  {
+    question: "How many course categories do you have?",
+    answer: "We currently have 13 main categories covering various subjects from programming and design to business and marketing. Each category contains multiple subcategories for more specific topics."
+  },
+  {
+    question: "What are the most popular categories?",
+    answer: "Our most popular categories include Programming & Development, Web Design, Business & Entrepreneurship, Digital Marketing, Data Science, and Graphic Design. Each category offers hundreds of free courses."
+  },
+  {
+    question: "How do I find courses in a specific category?",
+    answer: "Click on any category card above to browse courses in that subject area. You can also use the search function on our homepage to find specific courses by keywords."
+  },
+  {
+    question: "Are all courses in these categories free?",
+    answer: "Yes! All courses listed in our categories are available for free using our exclusive coupon codes. No hidden fees or subscriptions required."
+  }
 ];
 
-const breadcrumbSchema = { "@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{ "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" }, { "@type": "ListItem", "position": 2, "name": "Categories", "item": "https://courseswyn.com/categories" }] };
-const itemListSchema = { "@context": "https://schema.org", "@type": "ItemList", "itemListElement": categoryData.map((data, index) => ({ "@type": "ListItem", "position": index + 1, "name": data.name, "url": `https://courseswyn.com/courses/category/${data.slug}` })) };
-const faqSchema = { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": faqs.map(faq => ({ "@type": "Question", "name": faq.question, "acceptedAnswer": { "@type": "Answer", "text": faq.answer } })) };
-const combinedSchema = [breadcrumbSchema, itemListSchema, faqSchema];
+// Structured Data: ItemList for categories
+const itemListSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListElement": categoryData.map((data, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "name": data.name,
+    "url": `https://courseswyn.com/courses/category/${data.name}`
+  }))
+};
 
-const pageTitle = `${totalCourses.toLocaleString()}+ Free Udemy Courses by Category &mdash; 100% OFF Coupons ${currentYear}`;
-const pageDescription = `Explore ${totalCourses.toLocaleString()}+ free Udemy courses across ${categoryData.length} categories for ${currentMonth} ${currentYear}. Verified daily coupons for Development, Business, Design, Marketing & more.`;
+// Structured Data: FAQPage
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map(faq => ({
+    "@type": "Question",
+    "name": faq.question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": faq.answer
+    }
+  }))
+};
+
+const combinedSchema = [itemListSchema, faqSchema];
+
+const pageTitle = "Free Udemy Course Categories - Browse Courses by Subject | CoursesWyn";
+const pageDescription = "Explore thousands of 100% OFF free Udemy courses organized by category. Verified daily: Development, Business, Design, Marketing, and more. Get your free certification today!";
 ---
 
-<MainLayout
-  title={pageTitle}
+<MainLayout 
+  title={pageTitle} 
   description={pageDescription}
   structuredData={combinedSchema}
-  ogTitle="Browse Free Udemy Course Categories - 100% OFF Coupons Daily"
+  ogTitle="Browse Free Udemy Course Categories - 100% OFF Coupons"
   ogDescription="Stop paying for courses! Explore 13+ categories and thousands of premium Udemy courses for free with our daily updated coupons."
 >
-
-<div class="fixed inset-0 bg-[#0a0f16] -z-50"></div>
-<div class="fixed top-0 left-[-10%] w-[700px] h-[700px] bg-emerald-500/10 rounded-full blur-[180px] mix-blend-screen pointer-events-none -z-40"></div>
-<div class="fixed bottom-0 right-[-10%] w-[600px] h-[600px] bg-blue-600/8 rounded-full blur-[180px] mix-blend-screen pointer-events-none -z-40"></div>
-
-<div class="min-h-screen pb-24">
-
-  <!-- HEADER -->
-  <header class="pt-20 pb-16 border-b border-white/5 relative overflow-hidden">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-      <!-- Breadcrumb -->
-      <nav class="flex items-center gap-2 text-xs text-gray-500 mb-6 font-medium">
-        <a href="/" class="hover:text-emerald-400 transition-colors">Home</a>
-        <span>/</span>
-        <span class="text-gray-300">Categories</span>
-      </nav>
-
+  <div class="bg-[#1c252e] min-h-screen pb-20">
+    <!-- Header Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
       <div class="text-center">
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-5">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          Last Verified: {todayDate}
-        </div>
-        <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-5 leading-tight tracking-tight">
-          Free Udemy Courses<br/>
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">By Category {currentYear}</span>
+        <h1 class="text-5xl md:text-6xl font-extrabold text-[#98a3f8] mb-6 tracking-tight">
+          Free Udemy Course Categories
         </h1>
-        <p class="text-xl text-gray-300 font-medium mb-5">
-          {totalCourses.toLocaleString()}+ Free Courses Across {categoryData.length} Categories
+        <p class="text-2xl md:text-3xl text-gray-300 font-medium mb-8">
+          Explore Thousands of Free Courses Organized by Subject
         </p>
-        <p class="text-lg text-gray-400 max-w-3xl mx-auto leading-relaxed mb-10">
-          Browse premium Udemy courses completely free. {categoryData.length} major categories with {totalSubcategories}+ subcategories &mdash; every skill you need to launch your career in {currentYear}.
+        <p class="text-lg text-gray-500 max-w-4xl mx-auto leading-relaxed">
+          Discover premium Udemy courses completely free! Browse by category to find exactly what you want to learn. From programming and design to business and marketing - we have {categoryData.length}+ categories with thousands of free courses.
         </p>
-
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto border-t border-b border-white/10 py-10 mb-10">
-          <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/5">
-            <div class="text-4xl font-black text-emerald-400">{totalCourses.toLocaleString()}+</div>
-            <div class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Free Courses</div>
-          </div>
-          <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/5">
-            <div class="text-4xl font-black text-emerald-400">{categoryData.length}</div>
-            <div class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Categories</div>
-          </div>
-          <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/5">
-            <div class="text-4xl font-black text-emerald-400">{totalSubcategories}+</div>
-            <div class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Subcategories</div>
-          </div>
-          <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/5">
-            <div class="text-4xl font-black text-emerald-400">100%</div>
-            <div class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Free & Verified</div>
-          </div>
-        </div>
-
-        <!-- CTAs -->
-        <div class="flex flex-wrap justify-center gap-4">
-          <a href="#categories" class="px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-400 text-white rounded-xl font-extrabold text-lg shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:scale-105 active:scale-95 transition-all relative overflow-hidden group">
-            <div class="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"></div>
-            <span class="relative z-10">Browse Categories &darr;</span>
-          </a>
-          <a href="/udemy-coupon-code" class="px-8 py-4 bg-white/5 backdrop-blur-md border border-white/10 hover:border-emerald-500/50 text-gray-300 hover:text-white rounded-xl font-bold text-base transition-all">
-            Latest Deals &rarr;
-          </a>
-        </div>
       </div>
     </div>
-  </header>
 
-  <!-- CATEGORIES GRID -->
-  <section id="categories" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-    <div class="flex items-center gap-3 mb-4">
-      <span class="w-2 h-10 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
-      <h2 class="text-3xl font-extrabold text-white tracking-tight">Browse All Course Categories</h2>
-    </div>
-    <p class="text-gray-400 mb-10 ml-5 font-medium">
-      Select a category to explore free Udemy courses with 100% OFF coupons, updated daily.
-    </p>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {categoryData.map((data) => (
-        <a
-          href={`/courses/category/${data.slug}`}
-          class="group flex flex-col bg-white/5 backdrop-blur-xl border border-white/5 rounded-2xl p-6 hover:border-emerald-500/40 hover:bg-white/10 hover:shadow-[0_8px_32px_rgba(16,185,129,0.1)] hover:-translate-y-1 transition-all duration-300"
-        >
-          <!-- Icon -->
-          <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all duration-300 mb-4" set:html={categoryIcons[data.name] ?? fallbackIcon} />
-
-          <!-- Name & Count -->
-          <h3 class="text-white font-extrabold text-lg group-hover:text-emerald-400 transition-colors mb-1">{data.name}</h3>
-          <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-4">{data.courseCount} Courses &bull; {data.subcategories.length} Topics</p>
-
-          <!-- Top subcategories pills -->
-          {data.subcategories.length > 0 && (
-            <div class="flex flex-wrap gap-1.5 mb-4">
-              {data.subcategories.slice(0, 3).map((sub: string) => (
-                <span class="text-[10px] text-gray-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full truncate max-w-[120px]">{sub}</span>
-              ))}
-              {data.subcategories.length > 3 && (
-                <span class="text-[10px] text-gray-500 px-1">+{data.subcategories.length - 3} more</span>
-              )}
-            </div>
-          )}
-
-          <!-- CTA row -->
-          <div class="mt-auto flex items-center justify-between">
-            <span class="text-emerald-400 text-xs font-bold uppercase tracking-wider group-hover:translate-x-1 transition-transform">Browse &rarr;</span>
-            <svg class="w-5 h-5 text-emerald-400/50 group-hover:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-          </div>
-        </a>
-      ))}
-    </div>
-  </section>
-
-  <!-- FAQ Section -->
-  <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 border-t border-white/5 pt-16 relative">
-    <div class="absolute top-1/2 left-[-10%] w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[120px] mix-blend-screen pointer-events-none -translate-y-1/2"></div>
-    <div class="text-center mb-12 relative z-10">
-      <h2 class="text-3xl font-extrabold text-white mb-3 tracking-tight">Frequently Asked Questions</h2>
-      <p class="text-gray-400">Everything you need to know about free Udemy course categories</p>
-    </div>
-    <div class="grid grid-cols-1 gap-4 relative z-10">
-      {faqs.map(faq => (
-        <details class="group bg-[#131922]/80 backdrop-blur-md rounded-2xl border border-white/5 open:border-emerald-500/50 open:bg-white/5 transition-all duration-300 overflow-hidden shadow-lg">
-          <summary class="flex justify-between items-center font-bold cursor-pointer list-none p-6 text-gray-200 hover:text-emerald-400 transition-colors">
-            <span>{faq.question}</span>
-            <span class="transition-transform duration-300 group-open:rotate-180 bg-white/5 p-2 rounded-full border border-white/10 flex-shrink-0 ml-4">
-              <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-            </span>
-          </summary>
-          <div class="text-gray-400 px-6 pb-6 text-sm leading-relaxed border-t border-white/5 pt-5 bg-[#0a0f16]/30">
-            {faq.answer}
-          </div>
-        </details>
-      ))}
-    </div>
-  </section>
-
-  <!-- SEO Prose -->
-  <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 border-t border-white/5 pt-16">
-    <h2 class="text-3xl font-extrabold text-white text-center mb-4 tracking-tight">How Our Free Udemy Course Categories Work</h2>
-    <div class="space-y-5 text-gray-400 leading-relaxed text-base">
-      <p>
-        Every day, CoursesWyn scans and aggregates thousands of <strong class="text-white">100% OFF Udemy coupon codes</strong> across all {categoryData.length} major subject categories. Our automated verification system ensures every code you click is active and valid at the time of listing.
-      </p>
-      <p>
-        Whether you're looking for <strong class="text-white">free programming courses</strong>, business courses, UI/UX design tutorials, or digital marketing guides &mdash; each category page is sorted by recency and rating to surface the best deals first.
-      </p>
-      <div class="bg-white/5 backdrop-blur-md border border-emerald-500/20 rounded-2xl p-6">
-        <p class="text-emerald-400 font-bold mb-2">&#128161; Pro Tip:</p>
-        <p class="text-gray-400 text-sm">Udemy coupon codes expire fast (often within 1&ndash;3 days). Bookmark this page and check back daily for the freshest <strong class="text-white">free online courses</strong> across all categories.</p>
+    <!-- Categories Grid -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-32">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {categoryData.map((data) => (
+          <CategoryCard 
+            category={data.name} 
+            subcategories={data.subcategories} 
+            courseCount={data.courseCount} 
+          />
+        ))}
       </div>
-      <p class="text-xs pt-6 border-t border-white/10 text-center text-gray-500">
-        <em><strong>Disclaimer:</strong> CoursesWyn is not affiliated with Udemy.com. All trademarks belong to their respective owners. We aggregate publicly available promotional coupon codes to help students access quality education at no cost.</em>
-      </p>
     </div>
-  </section>
 
-</div>
+    <!-- FAQ Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-[#2d3748] pt-24">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold text-white mb-4">Frequently Asked Questions</h2>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {faqs.map((faq) => (
+          <div class="bg-[#1c252e] border border-[#2d3748] p-8 rounded-2xl">
+            <h3 class="text-[#059669] text-xl font-bold mb-4">
+              {faq.question}
+            </h3>
+            <p class="text-gray-400 leading-relaxed">
+              {faq.answer}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
 </MainLayout>

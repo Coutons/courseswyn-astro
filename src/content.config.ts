@@ -3,18 +3,17 @@ import { glob } from 'astro/loaders';
 
 const blog = defineCollection({
   loader: glob({ 
-    pattern: "**/*.md", 
+    pattern: "**/*.{md,mdx}", 
     base: "./src/content/blog",
     generateId: ({ entry }) => {
-      // e.g. "best-excel-courses-udemy-2026/index.md"
-      const normalizedPath = entry.replace(/\\/g, '/');
-      const parts = normalizedPath.split('/');
-      // If it's an index.md, the ID should be the parent folder name
-      if (parts[parts.length - 1] === 'index.md' && parts.length > 1) {
-        return parts[parts.length - 2];
-      }
-      return normalizedPath.replace(/\.md$/, '').split('/').pop() || '';
-    },
+  const normalizedPath = entry.replace(/\\/g, '/');
+  const parts = normalizedPath.split('/');
+  const filename = parts[parts.length - 1];
+  if ((filename === 'index.md' || filename === 'index.mdx') && parts.length > 1) {
+    return parts[parts.length - 2];
+  }
+  return normalizedPath.replace(/\.(md|mdx)$/, '').split('/').pop() || '';
+},
   }),
   schema: ({ image }) => z.object({
     title: z.string(),

@@ -7,6 +7,8 @@ import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 
+import mdx from "@astrojs/mdx";
+
 // Helper function to get blog post dates for the sitemap
 const getBlogDates = () => {
   const blogDir = "src/content/blog";
@@ -41,29 +43,25 @@ export default defineConfig({
   site: "https://courseswyn.com",
   base: "/",
   output: "static",
-  integrations: [
-    tailwind(),
-    preact(),
-    sitemap({
-      changefreq: "weekly",
-      priority: 0.8,
-      entryLimit: 5000,
-      serialize(item) {
-        // Extract the slug from the URL: https://courseswyn.com/blog/[slug]/
-        const match = item.url.match(/\/blog\/([^\/]+)\/?$/);
-        if (match && match[1]) {
-          const slug = match[1];
-          if (blogDates[slug]) {
-            item.lastmod = blogDates[slug];
-          }
-        } else if (item.url === "https://courseswyn.com/" || item.url === "https://courseswyn.com") {
-          // Keep homepage with latest update if possible, or build date
-          item.lastmod = new Date().toISOString();
+  integrations: [tailwind(), preact(), sitemap({
+    changefreq: "weekly",
+    priority: 0.8,
+    entryLimit: 5000,
+    serialize(item) {
+      // Extract the slug from the URL: https://courseswyn.com/blog/[slug]/
+      const match = item.url.match(/\/blog\/([^\/]+)\/?$/);
+      if (match && match[1]) {
+        const slug = match[1];
+        if (blogDates[slug]) {
+          item.lastmod = blogDates[slug];
         }
-        return item;
-      },
-    }),
-  ],
+      } else if (item.url === "https://courseswyn.com/" || item.url === "https://courseswyn.com") {
+        // Keep homepage with latest update if possible, or build date
+        item.lastmod = new Date().toISOString();
+      }
+      return item;
+    },
+  }), mdx()],
   markdown: {
     remarkPlugins: [
       [
@@ -80,4 +78,3 @@ export default defineConfig({
     svgo: true,
   },
 });
-
