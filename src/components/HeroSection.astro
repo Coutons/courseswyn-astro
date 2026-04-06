@@ -1,156 +1,136 @@
 ---
-import type { HTMLAttributes } from 'astro/types';
 import coupons from '../data/coupons.json';
 
-interface Props extends HTMLAttributes<'div'> {}
-
-const { ...props } = Astro.props;
 const totalCoupons = coupons.length;
+const now = new Date();
+const currentMonth = now.toLocaleDateString('en-US', { month: 'long' });
+const currentYear = now.getFullYear();
+const todayDate = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+const todayShort = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+// Count courses added today/recently
+const recentCoupons = coupons.filter((c: any) => {
+  if (!c.updatedAt) return false;
+  const diff = (now.getTime() - new Date(c.updatedAt).getTime()) / (1000 * 60 * 60 * 24);
+  return diff <= 2;
+}).length;
+
+const topCategories = [
+  { name: "Python", emoji: "🐍", href: "/search?q=python" },
+  { name: "Web Dev", emoji: "🌐", href: "/search?q=web+development" },
+  { name: "AI & ChatGPT", emoji: "🤖", href: "/search?q=ai" },
+  { name: "Data Science", emoji: "📊", href: "/search?q=data+science" },
+  { name: "React", emoji: "⚛️", href: "/search?q=react" },
+  { name: "Excel", emoji: "📈", href: "/search?q=excel" },
+  { name: "AWS", emoji: "☁️", href: "/search?q=aws" },
+  { name: "UI Design", emoji: "🎨", href: "/search?q=design" },
+];
 ---
 
-<section class="relative bg-[#0a0f16] border-b border-[#2d3748] py-24 overflow-hidden" {...props}>
-  <!-- Ambient Background Glows -->
-  <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-emerald-500/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none animate-pulse" style="animation-duration: 4s;"></div>
-  <div class="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[150px] mix-blend-screen pointer-events-none"></div>
+<section class="relative bg-[#07090f] pt-24 pb-16 overflow-hidden border-b border-white/5">
+  <!-- Ambient glow -->
+  <div class="absolute top-[-15%] left-[-10%] w-[700px] h-[600px] bg-emerald-500/12 rounded-full blur-[180px] pointer-events-none"></div>
+  <div class="absolute top-[10%] right-[-5%] w-[500px] h-[500px] bg-blue-600/8 rounded-full blur-[160px] pointer-events-none"></div>
 
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-      
-      <!-- Left Column: Text -->
-      <div>
-        <!-- OPTIMIZED H1 dengan keyword "udemy coupon codes 2026" & Premium Typography -->
-        <h1 class="text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-[1.1] tracking-tight drop-shadow-sm">
-          Udemy Coupon Codes {new Date().getFullYear()}: <br class="hidden lg:block"/>
-          <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">Get 100% OFF Discount</span> <br class="hidden lg:block"/>
-          on {totalCoupons}+ Courses
-        </h1>
-        
-        <!-- OPTIMIZED subtitle dengan keyword variations -->
-        <p class="text-xl text-gray-300 mb-6 font-medium">
-          Verified Udemy Promo Codes & Discount Coupons Updated Every Day
-        </p>
-        
-        <!-- OPTIMIZED description dengan semantic keywords -->
-        <p class="text-gray-400 leading-relaxed max-w-xl text-lg">
-          Discover the latest Udemy coupon codes for {new Date().getFullYear()} with verified 100% OFF discounts. Access premium courses in Python, Web Development, AI, Business, and 500+ topics instantly.
-        </p>
-        
-        <!-- Feature checklist - Redesigned as Glassmorphism Pills -->
-        <div class="mt-8 flex flex-wrap gap-3 text-sm text-gray-200 font-medium tracking-wide">
-          <div class="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/10 shadow-lg shadow-black/20">
-            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            {totalCoupons}+ Verified Daily
-          </div>
-          <div class="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/10 shadow-lg shadow-black/20">
-            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            100% OFF Discounts
-          </div>
-          <div class="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/10 shadow-lg shadow-black/20">
-            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            Lifetime Access
-          </div>
-          <div class="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/10 shadow-lg shadow-black/20">
-            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            Free Certificates
-          </div>
-        </div>
-      </div>
+  <div class="max-w-6xl mx-auto px-4 relative z-10">
 
-      <!-- Right Column: Search & Buttons -->
-      <div>
-      <!-- OPTIMIZED Search Bar with Glassmorphism -->
-      <form action="/search" method="GET" class="max-w-xl lg:ml-auto mb-10 relative group w-full">
-        <div class="flex items-center bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-2 shadow-[0_8px_32px_rgba(0,0,0,0.3)] group-focus-within:border-emerald-500/50 group-focus-within:bg-white/10 transition-all duration-300 h-16">
-           
-           <!-- Icon -->
-           <div class="pl-4 pr-3 text-emerald-400">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-           </div>
-           
-           <!-- Input -->
-           <input 
-              type="text" 
-              name="q"
-              id="hero-search-input"
-              class="w-full bg-transparent border-none focus:ring-0 text-white placeholder-gray-400 text-lg h-full outline-none font-medium"
-              autocomplete="off"
-           />
-
-           <!-- Right Hint (Cmd + K) -->
-           <div class="hidden sm:flex items-center pr-4 text-xs text-gray-400 font-bold pointer-events-none gap-1.5 uppercase tracking-widest">
-               <span>Press</span> 
-               <kbd class="bg-black/30 border border-white/10 rounded-md px-2 py-1 text-white shadow-inner">⌘</kbd> 
-               <span>+</span>
-               <kbd class="bg-black/30 border border-white/10 rounded-md px-2 py-1 text-white shadow-inner">K</kbd>
-           </div>
-        </div>
-      </form>
-
-      <!-- Buttons -->
-      <div class="flex flex-col sm:flex-row justify-end gap-4 max-w-xl lg:ml-auto">
-         <a href="/courses" class="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-white text-[#0a0f16] rounded-xl font-extrabold hover:scale-[1.03] transition-transform shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-            Browse Coupon Codes
-         </a>
-         <a href="/categories" class="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-white/5 backdrop-blur-md border border-white/10 text-white rounded-xl font-bold hover:bg-white/10 hover:border-white/20 transition-all">
-             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-             Explore Categories
-         </a>
-      </div>
-      
-      <!-- OPTIMIZED Typewriter Script with keyword-rich placeholders -->
-      <script define:vars={{ totalCoupons }}>
-        const input = document.getElementById('hero-search-input');
-        const placeholders = [
-            "Search for Udemy coupon codes...", 
-            "Try: Python, Web Dev, Marketing...", 
-            `${totalCoupons}+ discount codes updated daily`, 
-            "Find 100% OFF Udemy promo codes"
-        ];
-        let pIndex = 0;
-        let charIndex = 0;
-        let isDeleting = false;
-        let typeSpeed = 100;
-
-        function type() {
-            if (!input) return;
-            
-            const currentText = placeholders[pIndex];
-            
-            if (isDeleting) {
-                input.placeholder = currentText.substring(0, charIndex--);
-                typeSpeed = 50;
-            } else {
-                input.placeholder = currentText.substring(0, charIndex++);
-                typeSpeed = 100;
-            }
-
-            if (!isDeleting && charIndex === currentText.length) {
-                isDeleting = true;
-                typeSpeed = 2000; // Pause at end
-            } else if (isDeleting && charIndex === 0) {
-                isDeleting = false;
-                pIndex = (pIndex + 1) % placeholders.length;
-                typeSpeed = 500;
-            }
-
-            setTimeout(type, typeSpeed);
-        }
-
-        // Start typing on load
-        document.addEventListener('DOMContentLoaded', type);
-        
-        // Handle Cmd+K Focus
-        document.addEventListener('keydown', (e) => {
-            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-                e.preventDefault();
-                input?.focus();
-            }
-        });
-      </script>
-
-      </div>
-
+    <!-- GEO AI: Structured breadcrumb for context clarity -->
+    <div class="text-xs text-gray-600 mb-6 flex items-center gap-2">
+      <span>CoursesWyn</span>
+      <span>›</span>
+      <span class="text-gray-500">Free Udemy Courses — {todayShort}</span>
     </div>
+
+    <!-- HERO CORE -->
+    <div class="max-w-3xl mb-10">
+      <!-- Live indicator -->
+      <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/25 rounded-full px-4 py-2 mb-6">
+        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+        <span class="text-emerald-400 text-xs font-bold uppercase tracking-widest">Updated {todayShort}</span>
+        {recentCoupons > 0 && <span class="text-gray-500 text-xs">— {recentCoupons} new courses added</span>}
+      </div>
+
+      <!-- H1: Primary keyword "free udemy courses" + secondary "coupon codes" -->
+      <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-[1.08] tracking-tight mb-5">
+        Free Udemy Courses<br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400">
+          100% OFF — {currentMonth} {currentYear}
+        </span>
+      </h1>
+
+      <!-- GEO AI: Answer-first paragraph — directly answers "what is this site" for AI citations -->
+      <p class="text-lg md:text-xl text-gray-300 leading-relaxed mb-4 max-w-2xl">
+        <strong class="text-white">{totalCoupons}+ verified Udemy coupon codes</strong> — completely free to use. Get 100% off premium Udemy courses in Python, AI, Web Development, Business, and 500+ topics. No credit card. No subscription. Lifetime access.
+      </p>
+
+      <!-- GEO AI: Factual bullet — quote-worthy for AI engines -->
+      <div class="flex flex-wrap gap-3 text-sm text-gray-400 mb-8">
+        <span class="flex items-center gap-1.5"><span class="text-emerald-400">✓</span> Free certificate included</span>
+        <span class="flex items-center gap-1.5"><span class="text-emerald-400">✓</span> Instructor-issued codes</span>
+        <span class="flex items-center gap-1.5"><span class="text-emerald-400">✓</span> Auto-applied at checkout</span>
+        <span class="flex items-center gap-1.5"><span class="text-emerald-400">✓</span> Expires in 1–4 days — act fast</span>
+      </div>
+    </div>
+
+    <!-- SEARCH BAR — prominent, search-first -->
+    <form action="/search" method="GET" class="max-w-2xl mb-10 group">
+      <div class="flex items-center bg-white/6 backdrop-blur-xl rounded-2xl border border-white/12 group-focus-within:border-emerald-500/60 group-focus-within:bg-white/8 transition-all duration-300 h-16 shadow-[0_8px_40px_rgba(0,0,0,0.4)] group-focus-within:shadow-[0_8px_40px_rgba(16,185,129,0.15)]">
+        <div class="pl-5 pr-3 text-emerald-400 flex-shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <input
+          type="text"
+          name="q"
+          id="hero-search-input"
+          placeholder="Search free courses: Python, AI, Web Dev, Excel..."
+          class="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder-gray-500 text-base h-full outline-none font-medium"
+          autocomplete="off"
+        />
+        <button type="submit" class="mr-2 bg-emerald-500 hover:bg-emerald-400 text-white font-black text-sm px-5 py-2.5 rounded-xl transition-all whitespace-nowrap">
+          Search
+        </button>
+      </div>
+    </form>
+
+    <!-- Quick category pills -->
+    <div class="flex flex-wrap gap-2 mb-10">
+      {topCategories.map(cat => (
+        <a href={cat.href} class="flex items-center gap-1.5 bg-white/5 border border-white/8 hover:border-emerald-500/40 hover:bg-white/8 text-gray-300 hover:text-white text-xs font-semibold px-3.5 py-2 rounded-full transition-all">
+          <span>{cat.emoji}</span>
+          <span>{cat.name}</span>
+        </a>
+      ))}
+    </div>
+
+    <!-- STATS BAR — GEO AI: cite-worthy statistics -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl">
+      <div class="bg-white/4 border border-white/8 rounded-2xl p-4 text-center hover:border-emerald-500/20 transition-colors">
+        <div class="text-2xl font-black text-emerald-400 mb-1">{totalCoupons}+</div>
+        <div class="text-gray-500 text-[11px] font-bold uppercase tracking-wider">Free Courses</div>
+      </div>
+      <div class="bg-white/4 border border-white/8 rounded-2xl p-4 text-center hover:border-emerald-500/20 transition-colors">
+        <div class="text-2xl font-black text-emerald-400 mb-1">100%</div>
+        <div class="text-gray-500 text-[11px] font-bold uppercase tracking-wider">OFF Verified</div>
+      </div>
+      <div class="bg-white/4 border border-white/8 rounded-2xl p-4 text-center hover:border-emerald-500/20 transition-colors">
+        <div class="text-2xl font-black text-cyan-400 mb-1">Daily</div>
+        <div class="text-gray-500 text-[11px] font-bold uppercase tracking-wider">Updated</div>
+      </div>
+      <div class="bg-white/4 border border-white/8 rounded-2xl p-4 text-center hover:border-emerald-500/20 transition-colors">
+        <div class="text-2xl font-black text-cyan-400 mb-1">$0</div>
+        <div class="text-gray-500 text-[11px] font-bold uppercase tracking-wider">Total Cost</div>
+      </div>
+    </div>
+
   </div>
+
+  <!-- CMD+K script -->
+  <script>
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        document.getElementById('hero-search-input')?.focus();
+      }
+    });
+  </script>
 </section>

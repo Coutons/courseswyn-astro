@@ -1,188 +1,282 @@
 ---
 import MainLayout from '../layouts/MainLayout.astro';
-import CourseCard from '../components/CourseCard.astro';
 import coupons from '../data/coupons.json';
 
-// Get unique categories for filters
-const categories = [...new Set(coupons.map(c => c.category))].sort();
+// Get unique top categories for discovery grid
+const categories = [...new Set(coupons.map(c => c.category))].sort().slice(0, 12);
 
+const siteUrl = "https://courseswyn.com";
+const canonical = `${siteUrl}/search/`;
+const title = "Verified Udemy Coupon Search — Find 100% OFF Instructor Deals";
+const description = "Search our directory of thousands of manualy verified Udemy coupons, free courses, and professional skill-based discounts. Updated daily for accuracy.";
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": `${siteUrl}/#website`,
+      "url": siteUrl,
+      "name": "CoursesWyn",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": `${siteUrl}/search/?q={search_term_string}`,
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
+        { "@type": "ListItem", "position": 2, "name": "Search Coupons", "item": canonical }
+      ]
+    }
+  ]
+};
 ---
 
-<MainLayout title="Search Courses | CoursesWyn" description="Search thousands of free Udemy coupons and courses.">
+<MainLayout 
+  title={title} 
+  description={description} 
+  canonical={canonical}
+  structuredData={structuredData}
+>
+  <style is:global>
+    body { background: #0a0f16 !important; }
+  </style>
+
   <!-- Fixed Background & Glows -->
   <div class="fixed inset-0 bg-[#0a0f16] -z-50"></div>
-  <div class="fixed top-0 left-[-10%] w-[700px] h-[700px] bg-emerald-500/10 rounded-full blur-[180px] mix-blend-screen pointer-events-none -z-40"></div>
-  <div class="fixed bottom-0 right-[-10%] w-[600px] h-[600px] bg-blue-600/8 rounded-full blur-[180px] mix-blend-screen pointer-events-none -z-40"></div>
+  <div class="fixed top-0 left-[-10%] w-[700px] h-[700px] bg-emerald-500/10 rounded-full blur-[180px] pointer-events-none -z-40"></div>
+  <div class="fixed bottom-0 right-[-10%] w-[600px] h-[600px] bg-indigo-600/8 rounded-full blur-[180px] pointer-events-none -z-40"></div>
 
   <div class="min-h-screen pb-20 relative">
     
-    <!-- Header -->
-    <div class="border-b border-white/5 pt-12 pb-8 relative z-30">
+    <!-- Meta Robots Logic (Client-side would need different handling, but we set a default) -->
+    <meta name="robots" content="index, follow" />
+
+    <!-- Search Header -->
+    <header class="border-b border-white/5 pt-20 pb-16 relative z-30">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 class="text-4xl md:text-6xl font-black text-white leading-[1.1] tracking-tighter mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/50">
-          Find Your Next <span class="text-emerald-400">Skill</span>
+        <nav class="mb-6 flex justify-center" aria-label="Breadcrumb">
+           <ol class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-600">
+              <li><a href="/" class="hover:text-emerald-400 transition-colors">Home</a></li>
+              <li>/</li>
+              <li class="text-indigo-400">Search Engine</li>
+           </ol>
+        </nav>
+
+        <h1 class="text-4xl md:text-7xl font-black text-white leading-[1.1] tracking-tighter mb-10 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">
+           Verified <span class="text-emerald-400">Coupon</span> Search
         </h1>
         
          <div class="relative max-w-2xl mx-auto">
             <input 
               type="text" 
               id="search-page-input"
-              placeholder="Search for courses, skills, or categories..." 
-              class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 pl-14 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all shadow-2xl backdrop-blur-xl text-lg" 
+              placeholder="Search by skill (e.g. AI, Python, AWS)..." 
+              class="w-full bg-white/5 border border-white/10 rounded-[2rem] px-8 py-5 pl-16 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl text-xl font-medium" 
             />
-            <div class="absolute left-5 top-1/2 -translate-y-1/2 text-emerald-400">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <div class="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
          </div>
       </div>
-    </div>
+    </header>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div id="search-status" class="mb-12">
-        <h2 class="text-2xl font-black text-white mb-2 tracking-tight">Search Results</h2>
-        <p class="text-gray-500 font-bold uppercase tracking-widest text-[10px]" id="results-count">Searching...</p>
+      
+      <!-- 1. EMPTY STATE: DISCOVERY HUB (SEO Silo) -->
+      <div id="discovery-hub" class="space-y-16">
+          <div class="flex flex-col md:flex-row items-end justify-between gap-6 border-b border-white/5 pb-8">
+              <div>
+                  <span class="text-emerald-400 font-black uppercase text-[10px] tracking-[0.4em] block mb-2">Discovery Hub</span>
+                  <h2 class="text-3xl font-black text-white tracking-tight">Browse Manual Categories</h2>
+              </div>
+              <p class="text-gray-500 text-sm max-w-sm italic">Direct internal links to our most active professional domains for optimized learning discovery.</p>
+          </div>
+          
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {categories.map(cat => (
+                  <a href={`/search?q=${cat.toLowerCase()}`} class="group p-8 rounded-[2rem] bg-white/5 border border-white/5 hover:border-emerald-400/40 hover:-translate-y-1 transition-all text-center relative overflow-hidden">
+                      <div class="absolute inset-0 bg-emerald-400/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <span class="text-white font-black text-xs block group-hover:text-emerald-400 transition-colors uppercase tracking-tight relative z-10">{cat}</span>
+                  </a>
+              ))}
+          </div>
+
+          <div class="p-12 rounded-[3.5rem] bg-emerald-500/5 border border-emerald-500/10 text-center">
+             <h3 class="text-white font-black text-xl mb-4">Quality Verification Protocol</h3>
+             <p class="text-gray-500 text-sm max-w-2xl mx-auto leading-relaxed">
+                Every course matching your search is manually vetted for current pricing integrity and instructor verification. We filter over 5,000 daily Udemy offers to present only 100% functional coupons.
+             </p>
+          </div>
       </div>
 
-      <!-- Results Grid -->
-      <div id="results-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <!-- 2. SEARCH STATUS -->
+      <div id="search-status" class="mb-12 hidden">
+        <div class="flex items-center gap-4 mb-4">
+            <span class="w-1.5 h-8 bg-emerald-400 rounded-full"></span>
+            <h2 class="text-2xl font-black text-white tracking-tight uppercase" id="results-headline">Filtering Inventory</h2>
+        </div>
+        <p class="text-gray-500 font-black uppercase tracking-widest text-[10px]" id="results-count">Analyzing coupon library...</p>
+      </div>
+
+      <!-- 3. RESULTS GRID -->
+      <div id="results-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         <!-- Results injected here -->
       </div>
 
-      <!-- No Results State -->
-      <div id="no-results" class="hidden text-center py-32 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[3rem] shadow-2xl">
+      <!-- 4. NO RESULTS -->
+      <div id="no-results" class="hidden text-center py-32 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[4rem] shadow-2xl">
          <div class="inline-flex items-center justify-center w-24 h-24 bg-emerald-500/10 rounded-full mb-8 text-emerald-400">
             <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
          </div>
-         <h3 class="text-3xl font-black text-white mb-4 tracking-tighter">No courses found</h3>
-         <p class="text-gray-400 max-w-md mx-auto text-lg font-medium">We couldn't find any courses matching your search. Try different keywords or browse our categories.</p>
-         <a href="/categories" class="mt-8 inline-block bg-emerald-500 text-white font-black px-8 py-3 rounded-xl uppercase tracking-widest text-xs shadow-lg shadow-emerald-500/20 hover:-translate-y-1 transition-all">Browse Categories</a>
+         <h3 class="text-3xl font-black text-white mb-4 tracking-tighter">Inventory Mismatch</h3>
+         <p class="text-gray-500 max-w-md mx-auto text-lg font-medium">We couldn't find manual coupons matching that phrase. Try "AI", "Software", or use the discovery categories above.</p>
+         <button onclick="window.location.href='/search'" class="mt-10 inline-block bg-white text-black font-black px-10 py-4 rounded-2xl uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Clear Search</button>
       </div>
 
     </div>
   </div>
 </MainLayout>
 
-<!-- Client Side Script for Static Search -->
+<!-- Client Side Script -->
 <script define:vars={{ initialCoupons: coupons }}>
-  // Data passed from server build time to client script
   const allCoupons = initialCoupons;
 
   function initSearch() {
-      console.log('Search initialized'); // Debug
       const urlParams = new URLSearchParams(window.location.search);
       const query = (urlParams.get('q') || '').toLowerCase().trim();
       
+      const hubEl = document.getElementById('discovery-hub');
       const statusEl = document.getElementById('search-status');
       const countEl = document.getElementById('results-count');
+      const headlineEl = document.getElementById('results-headline');
       const gridEl = document.getElementById('results-grid');
       const noResultsEl = document.getElementById('no-results');
       const inputPageEl = document.getElementById('search-page-input');
 
-      // Update input value if exists
       if(inputPageEl) {
         inputPageEl.value = query;
+        inputPageEl.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') window.location.href = `/search?q=${encodeURIComponent(inputPageEl.value)}`;
+        });
       }
 
       if (!query) {
-          if (countEl) countEl.textContent = 'Please enter a keyword to search.';
-          if (gridEl) gridEl.innerHTML = '';
+          hubEl.classList.remove('hidden');
+          statusEl.classList.add('hidden');
+          gridEl.innerHTML = '';
           return;
       }
 
-      if (countEl) countEl.textContent = `Searching for "${query}"...`;
+      hubEl.classList.add('hidden');
+      statusEl.classList.remove('hidden');
+      headlineEl.textContent = `Search: ${query}`;
 
-      // Filter Logic - Robust
       const results = allCoupons.filter(course => {
-          const titleMap = (course.title || '').toLowerCase();
-          const categoryMap = (course.category || '').toLowerCase();
-          return titleMap.includes(query) || categoryMap.includes(query);
+          const t = (course.title || '').toLowerCase();
+          const c = (course.category || '').toLowerCase();
+          const s = (course.subcategory || '').toLowerCase();
+          return t.includes(query) || c.includes(query) || s.includes(query);
       });
 
-      console.log(`Found ${results.length} results for ${query}`); // Debug
-
       if (results.length === 0) {
-          if (countEl) countEl.textContent = `0 results for "${query}"`;
-          if (gridEl) gridEl.innerHTML = '';
-          if (noResultsEl) noResultsEl.classList.remove('hidden');
+          countEl.textContent = `0 Verified Results`;
+          gridEl.innerHTML = '';
+          noResultsEl.classList.remove('hidden');
       } else {
-          if (countEl) countEl.textContent = `Found ${results.length} results for "${query}"`;
-          if (noResultsEl) noResultsEl.classList.add('hidden');
+          countEl.textContent = `${results.length} Manually Verified Offers Found`;
+          noResultsEl.classList.add('hidden');
           
-          // Render Results
-          if (gridEl) {
-            gridEl.innerHTML = results.map(course => {
-                const price = course.price;
-                const originalPrice = course.originalPrice;
-                let discountBadge = "";
-                
-                // Logic Diskon JS
-                if (originalPrice && originalPrice > price) {
-                   if (price === 0) discountBadge = "100% OFF";
-                   else {
-                      const percent = Math.round(((originalPrice - price) / originalPrice) * 100);
-                      discountBadge = `${percent}% OFF`;
-                   }
-                } else if (price === 0) {
-                   discountBadge = "100% OFF";
-                }
+          gridEl.innerHTML = results.map(course => {
+              const price = course.price;
+              const originalPrice = course.originalPrice;
+              let discountBadge = "";
+              if (originalPrice > price) {
+                 const p = Math.round(((originalPrice - price) / originalPrice) * 100);
+                 discountBadge = `${p}% OFF`;
+              } else if (price === 0) discountBadge = "100% OFF";
 
-                return `
-                <a href="/coupon/${course.slug}" class="group block bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden hover:border-emerald-500/50 hover:bg-white/10 hover:-translate-y-2 transition-all duration-500 h-full flex flex-col shadow-2xl relative">
-                  <div class="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  
-                  <div class="relative aspect-[16/10] overflow-hidden">
-                      <img src="${course.image}" alt="${course.title}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
-                      <div class="absolute inset-0 bg-gradient-to-t from-[#0a0f16] via-transparent to-transparent opacity-80"></div>
+              const categorySlug = (course.category || '').toLowerCase().replace(/\s+/g, '-');
+              const subcategorySlug = (course.subcategory || '').toLowerCase().replace(/\s+/g, '-');
+              const badgeLink = course.subcategory ? `/courses/subcategory/${subcategorySlug}` : `/courses/category/${categorySlug}`;
+              
+              const isTopRated = course.rating >= 4.7;
+              const isPopular = course.students >= 10000;
+              const displayDate = new Date(course.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+              return `
+                <div class="group relative bg-[#1c252e] border border-[#2d3748] rounded-2xl overflow-hidden hover:border-emerald-500 hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 h-full flex flex-col shadow-2xl">
+                  <a href="/coupon/${course.slug}" class="absolute inset-0 z-10"></a>
+                  <div class="relative aspect-video overflow-hidden z-0">
+                      <img src="${course.image}" alt="${course.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+                      <div class="absolute inset-0 bg-gradient-to-t from-[#1a1d29] via-transparent to-transparent opacity-60"></div>
                       
-                      ${discountBadge ? `
-                        <div class="absolute top-4 left-4">
-                          <span class="bg-emerald-500 text-white text-[10px] font-black px-3 py-1.5 rounded-lg shadow-lg shadow-emerald-500/30 uppercase tracking-widest">${discountBadge}</span>
+                      <div class="absolute top-2 right-2 flex flex-col gap-1 z-20">
+                          ${isTopRated ? `<span class="bg-yellow-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg uppercase tracking-tight">★ Top Rated</span>` : ''}
+                          ${isPopular ? `<span class="bg-blue-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg uppercase tracking-tight">🔥 Popular</span>` : ''}
+                      </div>
+
+                      ${course.duration ? `
+                        <div class="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-[10px] text-white font-medium flex items-center gap-1 border border-white/10">
+                            <svg class="w-3 h-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            ${course.duration}
                         </div>
                       ` : ''}
-                      
-                      <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                         <span class="bg-white/10 backdrop-blur-md text-white text-[9px] font-black px-3 py-1.5 rounded-lg border border-white/10 uppercase tracking-widest shadow-xl line-clamp-1 max-w-[60%]">${course.category}</span>
-                         <div class="flex items-center gap-1.5 bg-[#0a0f16]/80 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-white/5 shadow-xl">
-                            <span class="text-amber-400 text-xs" aria-hidden="true">★</span>
-                            <span class="text-white text-[10px] font-black">4.8</span>
-                         </div>
-                      </div>
                   </div>
 
-                  <div class="p-6 flex flex-col flex-grow relative z-10">
-                      <h3 class="font-black text-white text-lg mb-4 leading-tight group-hover:text-emerald-400 transition-colors line-clamp-2 tracking-tight">${course.title}</h3>
+                  <div class="p-5 flex flex-col flex-grow relative z-20">
+                      <div class="flex items-center gap-2 mb-3 text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none">
+                        <span>${displayDate}</span>
+                        <span class="w-1 h-1 bg-gray-600 rounded-full"></span>
+                        <span class="text-emerald-400">${course.subcategory || course.category}</span>
+                      </div>
+
+                      <h3 class="font-black text-white text-md mb-3 leading-tight group-hover:text-emerald-400 transition-colors line-clamp-2 tracking-tight">${course.title}</h3>
                       
-                      <div class="mt-auto pt-6 border-t border-white/5 flex justify-between items-center">
-                          <div class="flex flex-col">
-                             <span class="text-gray-500 text-[9px] font-black uppercase tracking-widest mb-0.5">Price</span>
-                             <div class="flex items-center gap-2">
-                                ${originalPrice && originalPrice > price ? `<span class="text-gray-500 line-through text-xs font-bold">$${originalPrice}</span>` : ''}
-                                <span class="${price === 0 ? 'text-emerald-400' : 'text-white'} font-black text-xl tracking-tighter">${price === 0 ? 'FREE' : '$'+price}</span>
-                             </div>
+                      <div class="flex items-center gap-2 mb-4 text-[11px] text-gray-400 leading-none">
+                        <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <span class="truncate">By ${course.instructor || "Expert Instructor"}</span>
+                      </div>
+
+                      <p class="text-gray-500 text-xs leading-relaxed line-clamp-2 mb-6 flex-grow opacity-80">
+                        ${course.description || course.seoDescription || "Explore this comprehensive course and master new skills with expert guidance and hands-on projects."}
+                      </p>
+
+                      <div class="mt-auto pt-4 border-t border-white/5 flex flex-col gap-4">
+                          <div class="flex justify-between items-center">
+                              <div class="flex items-center gap-2">
+                                 <span class="text-yellow-500 font-black text-sm">★ ${course.rating || "4.8"}</span>
+                                 <span class="text-gray-600 text-[9px] bg-white/5 px-2 py-1 rounded border border-white/5 font-bold uppercase tracking-widest">${(course.students || 1200).toLocaleString()}+</span>
+                              </div>
+                              <div class="flex items-center gap-2 leading-none">
+                                 ${originalPrice && originalPrice > price ? `<span class="text-gray-600 line-through text-[10px]">$${originalPrice}</span>` : ''}
+                                 <span class="${price === 0 ? 'text-emerald-400' : 'text-white'} font-black text-lg tracking-tighter">${price === 0 ? 'FREE' : '$'+price}</span>
+                              </div>
                           </div>
-                          
-                          <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
-                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+
+                          <div class="flex items-center justify-between">
+                              ${discountBadge ? `<span class="text-[9px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded border border-emerald-400/20 uppercase tracking-widest">${discountBadge}</span>` : '<span></span>'}
+                              <span class="text-emerald-400 text-[9px] font-black flex items-center gap-1 uppercase tracking-widest">
+                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                 Verified
+                              </span>
+                          </div>
+
+                          <div class="relative z-30">
+                            <a href="${course.url}" target="_blank" rel="nofollow noopener" class="block w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-400 text-white text-xs font-black rounded-xl text-center shadow-lg shadow-emerald-500/10 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">
+                                Get Coupon
+                            </a>
                           </div>
                       </div>
                   </div>
-                </a>
+                </div>
                 `;
-            }).join('');
-          }
+          }).join('');
       }
-      
-      // Hide loading spinner if it exists
-      const loadingEl = document.getElementById('loading');
-      if(loadingEl) loadingEl.classList.add('hidden');
   }
 
-  // Run on load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSearch);
-  } else {
-    initSearch();
-  }
-  
-
+  window.addEventListener('DOMContentLoaded', initSearch);
 </script>
