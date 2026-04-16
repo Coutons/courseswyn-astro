@@ -1,12 +1,13 @@
 ---
 import MainLayout from '../layouts/MainLayout.astro';
-import HeroSection from '../components/HeroSection.astro';
+import GeoHero from '../components/GeoHero.astro';
+import ComparisonTable from '../components/ComparisonTable.astro';
+import ExpertGuidesBento from '../components/ExpertGuidesBento.astro';
 import FeaturedCourses from '../components/FeaturedCourses.astro';
-import PopularTopics from '../components/PopularTopics.astro';
-import CourseOfTheDay from '../components/CourseOfTheDay.astro';
-import UdemyPromo from '../components/UdemyPromo.astro';
+import ExpertMethodology from '../components/ExpertMethodology.astro';
+import GlobalSavings from '../components/GlobalSavings.astro';
 import PlatformSection from '../components/PlatformSection.astro';
-import CategoryList from '../components/CategoryList.astro';
+import UdemyPromo from '../components/UdemyPromo.astro';
 import SeoContent from '../components/SeoContent.astro';
 import coupons from '../data/coupons.json';
 
@@ -17,12 +18,11 @@ const todayISO = now.toISOString().split('T')[0];
 const totalCoupons = coupons.length;
 
 // ─── TITLE & META ─────────────────────────────────────────────────────────────
-// Primary keyword: "free udemy courses" (winnable, high volume)
-// Secondary: "udemy coupon codes" | "udemy 100 off" | "free online courses"
-const pageTitle = `Free Udemy Courses ${currentYear} — ${totalCoupons}+ Verified 100% OFF Coupons | CoursesWyn`;
-const pageDescription = `Get ${totalCoupons}+ free Udemy courses in ${currentMonth} ${currentYear}. 100% OFF instructor coupon codes for Python, AI, Web Development, Business & more. Auto-applied, no credit card needed. Updated daily.`;
-const ogTitle = `Free Udemy Courses Today — ${totalCoupons}+ 100% OFF Coupons (${currentMonth} ${currentYear})`;
-const ogDescription = `Stop paying for online education. ${totalCoupons}+ free Udemy courses with lifetime access and free certificates — verified and updated every single day.`;
+// Pivot: "udemy coupon codes" (primary) + "free udemy courses" (secondary/intent)
+const pageTitle = `Udemy Coupon Codes ${currentYear} — Verified 100% OFF & Premium Deals | CoursesWyn`;
+const pageDescription = `Access ${totalCoupons}+ verified Udemy coupon codes for ${currentMonth} ${currentYear}. Get 100% OFF premium courses in AI, Web Development, and Business. High-quality deals verified hourly. No credit card required.`;
+const ogTitle = `Verified Udemy Coupons — ${totalCoupons}+ Active Deals (${currentMonth} ${currentYear})`;
+const ogDescription = `Stop paying full price for online education. Access ${totalCoupons}+ verified Udemy coupons with lifetime access and completion certificates — updated daily.`;
 
 // ─── GEO AI + SCHEMA ──────────────────────────────────────────────────────────
 // GEO (Generative Engine Optimization): Structured, citation-ready data
@@ -38,7 +38,7 @@ const homepageSchema = {
       "name": "CoursesWyn",
       "alternateName": ["Courses Wyn", "CoursesWyn.com"],
       "url": "https://courseswyn.com",
-      "description": `CoursesWyn is a daily-updated directory of ${totalCoupons}+ free Udemy courses with 100% OFF instructor coupon codes. We track, verify, and publish free Udemy course deals in Python, AI, Web Development, Business, Design, and 500+ topics.`,
+      "description": `CoursesWyn is a verified directory of ${totalCoupons}+ Udemy coupon codes and premium discounts. We manually track and verify 100% OFF instructor coupons in AI, Web Development, and Business categories.`,
       "inLanguage": "en-US",
       "dateModified": todayISO,
       "potentialAction": {
@@ -77,19 +77,19 @@ const homepageSchema = {
     {
       "@type": "CollectionPage",
       "@id": "https://courseswyn.com/#collection",
-      "name": `Free Udemy Courses — ${currentMonth} ${currentYear}`,
+      "name": `Verified Udemy Coupons — ${currentMonth} ${currentYear}`,
       "description": pageDescription,
       "url": "https://courseswyn.com/",
       "numberOfItems": totalCoupons,
       "dateModified": todayISO,
       "about": {
         "@type": "Thing",
-        "name": "Free Udemy Courses",
-        "description": "100% OFF instructor-issued coupon codes for Udemy online courses"
+        "name": "Udemy Coupon Codes",
+        "description": "Verified Udemy instructor-issued coupon codes and discounts"
       },
       "mainEntity": {
         "@type": "ItemList",
-        "name": "Free Udemy Courses Today",
+        "name": "Latest Verified Udemy Coupons Today",
         "numberOfItems": totalCoupons,
         "itemListElement": coupons.slice(0, 10).map((c: any, i: number) => ({
           "@type": "ListItem",
@@ -105,18 +105,18 @@ const homepageSchema = {
       "mainEntity": [
         {
           "@type": "Question",
-          "name": `Are there free Udemy courses available in ${currentMonth} ${currentYear}?`,
+          "name": `Are there active Udemy coupon codes available in ${currentMonth} ${currentYear}?`,
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": `Yes. CoursesWyn lists ${totalCoupons}+ verified free Udemy courses for ${currentMonth} ${currentYear}. These are 100% OFF instructor-issued coupon codes that make premium Udemy courses completely free. New courses are added daily and coupons are auto-applied when you click the link.`
+            "text": `Yes. CoursesWyn provides ${totalCoupons}+ verified Udemy coupon codes for ${currentMonth} ${currentYear}. These include 100% OFF instructor coupons making premium courses free, as well as the lowest-price deals for trending certifications.`
           }
         },
         {
           "@type": "Question",
-          "name": "How do I get 100% OFF free Udemy courses?",
+          "name": "How do I use a Udemy 100% OFF coupon code?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "To get a 100% OFF free Udemy course: (1) Browse the free course listings on CoursesWyn, (2) Click 'Get Free Course' on any listing — the coupon code is automatically applied, (3) Complete checkout at $0 on Udemy, (4) Receive lifetime access and a free completion certificate. No credit card required."
+            "text": "To use a coupon: (1) Find a deals on CoursesWyn, (2) Click 'Get Offer' — the code is automatically applied to your session, (3) Secure the course at the discounted price (often $0) on Udemy, (4) Get lifetime access. No credit card is needed for $0 enrollments."
           }
         },
         {
@@ -173,28 +173,31 @@ const homepageSchema = {
   structuredData={homepageSchema}
 >
 
-  <!-- Section 1: Hero (redesigned — search-first, GEO AI) -->
-  <HeroSection />
+  <!-- Section 1: GeoHero (Answer-First Intent) -->
+  <GeoHero />
 
-  <!-- Section 2: Platform trust bar -->
+  <!-- Section 2: Platform Proof -->
   <PlatformSection />
 
-  <!-- Section 3: Udemy flash sale promo -->
-  <UdemyPromo />
-
-  <!-- Section 4: Featured free courses -->
+  <!-- Section 3: Live Freshness Feed (Featured Coupon Cards) -->
   <FeaturedCourses />
 
-  <!-- Section 5: Course of the Day -->
-  <CourseOfTheDay />
+  <!-- Section 4: Premium Choice (Udemy Personal Plan) -->
+  <UdemyPromo />
 
-  <!-- Section 6: Popular Topics -->
-  <PopularTopics />
+  <!-- Section 5: Mastery Roadmaps (Expert Guides) -->
+  <ExpertGuidesBento />
 
-  <!-- Section 7: Category Browse -->
-  <CategoryList />
+  <!-- Section 6: Data Core (AI Citation Table) -->
+  <ComparisonTable />
 
-  <!-- Section 8: GEO AI SEO Content (FAQs, citations, geo content) -->
+  <!-- Section 7: Trust Factor (EEAT Methodology) -->
+  <ExpertMethodology />
+
+  <!-- Section 8: Global PPP Insights -->
+  <GlobalSavings />
+
+  <!-- Section 9: Contextual SEO Content & Glossary -->
   <SeoContent />
 
 </MainLayout>
