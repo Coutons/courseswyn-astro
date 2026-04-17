@@ -52,6 +52,7 @@ const isActive = (path: string) => pathname === path || (path !== '/' && pathnam
                <form action="/search" method="GET" class="w-full relative group">
                   <input 
                     type="text" 
+                    id="search-input"
                     name="q"
                     placeholder="Search..." 
                     class="w-full bg-white/5 border border-white/10 rounded-full pl-9 pr-12 py-1.5 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
@@ -117,6 +118,7 @@ const isActive = (path: string) => pathname === path || (path !== '/' && pathnam
             </div>
             <input 
               type="text" 
+              id="search-input-modal"
               name="q"
               placeholder="Search for courses, skills, or topics..." 
               class="block w-full pl-10 pr-3 py-4 border border-white/10 rounded-2xl leading-5 bg-white/5 text-emerald-400 placeholder-gray-500 focus:outline-none focus:bg-white/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 sm:text-lg transition-all duration-300"
@@ -136,31 +138,33 @@ const isActive = (path: string) => pathname === path || (path !== '/' && pathnam
 </header>
 
 <script>
-  // Mobile Menu Logic
-  const button = document.getElementById('mobile-menu-button');
-  const menu = document.getElementById('mobile-menu');
-  
-  button?.addEventListener('click', () => {
-    menu?.classList.toggle('hidden');
-  });
+  document.addEventListener('astro:page-load', () => {
+    // Mobile Menu Logic
+    const button = document.getElementById('mobile-menu-button');
+    const menu = document.getElementById('mobile-menu');
+    
+    button?.addEventListener('click', () => {
+      menu?.classList.toggle('hidden');
+    });
 
-  // Search Logic
-  const searchInput = document.getElementById('search-input');
-  searchInput?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      window.location.href = `/search?q=${encodeURIComponent((e.target as HTMLInputElement).value)}`;
-    }
-  });
+    // Search Logic (Main Header)
+    const searchInput = document.getElementById('search-input');
+    searchInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        window.location.href = `/search?q=${encodeURIComponent((e.target as HTMLInputElement).value)}`;
+      }
+    });
 
-  // Keyboard shortcut for search
-  document.addEventListener('keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-      e.preventDefault();
-      document.getElementById('search-modal')?.classList.remove('hidden');
-      document.getElementById('search-input')?.focus();
-    }
-    if (e.key === 'Escape') {
-      document.getElementById('search-modal')?.classList.add('hidden');
-    }
+    // Keyboard shortcut for search
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        document.getElementById('search-modal')?.classList.remove('hidden');
+        document.getElementById('search-input-modal')?.focus();
+      }
+      if (e.key === 'Escape') {
+        document.getElementById('search-modal')?.classList.add('hidden');
+      }
+    });
   });
 </script>
