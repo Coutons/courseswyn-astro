@@ -8,16 +8,49 @@ import udemyImage from '../../assets/images/Udemy Personal Plan Offers.png';
 
 
 export async function getStaticPaths() {
-  const posts = await getCollection("blog");
-  const validPosts = posts.filter(post => post.id && typeof post.id === 'string');
+  const fs = await import('fs');
+  const path = await import('path');
+  const blogDir = path.join(process.cwd(), 'src/content/blog');
 
-  return validPosts.map((post) => ({
-    params: { slug: post.id },
-    props: { post },
+  // Recursively find all folders with index.md or index.mdx
+  function getBlogFolders(dir: string, basePath = ''): string[] {
+    const folders: string[] = [];
+    const items = fs.readdirSync(dir, { withFileTypes: true });
+
+    for (const item of items) {
+      if (item.isDirectory()) {
+        const folderPath = path.join(dir, item.name);
+        const indexPath = path.join(folderPath, 'index.md');
+        const indexPathMdx = path.join(folderPath, 'index.mdx');
+
+        if (fs.existsSync(indexPath) || fs.existsSync(indexPathMdx)) {
+          const folderSlug = basePath ? `${basePath}/${item.name}` : item.name;
+          folders.push(folderSlug);
+        } else {
+          // Recursively check subdirectories
+          folders.push(...getBlogFolders(folderPath, basePath ? `${basePath}/${item.name}` : item.name));
+        }
+      }
+    }
+
+    return folders;
+  }
+
+  const blogFolders = getBlogFolders(blogDir);
+
+  return blogFolders.map((folder) => ({
+    params: { slug: folder },
   }));
 }
 
-const { post } = Astro.props as { post: CollectionEntry<'blog'> };
+const { slug } = Astro.params;
+const allPosts = await getCollection("blog");
+const post = allPosts?.find(p => p.id === slug || (p.data as any).slug === slug);
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+
 const { data } = post;
 
 // Render the content
