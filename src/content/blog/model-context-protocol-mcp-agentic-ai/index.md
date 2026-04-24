@@ -191,7 +191,7 @@ Yes. MCP provides value in both single-agent and multi-agent architectures.
   "datePublished": "2026-01-31",
   "author": {
     "@type": "Organization",
-    "name": "Coutons"
+    "name": "Andrew Derek"
   }
 }
 </script>

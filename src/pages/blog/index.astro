@@ -1,286 +1,403 @@
 ---
-import MainLayout from "../../layouts/MainLayout.astro";
+import Layout from "../../layouts/Layout.astro";
 import { getCollection } from "astro:content";
-import coupons from '../../data/coupons.json';
 
-// Get latest blog posts for blog index page
-const posts = await getCollection('blog');
-const totalCoupons = coupons.length;
-const latestPosts = posts
+const siteUrl = "https://courseswyn.com";
+
+// Helper: convert relative image paths from MDX frontmatter to a usable URL
+// Paths like "../../../assets/images/foo.jpg" → "/assets/images/foo.jpg"
+function resolveImage(imagePath: string | undefined): string | null {
+  if (!imagePath) return null;
+  if (imagePath.startsWith('http')) return imagePath;
+  // Extract just the filename from relative paths
+  const filename = imagePath.split('/').pop();
+  if (!filename) return null;
+  return `/assets/images/${filename}`;
+}
+
+// Get all MDX/MD blog posts
+const allPosts = await getCollection("blog");
+const posts = allPosts
   .sort((a, b) => {
     const dateA = a.data.updatedAt || a.data.pubDate;
     const dateB = b.data.updatedAt || b.data.pubDate;
     return dateB.getTime() - dateA.getTime();
-  })
-  .slice(0, 12);
+  });
 
-// Date formatting function
+const POSTS_PER_PAGE = 12;
+const page1Posts = posts.slice(0, POSTS_PER_PAGE);
+const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
+
 function formatDate(post: any) {
-  const isUpdated = !!post.data.updatedAt;
   const date = post.data.updatedAt || post.data.pubDate;
-  const formatted = new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   }).format(date);
-  return isUpdated ? `Updated ${formatted}` : formatted;
 }
 
-const currentYear = new Date().getFullYear();
-const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
-const title = `Verified Udemy Coupon Codes & Learning Journal ${currentMonth} ${currentYear} — 100% OFF & AI Rankings`;
-const description = `${totalCoupons}+ Verified Udemy Coupon Codes for ${currentMonth} ${currentYear} — Updated hourly. Access expert course rankings for Agentic AI, Claude Code, MCP & more. Real-time deals, free certificates.`;
-const canonical = "https://courseswyn.com/blog/";
+// Gather unique tags
+const allTags = [...new Set(posts.flatMap((p) => p.data.tags || []))].slice(0, 10);
 
-// --- DYNAMIC DATA FOR GEO AI ---
-const articleCiteCount = posts.length * 15; // Simulated impact data
-const topicsTreated = [...new Set(posts.flatMap(p => p.data.tags || []))].length;
+const title = `Udemy Promo Guides & Course Savings ${new Date().getFullYear()} | CoursesWyn Blog`;
+const description = `${posts.length}+ verified Udemy promo guides, discount strategies, and expert vouchers. Learn how to save on premium courses like ChatGPT, Python, and Data Science.`;
+const canonical = `${siteUrl}/blog/`;
 
-const structuredData = {
+const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
       "@type": "Blog",
-      "@id": "https://courseswyn.com/blog/#blog",
-      "name": title,
+      "@id": `${siteUrl}/blog#blog`,
+      "name": "CoursesWyn Blog — Udemy Promo Guides & Course Savings",
       "description": description,
-      "publisher": {
-        "@type": "Organization",
-        "name": "CoursesWyn",
-        "logo": { "@type": "ImageObject", "url": "https://courseswyn.com/logo.png" }
-      },
-      "blogPost": latestPosts.map((post: any) => ({
+      "url": `${siteUrl}/blog`,
+      "publisher": { "@id": `${siteUrl}/#organization` },
+      "blogPost": page1Posts.map((p) => ({
         "@type": "BlogPosting",
-        "headline": post.data.title,
-        "description": post.data.description,
-        "url": `https://courseswyn.com/blog/${post.id}/`,
-        "datePublished": (post.data.pubDate || new Date()).toISOString(),
-        "author": { "@type": "Person", "name": "Andrew Derek" }
-      }))
+        "headline": p.data.title,
+        "url": `${siteUrl}/blog/${p.id}/`,
+        "datePublished": (p.data.pubDate || new Date()).toISOString(),
+        "description": p.data.description,
+      })),
     },
     {
-       "@type": "BreadcrumbList",
-       "itemListElement": [
-         { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com/" },
-         { "@type": "ListItem", "position": 2, "name": "Learning Journal", "item": canonical }
-       ]
-    }
-  ]
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": `${siteUrl}/blog` },
+      ],
+    },
+  ],
 };
 ---
 
-<MainLayout
-  title={title}
-  description={description}
-  canonical={canonical}
-  structuredData={structuredData}
->
+<Layout title={title} description={description} canonical={canonical}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} slot="head" />
 
-<div class="fixed inset-0 bg-[#07090f] -z-50"></div>
-<div class="fixed top-0 left-[-15%] w-[800px] h-[800px] bg-indigo-500/5 rounded-full blur-[200px] pointer-events-none -z-40"></div>
+  <article class="blog-root">
+    <div class="blog-container">
 
-<div class="min-h-screen pb-24">
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span class="breadcrumb-sep" aria-hidden="true">/</span>
+        <span>Blog</span>
+      </nav>
 
-  <!-- HERO: JOURNAL-FIRST DESIGN -->
-  <header class="pt-24 pb-20 border-b border-white/5 relative overflow-hidden">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 lg:grid-cols-[1fr,350px] gap-16 items-center">
-        
-        <div>
-           <!-- Breadcrumb & Badge -->
-            <div class="flex items-center gap-3 mb-8">
-                <nav class="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em]" aria-label="Breadcrumb">
-                    <a href="/" class="hover:text-indigo-400 transition-colors">Home</a>
-                    <span class="mx-1 text-gray-800">/</span>
-                    <span class="text-indigo-400">Journal</span>
-                </nav>
-                <span class="w-1 h-1 bg-gray-700 rounded-full"></span>
-                <span class="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Est. {currentYear}</span>
-            </div>
+      <!-- Header -->
+      <header class="blog-header">
+        <h1 class="blog-title">Udemy Promo Guides &amp; Savings</h1>
+        <p class="blog-desc">
+          Learn how to maximize your learning budget with verified Udemy promo codes, discount strategies, and expert guides from our editorial team.
+          We track daily deals and voucher patterns so you can access premium education at the lowest possible price.
+        </p>
+      </header>
 
-            <h1 class="text-4xl md:text-6xl font-black text-white mb-6 leading-tight tracking-tight">
-              Verified <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Coupon Codes</span> & Learning Journal {currentYear}
-            </h1>
-            
-            <p class="text-gray-400 text-lg md:text-xl max-w-2xl leading-relaxed mb-10">
-              Your research-backed source for <strong class="text-white">verified Udemy coupon codes</strong>, course comparisons, and professional learning paths. We verify the "Why" and "How" before you spend a single minute learning.
-            </p>
-
-            <div class="flex flex-wrap gap-4">
-                <div class="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl">
-                    <div class="text-white text-2xl font-black">{posts.length}+</div>
-                    <div class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Research Guides</div>
-                </div>
-                <div class="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl">
-                    <div class="text-white text-2xl font-black">{topicsTreated}</div>
-                    <div class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Core Topics</div>
-                </div>
-                <div class="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl">
-                    <div class="text-white text-2xl font-black">100%</div>
-                    <div class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Data Integrity</div>
-                </div>
-            </div>
+      <!-- Stats bar -->
+      <div class="stats-bar">
+        <div class="stat">
+          <strong>{posts.length}+</strong>
+          <span>Expert Guides</span>
         </div>
-
-        <!-- Sidebar Accent: Editorial Trust Box -->
-        <div class="hidden lg:block">
-            <div class="bg-indigo-500/5 border border-indigo-500/10 rounded-[2.5rem] p-8 relative">
-                <div class="absolute -top-6 -right-6 w-16 h-16 bg-white/5 rounded-full blur-2xl"></div>
-                <img src="/assets/authors/andrew-derek.png" alt="Andrew Derek" class="w-16 h-16 rounded-2xl object-cover mb-6 border border-white/10 grayscale hover:grayscale-0 transition-all shadow-xl" />
-                <h3 class="text-white font-black text-lg mb-2">Editorial Methodology</h3>
-                <p class="text-gray-500 text-xs leading-relaxed mb-6 italic">
-                   "We analyze curriculum depth, student reviews, and actual industry demand to rank every Udemy course manually."
-                </p>
-                <div class="space-y-3">
-                   <div class="flex items-center gap-2 text-indigo-400 text-[10px] font-black uppercase">
-                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                      Real Performance Check
-                   </div>
-                   <div class="flex items-center gap-2 text-indigo-400 text-[10px] font-black uppercase">
-                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
-                      Student Meta Analysis
-                   </div>
-                </div>
-            </div>
+        <div class="stat">
+          <strong>{allTags.length}+</strong>
+          <span>Topics Covered</span>
         </div>
-
+        <div class="stat">
+          <strong>100%</strong>
+          <span>Verified Promos</span>
+        </div>
       </div>
-    </div>
-  </header>
 
-  <!-- LISTING SECTION -->
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-    
-    <!-- Filter Row -->
-    <div class="flex flex-col md:flex-row items-center justify-between gap-8 mb-16">
-        <div class="flex items-center gap-3">
-            <span class="w-2 h-10 bg-indigo-500 rounded-full shadow-lg shadow-indigo-500/20"></span>
-            <h2 class="text-2xl lg:text-3xl font-black text-white tracking-tight">Recent Research & Rankings</h2>
+      <!-- Tag Filter -->
+      {allTags.length > 0 && (
+        <div class="tag-filter" aria-label="Filter by topic">
+          <span class="tag-filter-label">Browse by:</span>
+          {allTags.map((tag) => (
+            <a href={`/search?q=${encodeURIComponent(tag)}`} class="tag-chip">{tag}</a>
+          ))}
         </div>
-        <div class="flex items-center gap-1.5 p-1 bg-white/5 border border-white/5 rounded-2xl">
-           <a href="#all" class="px-4 py-2 text-[10px] font-black uppercase bg-indigo-500 text-white rounded-xl shadow-lg">Newest</a>
-           <a href="/search?q=software" class="px-4 py-2 text-[10px] font-black uppercase text-gray-500 hover:text-white transition-all">IT & Software</a>
-           <a href="/search?q=ai" class="px-4 py-2 text-[10px] font-black uppercase text-gray-500 hover:text-white transition-all">AI Learning</a>
-        </div>
-    </div>
+      )}
 
-    <!-- Articles Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-      {latestPosts.map((post: any) => (
-        <article class="group relative flex flex-col bg-[#0c1219] border border-white/8 rounded-[2rem] overflow-hidden hover:border-indigo-500/40 hover:-translate-y-2 transition-all duration-500 shadow-xl shadow-black/40">
-           <!-- Thumbnail Container -->
-            <div class="relative aspect-[1.8/1] overflow-hidden">
-                <img 
-                  src={post.data.image?.src || post.data.image || 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&fit=crop'} 
-                  alt={post.data.title}
-                  class="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
-                />
-                <div class="absolute inset-0 bg-gradient-to-t from-[#0c1219] via-transparent to-transparent"></div>
-                {post.data.tags?.[0] && (
-                    <div class="absolute top-4 left-4">
-                        <span class="px-3 py-1 bg-white/10 backdrop-blur-md border border-white/10 rounded-lg text-indigo-400 text-[10px] font-black uppercase tracking-widest">{post.data.tags[0]}</span>
+      <!-- Posts Grid -->
+      <section aria-label="Blog posts">
+        <div class="post-grid">
+          {page1Posts.map((post: any) => {
+            // glob() loader generates IDs like "best-chatgpt-courses-udemy-2026/index"
+            // Strip "/index" suffix to get the clean URL slug
+            const slug = post.id.replace(/\/index$/, '');
+            const imgSrc = resolveImage(post.data.image);
+            return (
+              <article class="post-card">
+                {imgSrc && (
+                  <a href={`/blog/${slug}/`} class="post-card-img-link" tabindex="-1" aria-hidden="true">
+                    <div class="post-card-img">
+                      <img
+                        src={imgSrc}
+                        alt={post.data.title}
+                        loading="lazy"
+                        onerror="this.parentElement.parentElement.style.display='none'"
+                      />
                     </div>
+                  </a>
                 )}
-            </div>
-
-            <!-- Content Area -->
-            <div class="p-8 flex flex-col flex-1">
-                <div class="flex items-center gap-3 mb-4 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-                    <span>{formatDate(post)}</span>
-                    <span class="w-1 h-1 bg-gray-800 rounded-full"></span>
-                    <span class="text-indigo-400">Andrew Derek</span>
+                <div class="post-card-body">
+                  <div class="post-card-meta">
+                    {post.data.tags?.[0] && (
+                      <span class="post-tag">{post.data.tags[0]}</span>
+                    )}
+                    <time class="post-date">{formatDate(post)}</time>
+                  </div>
+                  <h2 class="post-card-title">
+                    <a href={`/blog/${slug}/`}>{post.data.title}</a>
+                  </h2>
+                  <p class="post-card-desc">{post.data.description}</p>
+                  <a href={`/blog/${slug}/`} class="post-card-btn">Read Guide →</a>
                 </div>
-
-                <h3 class="text-xl font-black text-white leading-tight mb-4 group-hover:text-indigo-400 transition-colors">
-                    <a href={`/blog/${post.id}/`} class="after:absolute after:inset-0 after:z-0">
-                        {post.data.title}
-                    </a>
-                </h3>
-
-                <p class="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-8">
-                    {post.data.description}
-                </p>
-
-                <div class="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
-                    <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest group-hover:translate-x-1 transition-transform">Read Insights →</span>
-                    <span class="text-[9px] text-gray-700 font-bold uppercase">{Math.ceil(post.body?.length / 1500 || 5)} Min Read</span>
-                </div>
-            </div>
-        </article>
-      ))}
-    </div>
-
-    <!-- Pagination -->
-    <div class="mt-20 text-center">
-        <a href="/blog/page/2" class="inline-flex items-center gap-3 px-10 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-black hover:border-indigo-500/40 hover:bg-indigo-500/5 transition-all text-sm uppercase tracking-widest shadow-lg active:scale-95">
-           Browse More Archives
-           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-        </a>
-    </div>
-  </section>
-
-  <!-- NEW: GLOBAL LEARNING PULSE (GEO AI Cite-worthy Data) -->
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
-     <div class="bg-gradient-to-br from-indigo-500/10 via-transparent to-transparent border-t border-white/5 pt-20">
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
-            <div class="max-w-xl">
-                <h2 class="text-3xl font-black text-white mb-4 tracking-tight">Global Learning Pulse</h2>
-                <p class="text-gray-500 text-sm leading-relaxed">
-                   The world of online education is shifting. Here are the top career sectors currently being cited and researched by our international community:
-                </p>
-            </div>
-            <div class="text-right">
-                <div class="text-indigo-400 text-4xl font-black tracking-tighter">1.2M+</div>
-                <div class="text-gray-600 text-[10px] font-bold uppercase tracking-widest">Global Citations</div>
-            </div>
+              </article>
+            );
+          })}
         </div>
+      </section>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-                { sector: "Generative AI", rating: "9.8/10", trend: "Explosive Growh", body: "Articles on LLM fine-tuning and AI ethical management are the most requested in early 2026." },
-                { sector: "Cyber Governance", rating: "9.2/10", trend: "High Demand", body: "European and NA students are prioritizing ISO-level certifications and security architecture guides." },
-                { sector: "Cloud Logistics", rating: "8.9/10", trend: "Developing", body: "Emerging trend in APAC: Integrating cloud infrastructure with global supply chain automation." }
-            ].map(pulse => (
-                <div class="bg-[#0c1219] border border-white/10 rounded-3xl p-8 hover:border-indigo-500/30 transition-all group">
-                   <div class="flex justify-between items-start mb-6">
-                      <h4 class="text-white font-black text-lg">{pulse.sector}</h4>
-                      <span class="text-indigo-400 font-black text-xs">{pulse.rating}</span>
-                   </div>
-                   <p class="text-gray-500 text-xs leading-relaxed mb-6">{pulse.body}</p>
-                   <div class="flex items-center gap-2">
-                       <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse"></span>
-                       <span class="text-[9px] text-gray-700 font-bold uppercase tracking-widest">{pulse.trend}</span>
-                   </div>
-                </div>
-            ))}
-        </div>
-     </div>
-  </section>
+      <!-- Pagination -->
+      {totalPages > 1 && (
+        <nav class="pagination" aria-label="Blog pagination">
+          <span class="pagination-info">Page 1 of {totalPages} — showing {page1Posts.length} of {posts.length} guides</span>
+          <a href="/blog/page/2" class="pagination-next">More Guides →</a>
+        </nav>
+      )}
 
-  <!-- Editorial FAQ Box (GEO AI target) -->
-  <section class="max-w-4xl mx-auto mb-24 px-4">
-     <div class="text-center mb-12">
-        <h2 class="text-2xl font-black text-white mb-3">Learning Intelligence FAQ</h2>
-        <p class="text-gray-500 text-sm uppercase tracking-widest font-bold">Your directory & guide questions answered</p>
-     </div>
-     <div class="space-y-4">
-        {[
-            { q: "How often is the Learning Journal updated?", a: "We publish new course reviews and career guides every 48–72 hours to ensure our data matches current Udemy curriculum changes." },
-            { q: "Is the research data cite-worthy for academic use?", a: "Yes. Our rankings are based on verified student enrollment data, instructor tenure, and course curriculum analysis, making them a high-authority source for education trends." },
-            { q: "Do you accept sponsored course reviews?", a: "No. Integrity is our core. CoursesWyn never accepts payment for course placement or ranking boost. Every article is 100% researcher-driven." }
-        ].map(faq => (
-            <details class="group bg-[#0c1219] border border-white/5 rounded-2xl overflow-hidden open:border-indigo-500/20 shadow-xl transition-all">
-                <summary class="flex justify-between items-center cursor-pointer list-none p-6 text-white font-bold text-sm hover:text-indigo-400 transition-colors">
-                    <span>{faq.q}</span>
-                    <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center transition-transform group-open:rotate-180">▾</span>
-                </summary>
-                <div class="px-8 pb-8 text-gray-500 text-xs leading-relaxed pt-2">
-                    {faq.a}
-                </div>
-            </details>
-        ))}
-     </div>
-  </section>
+    </div>
+  </article>
+</Layout>
 
-</div>
-</MainLayout>
+<style>
+  .blog-root {
+    background: var(--bg);
+    min-height: 60vh;
+    padding: 2rem 1rem 4rem;
+  }
+  .blog-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .breadcrumb {
+    font-size: 0.875rem;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+  .breadcrumb a { color: var(--brand); text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb-sep { margin: 0 0.35rem; color: var(--muted); }
+
+  .blog-header { margin-bottom: 1.5rem; }
+  .blog-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 0.5rem;
+    line-height: 1.2;
+  }
+  .blog-desc {
+    font-size: 1.0625rem;
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 0;
+    max-width: 760px;
+  }
+
+  /* Stats */
+  .stats-bar {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.5rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .stat strong {
+    font-size: 1.375rem;
+    font-weight: 800;
+    color: var(--brand);
+  }
+  .stat span {
+    font-size: 0.8125rem;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* Tag Filter */
+  .tag-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+  }
+  .tag-filter-label {
+    font-size: 0.8125rem;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 0.25rem;
+  }
+  .tag-chip {
+    display: inline-block;
+    padding: 0.3rem 0.75rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    color: var(--muted);
+    text-decoration: none;
+    font-weight: 500;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .tag-chip:hover { border-color: var(--brand); color: var(--brand); }
+
+  /* Post Grid */
+  .post-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .post-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  }
+  .post-card:hover {
+    border-color: var(--brand);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+  }
+  .post-card-img-link { display: block; }
+  .post-card-img {
+    aspect-ratio: 16/9;
+    overflow: hidden;
+  }
+  .post-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s;
+  }
+  .post-card:hover .post-card-img img { transform: scale(1.04); }
+
+  .post-card-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  .post-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .post-tag {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--brand);
+  }
+  .post-date {
+    font-size: 0.8125rem;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .post-tag + .post-date::before {
+    content: '·';
+    margin-right: 0.5rem;
+    color: var(--border);
+  }
+  .post-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.4;
+    margin: 0 0 0.5rem;
+  }
+  .post-card-title a { color: var(--text); text-decoration: none; }
+  .post-card-title a:hover { color: var(--brand); }
+  .post-card-desc {
+    font-size: 0.875rem;
+    color: var(--muted);
+    line-height: 1.55;
+    margin: 0 0 1rem;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .post-card-btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: var(--brand);
+    color: var(--bg);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    width: fit-content;
+    transition: filter 0.2s;
+    margin-top: auto;
+  }
+  .post-card-btn:hover { filter: brightness(1.1); }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .pagination-info { font-size: 0.9375rem; color: var(--muted); font-weight: 500; }
+  .pagination-next {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    background: var(--brand);
+    color: var(--bg);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: filter 0.2s;
+  }
+  .pagination-next:hover { filter: brightness(1.1); }
+
+  @media (max-width: 900px) {
+    .post-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+  }
+  @media (max-width: 560px) {
+    .post-grid { grid-template-columns: 1fr; gap: 1rem; }
+    .blog-title { font-size: 1.5rem; }
+    .stats-bar { gap: 1rem; }
+  }
+</style>

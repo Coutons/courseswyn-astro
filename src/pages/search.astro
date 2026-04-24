@@ -1,282 +1,755 @@
 ---
-import MainLayout from '../layouts/MainLayout.astro';
-import coupons from '../data/coupons.json';
-
-// Get unique top categories for discovery grid
-const categories = [...new Set(coupons.map(c => c.category))].sort().slice(0, 12);
-
-const siteUrl = "https://courseswyn.com";
-const canonical = `${siteUrl}/search/`;
-const title = "Verified Udemy Coupon Search — Find 100% OFF Instructor Deals";
-const description = "Search our directory of thousands of manualy verified Udemy coupons, free courses, and professional skill-based discounts. Updated daily for accuracy.";
-
-const structuredData = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "WebSite",
-      "@id": `${siteUrl}/#website`,
-      "url": siteUrl,
-      "name": "CoursesWyn",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": `${siteUrl}/search/?q={search_term_string}`,
-        "query-input": "required name=search_term_string"
-      }
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
-        { "@type": "ListItem", "position": 2, "name": "Search Coupons", "item": canonical }
-      ]
-    }
-  ]
-};
+import Layout from '../layouts/Layout.astro';
 ---
 
-<MainLayout 
-  title={title} 
-  description={description} 
-  canonical={canonical}
-  structuredData={structuredData}
->
-  <style is:global>
-    body { background: #0a0f16 !important; }
-  </style>
-
-  <!-- Fixed Background & Glows -->
-  <div class="fixed inset-0 bg-[#0a0f16] -z-50"></div>
-  <div class="fixed top-0 left-[-10%] w-[700px] h-[700px] bg-indigo-500/10 rounded-full blur-[180px] pointer-events-none -z-40"></div>
-  <div class="fixed bottom-0 right-[-10%] w-[600px] h-[600px] bg-indigo-600/8 rounded-full blur-[180px] pointer-events-none -z-40"></div>
-
-  <div class="min-h-screen pb-20 relative">
-    
-    <!-- Meta Robots Logic (Client-side would need different handling, but we set a default) -->
-    <meta name="robots" content="index, follow" />
-
-    <!-- Search Header -->
-    <header class="border-b border-white/5 pt-20 pb-16 relative z-30">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <nav class="mb-6 flex justify-center" aria-label="Breadcrumb">
-           <ol class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-600">
-              <li><a href="/" class="hover:text-indigo-400 transition-colors">Home</a></li>
-              <li>/</li>
-              <li class="text-indigo-400">Search Engine</li>
-           </ol>
-        </nav>
-
-        <h1 class="text-4xl md:text-7xl font-black text-white leading-[1.1] tracking-tighter mb-10 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">
-           Verified <span class="text-indigo-400">Coupon</span> Search
-        </h1>
-        
-         <div class="relative max-w-2xl mx-auto">
-            <input 
-              type="text" 
-              id="search-page-input"
-              placeholder="Search by skill (e.g. AI, Python, AWS)..." 
-              class="w-full bg-white/5 border border-white/10 rounded-[2rem] px-8 py-5 pl-16 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl text-xl font-medium" 
-            />
-            <div class="absolute left-6 top-1/2 -translate-y-1/2 text-indigo-400">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            </div>
-         </div>
+<Layout title="Search Udemy Courses — Verified Promo Codes & Vouchers | CoursesWyn">
+  <!-- Hero -->
+  <section class="search-hero">
+    <div class="hero-grid-bg"></div>
+    <div class="container hero-inner">
+      <div class="hero-badge">
+        <span class="badge-pulse"></span>
+        Live Deals — Updated Daily
       </div>
-    </header>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      
-      <!-- 1. EMPTY STATE: DISCOVERY HUB (SEO Silo) -->
-      <div id="discovery-hub" class="space-y-16">
-          <div class="flex flex-col md:flex-row items-end justify-between gap-6 border-b border-white/5 pb-8">
-              <div>
-                  <span class="text-indigo-400 font-black uppercase text-[10px] tracking-[0.4em] block mb-2">Discovery Hub</span>
-                  <h2 class="text-3xl font-black text-white tracking-tight">Browse Manual Categories</h2>
-              </div>
-              <p class="text-gray-500 text-sm max-w-sm italic">Direct internal links to our most active professional domains for optimized learning discovery.</p>
-          </div>
-          
-          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {categories.map(cat => (
-                  <a href={`/search?q=${cat.toLowerCase()}`} class="group p-8 rounded-[2rem] bg-white/5 border border-white/5 hover:border-indigo-500/40 hover:-translate-y-1 transition-all text-center relative overflow-hidden">
-                      <div class="absolute inset-0 bg-indigo-400/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                      <span class="text-white font-black text-xs block group-hover:text-indigo-400 transition-colors uppercase tracking-tight relative z-10">{cat}</span>
-                  </a>
-              ))}
-          </div>
-
-          <div class="p-12 rounded-[3.5rem] bg-indigo-500/5 border border-indigo-500/10 text-center">
-             <h3 class="text-white font-black text-xl mb-4">Quality Verification Protocol</h3>
-             <p class="text-gray-500 text-sm max-w-2xl mx-auto leading-relaxed">
-                Every course matching your search is manually vetted for current pricing integrity and instructor verification. We filter over 5,000 daily Udemy offers to present only 100% functional coupons.
-             </p>
-          </div>
-      </div>
-
-      <!-- 2. SEARCH STATUS -->
-      <div id="search-status" class="mb-12 hidden">
-        <div class="flex items-center gap-4 mb-4">
-            <span class="w-1.5 h-8 bg-indigo-400 rounded-full"></span>
-            <h2 class="text-2xl font-black text-white tracking-tight uppercase" id="results-headline">Filtering Inventory</h2>
-        </div>
-        <p class="text-gray-500 font-black uppercase tracking-widest text-[10px]" id="results-count">Analyzing coupon library...</p>
-      </div>
-
-      <!-- 3. RESULTS GRID -->
-      <div id="results-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        <!-- Results injected here -->
-      </div>
-
-      <!-- 4. NO RESULTS -->
-      <div id="no-results" class="hidden text-center py-32 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[4rem] shadow-2xl">
-         <div class="inline-flex items-center justify-center w-24 h-24 bg-indigo-500/10 rounded-full mb-8 text-indigo-400">
-            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-         </div>
-         <h3 class="text-3xl font-black text-white mb-4 tracking-tighter">Inventory Mismatch</h3>
-         <p class="text-gray-500 max-w-md mx-auto text-lg font-medium">We couldn't find manual coupons matching that phrase. Try "AI", "Software", or use the discovery categories above.</p>
-         <button onclick="window.location.href='/search'" class="mt-10 inline-block bg-white text-black font-black px-10 py-4 rounded-2xl uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Clear Search</button>
-      </div>
-
+      <h1 id="search-title" class="hero-title">
+        Search Udemy Promo Codes
+      </h1>
+      <p id="search-description" class="hero-desc" style="display:none"></p>
     </div>
-  </div>
-</MainLayout>
+  </section>
 
-<!-- Client Side Script -->
-<script define:vars={{ initialCoupons: coupons }}>
-  const allCoupons = initialCoupons;
+  <!-- Results section -->
+  <section class="results-section">
+    <div class="container">
 
-  function initSearch() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const query = (urlParams.get('q') || '').toLowerCase().trim();
-      
-      const hubEl = document.getElementById('discovery-hub');
-      const statusEl = document.getElementById('search-status');
-      const countEl = document.getElementById('results-count');
-      const headlineEl = document.getElementById('results-headline');
-      const gridEl = document.getElementById('results-grid');
-      const noResultsEl = document.getElementById('no-results');
-      const inputPageEl = document.getElementById('search-page-input');
+      <!-- Loading -->
+      <div id="search-loading" class="state-box" style="display:none">
+        <div class="loading-spinner"></div>
+        <p class="state-title">Searching courses…</p>
+        <p class="state-sub">Finding the best verified coupons for you</p>
+      </div>
 
-      if(inputPageEl) {
-        inputPageEl.value = query;
-        inputPageEl.addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') window.location.href = `/search?q=${encodeURIComponent(inputPageEl.value)}`;
-        });
-      }
+      <!-- Grid -->
+      <div id="search-results" class="results-grid"></div>
 
-      if (!query) {
-          hubEl.classList.remove('hidden');
-          statusEl.classList.add('hidden');
-          gridEl.innerHTML = '';
-          return;
-      }
+      <!-- No results -->
+      <div id="no-results" class="no-results-wrap" style="display:none">
+        <div class="no-results-card">
+          <div class="no-results-icon">🔍</div>
+          <h2 id="no-results-title" class="no-results-heading">No Courses Found</h2>
+          <p class="no-results-body">
+            We couldn't find any courses with verified coupons for that search.
+            Try <strong>free courses</strong>, <strong>discount codes</strong>, or browse popular categories below.
+          </p>
+          <div class="no-results-actions">
+            <a href="/search?q=free" class="action-btn action-green">🎁 Discount Deals</a>
+            <a href="/search?q=coupon" class="action-btn action-amber">💰 Promo Vouchers</a>
+          </div>
+          <div class="category-grid">
+            <a href="/categories/development"   class="cat-btn">💻 Development</a>
+            <a href="/categories/business"      class="cat-btn cat-green">💼 Business</a>
+            <a href="/categories/design"        class="cat-btn cat-amber">🎨 Design</a>
+            <a href="/categories/it-and-software" class="cat-btn cat-blue">💾 IT & Software</a>
+          </div>
+        </div>
+      </div>
 
-      hubEl.classList.add('hidden');
-      statusEl.classList.remove('hidden');
-      headlineEl.textContent = `Search: ${query}`;
+      <!-- Pagination -->
+      <div id="search-navigation" class="pagination" style="display:none">
+        <button id="prev-page" class="page-btn page-btn-ghost">← Previous</button>
+        <span id="page-info" class="page-info"></span>
+        <button id="next-page" class="page-btn page-btn-primary">Next →</button>
+      </div>
+    </div>
+  </section>
+</Layout>
 
-      const results = allCoupons.filter(course => {
-          const t = (course.title || '').toLowerCase();
-          const c = (course.category || '').toLowerCase();
-          const s = (course.subcategory || '').toLowerCase();
-          return t.includes(query) || c.includes(query) || s.includes(query);
-      });
-
-      if (results.length === 0) {
-          countEl.textContent = `0 Verified Results`;
-          gridEl.innerHTML = '';
-          noResultsEl.classList.remove('hidden');
-      } else {
-          countEl.textContent = `${results.length} Manually Verified Offers Found`;
-          noResultsEl.classList.add('hidden');
-          
-          gridEl.innerHTML = results.map(course => {
-              const price = course.price;
-              const originalPrice = course.originalPrice;
-              let discountBadge = "";
-              if (originalPrice > price) {
-                 const p = Math.round(((originalPrice - price) / originalPrice) * 100);
-                 discountBadge = `${p}% OFF`;
-              } else if (price === 0) discountBadge = "100% OFF";
-
-              const categorySlug = (course.category || '').toLowerCase().replace(/\s+/g, '-');
-              const subcategorySlug = (course.subcategory || '').toLowerCase().replace(/\s+/g, '-');
-              const badgeLink = course.subcategory ? `/courses/subcategory/${subcategorySlug}` : `/courses/category/${categorySlug}`;
-              
-              const isTopRated = course.rating >= 4.7;
-              const isPopular = course.students >= 10000;
-              const displayDate = new Date(course.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-              return `
-                <div class="group relative bg-[#1c252e] border border-[#2d3748] rounded-2xl overflow-hidden hover:border-indigo-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 h-full flex flex-col shadow-2xl">
-                  <a href="/coupon/${course.slug}" class="absolute inset-0 z-10"></a>
-                  <div class="relative aspect-video overflow-hidden z-0">
-                      <img src="${course.image}" alt="${course.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
-                      <div class="absolute inset-0 bg-gradient-to-t from-[#1a1d29] via-transparent to-transparent opacity-60"></div>
-                      
-                      <div class="absolute top-2 right-2 flex flex-col gap-1 z-20">
-                          ${isTopRated ? `<span class="bg-yellow-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg uppercase tracking-tight">★ Top Rated</span>` : ''}
-                          ${isPopular ? `<span class="bg-indigo-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg uppercase tracking-tight">🔥 Popular</span>` : ''}
-                      </div>
-
-                      ${course.duration ? `
-                        <div class="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-[10px] text-white font-medium flex items-center gap-1 border border-white/10">
-                            <svg class="w-3 h-3 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            ${course.duration}
-                        </div>
-                      ` : ''}
-                  </div>
-
-                  <div class="p-5 flex flex-col flex-grow relative z-20">
-                      <div class="flex items-center gap-2 mb-3 text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none">
-                        <span>${displayDate}</span>
-                        <span class="w-1 h-1 bg-gray-600 rounded-full"></span>
-                        <span class="text-indigo-400">${course.subcategory || course.category}</span>
-                      </div>
-
-                      <h3 class="font-black text-white text-md mb-3 leading-tight group-hover:text-indigo-400 transition-colors line-clamp-2 tracking-tight">${course.title}</h3>
-                      
-                      <div class="flex items-center gap-2 mb-4 text-[11px] text-gray-400 leading-none">
-                        <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        <span class="truncate">By ${course.instructor || "Expert Instructor"}</span>
-                      </div>
-
-                      <p class="text-gray-500 text-xs leading-relaxed line-clamp-2 mb-6 flex-grow opacity-80">
-                        ${course.description || course.seoDescription || "Explore this comprehensive course and master new skills with expert guidance and hands-on projects."}
-                      </p>
-
-                      <div class="mt-auto pt-4 border-t border-white/5 flex flex-col gap-4">
-                          <div class="flex justify-between items-center">
-                              <div class="flex items-center gap-2">
-                                 <span class="text-yellow-500 font-black text-sm">★ ${course.rating || "4.8"}</span>
-                                 <span class="text-gray-600 text-[9px] bg-white/5 px-2 py-1 rounded border border-white/5 font-bold uppercase tracking-widest">${(course.students || 1200).toLocaleString()}+</span>
-                              </div>
-                              <div class="flex items-center gap-2 leading-none">
-                                 ${originalPrice && originalPrice > price ? `<span class="text-gray-600 line-through text-[10px]">$${originalPrice}</span>` : ''}
-                                 <span class="${price === 0 ? 'text-indigo-400' : 'text-white'} font-black text-lg tracking-tighter">${price === 0 ? 'FREE' : '$'+price}</span>
-                              </div>
-                          </div>
-
-                          <div class="flex items-center justify-between">
-                              ${discountBadge ? `<span class="text-[9px] font-black text-indigo-400 bg-indigo-400/10 px-2 py-1 rounded border border-indigo-400/20 uppercase tracking-widest">${discountBadge}</span>` : '<span></span>'}
-                              <span class="text-indigo-400 text-[9px] font-black flex items-center gap-1 uppercase tracking-widest">
-                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                                 Verified
-                              </span>
-                          </div>
-
-                          <div class="relative z-30">
-                            <a href="${course.url}" target="_blank" rel="nofollow noopener" class="block w-full py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white text-xs font-black rounded-xl text-center shadow-lg shadow-indigo-500/10 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">
-                                Get Coupon
-                            </a>
-                          </div>
-                      </div>
-                  </div>
-                </div>
-                `;
-          }).join('');
-      }
+<style>
+  :root {
+    --bg-dark: #0b0d12;
+    --bg-card: #151921;
+    --border: rgba(255,255,255,0.07);
+    --green: var(--brand);
+    --green-dark: var(--secondary);
+    --amber: var(--secondary);
+    --blue: #00f2fe;
+    --red: #ef4444;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    --radius-card: 1.25rem;
   }
 
-  document.addEventListener('astro:page-load', initSearch);
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  /* ===== HERO ===== */
+  .search-hero {
+    background: linear-gradient(160deg, #131720 0%, #0b0d12 60%);
+    padding: 5rem 0 4rem;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.25);
+    color: var(--green);
+    padding: 0.4rem 1.1rem;
+    border-radius: 2rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin-bottom: 1.5rem;
+  }
+
+  .badge-pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: blink 2s infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 1rem;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .hero-desc {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    max-width: 680px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* ===== RESULTS ===== */
+  .results-section {
+    background: var(--bg-dark);
+    padding: 3rem 0 6rem;
+    min-height: 60vh;
+  }
+
+  /* Loading */
+  .state-box {
+    text-align: center;
+    padding: 4rem 0;
+  }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .state-title {
+    color: var(--amber);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 0.4rem;
+  }
+
+  .state-sub {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  /* Results grid */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.75rem;
+    margin-bottom: 3rem;
+  }
+
+  /* No results */
+  .no-results-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 3rem 0;
+  }
+
+  .no-results-card {
+    max-width: 620px;
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 3rem 2.5rem;
+    text-align: center;
+  }
+
+  .no-results-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+  .no-results-heading {
+    color: var(--text-primary);
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 0 0 1rem;
+  }
+
+  .no-results-body {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.65;
+    margin: 0 0 2rem;
+  }
+
+  .no-results-body strong { color: var(--amber); }
+
+  .no-results-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+
+  .action-btn {
+    display: inline-block;
+    padding: 0.85rem 2rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: filter 0.2s;
+  }
+
+  .action-btn:hover { filter: brightness(1.1); }
+
+  .action-green {
+    background: var(--green);
+    color: #0a1a0f;
+  }
+
+  .action-amber {
+    background: var(--amber);
+    color: #1c0f00;
+  }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .cat-btn {
+    display: block;
+    padding: 0.85rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .cat-btn:hover { background: rgba(255,255,255,0.09); color: var(--text-primary); }
+  .cat-green { border-color: rgba(34,197,94,0.2); color: #86efac; }
+  .cat-amber { border-color: rgba(245,158,11,0.2); color: #fcd34d; }
+  .cat-blue  { border-color: rgba(96,165,250,0.2); color: var(--blue); }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    margin-top: 2rem;
+  }
+
+  .page-btn {
+    padding: 0.65rem 1.5rem;
+    border-radius: 0.6rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid;
+  }
+
+  .page-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .page-btn-ghost {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-secondary);
+  }
+
+  .page-btn-ghost:not(:disabled):hover {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-primary);
+  }
+
+  .page-btn-primary {
+    background: var(--green);
+    border-color: var(--green-dark);
+    color: #0a1a0f;
+  }
+
+  .page-btn-primary:not(:disabled):hover {
+    background: var(--green-dark);
+  }
+
+  .page-info {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    min-width: 120px;
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .results-grid { grid-template-columns: 1fr; }
+    .no-results-card { padding: 2rem 1.25rem; }
+  }
+</style>
+
+<script>
+  interface Deal {
+    id: string;
+    slug?: string;
+    title: string;
+    description?: string;
+    category?: string;
+    subcategory?: string;
+    instructor?: string;
+    price?: number;
+    originalPrice?: number;
+    rating?: number;
+    students?: number;
+    image?: string;
+    updatedAt?: string;
+  }
+
+  let currentPage = 1;
+  const ITEMS_PER_PAGE = 12;
+  let allDeals: Deal[] = [];
+
+  // ── helpers ──────────────────────────────────────────────────────────────
+
+  function renderCard(deal: Deal): string {
+    const price        = deal.price ?? 0;
+    const originalPrice = deal.originalPrice ?? 0;
+    const hasDiscount  = originalPrice > 0 && price < originalPrice;
+    const discount     = hasDiscount ? Math.round(100 - (price / originalPrice) * 100) : 0;
+    const isFree       = price === 0;
+    const rating       = deal.rating ?? 0;
+    const students     = deal.students ?? 0;
+    const updatedLabel = deal.updatedAt
+      ? new Date(deal.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : 'Recently updated';
+
+    const imgHtml = deal.image
+      ? `<img src="${deal.image}" alt="${deal.title}" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:0.75rem 0.75rem 0 0;">`
+      : `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:3rem;opacity:0.3;">📚</div>`;
+
+    const badgeHtml = isFree
+      ? `<div class="rc-badge rc-badge-free">🎁 FREE</div>`
+      : hasDiscount
+        ? `<div class="rc-badge rc-badge-hot">🔥 ${discount}% OFF</div>`
+        : '';
+
+    const subcatHtml = deal.subcategory
+      ? `<a href="/topics/${deal.subcategory.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}"
+           class="rc-subcat">${deal.subcategory}</a>`
+      : '';
+
+    return `
+      <article class="rc-card">
+        <div class="rc-img-wrap">
+          ${imgHtml}
+          ${badgeHtml}
+          <span class="rc-date">${updatedLabel}</span>
+        </div>
+        <div class="rc-body">
+          <h2 class="rc-title">
+            <a href="/coupon/${deal.slug || deal.id}" class="rc-title-link">${deal.title}</a>
+          </h2>
+          ${deal.instructor
+            ? `<p class="rc-instructor">By <strong>${deal.instructor}</strong></p>`
+            : ''}
+          <p class="rc-desc">${deal.description ?? 'Master this in-demand skill with comprehensive training from industry experts.'}</p>
+          <div class="rc-meta">
+            <span class="rc-rating">★ ${rating.toFixed(1)} · ${students.toLocaleString()} students</span>
+            ${subcatHtml}
+          </div>
+          <div class="rc-actions">
+            <a href="/coupon/${deal.slug || deal.id}" class="rc-btn-primary">🎯 Get Coupon</a>
+            ${deal.instructor
+              ? `<a href="/search?q=${encodeURIComponent(deal.instructor + ' free')}" class="rc-btn-secondary">Free Only</a>`
+              : ''}
+          </div>
+        </div>
+      </article>`;
+  }
+
+  function getEmptyStateHtml(query: string): string {
+    return `<div style="grid-column:1/-1;display:flex;justify-content:center;padding:2rem 0;">
+      <div style="text-align:center;max-width:420px;background:#151921;border:1px solid rgba(255,255,255,0.07);border-radius:1.25rem;padding:2.5rem 2rem;">
+        <div style="font-size:2.5rem;margin-bottom:1rem;">🔍</div>
+        <h3 style="color:#f8fafc;margin:0 0 0.5rem;font-size:1.3rem;">Enter a Search Term</h3>
+        <p style="color:#94a3b8;font-size:0.95rem;line-height:1.6;margin:0;">
+          Search for courses, instructors, or topics to find verified coupons and exclusive deals.
+        </p>
+      </div>
+    </div>`;
+  }
+
+  // ── display ───────────────────────────────────────────────────────────────
+
+  function displayResults(): void {
+    const container = document.getElementById('search-results');
+    const noResults = document.getElementById('no-results');
+    const nav       = document.getElementById('search-navigation');
+
+    if (!container) return;
+
+    if (allDeals.length === 0) {
+      container.innerHTML = '';
+      if (noResults) noResults.style.display = 'flex';
+      if (nav) nav.style.display = 'none';
+      return;
+    }
+
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const page  = allDeals.slice(start, start + ITEMS_PER_PAGE);
+
+    container.innerHTML = page.map(renderCard).join('');
+    if (noResults) noResults.style.display = 'none';
+    if (nav) nav.style.display = allDeals.length > ITEMS_PER_PAGE ? 'flex' : 'none';
+  }
+
+  function updatePagination(): void {
+    const prevBtn  = document.getElementById('prev-page') as HTMLButtonElement | null;
+    const nextBtn  = document.getElementById('next-page') as HTMLButtonElement | null;
+    const pageInfo = document.getElementById('page-info');
+    const total    = Math.ceil(allDeals.length / ITEMS_PER_PAGE);
+
+    if (prevBtn) {
+      prevBtn.disabled = currentPage === 1;
+    }
+    if (nextBtn) {
+      nextBtn.disabled = currentPage >= total;
+    }
+    if (pageInfo) {
+      pageInfo.textContent = `Page ${currentPage} of ${total} · ${allDeals.length} results`;
+    }
+  }
+
+  function goToPage(page: number): void {
+    const total = Math.ceil(allDeals.length / ITEMS_PER_PAGE);
+    if (page < 1 || page > total) return;
+    currentPage = page;
+    displayResults();
+    updatePagination();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── search ────────────────────────────────────────────────────────────────
+
+  async function performSearch(): Promise<void> {
+    const params  = new URLSearchParams(window.location.search);
+    const query   = params.get('q') ?? '';
+
+    const container  = document.getElementById('search-results');
+    const noResults  = document.getElementById('no-results');
+    const nav        = document.getElementById('search-navigation');
+    const loading    = document.getElementById('search-loading');
+    const titleEl    = document.getElementById('search-title');
+    const descEl     = document.getElementById('search-description');
+
+    if (!query) {
+      if (container) container.innerHTML = getEmptyStateHtml('');
+      if (noResults) noResults.style.display = 'none';
+      if (nav) nav.style.display = 'none';
+      if (loading) loading.style.display = 'none';
+      return;
+    }
+
+    // Show loading state
+    if (loading) loading.style.display = 'block';
+    if (container) container.innerHTML = '';
+    if (noResults) noResults.style.display = 'none';
+    if (nav) nav.style.display = 'none';
+
+    try {
+      const res   = await fetch('/api/deals');
+      const deals = (await res.json()) as Deal[];
+
+      const q = query.toLowerCase();
+      allDeals = deals.filter((deal) =>
+        deal.title.toLowerCase().includes(q) ||
+        (deal.description?.toLowerCase().includes(q) ?? false) ||
+        (deal.category?.toLowerCase().includes(q)    ?? false) ||
+        (deal.instructor?.toLowerCase().includes(q)  ?? false) ||
+        (deal.subcategory?.toLowerCase().includes(q) ?? false)
+      );
+
+      currentPage = 1;
+
+      if (titleEl) {
+        titleEl.textContent = `"${query}" — Verified Udemy Promo Codes`;
+      }
+      document.title = `${query} Udemy Promo Codes — ${allDeals.length} Results | CoursesWyn`;
+
+      if (descEl) {
+        descEl.style.display = 'block';
+        descEl.textContent = `Found ${allDeals.length} verified ${query} courses with exclusive promo codes. Browse discount vouchers verified by our experts — up to 100% off. Limited-time offers!`;
+      }
+
+      displayResults();
+      updatePagination();
+    } catch (err) {
+      console.error('Search error:', err);
+      if (container) {
+        container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem 0;">
+          <div style="background:#151921;border:1px solid rgba(239,68,68,0.3);border-radius:1.25rem;padding:2rem;max-width:400px;margin:0 auto;">
+            <p style="color:#ef4444;font-size:1.1rem;font-weight:600;margin:0 0 0.5rem;">⚠️ Search Error</p>
+            <p style="color:#94a3b8;margin:0;">Unable to load results. Please try again later.</p>
+          </div>
+        </div>`;
+      }
+    } finally {
+      if (loading) loading.style.display = 'none';
+    }
+  }
+
+  // ── init ──────────────────────────────────────────────────────────────────
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const prevBtn = document.getElementById('prev-page') as HTMLButtonElement | null;
+    const nextBtn = document.getElementById('next-page') as HTMLButtonElement | null;
+
+    prevBtn?.addEventListener('click', () => goToPage(currentPage - 1));
+    nextBtn?.addEventListener('click', () => goToPage(currentPage + 1));
+
+    performSearch();
+  });
 </script>
+
+<!-- Card styles (injected once, used by JS-generated HTML) -->
+<style is:global>
+  .rc-card {
+    background: #151921;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 1.25rem;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .rc-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+    border-color: rgba(34,197,94,0.35);
+  }
+
+  .rc-img-wrap {
+    height: 180px;
+    position: relative;
+    background: #1c2230;
+    overflow: hidden;
+  }
+
+  .rc-badge {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 2rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .rc-badge-free {
+    background: rgba(34,197,94,0.18);
+    border: 1px solid rgba(34,197,94,0.4);
+    color: #86efac;
+  }
+
+  .rc-badge-hot {
+    background: rgba(239,68,68,0.18);
+    border: 1px solid rgba(239,68,68,0.4);
+    color: #fca5a5;
+  }
+
+  .rc-date {
+    position: absolute;
+    bottom: 0.6rem;
+    right: 0.6rem;
+    background: rgba(0,0,0,0.65);
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.4rem;
+    backdrop-filter: blur(4px);
+  }
+
+  .rc-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .rc-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin: 0 0 0.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.45;
+  }
+
+  .rc-title-link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .rc-title-link:hover { color: var(--brand); }
+
+  .rc-instructor {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin: 0 0 0.75rem;
+  }
+
+  .rc-instructor strong { color: #cbd5e1; }
+
+  .rc-desc {
+    font-size: 0.88rem;
+    color: #94a3b8;
+    line-height: 1.55;
+    margin: 0 0 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+  }
+
+  .rc-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .rc-rating {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  .rc-subcat {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--brand);
+    background: var(--brand-soft);
+    border: 1px solid rgba(0, 242, 254, 0.2);
+    padding: 0.2rem 0.6rem;
+    border-radius: 2rem;
+    text-decoration: none;
+  }
+
+  .rc-subcat:hover { background: rgba(34,197,94,0.15); }
+
+  .rc-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .rc-btn-primary {
+    flex: 1;
+    display: block;
+    padding: 0.75rem 1rem;
+    background: #22c55e;
+    color: #0a1a0f;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 0.7rem;
+    transition: background 0.2s, transform 0.15s;
+  }
+
+  .rc-btn-primary:hover {
+    filter: brightness(1.2);
+    transform: translateY(-1px);
+  }
+
+  .rc-btn-secondary {
+    display: block;
+    padding: 0.75rem 1rem;
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.25);
+    color: #f59e0b;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 0.7rem;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+
+  .rc-btn-secondary:hover { background: rgba(245,158,11,0.2); }
+</style>

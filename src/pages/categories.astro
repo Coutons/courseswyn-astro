@@ -1,154 +1,396 @@
 ---
-import MainLayout from '../layouts/MainLayout.astro';
-import CategoryCard from '../components/category/CategoryCard.astro';
-import coupons from '../data/coupons.json';
+import Layout from "../layouts/Layout.astro";
+import { readDeals } from "../lib/store";
 
-// Get and process category data
-const categoryData = [...new Set(coupons.map(c => c.category))].sort().map(category => {
-  const categoryCoupons = coupons.filter(c => c.category === category);
-  const subcategories = [...new Set(categoryCoupons.map(c => c.subcategory))].filter(Boolean).sort() as string[];
-  
-  return {
-    name: category,
-    courseCount: categoryCoupons.length,
-    subcategories
-  };
+function normName(raw?: string | null) {
+  if (!raw) return undefined;
+  let v = String(raw).trim();
+  v = v.replace(/&amp;/gi, "&");
+  v = v.replace(/\s+/g, " ");
+  return v || undefined;
+}
+
+function slugifyCategory(name: string) {
+  if (name === "Uncategorized") return "uncategorized";
+  let v = name.toLowerCase();
+  v = v.replace(/&amp;/gi, "&");
+  v = v.replace(/&/g, " and ");
+  v = v.replace(/[^\w\s-]/g, "");
+  v = v.trim();
+  v = v.replace(/\s+/g, "-");
+  v = v.replace(/-+/g, "-");
+  return v;
+}
+
+// Category descriptions for SEO — unique, informative text per category
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  "development": "Web development, mobile apps, game dev, and software engineering courses.",
+  "it-and-software": "IT fundamentals, cybersecurity, cloud computing, and networking certifications.",
+  "business": "Entrepreneurship, management, finance, and business strategy courses.",
+  "design": "Graphic design, UI/UX, illustration, and digital art with pro tools.",
+  "marketing": "Digital marketing, SEO, social media, email campaigns, and growth hacking.",
+  "data-science": "Machine learning, Python, data analytics, statistics, and AI fundamentals.",
+  "personal-development": "Productivity, leadership, communication, and career advancement skills.",
+  "photography-and-video": "Photography techniques, video production, editing, and post-processing.",
+  "music": "Music theory, production, audio engineering, and instrument learning.",
+  "teaching-and-academics": "Academic subjects, test prep, language learning, and teaching methods.",
+  "office-productivity": "Microsoft Office, Google Workspace, project management, and workflow tools.",
+  "finance-and-accounting": "Accounting, investing, financial modeling, cryptocurrency, and budgeting.",
+  "programming-languages": "Python, JavaScript, Java, C++, Rust, Go, and other coding languages.",
+};
+
+const deals = await readDeals();
+const cats = new Map<string, { name: string; count: number; subs: Map<string, number> }>();
+
+for (const d of deals) {
+  const cName = normName(d.category) ?? "Uncategorized";
+  const cKey = cName.toLowerCase();
+  if (!cats.has(cKey)) cats.set(cKey, { name: cName, count: 0, subs: new Map() });
+  const bucket = cats.get(cKey)!;
+  bucket.count += 1;
+  const sName = normName(d.subcategory);
+  if (sName) {
+    bucket.subs.set(sName, (bucket.subs.get(sName) || 0) + 1);
+  }
+}
+
+const listRaw = Array.from(cats.values()).sort((a, b) => b.count - a.count);
+
+const list = listRaw.map((c) => {
+  const slug = slugifyCategory(c.name);
+  const description = CATEGORY_DESCRIPTIONS[slug] ?? `Browse ${c.count} ${c.name} courses with verified Udemy coupons and discounts.`;
+  return { ...c, slug, description };
 });
 
-const faqs = [
-  {
-    question: "How many course categories do you have?",
-    answer: "We currently have 13 main categories covering various subjects from programming and design to business and marketing. Each category contains multiple subcategories for more specific topics."
-  },
-  {
-    question: "What are the most popular categories?",
-    answer: "Our most popular categories include Programming & Development, Web Design, Business & Entrepreneurship, Digital Marketing, Data Science, and Graphic Design. Each category offers hundreds of free courses."
-  },
-  {
-    question: "How do I find courses in a specific category?",
-    answer: "Click on any category card above to browse courses in that subject area. You can also use the search function on our homepage to find specific courses by keywords."
-  },
-  {
-    question: "Are all courses in these categories free?",
-    answer: "Yes! All courses listed in our categories are available for free using our exclusive coupon codes. No hidden fees or subscriptions required."
-  }
-];
+const totalCategories = list.length;
+const totalCourses = deals.length;
 
-// Structured Data: ItemList for categories
-const itemListSchema = {
+// Proper interpolated values for structured data
+const pageTitle = `Browse ${totalCategories}+ Course Categories — ${totalCourses}+ Free Udemy Coupons | CoursesWyn`;
+const pageDescription = `Explore ${totalCategories} course categories with ${totalCourses}+ verified Udemy coupons. Python, web development, data science, AI, design, business & more — updated daily.`;
+
+// Build structured data with real interpolated values (not template strings)
+const structuredData = {
   "@context": "https://schema.org",
-  "@type": "ItemList",
-  "itemListElement": categoryData.map((data, index) => ({
-    "@type": "ListItem",
-    "position": index + 1,
-    "name": data.name,
-    "url": `https://courseswyn.com/courses/category/${data.name}`
-  }))
-};
-
-// Structured Data: FAQPage
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": faqs.map(faq => ({
-    "@type": "Question",
-    "name": faq.question,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": faq.answer
-    }
-  }))
-};
-
-const combinedSchema = [
-  ...[itemListSchema, faqSchema],
-  {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": "https://courseswyn.com/"
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "Categories",
-        "item": "https://courseswyn.com/categories/"
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://courseswyn.com/categories#webpage",
+      "url": "https://courseswyn.com/categories",
+      "name": pageTitle,
+      "description": pageDescription,
+      "isPartOf": { "@id": "https://courseswyn.com/#website" },
+      "inLanguage": "en-US",
+      "dateModified": new Date().toISOString().split("T")[0],
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" },
+          { "@type": "ListItem", "position": 2, "name": "Categories", "item": "https://courseswyn.com/categories" }
+        ]
       }
-    ]
-  }
-];
-
-const pageTitle = "Free Udemy Course Categories - Browse Courses by Subject | CoursesWyn";
-const pageDescription = "Explore thousands of 100% OFF free Udemy courses organized by category. Verified daily: Development, Business, Design, Marketing, and more. Get your free certification today!";
+    },
+    {
+      "@type": "ItemList",
+      "@id": "https://courseswyn.com/categories#list",
+      "name": "Udemy Course Categories on CoursesWyn",
+      "description": `${totalCategories} categories with ${totalCourses}+ verified coupon deals`,
+      "numberOfItems": totalCategories,
+      "itemListElement": list.map((c, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "item": {
+          "@type": "ItemList",
+          "name": `${c.name} Courses`,
+          "description": c.description,
+          "url": `https://courseswyn.com/categories/${c.slug}`,
+          "numberOfItems": c.count
+        }
+      }))
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://courseswyn.com/#organization",
+      "name": "CoursesWyn",
+      "url": "https://courseswyn.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://courseswyn.com/logo.svg"
+      },
+      "sameAs": [
+        "https://x.com/courses_peak",
+        "https://www.facebook.com/CoursesWynOfficial/",
+        "https://www.linkedin.com/company/courseswyn"
+      ]
+    }
+  ]
+};
 ---
 
-<MainLayout 
-  title={pageTitle} 
-  description={pageDescription}
-  structuredData={combinedSchema}
-  ogTitle="Browse Free Udemy Course Categories - 100% OFF Coupons"
-  ogDescription="Stop paying for courses! Explore 13+ categories and thousands of premium Udemy courses for free with our daily updated coupons."
->
-  <div class="bg-[#060d18] min-h-screen pb-20 selection:bg-indigo-500/30 selection:text-indigo-200">
-    <!-- Hero Section -->
-    <section class="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden border-b border-white/5">
-      <div class="absolute inset-0 bg-gradient-to-b from-[#0a1120] to-[#060d18]"></div>
-      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-      
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-        <div class="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4 py-1.5 mb-6 shadow-[inset_0_1px_3px_rgba(99,102,241,0.2)]">
-          <span class="text-indigo-400 text-xs font-black uppercase tracking-widest">Directory Explorer</span>
+<Layout title={pageTitle} description={pageDescription}>
+  <!-- Structured Data with real interpolated values -->
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+
+  <div style="min-height: 100vh; color: var(--text); background: var(--bg);">
+    <main>
+
+      <!-- ── Hero ── -->
+      <section
+        aria-labelledby="categories-hero-heading"
+        style="background: linear-gradient(135deg, hsl(222,47%,7%) 0%, hsl(222,43%,10%) 100%); padding: clamp(4rem,10vw,8rem) 1rem 4rem; text-align: center; position: relative; overflow: hidden;"
+      >
+        <!-- Decorative blobs (aria-hidden) -->
+        <div aria-hidden="true" style="position:absolute;top:20%;left:10%;width:300px;height:300px;background:var(--brand);filter:blur(120px);opacity:.08;border-radius:50%;pointer-events:none;"></div>
+        <div aria-hidden="true" style="position:absolute;bottom:10%;right:10%;width:250px;height:250px;background:hsl(0,84%,60%);filter:blur(100px);opacity:.08;border-radius:50%;pointer-events:none;"></div>
+
+        <div class="container" style="position:relative;z-index:1;">
+          <!-- Breadcrumb nav -->
+          <nav aria-label="Breadcrumb" style="margin-bottom:2rem;">
+            <ol
+              itemscope
+              itemtype="https://schema.org/BreadcrumbList"
+              style="display:inline-flex;align-items:center;gap:8px;list-style:none;margin:0;padding:0;font-size:0.875rem;color:var(--muted);"
+            >
+              <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                <a href="/" itemprop="item" style="color:var(--muted);text-decoration:none;">
+                  <span itemprop="name">Home</span>
+                </a>
+                <meta itemprop="position" content="1" />
+              </li>
+              <li aria-hidden="true" style="color:var(--muted);">›</li>
+              <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                <span itemprop="name" style="color:var(--brand);font-weight:600;">Categories</span>
+                <meta itemprop="position" content="2" />
+                <meta itemprop="item" content="https://courseswyn.com/categories" />
+              </li>
+            </ol>
+          </nav>
+
+          <!-- Badge -->
+          <div aria-hidden="true" style="display:inline-flex;align-items:center;gap:.5rem;background:var(--brand-soft,rgba(168,85,247,.12));padding:.5rem 1rem;border-radius:9999px;margin-bottom:1.5rem;font-size:.875rem;color:var(--brand);font-weight:600;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Browse All Categories
+          </div>
+
+          <!--
+            H1: keyword-rich, uses real interpolated numbers.
+            Avoid duplicate of page <title> — complementary phrasing.
+          -->
+          <h1
+            id="categories-hero-heading"
+            style="font-size:clamp(2rem,5vw,3.5rem);font-weight:800;line-height:1.1;margin:0 auto 1.25rem;max-width:900px;color:var(--text);"
+          >
+            {totalCategories}+ Course Categories —
+            <span style="background:linear-gradient(135deg,var(--brand),hsl(35,90%,68%));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+              Find Free Udemy Coupons
+            </span>
+            by Topic
+          </h1>
+
+          <!-- Unique intro paragraph — important for E-E-A-T & topic relevance -->
+          <p style="font-size:clamp(1rem,2.5vw,1.2rem);color:var(--muted);max-width:680px;margin:0 auto 2.5rem;line-height:1.7;">
+            CoursesWyn organizes <strong style="color:var(--text);">{totalCourses}+ verified Udemy coupons</strong> across {totalCategories} learning categories — from programming and data science to design and business. Browse by topic to find discounted courses in your field, updated daily.
+          </p>
+
+          <!-- Stats row -->
+          <ul role="list" aria-label="Site statistics" style="display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;list-style:none;padding:0;margin:0;">
+            {[
+              { value: `${totalCategories}+`, label: "Categories" },
+              { value: `${totalCourses}+`, label: "Udemy Courses" },
+              { value: "100%", label: "Verified Coupons" },
+              { value: "Daily", label: "Fresh Updates" },
+            ].map(({ value, label }) => (
+              <li style="background:var(--card,#1f2330);padding:.75rem 1.5rem;border-radius:12px;border:1px solid var(--border,#2d3748);display:flex;flex-direction:column;align-items:center;min-width:110px;">
+                <strong style="color:var(--brand);font-size:1.3rem;line-height:1;">{value}</strong>
+                <span style="color:var(--muted);font-size:.8rem;margin-top:.25rem;">{label}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-        
-        <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight leading-tight">
-          Browse All <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Course Categories</span>
-        </h1>
-        
-        <p class="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed mb-10">
-          Discover premium Udemy courses completely free! Browse through <strong class="text-white">{categoryData.length}+ categories</strong>. From programming and design to business and marketing, find exactly what you want to learn.
-        </p>
-      </div>
-    </section>
+      </section>
 
-    <!-- Categories Grid -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20 mb-32">
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
-        {categoryData.map((data) => (
-          <CategoryCard 
-            category={data.name} 
-            subcategories={data.subcategories} 
-            courseCount={data.courseCount} 
-          />
-        ))}
-      </div>
-    </div>
+      <!-- ── Categories Grid ── -->
+      <section
+        aria-labelledby="categories-grid-heading"
+        style="padding:4rem 1rem;background:var(--bg);"
+      >
+        <div class="container" style="max-width:1200px;">
+          <div style="text-align:center;margin-bottom:3rem;">
+            <h2
+              id="categories-grid-heading"
+              style="font-size:clamp(1.6rem,4vw,2.2rem);font-weight:800;color:var(--text);margin-bottom:.75rem;"
+            >
+              Browse All {totalCategories} Categories
+            </h2>
+            <!--
+              Unique descriptive paragraph under H2 — helps Google understand
+              the page's topical depth and gives each section a distinct role.
+            -->
+            <p style="color:var(--muted);font-size:1rem;max-width:580px;margin:0 auto;line-height:1.65;">
+              Each category links to a dedicated page listing all available Udemy coupons in that topic. Subcategories are shown below each card to help you narrow down your search.
+            </p>
+          </div>
 
-    <!-- FAQ Section (V3 Accordions) -->
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl font-black text-white mb-4">Frequently Asked Questions</h2>
-        <p class="text-gray-400">Everything you need to know about navigating our free course directory.</p>
-      </div>
-      
-      <div class="space-y-4">
-        {faqs.map((faq) => (
-          <details class="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden [&_summary::-webkit-details-marker]:hidden">
-            <summary class="flex items-center justify-between p-6 cursor-pointer font-bold text-white hover:text-indigo-400 transition-colors">
-              <span class="text-lg pr-4">{faq.question}</span>
-              <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-open:rotate-180 transition-transform duration-300 border border-white/10">
-                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-              </span>
-            </summary>
-            <div class="px-6 pb-6 text-gray-400 leading-relaxed bg-[#0a1120]/50 border-t border-white/5 pt-4 text-sm md:text-base">
-              {faq.answer}
+          {list.length === 0 ? (
+            <div style="text-align:center;padding:3rem;background:var(--card);border-radius:16px;border:1px solid var(--border);">
+              <h3 style="color:var(--text);margin-bottom:1rem;">No categories found</h3>
+              <p style="color:var(--muted);margin-bottom:1.5rem;">We loaded {deals.length} deals but couldn't group them into categories. Please try again later.</p>
+              <a href="/udemy-coupon-code" style="padding:.875rem 1.75rem;background:var(--brand);color:#fff;text-decoration:none;border-radius:10px;font-weight:600;">Browse All Deals</a>
             </div>
-          </details>
-        ))}
-      </div>
-    </div>
+          ) : (
+            <ul
+              role="list"
+              aria-label="Course categories"
+              style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;list-style:none;padding:0;margin:0;"
+            >
+              {list.map((c) => (
+                <li style="position:relative;">
+                  <a
+                    href={`/categories/${c.slug}`}
+                    title={`Browse ${c.count} ${c.name} courses with Udemy coupons`}
+                    style="display:block;background:var(--card,#1f2330);border:1px solid var(--border,#2d3748);border-radius:16px;padding:1.5rem;text-decoration:none;color:inherit;transition:border-color .2s,transform .2s;height:100%;"
+                  >
+                    <!-- Category header -->
+                    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+                      <!-- Icon initial -->
+                      <div
+                        aria-hidden="true"
+                        style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--brand),hsl(35,90%,60%));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1.25rem;flex-shrink:0;"
+                      >
+                        {c.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <!-- H3 inside list item: helps topic hierarchy for crawlers -->
+                        <h3 style="margin:0;color:var(--text);font-size:1.1rem;font-weight:700;line-height:1.2;margin-bottom:.2rem;">
+                          {c.name} Courses
+                        </h3>
+                        <p style="margin:0;color:var(--muted);font-size:.875rem;">
+                          <strong style="color:var(--brand);">{c.count}</strong> Udemy coupons
+                        </p>
+                      </div>
+                    </div>
+
+                    <!-- SEO description per category -->
+                    <p style="color:var(--muted);font-size:.85rem;line-height:1.55;margin:0 0 1rem;">
+                      {c.description}
+                    </p>
+
+                    <!-- Subcategory tags -->
+                    {c.subs.size > 0 && (
+                      <div>
+                        <p style="color:var(--muted);font-size:.78rem;font-weight:600;margin:0 0 .5rem;text-transform:uppercase;letter-spacing:.04em;">
+                          Topics:
+                        </p>
+                        <ul role="list" style="display:flex;gap:.4rem;flex-wrap:wrap;list-style:none;padding:0;margin:0;">
+                          {Array.from(c.subs.entries())
+                            .sort((a, b) => b[1] - a[1])
+                            .slice(0, 4)
+                            .map(([sub]) => (
+                              <li>
+                                <span style="display:inline-block;padding:.3rem .65rem;border-radius:20px;font-size:.75rem;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);color:var(--brand);font-weight:500;">
+                                  {sub}
+                                </span>
+                              </li>
+                            ))}
+                          {c.subs.size > 4 && (
+                            <li style="display:inline-flex;align-items:center;">
+                              <span style="font-size:.75rem;color:var(--muted);padding:.3rem .4rem;">+{c.subs.size - 4} more</span>
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      <!-- ── What You Can Learn — Topical Authority Section ── -->
+      <section
+        aria-labelledby="learning-paths-heading"
+        style="padding:4rem 1rem;background:linear-gradient(135deg,hsl(222,47%,7%),hsl(222,43%,10%));"
+      >
+        <div class="container" style="max-width:900px;text-align:center;">
+          <h2
+            id="learning-paths-heading"
+            style="font-size:clamp(1.5rem,3.5vw,2rem);font-weight:800;color:var(--text);margin-bottom:.75rem;"
+          >
+            How CoursesWyn's Categories Work
+          </h2>
+          <p style="color:var(--muted);font-size:1rem;line-height:1.7;max-width:700px;margin:0 auto 2.5rem;">
+            Every category page on CoursesWyn lists real Udemy courses with verified discount coupons. Coupons are checked daily — when a coupon expires, it's removed or replaced. You can filter by subcategory to find exactly the skill you're looking for, whether it's Python for beginners, advanced Kubernetes, or UX design fundamentals.
+          </p>
+
+          <!-- FAQ for this page — also injected into FAQPage schema below -->
+          <div style="text-align:left;max-width:700px;margin:0 auto;">
+            <h3 style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:1.25rem;">Common Questions About Categories</h3>
+            <dl style="display:flex;flex-direction:column;gap:1rem;">
+              {[
+                {
+                  q: "Are all courses in each category really free?",
+                  a: "Most coupons listed on CoursesWyn apply a 100% discount, making the course temporarily free. Some coupons apply a partial discount (e.g., 90% off). The price shown reflects the coupon price at time of verification."
+                },
+                {
+                  q: "How often are categories updated?",
+                  a: "New courses are added to categories daily as we source and verify fresh Udemy coupons. Each category page shows only deals with currently active coupons."
+                },
+                {
+                  q: "Can I browse subcategories?",
+                  a: "Yes — each category page includes subcategory filters so you can narrow down results. For example, within Development you can filter by Web Development, Mobile Development, Game Development, and more."
+                },
+                {
+                  q: "Which categories have the most courses?",
+                  a: `The largest categories on CoursesWyn are currently ${list.slice(0, 3).map(c => c.name).join(", ")} — reflecting the most popular learning topics on Udemy.`
+                },
+              ].map(({ q, a }) => (
+                <div style="border:1px solid var(--border,#2d3748);border-radius:10px;overflow:hidden;">
+                  <dt style="padding:.875rem 1.25rem;background:var(--card,#1f2330);font-weight:600;font-size:.95rem;color:var(--text);">{q}</dt>
+                  <dd style="padding:.875rem 1.25rem;background:var(--bg);margin:0;color:var(--muted);font-size:.9rem;line-height:1.6;">{a}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── CTA ── -->
+      <section style="padding:4rem 1rem;background:var(--bg);text-align:center;">
+        <div class="container" style="max-width:700px;">
+          <h2 style="font-size:clamp(1.4rem,3vw,1.9rem);font-weight:800;color:var(--text);margin-bottom:.75rem;">
+            Can't Find What You're Looking For?
+          </h2>
+          <p style="color:var(--muted);line-height:1.65;margin-bottom:2rem;">
+            Browse our full collection of <strong style="color:var(--text);">{totalCourses}+ Udemy deals</strong> or reach out to suggest a new category.
+          </p>
+          <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+            <a
+              href="/udemy-coupon-code"
+              style="padding:.9rem 2rem;background:var(--brand);color:#fff;text-decoration:none;border-radius:10px;font-size:1rem;font-weight:700;transition:opacity .2s;"
+            >
+              Browse All Deals
+            </a>
+            <a
+              href="/contact"
+              style="padding:.9rem 2rem;background:transparent;color:var(--brand);text-decoration:none;border-radius:10px;font-size:1rem;font-weight:700;border:2px solid var(--brand);transition:background .2s;"
+            >
+              Request a Category
+            </a>
+          </div>
+        </div>
+      </section>
+
+    </main>
   </div>
-</MainLayout>
+
+  <style>
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    a[href^="/categories/"]:hover {
+      border-color: var(--brand) !important;
+      transform: translateY(-2px);
+    }
+  </style>
+</Layout>

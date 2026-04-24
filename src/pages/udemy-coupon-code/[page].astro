@@ -1,0 +1,340 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import DealCard from "../../components/DealCard.astro";
+import { readDeals } from "../../lib/store";
+
+export async function getStaticPaths() {
+  const allDeals = await readDeals();
+  const PAGE_SIZE = 12;
+  const totalPages = Math.ceil(allDeals.length / PAGE_SIZE);
+
+  // Start from page 2 — page 1 is handled by /deals.astro
+  return Array.from({ length: totalPages - 1 }, (_, i) => ({
+    params: { page: String(i + 2) }
+  }));
+}
+
+const allDeals = await readDeals();
+const PAGE_SIZE = 12;
+
+const currentPage = Math.max(2, parseInt(Astro.params.page || '2', 10));
+
+const totalPages = Math.ceil(allDeals.length / PAGE_SIZE);
+const startIndex = (currentPage - 1) * PAGE_SIZE;
+const endIndex = startIndex + PAGE_SIZE;
+const currentItems = allDeals.slice(startIndex, endIndex);
+
+// Pagination URLs
+const siteUrl = "https://courseswyn.com";
+const baseDealsUrl = `${siteUrl}/udemy-coupon-code`;
+const currentUrl = `${baseDealsUrl}/${currentPage}`;
+const prevUrl = currentPage === 2 ? baseDealsUrl : `${baseDealsUrl}/${currentPage - 1}`;
+const nextUrl = currentPage < totalPages ? `${baseDealsUrl}/${currentPage + 1}` : null;
+
+// SEO
+const currentDate = new Date();
+const monthNames = ["January","February","March","April","May","June",
+  "July","August","September","October","November","December"];
+const currentMonth = monthNames[currentDate.getMonth()];
+const currentYear = currentDate.getFullYear();
+
+const totalDeals = allDeals.length;
+const freeDeals = allDeals.filter((d: any) => d.price === 0 || d.price === null).length;
+
+const pageTitle = `Udemy Deals Page ${currentPage} of ${totalPages} — Free Coupons | CoursesWyn`;
+const pageDescription = `Page ${currentPage} of verified Udemy coupons. Browse ${totalDeals}+ free courses and 100% off deals updated daily — ${currentMonth} ${currentYear}.`;
+
+// Build page number list — no key prop, no >= operator
+type PageItem = { type: 'page'; value: number } | { type: 'ellipsis'; id: string };
+const pageItems: PageItem[] = [];
+const windowSize = 2;
+let lastAdded = 0;
+for (let p = 1; p <= totalPages; p++) {
+  const inWindow = p >= currentPage - windowSize && p <= currentPage + windowSize;
+  if (p === 1 || p === totalPages || inWindow) {
+    if (lastAdded > 0 && p - lastAdded > 1) {
+      pageItems.push({ type: 'ellipsis', id: `gap-${p}` });
+    }
+    pageItems.push({ type: 'page', value: p });
+    lastAdded = p;
+  }
+}
+
+// JSON-LD — no Organization/WebSite (already in Layout.astro)
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "@id": `${currentUrl}#breadcrumb`,
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
+        { "@type": "ListItem", "position": 2, "name": "Udemy Deals & Coupons", "item": baseDealsUrl },
+        { "@type": "ListItem", "position": 3, "name": `Page ${currentPage}`, "item": currentUrl }
+      ]
+    },
+    {
+      "@type": "CollectionPage",
+      "@id": currentUrl,
+      "url": currentUrl,
+      "name": pageTitle,
+      "description": pageDescription,
+      "isPartOf": { "@id": siteUrl },
+      "breadcrumb": { "@id": `${currentUrl}#breadcrumb` },
+      "dateModified": currentDate.toISOString().split('T')[0],
+      "inLanguage": "en-US",
+      "mainEntity": {
+        "@type": "ItemList",
+        "name": `Udemy Deals — Page ${currentPage}`,
+        "numberOfItems": allDeals.length,
+        "itemListElement": currentItems.map((deal: any, index: number) => ({
+          "@type": "ListItem",
+          "position": startIndex + index + 1,
+          "item": {
+            "@type": "Course",
+            "name": deal.title,
+            "description": deal.description || `Get ${deal.title} free with a verified 100% off coupon.`,
+            "url": `${siteUrl}/coupon/${deal.id}`,
+            "image": deal.image,
+            "provider": {
+              "@type": "Organization",
+              "name": deal.provider || "Udemy",
+              "url": "https://www.udemy.com"
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": String(deal.price ?? "0"),
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "priceValidUntil": deal.expiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              "seller": { "@type": "Organization", "name": "CoursesWyn", "url": siteUrl }
+            },
+            ...(deal.rating ? {
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": deal.rating.toString(),
+                "bestRating": "5",
+                "worstRating": "1",
+                "ratingCount": Math.max(1, Math.round(deal.students ?? 1000))
+              }
+            } : {})
+          }
+        }))
+      }
+    }
+  ]
+};
+---
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={currentUrl}
+>
+  <Fragment slot="head">
+    <link rel="prev" href={prevUrl} />
+    {nextUrl && <link rel="next" href={nextUrl} />}
+  </Fragment>
+
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+
+  <div style={{ minHeight: "100vh", color: "var(--text)" }}>
+
+    {/* ── BREADCRUMB ── */}
+    <nav aria-label="Breadcrumb" style={{ background: "var(--card)", borderBottom: "1px solid var(--border)", padding: "0.75rem 0" }}>
+      <div class="container">
+        <ol style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.875rem", listStyle: "none", margin: 0, padding: "0 1rem", flexWrap: "wrap" }}>
+          <li><a href="/" style={{ color: "var(--muted)", textDecoration: "none" }}>Home</a></li>
+          <li aria-hidden="true" style={{ color: "var(--muted)" }}>›</li>
+          <li><a href={baseDealsUrl} style={{ color: "var(--muted)", textDecoration: "none" }}>Udemy Deals & Coupons</a></li>
+          <li aria-hidden="true" style={{ color: "var(--muted)" }}>›</li>
+          <li aria-current="page" style={{ color: "var(--brand)", fontWeight: 600 }}>Page {currentPage}</li>
+        </ol>
+      </div>
+    </nav>
+
+    {/* ── PAGE HEADER ── */}
+    <div style={{ background: "var(--card)", borderBottom: "1px solid var(--border)", padding: "1.5rem 0", textAlign: "center" }}>
+      <div class="container">
+        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text)", margin: "0 0 0.25rem" }}>
+          <span style={{ color: "var(--brand)" }}>Udemy Deals</span> & Free Coupons — Page {currentPage}
+        </h1>
+        <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.9rem" }}>
+          Showing {startIndex + 1}–{Math.min(endIndex, allDeals.length)} of {allDeals.length} verified courses
+          · Page {currentPage} of {totalPages}
+        </p>
+      </div>
+    </div>
+
+    {/* ── DEALS GRID ── */}
+    <section style={{ padding: "3rem 1rem 4rem" }}>
+      <div class="container" style={{ maxWidth: "1400px" }}>
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
+          <div>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text)", margin: "0 0 0.2rem" }}>
+              <span style={{ color: "var(--brand)" }}>Latest</span> Udemy Coupons
+            </h2>
+            <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.85rem" }}>
+              {startIndex + 1}–{Math.min(endIndex, allDeals.length)} of {allDeals.length} courses · Page {currentPage} of {totalPages}
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <a href={baseDealsUrl} style={{
+              display: "inline-flex", alignItems: "center", gap: "0.4rem",
+              padding: "0.5rem 1rem", background: "var(--card)",
+              border: "1px solid var(--border)", borderRadius: "8px",
+              color: "var(--muted)", textDecoration: "none", fontSize: "0.8rem", fontWeight: 600
+            }}>
+              ← All Deals
+            </a>
+            <a href="/categories" style={{
+              display: "inline-flex", alignItems: "center", gap: "0.4rem",
+              padding: "0.5rem 1rem", background: "var(--card)",
+              border: "1px solid var(--border)", borderRadius: "8px",
+              color: "var(--text)", textDecoration: "none", fontSize: "0.8rem", fontWeight: 600
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+              </svg>
+              Categories
+            </a>
+          </div>
+        </div>
+
+        {/* Deals grid */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+          gap: "1.5rem",
+          marginBottom: "3rem"
+        }}>
+          {currentItems.map((deal: any) => (
+            <DealCard deal={deal} />
+          ))}
+        </div>
+
+        {/* ── PAGINATION ── */}
+        <nav aria-label="Deal pages pagination" style={{ marginTop: "2rem" }}>
+          <div style={{
+            display: "flex", justifyContent: "center",
+            alignItems: "center", gap: "0.75rem", flexWrap: "wrap"
+          }}>
+
+            {/* Previous */}
+            <a href={prevUrl} rel="prev" style={{
+              display: "inline-flex", alignItems: "center", gap: "0.4rem",
+              padding: "0.75rem 1.5rem", background: "var(--card)",
+              border: "2px solid var(--brand)", borderRadius: "10px",
+              color: "var(--brand)", textDecoration: "none",
+              fontSize: "0.95rem", fontWeight: 600
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+              </svg>
+              Previous
+            </a>
+
+            {/* Page numbers */}
+            {pageItems.map((item) => {
+              if (item.type === 'ellipsis') {
+                return <span style={{ color: "var(--muted)", padding: "0 0.25rem" }}>…</span>;
+              }
+              const p = item.value;
+              const isActive = p === currentPage;
+              const href = p === 1 ? baseDealsUrl : `${baseDealsUrl}/${p}`;
+              return (
+                <a
+                  href={href}
+                  aria-current={isActive ? "page" : undefined}
+                  style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    width: "40px", height: "40px", borderRadius: "8px",
+                    textDecoration: "none", fontSize: "0.9rem", fontWeight: 600,
+                    background: isActive ? "var(--brand)" : "var(--card)",
+                    color: isActive ? "var(--bg)" : "var(--text)",
+                    border: isActive ? "2px solid var(--brand)" : "1px solid var(--border)"
+                  }}
+                >
+                  {p}
+                </a>
+              );
+            })}
+
+            {/* Next */}
+            {nextUrl ? (
+              <a href={nextUrl} rel="next" style={{
+                display: "inline-flex", alignItems: "center", gap: "0.4rem",
+                padding: "0.75rem 1.5rem", background: "var(--card)",
+                border: "2px solid var(--brand)", borderRadius: "10px",
+                color: "var(--brand)", textDecoration: "none",
+                fontSize: "0.95rem", fontWeight: 600
+              }}>
+                Next
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
+                </svg>
+              </a>
+            ) : (
+              <span style={{ padding: "0.75rem 1.5rem", opacity: 0.3, fontSize: "0.95rem", fontWeight: 600 }}>Next</span>
+            )}
+          </div>
+
+          <p style={{ textAlign: "center", color: "var(--muted)", fontSize: "0.85rem", marginTop: "1rem" }}>
+            Page {currentPage} of {totalPages} — {allDeals.length} total courses
+          </p>
+        </nav>
+
+      </div>
+    </section>
+
+    {/* ── CTA ── */}
+    <section class="hero-gradient" style={{ padding: "3rem 1rem" }}>
+      <div class="container" style={{ maxWidth: "700px", textAlign: "center" }}>
+        <p style={{ color: "var(--muted)", margin: "0 0 1.5rem", lineHeight: 1.6 }}>
+          Looking for a specific subject? Browse {totalDeals}+ free Udemy coupons by category.
+        </p>
+        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+          <a href={baseDealsUrl} style={{
+            display: "inline-flex", alignItems: "center", gap: "0.5rem",
+            padding: "0.75rem 1.5rem", background: "var(--card)",
+            color: "var(--text)", border: "2px solid var(--border)",
+            borderRadius: "10px", textDecoration: "none",
+            fontSize: "0.95rem", fontWeight: 600
+          }}>
+            ← Back to All Deals
+          </a>
+          <a href="/categories" style={{
+            display: "inline-flex", alignItems: "center", gap: "0.5rem",
+            padding: "0.75rem 1.5rem", background: "var(--brand)",
+            color: "var(--bg)", borderRadius: "10px", textDecoration: "none",
+            fontSize: "0.95rem", fontWeight: 700,
+            boxShadow: "0 4px 20px -4px hsla(45, 95%, 58%, 0.4)"
+          }}>
+            Browse Categories
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</Layout>
+
+<style>
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  .hero-gradient {
+    background: linear-gradient(135deg, hsl(222, 47%, 7%) 0%, hsl(222, 43%, 10%) 100%);
+  }
+
+  @media (max-width: 768px) {
+    h1 { font-size: 1.25rem !important; }
+  }
+</style>

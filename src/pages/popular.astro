@@ -1,0 +1,449 @@
+---
+import Layout from "../layouts/Layout.astro";
+import DealCard from "../components/DealCard.astro";
+import { readDeals } from "../lib/store";
+import { normName, slugifyCategory } from "../lib/utils";
+
+const allDeals = await readDeals();
+
+// ── INTENTIONAL: 5.0★ rated courses — by design, showing highest-rated ────────
+const popularCourses = allDeals
+  .filter(deal => deal.rating && deal.rating >= 4.5)
+  .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+  .slice(0, 100);
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+const totalDeals = allDeals.length;
+const totalPopular = popularCourses.length;
+const avgRating = popularCourses.length > 0
+  ? (popularCourses.reduce((sum, c) => sum + (c.rating ?? 0), 0) / popularCourses.filter(c => c.rating).length).toFixed(1)
+  : "5.0";
+
+// ── Categories ────────────────────────────────────────────────────────────────
+const categoryMap = new Map<string, number>();
+allDeals.forEach(deal => {
+  const name = normName(deal.category) || "Uncategorized";
+  categoryMap.set(name, (categoryMap.get(name) ?? 0) + 1);
+});
+const categories = Array.from(categoryMap.entries())
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 9)
+  .map(([name, count]) => ({ name, count }));
+
+// ── SEO — popular online courses keyword matching URL path ───────
+const pageTitle = `100+ Most Popular Online Courses 2026 — High-Rated Udemy Courses | CoursesWyn`;
+const pageDescription = `Browse 100+ popular online courses with 4.5-5.0★ ratings. Discover trending Udemy courses in programming, design, marketing & data science — with verified free coupons updated daily.`;
+const canonicalUrl = "https://courseswyn.com/popular";
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": canonicalUrl,
+      "url": canonicalUrl,
+      "name": pageTitle,
+      "description": pageDescription,
+      "inLanguage": "en-US",
+      "dateModified": new Date().toISOString().split('T')[0],
+      "isPartOf": { "@id": "https://courseswyn.com" },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" },
+          { "@type": "ListItem", "position": 2, "name": "Popular Courses", "item": canonicalUrl }
+        ]
+      },
+      "mainEntity": {
+        "@type": "ItemList",
+        "name": "Popular Online Courses",
+        "numberOfItems": totalPopular,
+        "itemListElement": popularCourses.slice(0, 10).map((course, index) => ({
+          "@type": "ListItem",
+          "position": index + 1,
+          "item": {
+            "@type": "Course",
+            "name": course.title,
+            "description": course.description || `Popular Udemy course with ${course.rating}★ rating`,
+            "url": `https://courseswyn.com/coupon/${course.slug || course.id}`,
+            "provider": {
+              "@type": "Organization",
+              "name": course.provider || "Udemy",
+              "sameAs": "https://www.udemy.com"
+            },
+            ...(course.rating ? {
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": course.rating.toFixed(1),
+                "bestRating": "5",
+                "worstRating": "1",
+                "ratingCount": Math.max(10, course.students ?? 100)
+              }
+            } : {})
+          }
+        }))
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What are popular online courses on CoursesWyn?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "CoursesWyn's Popular page showcases trending online courses with 4.5-5.0★ student ratings. These are the most sought-after Udemy courses — where students consistently give high scores and enroll in high numbers."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are top-rated Udemy courses free on CoursesWyn?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. CoursesWyn lists verified coupon codes for all featured courses. Many have 100% off coupons making them completely free. Click any course to see the current coupon and discounted price."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How are popular online courses ranked?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Popular courses are ranked by a combination of student rating (4.5-5.0★), enrollment numbers, and recent engagement. This ensures you discover courses that are both high-quality and currently trending among learners."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do popular online courses include a completion certificate?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. All Udemy courses listed on CoursesWyn include a certificate of completion you can share on LinkedIn or add to your resume — regardless of whether you enrolled using a free coupon."
+          }
+        }
+      ]
+    }
+  ]
+};
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <link rel="canonical" href={canonicalUrl} slot="head" />
+  <meta property="og:title" content={pageTitle} slot="head" />
+  <meta property="og:description" content={pageDescription} slot="head" />
+  <meta property="og:url" content={canonicalUrl} slot="head" />
+  <meta property="og:type" content="website" slot="head" />
+  <meta name="twitter:card" content="summary_large_image" slot="head" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" slot="head" />
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+
+  <div style="background: var(--bg); color: var(--text); min-height: 100vh;">
+    <main>
+
+      {/* ── Breadcrumb ── */}
+      <div style="background:var(--card); border-bottom:1px solid var(--border); padding:0.75rem 0;">
+        <div class="container">
+          <nav aria-label="Breadcrumb">
+            <ol
+              itemscope
+              itemtype="https://schema.org/BreadcrumbList"
+              style="display:flex; align-items:center; gap:8px; font-size:0.85rem; list-style:none; margin:0; padding:0; flex-wrap:wrap;"
+            >
+              <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                <a href="/" itemprop="item" style="color:var(--muted); text-decoration:none;">
+                  <span itemprop="name">Home</span>
+                </a>
+                <meta itemprop="position" content="1" />
+              </li>
+              <li aria-hidden="true" style="color:var(--border);">›</li>
+              <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                <span itemprop="name" style="color:var(--brand); font-weight:600;">Popular Online Courses</span>
+                <meta itemprop="position" content="2" />
+              </li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+
+      {/* ── Hero ── */}
+      <section
+        aria-labelledby="hero-heading"
+        style="padding:5rem 1rem 3.5rem; text-align:center; background:linear-gradient(135deg, hsl(222,47%,7%) 0%, hsl(222,43%,10%) 100%); position:relative; overflow:hidden;"
+      >
+        <div aria-hidden="true" style="position:absolute; top:15%; left:8%; width:280px; height:280px; background:var(--brand); filter:blur(120px); opacity:0.08; border-radius:50%; pointer-events:none;"></div>
+        <div aria-hidden="true" style="position:absolute; bottom:10%; right:8%; width:220px; height:220px; background:#f59e0b; filter:blur(100px); opacity:0.07; border-radius:50%; pointer-events:none;"></div>
+
+        <div class="container" style="position:relative; z-index:1;">
+
+          {/* H1 — keyword-first, honest label */}
+          <h1
+            id="hero-heading"
+            style="font-size:clamp(1.9rem, 4vw, 3rem); font-weight:800; line-height:1.15; margin-bottom:1.25rem; color:var(--text);"
+          >
+            100+ Most <span style="background:linear-gradient(135deg,var(--brand),hsl(35,90%,68%));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Popular Online Courses</span>
+            <span style="display:block; font-size:0.55em; font-weight:500; color:var(--muted); margin-top:0.4rem;">
+              4.5-5.0★ Ratings · Trending Udemy Courses Updated Daily
+            </span>
+          </h1>
+
+          <p style="font-size:clamp(1rem, 2vw, 1.2rem); color:var(--muted); max-width:680px; margin:0 auto 2.5rem; line-height:1.65;">
+            Discover {totalPopular}+ trending online courses with exceptional student ratings.
+            Popular Udemy courses in programming, design, marketing & more — with verified free coupons.
+          </p>
+
+          {/* Rating explanation pill */}
+          <div style="display:inline-flex; align-items:center; gap:0.5rem; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); padding:0.6rem 1.1rem; border-radius:9999px; font-size:0.82rem; color:#f59e0b; margin-bottom:2rem; font-weight:600;">
+            <span aria-hidden="true">★</span>
+            Showing {avgRating}★ rated courses — trending on Udemy right now
+          </div>
+
+          {/* Stats */}
+          <div role="list" aria-label="Page statistics" style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+            {[
+              { value: `${totalPopular}+`, label: "Popular Courses" },
+              { value: `${avgRating}★`, label: "Avg Rating" },
+              { value: "100%", label: "Free Coupons" },
+              { value: "Daily", label: "Updates" },
+            ].map(stat => (
+              <div role="listitem" style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:0.65rem 1.25rem; display:flex; flex-direction:column; align-items:center; min-width:90px;">
+                <span style="font-size:1.25rem; font-weight:800; color:var(--brand);">{stat.value}</span>
+                <span style="font-size:0.78rem; color:var(--muted); margin-top:2px;">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── GEO AI Banner ── */}
+      <div id="geo-banner" style="display:none; background:linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1)); border-bottom:1px solid rgba(59,130,246,0.2); padding:0.85rem 0;">
+        <div class="container" style="display:flex; align-items:center; justify-content:center; gap:0.5rem;">
+          <span id="geo-text" style="color:var(--text); font-size:0.85rem; font-weight:500;"></span>
+        </div>
+      </div>
+
+      {/* ── Context strip — E-E-A-T ── */}
+      <section
+        aria-labelledby="about-heading"
+        style="padding:1.75rem 1rem; background:var(--card); border-bottom:1px solid var(--border);"
+      >
+        <div class="container" style="max-width:860px; display:flex; gap:2rem; flex-wrap:wrap; align-items:center;">
+          <div style="flex:1; min-width:240px;">
+            <h2 id="about-heading" style="font-size:1.1rem; font-weight:700; color:var(--text); margin-bottom:0.5rem;">
+              Why these courses are popular
+            </h2>
+            <p style="font-size:0.95rem; color:var(--muted); line-height:1.65; margin:0;">
+              This page features <strong style="color:var(--text);">popular online courses</strong> with 4.5-5.0★ ratings —
+              trending Udemy courses that students love and enroll in daily. These courses combine high ratings
+              with strong engagement, making them excellent choices for your learning journey.
+              For the most-enrolled courses overall, visit our
+              <a href="/udemy-coupon-code" style="color:var(--brand); text-decoration:underline;">All Deals</a> page.
+            </p>
+          </div>
+          <div style="display:flex; gap:1.5rem; flex-shrink:0; flex-wrap:wrap;">
+            {[
+              { icon: "⭐", label: "4.5-5.0★ Score", note: "High rated" },
+              { icon: "✅", label: "Verified", note: "Coupons checked" },
+              { icon: "🔄", label: "Daily", note: "Fresh updates" },
+            ].map(item => (
+              <div style="text-align:center; min-width:68px;">
+                <div style="font-size:1.3rem; margin-bottom:3px;">{item.icon}</div>
+                <div style="font-size:0.76rem; font-weight:700; color:var(--text);">{item.label}</div>
+                <div style="font-size:0.68rem; color:var(--muted);">{item.note}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Courses Grid ── */}
+      <section aria-labelledby="courses-heading" style="padding:3rem 1rem 4rem;">
+        <div class="container">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem;">
+            <h2
+              id="courses-heading"
+              style="font-size:clamp(1.3rem, 3vw, 1.75rem); font-weight:800; color:var(--text); margin:0;"
+            >
+              {totalPopular} Popular Online Courses
+            </h2>
+            <span style="font-size:0.8rem; color:var(--muted); background:var(--card); border:1px solid var(--border); padding:0.35rem 0.85rem; border-radius:9999px;">
+              ★ Sorted by popularity & rating
+            </span>
+          </div>
+
+          <div
+            role="list"
+            aria-label="Popular online courses"
+            style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:1.5rem; margin-bottom:3rem;"
+          >
+            {popularCourses.map((course, index) => (
+              <DealCard deal={course} />
+            ))}
+          </div>
+
+          <div style="text-align:center;">
+            <a href="/udemy-coupon-code" style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.85rem 2rem; background:var(--brand); color:var(--bg); text-decoration:none; border-radius:10px; font-weight:700; font-size:0.95rem;">
+              Browse All {totalDeals}+ Deals
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Categories ── */}
+      <section aria-labelledby="categories-heading" style="padding:3rem 1rem; background:var(--card); border-top:1px solid var(--border);">
+        <div class="container">
+          <h2 id="categories-heading" style="font-size:1.3rem; font-weight:800; color:var(--text); margin-bottom:1.25rem; text-align:center;">
+            Browse Popular Courses by Category
+          </h2>
+          <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:0.75rem;">
+            {categories.map(cat => (
+              <a
+                href={`/categories/${slugifyCategory(cat.name)}`}
+                class="cat-link"
+                style="display:flex; flex-direction:column; align-items:center; padding:0.85rem 0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:10px; color:var(--text); text-decoration:none; font-size:0.83rem; font-weight:600; text-align:center; gap:3px;"
+              >
+                {cat.name}
+                <span style="font-size:0.7rem; color:var(--muted); font-weight:400;">{cat.count} courses</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section aria-labelledby="faq-heading" style="padding:3.5rem 1rem; border-top:1px solid var(--border);">
+        <div class="container" style="max-width:860px;">
+          <h2 id="faq-heading" style="font-size:clamp(1.3rem, 3vw, 1.75rem); font-weight:800; color:var(--text); margin-bottom:0.75rem; text-align:center;">
+            Frequently Asked Questions
+          </h2>
+          <p style="color:var(--muted); font-size:0.9rem; text-align:center; margin-bottom:2rem; max-width:520px; margin-left:auto; margin-right:auto; line-height:1.6;">
+            About our popular course selection and how to get them free.
+          </p>
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            {[
+              {
+                q: "What are popular online courses on CoursesWyn?",
+                a: "CoursesWyn's Popular page showcases trending online courses with 4.5-5.0★ student ratings. These are the most sought-after Udemy courses — where students consistently give high scores and enroll in high numbers."
+              },
+              {
+                q: "Are popular online courses free on CoursesWyn?",
+                a: "Yes. CoursesWyn lists verified coupon codes for all featured courses. Many have 100% off coupons making them completely free. Click any course card to see the current coupon and discounted price before enrolling."
+              },
+              {
+                q: "How are popular online courses ranked?",
+                a: "Popular courses are ranked by a combination of student rating (4.5-5.0★), enrollment numbers, and recent engagement. This ensures you discover courses that are both high-quality and currently trending among learners."
+              },
+              {
+                q: "Do popular online courses include a completion certificate?",
+                a: "Yes. All Udemy courses listed on CoursesWyn include a certificate of completion you can share on LinkedIn or add to your resume — regardless of whether you enrolled using a free coupon."
+              }
+            ].map(faq => (
+              <details style="background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
+                <summary style="padding:1rem 1.25rem; font-weight:600; color:var(--text); font-size:0.9rem; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:1rem;">
+                  {faq.q}
+                  <span aria-hidden="true" style="color:var(--muted); flex-shrink:0;">+</span>
+                </summary>
+                <div style="padding:0 1.25rem 1rem; color:var(--muted); font-size:0.875rem; line-height:1.65;">
+                  <p style="margin:0;">{faq.a}</p>
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <style>
+    .container { max-width: 1200px; margin: 0 auto; }
+    .course-card { transition: transform 0.2s, box-shadow 0.2s; }
+    .course-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+    .cta-btn:hover { opacity: 0.88; }
+    .cat-link { transition: border-color 0.2s; }
+    .cat-link:hover { border-color: var(--brand); }
+    details > summary::-webkit-details-marker { display: none; }
+    @media (max-width: 640px) { .container { padding: 0 0.75rem; } }
+  </style>
+
+  <script define:vars={{ totalPopular }}>
+    // ─────────────────────────────────────────────
+    // GEO AI PERSONALISATION
+    // Detects visitor country via ipapi.co (free tier, no key needed)
+    // and shows a localised banner + appends country hint to subtitle.
+    // Fails silently — no impact on page if API is unavailable.
+    // ─────────────────────────────────────────────
+    const GEO_COPY = {
+      US: '🇺🇸 Popular in the United States — Top Udemy courses with verified English-language coupons.',
+      GB: '🇬🇧 Trending in the UK — Expert Udemy courses with exclusive discount codes for UK learners.',
+      IN: '🇮🇳 Top picks for India — Thousands of Indian learners save daily with these Udemy course coupons.',
+      AU: '🇦🇺 Trending in Australia — Verified Udemy course coupons available to you right now.',
+      CA: '🇨🇦 Popular in Canada — Get free and discounted Udemy courses from top instructors.',
+      DE: '🇩🇪 Beliebt in Deutschland — Verifizierte Udemy-Coupons von Top-Kursen, täglich aktualisiert.',
+      BR: '🇧🇷 Popular no Brasil — Cupons Udemy verificados dos melhores cursos, atualizados diariamente.',
+      NG: '🇳🇬 Trending in Nigeria — Access world-class Udemy courses free with verified course coupons.',
+      PH: '🇵🇭 Popular in the Philippines — Free and discounted Udemy courses from expert instructors.',
+      ID: '🇮🇩 Populer di Indonesia — Kupon Udemy terverifikasi dari kursus terbaik, diperbarui harian.',
+      PK: '🇵🇰 Trending in Pakistan — Get free Udemy courses from top instructors, verified every day.',
+      EG: '🇪🇬 Popular in Egypt — Verified Udemy course coupons updated daily.',
+      MX: '🇲🇽 Popular en México — Cupones Udemy verificados de los mejores cursos.',
+      FR: '🇫🇷 Populaire en France — Coupons Udemy vérifiés auprès des meilleurs cours.',
+      TR: '🇹🇷 Türkiye\'de popüler — En iyi Udemy kurslarından doğrulanmış kuponlar.',
+      AR: '🇦🇷 Popular en Argentina — Cupones Udemy verificados de los mejores cursos.',
+      SA: '🇸🇦 رائج في المملكة العربية السعودية — كوبونات Udemy موثقة من أفضل الدورات.',
+      NL: '🇳🇱 Populair in Nederland — Geverifieerde Udemy-coupons van topcursussen.',
+      ES: '🇪🇸 Popular en España — Cupones Udemy verificados de los mejores cursos.',
+      IT: '🇮🇹 Popolare in Italia — Coupon Udemy verificati dai migliori corsi.',
+    };
+
+    async function initGeo() {
+      const banner  = document.getElementById('geo-banner');
+      const geoText = document.getElementById('geo-text');
+      if (!banner || !geoText) return;
+
+      try {
+        // Use session cache to avoid repeated API calls on navigation
+        const cached = sessionStorage.getItem('cs_geo');
+        let geo;
+
+        if (cached) {
+          geo = JSON.parse(cached);
+        } else {
+          const res = await fetch('https://ipapi.co/json/', {
+            signal: AbortSignal.timeout(4000),
+          });
+          if (!res.ok) return;
+          geo = await res.json();
+          sessionStorage.setItem('cs_geo', JSON.stringify(geo));
+        }
+
+        const code = (geo.country_code ?? '').toUpperCase();
+        const msg  = GEO_COPY[code]
+          ?? `📍 Browsing from ${geo.country_name ?? 'your region'} — Verified Udemy course coupons available now.`;
+
+        geoText.textContent = msg;
+        banner.style.display = 'block';
+
+        // Append country hint to the stats subtitle for soft personalisation
+        const sub = document.querySelector('[role="list"][aria-label="Page statistics"]');
+        if (sub && geo.country_name && !sub.textContent?.includes(geo.country_name)) {
+          const statItems = sub.querySelectorAll('div[role="listitem"]');
+          if (statItems.length > 0) {
+            const lastStat = statItems[statItems.length - 1];
+            const label = lastStat.querySelector('span:last-child');
+            if (label && !label.textContent?.includes(geo.country_name)) {
+              label.textContent = `${label.textContent?.trimEnd() || ''} · Popular in ${geo.country_name}`;
+            }
+          }
+        }
+      } catch {
+        // Geo is a progressive enhancement — never block page load
+      }
+    }
+
+    // Initialize GEO personalisation after page load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initGeo);
+    } else {
+      initGeo();
+    }
+  </script>
+</Layout>

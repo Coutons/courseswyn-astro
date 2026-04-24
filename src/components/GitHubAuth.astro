@@ -1,0 +1,79 @@
+---
+// GitHub Authentication Component
+interface Props {
+  onAuth?: (token: string) => void;
+}
+
+const { onAuth } = Astro.props;
+---
+
+<div id="github-auth" style="display: block; margin-bottom: 2rem; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 0.5rem;">
+  <h3 style="color: #fff; margin-bottom: 1rem;">GitHub Authentication Required</h3>
+  <p style="color: #a9b0c0; margin-bottom: 1rem; font-size: 0.9rem;">
+    Enter your GitHub Personal Access Token to update deals via GitHub API.
+  </p>
+  <div style="display: flex; gap: 0.5rem; align-items: center;">
+    <input 
+      type="password" 
+      id="github-token" 
+      placeholder="ghp_xxxxxxxxxxxx" 
+      style="flex: 1; padding: 0.5rem; border: 1px solid #333; background: #1a1d29; color: #fff; border-radius: 0.25rem;"
+    />
+    <button 
+      id="github-auth-btn" 
+      style="padding: 0.5rem 1rem; background: #007acc; color: white; border: none; border-radius: 0.25rem; cursor: pointer;"
+    >
+      Authenticate
+    </button>
+  </div>
+  <p style="color: #64748b; margin-top: 0.5rem; font-size: 0.8rem;">
+    Create token at: <a href="https://github.com/settings/tokens" target="_blank" style="color: #007acc;">GitHub Settings</a>
+  </p>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const authDiv = document.getElementById('github-auth');
+    const tokenInput = document.getElementById('github-token') as HTMLInputElement;
+    const authBtn = document.getElementById('github-auth-btn');
+    
+    // Debug: Check sessionStorage
+    console.log('=== GitHub Auth Debug ===');
+    console.log('SessionStorage available:', typeof sessionStorage !== 'undefined');
+    console.log('Existing token check...');
+    const existingToken = sessionStorage.getItem('github_token');
+    console.log('Existing token:', existingToken ? 'FOUND' : 'NOT FOUND');
+    console.log('Token length:', existingToken ? existingToken.length : 0);
+    
+    // Check if elements exist
+    if (!authDiv || !tokenInput || !authBtn) {
+      console.error('GitHub auth elements not found');
+      return;
+    }
+    
+    // Check if token already exists
+    if (existingToken) {
+      // Show the form anyway for testing
+      authDiv.style.display = 'block';
+      tokenInput.value = existingToken;
+      console.log('Token loaded into input field');
+    } else {
+      authDiv.style.display = 'block';
+      console.log('Form displayed, no existing token');
+    }
+    
+    authBtn.addEventListener('click', function() {
+      const token = tokenInput.value.trim();
+      console.log('Save button clicked, token length:', token.length);
+      if (token) {
+        sessionStorage.setItem('github_token', token);
+        console.log('Token saved to sessionStorage');
+        authDiv.style.display = 'none';
+        // Trigger custom event for authentication success
+        window.dispatchEvent(new CustomEvent('github-authenticated', { detail: { token } }));
+      } else {
+        console.log('No token entered');
+      }
+    });
+  });
+</script>

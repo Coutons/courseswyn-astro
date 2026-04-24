@@ -1,0 +1,309 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { readDeals } from '../../lib/store';
+import DealCard from '../../components/DealCard.astro';
+
+// Function to decode HTML entities
+const decodeHtml = (str: string) => str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+
+export async function getStaticPaths() {
+  // Function to decode HTML entities
+  const decodeHtml = (str: string) => str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+
+  const allDeals = await readDeals();
+
+  // Decode subcategories
+  allDeals.forEach(deal => {
+    if (deal.subcategory) {
+      deal.subcategory = decodeHtml(deal.subcategory);
+    }
+  });
+
+  // Get unique subcategories
+  const subcategories = [...new Set(allDeals.map(deal => deal.subcategory).filter(sub => sub != null && typeof sub === 'string'))];
+
+  return subcategories.map(subcategory => {
+    try {
+      const slug = subcategory.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+      return {
+        params: { topic: slug },
+        props: { originalTopic: subcategory }
+      };
+    } catch (e) {
+      return null;
+    }
+  }).filter(p => p != null);
+}
+
+const { topic: topicSlug } = Astro.params;
+const { originalTopic } = Astro.props;
+const urlParams = new URLSearchParams(Astro.url.search);
+const page = urlParams.get('page');
+
+// Read all deals
+const allDeals = await readDeals();
+
+// Decode subcategories in deals
+allDeals.forEach(deal => {
+  if (deal.subcategory && typeof deal.subcategory === 'string') {
+    deal.subcategory = decodeHtml(deal.subcategory);
+  }
+});
+
+// Use originalTopic for exact matching, with fallback for dev mode
+let topic = originalTopic;
+if (!topic) {
+  // Fallback for dev mode or missing props
+  const allSubcategories = [...new Set(allDeals.map(deal => deal.subcategory).filter(sub => sub != null && typeof sub === 'string'))];
+  const matching = allSubcategories.find(sub => sub.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-') === topicSlug);
+  topic = matching || 'Unknown Topic';
+}
+
+// Filter deals for this topic (subcategory) - exact match
+const topicDeals = allDeals.filter(deal => {
+  try {
+    if (!deal.subcategory || typeof deal.subcategory !== 'string') return false;
+    return deal.subcategory === topic;
+  } catch (e) {
+    return false;
+  }
+});
+
+// Pagination
+const PAGE_SIZE = 12;
+const currentPage = parseInt(page || '1') || 1;
+const startIndex = (currentPage - 1) * PAGE_SIZE;
+const endIndex = startIndex + PAGE_SIZE;
+const currentItems = topicDeals.slice(startIndex, endIndex);
+const totalPages = Math.ceil(topicDeals.length / PAGE_SIZE);
+
+const displayName = topic.replace(/\b\w/g, l => l.toUpperCase());
+const topicName = displayName;
+
+// Get category for this topic (assuming all deals in topic have same category)
+const category = topicDeals.length > 0 && topicDeals[0].category ? topicDeals[0].category : 'Development';
+const categoryImage = `/categories/${category.toLowerCase().replace(/\s+/g, '-')}.svg`;
+
+// Generate related searches
+const generateRelatedSearches = (topic: string) => {
+  const baseSearches = [
+    `${topic} Free Course`,
+    `${topic} Course Free`,
+    `${topic} PDF`,
+    `${topic} For Beginners`,
+    `${topic} Course for Beginners`,
+    `${topic} Course Udemy`,
+    `${topic} Course Youtube`,
+    `${topic} Course Free with certificate`,
+    `Free ${topic} Course with certificate`,
+    `${topic} online`,
+    `${topic} Course online`,
+    `${topic} Course Coupon Code`,
+    `${topic} Free`,
+    `${topic} Tutorial`,
+    `${topic} App`,
+    `${topic} download`,
+    `Learn ${topic}`,
+    `${topic} Mooc`
+  ];
+  return baseSearches;
+};
+
+const relatedSearches = generateRelatedSearches(topicName);
+
+// SEO description
+const topicDescription = `Discover the best Udemy courses for ${topicName} in 2026. Our comprehensive collection features expert-led tutorials covering ${topicName.toLowerCase()} fundamentals to advanced techniques. Whether you're a complete beginner looking to start your ${topicName.toLowerCase()} journey or an experienced professional seeking to deepen your expertise, you'll find high-quality courses with massive discounts. Learn from industry-leading instructors, gain practical skills through hands-on projects, and earn certificates to boost your career. From basic concepts to cutting-edge applications, our curated ${topicName.toLowerCase()} courses include interactive exercises, real-world examples, and lifetime access. Perfect for students, professionals, and anyone passionate about ${topicName.toLowerCase()}. Explore beginner-friendly introductions, intermediate skill-building courses, and advanced masterclasses. Get started today and transform your knowledge with the top-rated ${topicName.toLowerCase()} courses available on Udemy.`;
+
+// Get all topics for sidebar
+const topics = [...new Set(allDeals.map(deal => deal.subcategory).filter(sub => sub != null))];
+
+---
+
+<Layout title={`Best Udemy Courses for ${topicName} in 2026`} description={topicDescription}>
+  <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "2rem 1rem" }}>
+    {/* Page Header */}
+    <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+      <div style={{ marginBottom: "2rem" }}>
+        <img
+          src={categoryImage}
+          alt={`${topicName} courses`}
+          style={{
+            width: "80px",
+            height: "80px",
+            borderRadius: "12px",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.1)"
+          }}
+        />
+      </div>
+      <h1 style={{
+        fontSize: "2.5rem",
+        fontWeight: "800",
+        marginBottom: "1rem",
+        background: "linear-gradient(135deg, #FFC107 0%, #FFD54F 100%)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        backgroundClip: "text"
+      }}>
+        Best Udemy Courses for {topicName} in 2026
+      </h1>
+      <p style={{
+        fontSize: "1.1rem",
+        color: "var(--muted)",
+        maxWidth: "600px",
+        margin: "0 auto",
+        lineHeight: "1.6"
+      }}>
+        Discover {topicDeals.length}+ verified {topicName.toLowerCase()} courses with massive discounts. Learn from industry experts and advance your career today.
+      </p>
+      <a href="/udemy-coupon-code" style={{
+        color: "#FFC107",
+        textDecoration: "none",
+        fontWeight: "600",
+        display: "inline-block",
+        marginTop: "1rem"
+      }}>
+        ← Back to all deals
+      </a>
+    </div>
+
+    {/* Deals Grid */}
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+      gap: "2rem",
+      marginBottom: "3rem"
+    }}>
+      {currentItems.length > 0 ? (
+        currentItems.map((deal) => (
+          <DealCard deal={deal} />
+        ))
+      ) : (
+        <div style={{
+          gridColumn: "1 / -1",
+          textAlign: "center",
+          padding: "3rem",
+          background: "var(--card)",
+          borderRadius: "20px",
+          border: "1px solid var(--border)"
+        }}>
+          <h3 style={{ color: "var(--text)", marginBottom: "1rem", fontSize: "1.5rem" }}>
+            No courses found in {topicName}
+          </h3>
+          <p style={{ color: "var(--muted)", marginBottom: "1.5rem", lineHeight: "1.6" }}>
+            We couldn't find any courses in this topic. Try browsing our other topics or check back later for new courses.
+          </p>
+          <a href="/udemy-coupon-code" style={{
+            padding: "12px 24px",
+            background: "linear-gradient(135deg, #FFC107 0%, #FFD54F 100%)",
+            border: "2px solid #FFC107",
+            borderRadius: "8px",
+            color: "white",
+            textDecoration: "none",
+            fontWeight: "600",
+            display: "inline-block"
+          }}>
+            Browse All Courses
+          </a>
+        </div>
+      )}
+    </div>
+
+    {/* Related Searches */}
+    <div style={{ marginTop: "3rem", padding: "2rem", background: "var(--card)", borderRadius: "12px", border: "1px solid var(--border)" }}>
+      <h2 style={{ color: "var(--text)", marginBottom: "1rem", fontSize: "1.5rem" }}>
+        Related Searches for {topicName}
+      </h2>
+      <p style={{ color: "var(--muted)", lineHeight: "1.6", fontSize: "1rem" }}>
+        {relatedSearches.join(', ')}
+      </p>
+    </div>
+
+    {/* Topic Description */}
+    <div style={{ marginTop: "2rem", padding: "2rem", background: "var(--card)", borderRadius: "12px", border: "1px solid var(--border)" }}>
+      <h2 style={{ color: "var(--text)", marginBottom: "1rem", fontSize: "1.5rem" }}>
+        About {topicName} Courses
+      </h2>
+      <p style={{ color: "var(--muted)", lineHeight: "1.6", fontSize: "1rem" }}>
+        {topicDescription}
+      </p>
+    </div>
+
+    {/* Pagination */}
+    {totalPages > 1 && (
+      <div style={{ textAlign: "center", marginTop: "3rem", padding: "2rem" }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+          {/* Previous Button */}
+          {currentPage > 1 && (
+            <a
+              href={`/topics/${topicSlug}?page=${currentPage - 1}`}
+              style={{
+                padding: "8px 12px",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
+                color: "var(--text)",
+                textDecoration: "none",
+                fontSize: "14px",
+                fontWeight: "600"
+              }}
+            >
+              ←
+            </a>
+          )}
+
+          {/* Page Numbers */}
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(pageNum =>
+              pageNum === 1 ||
+              pageNum === totalPages ||
+              (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+            )
+            .map((pageNum) => (
+              <a
+                href={`/topics/${topicSlug}?page=${pageNum}`}
+                style={{
+                  padding: "8px 12px",
+                  background: pageNum === currentPage
+                    ? "linear-gradient(135deg, #FFC107 0%, #FFD54F 100%)"
+                    : "var(--card)",
+                  border: pageNum === currentPage
+                    ? "2px solid #FFC107"
+                    : "1px solid var(--border)",
+                  borderRadius: "6px",
+                  color: pageNum === currentPage ? "white" : "var(--text)",
+                  textDecoration: "none",
+                  fontSize: "14px",
+                  fontWeight: pageNum === currentPage ? "bold" : "600"
+                }}
+              >
+                {pageNum}
+              </a>
+            ))}
+
+          {/* Next Button */}
+          {currentPage < totalPages && (
+            <a
+              href={`/topics/${topicSlug}?page=${currentPage + 1}`}
+              style={{
+                padding: "8px 12px",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
+                color: "var(--text)",
+                textDecoration: "none",
+                fontSize: "14px",
+                fontWeight: "600"
+              }}
+            >
+              →
+            </a>
+          )}
+        </div>
+
+        <div style={{ color: "var(--muted)", fontSize: "14px", marginTop: "10px" }}>
+          Showing {startIndex + 1}-{Math.min(endIndex, topicDeals.length)} of {topicDeals.length} courses
+        </div>
+      </div>
+    )}
+  </div>
+</Layout>

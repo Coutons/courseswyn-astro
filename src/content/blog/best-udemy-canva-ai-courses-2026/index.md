@@ -17,7 +17,7 @@ image: ../../../assets/images/best-canva-ai-courses-udemy-2026.jpg
 
 ## Why Learn Canva AI in 2026?
 
-Canva has quietly transformed from a simple drag-and-drop design tool into one of the most powerful AI-driven creative platforms available today. With the rollout of Magic Studio, AI-powered video generation, background removal, text-to-image features, and deep [ChatGPT integration](https://medium.com/@coursespeak/udemy-chatgpt-integration-2026-how-to-access-courses-inside-chatgpt-f8f572b57621), Canva in 2026 is a completely different beast compared to what it was just two years ago.
+Canva has quietly transformed from a simple drag-and-drop design tool into one of the most powerful AI-driven creative platforms available today. With the rollout of Magic Studio, AI-powered video generation, background removal, text-to-image features, and deep [ChatGPT integration](https://medium.com/@courseswyn/udemy-chatgpt-integration-2026-how-to-access-courses-inside-chatgpt-f8f572b57621), Canva in 2026 is a completely different beast compared to what it was just two years ago.
 
 Whether you're a solo content creator trying to build a brand, a small business owner who can't afford a design team, or a marketing professional looking to produce more content in less time — Canva AI is genuinely worth learning properly. And Udemy happens to have some solid structured courses that go beyond basic YouTube tutorials.
 

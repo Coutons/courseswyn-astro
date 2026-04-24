@@ -1,0 +1,240 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { getAvailableDates } from '../../../lib/store.js';
+
+export async function getStaticPaths() {
+  const dates = await getAvailableDates();
+  const ARTICLES_PER_PAGE = 12;
+  const totalPages = Math.max(1, Math.ceil(dates.length / ARTICLES_PER_PAGE));
+  return Array.from({ length: totalPages - 1 }, (_, i) => ({
+    params: { page: String(i + 2) },
+  }));
+}
+
+const siteUrl = "https://courseswyn.com";
+const ARTICLES_PER_PAGE = 12;
+const { page: pageParam } = Astro.params;
+const currentPage = Math.max(2, parseInt(pageParam || '2', 10));
+const today = new Date().toISOString().substring(0, 10);
+const dates = await getAvailableDates();
+const totalPages = Math.max(1, Math.ceil(dates.length / ARTICLES_PER_PAGE));
+const safePage = Math.min(currentPage, totalPages);
+const start = (safePage - 1) * ARTICLES_PER_PAGE;
+const pageDates = dates.slice(start, start + ARTICLES_PER_PAGE);
+
+const excerptTemplates = [
+  (label: string) => `Browse ${label}'s verified 100% off codes — programming, design, and business courses in one place.`,
+  (label: string) => `Fresh batch of free Udemy courses from that day, grouped by category and sorted by rating.`,
+  (label: string) => `That day's top-rated free courses and tested Udemy coupons. Open the article to filter by category.`,
+  (label: string) => `All Udemy deals we published on ${label}. Development, Design, Marketing, and more.`,
+  (label: string) => `Verified discount codes and free courses for ${label}. Click through to see the full list by category.`,
+  (label: string) => `That date's curated Udemy coupons — 100% off and free courses, all verified before listing.`,
+  (label: string) => `See what was live on ${label}: free Udemy courses and working coupon codes, grouped by topic.`,
+  (label: string) => `Full rundown of ${label}'s Udemy deals. Top courses by rating and category inside the article.`,
+  (label: string) => `Daily roundup for ${label}. Open to browse free courses and coupon links that were updated that day.`,
+  (label: string) => `Udemy coupons and free courses from that day. Article includes category filters and direct links.`,
+];
+
+const articles = pageDates.map((date, index) => {
+  const d = new Date(date);
+  const shortLabel = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const globalIndex = start + index;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().substring(0, 10);
+  const isTodayArticle = date === today;
+  const isYesterday = date === yesterday;
+  let excerpt: string;
+  if (isTodayArticle) {
+    excerpt = "Today's top free Udemy courses and verified 100% off coupons. Updated this morning — Development, Design, Business, and more.";
+  } else if (isYesterday) {
+    excerpt = "Yesterday's verified Udemy coupons and free courses. Still-valid deals from the latest batch, grouped by category.";
+  } else {
+    const template = excerptTemplates[globalIndex % excerptTemplates.length];
+    excerpt = template(shortLabel);
+  }
+  return {
+    date,
+    shortLabel,
+    title: `Top Udemy Coupons — ${shortLabel}`,
+    url: `${siteUrl}/blog/top-udemy-coupons/${date}/`,
+    excerpt,
+  };
+});
+
+const faqs = [
+  { q: "What is the CoursesWyn blog?", a: "The CoursesWyn blog is a daily-updated list of Udemy coupon articles. Each article shows the top free Udemy courses and verified discount codes for that specific date, so you can find 100% off coupons and enroll in premium courses for free." },
+  { q: "How often are new Udemy coupon articles published?", a: "We publish a new article every day. Each post contains that day's verified Udemy coupons and free courses, grouped by category. You can browse by date from this blog index." },
+  { q: "Are the Udemy coupons in these articles really free?", a: "Yes. Every coupon we list gives you 100% off the course price — you pay nothing. We verify each code before publishing. No credit card or subscription is required to enroll via these links." },
+  { q: "How do I use the daily coupon articles?", a: "Pick a date from the blog grid above. Each article opens a page with that day's Udemy coupons, sorted by category. Click a course to go to its deal page, then use the coupon link to enroll on Udemy for free." },
+  { q: "Can I still use coupons from older dates?", a: "Many Udemy coupons stay valid for several days or until enrollment limits are reached. Older articles may still have working codes — it's worth trying. For the freshest deals, start with today's or yesterday's article." },
+  { q: "Where else can I find Udemy deals on CoursesWyn?", a: "Besides the blog, you can browse all current deals on our Deals page, filter by category, or use search. The blog is best for seeing what was added on a specific day." },
+];
+
+const prevUrl = safePage === 2 ? '/blog' : `/blog/page/${safePage - 1}`;
+const nextUrl = safePage < totalPages ? `/blog/page/${safePage + 1}` : null;
+const canonicalUrl = `${siteUrl}/blog/page/${safePage}`;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": `${siteUrl}/blog` },
+        { "@type": "ListItem", "position": 3, "name": `Page ${safePage}`, "item": canonicalUrl },
+      ],
+    },
+    {
+      "@type": "ItemList",
+      "name": "Daily Udemy Coupon Articles",
+      "numberOfItems": dates.length,
+      "itemListElement": articles.map((a, i) => ({
+        "@type": "ListItem",
+        "position": start + i + 1,
+        "url": a.url,
+        "name": a.title,
+      })),
+    },
+  ],
+};
+---
+
+<Layout
+  title={`Blog — Page ${safePage} of ${totalPages} | CoursesWyn`}
+  description={`Daily Udemy coupon articles, page ${safePage}. Browse top free courses and verified discount codes by date.`}
+  canonical={canonicalUrl}
+>
+  <link rel="prev" href={safePage === 2 ? siteUrl + '/blog' : `${siteUrl}/blog/page/${safePage - 1}`} slot="head" />
+  {nextUrl && <link rel="next" href={`${siteUrl}${nextUrl}`} slot="head" />}
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+  <article class="blog-root" itemscope itemtype="https://schema.org/Blog">
+    <div class="blog-container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span class="breadcrumb-sep" aria-hidden="true">/</span>
+        <a href="/blog/">Blog</a>
+        <span class="breadcrumb-sep" aria-hidden="true">/</span>
+        <span>Page {safePage}</span>
+      </nav>
+
+      <header class="blog-header">
+        <h1 class="blog-title">Blog</h1>
+        <p class="blog-desc">
+          Daily Udemy coupon articles with <strong>top free courses</strong> and verified discount codes.
+          Page {safePage} of {totalPages}.
+        </p>
+      </header>
+
+      <section class="blog-about" aria-labelledby="about-heading">
+        <h2 id="about-heading" class="about-title">What is this blog?</h2>
+        <p>
+          The <strong>CoursesWyn blog</strong> is where we publish a new article every day with that day's <strong>Udemy coupons and free courses</strong>. Each article lists verified 100% off codes and top-rated courses, grouped by category. Use the grid below or <a href="/blog">go to the first page</a> for the latest dates.
+        </p>
+      </section>
+
+      <section class="articles-section" aria-label="Daily coupon articles">
+        <h2 class="sr-only">Daily Udemy Coupon Articles</h2>
+        <div class="article-grid">
+          {articles.map((a) => (
+            <article class="article-card" itemscope itemtype="https://schema.org/BlogPosting">
+              <time class="article-date" datetime={a.date}>{a.shortLabel}</time>
+              <h3 class="article-card-title">
+                <a href={`/blog/top-udemy-coupons/${a.date}/`} itemprop="url">
+                  <span itemprop="headline">Top Udemy Coupons — {a.shortLabel}</span>
+                </a>
+              </h3>
+              <p class="article-card-excerpt" itemprop="description">{a.excerpt}</p>
+              <a href={`/blog/top-udemy-coupons/${a.date}/`} class="article-card-btn">View coupons</a>
+            </article>
+          ))}
+        </div>
+        <nav class="pagination" aria-label="Blog pagination">
+          <a href={prevUrl} class="pagination-prev">← Previous</a>
+          <span class="pagination-info">Page {safePage} of {totalPages}</span>
+          {nextUrl ? (
+            <a href={nextUrl} class="pagination-next">Next page →</a>
+          ) : (
+            <span class="pagination-next disabled">Next page →</span>
+          )}
+        </nav>
+      </section>
+
+      <section class="blog-faq" aria-labelledby="faq-heading">
+        <h2 id="faq-heading" class="faq-heading">Frequently asked questions</h2>
+        <div class="faq-cards">
+          {faqs.map((faq) => (
+            <details class="faq-card">
+              <summary class="faq-q">{faq.q}</summary>
+              <p class="faq-a">{faq.a}</p>
+            </details>
+          ))}
+        </div>
+        <div class="blog-cta">
+          <p class="cta-label">Miss a day?</p>
+          <div class="cta-buttons">
+            <a href="/udemy-coupon-code" class="cta-btn cta-btn-primary">Browse all deals</a>
+            <a href="/categories" class="cta-btn cta-btn-secondary">Browse by category</a>
+          </div>
+        </div>
+      </section>
+    </div>
+  </article>
+</Layout>
+
+<style>
+  .blog-root { background: var(--bg); min-height: 60vh; padding: 2rem 1rem 4rem; }
+  .blog-container { max-width: 1200px; margin: 0 auto; }
+  .breadcrumb { font-size: 0.875rem; color: var(--muted); margin-bottom: 1.25rem; }
+  .breadcrumb a { color: var(--brand); text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb-sep { margin: 0 0.35rem; color: var(--muted); }
+  .blog-header { margin-bottom: 2rem; }
+  .blog-title { font-size: 2rem; font-weight: 800; color: var(--text); margin: 0 0 0.5rem; line-height: 1.2; }
+  .blog-desc { font-size: 1.0625rem; color: var(--muted); line-height: 1.6; margin: 0; max-width: 720px; }
+  .blog-desc strong { color: var(--text); }
+  .blog-about { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem 1.75rem; margin-bottom: 2rem; }
+  .about-title { font-size: 1.25rem; font-weight: 700; color: var(--text); margin: 0 0 1rem; }
+  .blog-about p { font-size: 0.9375rem; color: var(--muted); line-height: 1.65; margin: 0; }
+  .blog-about a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  .blog-about a:hover { text-decoration: underline; }
+  .blog-about strong { color: var(--text); }
+  .articles-section { margin-bottom: 2rem; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .article-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+  .article-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; transition: border-color 0.2s, box-shadow 0.2s; }
+  .article-card:hover { border-color: var(--brand); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+  .article-date { font-size: 0.8125rem; color: var(--brand); font-weight: 600; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .article-card-title { font-size: 1rem; font-weight: 700; line-height: 1.35; margin: 0 0 0.5rem; }
+  .article-card-title a { color: var(--text); text-decoration: none; }
+  .article-card-title a:hover { color: var(--brand); }
+  .article-card-excerpt { font-size: 0.875rem; color: var(--muted); line-height: 1.5; margin: 0 0 1rem; flex: 1; }
+  .article-card-btn { display: inline-block; padding: 0.5rem 1rem; border-radius: 8px; background: var(--brand); color: var(--bg); font-size: 0.875rem; font-weight: 600; text-decoration: none; width: fit-content; transition: filter 0.2s; }
+  .article-card-btn:hover { filter: brightness(1.1); }
+  .pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .pagination-info { font-size: 0.9375rem; color: var(--muted); font-weight: 500; }
+  .pagination-prev, .pagination-next { padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.9375rem; font-weight: 600; text-decoration: none; transition: filter 0.2s; }
+  .pagination-prev { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+  .pagination-prev:hover { border-color: var(--brand); filter: brightness(1.05); }
+  .pagination-next { background: var(--brand); color: var(--bg); }
+  .pagination-next:hover { filter: brightness(1.1); }
+  .pagination-next.disabled { opacity: 0.5; cursor: default; pointer-events: none; }
+  .blog-faq { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem 1.75rem; margin-bottom: 2rem; }
+  .faq-heading { font-size: 1.375rem; font-weight: 700; color: var(--text); margin: 0 0 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border); }
+  .faq-cards { display: flex; flex-direction: column; gap: 0.75rem; }
+  .faq-card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .faq-card[open] { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
+  .faq-q { font-size: 1rem; font-weight: 600; color: var(--text); padding: 1rem 1.25rem; cursor: pointer; list-style: none; }
+  .faq-q::-webkit-details-marker { display: none; }
+  .faq-a { font-size: 0.9375rem; color: var(--muted); line-height: 1.65; margin: 0; padding: 0 1.25rem 1.25rem 2.5rem; }
+  .blog-cta { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border); text-align: center; }
+  .cta-label { font-size: 1rem; font-weight: 600; color: var(--text); margin: 0 0 1rem; }
+  .cta-buttons { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+  .cta-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.875rem 1.5rem; border-radius: 12px; font-size: 0.9375rem; font-weight: 600; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; }
+  .cta-btn-primary { background: linear-gradient(135deg, var(--brand) 0%, hsl(35, 90%, 68%) 100%); color: var(--bg); box-shadow: 0 4px 14px rgba(255, 193, 7, 0.25); }
+  .cta-btn-primary:hover { transform: translateY(-2px); }
+  .cta-btn-secondary { background: transparent; color: var(--text); border: 2px solid var(--border); }
+  .cta-btn-secondary:hover { border-color: var(--brand); color: var(--brand); transform: translateY(-2px); }
+  @media (max-width: 900px) { .article-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; } }
+  @media (max-width: 560px) { .article-grid { grid-template-columns: 1fr; gap: 1rem; } .blog-title { font-size: 1.5rem; } .pagination { flex-direction: column; } }
+</style>

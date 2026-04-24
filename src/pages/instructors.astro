@@ -1,0 +1,1035 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { readDeals } from '../lib/store';
+import type { Deal } from '../types/deal.d';
+
+// ─────────────────────────────────────────────
+// TYPES
+// ─────────────────────────────────────────────
+interface Instructor {
+  name: string;
+  courses: Deal[];
+  totalStudents: number;
+  avgRating: number;
+  categories: string[];
+  totalReviews: number;
+  provider: string;
+  courseCount: number;
+}
+
+// ─────────────────────────────────────────────
+// DATA AGGREGATION
+// ─────────────────────────────────────────────
+const deals: Deal[] = await readDeals();
+const instructorMap = new Map<string, Instructor>();
+
+deals.forEach((deal: Deal) => {
+  if (!deal.instructor) return;
+
+  if (!instructorMap.has(deal.instructor)) {
+    instructorMap.set(deal.instructor, {
+      name: deal.instructor,
+      courses: [],
+      totalStudents: 0,
+      avgRating: 0,
+      categories: [],
+      totalReviews: 0,
+      provider: deal.provider || 'Udemy',
+      courseCount: 0,
+    });
+  }
+
+  const inst = instructorMap.get(deal.instructor)!;
+  inst.courses.push(deal);
+  if (deal.students) inst.totalStudents += deal.students;
+  if (deal.rating) {
+    const count = inst.courses.length;
+    inst.avgRating = (inst.avgRating * (count - 1) + deal.rating) / count;
+    inst.totalReviews += deal.students || 0;
+  }
+  if (deal.category && !inst.categories.includes(deal.category)) {
+    inst.categories.push(deal.category);
+  }
+});
+
+const instructors: Instructor[] = Array.from(instructorMap.values())
+  .map((inst) => ({
+    ...inst,
+    courseCount: inst.courses.length,
+    avgRating: Number(inst.avgRating.toFixed(1)),
+  }))
+  .sort((a, b) => b.totalStudents - a.totalStudents);
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+function getMaxDiscount(courses: Deal[]): number {
+  return Math.max(
+    0,
+    ...courses.map((c) => {
+      if (!c.originalPrice || !c.price || c.price >= c.originalPrice) return 0;
+      return Math.round(100 - (c.price / c.originalPrice) * 100);
+    })
+  );
+}
+
+function hasFree(courses: Deal[]): boolean {
+  return courses.some((c) => c.price === 0);
+}
+
+function getInitials(name: string): string {
+  return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function getTopDeals(courses: Deal[]): Deal[] {
+  return courses
+    .filter((c) => c.originalPrice && c.price !== undefined && c.price < c.originalPrice)
+    .sort((a, b) => {
+      const da = Math.round(100 - ((a.price ?? 0) / (a.originalPrice ?? 1)) * 100);
+      const db = Math.round(100 - ((b.price ?? 0) / (b.originalPrice ?? 1)) * 100);
+      return db - da;
+    })
+    .slice(0, 2);
+}
+
+// ─────────────────────────────────────────────
+// AGGREGATED STATS
+// ─────────────────────────────────────────────
+const totalCourses  = instructors.reduce((s, i) => s + i.courseCount, 0);
+const totalStudents = instructors.reduce((s, i) => s + i.totalStudents, 0);
+const avgRating     = (
+  instructors.reduce((s, i) => s + i.avgRating, 0) / (instructors.length || 1)
+).toFixed(1);
+const allCategories = Array.from(new Set(instructors.flatMap((i) => i.categories))).sort();
+const totalFree     = instructors.reduce((s, i) => s + (hasFree(i.courses) ? 1 : 0), 0);
+
+// ─────────────────────────────────────────────
+// DATE
+// ─────────────────────────────────────────────
+const now = new Date();
+const monthNames = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December',
+];
+const currentMonth = monthNames[now.getMonth()];
+const currentYear  = now.getFullYear();
+
+// ─────────────────────────────────────────────
+// SEO
+// ─────────────────────────────────────────────
+const siteUrl      = 'https://courseswyn.com';
+const canonicalUrl = `${siteUrl}/instructors`;
+const title        = `Udemy Instructor Promo Codes & Verified Coupons ${currentMonth} ${currentYear} | CoursesWyn`;
+const description  = `Browse ${instructors.length} verified Udemy instructors offering ${totalCourses}+ daily deals. Get verified promo codes and discount vouchers updated daily — ${currentMonth} ${currentYear}.`;
+
+// ─────────────────────────────────────────────
+// FAQs — identical between schema and HTML (Google requirement)
+// ─────────────────────────────────────────────
+const faqs = [
+  {
+    q: 'Who are the top Udemy instructors with free coupons?',
+    a: `CoursesWyn features ${instructors.length} verified Udemy instructors who regularly share free and discounted coupons. Top instructors include those in development, data science, design, and business — all with high student ratings and active coupons updated daily.`,
+  },
+  {
+    q: 'How do I get a free course from a Udemy instructor?',
+    a: 'Click "View All Coupons" on any instructor card to see their latest verified deals. Click the coupon link — it redirects to Udemy with the discount automatically applied. For 100% off coupons, you can enroll completely free with no payment required.',
+  },
+  {
+    q: 'Are instructor coupons on CoursesWyn verified?',
+    a: 'Yes. Every coupon listed is verified before publishing. We check validity daily and remove expired codes automatically so you never encounter a broken deal.',
+  },
+  {
+    q: 'How often do Udemy instructors release new coupons?',
+    a: 'Most active instructors release new coupons daily or weekly, especially for new course editions or promotions. CoursesWyn monitors all major Udemy instructors and updates listings within hours of new coupon releases.',
+  },
+  {
+    q: 'Do free Udemy courses from these instructors include certificates?',
+    a: 'Yes. All Udemy courses obtained through coupons include official completion certificates, lifetime access, and all course materials including future updates — same as paid enrollment.',
+  },
+];
+
+// ─────────────────────────────────────────────
+// STRUCTURED DATA
+// ─────────────────────────────────────────────
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BreadcrumbList',
+      '@id': `${canonicalUrl}#breadcrumb`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+        { '@type': 'ListItem', position: 2, name: 'Udemy Deals', item: `${siteUrl}/udemy-coupon-code` },
+        { '@type': 'ListItem', position: 3, name: 'Instructors & Coupons', item: canonicalUrl },
+      ],
+    },
+    {
+      '@type': 'CollectionPage',
+      '@id': canonicalUrl,
+      url: canonicalUrl,
+      name: title,
+      description,
+      dateModified: now.toISOString().split('T')[0],
+      inLanguage: 'en-US',
+      breadcrumb: { '@id': `${canonicalUrl}#breadcrumb` },
+      mainEntity: {
+        '@type': 'ItemList',
+        name: `Top Udemy Instructors — ${currentMonth} ${currentYear}`,
+        numberOfItems: instructors.length,
+        itemListElement: instructors.slice(0, 20).map((inst, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          item: {
+            '@type': 'Person',
+            name: inst.name,
+            jobTitle: 'Udemy Instructor',
+            worksFor: { '@type': 'Organization', name: inst.provider },
+            knowsAbout: inst.categories,
+            description: `Verified Udemy instructor in ${inst.categories.join(', ')} with ${inst.courseCount} courses and ${inst.totalStudents.toLocaleString()} students. Regularly offering exclusive promo codes on CoursesWyn.`,
+            ...(inst.avgRating
+              ? {
+                  aggregateRating: {
+                    '@type': 'AggregateRating',
+                    ratingValue: inst.avgRating,
+                    reviewCount: inst.totalReviews,
+                    bestRating: 5,
+                    worstRating: 1,
+                  },
+                }
+              : {}),
+          },
+        })),
+      },
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': `${canonicalUrl}#faq`,
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonicalUrl}>
+  <Fragment slot="head">
+    <link rel="canonical" href={canonicalUrl} />
+  </Fragment>
+
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+
+  <div style={{ minHeight: '100vh', color: 'var(--text)' }}>
+
+    {/* ── BREADCRUMB ── */}
+    <nav aria-label="Breadcrumb" style={{ background: 'var(--card)', borderBottom: '1px solid var(--border)', padding: '0.75rem 0' }}>
+      <div class="container">
+        <ol style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.875rem', listStyle: 'none', margin: 0, padding: '0 1rem', flexWrap: 'wrap' }}>
+          <li><a href="/" style={{ color: 'var(--muted)', textDecoration: 'none' }}>Home</a></li>
+          <li aria-hidden="true" style={{ color: 'var(--muted)' }}>›</li>
+          <li><a href="/udemy-coupon-code" style={{ color: 'var(--muted)', textDecoration: 'none' }}>Udemy Deals</a></li>
+          <li aria-hidden="true" style={{ color: 'var(--muted)' }}>›</li>
+          <li aria-current="page">
+            <span style={{ color: 'var(--brand)', fontWeight: 600 }}>Instructors</span>
+          </li>
+        </ol>
+      </div>
+    </nav>
+
+    {/* ── HERO ── */}
+    <section class="hero-gradient" style={{ position: 'relative', padding: '5rem 1rem 4rem', textAlign: 'center', overflow: 'hidden' }}>
+      <div class="container" style={{ position: 'relative', zIndex: 10 }}>
+
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+          background: 'var(--brand-soft)', padding: '0.5rem 1rem',
+          borderRadius: '9999px', marginBottom: '1.5rem',
+          fontSize: '0.875rem', color: 'var(--brand)', fontWeight: 600,
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          Updated Daily — {currentMonth} {currentYear}
+        </div>
+
+        <h1 style={{
+          fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 800,
+          lineHeight: 1.1, maxWidth: '900px', margin: '0 auto 1.5rem',
+        }}>
+          <span style={{
+            background: 'linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          }}>Verified Instructor Promo Codes</span>
+          <br />
+          <span style={{
+            background: 'linear-gradient(135deg, var(--text) 0%, var(--muted) 100%)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          }}>with Verified Coupons — {currentMonth} {currentYear}</span>
+        </h1>
+
+        <p style={{
+          fontSize: 'clamp(1rem, 2.5vw, 1.2rem)', color: 'var(--muted)',
+          maxWidth: '660px', margin: '0 auto 2.5rem', lineHeight: 1.7,
+        }}>
+          Discover exclusive discount codes from{' '}
+          <strong style={{ color: 'var(--text)' }}>{instructors.length} expert instructors</strong>.
+          Browse <strong style={{ color: 'var(--text)' }}>{totalCourses.toLocaleString()} courses</strong> with up to{' '}
+          <strong style={{ color: 'var(--brand)' }}>100% off</strong> — verified and updated daily.
+        </p>
+
+        {/* Stat pills — identical style to /deals hero */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          {[
+            { label: `${instructors.length} Instructors`,         path: 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',   color: 'var(--brand)' },
+            { label: `${totalCourses.toLocaleString()} Courses`,  path: 'M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 8H5V9h7v2zm0-4H5V5h7v2z',       color: 'var(--secondary)' },
+            { label: `${totalFree}+ Free Courses`,                path: 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',                                                                 color: 'var(--brand)' },
+            { label: `${avgRating} Avg Rating`,                   path: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',                  color: 'var(--secondary)' },
+          ].map((stat) => (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '0.5rem',
+              background: 'var(--card)', padding: '0.625rem 1.25rem',
+              borderRadius: '10px', border: '1px solid var(--border)',
+              fontSize: '0.875rem', fontWeight: 600, color: 'var(--text)',
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill={stat.color}>
+                <path d={stat.path} />
+              </svg>
+              {stat.label}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Ambient glows — identical to /deals */}
+      <div style={{ position: 'absolute', top: '20%', left: '5%', width: '280px', height: '280px', background: 'var(--brand)', filter: 'blur(120px)', opacity: 0.07, borderRadius: '50%', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '10%', right: '5%', width: '240px', height: '240px', background: 'hsl(0, 84%, 60%)', filter: 'blur(100px)', opacity: 0.07, borderRadius: '50%', pointerEvents: 'none' }} />
+    </section>
+
+    {/* ── GEO AI PERSONALISATION BANNER ── */}
+    <div
+      id="geo-banner"
+      style={{ display: 'none', background: 'var(--card)', borderBottom: '1px solid var(--border)', padding: '0.85rem 1rem' }}
+    >
+      <div class="container" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--brand)" style={{ flexShrink: 0 }}>
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+        </svg>
+        <span id="geo-text" style={{ fontSize: '0.88rem', color: 'var(--text)', fontWeight: 500 }}></span>
+        <a id="geo-link" href="#instructorGrid" style={{ marginLeft: 'auto', fontSize: '0.82rem', color: 'var(--brand)', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+          Browse now →
+        </a>
+      </div>
+    </div>
+
+    {/* ── DIRECTORY SECTION ── */}
+    <section style={{ padding: '3rem 1rem 4rem' }}>
+      <div class="container" style={{ maxWidth: '1400px' }}>
+
+        {/* Header row — mirrors /deals layout */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
+          marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem',
+        }}>
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 0.25rem' }}>
+              <span style={{ color: 'var(--brand)' }}>Browse</span> Instructors & Coupons
+            </h2>
+            <p id="resultCount" style={{ color: 'var(--muted)', margin: 0, fontSize: '0.9rem' }}>
+              {instructors.length} instructors found
+            </p>
+          </div>
+
+          {/* Filters — compact, right-aligned like /deals category link */}
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              <label class="filter-label" for="categoryFilter">Category</label>
+              <select id="categoryFilter" class="filter-select">
+                <option value="">All Categories</option>
+                {allCategories.map((cat) => <option value={cat}>{cat}</option>)}
+              </select>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              <label class="filter-label" for="ratingFilter">Min Rating</label>
+              <select id="ratingFilter" class="filter-select">
+                <option value="">Any Rating</option>
+                <option value="4.5">4.5+ Stars</option>
+                <option value="4.0">4.0+ Stars</option>
+                <option value="3.5">3.5+ Stars</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              <label class="filter-label" for="sortBy">Sort By</label>
+              <select id="sortBy" class="filter-select">
+                <option value="students">Most Students</option>
+                <option value="courses">Most Courses</option>
+                <option value="rating">Highest Rated</option>
+                <option value="name">Name A–Z</option>
+              </select>
+            </div>
+            <a href="/categories" style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.5rem 1rem', background: 'var(--card)',
+              border: '1px solid var(--border)', borderRadius: '8px',
+              color: 'var(--text)', textDecoration: 'none',
+              fontSize: '0.875rem', fontWeight: 600,
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+              </svg>
+              Browse by Category
+            </a>
+          </div>
+        </div>
+
+        {/* ── INSTRUCTOR GRID ── */}
+        <div
+          id="instructorGrid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+            gap: '1.5rem',
+            marginBottom: '3rem',
+          }}
+        >
+          {instructors.map((instructor) => {
+            const maxDisc  = getMaxDiscount(instructor.courses);
+            const free     = hasFree(instructor.courses);
+            const topDeals = getTopDeals(instructor.courses);
+
+            return (
+              <article
+                class="inst-card"
+                data-categories={instructor.categories.join(',')}
+                data-rating={instructor.avgRating}
+                data-students={instructor.totalStudents}
+                data-courses={instructor.courseCount}
+                data-name={instructor.name.toLowerCase()}
+              >
+                <div class="card-accent-bar"></div>
+
+                {/* Badge */}
+                {free
+                  ? <div class="card-badge badge-free">🎁 FREE Course</div>
+                  : maxDisc >= 90
+                    ? <div class="card-badge badge-hot">🔥 {maxDisc}% OFF</div>
+                    : null}
+
+                {/* Instructor header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div class="inst-avatar" aria-hidden="true">
+                    {getInitials(instructor.name)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h3 class="inst-name">{instructor.name}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem', fontSize: '0.85rem', color: 'var(--muted)' }}>
+                      <span>{instructor.courseCount} courses</span>
+                      <span>·</span>
+                      <span>{instructor.provider}</span>
+                      {maxDisc > 0 && (
+                        <>
+                          <span>·</span>
+                          <span style={{ color: 'var(--brand)', fontWeight: 700 }}>Up to {maxDisc}% off</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats — 3-column, matches DealCard metadata style */}
+                <div class="inst-stats-row">
+                  <div class="inst-stat">
+                    <span class="stat-val" style={{ color: 'var(--brand)' }}>{instructor.courseCount}</span>
+                    <span class="stat-lbl">Courses</span>
+                  </div>
+                  <div class="inst-stat">
+                    <span class="stat-val" style={{ color: 'hsl(210, 100%, 65%)' }}>{instructor.totalStudents.toLocaleString()}</span>
+                    <span class="stat-lbl">Students</span>
+                  </div>
+                  <div class="inst-stat">
+                    <span class="stat-val" style={{ color: 'hsl(35, 90%, 68%)' }}>{instructor.avgRating} ★</span>
+                    <span class="stat-lbl">Rating</span>
+                  </div>
+                </div>
+
+                {/* Category tags — linkable for internal SEO */}
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <p class="section-label">Expertise</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                    {[...new Set(instructor.categories)].map((cat) => (
+                      <a
+                        href={`/categories/${cat.toLowerCase().replace(/\s+/g, '-')}`}
+                        class="cat-tag"
+                      >{cat}</a>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Hot deals preview — clickable rows */}
+                {topDeals.length > 0 && (
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <p class="section-label">🔥 Hot Coupons</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+                      {topDeals.map((course) => {
+                        const disc = Math.round(
+                          100 - ((course.price ?? 0) / (course.originalPrice ?? 1)) * 100
+                        );
+                        return (
+                          <a href={`/coupon/${course.id}`} class="deal-preview-row">
+                            <span class="deal-disc-pill">-{disc}%</span>
+                            <span class="deal-preview-title">{course.title}</span>
+                            <span class="deal-price-current">
+                              {(course.price ?? 0) === 0 ? 'FREE' : `$${course.price}`}
+                            </span>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Single CTA — no "Free Only" button */}
+                <a
+                  href={`/search?q=${encodeURIComponent(instructor.name)}`}
+                  class="cta-btn"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  </svg>
+                  View All Coupons
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 'auto', opacity: 0.6 }}>
+                    <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
+                  </svg>
+                </a>
+              </article>
+            );
+          })}
+        </div>
+
+        {/* No results state */}
+        <div id="noResults" style={{ display: 'none', textAlign: 'center', padding: '4rem 1rem' }}>
+          <div style={{
+            background: 'var(--card)', borderRadius: '14px',
+            border: '1px solid var(--border)', padding: '3rem 2rem',
+            maxWidth: '480px', margin: '0 auto',
+          }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🔍</div>
+            <h3 style={{ color: 'var(--text)', fontSize: '1.3rem', margin: '0 0 0.5rem' }}>No instructors match your filters</h3>
+            <p style={{ color: 'var(--muted)', margin: 0 }}>Try adjusting the category or rating filter.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    {/* ── FAQ — synced with schema, identical to /deals pattern ── */}
+    <section class="card-gradient" style={{ padding: '4rem 1rem' }}>
+      <div class="container" style={{ maxWidth: '900px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+          <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 800, color: 'var(--text)', marginBottom: '0.75rem' }}>
+            Frequently Asked Questions
+          </h2>
+          <p style={{ color: 'var(--muted)', fontSize: '1rem', maxWidth: '550px', margin: '0 auto', lineHeight: 1.6 }}>
+            Everything about Udemy instructor coupons on CoursesWyn
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {faqs.map((faq) => (
+            <div class="faq-item" style={{
+              background: 'var(--card)', borderRadius: '14px',
+              border: '1px solid var(--border)', overflow: 'hidden',
+            }}>
+              <button
+                class="faq-question"
+                aria-expanded="false"
+                style={{
+                  width: '100%', padding: '1.25rem 1.5rem',
+                  background: 'transparent', border: 'none',
+                  textAlign: 'left', cursor: 'pointer',
+                  display: 'flex', justifyContent: 'space-between',
+                  alignItems: 'center', gap: '1rem',
+                  fontSize: '1rem', fontWeight: 600, color: 'var(--text)',
+                }}
+              >
+                <span>{faq.q}</span>
+                <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"
+                  style={{ flexShrink: 0, transition: 'transform 0.25s ease' }}>
+                  <path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/>
+                </svg>
+              </button>
+              <div class="faq-answer" style={{ maxHeight: '0', overflow: 'hidden', transition: 'max-height 0.3s ease' }}>
+                <p style={{ padding: '0 1.5rem 1.25rem', color: 'var(--muted)', lineHeight: 1.7, margin: 0, fontSize: '0.95rem' }}>
+                  {faq.a}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ── CTA — mirrors /deals footer CTA ── */}
+    <section class="hero-gradient" style={{ padding: '4rem 1rem' }}>
+      <div class="container" style={{ maxWidth: '700px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 800, color: 'var(--text)', marginBottom: '1rem' }}>
+          Find Courses by Category
+        </h2>
+        <p style={{ color: 'var(--muted)', maxWidth: '500px', margin: '0 auto 2rem', lineHeight: 1.6 }}>
+          Browse {totalCourses.toLocaleString()}+ free Udemy coupons organized by subject — programming, design, marketing, data science, and more.
+        </p>
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <a href="/categories" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+            padding: '0.875rem 2rem', background: 'var(--brand)',
+            color: 'var(--bg)', borderRadius: '10px', textDecoration: 'none',
+            fontSize: '1rem', fontWeight: 700,
+            boxShadow: '0 4px 20px -4px hsla(45, 95%, 58%, 0.4)',
+          }}>
+            Browse Categories
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+            </svg>
+          </a>
+          <a href="/udemy-coupon-code" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+            padding: '0.875rem 2rem', background: 'transparent',
+            color: 'var(--text)', border: '2px solid var(--border)',
+            borderRadius: '10px', textDecoration: 'none',
+            fontSize: '1rem', fontWeight: 700,
+          }}>
+            All Deals
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</Layout>
+
+<style>
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  /* Match /deals page global backgrounds */
+  .hero-gradient {
+    background: linear-gradient(135deg, hsl(222, 47%, 7%) 0%, hsl(222, 43%, 10%) 100%);
+  }
+
+  .card-gradient {
+    background: var(--bg);
+  }
+
+  /* ── FILTERS ── */
+  .filter-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .filter-select {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.65rem center;
+    cursor: pointer;
+    min-width: 140px;
+    transition: border-color 0.2s;
+  }
+
+  .filter-select:focus {
+    outline: none;
+    border-color: var(--brand);
+  }
+
+  /* ── INSTRUCTOR CARD ── */
+  .inst-card {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.75rem;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+
+  .inst-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px -8px rgba(0, 0, 0, 0.45);
+    border-color: var(--brand);
+  }
+
+  /* Top gradient bar appears on hover */
+  .card-accent-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--brand), var(--secondary));
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .inst-card:hover .card-accent-bar {
+    opacity: 1;
+  }
+
+  /* Badge */
+  .card-badge {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .badge-hot {
+    background: hsla(0, 80%, 55%, 0.12);
+    border: 1px solid hsla(0, 80%, 55%, 0.35);
+    color: hsl(0, 80%, 75%);
+  }
+
+  .badge-free {
+    background: hsla(120, 70%, 45%, 0.12);
+    border: 1px solid hsla(120, 70%, 45%, 0.3);
+    color: hsl(120, 60%, 65%);
+  }
+
+  /* Avatar */
+  .inst-avatar {
+    flex-shrink: 0;
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, hsl(222, 47%, 13%), hsl(222, 40%, 19%));
+    border: 2px solid var(--brand-soft);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--brand);
+    font-weight: 800;
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+  }
+
+  .inst-name {
+    color: var(--text);
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0 0 0.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 3-column stats panel */
+  .inst-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    background: var(--bg, hsl(222, 47%, 5%));
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+
+  .inst-stat {
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 0.4rem;
+    position: relative;
+  }
+
+  .inst-stat:not(:last-child)::after {
+    content: '';
+    position: absolute; right: 0; top: 20%; height: 60%;
+    width: 1px; background: var(--border);
+  }
+
+  .stat-val {
+    font-size: 1rem; font-weight: 700;
+    margin-bottom: 0.2rem;
+  }
+
+  .stat-lbl {
+    font-size: 0.72rem; color: var(--muted); font-weight: 500;
+  }
+
+  /* Category tags */
+  .section-label {
+    font-size: 0.7rem; font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin: 0 0 0.5rem;
+  }
+
+  .cat-tag {
+    background: var(--brand-soft);
+    border: 1px solid rgba(0, 242, 254, 0.2);
+    color: var(--brand);
+    padding: 0.2rem 0.6rem;
+    border-radius: 99px;
+    font-size: 0.78rem; font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+
+  .cat-tag:hover { background: hsla(45, 95%, 58%, 0.15); }
+
+  /* Deal preview rows */
+  .deal-preview-row {
+    display: flex; align-items: center; gap: 0.55rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--bg, hsl(222, 47%, 5%));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-decoration: none;
+    transition: border-color 0.15s;
+  }
+
+  .deal-preview-row:hover { border-color: var(--brand); }
+
+  .deal-disc-pill {
+    flex-shrink: 0;
+    background: hsla(0, 80%, 55%, 0.14);
+    border: 1px solid hsla(0, 80%, 55%, 0.28);
+    color: hsl(0, 80%, 75%);
+    font-size: 0.68rem; font-weight: 700;
+    padding: 0.12rem 0.4rem; border-radius: 5px;
+  }
+
+  .deal-preview-title {
+    flex: 1;
+    font-size: 0.82rem; color: var(--text); font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .deal-price-current {
+    flex-shrink: 0;
+    font-size: 0.85rem; font-weight: 700;
+    color: hsl(120, 60%, 55%);
+  }
+
+  /* CTA button — same style as /deals primary button */
+  .cta-btn {
+    display: flex; align-items: center; gap: 0.5rem;
+    width: 100%; padding: 0.85rem 1.25rem;
+    background: var(--brand);
+    color: var(--bg);
+    font-weight: 700; font-size: 0.95rem;
+    text-decoration: none; border-radius: 10px;
+    transition: filter 0.2s, transform 0.15s;
+    box-shadow: 0 4px 20px -4px hsla(45, 95%, 58%, 0.3);
+  }
+
+  .cta-btn:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+  }
+
+  /* FAQ */
+  .faq-item:hover {
+    border-color: var(--brand) !important;
+    transition: border-color 0.2s ease;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    h1 { font-size: 1.75rem !important; }
+    #instructorGrid { grid-template-columns: 1fr !important; }
+  }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 1.4rem !important; }
+  }
+</style>
+
+<script>
+  // ─────────────────────────────────────────────
+  // FILTER + SORT
+  // ─────────────────────────────────────────────
+  interface CardEl extends HTMLElement {
+    dataset: {
+      categories: string;
+      rating: string;
+      students: string;
+      courses: string;
+      name: string;
+    };
+  }
+
+  const categoryFilter = document.getElementById('categoryFilter') as HTMLSelectElement | null;
+  const ratingFilter   = document.getElementById('ratingFilter')   as HTMLSelectElement | null;
+  const sortByEl       = document.getElementById('sortBy')         as HTMLSelectElement | null;
+  const grid           = document.getElementById('instructorGrid');
+  const noResults      = document.getElementById('noResults');
+  const resultCount    = document.getElementById('resultCount');
+
+  function filterAndSort(): void {
+    if (!grid || !categoryFilter || !ratingFilter || !sortByEl) return;
+
+    const category  = categoryFilter.value.toLowerCase();
+    const minRating = parseFloat(ratingFilter.value) || 0;
+    const sort      = sortByEl.value;
+
+    const cards = Array.from(grid.querySelectorAll<CardEl>('.inst-card'));
+
+    const visible = cards.filter((card) => {
+      const cats   = card.dataset.categories.toLowerCase();
+      const rating = parseFloat(card.dataset.rating) || 0;
+      return (!category || cats.includes(category)) && rating >= minRating;
+    });
+
+    visible.sort((a, b) => {
+      switch (sort) {
+        case 'students': return parseInt(b.dataset.students) - parseInt(a.dataset.students);
+        case 'courses':  return parseInt(b.dataset.courses)  - parseInt(a.dataset.courses);
+        case 'rating':   return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
+        case 'name':     return a.dataset.name.localeCompare(b.dataset.name);
+        default:         return 0;
+      }
+    });
+
+    // Hide all, re-insert visible in sorted order
+    cards.forEach((c) => (c.style.display = 'none'));
+
+    if (visible.length === 0) {
+      if (grid)      grid.style.display      = 'none';
+      if (noResults) noResults.style.display = 'block';
+    } else {
+      if (grid)      grid.style.display      = 'grid';
+      if (noResults) noResults.style.display = 'none';
+      visible.forEach((c) => { c.style.display = ''; grid!.appendChild(c); });
+    }
+
+    if (resultCount) {
+      resultCount.textContent = `${visible.length} instructor${visible.length !== 1 ? 's' : ''} found`;
+    }
+  }
+
+  categoryFilter?.addEventListener('change', filterAndSort);
+  ratingFilter?.addEventListener('change', filterAndSort);
+  sortByEl?.addEventListener('change', filterAndSort);
+
+  // ─────────────────────────────────────────────
+  // GEO AI PERSONALISATION
+  // Detects visitor country via ipapi.co (free tier, no key needed)
+  // and shows a localised banner + appends country hint to subtitle.
+  // Fails silently — no impact on page if API is unavailable.
+  // ─────────────────────────────────────────────
+  interface GeoResponse {
+    country_code?: string;
+    country_name?: string;
+    city?: string;
+  }
+
+  const GEO_COPY: Record<string, string> = {
+    US: '🇺🇸 Popular in the United States — Top Udemy instructors with verified English-language coupons.',
+    GB: '🇬🇧 Trending in the UK — Expert Udemy instructors with exclusive discount codes for UK learners.',
+    IN: '🇮🇳 Top picks for India — Thousands of Indian learners save daily with these Udemy instructor coupons.',
+    AU: '🇦🇺 Trending in Australia — Verified Udemy instructor coupons available to you right now.',
+    CA: '🇨🇦 Popular in Canada — Get free and discounted Udemy courses from top instructors.',
+    DE: '🇩🇪 Beliebt in Deutschland — Verifizierte Udemy-Coupons von Top-Instruktoren, täglich aktualisiert.',
+    BR: '🇧🇷 Popular no Brasil — Cupons Udemy verificados dos melhores instrutores, atualizados diariamente.',
+    NG: '🇳🇬 Trending in Nigeria — Access world-class Udemy courses free with verified instructor coupons.',
+    PH: '🇵🇭 Popular in the Philippines — Free and discounted Udemy courses from expert instructors.',
+    ID: '🇮🇩 Populer di Indonesia — Kupon Udemy terverifikasi dari instruktur terbaik, diperbarui harian.',
+    PK: '🇵🇰 Trending in Pakistan — Get free Udemy courses from top instructors, verified every day.',
+    EG: '🇪🇬 Popular in Egypt — Verified Udemy instructor coupons updated daily.',
+    MX: '🇲🇽 Popular en México — Cupones Udemy verificados de los mejores instructores.',
+    FR: '🇫🇷 Populaire en France — Coupons Udemy vérifiés auprès des meilleurs formateurs.',
+    TR: '🇹🇷 Türkiye\'de popüler — En iyi Udemy eğitmenlerinden doğrulanmış kuponlar.',
+    AR: '🇦🇷 Popular en Argentina — Cupones Udemy verificados de los mejores instructores.',
+    SA: '🇸🇦 رائج في المملكة العربية السعودية — كوبونات Udemy موثقة من أفضل المدربين.',
+    NL: '🇳🇱 Populair in Nederland — Geverifieerde Udemy-coupons van topinstructeurs.',
+    ES: '🇪🇸 Popular en España — Cupones Udemy verificados de los mejores instructores.',
+    IT: '🇮🇹 Popolare in Italia — Coupon Udemy verificati dai migliori istruttori.',
+  };
+
+  async function initGeo(): Promise<void> {
+    const banner  = document.getElementById('geo-banner');
+    const geoText = document.getElementById('geo-text');
+    if (!banner || !geoText) return;
+
+    try {
+      // Use session cache to avoid repeated API calls on navigation
+      const cached = sessionStorage.getItem('cs_geo');
+      let geo: GeoResponse;
+
+      if (cached) {
+        geo = JSON.parse(cached) as GeoResponse;
+      } else {
+        const res = await fetch('https://ipapi.co/json/', {
+          signal: AbortSignal.timeout(4000),
+        });
+        if (!res.ok) return;
+        geo = (await res.json()) as GeoResponse;
+        sessionStorage.setItem('cs_geo', JSON.stringify(geo));
+      }
+
+      const code = (geo.country_code ?? '').toUpperCase();
+      const msg  = GEO_COPY[code]
+        ?? `📍 Browsing from ${geo.country_name ?? 'your region'} — Verified Udemy instructor coupons available now.`;
+
+      geoText.textContent = msg;
+      banner.style.display = 'block';
+
+      // Append country hint to the results subtitle for soft personalisation
+      const sub = document.getElementById('resultCount');
+      if (sub && geo.country_name && !sub.textContent?.includes(geo.country_name)) {
+        sub.textContent = (sub.textContent ?? '').trimEnd() + ` · Popular in ${geo.country_name}`;
+      }
+    } catch {
+      // Geo is a progressive enhancement — never block page load
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // FAQ ACCORDION — identical logic to /deals
+  // ─────────────────────────────────────────────
+  function initFaq(): void {
+    document.querySelectorAll('.faq-item').forEach((item) => {
+      const btn    = item.querySelector('.faq-question') as HTMLButtonElement | null;
+      const answer = item.querySelector('.faq-answer')   as HTMLElement | null;
+      const icon   = item.querySelector('.faq-icon')     as SVGElement | null;
+      if (!btn || !answer || !icon) return;
+
+      btn.addEventListener('click', () => {
+        const isOpen = btn.getAttribute('aria-expanded') === 'true';
+
+        // Close all items first
+        document.querySelectorAll('.faq-item').forEach((other) => {
+          const ob = other.querySelector('.faq-question') as HTMLButtonElement | null;
+          const oa = other.querySelector('.faq-answer')   as HTMLElement | null;
+          const oi = other.querySelector('.faq-icon')     as SVGElement | null;
+          if (ob) ob.setAttribute('aria-expanded', 'false');
+          if (oa) oa.style.maxHeight = '0';
+          if (oi) oi.style.transform = 'rotate(0deg)';
+        });
+
+        // Re-open if it was closed
+        if (!isOpen) {
+          btn.setAttribute('aria-expanded', 'true');
+          answer.style.maxHeight = `${answer.scrollHeight}px`;
+          icon.style.transform   = 'rotate(180deg)';
+        }
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initFaq();
+    initGeo();
+  });
+</script>

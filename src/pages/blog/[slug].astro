@@ -1,5 +1,5 @@
 ---
-import MainLayout from "../../layouts/MainLayout.astro";
+import Layout from "../../layouts/Layout.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
 import AuthorBox from "../../components/AuthorBox.astro";
 import ReadingProgress from "../../components/blog/ReadingProgress.astro";
@@ -45,7 +45,11 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 const allPosts = await getCollection("blog");
-const post = allPosts?.find(p => p.id === slug || (p.data as any).slug === slug);
+const post = allPosts?.find(p => {
+  // glob() loader generates IDs like "best-chatgpt-courses/index"
+  const normalizedId = p.id.replace(/\/index$/, '');
+  return normalizedId === slug || p.id === slug || (p.data as any).slug === slug;
+});
 
 if (!post) {
   return Astro.redirect('/404');
@@ -95,9 +99,9 @@ const articleSchema = {
   dateModified: (data.updatedAt || data.pubDate).toISOString(),
   author: {
     "@type": "Person",
-    name: "Andrew Derek",
+    name: "Editorial Team",
     url: "https://courseswyn.com",
-    jobTitle: "Content Editor"
+    jobTitle: "Lead Editor & Course Analyst"
   },
   publisher: {
     "@type": "Organization",
@@ -124,12 +128,11 @@ const articleSchema = {
 const structuredData = articleSchema;
 ---
 
-<MainLayout
+<Layout
   title={title}
   description={description}
   canonical={canonical}
-  ogImage={ogImage}
-  structuredData={structuredData}
+  image={ogImage}
 >
   <ReadingProgress />
   
@@ -188,11 +191,11 @@ const structuredData = articleSchema;
           <div class="flex flex-wrap items-center gap-8 text-sm text-gray-400">
             <div class="flex items-center gap-4 group cursor-pointer">
               <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-primary/50 group-hover:border-primary transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                <img src="/assets/authors/andrew-derek.png" alt="Andrew Derek" class="w-full h-full object-cover" />
+                <img src="/images/author.jpg" alt="Andrew Derek" class="w-full h-full object-cover" />
               </div>
               <div class="text-left">
                 <p class="text-white font-black text-lg leading-none mb-1">Andrew Derek</p>
-                <p class="text-xs uppercase tracking-widest opacity-80 text-primary">Senior Content Editor</p>
+                <p class="text-xs uppercase tracking-widest opacity-80 text-primary">Lead Editor</p>
               </div>
             </div>
             
@@ -391,7 +394,7 @@ const structuredData = articleSchema;
     </div>
   </div>
 </div>
-</MainLayout>
+</Layout>
 
 
 

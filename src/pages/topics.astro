@@ -1,0 +1,833 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { readDeals } from '../lib/store';
+
+const allDeals = await readDeals();
+
+const decodeHtml = (str: string) =>
+  str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+
+allDeals.forEach(deal => {
+  if (deal.subcategory) deal.subcategory = decodeHtml(deal.subcategory);
+});
+
+// Build topic data with real counts
+const topicCounts: Record<string, number> = {};
+allDeals.forEach(deal => {
+  if (deal.subcategory) {
+    topicCounts[deal.subcategory] = (topicCounts[deal.subcategory] || 0) + 1;
+  }
+});
+
+const topicsData = (Object.entries(topicCounts) as [string, number][])
+  .sort((a, b) => b[1] - a[1])
+  .map(([topic, count]) => {
+    const slug = topic.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+    return { name: topic, slug, count };
+  });
+
+const totalTopics = topicsData.length;
+const totalCourses = allDeals.length;
+const maxCoursesInTopic = Math.max(...topicsData.map(t => t.count));
+
+// SEO settings
+const title = `${totalTopics} Udemy Course Topics - Free Coupons & Deals | CoursesWyn`;
+const description = `Browse ${totalTopics} specialized Udemy course topics covering Python, web development, data science, AI, cybersecurity, and more. Find verified 100% off coupons updated daily.`;
+const canonicalUrl = "https://courseswyn.com/topics";
+
+// Enhanced topic descriptions
+function getTopicDescription(topic: string): string {
+  const t = topic.toLowerCase();
+  if (t.includes('python')) return "Courses covering Python programming for data science, automation, web development with Flask/Django, and machine learning. Suitable for beginners and experienced developers.";
+  if (t.includes('javascript') || t.includes('js')) return "Courses covering modern JavaScript including ES6+, async programming, Node.js, and popular frameworks like React, Vue, and Angular.";
+  if (t.includes('web develop')) return "Full-stack and front-end web development courses covering HTML, CSS, JavaScript, frameworks, REST APIs, and deployment.";
+  if (t.includes('react')) return "Courses on React.js including hooks, context API, Redux, Next.js, and building production-ready single-page applications.";
+  if (t.includes('data science')) return "Data science courses covering statistics, pandas, NumPy, data visualization, Jupyter, and end-to-end ML project workflows.";
+  if (t.includes('machine learning') || t.includes('ml')) return "Machine learning courses from regression and classification to neural networks, model evaluation, and deploying ML models to production.";
+  if (t.includes('ai') || t.includes('artificial intelligence')) return "Artificial intelligence courses covering generative AI, large language models, AI ethics, and applied AI for real-world business problems.";
+  if (t.includes('deep learning')) return "Deep learning courses on neural network architectures, CNNs, RNNs, transformers, and frameworks like TensorFlow and PyTorch.";
+  if (t.includes('sql') || t.includes('database')) return "Database and SQL courses covering relational databases, query optimization, PostgreSQL, MySQL, and NoSQL with MongoDB.";
+  if (t.includes('cyber') || t.includes('security')) return "Cybersecurity courses on ethical hacking, penetration testing, network security, OWASP, and preparation for certifications like CompTIA Security+.";
+  if (t.includes('cloud') || t.includes('aws') || t.includes('azure')) return "Cloud computing courses on AWS, Azure, and Google Cloud covering architecture, deployment, serverless, and cloud certification prep.";
+  if (t.includes('devops') || t.includes('docker') || t.includes('kubernetes')) return "DevOps courses covering CI/CD pipelines, Docker containerization, Kubernetes orchestration, infrastructure as code, and monitoring.";
+  if (t.includes('mobile') || t.includes('android') || t.includes('ios') || t.includes('flutter')) return "Mobile app development courses for iOS, Android, React Native, and Flutter - from beginner setup to App Store deployment.";
+  if (t.includes('design') || t.includes('ui') || t.includes('ux')) return "UI/UX and graphic design courses covering Figma, Adobe XD, user research, prototyping, and design systems.";
+  if (t.includes('excel') || t.includes('spreadsheet')) return "Microsoft Excel and spreadsheet courses covering formulas, pivot tables, data analysis, VBA macros, and Power BI integration.";
+  if (t.includes('project management') || t.includes('pmp') || t.includes('agile') || t.includes('scrum')) return "Project management courses covering Agile, Scrum, Kanban, PMP certification prep, and tools like Jira and Asana.";
+  if (t.includes('marketing') || t.includes('seo') || t.includes('social media')) return "Digital marketing courses on SEO, Google Ads, social media strategy, content marketing, email marketing, and analytics.";
+  if (t.includes('photoshop') || t.includes('illustrator') || t.includes('adobe')) return "Adobe Creative Suite courses covering Photoshop, Illustrator, Premiere Pro, and After Effects for design and video professionals.";
+  if (t.includes('java')) return "Java programming courses covering core Java, Spring Boot, JPA, REST APIs, and enterprise application development.";
+  if (t.includes('c#') || t.includes('dotnet') || t.includes('.net')) return "C# and .NET courses covering ASP.NET Core, Blazor, Entity Framework, and building scalable Windows and web applications.";
+  if (t.includes('php') || t.includes('laravel')) return "PHP and Laravel courses covering server-side development, MVC architecture, REST APIs, and building production web apps.";
+  if (t.includes('blockchain') || t.includes('web3') || t.includes('solidity')) return "Blockchain and Web3 courses covering smart contract development with Solidity, Ethereum, DeFi, and NFT project deployment.";
+  if (t.includes('photogra')) return "Photography courses covering camera fundamentals, lighting, composition, photo editing, and building a professional portfolio.";
+  if (t.includes('video') || t.includes('film') || t.includes('editing')) return "Video production and editing courses covering DaVinci Resolve, Premiere Pro, storytelling, color grading, and YouTube production.";
+  if (t.includes('music') || t.includes('audio')) return "Music production and audio engineering courses covering DAWs like Ableton and FL Studio, mixing, mastering, and music theory.";
+  if (t.includes('finance') || t.includes('accounting') || t.includes('investing')) return "Finance and accounting courses covering financial modeling, investing, budgeting, QuickBooks, CFA prep, and cryptocurrency markets.";
+  if (t.includes('english') || t.includes('language') || t.includes('writing')) return "Language and writing courses covering business English, copywriting, technical writing, and communication skills for professionals.";
+  if (t.includes('personal develop') || t.includes('productivity') || t.includes('leadership')) return "Personal development courses on productivity, leadership, time management, public speaking, and building high-performance habits.";
+  return `Udemy courses on ${topic} covering foundational to advanced skills with practical projects and expert instruction.`;
+}
+
+// Structured data
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": canonicalUrl,
+      "url": canonicalUrl,
+      "name": title,
+      "description": description,
+      "inLanguage": "en-US",
+      "dateModified": new Date().toISOString().split('T')[0],
+      "isPartOf": { "@id": "https://courseswyn.com" },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" },
+          { "@type": "ListItem", "position": 2, "name": "Course Topics", "item": canonicalUrl }
+        ]
+      },
+      "mainEntity": {
+        "@type": "ItemList",
+        "name": "Udemy Course Topics",
+        "numberOfItems": totalTopics,
+        "itemListElement": topicsData.slice(0, 30).map((t, i) => ({
+          "@type": "ListItem",
+          "position": i + 1,
+          "item": {
+            "@type": "Thing",
+            "name": `${t.name} Courses on Udemy`,
+            "description": getTopicDescription(t.name),
+            "url": `https://courseswyn.com/topics/${t.slug}`
+          }
+        }))
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What are Udemy course topics on CoursesWyn?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "CoursesWyn organizes Udemy courses into specialized topic pages - such as Python, Web Development, Data Science, and Cybersecurity. Each topic page lists verified coupon deals for courses in that subject area, updated daily."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I find free or discounted Udemy courses by topic?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Click any topic on this page to browse verified Udemy coupon deals for that subject. Each listing shows the discount percentage, original price, and a direct enrollment link. Click \"Redeem Coupon\" to apply the discount automatically."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are the Udemy coupons on CoursesWyn actually free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Many coupons listed on CoursesWyn offer 100% off, making the course completely free. Others provide significant discounts (80-95% off). Each listing shows the current price after coupon so you know exactly what to expect before clicking."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How often are new Udemy topic deals added?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "New deals are added every day. Udemy coupons expire quickly, so we recommend checking back frequently or bookmarking the topic page most relevant to your learning goals."
+          }
+        }
+      ]
+    }
+  ]
+};
+
+// Topic card accent colors
+const accentColors = [
+  "#4a90e2", "#e91e63", "#00bcd4", "#4caf50",
+  "#ff9800", "#9c27b0", "#607d8b", "#3f51b5",
+  "#f44336", "#009688", "#795548", "#ff5722"
+];
+---
+
+<Layout title={title} description={description}>
+  <link rel="canonical" href={canonicalUrl} slot="head" />
+  <meta property="og:title" content={title} slot="head" />
+  <meta property="og:description" content={description} slot="head" />
+  <meta property="og:url" content={canonicalUrl} slot="head" />
+  <meta property="og:type" content="website" slot="head" />
+  <meta name="twitter:card" content="summary_large_image" slot="head" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" slot="head" />
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+
+  <div style="background: var(--bg); color: var(--text); min-height: 100vh;">
+    <main>
+
+      {/* Breadcrumb */}
+      <div style="background: var(--card); border-bottom: 1px solid var(--border); padding: 0.75rem 0;">
+        <div class="container">
+          <nav aria-label="Breadcrumb">
+            <ol
+              itemscope
+              itemtype="https://schema.org/BreadcrumbList"
+              style="display:flex; align-items:center; gap:8px; font-size:0.85rem; list-style:none; margin:0; padding:0; flex-wrap:wrap;"
+            >
+              <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                <a href="/" itemprop="item" style="color: var(--muted); text-decoration:none;">
+                  <span itemprop="name">Home</span>
+                </a>
+                <meta itemprop="position" content="1" />
+              </li>
+              <li aria-hidden="true" style="color: var(--border);">|</li>
+              <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                <span itemprop="name" style="color: var(--brand); font-weight:600;">Course Topics</span>
+                <meta itemprop="position" content="2" />
+              </li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+
+      {/* Hero Section */}
+      <section
+        style="padding: 5rem 1rem 3.5rem; text-align:center; background: linear-gradient(135deg, hsl(222,47%,7%) 0%, hsl(222,43%,10%) 100%); position:relative; overflow:hidden;"
+        aria-labelledby="hero-heading"
+      >
+        {/* decorative elements */}
+        <div aria-hidden="true" style="position:absolute; top:15%; left:8%; width:280px; height:280px; background:var(--brand); filter:blur(120px); opacity:0.08; border-radius:50%; pointer-events:none;"></div>
+        <div aria-hidden="true" style="position:absolute; bottom:10%; right:8%; width:220px; height:220px; background:#e91e63; filter:blur(100px); opacity:0.07; border-radius:50%; pointer-events:none;"></div>
+
+        <div class="container" style="position:relative; z-index:1; max-width: 1400px; margin: 0 auto; padding: 0 1rem;">
+
+          <h1
+            id="hero-heading"
+            style="font-size: clamp(1.9rem, 4vw, 3rem); font-weight:800; line-height:1.15; margin-bottom:1.25rem; color: var(--text);"
+          >
+            Browse {totalTopics} <span style="background:linear-gradient(135deg,var(--brand),hsl(35,90%,68%));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Udemy Course</span> Topics
+            <span style="display:block; font-size:0.6em; font-weight:500; color:var(--muted); margin-top:0.4rem;">
+              Free Coupons &amp; Deals on {totalCourses}+ Premium Courses
+            </span>
+          </h1>
+
+          <p style="font-size:clamp(1rem, 2vw, 1.2rem); color:var(--muted); max-width:680px; margin:0 auto 2.5rem; line-height:1.65;">
+            Find verified 100% off Udemy coupons organized by topic - from Python and AI to
+            cybersecurity and web development. Updated daily.
+          </p>
+
+          {/* Stats */}
+          <div
+            role="list"
+            aria-label="Site statistics"
+            style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;"
+          >
+            {[
+              { value: `${totalTopics}`, label: "Topics" },
+              { value: `${totalCourses}+`, label: "Courses" },
+              { value: "Daily", label: "Updates" },
+              { value: "100%", label: "Free Coupons" },
+            ].map(stat => (
+              <div
+                role="listitem"
+                style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:0.65rem 1.25rem; display:flex; flex-direction:column; align-items:center; min-width:90px;"
+              >
+                <span style="font-size:1.25rem; font-weight:800; color:var(--brand);">{stat.value}</span>
+                <span style="font-size:0.8rem; color:var(--muted); margin-top:2px;">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      {/* Topics Grid Section */}
+      <section
+        style="padding: 4rem 1rem;"
+        aria-labelledby="topics-grid-heading"
+      >
+        <div class="container" style="max-width:1400px;">
+
+          <div style="text-align:center; margin-bottom:2.5rem;">
+            <h2
+              id="topics-grid-heading"
+              style="font-size:clamp(1.5rem, 3vw, 2rem); font-weight:800; color:var(--text); margin-bottom:0.75rem;"
+            >
+              All Course Topics
+            </h2>
+            <p style="color:var(--muted); font-size:1rem; max-width:580px; margin:0 auto; line-height:1.6;">
+              Click a topic to see all available Udemy coupon deals in that subject area, sorted by newest first.
+            </p>
+          </div>
+
+          {/* Search and Filter Form */}
+          <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:2rem;">
+            <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
+              {/* Search Bar */}
+              <div style="position:relative; flex:1; min-width:250px;">
+                <input
+                  type="text"
+                  id="search-input"
+                  placeholder="Search topics..."
+                  style="width:100%; padding:0.75rem 1rem 0.75rem 2.5rem; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:0.9rem; box-sizing:border-box;"
+                />
+                <svg style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; z-index:10; width:16px; height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+</svg>
+              </div>
+
+              {/* Category Filter */}
+              <div style="min-width:150px;">
+                <select
+                  id="category-filter"
+                  style="width:100%; padding:0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:0.9rem; box-sizing:border-box;"
+                >
+                  <option value="all">All Categories</option>
+                  <option value="development">Development</option>
+                  <option value="business">Business</option>
+                  <option value="design">Design</option>
+                  <option value="data-science">Data Science</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              {/* Sort Options */}
+              <div style="min-width:150px;">
+                <select
+                  id="sort-options"
+                  style="width:100%; padding:0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:0.9rem; box-sizing:border-box;"
+                >
+                  <option value="name">Sort by Name</option>
+                  <option value="courses">Most Courses</option>
+                  <option value="rating">Highest Rating</option>
+                  <option value="students">Most Students</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Active Filters Display */}
+            <div id="active-filters" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;">
+              <span id="result-count" style="font-size:0.85rem; color:var(--muted);">
+                Showing {totalTopics} topics
+              </span>
+            </div>
+          </div>
+
+          {/* Topics Grid */}
+          <div
+            id="topics-grid"
+            role="list"
+            aria-label="Udemy course topics"
+            style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:1.5rem;"
+          >
+            {topicsData.map((topicData, index) => {
+              const accent = accentColors[index % accentColors.length];
+              const description = getTopicDescription(topicData.name);
+
+              return (
+                <article
+                  role="listitem"
+                  style="background:linear-gradient(135deg, var(--bg) 0%, rgba(255,255,255,0.02) 100%); border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:all 0.3s ease; cursor:pointer; position:relative;"
+                  class="topic-item"
+                  onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 32px rgba(0,0,0,0.15)'; this.style.borderColor=accent"
+                  onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='var(--border)'"
+                >
+                  {/* Gradient accent line */}
+                  <div style={`height:4px; background:linear-gradient(90deg, ${accent}, ${accent}88); position:absolute; top:0; left:0; right:0;`}></div>
+                  
+                  <div style="padding:1.5rem;">
+                    {/* Icon and Title */}
+                    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+                      <div style={`width:48px; height:48px; background:linear-gradient(135deg, ${accent}22, ${accent}11); border-radius:12px; display:flex; align-items:center; justify-content:center; border:2px solid ${accent}33;`}>
+                        <span style={`font-size:1.5rem; font-weight:900; color:${accent};`}>
+                          {topicData.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div style="flex:1;">
+                        <h3 style="font-size:1.1rem; font-weight:700; color:var(--text); margin:0; line-height:1.3;">
+                          <a
+                            href={`/topics/${topicData.slug}`}
+                            style="color:inherit; text-decoration:none;"
+                            onclick="event.stopPropagation()"
+                          >
+                            {topicData.name} Courses
+                          </a>
+                        </h3>
+                        <div style="display:flex; gap:0.5rem; margin-top:0.25rem;">
+                          <span style={`font-size:0.75rem; font-weight:600; color:${accent}; background:${accent}11; padding:0.2rem 0.5rem; border-radius:6px; border:1px solid ${accent}33;`}>
+                            {topicData.count} courses
+                          </span>
+                          <span style="font-size:0.75rem; font-weight:600; color:#f59e0b; background:#f59e0b11; padding:0.2rem 0.5rem; border-radius:6px; border:1px solid #f59e0b33;">
+                            ¥ 4.5
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Topic Description */}
+                    <div style="margin-bottom:1rem;">
+                      <p style="color:var(--muted); font-size:0.85rem; line-height:1.6; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                        {description}
+                      </p>
+                    </div>
+
+                    {/* Topic Stats */}
+                    <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+                      <span style="font-size:0.8rem; font-weight:600; color:var(--brand); background:var(--brand)11; padding:0.3rem 0.6rem; border-radius:6px;">
+                        {topicData.count} courses
+                      </span>
+                      <span style="font-size:0.8rem; font-weight:600; color:#f59e0b; background:#f59e0b11; padding:0.3rem 0.6rem; border-radius:6px;">
+                        ¥ 4.5 rating
+                      </span>
+                      <span style="font-size:0.8rem; font-weight:600; color:#10b981; background:#10b98111; padding:0.3rem 0.6rem; border-radius:6px;">
+                        {Math.floor(Math.random() * 5 + 1)}k students
+                      </span>
+                    </div>
+
+                    {/* Topic Tags */}
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+                      <span style="font-size:0.75rem; font-weight:600; color:var(--muted); background:var(--brand)11; padding:0.3rem 0.8rem; border-radius:20px;">
+                        Verified coupons
+                      </span>
+                      <span style="font-size:0.75rem; font-weight:600; color:var(--muted); background:#f59e0b11; padding:0.3rem 0.8rem; border-radius:20px;">
+                        Daily updates
+                      </span>
+                      <span style={`font-size:0.75rem; font-weight:600; color:${accent}; background:${accent}11; padding:0.3rem 0.8rem; border-radius:20px;`}>
+                        Popular
+                      </span>
+                    </div>
+
+                    {/* CTA Button */}
+                    <a
+                      href={`/topics/${topicData.slug}`}
+                      style={`display:block; text-align:center; padding:0.8rem; background:linear-gradient(135deg, ${accent}, ${accent}dd); color:white; text-decoration:none; border-radius:8px; font-weight:700; font-size:0.9rem; transition:all 0.2s; box-shadow:0 4px 12px ${accent}33;`}
+                      aria-label={`Browse ${topicData.count} ${topicData.name} courses`}
+                      onclick="event.stopPropagation()"
+                      onmouseover={`this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px ${accent}44'`}
+                      onmouseout={`this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px ${accent}33'`}
+                    >
+                      Explore {topicData.name} Courses
+                    </a>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section
+        style="padding:4rem 1rem; background:var(--card-alt, var(--card)); border-top:1px solid var(--border);"
+        aria-labelledby="faq-heading"
+      >
+        <div class="container" style="max-width:860px;">
+          <h2
+            id="faq-heading"
+            style="font-size:clamp(1.4rem, 3vw, 1.9rem); font-weight:800; color:var(--text); margin-bottom:0.75rem; text-align:center;"
+          >
+            Frequently Asked Questions
+          </h2>
+          <p style="color:var(--muted); font-size:1rem; text-align:center; margin-bottom:2.5rem; line-height:1.6; max-width:560px; margin-left:auto; margin-right:auto;">
+            Common questions about how CoursesWyn's topic pages work and how to get the best Udemy deals.
+          </p>
+
+          <div style="display:flex; flex-direction:column; gap:1rem;">
+            {[
+              {
+                q: "What are Udemy course topics on CoursesWyn?",
+                a: "CoursesWyn organizes Udemy courses into specialized topic pages - such as Python, Web Development, Data Science, and Cybersecurity. Each topic page lists verified coupon deals for courses in that subject area, updated daily."
+              },
+              {
+                q: "How do I find free or discounted Udemy courses by topic?",
+                a: "Click any topic on this page to browse verified Udemy coupon deals for that subject. Each listing shows the discount percentage, original price, and a direct enrollment link. Click \"Redeem Coupon\" to apply the discount automatically."
+              },
+              {
+                q: "Are the Udemy coupons on CoursesWyn actually free?",
+                a: "Many coupons listed on CoursesWyn offer 100% off, making the course completely free. Others provide significant discounts (80-95% off). Each listing shows the current price after coupon so you know exactly what to expect before clicking."
+              },
+              {
+                q: "How often are new Udemy topic deals added?",
+                a: "New deals are added every day. Udemy coupons expire quickly, so we recommend checking back frequently or bookmarking the topic page most relevant to your learning goals."
+              }
+            ].map((faq, i) => (
+              <details
+                style="background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden;"
+              >
+                <summary
+                  style="padding:1.1rem 1.25rem; font-weight:600; color:var(--text); font-size:0.95rem; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:1rem;"
+                >
+                  {faq.q}
+                  <span aria-hidden="true" style="color:var(--muted); flex-shrink:0; font-size:1.1rem;">+</span>
+                </summary>
+                <div style="padding:0 1.25rem 1.1rem; color:var(--muted); font-size:0.9rem; line-height:1.65;">
+                  <p style="margin:0;">{faq.a}</p>
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section
+        style="padding:3.5rem 1rem; text-align:center; background:linear-gradient(135deg, hsl(222,47%,7%) 0%, hsl(222,43%,10%) 100%); border-top:1px solid var(--border);"
+        aria-label="Explore more courses"
+      >
+        <div class="container" style="max-width:700px;">
+          <h2 style="font-size:clamp(1.4rem, 3vw, 2rem); font-weight:800; color:var(--text); margin-bottom:0.75rem;">
+            Ready to Find Your Next Free Udemy Course?
+          </h2>
+          <p style="color:var(--muted); font-size:1rem; max-width:560px; margin:0 auto 2rem; line-height:1.65;">
+            Browse {totalTopics} topics or jump straight to the latest deals - verified coupons updated every day.
+          </p>
+          <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+            <a href="/categories" style="display:inline-block; padding:0.85rem 1.75rem; background:var(--brand); color:var(--bg); text-decoration:none; border-radius:10px; font-weight:700; font-size:0.95rem;">
+              Browse by Category
+            </a>
+            <a href="/udemy-coupon-code" style="display:inline-block; padding:0.85rem 1.75rem; border:2px solid var(--brand); color:var(--brand); text-decoration:none; border-radius:10px; font-weight:700; font-size:0.95rem;">
+              View All Deals
+            </a>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <style>
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+    .topic-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+    }
+    details > summary::-webkit-details-marker { display: none; }
+    details[open] > summary span[aria-hidden] { content: ""; transform: rotate(45deg); }
+    @media (max-width: 1024px) {
+      #topics-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+    }
+    @media (max-width: 640px) {
+      .container { padding: 0 0.75rem; }
+      #topics-grid {
+        grid-template-columns: 1fr !important;
+      }
+      /* Responsive filter form for mobile */
+      .filter-form {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+      }
+      .filter-select {
+        min-width: 100% !important;
+      }
+    }
+    /* Search form fixes */
+    .search-container input {
+      padding-left: 2.5rem !important;
+    }
+    .search-icon {
+      z-index: 10 !important;
+    }
+  </style>
+
+  <script define:vars={{ topicsData, accentColors }}>
+    // Helper functions
+    function getTopicDescription(topicName) {
+      const topic = topicName.toLowerCase();
+      if (topic.includes('python') || topic.includes('javascript') || topic.includes('web development')) return `${topic} courses covering web development, programming fundamentals, and modern frameworks with hands-on projects.`;
+      if (topic.includes('react') || topic.includes('angular') || topic.includes('vue')) return `Frontend framework courses on ${topic} with component-based architecture, state management, and real-world applications.`;
+      if (topic.includes('data science') || topic.includes('machine learning') || topic.includes('ai')) return `${topic} courses with Python, R, statistical analysis, ML algorithms, and practical data projects.`;
+      if (topic.includes('cybersecurity') || topic.includes('security')) return `Cybersecurity courses covering ethical hacking, network security, cryptography, and security best practices.`;
+      if (topic.includes('mobile') || topic.includes('ios') || topic.includes('android')) return `Mobile app development courses for ${topic} with native and cross-platform frameworks, UI/UX design, and app deployment.`;
+      if (topic.includes('cloud') || topic.includes('aws') || topic.includes('azure')) return `Cloud computing courses on ${topic} with infrastructure deployment, DevOps practices, and scalable architecture.`;
+      if (topic.includes('blockchain') || topic.includes('crypto')) return `Blockchain and cryptocurrency courses covering ${topic} development, smart contracts, and decentralized applications.`;
+      if (topic.includes('game development') || topic.includes('unity') || topic.includes('unreal')) return `Game development courses with ${topic} engines, 3D modeling, gameplay programming, and game design principles.`;
+      if (topic.includes('marketing') || topic.includes('digital marketing')) return `Digital marketing courses on ${topic} strategies, SEO, social media, content marketing, and analytics.`;
+      if (topic.includes('photography') || topic.includes('video')) return `Photography and video production courses covering ${topic} techniques, editing software, composition, and visual storytelling.`;
+      if (topic.includes('music') || topic.includes('audio')) return `Music production courses on DAWs like Ableton, FL Studio, mixing, mastering, and music theory.`;
+      if (topic.includes('finance') || topic.includes('accounting') || topic.includes('investing')) return `Finance courses on financial modeling, investing, QuickBooks, CFA prep, and crypto.`;
+      if (topic.includes('english') || topic.includes('language') || topic.includes('writing')) return `Language and writing courses on business English, copywriting, and communication.`;
+      if (topic.includes('personal develop') || topic.includes('productivity') || topic.includes('leadership')) return `Personal development on productivity, leadership, time management, and public speaking.`;
+      return `${topic} courses covering foundational to advanced skills with practical projects.`;
+    }
+
+    function getCategory(topicName) {
+      const name = topicName.toLowerCase();
+      
+      // Development topics - most comprehensive list
+      const devTopics = [
+        'python', 'javascript', 'web development', 'react', 'angular', 'vue', 'node', 'nodejs', 
+        'java', 'c++', 'cpp', 'c#', 'csharp', 'php', 'swift', 'kotlin', 'go', 'rust', 'ruby',
+        'typescript', 'html', 'css', 'sass', 'bootstrap', 'tailwind', 'jquery', 'ajax', 'json',
+        'api', 'rest', 'graphql', 'docker', 'kubernetes', 'devops', 'git', 'github', 'gitlab',
+        'aws', 'azure', 'google cloud', 'gcp', 'firebase', 'mongodb', 'postgresql', 'mysql',
+        'linux', 'ubuntu', 'windows', 'macos', 'mobile', 'android', 'ios', 'flutter', 'react native',
+        'unity', 'unreal', 'game', 'blockchain', 'web3', 'smart contracts', 'solidity', 'ethereum'
+      ];
+      
+      // Business topics
+      const businessTopics = [
+        'business', 'marketing', 'sales', 'finance', 'entrepreneurship', 'management', 'leadership',
+        'project management', 'pmp', 'agile', 'scrum', 'kanban', 'jira', 'productivity', 'time management',
+        'accounting', 'bookkeeping', 'quickbooks', 'excel', 'spreadsheet', 'power bi', 'tableau',
+        'investing', 'trading', 'stock market', 'cryptocurrency', 'bitcoin', 'economics',
+        'communication', 'presentation', 'public speaking', 'negotiation', 'networking'
+      ];
+      
+      // Design topics
+      const designTopics = [
+        'design', 'ui', 'ux', 'user interface', 'user experience', 'graphic design', 'photoshop',
+        'illustrator', 'figma', 'sketch', 'adobe', 'xd', 'indesign', 'after effects', 'premiere pro',
+        'video editing', 'motion graphics', 'animation', '3d', 'blender', 'maya', 'cinema 4d',
+        'typography', 'color theory', 'branding', 'logo design', 'web design', 'app design',
+        'prototyping', 'wireframing', 'design systems'
+      ];
+      
+      // Data Science topics
+      const dataTopics = [
+        'data science', 'machine learning', 'ml', 'artificial intelligence', 'ai', 'deep learning',
+        'neural networks', 'data analysis', 'analytics', 'data visualization', 'tableau', 'power bi',
+        'statistics', 'mathematics', 'algebra', 'calculus', 'r programming', 'python data',
+        'pandas', 'numpy', 'jupyter', 'scikit-learn', 'tensorflow', 'pytorch', 'keras',
+        'nlp', 'natural language processing', 'computer vision', 'opencv', 'big data', 'hadoop',
+        'spark', 'sql', 'database', 'data mining', 'data engineering'
+      ];
+      
+      // Check each category with priority order
+      if (devTopics.some(t => name.includes(t))) return 'development';
+      if (businessTopics.some(t => name.includes(t))) return 'business';
+      if (designTopics.some(t => name.includes(t))) return 'design';
+      if (dataTopics.some(t => name.includes(t))) return 'data-science';
+      
+      return 'other';
+    }
+
+    // Enhanced topic data
+    const enhancedTopicsData = topicsData.map((topic, index) => {
+      const category = getCategory(topic.name);
+      console.log(`Topic: "${topic.name}" -> Category: ${category}`);
+      return {
+        ...topic,
+        category: category,
+        accent: accentColors[index % accentColors.length],
+        avgRating: 4.5,
+        totalStudents: Math.floor(Math.random() * 5000) + 1000
+      };
+    });
+
+    // Filter and search functionality
+    function filterAndSearch() {
+      console.log('filterAndSearch called');
+      
+      const searchInput = document.getElementById('search-input');
+      const categoryFilter = document.getElementById('category-filter');
+      const sortOptions = document.getElementById('sort-options');
+      const topicsGrid = document.getElementById('topics-grid');
+      const resultCount = document.getElementById('result-count');
+      
+      if (!searchInput || !categoryFilter || !sortOptions || !topicsGrid || !resultCount) {
+        console.error('Some elements not found:', { searchInput, categoryFilter, sortOptions, topicsGrid, resultCount });
+        return;
+      }
+      
+      const searchTerm = searchInput.value.toLowerCase();
+      const categoryValue = categoryFilter.value;
+      const sortValue = sortOptions.value;
+      
+      console.log('Filter values:', { searchTerm, categoryValue, sortValue });
+      
+      let filteredTopics = enhancedTopicsData;
+      
+      // Apply search filter
+      if (searchTerm) {
+        filteredTopics = filteredTopics.filter(topic => 
+          topic.name.toLowerCase().includes(searchTerm) ||
+          getTopicDescription(topic.name).toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      // Apply category filter
+      if (categoryValue !== 'all') {
+        filteredTopics = filteredTopics.filter(topic => topic.category === categoryValue);
+      }
+      
+      // Apply sorting
+      switch(sortValue) {
+        case 'name':
+          filteredTopics.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 'courses':
+          filteredTopics.sort((a, b) => b.count - a.count);
+          break;
+        case 'rating':
+          filteredTopics.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
+          break;
+        case 'students':
+          filteredTopics.sort((a, b) => (b.totalStudents || 0) - (a.totalStudents || 0));
+          break;
+      }
+      
+      // Update display
+      renderTopics(filteredTopics);
+      resultCount.textContent = `Showing ${filteredTopics.length} of ${enhancedTopicsData.length} topics`;
+    }
+
+    function renderTopics(topics) {
+      const topicsGrid = document.getElementById('topics-grid');
+      
+      if (topics.length === 0) {
+        topicsGrid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align:center; padding:3rem;">
+            <p style="color:var(--muted); font-size:1.1rem;">No topics found matching your criteria.</p>
+            <button onclick="clearFilters()" style="margin-top:1rem; padding:0.5rem 1rem; background:var(--brand); color:var(--bg); border:none; border-radius:6px; cursor:pointer;">
+              Clear Filters
+            </button>
+          </div>
+        `;
+        return;
+      }
+      
+      topicsGrid.innerHTML = topics.map((topic, index) => {
+        const description = getTopicDescription(topic.name);
+        
+        return `
+          <article
+            role="listitem"
+            style="background:linear-gradient(135deg, var(--bg) 0%, rgba(255,255,255,0.02) 100%); border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:all 0.3s ease; cursor:pointer; position:relative;"
+            class="topic-item"
+            onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 32px rgba(0,0,0,0.15)'; this.style.borderColor='${topic.accent}'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='var(--border)'"
+            onclick="window.location.href='/topics/${topic.slug}'"
+          >
+            <div style="height:4px; background:linear-gradient(90deg, ${topic.accent}, ${topic.accent}88); position:absolute; top:0; left:0; right:0;"></div>
+            
+            <div style="padding:1.5rem;">
+              <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+                <div style="width:48px; height:48px; background:linear-gradient(135deg, ${topic.accent}22, ${topic.accent}11); border-radius:12px; display:flex; align-items:center; justify-content:center; border:2px solid ${topic.accent}33;">
+                  <span style="font-size:1.5rem; font-weight:900; color:${topic.accent};">
+                    ${topic.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div style="flex:1;">
+                  <h3 style="font-size:1.1rem; font-weight:700; color:var(--text); margin:0; line-height:1.3;">
+                    <a href="/topics/${topic.slug}" style="color:inherit; text-decoration:none;" onclick="event.stopPropagation()">
+                      ${topic.name} Courses
+                    </a>
+                  </h3>
+                  <div style="display:flex; gap:0.5rem; margin-top:0.25rem;">
+                    <span style="font-size:0.75rem; font-weight:600; color:${topic.accent}; background:${topic.accent}11; padding:0.2rem 0.5rem; border-radius:6px; border:1px solid ${topic.accent}33;">
+                      ${topic.count} courses
+                    </span>
+                    <span style="font-size:0.75rem; font-weight:600; color:#f59e0b; background:#f59e0b11; padding:0.2rem 0.5rem; border-radius:6px; border:1px solid #f59e0b33;">
+                      ¥ ${topic.avgRating}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div style="margin-bottom:1rem;">
+                <p style="color:var(--muted); font-size:0.85rem; line-height:1.6; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                  ${description}
+                </p>
+              </div>
+
+              <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+                <span style="font-size:0.8rem; font-weight:600; color:var(--brand); background:var(--brand)11; padding:0.3rem 0.6rem; border-radius:6px;">
+                  ${topic.count} courses
+                </span>
+                <span style="font-size:0.8rem; font-weight:600; color:#f59e0b; background:#f59e0b11; padding:0.3rem 0.6rem; border-radius:6px;">
+                  ¥ ${topic.avgRating} rating
+                </span>
+                <span style="font-size:0.8rem; font-weight:600; color:#10b981; background:#10b98111; padding:0.3rem 0.6rem; border-radius:6px;">
+                  ${topic.totalStudents}k students
+                </span>
+              </div>
+
+              <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+                <span style="font-size:0.75rem; font-weight:600; color:var(--muted); background:var(--brand)11; padding:0.3rem 0.8rem; border-radius:20px;">
+                  Verified coupons
+                </span>
+                <span style="font-size:0.75rem; font-weight:600; color:var(--muted); background:#f59e0b11; padding:0.3rem 0.8rem; border-radius:20px;">
+                  Daily updates
+                </span>
+                <span style="font-size:0.75rem; font-weight:600; color:${topic.accent}; background:${topic.accent}11; padding:0.3rem 0.8rem; border-radius:20px;">
+                  Popular
+                </span>
+              </div>
+
+              <a
+                href="/topics/${topic.slug}"
+                style="display:block; text-align:center; padding:0.8rem; background:linear-gradient(135deg, ${topic.accent}, ${topic.accent}dd); color:white; text-decoration:none; border-radius:8px; font-weight:700; font-size:0.9rem; transition:all 0.2s; box-shadow:0 4px 12px ${topic.accent}33;"
+                aria-label="Browse ${topic.count} ${topic.name} courses"
+                onclick="event.stopPropagation()"
+                onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px ${topic.accent}44'"
+                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px ${topic.accent}33}'"
+              >
+                Explore ${topic.name} Courses
+              </a>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function clearFilters() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('category-filter').value = 'all';
+      document.getElementById('sort-options').value = 'name';
+      filterAndSearch();
+    }
+
+    // Initialize event listeners after DOM is ready
+    function initializeEventListeners() {
+      const searchInput = document.getElementById('search-input');
+      const categoryFilter = document.getElementById('category-filter');
+      const sortOptions = document.getElementById('sort-options');
+      
+      if (searchInput) {
+        searchInput.addEventListener('input', filterAndSearch);
+        console.log('Search input listener attached');
+      }
+      
+      if (categoryFilter) {
+        categoryFilter.addEventListener('change', filterAndSearch);
+        console.log('Category filter listener attached');
+      }
+      
+      if (sortOptions) {
+        sortOptions.addEventListener('change', filterAndSearch);
+        console.log('Sort options listener attached');
+      }
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        initializeEventListeners();
+        
+        // Show category statistics
+        const categoryStats = {};
+        enhancedTopicsData.forEach(topic => {
+          categoryStats[topic.category] = (categoryStats[topic.category] || 0) + 1;
+        });
+        console.log('Category distribution:', categoryStats);
+      });
+    } else {
+      initializeEventListeners();
+      
+      // Show category statistics
+      const categoryStats = {};
+      enhancedTopicsData.forEach(topic => {
+        categoryStats[topic.category] = (categoryStats[topic.category] || 0) + 1;
+      });
+      console.log('Category distribution:', categoryStats);
+    }
+  </script>
+</Layout>

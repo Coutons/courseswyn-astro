@@ -1,0 +1,218 @@
+---
+import { readDeals } from '../../lib/store';
+
+// Dynamic rendering in dev mode, static in production
+
+// In production, pre-generate static paths
+export async function getStaticPaths() {
+  const allDeals = await readDeals();
+  const paths = [];
+  for (const deal of allDeals) {
+    paths.push({
+      params: { slug: deal.id },
+      props: { deal }
+    });
+    if (deal.slug && deal.slug !== deal.id) {
+      paths.push({
+        params: { slug: deal.slug },
+        props: { deal }
+      });
+    }
+  }
+  return paths;
+}
+
+let { deal } = Astro.props as { deal: any };
+
+if (!deal) {
+  // SSR / Dev mode fallback
+  const { slug } = Astro.params;
+  const allDeals = await readDeals();
+  deal = allDeals.find((d) => d.id === slug || d.slug === slug);
+}
+
+if (!deal) {
+  return new Response('Deal not found', { status: 404 });
+}
+
+const discountPercentage = deal.originalPrice && deal.price && deal.originalPrice > deal.price
+  ? Math.round(((deal.originalPrice - deal.price) / deal.originalPrice) * 100)
+  : 0;
+---
+
+<!doctype html>
+<html ⚡ lang="en">
+<head>
+  <meta charset="utf-8">
+  <script async src="https://cdn.ampproject.org/v0.js"></script>
+  <script async custom-element="amp-img" src="https://cdn.ampproject.org/v0/amp-img-0.1.js"></script>
+  <script async custom-element="amp-analytics" src="https://cdn.ampproject.org/v0/amp-analytics-0.1.js"></script>
+  <script async custom-element="amp-sidebar" src="https://cdn.ampproject.org/v0/amp-sidebar-0.1.js"></script>
+
+  <title>{deal.title} | {discountPercentage}% Off Udemy Coupon - CoursesWyn</title>
+  <meta name="description" content={deal.seoDescription || deal.description}>
+  <link rel="canonical" href={`https://courseswyn.com/coupon/${deal.slug || deal.id}`}>
+  <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+
+  <!-- AMP Boilerplate -->
+  <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
+
+  <style amp-custom>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #0b0d12;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .header {
+      background: #1f2330;
+      padding: 2rem 0;
+      text-align: center;
+      border-bottom: 1px solid #2d3748;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .price-section {
+      background: #1f2330;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      text-align: center;
+    }
+
+    .price {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .discount {
+      color: #ef4444;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background: #a855f7;
+      color: #fff;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 700;
+      margin-top: 1rem;
+    }
+
+    .content {
+      margin: 2rem 0;
+      line-height: 1.7;
+    }
+
+    .related {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid #1f2330;
+    }
+
+    .related h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #fff;
+    }
+
+    .amp-img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <h1>{deal.title}</h1>
+      <p>{deal.description}</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="price-section">
+      <div class="price">
+        ${deal.price}
+        {discountPercentage > 0 && <span class="discount"> ({discountPercentage}% OFF)</span>}
+      </div>
+      <a href={deal.url} class="cta-button" target="_blank" rel="noopener noreferrer">
+        Get Course Now
+      </a>
+    </section>
+
+    {deal.image && (
+      <amp-img
+        src={deal.image}
+        alt={deal.title}
+        width="400"
+        height="190"
+        layout="responsive"
+        class="amp-img"
+      ></amp-img>
+    )}
+
+    <div class="content">
+      <h2>About This Course</h2>
+      <div>{deal.content || deal.description}</div>
+
+      {deal.learn && deal.learn.length > 0 && (
+        <div>
+          <h3>What you'll learn:</h3>
+          <ul>
+            {deal.learn.map((item: string) => <li>{item}</li>)}
+          </ul>
+        </div>
+      )}
+    </div>
+
+    <div class="related">
+      <h2>More Course Deals</h2>
+      <p>Check out more discounted courses on CoursesWyn.</p>
+      <a href="/udemy-coupon-code" class="cta-button">Browse All Deals</a>
+    </div>
+  </main>
+
+  <!-- AMP Analytics -->
+  <amp-analytics type="googleanalytics">
+    <script type="application/json">
+    {
+      "vars": {
+        "account": "G-VPY4HMMKBH"
+      },
+      "triggers": {
+        "trackPageview": {
+          "on": "visible",
+          "request": "pageview"
+        }
+      }
+    }
+    </script>
+  </amp-analytics>
+</body>
+</html>

@@ -1,0 +1,522 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { readDeals } from '../../lib/store';
+import DealCard from '../../components/DealCard.astro';
+
+
+
+
+
+export async function getStaticPaths() {
+  function normName(raw?: string | null) {
+    if (!raw) return undefined;
+    let v = String(raw).trim();
+    v = v.replace(/&amp;/gi, "&");
+    v = v.replace(/\s+/g, " ");
+    return v || undefined;
+  }
+
+  function slugifyCategory(name: string) {
+    if (name === "Uncategorized") return "uncategorized";
+    let v = name.toLowerCase();
+    v = v.replace(/&amp;/gi, "&");
+    v = v.replace(/&/g, " and ");
+    v = v.replace(/[^\w\s-]/g, "");
+    v = v.trim();
+    v = v.replace(/\s+/g, "-");
+    v = v.replace(/-+/g, "-");
+    return v;
+  }
+
+  const allDeals = await readDeals();
+  const categories = [...new Set(allDeals.map(deal => normName(deal.category)).filter(cat => cat != null))];
+  return categories.map(category => ({
+    params: { category: slugifyCategory(category!) },
+    props: {}
+  }));
+}
+
+function normName(raw?: string | null) {
+  if (!raw) return undefined;
+  let v = String(raw).trim();
+  v = v.replace(/&amp;/gi, "&");
+  v = v.replace(/\s+/g, " ");
+  return v || undefined;
+}
+
+function slugifyCategory(name: string) {
+  if (name === "Uncategorized") return "uncategorized";
+  let v = name.toLowerCase();
+  v = v.replace(/&amp;/gi, "&");
+  v = v.replace(/&/g, " and ");
+  v = v.replace(/[^\w\s-]/g, "");
+  v = v.trim();
+  v = v.replace(/\s+/g, "-");
+  v = v.replace(/-+/g, "-");
+  return v;
+}
+
+const { category } = Astro.params;
+const urlParams = new URLSearchParams(Astro.url.search);
+const page = urlParams.get('page');
+
+// Read all deals
+const allDeals = await readDeals();
+
+// Filter deals for this category
+const categoryDeals = allDeals.filter(deal => {
+  if (!deal.category || !category) return false;
+
+  const normalizedDealCategory = normName(deal.category);
+  if (!normalizedDealCategory) return false;
+
+  const dealSlug = slugifyCategory(normalizedDealCategory);
+  return dealSlug === category;
+});
+
+// Pagination
+const PAGE_SIZE = 12;
+const currentPage = parseInt(page || '1') || 1;
+const startIndex = (currentPage - 1) * PAGE_SIZE;
+const endIndex = startIndex + PAGE_SIZE;
+const currentItems = categoryDeals.slice(startIndex, endIndex);
+const totalPages = Math.ceil(categoryDeals.length / PAGE_SIZE);
+
+const displayName = categoryDeals.length > 0 ? normName(categoryDeals[0].category) || 'Courses' : 'Courses';
+const categoryName = displayName;
+
+// Get related categories for internal linking
+const allCategories = [...new Set(allDeals.map(deal => normName(deal.category)).filter(Boolean))].filter(cat => cat !== categoryName);
+
+// Create dynamic meta description with keywords
+const categoryKeywords = `${categoryName.toLowerCase()}, ${categoryName.toLowerCase()} courses, ${categoryName.toLowerCase()} certification, learn ${categoryName.toLowerCase()}, ${categoryName.toLowerCase()} tutorial`;
+const metaDescription = `Browse ${categoryDeals.length}+ verified ${categoryName.toLowerCase()} courses with massive discounts up to 90% off. Learn ${categoryKeywords} from industry experts. Udemy coupons updated daily.`;
+---
+
+<Layout title={`${categoryName} Courses - Udemy Promo Codes & Discount Vouchers 2026 | CoursesWyn`} description={metaDescription}>
+
+  <!-- Category Collection Schema -->
+  <script type="application/ld+json" set:html={
+    JSON.stringify([
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": `${categoryName} Courses`,
+        "description": metaDescription,
+        "url": `https://courseswyn.com/categories/${category}`,
+        "mainEntity": {
+          "@type": "ItemList",
+          "name": `${categoryName} Course Collection`,
+          "numberOfItems": categoryDeals.length,
+          "itemListElement": categoryDeals.slice(0, 10).map((deal, index) => ({
+            "@type": "ListItem",
+            "position": index + 1,
+            "item": {
+              "@type": "Course",
+              "name": deal.title,
+              "url": `https://courseswyn.com/coupon/${deal.slug || deal.id}`,
+              "image": deal.image,
+              "provider": {
+                "@type": "Organization",
+                "name": deal.provider
+              },
+              "offers": {
+                "@type": "Offer",
+                "price": deal.price.toString(),
+                "priceCurrency": "USD",
+                "availability": "https://schema.org/InStock"
+              }
+            }
+          }))
+        },
+        "breadcrumb": {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://courseswyn.com"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Categories",
+              "item": "https://courseswyn.com/categories"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": categoryName,
+              "item": `https://courseswyn.com/categories/${category}`
+            }
+          ]
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": `How to get ${categoryName} courses with promo codes?`,
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": `You can access premium ${categoryName.toLowerCase()} courses at significant discounts or even for free using verified promo codes listed on CoursesWyn. We update our database daily to ensure you get the best savings.`
+            }
+          },
+          {
+            "@type": "Question",
+            "name": `What will I learn in ${categoryName} courses?`,
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": `Our ${categoryName} courses cover everything from beginner fundamentals to advanced professional skills. You'll get hands-on experience with real-world projects and industry-standard tools.`
+            }
+          },
+          {
+            "@type": "Question",
+            "name": `Do I get certificates for ${categoryName} courses?`,
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": `Absolutely! Free ${categoryName} courses include completion certificates, lifetime access, and all course materials - the same benefits as paid courses.`
+            }
+          },
+          {
+            "@type": "Question",
+            "name": `How long do ${categoryName} course coupons last?`,
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": `Coupon validity varies, but we recommend using them as soon as possible. New deals are added daily, so check back regularly for fresh ${categoryName} course offers.`
+            }
+          }
+        ]
+      }
+    ])
+  } />
+  <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "2rem 1rem" }}>
+    {/* Page Header - Same as deals page */}
+    <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+      <h1 style={{ 
+        fontSize: "2.5rem", 
+        fontWeight: "800", 
+        marginBottom: "1rem",
+        background: "linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        backgroundClip: "text"
+      }}>
+        {categoryName} Promo Codes
+      </h1>
+      <p style={{ 
+        fontSize: "1.1rem", 
+        color: "var(--muted)", 
+        maxWidth: "600px", 
+        margin: "0 auto",
+        lineHeight: "1.6"
+      }}>
+        Discover {categoryDeals.length}+ verified {categoryName.toLowerCase()} courses with massive discounts. Learn from industry experts and advance your career today.
+      </p>
+      <a href="/udemy-coupon-code" style={{ 
+        color: "var(--brand)", 
+        textDecoration: "none",
+        fontWeight: "600",
+        display: "inline-block",
+        marginTop: "1rem"
+      }}>
+        ← Back to Udemy Coupon Code
+      </a>
+    </div>
+
+    {/* Deals Grid - Same as deals page */}
+    <div style={{ 
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+      gap: "2rem",
+      marginBottom: "3rem"
+    }}>
+      {currentItems.length > 0 ? (
+        currentItems.map((deal) => (
+          <DealCard deal={deal} />
+        ))
+      ) : (
+        <div style={{ 
+          gridColumn: "1 / -1",
+          textAlign: "center", 
+          padding: "3rem", 
+          background: "var(--card)", 
+          borderRadius: "20px",
+          border: "1px solid var(--border)"
+        }}>
+          <h3 style={{ color: "var(--text)", marginBottom: "1rem", fontSize: "1.5rem" }}>
+            No courses found in {categoryName}
+          </h3>
+          <p style={{ color: "var(--muted)", marginBottom: "1.5rem", lineHeight: "1.6" }}>
+            We couldn't find any courses in this category. Try browsing our other categories or check back later for new courses.
+          </p>
+          <a href="/udemy-coupon-code" style={{ 
+            padding: "12px 24px",
+            background: "linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%)",
+            borderRadius: "8px",
+            color: "#000",
+            textDecoration: "none",
+            fontWeight: "700",
+            display: "inline-block"
+          }}>
+            Browse All Deals
+          </a>
+        </div>
+      )}
+    </div>
+
+    {/* Pagination */}
+    {totalPages > 1 && (
+      <div style={{ textAlign: "center", marginTop: "3rem", padding: "2rem" }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+          {/* Previous Button */}
+          {currentPage > 1 && (
+            <a
+              href={`/categories/${category}?page=${currentPage - 1}`}
+              style={{
+                padding: "8px 12px",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
+                color: "var(--text)",
+                textDecoration: "none",
+                fontSize: "14px",
+                fontWeight: "600"
+              }}
+            >
+              ←
+            </a>
+          )}
+          
+          {/* Page Numbers */}
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(pageNum => 
+              pageNum === 1 || 
+              pageNum === totalPages || 
+              (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+            )
+            .map((pageNum) => (
+              <a
+                href={`/categories/${category}?page=${pageNum}`}
+                style={{
+                  padding: "8px 12px",
+                  background: pageNum === currentPage 
+                    ? "linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%)"
+                    : "var(--card)",
+                  border: pageNum === currentPage 
+                    ? "2px solid var(--brand)"
+                    : "1px solid var(--border)",
+                  borderRadius: "6px",
+                  color: pageNum === currentPage ? "#000" : "var(--text)",
+                  textDecoration: "none",
+                  fontSize: "14px",
+                  fontWeight: pageNum === currentPage ? "bold" : "600"
+                }}
+              >
+                {pageNum}
+              </a>
+            ))}
+          
+          {/* Next Button */}
+          {currentPage < totalPages && (
+            <a
+              href={`/categories/${category}?page=${currentPage + 1}`}
+              style={{
+                padding: "8px 12px",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
+                color: "var(--text)",
+                textDecoration: "none",
+                fontSize: "14px",
+                fontWeight: "600"
+              }}
+            >
+              →
+            </a>
+          )}
+        </div>
+        
+        <div style={{ color: "var(--muted)", fontSize: "14px", marginTop: "10px" }}>
+          Showing {startIndex + 1}-{Math.min(endIndex, categoryDeals.length)} of {categoryDeals.length} courses
+        </div>
+      </div>
+    )}
+
+    {/* Related Categories */}
+    {allCategories.length > 0 && (
+      <div style={{
+        marginTop: "4rem",
+        padding: "2rem",
+        background: "var(--card)",
+        borderRadius: "1rem",
+        border: "1px solid var(--border)"
+      }}>
+        <h2 style={{
+          fontSize: "1.5rem",
+          fontWeight: "700",
+          color: "var(--text)",
+          marginBottom: "1.5rem",
+          textAlign: "center"
+        }}>
+          Explore Other Categories
+        </h2>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: "1rem"
+        }}>
+          {allCategories.slice(0, 8).map(cat => (
+            <a
+              href={`/categories/${slugifyCategory(cat!)}`}
+              style={{
+                padding: "1rem",
+                background: "var(--bg)",
+                border: "1px solid var(--border)",
+                borderRadius: "0.5rem",
+                textDecoration: "none",
+                color: "var(--text)",
+                fontWeight: "600",
+                textAlign: "center",
+                transition: "all 0.2s ease",
+                display: "block"
+              }}
+              onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'"
+              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
+            >
+              {cat}
+            </a>
+          ))}
+        </div>
+        <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
+          <a href="/categories" style={{
+            color: "var(--brand)",
+            textDecoration: "none",
+            fontWeight: "600"
+          }}>
+            View All Categories →
+          </a>
+        </div>
+      </div>
+    )}
+
+    {/* FAQ Section for SEO */}
+    <div style={{
+      marginTop: "4rem",
+      padding: "2rem",
+      background: "var(--card)",
+      borderRadius: "1rem",
+      border: "1px solid var(--border)"
+    }}>
+      <h2 style={{
+        fontSize: "1.5rem",
+        fontWeight: "700",
+        color: "var(--text)",
+        marginBottom: "1.5rem",
+        textAlign: "center"
+      }}>
+        Frequently Asked Questions about {categoryName}
+      </h2>
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+        gap: "1.5rem"
+      }}>
+        <div style={{
+          background: "var(--bg)",
+          padding: "1.5rem",
+          borderRadius: "0.5rem",
+          border: "1px solid var(--border)"
+        }}>
+          <h3 style={{
+            color: "var(--text)",
+            fontSize: "1.1rem",
+            fontWeight: "600",
+            marginBottom: "0.75rem"
+          }}>
+            How to get {categoryName.toLowerCase()} courses with promo codes?
+          </h3>
+          <p style={{
+            color: "var(--muted)",
+            fontSize: "0.95rem",
+            lineHeight: 1.6
+          }}>
+            You can access premium {categoryName.toLowerCase()} courses at significant discounts or even for free using verified promo codes listed on CoursesWyn. We update our database daily to ensure you get the best savings.
+          </p>
+        </div>
+
+        <div style={{
+          background: "var(--bg)",
+          padding: "1.5rem",
+          borderRadius: "0.5rem",
+          border: "1px solid var(--border)"
+        }}>
+          <h3 style={{
+            color: "var(--text)",
+            fontSize: "1.1rem",
+            fontWeight: "600",
+            marginBottom: "0.75rem"
+          }}>
+            What will I learn in {categoryName.toLowerCase()} courses?
+          </h3>
+          <p style={{
+            color: "var(--muted)",
+            fontSize: "0.95rem",
+            lineHeight: 1.6
+          }}>
+            Our {categoryName.toLowerCase()} courses cover everything from beginner fundamentals to advanced professional skills. You'll get hands-on experience with real-world projects and industry-standard tools.
+          </p>
+        </div>
+
+        <div style={{
+          background: "var(--bg)",
+          padding: "1.5rem",
+          borderRadius: "0.5rem",
+          border: "1px solid var(--border)"
+        }}>
+          <h3 style={{
+            color: "var(--text)",
+            fontSize: "1.1rem",
+            fontWeight: "600",
+            marginBottom: "0.75rem"
+          }}>
+            Do I get certificates for {categoryName.toLowerCase()} courses?
+          </h3>
+          <p style={{
+            color: "var(--muted)",
+            fontSize: "0.95rem",
+            lineHeight: 1.6
+          }}>
+            Absolutely! Free {categoryName.toLowerCase()} courses include completion certificates, lifetime access, and all course materials - the same benefits as paid courses.
+          </p>
+        </div>
+
+        <div style={{
+          background: "var(--bg)",
+          padding: "1.5rem",
+          borderRadius: "0.5rem",
+          border: "1px solid var(--border)"
+        }}>
+          <h3 style={{
+            color: "var(--text)",
+            fontSize: "1.1rem",
+            fontWeight: "600",
+            marginBottom: "0.75rem"
+          }}>
+            How long do {categoryName.toLowerCase()} course coupons last?
+          </h3>
+          <p style={{
+            color: "var(--muted)",
+            fontSize: "0.95rem",
+            lineHeight: 1.6
+          }}>
+            Coupon validity varies, but we recommend using them as soon as possible. New deals are added daily, so check back regularly for fresh {categoryName.toLowerCase()} course offers.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

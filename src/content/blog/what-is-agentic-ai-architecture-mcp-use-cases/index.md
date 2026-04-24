@@ -208,7 +208,7 @@ No. Agentic behavior can be implemented with a single agent, although multi-agen
   "datePublished": "2026-01-31",
   "author": {
     "@type": "Organization",
-    "name": "Coutons"
+    "name": "Andrew Derek"
   }
 }
 </script>
