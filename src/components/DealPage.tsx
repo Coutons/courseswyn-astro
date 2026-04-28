@@ -453,7 +453,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                     <section aria-labelledby="key-takeaways-heading" style={{ border: "1px solid hsl(0, 0%, 96%)", padding: "1.5rem", borderRadius: "2.5rem", background: "hsl(0, 0%, 98%)", marginBottom: "2rem" }}>
                         <h2 id="key-takeaways-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "hsl(222, 47%, 8%)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                             <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true"></span>
-                            Key Takeaways — Promo Overview
+                            Key Takeaways — Online Courses Overview
                         </h2>
                         <p style={{ fontSize: "0.9rem", color: "hsl(215, 25%, 35%)", marginBottom: "1.25rem" }}>
                             The following summarizes all verified data points for <strong style={{ color: "hsl(222, 47%, 8%)" }}>{deal.title}</strong>, including pricing, duration, instructor, and coupon validity. All data is sourced directly from Udemy and verified by CoursesWyn on <time dateTime={deal.updatedAt ? new Date(deal.updatedAt).toISOString() : new Date().toISOString()}>{deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>.
@@ -633,7 +633,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                     <section aria-labelledby="deal-summary-heading" style={{ borderTop: "1px solid hsl(0, 0%, 96%)", paddingTop: "2rem", marginBottom: "2rem" }}>
                         <h2 id="deal-summary-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "hsl(222, 47%, 8%)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.50rem" }}>
                             <span style={{ width: "6px", height: "32px", background: "var(--secondary)", borderRadius: "9999px" }} aria-hidden="true"></span>
-                            Is the {deal.title} Promo Worth It?
+                            Is the {deal.title} Courses Worth It?
                         </h2>
 
                         {/* Expert Review Info */}

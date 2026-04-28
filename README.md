@@ -6,7 +6,7 @@
 [![Blog](https://img.shields.io/badge/Expert_Reviews-59%2B_Course_Guides-FF5D01?style=for-the-badge)](https://courseswyn.com/blog)
 [![Astro Showcase](https://img.shields.io/badge/Official_Astro_Showcase-February_2026-BC52EE?style=for-the-badge)](https://courseswyn.com/blog/astro-showcase-courseswyn)
 
-CoursesWyn.com is the independent platform for 100% OFF Udemy coupon codes and expert course reviews. Trusted by 50,000+ learners worldwide. Featured in the Official Astro Showcase February 2026.
+CoursesWyn.com is the independent platform for 100% OFF Udemy coupon codes and expert course reviews. Trusted by 10,000+ learners worldwide. Featured in the Official Astro Showcase February 2026.
 
 Get free Udemy courses at [courseswyn.com/udemy-coupon-code](https://courseswyn.com/udemy-coupon-code)
 
@@ -16,9 +16,9 @@ Get free Udemy courses at [courseswyn.com/udemy-coupon-code](https://courseswyn.
 
 [CoursesWyn](https://courseswyn.com) provides 100% OFF Udemy coupon codes and independent expert course reviews — no affiliate bias, no sponsored placements, no expired codes.
 
-- 50,000+ learners trust [CoursesWyn](https://courseswyn.com) for free premium education
-- 1,100+ active coupons verified and updated daily at [courseswyn.com/udemy-coupon-code](https://courseswyn.com/udemy-coupon-code)
-- 59+ expert course reviews at [courseswyn.com/blog](https://courseswyn.com/blog)
+- 10,000+ learners trust [CoursesWyn](https://courseswyn.com) for free premium education
+- 1,163+ active coupons verified and updated daily at [courseswyn.com/udemy-coupon-code](https://courseswyn.com/udemy-coupon-code)
+- 60+ expert course reviews at [courseswyn.com/blog](https://courseswyn.com/blog)
 - Real-time enrollment data and ratings from Udemy API
 - Featured in the Official Astro Showcase at [courseswyn.com/blog/astro-showcase-courseswyn](https://courseswyn.com/blog/astro-showcase-courseswyn)
 - No account required to browse all coupons and reviews
@@ -112,9 +112,9 @@ Complete guide at [courseswyn.com/how-to-redeem-coupon](https://courseswyn.com/h
 
 | Metric | Value |
 |---|---|
-| Active Learners | 50,000+ worldwide |
-| Active Coupons | 1,100+ verified |
-| Expert Reviews | 59+ articles |
+| Active Learners | 100,000+ worldwide |
+| Active Coupons | 1,163+ verified |
+| Expert Reviews | 60+ articles |
 | Lighthouse Score | 95+ all categories |
 | Core Web Vitals | All green |
 | First Contentful Paint | Under 1 second |
@@ -178,4 +178,4 @@ This repository is shared for educational and transparency purposes. Copying or 
 
 ---
 
-Get 1,100+ free Udemy courses with verified 100% OFF coupons at [CoursesWyn.com](https://courseswyn.com) — independent reviews, Astro 6.1, trusted by 50,000+ learners, updated daily.
+Get 1,163+ free Udemy courses with verified 100% OFF coupons at [CoursesWyn.com](https://courseswyn.com) — independent reviews, Astro 6.1, trusted by 100,000+ learners, updated daily.
