@@ -122,7 +122,7 @@ export default function CourseComparison({ currentDeal, similarDeals }: CourseCo
 
     <section
 
-      style={{ marginTop: "6rem", marginBottom: "4rem", borderTop: "1px solid #1f2330", paddingTop: "3rem" }}
+      style={{ marginTop: "6rem", marginBottom: "4rem", borderTop: "1px solid hsl(0, 0%, 90%)", paddingTop: "3rem" }}
 
       itemScope
 
@@ -212,7 +212,7 @@ export default function CourseComparison({ currentDeal, similarDeals }: CourseCo
 
         marginBottom: "1rem",
 
-        color: "#fff"
+        color: "hsl(222, 47%, 8%)"
 
       }}>
 
@@ -224,7 +224,7 @@ export default function CourseComparison({ currentDeal, similarDeals }: CourseCo
 
         fontSize: "0.95rem",
 
-        color: "#cbd5e1",
+        color: "hsl(215, 20%, 45%)",
 
         lineHeight: "1.6",
 
@@ -264,11 +264,11 @@ export default function CourseComparison({ currentDeal, similarDeals }: CourseCo
 
             style={{
 
-              background: "#0b0d12",
+              background: "hsl(0, 0%, 98%)",
 
               borderRadius: "10px",
 
-              border: deal.id === currentDeal.id ? "2px solid #FBBF24" : "1px solid #1f2330",
+              border: deal.id === currentDeal.id ? "2px solid #FBBF24" : "1px solid hsl(0, 0%, 90%)",
 
               overflow: "hidden",
 
@@ -304,7 +304,7 @@ export default function CourseComparison({ currentDeal, similarDeals }: CourseCo
 
                 background: "#3b82f6",
 
-                color: "#0b0d12",
+                color: "hsl(0, 0%, 98%)",
 
                 padding: "0.2rem 0.6rem",
 
@@ -438,7 +438,7 @@ export default function CourseComparison({ currentDeal, similarDeals }: CourseCo
 
                     fontWeight: 600,
 
-                    color: "#fff",
+                    color: "hsl(222, 47%, 8%)",
 
                     marginBottom: "0.25rem",
 
@@ -474,7 +474,7 @@ export default function CourseComparison({ currentDeal, similarDeals }: CourseCo
 
                       onMouseEnter={(e) => (e.target as HTMLElement).style.color = "#3b82f6"}
 
-                      onMouseLeave={(e) => (e.target as HTMLElement).style.color = "#fff"}
+                      onMouseLeave={(e) => (e.target as HTMLElement).style.color = "hsl(222, 47%, 8%)"}
 
                     >
 
@@ -486,7 +486,7 @@ export default function CourseComparison({ currentDeal, similarDeals }: CourseCo
 
                   <div style={{
 
-                    color: "#a9b0c0",
+                    color: "hsl(215, 25%, 35%)",
 
                     fontSize: "0.8rem"
 
@@ -556,7 +556,7 @@ export default function CourseComparison({ currentDeal, similarDeals }: CourseCo
 
                 </div>
 
-                <span style={{ color: "#a9b0c0" }}>
+                <span style={{ color: "hsl(215, 25%, 35%)" }}>
 
                   {formatStudents(deal.students)} students
 
@@ -604,7 +604,7 @@ export default function CourseComparison({ currentDeal, similarDeals }: CourseCo
 
                         textDecoration: "line-through",
 
-                        color: "#a9b0c0",
+                        color: "hsl(215, 25%, 35%)",
 
                         fontSize: "0.85rem"
 
@@ -618,7 +618,7 @@ export default function CourseComparison({ currentDeal, similarDeals }: CourseCo
 
                         background: "#ef4444",
 
-                        color: "#0b0d12",
+                        color: "hsl(0, 0%, 98%)",
 
                         padding: "0.2rem 0.4rem",
 
@@ -660,7 +660,7 @@ export default function CourseComparison({ currentDeal, similarDeals }: CourseCo
 
                   background: deal.id === currentDeal.id ? "#374151" : "#3b82f6",
 
-                  color: "#fff",
+                  color: "hsl(222, 47%, 8%)",
 
                   textDecoration: "none",
 
@@ -710,7 +710,7 @@ export default function CourseComparison({ currentDeal, similarDeals }: CourseCo
 
         fontSize: "0.95rem",
 
-        color: "#cbd5e1",
+        color: "hsl(215, 20%, 45%)",
 
         lineHeight: "1.6",
 

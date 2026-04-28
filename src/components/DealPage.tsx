@@ -274,8 +274,8 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                 "@type": "WebPage",
                 "@id": `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug || deal.id}#webpage`,
                 "url": `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug || deal.id}`,
-                "name": `${deal.title} - Udemy Promo Code & Discount Code`,
-                "description": `Get ${deal.title} with ${discountPct > 0 ? discountPct + '% off promo code' : 'special discount'} using verified voucher. ${deal.students ? deal.students.toLocaleString() + ' students enrolled.' : ''} Limited time offer.`,
+                "name": `${deal.title} - Udemy Coupon & Discount Code`,
+                "description": `Get ${deal.title} with ${discountPct > 0 ? discountPct + '% off coupon' : 'special discount'} using verified voucher. ${deal.students ? deal.students.toLocaleString() + ' students enrolled.' : ''} Limited time offer.`,
                 "inLanguage": "en-US",
                 "isPartOf": {
                     "@type": "WebSite",
@@ -332,7 +332,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
     }, []);
 
     return (
-        <div style={{ background: "linear-gradient(135deg, #0b0d12 0%, #1a1d2e 100%)", color: "#e2e8f0", minHeight: "100vh" }}>
+        <div style={{ background: "linear-gradient(135deg, hsl(0, 0%, 98%) 0%, hsl(0, 0%, 95%) 100%)", color: "hsl(222, 47%, 8%)", minHeight: "100vh" }}>
             {/* Structured Data */}
             <script
                 type="application/ld+json"
@@ -340,7 +340,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
             />
 
             {/* Breadcrumb + Hero */}
-            <header style={{ background: "#1f2330", padding: "2rem 0", borderBottom: "1px solid #0b0d12" }}>
+            <header style={{ background: "hsl(0, 0%, 96%)", padding: "2rem 0", borderBottom: "1px solid hsl(0, 0%, 98%)" }}>
                 <div className="container" style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 1rem" }}>
                     {/* Breadcrumb */}
                     <nav aria-label="Breadcrumb" style={{ marginBottom: "1rem" }}>
@@ -352,7 +352,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                 alignItems: "center",
                                 gap: "8px",
                                 fontSize: "14px",
-                                color: "#fff",
+                                color: "hsl(222, 47%, 8%)",
                                 fontWeight: 600,
                                 flexWrap: "wrap",
                                 listStyle: "none",
@@ -361,23 +361,23 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                             }}
                         >
                             <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                                <a href="/" itemProp="item" style={{ color: "#cbd5e1", textDecoration: "none" }}>
+                                <a href="/" itemProp="item" style={{ color: "hsl(215, 20%, 45%)", textDecoration: "none" }}>
                                     <span itemProp="name">Home</span>
                                 </a>
                                 <meta itemProp="position" content="1" />
                             </li>
-                            <li aria-hidden="true" style={{ color: "#64748b" }}>›</li>
+                            <li aria-hidden="true" style={{ color: "hsl(215, 16%, 35%)" }}>›</li>
                             <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                                <a href="/udemy-coupon-code" itemProp="item" style={{ color: "#cbd5e1", textDecoration: "none" }}>
+                                <a href="/udemy-coupon-code" itemProp="item" style={{ color: "hsl(215, 20%, 45%)", textDecoration: "none" }}>
                                     <span itemProp="name">Udemy Coupon Code</span>
                                 </a>
                                 <meta itemProp="position" content="2" />
                             </li>
                             {deal.category && (
                                 <>
-                                    <li aria-hidden="true" style={{ color: "#64748b" }}>›</li>
+                                    <li aria-hidden="true" style={{ color: "hsl(215, 16%, 35%)" }}>›</li>
                                     <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                                        <a href={`/categories/${slugifyCategory(deal.category)}`} itemProp="item" style={{ color: "#cbd5e1", textDecoration: "none" }}>
+                                        <a href={`/categories/${slugifyCategory(deal.category)}`} itemProp="item" style={{ color: "hsl(215, 20%, 45%)", textDecoration: "none" }}>
                                             <span itemProp="name">{deal.category}</span>
                                         </a>
                                         <meta itemProp="position" content="3" />
@@ -386,28 +386,28 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                             )}
                             {deal.subcategory && deal.subcategory !== deal.category && (
                                 <>
-                                    <li aria-hidden="true" style={{ color: "#64748b" }}>›</li>
+                                    <li aria-hidden="true" style={{ color: "hsl(215, 16%, 35%)" }}>›</li>
                                     <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                                        <a href={`/topics/${slugifyCategory(deal.subcategory)}`} itemProp="item" style={{ color: "#cbd5e1", textDecoration: "none" }}>
+                                        <a href={`/topics/${slugifyCategory(deal.subcategory)}`} itemProp="item" style={{ color: "hsl(215, 20%, 45%)", textDecoration: "none" }}>
                                             <span itemProp="name">{deal.subcategory}</span>
                                         </a>
                                         <meta itemProp="position" content="4" />
                                     </li>
                                 </>
                             )}
-                            <li aria-hidden="true" style={{ color: "#64748b" }}>›</li>
+                            <li aria-hidden="true" style={{ color: "hsl(215, 16%, 35%)" }}>›</li>
                             <li aria-current="page" style={{ color: "var(--brand)", fontWeight: 700, wordBreak: "break-word" }}>
                                 {deal.title}
                             </li>
                         </ol>
                     </nav>
-                    <h1 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 800, lineHeight: 1.2, marginBottom: "1rem", color: "#fff" }}>
+                    <h1 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 800, lineHeight: 1.2, marginBottom: "1rem", color: "hsl(222, 47%, 8%)" }}>
                         {deal.title}
-                        {discountPct > 0 ? ` — ${discountPct}% Off Promo Code` : ' — Udemy Discount Deal'}
+                        {discountPct > 0 ? ` — ${discountPct}% Off Coupon` : ' — Udemy Discount Deal'}
                     </h1>
 
                     {/* ... */}
-                    <p style={{ fontSize: "1.05rem", lineHeight: 1.6, marginBottom: "1.5rem", color: "#cbd5e1", maxWidth: "800px" }}>
+                    <p style={{ fontSize: "1.05rem", lineHeight: 1.6, marginBottom: "1.5rem", color: "hsl(215, 20%, 45%)", maxWidth: "800px" }}>
                         {deal.description}
                     </p>
 
@@ -419,12 +419,12 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                             </span>
                         )}
                         {deal.students && (
-                            <span style={{ color: "#cbd5e1" }}>
+                            <span style={{ color: "hsl(215, 20%, 45%)" }}>
                                 <strong>({deal.students.toLocaleString()}</strong> students enrolled)
                             </span>
                         )}
                         {deal.instructor && (
-                            <span style={{ color: "#cbd5e1" }}>
+                            <span style={{ color: "hsl(215, 20%, 45%)" }}>
                                 Created by <strong style={{ color: "var(--brand)" }}>{deal.instructor}</strong>
                             </span>
                         )}
@@ -437,7 +437,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                             </span>
                         )}
                         {deal.language && (
-                            <span style={{ color: "#cbd5e1" }}>🌐 {deal.language}</span>
+                            <span style={{ color: "hsl(215, 20%, 45%)" }}>🌐 {deal.language}</span>
                         )}
                     </div>
                 </div>
@@ -450,15 +450,15 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                 <main>
 
                     {/* Key Takeaways */}
-                    <section aria-labelledby="key-takeaways-heading" style={{ border: "1px solid #1f2330", padding: "1.5rem", borderRadius: "2.5rem", background: "#0b0d12", marginBottom: "2rem" }}>
-                        <h2 id="key-takeaways-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <section aria-labelledby="key-takeaways-heading" style={{ border: "1px solid hsl(0, 0%, 96%)", padding: "1.5rem", borderRadius: "2.5rem", background: "hsl(0, 0%, 98%)", marginBottom: "2rem" }}>
+                        <h2 id="key-takeaways-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "hsl(222, 47%, 8%)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                             <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true"></span>
                             Key Takeaways — Promo Overview
                         </h2>
-                        <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "1.25rem" }}>
-                            The following summarizes all verified data points for <strong style={{ color: "#fff" }}>{deal.title}</strong>, including pricing, duration, instructor, and coupon validity. All data is sourced directly from Udemy and verified by CoursesWyn on <time dateTime={deal.updatedAt ? new Date(deal.updatedAt).toISOString() : new Date().toISOString()}>{deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>.
+                        <p style={{ fontSize: "0.9rem", color: "hsl(215, 25%, 35%)", marginBottom: "1.25rem" }}>
+                            The following summarizes all verified data points for <strong style={{ color: "hsl(222, 47%, 8%)" }}>{deal.title}</strong>, including pricing, duration, instructor, and coupon validity. All data is sourced directly from Udemy and verified by CoursesWyn on <time dateTime={deal.updatedAt ? new Date(deal.updatedAt).toISOString() : new Date().toISOString()}>{deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>.
                         </p>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.85rem", fontSize: "0.9rem", color: "#cbd5e1" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.85rem", fontSize: "0.9rem", color: "hsl(215, 20%, 45%)" }}>
                             {[
                                 { label: "Course Title", value: deal.title },
                                 { label: "Provider", value: `${deal.provider || "Udemy"} (listed via CoursesWyn)` },
@@ -477,8 +477,8 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                 { label: "Coupon", value: "Click REDEEM COUPON below to apply discount" },
                             ].filter(Boolean).map((item, idx) => (
                                 <div key={idx} style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                                    <span style={{ color: "#64748b", marginTop: "2px", flexShrink: 0 }}>•</span>
-                                    <span><strong style={{ color: "#e2e8f0" }}>{item!.label}:</strong>{" "}{item!.value}</span>
+                                    <span style={{ color: "hsl(215, 16%, 35%)", marginTop: "2px", flexShrink: 0 }}>•</span>
+                                    <span><strong style={{ color: "hsl(222, 47%, 8%)" }}>{item!.label}:</strong>{" "}{item!.value}</span>
                                 </div>
                             ))}
                         </div>
@@ -487,16 +487,16 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                         <div style={{
                             marginTop: "1.5rem",
                             padding: "1rem",
-                            background: "linear-gradient(135deg, #9c6a131a, #b67f1f1a)",
-                            border: "1px solid #eeff54ff",
+                            background: "linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.05))",
+                            border: "1px solid rgba(251, 191, 36, 0.3)",
                             borderRadius: "8px",
                             fontSize: "0.9rem",
-                            color: "#eeff54ff"
+                            color: "hsl(222, 47%, 8%)"
                         }}>
                             <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
                                 <span style={{ fontSize: "1.2rem", lineHeight: 1 }}>⚠️</span>
                                 <div>
-                                    <strong style={{ display: "block", marginBottom: "4px" }}>Important:</strong>
+                                    <strong style={{ display: "block", marginBottom: "4px", color: "hsl(15, 85%, 55%)" }}>Important:</strong>
                                     This coupon may not function properly in private/incognito browsing mode. Please use a standard browser window and consider temporarily disabling any ad blockers or VPN services for optimal performance.
                                 </div>
                             </div>
@@ -505,15 +505,15 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
 
                     {/* What You'll Learn */}
                     {deal.learn && deal.learn.length > 0 && (
-                        <section aria-labelledby="learn-heading" style={{ border: "1px solid #1f2330", padding: "1.5rem", borderRadius: "2.5rem", background: "#0b0d12", marginBottom: "2rem" }}>
-                            <h2 id="learn-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        <section aria-labelledby="learn-heading" style={{ border: "1px solid hsl(0, 0%, 96%)", padding: "1.5rem", borderRadius: "2.5rem", background: "hsl(0, 0%, 98%)", marginBottom: "2rem" }}>
+                            <h2 id="learn-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "hsl(222, 47%, 8%)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                                 <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true"></span>
                                 What You'll Learn
                             </h2>
-                            <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "1.25rem" }}>
-                                <strong style={{ color: "#fff" }}>{deal.title}</strong> gives you the following verified skills and competencies in <strong>{deal.category}</strong>:
+                            <p style={{ fontSize: "0.9rem", color: "hsl(215, 25%, 35%)", marginBottom: "1.25rem" }}>
+                                <strong style={{ color: "hsl(222, 47%, 8%)" }}>{deal.title}</strong> gives you the following verified skills and competencies in <strong>{deal.category}</strong>:
                             </p>
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.85rem", fontSize: "0.9rem", color: "#cbd5e1" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.85rem", fontSize: "0.9rem", color: "hsl(215, 20%, 45%)" }}>
                                 {deal.learn.map((point, idx) => (
                                     <div key={idx} style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
                                         <span style={{ color: "#22c55e", marginTop: "3px", flexShrink: 0 }}>✓</span>
@@ -526,18 +526,18 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
 
                     {/* Requirements */}
                     {deal.requirements && deal.requirements.length > 0 && (
-                        <section aria-labelledby="requirements-heading" style={{ border: "1px solid #1f2330", padding: "1.5rem", borderRadius: "2.5rem", background: "#0b0d12", marginBottom: "2rem" }}>
-                            <h2 id="requirements-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        <section aria-labelledby="requirements-heading" style={{ border: "1px solid hsl(0, 0%, 96%)", padding: "1.5rem", borderRadius: "2.5rem", background: "hsl(0, 0%, 98%)", marginBottom: "2rem" }}>
+                            <h2 id="requirements-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "hsl(222, 47%, 8%)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                                 <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true"></span>
                                 Course Requirements & Prerequisites
                             </h2>
-                            <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "1.25rem" }}>
-                                The following background knowledge and tools are recommended before starting <strong style={{ color: "#fff" }}>{deal.title}</strong>. Students without these prerequisites may still enroll but should expect a steeper learning curve:
+                            <p style={{ fontSize: "0.9rem", color: "hsl(215, 25%, 35%)", marginBottom: "1.25rem" }}>
+                                The following background knowledge and tools are recommended before starting <strong style={{ color: "hsl(222, 47%, 8%)" }}>{deal.title}</strong>. Students without these prerequisites may still enroll but should expect a steeper learning curve:
                             </p>
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.85rem", fontSize: "0.9rem", color: "#cbd5e1" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.85rem", fontSize: "0.9rem", color: "hsl(215, 20%, 45%)" }}>
                                 {deal.requirements.map((req, idx) => (
                                     <div key={idx} style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                                        <span style={{ color: "#64748b", marginTop: "2px", flexShrink: 0 }}>•</span>
+                                        <span style={{ color: "hsl(215, 16%, 35%)", marginTop: "2px", flexShrink: 0 }}>•</span>
                                         <span>{req}</span>
                                     </div>
                                 ))}
@@ -547,17 +547,17 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
 
                     {/* Course Content */}
                     <section aria-labelledby="about-heading" style={{ marginBottom: "2rem" }}>
-                        <h2 id="about-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        <h2 id="about-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "hsl(222, 47%, 8%)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                             <span style={{ width: "6px", height: "32px", background: "#22c55e", borderRadius: "9999px" }} aria-hidden="true"></span>
                             About This {deal.provider || "Udemy"} Course
                         </h2>
-                        <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "1.25rem" }}>
-                            The following is the full official course description for <strong style={{ color: "#fff" }}>{deal.title}</strong> as published on <strong>{deal.provider || "Udemy"}</strong> by instructor <strong style={{ color: "var(--brand)" }}>{deal.instructor}</strong>. It covers the curriculum structure, teaching methodology, and topic scope for this <strong>{deal.category}</strong> course:
+                        <p style={{ fontSize: "0.9rem", color: "hsl(215, 25%, 35%)", marginBottom: "1.25rem" }}>
+                            The following is the full official course description for <strong style={{ color: "hsl(222, 47%, 8%)" }}>{deal.title}</strong> as published on <strong>{deal.provider || "Udemy"}</strong> by instructor <strong style={{ color: "var(--brand)" }}>{deal.instructor}</strong>. It covers the curriculum structure, teaching methodology, and topic scope for this <strong>{deal.category}</strong> course:
                         </p>
                         <div
                             ref={markdownRef}
                             className="prose prose-invert max-w-none"
-                            style={{ lineHeight: 1.75, color: "#cbd5e1", fontSize: "0.95rem" }}
+                            style={{ lineHeight: 1.75, color: "hsl(215, 20%, 45%)", fontSize: "0.95rem" }}
                             suppressHydrationWarning={true}
                         />
                     </section>
@@ -572,10 +572,10 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                         textAlign: "center",
                         boxShadow: "0 4px 16px rgba(255,193,7,0.05)"
                     }}>
-                        <p style={{ fontSize: "0.95rem", color: "#cbd5e1", marginBottom: "0.5rem" }}>
+                        <p style={{ fontSize: "0.95rem", color: "hsl(215, 20%, 45%)", marginBottom: "0.5rem" }}>
                             <strong style={{ color: "#60a5fa" }}>Complete Udemy Coupons Guide</strong>
                         </p>
-                        <p style={{ fontSize: "0.85rem", color: "#94a3b8", marginBottom: "1rem" }}>
+                        <p style={{ fontSize: "0.85rem", color: "hsl(215, 25%, 35%)", marginBottom: "1rem" }}>
                             Everything you need to know about Udemy coupons: where to find them, how they work, how to redeem them, and how to avoid expired codes — explained clearly and honestly.
                         </p>
                         <a
@@ -584,7 +584,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                 display: "inline-block",
                                 padding: "0.75rem 1.5rem",
                                 background: "linear-gradient(135deg, #53240250, #5e240250)",
-                                color: "#fff",
+                                color: "hsl(222, 47%, 8%)",
                                 textDecoration: "none",
                                 borderRadius: "6px",
                                 fontSize: "0.9rem",
@@ -630,8 +630,8 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                     )}
 
                     {/* Coupon Deal Summary — SEO signal for deal intent */}
-                    <section aria-labelledby="deal-summary-heading" style={{ borderTop: "1px solid #1f2330", paddingTop: "2rem", marginBottom: "2rem" }}>
-                        <h2 id="deal-summary-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.50rem" }}>
+                    <section aria-labelledby="deal-summary-heading" style={{ borderTop: "1px solid hsl(0, 0%, 96%)", paddingTop: "2rem", marginBottom: "2rem" }}>
+                        <h2 id="deal-summary-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "hsl(222, 47%, 8%)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.50rem" }}>
                             <span style={{ width: "6px", height: "32px", background: "var(--secondary)", borderRadius: "9999px" }} aria-hidden="true"></span>
                             Is the {deal.title} Promo Worth It?
                         </h2>
@@ -643,17 +643,17 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                             gap: "0.5rem",
                             marginBottom: "1.5rem",
                             fontSize: "0.85rem",
-                            color: "#94a3b8"
+                            color: "hsl(215, 25%, 35%)"
                         }}>
-                            <span>Expert review by <strong style={{ color: "#fff" }}>Andrew Derek</strong>, Lead Editor at CoursesWyn.</span>
-                            <span style={{ color: "#64748b" }}>•</span>
+                            <span>Expert review by <strong style={{ color: "hsl(222, 47%, 8%)" }}>Andrew Derek</strong>, Lead Editor at CoursesWyn.</span>
+                            <span style={{ color: "hsl(215, 16%, 35%)" }}>•</span>
                             <span>Last updated: {deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.</span>
                         </div>
 
                         {/* Analysis Section */}
-                        <p style={{ fontSize: "0.95rem", color: "#cbd5e1", lineHeight: 1.75, marginBottom: "1rem" }}>
+                        <p style={{ fontSize: "0.95rem", color: "hsl(215, 20%, 45%)", lineHeight: 1.75, marginBottom: "1rem" }}>
                             Based on analysis of the curriculum structure, student engagement metrics, and verified rating data,
-                            <strong style={{ color: "#fff" }}> {deal.title}</strong> is a high-value resource for learners seeking to build skills in
+                            <strong style={{ color: "hsl(222, 47%, 8%)" }}> {deal.title}</strong> is a high-value resource for learners seeking to build skills in
                             {deal.category || "professional development"}.
                             {deal.instructor ? ` Taught by ${deal.instructor} on ${deal.provider || "Udemy"}` : ` Offered on ${deal.provider || "Udemy"}`}
                             {deal.duration ? `, the ${deal.duration} course provides a structured progression from foundational concepts to advanced techniques` : ""}
@@ -671,7 +671,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                 <span style={{ fontSize: "1.2rem" }}>✓</span>
                                 What We Like (Pros)
                             </h3>
-                            <ul style={{ margin: 0, paddingLeft: "1.5rem", color: "#cbd5e1", fontSize: "0.9rem", lineHeight: 1.6 }}>
+                            <ul style={{ margin: 0, paddingLeft: "1.5rem", color: "hsl(215, 20%, 45%)", fontSize: "0.9rem", lineHeight: 1.6 }}>
                                 <li style={{ marginBottom: "0.5rem" }}>
                                     Verified{discountPct > 0 ? ` ${discountPct}%` : ""} price reduction makes this course accessible to learners on any budget.
                                 </li>
@@ -697,10 +697,10 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                 <span style={{ fontSize: "1.2rem" }}>!</span>
                                 Keep in Mind (Cons)
                             </h3>
-                            <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "0.5rem" }}>
-                                The following limitations should be considered before enrolling in <strong style={{ color: "#fff" }}>{deal.title}</strong>:
+                            <p style={{ fontSize: "0.9rem", color: "hsl(215, 25%, 35%)", marginBottom: "0.5rem" }}>
+                                The following limitations should be considered before enrolling in <strong style={{ color: "hsl(222, 47%, 8%)" }}>{deal.title}</strong>:
                             </p>
-                            <ul style={{ margin: 0, paddingLeft: "1.5rem", color: "#cbd5e1", fontSize: "0.9rem", lineHeight: 1.6 }}>
+                            <ul style={{ margin: 0, paddingLeft: "1.5rem", color: "hsl(215, 20%, 45%)", fontSize: "0.9rem", lineHeight: 1.6 }}>
                                 <li style={{ marginBottom: "0.5rem" }}>
                                     The depth of {deal.category || "subject"} coverage may be challenging for absolute beginners without the listed prerequisites.
                                 </li>
@@ -739,8 +739,8 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                 AD
                             </div>
                             <div>
-                                <div style={{ fontWeight: 600, color: "#fff", marginBottom: "0.25rem" }}>Andrew Derek</div>
-                                <div style={{ fontSize: "0.85rem", color: "#94a3b8", marginBottom: "0.25rem" }}>Lead Editor, CoursesWyn</div>
+                                <div style={{ fontWeight: 600, color: "hsl(222, 47%, 8%)", marginBottom: "0.25rem" }}>Andrew Derek</div>
+                                <div style={{ fontSize: "0.85rem", color: "hsl(215, 25%, 35%)", marginBottom: "0.25rem" }}>Lead Editor, CoursesWyn</div>
                                 <a href="/about" style={{
                                     fontSize: "0.8rem",
                                     color: "#60a5fa",
@@ -765,13 +765,13 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                         }}>
                             <p style={{
                                 fontSize: "0.9rem",
-                                color: "#cbd5e1",
+                                color: "hsl(215, 20%, 45%)",
                                 lineHeight: 1.6,
                                 fontStyle: "italic",
                                 margin: 0
                             }}>
                                 "Given the{discountPct > 0 ? ` ${discountPct}%` : ""} price reduction{deal.rating ? ` and verified ${deal.rating.toFixed(1)}-star rating` : ""},
-                                <strong style={{ color: "#fff" }}> {deal.title}</strong> represents one of the strongest value propositions currently available in {deal.category || "professional development"} on {deal.provider || "Udemy"}.
+                                <strong style={{ color: "hsl(222, 47%, 8%)" }}> {deal.title}</strong> represents one of the strongest value propositions currently available in {deal.category || "professional development"} on {deal.provider || "Udemy"}.
                                 Enrollment is strongly recommended while this coupon remains active."
                             </p>
                         </div>
@@ -787,7 +787,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                             border: "1px solid rgba(34, 197, 94, 0.2)"
                         }}>
                             <div>
-                                <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#fff", marginBottom: "0.25rem" }}>
+                                <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "hsl(222, 47%, 8%)", marginBottom: "0.25rem" }}>
                                     Final Verdict: Worth It
                                 </div>
                                 <div style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.9)" }}>
@@ -802,7 +802,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
-                                color: "#fff",
+                                color: "hsl(222, 47%, 8%)",
                                 fontSize: "1.2rem"
                             }}>
                                 ✓
@@ -810,7 +810,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                         </div>
 
                         {/* Additional Info */}
-                        <div style={{ marginTop: "1.5rem", fontSize: "0.9rem", color: "#94a3b8", lineHeight: 1.6 }}>
+                        <div style={{ marginTop: "1.5rem", fontSize: "0.9rem", color: "hsl(215, 25%, 35%)", lineHeight: 1.6 }}>
                             <p style={{ marginBottom: "0.75rem" }}>
                                 <strong style={{ color: "#FBBF24" }}>New to redeeming coupons?</strong>{" "}
                                 Visit our <a href="/how-to-redeem-coupon" style={{ color: "#60a5fa", textDecoration: "underline" }}>How to Redeem Udemy Coupon on CoursesWyn</a> for detailed instructions on how to apply coupon codes.
@@ -825,13 +825,13 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
 
                     {/* Course Rating Summary */}
                     {deal.rating && (
-                        <section aria-labelledby="ratings-heading" style={{ borderTop: "1px solid #1f2330", paddingTop: "2rem", marginBottom: "2rem" }}>
-                            <h2 id="ratings-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        <section aria-labelledby="ratings-heading" style={{ borderTop: "1px solid hsl(0, 0%, 96%)", paddingTop: "2rem", marginBottom: "2rem" }}>
+                            <h2 id="ratings-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "hsl(222, 47%, 8%)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                                 <span style={{ width: "6px", height: "32px", background: "#fbbf24", borderRadius: "9999px" }} aria-hidden="true"></span>
                                 Course Rating Summary
                             </h2>
-                            <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "1.5rem" }}>
-                                <strong style={{ color: "#fff" }}>{deal.title}</strong> Course holds an aggregate rating of {deal.rating?.toFixed(1) || "4.8"} out of 5 based on {deal.students?.toLocaleString() || "1,489"} student reviews on {deal.provider || "Udemy"}. The distribution below shows the approximate percentage of students who gave each star rating.
+                            <p style={{ fontSize: "0.9rem", color: "hsl(215, 25%, 35%)", marginBottom: "1.5rem" }}>
+                                <strong style={{ color: "hsl(222, 47%, 8%)" }}>{deal.title}</strong> Course holds an aggregate rating of {deal.rating?.toFixed(1) || "4.8"} out of 5 based on {deal.students?.toLocaleString() || "1,489"} student reviews on {deal.provider || "Udemy"}. The distribution below shows the approximate percentage of students who gave each star rating.
                             </p>
                             <div style={{ display: "flex", alignItems: "center", gap: "2rem", flexWrap: "wrap" }}>
                                 <div style={{ textAlign: "center", minWidth: "100px" }}>
@@ -853,15 +853,15 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                     ].map(({ star, pct }) => (
                                         <div key={star} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
                                             <span style={{ color: "#9ca3af", fontSize: "0.8rem", width: "50px", flexShrink: 0 }}>{star} star{star !== 1 ? 's' : ''}</span>
-                                            <div role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${star} stars: ${pct}%`} style={{ flex: 1, height: "8px", background: "#2d3748", borderRadius: "4px", overflow: "hidden" }}>
+                                            <div role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${star} stars: ${pct}%`} style={{ flex: 1, height: "8px", background: "hsl(0, 0%, 85%)", borderRadius: "4px", overflow: "hidden" }}>
                                                 <div style={{ width: `${pct}%`, height: "100%", background: "#f59e0b", borderRadius: "4px" }}></div>
                                             </div>
-                                            <span style={{ color: "#64748b", fontSize: "0.8rem", width: "35px", textAlign: "right" }}>{pct}%</span>
+                                            <span style={{ color: "hsl(215, 16%, 35%)", fontSize: "0.8rem", width: "35px", textAlign: "right" }}>{pct}%</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                            <p style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "1rem", fontStyle: "italic" }}>
+                            <p style={{ fontSize: "0.8rem", color: "hsl(215, 16%, 35%)", marginTop: "1rem", fontStyle: "italic" }}>
                                 * Rating distribution is approximated from the aggregate score. Sourced from {deal.provider || "Udemy"}. Last verified: {deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : "March 2026"}.
                             </p>
                         </section>
@@ -869,31 +869,31 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
 
                     {/* Instructor Profile */}
                     {deal.instructor && (
-                        <section aria-labelledby="instructor-heading" style={{ borderTop: "1px solid #1f2330", paddingTop: "2rem", marginBottom: "2rem" }}>
-                            <h2 id="instructor-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        <section aria-labelledby="instructor-heading" style={{ borderTop: "1px solid hsl(0, 0%, 96%)", paddingTop: "2rem", marginBottom: "2rem" }}>
+                            <h2 id="instructor-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "hsl(222, 47%, 8%)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                                 <span style={{ width: "6px", height: "32px", background: "#fbbf24", borderRadius: "9999px" }} aria-hidden="true"></span>
                                 Instructor Profile
                             </h2>
-                            <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "1.5rem" }}>
+                            <p style={{ fontSize: "0.9rem", color: "hsl(215, 25%, 35%)", marginBottom: "1.5rem" }}>
                                 The following section provides background information on {deal.instructor}, the instructor responsible for creating and maintaining {deal.title} on {deal.provider || "Udemy"}.
                             </p>
-                            <p style={{ fontSize: "0.9rem", color: "#cbd5e1", lineHeight: 1.6, marginBottom: "1.5rem" }}>
+                            <p style={{ fontSize: "0.9rem", color: "hsl(215, 20%, 45%)", lineHeight: 1.6, marginBottom: "1.5rem" }}>
                                 {deal.title} is taught by {deal.instructor}, a {deal.provider || "Udemy"} instructor specializing in {deal.category || "IT & Software"}. For the full instructor biography, professional credentials, and a complete list of their courses, visit the official instructor profile on {deal.provider || "Udemy"}.
                             </p>
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.85rem", fontSize: "0.9rem", color: "#cbd5e1" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.85rem", fontSize: "0.9rem", color: "hsl(215, 20%, 45%)" }}>
                                 <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                                    <span style={{ color: "#64748b", marginTop: "2px", flexShrink: 0 }}>•</span>
-                                    <span><strong style={{ color: "#e2e8f0" }}>Instructor Name:</strong> {deal.instructor}</span>
+                                    <span style={{ color: "hsl(215, 16%, 35%)", marginTop: "2px", flexShrink: 0 }}>•</span>
+                                    <span><strong style={{ color: "hsl(222, 47%, 8%)" }}>Instructor Name:</strong> {deal.instructor}</span>
                                 </div>
                                 {deal.category && (
                                     <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                                        <span style={{ color: "#64748b", marginTop: "2px", flexShrink: 0 }}>•</span>
-                                        <span><strong style={{ color: "#e2e8f0" }}>Subject Area:</strong> {deal.category}</span>
+                                        <span style={{ color: "hsl(215, 16%, 35%)", marginTop: "2px", flexShrink: 0 }}>•</span>
+                                        <span><strong style={{ color: "hsl(222, 47%, 8%)" }}>Subject Area:</strong> {deal.category}</span>
                                     </div>
                                 )}
                                 <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                                    <span style={{ color: "#64748b", marginTop: "2px", flexShrink: 0 }}>•</span>
-                                    <span><strong style={{ color: "#e2e8f0" }}>Teaching Approach:</strong> Practical, project-based instruction focused on real-world application of {deal.category || "IT Certifications"} skills (as described in the course curriculum on {deal.provider || "Udemy"}).</span>
+                                    <span style={{ color: "hsl(215, 16%, 35%)", marginTop: "2px", flexShrink: 0 }}>•</span>
+                                    <span><strong style={{ color: "hsl(222, 47%, 8%)" }}>Teaching Approach:</strong> Practical, project-based instruction focused on real-world application of {deal.category || "IT Certifications"} skills (as described in the course curriculum on {deal.provider || "Udemy"}).</span>
                                 </div>
                             </div>
                             <div style={{ marginTop: "1.5rem" }}>
@@ -922,17 +922,17 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
 
                     {/* FAQs */}
                     {autoFAQs.length > 0 && (
-                        <section aria-labelledby="faq-heading" style={{ borderTop: "1px solid #1f2330", paddingTop: "2rem", marginBottom: "2rem" }}>
-                            <h2 id="faq-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        <section aria-labelledby="faq-heading" style={{ borderTop: "1px solid hsl(0, 0%, 96%)", paddingTop: "2rem", marginBottom: "2rem" }}>
+                            <h2 id="faq-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "hsl(222, 47%, 8%)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                                 <span style={{ width: "6px", height: "32px", background: "#fbbf24", borderRadius: "9999px" }} aria-hidden="true"></span>
                                 Frequently Asked Questions
                             </h2>
-                            <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "1.5rem" }}>
-                                The following questions and answers cover the most common queries about <strong style={{ color: "#fff" }}>{deal.title}</strong>, its coupon code, pricing, and enrollment process. All answers are based on verified data from {deal.provider || "Udemy"} as of {deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.
+                            <p style={{ fontSize: "0.9rem", color: "hsl(215, 25%, 35%)", marginBottom: "1.5rem" }}>
+                                The following questions and answers cover the most common queries about <strong style={{ color: "hsl(222, 47%, 8%)" }}>{deal.title}</strong>, its coupon code, pricing, and enrollment process. All answers are based on verified data from {deal.provider || "Udemy"} as of {deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.
                             </p>
                             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                                 {autoFAQs.map((faq, idx) => (
-                                    <div key={idx} style={{ border: "1px solid #2d3748", borderRadius: "8px", overflow: "hidden" }}>
+                                    <div key={idx} style={{ border: "1px solid hsl(0, 0%, 85%)", borderRadius: "8px", overflow: "hidden" }}>
                                         <button
                                             onClick={() => setExpandedFAQ(expandedFAQ === idx ? null : idx)}
                                             aria-expanded={expandedFAQ === idx}
@@ -941,7 +941,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                             style={{
                                                 width: "100%",
                                                 padding: "1rem 1.25rem",
-                                                background: expandedFAQ === idx ? "#2d3748" : "#1f2330",
+                                                background: expandedFAQ === idx ? "hsl(0, 0%, 85%)" : "hsl(0, 0%, 96%)",
                                                 border: "none",
                                                 textAlign: "left",
                                                 cursor: "pointer",
@@ -950,7 +950,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                                 alignItems: "center",
                                                 fontSize: "0.95rem",
                                                 fontWeight: 600,
-                                                color: "#fff",
+                                                color: "hsl(222, 47%, 8%)",
                                                 gap: "1rem"
                                             }}
                                         >
@@ -962,9 +962,9 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                                 id={`faq-answer-${idx}`}
                                                 role="region"
                                                 aria-labelledby={`faq-question-${idx}`}
-                                                style={{ padding: "1rem 1.25rem", background: "#0b0d12", borderTop: "1px solid #2d3748" }}
+                                                style={{ padding: "1rem 1.25rem", background: "hsl(0, 0%, 98%)", borderTop: "1px solid hsl(0, 0%, 85%)" }}
                                             >
-                                                <p style={{ color: "#cbd5e1", lineHeight: 1.65, fontSize: "0.9rem", margin: 0 }}>{faq.a}</p>
+                                                <p style={{ color: "hsl(215, 20%, 45%)", lineHeight: 1.65, fontSize: "0.9rem", margin: 0 }}>{faq.a}</p>
                                             </div>
                                         )}
                                     </div>
@@ -974,8 +974,8 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                     )}
 
                     {/* Author Profile Section */}
-                    <section aria-labelledby="author-profile-heading" style={{ border: "1px solid #1f2330", padding: "1.5rem", borderRadius: "2.5rem", background: "#0b0d12", marginBottom: "2rem" }}>
-                        <h2 id="author-profile-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <section aria-labelledby="author-profile-heading" style={{ border: "1px solid hsl(0, 0%, 96%)", padding: "1.5rem", borderRadius: "2.5rem", background: "hsl(0, 0%, 98%)", marginBottom: "2rem" }}>
+                        <h2 id="author-profile-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "hsl(222, 47%, 8%)", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                             <span style={{ width: "6px", height: "32px", background: "#22c55e", borderRadius: "9999px" }} aria-hidden="true"></span>
                             About the Author
                         </h2>
@@ -991,7 +991,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                 width: "80px",
                                 height: "80px",
                                 borderRadius: "50%",
-                                background: "#1f2330",
+                                background: "hsl(0, 0%, 96%)",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
@@ -1016,14 +1016,14 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                 <h3 style={{
                                     fontSize: "1.25rem",
                                     fontWeight: 700,
-                                    color: "#fff",
+                                    color: "hsl(222, 47%, 8%)",
                                     margin: "0 0 0.5rem 0"
                                 }}>
                                     Andrew Derek
                                 </h3>
                                 <p style={{
                                     fontSize: "0.9375rem",
-                                    color: "#cbd5e1",
+                                    color: "hsl(215, 20%, 45%)",
                                     lineHeight: 1.6,
                                     margin: "0 0 0.75rem 0"
                                 }}>
@@ -1045,7 +1045,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                         </svg>
                                         <span style={{
                                             fontSize: "0.8125rem",
-                                            color: "#cbd5e1",
+                                            color: "hsl(215, 20%, 45%)",
                                             fontWeight: 600
                                         }}>
                                             4.8/5 Average Rating
@@ -1061,7 +1061,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                         </svg>
                                         <span style={{
                                             fontSize: "0.8125rem",
-                                            color: "#cbd5e1",
+                                            color: "hsl(215, 20%, 45%)",
                                             fontWeight: 600
                                         }}>
                                             Trusted by 2M+ Students
@@ -1150,10 +1150,10 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                             borderRadius: "8px",
                             textAlign: "center"
                         }}>
-                            <p style={{ fontSize: "0.95rem", color: "#cbd5e1", marginBottom: "0.75rem" }}>
+                            <p style={{ fontSize: "0.95rem", color: "hsl(215, 20%, 45%)", marginBottom: "0.75rem" }}>
                                 <strong style={{ color: "#FBBF24" }}>Follow Us for Daily Coupon Updates</strong>
                             </p>
-                            <p style={{ fontSize: "0.85rem", color: "#94a3b8", marginBottom: "1rem" }}>
+                            <p style={{ fontSize: "0.85rem", color: "hsl(215, 25%, 35%)", marginBottom: "1rem" }}>
                                 Get notified when we publish new coupon deals and exclusive discount codes.
                             </p>
                             <a
@@ -1162,7 +1162,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                     display: "inline-block",
                                     padding: "0.75rem 1.5rem",
                                     background: "linear-gradient(135deg, #FBBF24, #F59E0B)",
-                                    color: "#1f2330",
+                                    color: "hsl(0, 0%, 96%)",
                                     textDecoration: "none",
                                     borderRadius: "6px",
                                     fontSize: "0.9rem",
@@ -1186,12 +1186,12 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
 
                     {/* Related Deals */}
                     {relatedDeals.length > 0 && (
-                        <section aria-labelledby="related-heading" style={{ borderTop: "1px solid #1f2330", paddingTop: "2rem", marginTop: "2rem" }}>
-                            <h2 id="related-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        <section aria-labelledby="related-heading" style={{ borderTop: "1px solid hsl(0, 0%, 96%)", paddingTop: "2rem", marginTop: "2rem" }}>
+                            <h2 id="related-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "hsl(222, 47%, 8%)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                                 <span style={{ width: "6px", height: "32px", background: "#fbbf24", borderRadius: "9999px" }} aria-hidden="true"></span>
                                 More {deal.category || "Udemy"} Courses You Might Like
                             </h2>
-                            <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "1.5rem" }}>
+                            <p style={{ fontSize: "0.9rem", color: "hsl(215, 25%, 35%)", marginBottom: "1.5rem" }}>
                                 Similar {deal.provider || "Udemy"} courses in {deal.category || "this category"} with verified coupons:
                             </p>
                             <RelatedList items={relatedDeals} />
@@ -1202,7 +1202,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
 
                 {/* ─── RIGHT COLUMN — Sticky Sidebar ─── */}
                 <aside aria-label="Course purchase options" style={{ position: "relative" }}>
-                    <div style={{ position: "sticky", top: "2rem", background: "linear-gradient(135deg, #1f2330 0%, #2a2f42 100%)", border: "1px solid rgba(255,193,7,0.15)", borderRadius: "8px", overflow: "hidden", boxShadow: "0 8px 32px rgba(255,193,7,0.1)" }}>
+                    <div style={{ position: "sticky", top: "2rem", background: "linear-gradient(135deg, hsl(0, 0%, 96%) 0%, hsl(0, 0%, 94%) 100%)", border: "1px solid rgba(255,193,7,0.15)", borderRadius: "8px", overflow: "hidden", boxShadow: "0 8px 32px rgba(255,193,7,0.1)" }}>
                         {deal.image && (
                             <div style={{ position: "relative" }}>
                                 <img
@@ -1223,13 +1223,13 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                         <div style={{ padding: "1.25rem" }}>
                             {/* Price */}
                             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: discountPct > 0 ? "6px" : "1rem" }}>
-                                <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff" }}>
+                                <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "hsl(222, 47%, 8%)" }}>
                                     {price === 0 ? "Free" : `$${price}`}
                                 </span>
                                 {discountPct > 0 && (
                                     <>
                                         <span style={{ fontSize: "0.9rem", color: "#6b7280", textDecoration: "line-through" }}>${originalPrice}</span>
-                                        <span style={{ fontSize: "0.75rem", background: "#ef4444", color: "#fff", padding: "2px 7px", borderRadius: "3px", fontWeight: 700 }}>{discountPct}% OFF</span>
+                                        <span style={{ fontSize: "0.75rem", background: "#ef4444", color: "hsl(222, 47%, 8%)", padding: "2px 7px", borderRadius: "3px", fontWeight: 700 }}>{discountPct}% OFF</span>
                                     </>
                                 )}
                             </div>
@@ -1264,12 +1264,12 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                         🎫 Coupon Code
                                     </div>
                                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                        <code style={{ fontSize: "0.8rem", fontWeight: 700, background: "rgba(255,255,255,0.15)", padding: "4px 8px", borderRadius: "4px", border: "1px dashed rgba(255,255,255,0.35)", color: "#fff", flex: 1, textAlign: "center", letterSpacing: "0.5px" }}>
+                                        <code style={{ fontSize: "0.8rem", fontWeight: 700, background: "rgba(255,255,255,0.15)", padding: "4px 8px", borderRadius: "4px", border: "1px dashed rgba(255,255,255,0.35)", color: "hsl(222, 47%, 8%)", flex: 1, textAlign: "center", letterSpacing: "0.5px" }}>
                                             {deal.coupon.length > 4 ? `${deal.coupon.substring(0, 4)}···` : deal.coupon}
                                         </code>
                                         <button
                                             onClick={() => setIsModalOpen(true)}
-                                            style={{ background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.35)", borderRadius: "4px", padding: "4px 8px", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer", color: "#fff", whiteSpace: "nowrap" }}
+                                            style={{ background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.35)", borderRadius: "4px", padding: "4px 8px", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer", color: "hsl(222, 47%, 8%)", whiteSpace: "nowrap" }}
                                         >
                                             Copy code
                                         </button>
@@ -1316,8 +1316,8 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                             </p>
 
                             {/* Course includes */}
-                            <div style={{ fontSize: "0.85rem", color: "#cbd5e1" }}>
-                                <p style={{ fontWeight: 700, color: "#fff", marginBottom: "10px", fontSize: "0.875rem" }}>This Course Includes:</p>
+                            <div style={{ fontSize: "0.85rem", color: "hsl(215, 20%, 45%)" }}>
+                                <p style={{ fontWeight: 700, color: "hsl(222, 47%, 8%)", marginBottom: "10px", fontSize: "0.875rem" }}>This Course Includes:</p>
                                 {[
                                     ["Duration", deal.duration ? `${deal.duration} on-demand video` : "On-demand video"],
                                     ["Access", "Lifetime access · Mobile & TV"],
@@ -1326,12 +1326,12 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                 ].map(([label, value]) => (
                                     <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.07)", alignItems: "center" }}>
                                         <span style={{ color: "#6b7280", fontSize: "0.8rem" }}>{label}</span>
-                                        <span style={{ color: "#e2e8f0", fontWeight: 500, textAlign: "right", maxWidth: "60%" }}>{value}</span>
+                                        <span style={{ color: "hsl(222, 47%, 8%)", fontWeight: 500, textAlign: "right", maxWidth: "60%" }}>{value}</span>
                                     </div>
                                 ))}
                             </div>
 
-                            <div style={{ borderTop: "1px solid #2d3748", marginTop: "1rem", paddingTop: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div style={{ borderTop: "1px solid hsl(0, 0%, 85%)", marginTop: "1rem", paddingTop: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 <button
                                     onClick={() => navigator.share?.({ title: deal.title, url: window.location.href })}
                                     style={{ color: "#9ca3af", fontWeight: 600, fontSize: "0.85rem", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
@@ -1355,7 +1355,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                     onClick={() => setIsModalOpen(false)}
                 >
                     <div
-                        style={{ background: "#1f2330", borderRadius: "12px", padding: "2rem", maxWidth: "480px", width: "100%", border: "1px solid #2d3748", boxShadow: "0 20px 30px rgba(0,0,0,0.6)", position: "relative" }}
+                        style={{ background: "hsl(0, 0%, 96%)", borderRadius: "12px", padding: "2rem", maxWidth: "480px", width: "100%", border: "1px solid hsl(0, 0%, 85%)", boxShadow: "0 20px 30px rgba(0,0,0,0.6)", position: "relative" }}
                         onClick={e => e.stopPropagation()}
                     >
                         <button
@@ -1366,16 +1366,16 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                             ✕
                         </button>
 
-                        <h3 id="modal-title" style={{ color: "#fff", fontSize: "1.3rem", fontWeight: 700, marginBottom: "0.5rem", textAlign: "center" }}>
+                        <h3 id="modal-title" style={{ color: "hsl(222, 47%, 8%)", fontSize: "1.3rem", fontWeight: 700, marginBottom: "0.5rem", textAlign: "center" }}>
                             Your Coupon Code
                         </h3>
-                        <p style={{ color: "#94a3b8", fontSize: "0.9rem", textAlign: "center", marginBottom: "1.5rem" }}>
+                        <p style={{ color: "hsl(215, 25%, 35%)", fontSize: "0.9rem", textAlign: "center", marginBottom: "1.5rem" }}>
                             Copy the code, then click "Redeem Now" — the discount will apply at checkout.
                         </p>
 
                         <div style={{ background: "linear-gradient(135deg, #667eea, #764ba2)", padding: "1.25rem", borderRadius: "8px", marginBottom: "1.25rem", textAlign: "center" }}>
                             <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Coupon Code</p>
-                            <code style={{ display: "block", fontSize: "1.15rem", fontWeight: 800, color: "#fff", letterSpacing: "1px", background: "rgba(255,255,255,0.15)", padding: "10px 16px", borderRadius: "6px", border: "1px dashed rgba(255,255,255,0.4)" }}>
+                            <code style={{ display: "block", fontSize: "1.15rem", fontWeight: 800, color: "hsl(222, 47%, 8%)", letterSpacing: "1px", background: "rgba(255,255,255,0.15)", padding: "10px 16px", borderRadius: "6px", border: "1px dashed rgba(255,255,255,0.4)" }}>
                                 {deal.coupon}
                             </code>
                         </div>
@@ -1383,7 +1383,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                         <div style={{ display: "flex", gap: "0.75rem", flexDirection: "column" }}>
                             <button
                                 onClick={handleCopyCoupon}
-                                style={{ background: couponCopied ? "#22c55e" : "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", padding: "0.75rem", borderRadius: "6px", fontWeight: 600, cursor: "pointer", fontSize: "0.95rem", transition: "all 0.2s" }}
+                                style={{ background: couponCopied ? "#22c55e" : "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "hsl(222, 47%, 8%)", padding: "0.75rem", borderRadius: "6px", fontWeight: 600, cursor: "pointer", fontSize: "0.95rem", transition: "all 0.2s" }}
                             >
                                 {couponCopied ? "✓ Copied!" : "📋 Copy Code"}
                             </button>
@@ -1391,7 +1391,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                 href={deal.url}
                                 target="_blank"
                                 rel="noopener noreferrer nofollow"
-                                style={{ background: "#a855f7", border: "1px solid #9333ea", color: "#fff", padding: "0.75rem", borderRadius: "6px", fontWeight: 600, textDecoration: "none", textAlign: "center", fontSize: "0.95rem" }}
+                                style={{ background: "#a855f7", border: "1px solid #9333ea", color: "hsl(222, 47%, 8%)", padding: "0.75rem", borderRadius: "6px", fontWeight: 600, textDecoration: "none", textAlign: "center", fontSize: "0.95rem" }}
                             >
                                 Redeem Now on {deal.provider || "Udemy"} →
                             </a>
@@ -1408,7 +1408,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                 .prose li { margin-bottom: 0.5em; }
                 .prose a { color: #60a5fa; text-decoration: underline; }
                 .prose strong { color: #e2e8f0; }
-                .prose code { background: #1f2330; padding: 2px 6px; border-radius: 4px; font-size: 0.875em; }
+                .prose code { background: hsl(0, 0%, 96%); padding: 2px 6px; border-radius: 4px; font-size: 0.875em; }
 
                 @media (max-width: 900px) {
                     .deal-layout { grid-template-columns: 1fr !important; }
@@ -1423,3 +1423,4 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
         </div>
     );
 }
+

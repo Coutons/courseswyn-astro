@@ -46,13 +46,13 @@ export default function DealCard({ deal }: { deal: any }) {
               loading="lazy"
               width="400"
               height="225"
-              style={{ width: "100%", height: "160px", borderRadius: 8, border: "1px solid #1f2330", display: "block", objectFit: "cover" }}
+              style={{ width: "100%", height: "160px", borderRadius: 8, border: "1px solid hsla(15, 85%, 55%, 0.2)", display: "block", objectFit: "cover" }}
               referrerPolicy="no-referrer"
             />
             {deal.duration && (
               <span
                 className="pill"
-                style={{ position: "absolute", top: 8, right: 8, background: "#3b82f6", color: "#0b0d12", fontWeight: 800 }}
+                style={{ position: "absolute", top: 8, right: 8, background: "hsl(15, 85%, 55%)", color: "white", fontWeight: 800 }}
               >
                 {(() => {
                   try {
@@ -73,7 +73,7 @@ export default function DealCard({ deal }: { deal: any }) {
           <span className="price">{p === 0 ? "Free" : `$${p.toFixed(2)}`}</span>
           {hasDiscount && (
             <>
-              <span className="original" style={{ textDecoration: "line-through", color: "#6b7280" }}>
+              <span className="original" style={{ textDecoration: "line-through", color: "var(--muted)" }}>
                 ${op.toFixed(2)}
               </span>
               <span className="discount" style={{ background: "#ef4444", color: "white", padding: "2px 6px", borderRadius: 4, fontSize: 12, fontWeight: 600 }}>
@@ -82,7 +82,7 @@ export default function DealCard({ deal }: { deal: any }) {
             </>
           )}
         </div>
-        <div className="stats" style={{ display: "flex", gap: 12, marginTop: 8, color: "#6b7280", fontSize: 14 }}>
+        <div className="stats" style={{ display: "flex", gap: 12, marginTop: 8, color: "var(--muted)", fontSize: 14 }}>
           <span>⭐ {r.toFixed(1)}</span>
           <span>👥 {formatStudents(s)}</span>
           {mounted && deal.updatedAt && (

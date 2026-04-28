@@ -36,7 +36,7 @@ const blog = defineCollection({
     pubDate: z.coerce.date(),
     updatedAt: z.coerce.date().optional(),
     tags: z.array(z.string()).optional(),
-    image: z.string().optional(),
+    image: z.union([z.string(), z.object({ src: z.string() })]).optional(),
     author: z.string().optional(),
     draft: z.boolean().optional(),
   }),
