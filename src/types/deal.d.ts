@@ -2,7 +2,7 @@ export interface Deal {
   id: string;
   slug?: string;
   title: string;
-  description?: string;
+  description: string;
   content?: string;
   price: number;
   originalPrice?: number;
@@ -21,9 +21,12 @@ export interface Deal {
   language?: string;
   learn?: string[];
   requirements?: string[];
+  skills?: string[];
   seoTitle?: string;
   seoDescription?: string;
   seoOgImage?: string;
   expiresAt?: string;
   createdAt?: string;
+  updatedAt?: string;
+  faqs?: { q: string; a: string }[];
 }

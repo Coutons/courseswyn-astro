@@ -340,7 +340,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
             />
 
             {/* Breadcrumb + Hero */}
-            <header style={{ background: "hsl(0, 0%, 96%)", padding: "2rem 0", borderBottom: "1px solid hsl(0, 0%, 98%)" }}>
+            <header style={{ background: "hsla(15, 85%, 55%, 0.12)", padding: "2rem 0", borderBottom: "1px solid hsl(0, 0%, 90%)" }}>
                 <div className="container" style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 1rem" }}>
                     {/* Breadcrumb */}
                     <nav aria-label="Breadcrumb" style={{ marginBottom: "1rem" }}>
@@ -1214,9 +1214,6 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                     decoding="async"
                                     style={{ width: "100%", height: "190px", objectFit: "cover", display: "block" }}
                                 />
-                                <div aria-hidden="true" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", background: "rgba(255,255,255,0.9)", borderRadius: "50%", width: "48px", height: "48px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 12px rgba(0,0,0,0.4)" }}>
-                                    <div style={{ width: 0, height: 0, borderTop: "9px solid transparent", borderBottom: "9px solid transparent", borderLeft: "15px solid #111", marginLeft: "3px" }}></div>
-                                </div>
                             </div>
                         )}
 

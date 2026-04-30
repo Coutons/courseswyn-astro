@@ -24,7 +24,7 @@ The Spring Framework continues to be a cornerstone of Java enterprise developmen
 <div style="text-align: center; margin: 20px 0; padding: 20px; border: 2px solid #007bff; border-radius: 10px; background-color: #f8f9fa;">
   <h3 style="margin-bottom: 10px; color: #007bff;">🚀 Top Recommendation: Chad Darby's Spring Course</h3>
   <p style="margin-bottom: 15px;">Master Spring Boot with Hibernate for real-world projects!</p>
-  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.647428&u=https%3A%2F%2Fwww.udemy.com%2Fspring-hibernate-tutorial&intsrc=PUI2_26324" class="inline-block bg-blue-600 hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-lg text-lg transition duration-300" target="_blank" rel="nofollow sponsored">Enroll Now & Save 90% 💻</a>
+  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.647428&u=https%3A%2F%2Fwww.udemy.com%2Fspring-hibernate-tutorial&intsrc=PUI2_26324" class="inline-block bg-blue-600 hover:bg-blue-800 text-[hsl(222,47%,8%)] font-bold py-3 px-6 rounded-lg text-lg transition duration-300" target="_blank" rel="nofollow sponsored">Enroll Now & Save 90% 💻</a>
 </div>
 
 ## Table of Contents
@@ -406,7 +406,7 @@ Instructors actively update content, but check the last update date. Spring evol
 <div style="text-align: center; margin: 30px 0; padding: 25px; border: 3px solid #28a745; border-radius: 15px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
   <h2 style="margin-bottom: 15px; color: #28a745; font-size: 1.5em;">🚀 Start Your Spring Journey Today!</h2>
   <p style="margin-bottom: 20px; font-size: 1.1em;">Build enterprise apps with top-rated Spring courses.</p>
-  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.647428&u=https%3A%2F%2Fwww.udemy.com%2Fspring-hibernate-tutorial&intsrc=PUI2_26324" class="inline-block bg-green-600 hover:bg-green-800 text-white font-bold py-4 px-8 rounded-lg text-xl transition duration-300 shadow-lg" target="_blank" rel="nofollow sponsored">Enroll Now & Save Big 💰</a>
+  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.647428&u=https%3A%2F%2Fwww.udemy.com%2Fspring-hibernate-tutorial&intsrc=PUI2_26324" class="inline-block bg-green-600 hover:bg-green-800 text-[hsl(222,47%,8%)] font-bold py-4 px-8 rounded-lg text-xl transition duration-300 shadow-lg" target="_blank" rel="nofollow sponsored">Enroll Now & Save Big 💰</a>
 </div>
 
 *Disclosure: This is an affiliate link.*
