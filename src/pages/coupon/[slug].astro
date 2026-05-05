@@ -86,6 +86,7 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
     description={(deal.seoDescription || deal.description)?.slice(0, 155) + ((deal.seoDescription || deal.description)?.length > 155 ? '...' : '')}
     image={deal.seoOgImage || deal.image}
     canonical={`https://courseswyn.com/coupon/${deal.slug || deal.id}`}
+    hideBreadcrumbs={true}
 >
     <!-- Enhanced Structured Data for SEO -->
     <script type="application/ld+json" set:html={
@@ -174,6 +175,40 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
                 "@type": "EducationalOccupationalCredential",
                 "name": `${deal.category} Certification`,
                 "educationalLevel": "Professional Certificate"
+            } : undefined
+        })
+    } />
+
+    <!-- Product Schema for Rich Results -->
+    <script type="application/ld+json" set:html={
+        JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": deal.title,
+            "image": deal.seoOgImage || deal.image,
+            "description": deal.seoDescription || deal.description,
+            "brand": {
+                "@type": "Brand",
+                "name": deal.provider
+            },
+            "offers": {
+                "@type": "Offer",
+                "url": `https://courseswyn.com/coupon/${deal.slug || deal.id}`,
+                "priceCurrency": "USD",
+                "price": deal.price.toString(),
+                "priceValidUntil": deal.expiresAt ? new Date(deal.expiresAt).toISOString().split('T')[0] : undefined,
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                    "@type": "Organization",
+                    "name": "CoursesWyn"
+                }
+            },
+            "aggregateRating": deal.rating ? {
+                "@type": "AggregateRating",
+                "ratingValue": deal.rating.toString(),
+                "reviewCount": Math.max(1, Math.round(deal.students ?? 0)),
+                "bestRating": "5",
+                "worstRating": "1"
             } : undefined
         })
     } />

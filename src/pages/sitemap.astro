@@ -1,0 +1,116 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+import { readDeals } from "../lib/store";
+
+const deals = await readDeals();
+const blogPosts = await getCollection("blog");
+
+// Extract categories and topics from deals
+const categories = [...new Set(deals.map(d => d.category).filter(Boolean))].sort();
+const topics = [...new Set(deals.map(d => d.subcategory).filter(Boolean))].sort();
+
+const pageTitle = "Sitemap — All Courses & Guides | CoursesWyn";
+const pageDescription = "Complete sitemap for CoursesWyn. Find all Udemy course reviews, verified coupon categories, instructor guides, and career insights in one place.";
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <main style="background: var(--bg); color: var(--text);">
+    
+    {/* ── HERO ── */}
+    <section style="padding: 100px 0 60px; border-bottom: 2px solid var(--border); background: var(--card);">
+      <div class="container">
+        <h1 style={{ 
+          fontSize: "clamp(2.5rem, 7vw, 4rem)", 
+          fontWeight: 900, 
+          lineHeight: 1.05, 
+          letterSpacing: "-0.04em",
+          marginBottom: "24px"
+        }}>
+          Site<br/>
+          <span style={{ background: "var(--accent)", color: "white", padding: "0 10px" }}>Navigation.</span>
+        </h1>
+        <p style={{ fontSize: "1.1rem", color: "var(--muted)", maxWidth: "600px", fontWeight: 500 }}>
+          Find every page, guide, and category on the CoursesWyn platform.
+        </p>
+      </div>
+    </section>
+
+    {/* ── GRID ── */}
+    <section style="padding: 80px 0;">
+      <div class="container">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 48px;">
+          
+          {/* Main Pages */}
+          <div>
+            <h2 class="sitemap-heading">Main Sections</h2>
+            <ul class="sitemap-list">
+              <li><a href="/">Home</a></li>
+              <li><a href="/blog">Best Courses (Reviews)</a></li>
+              <li><a href="/udemy-coupon-code">Latest Coupons</a></li>
+              <li><a href="/instructors">Instructors</a></li>
+              <li><a href="/categories">Categories</a></li>
+              <li><a href="/topics">Topics</a></li>
+              <li><a href="/popular">Popular Deals</a></li>
+            </ul>
+          </div>
+
+          {/* Resources */}
+          <div>
+            <h2 class="sitemap-heading">Resources</h2>
+            <ul class="sitemap-list">
+              <li><a href="/udemy-coupons-guide">Coupons Guide</a></li>
+              <li><a href="/how-to-redeem-coupon">How to Redeem</a></li>
+              <li><a href="/success-stories">Success Stories</a></li>
+              <li><a href="/about">About Us</a></li>
+              <li><a href="/contact">Contact</a></li>
+              <li><a href="/privacy">Privacy Policy</a></li>
+              <li><a href="/terms">Terms of Use</a></li>
+            </ul>
+          </div>
+
+          {/* Blog Content */}
+          <div>
+            <h2 class="sitemap-heading">Editorial Guides</h2>
+            <ul class="sitemap-list">
+              {blogPosts.slice(0, 10).map(post => (
+                <li><a href={`/blog/${post.id}`}>{post.data.title}</a></li>
+              ))}
+              {blogPosts.length > 10 && (
+                <li><a href="/blog" style="color: var(--accent); font-weight: 900;">View All Guides →</a></li>
+              )}
+            </ul>
+          </div>
+
+          {/* Top Categories */}
+          <div>
+            <h2 class="sitemap-heading">Categories</h2>
+            <ul class="sitemap-list">
+              {categories.slice(0, 10).map(cat => (
+                <li><a href={`/categories/${cat.toLowerCase().replace(/\s+/g, '-')}`}>{cat}</a></li>
+              ))}
+              <li><a href="/categories" style="color: var(--accent); font-weight: 900;">View All Categories →</a></li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <style>
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .sitemap-heading {
+      font-size: 1.2rem; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--text); margin-bottom: 24px;
+      padding-bottom: 12px; border-bottom: 2px solid var(--border);
+    }
+    .sitemap-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+    .sitemap-list a { 
+      text-decoration: none; color: var(--muted); font-weight: 600; font-size: 0.95rem;
+      transition: all 0.15s ease;
+    }
+    .sitemap-list a:hover { color: var(--accent); transform: translateX(4px); display: inline-block; }
+  </style>
+</Layout>

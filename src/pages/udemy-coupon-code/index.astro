@@ -52,7 +52,7 @@ const pageDescription = currentPage === 1
   ? `Browse ${totalDeals}+ verified Udemy coupons with ${freeDeals}+ free courses. Save up to ${avgSavings}% on programming, web development, data science and more. Updated daily.`
   : `Page ${currentPage} of Udemy deals. Browse more verified free courses and 100% off coupons on CoursesWyn.`;
 
-// FAQ data — identical between schema and visible HTML (Google requirement)
+// FAQ data
 const faqs = [
   {
     q: "Are Udemy deals on CoursesWyn legitimate?",
@@ -76,14 +76,13 @@ const faqs = [
   }
 ];
 
-// FIX 3: Build page number list without >= operator or key prop
-// Uses pre-computed array of {type, value} objects
-type PageItem = { type: 'page'; value: number } | { type: 'ellipsis'; id: string };
+// Pagination items
+type PageItem = { type: 'page'; value: number } | { type: 'ellipsis', id: string };
 const pageItems: PageItem[] = [];
-const window = 2;
+const windowSize = 2;
 let lastAdded = 0;
 for (let p = 1; p <= totalPages; p++) {
-  const inWindow = p >= currentPage - window && p <= currentPage + window;
+  const inWindow = p >= currentPage - windowSize && p <= currentPage + windowSize;
   if (p === 1 || p === totalPages || inWindow) {
     if (lastAdded > 0 && p - lastAdded > 1) {
       pageItems.push({ type: 'ellipsis', id: `gap-${p}` });
@@ -93,7 +92,7 @@ for (let p = 1; p <= totalPages; p++) {
   }
 }
 
-// JSON-LD — no duplication of Organization/WebSite from Layout.astro
+// JSON-LD
 const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
@@ -169,12 +168,6 @@ const structuredData = {
 };
 ---
 
-<!--
-  FIX 1: prevUrl/nextUrl — Layout.astro Props interface doesn't have these.
-  Inject rel=prev/next directly in <head> using Astro's head slot instead.
-  Add this slot to Layout.astro: <slot name="head" slot="head" />
-  inside the <head> tag.
--->
 <Layout
   title={pageTitle}
   description={pageDescription}
@@ -187,128 +180,83 @@ const structuredData = {
 
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-  <div style={{ minHeight: "100vh", color: "var(--text)" }}>
+  <main style="background: var(--bg); color: var(--text);">
 
     {/* ── HERO — page 1 only ── */}
     {currentPage === 1 && (
-      <section
-        class="hero-gradient"
-        style={{ position: "relative", padding: "5rem 1rem 4rem", textAlign: "center", overflow: "hidden" }}
-      >
-        <div class="container" style={{ position: "relative", zIndex: 10 }}>
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: "0.5rem",
-            background: "var(--brand-soft)", padding: "0.5rem 1rem",
-            borderRadius: "9999px", marginBottom: "1.5rem",
-            fontSize: "0.875rem", color: "var(--brand)", fontWeight: 600
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
+      <section style="padding: 100px 0 80px; border-bottom: 2px solid var(--border); background: var(--card);">
+        <div class="container">
+          <div style="display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: white; padding: 6px 16px; border: 2px solid var(--border); box-shadow: 3px 3px 0 var(--border); border-radius: 4px; font-weight: 900; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 32px;">
             Updated Daily — {currentMonth} {currentYear}
           </div>
 
-          <h1 style={{
-            fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 800,
-            lineHeight: 1.1, maxWidth: "900px", margin: "0 auto 1.5rem"
+          <h1 style={{ 
+            fontSize: "clamp(2.5rem, 7vw, 4.5rem)", 
+            fontWeight: 900, 
+            lineHeight: 1.05, 
+            letterSpacing: "-0.04em",
+            marginBottom: "32px"
           }}>
-            <span style={{
-              background: "linear-gradient(135deg, var(--brand) 0%, hsl(35, 90%, 68%) 100%)",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text"
-            }}>Free Udemy Coupons</span>
-            <br />
-            <span style={{
-              background: "linear-gradient(135deg, var(--text) 0%, var(--muted) 100%)",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text"
-            }}>100% Off — {currentMonth} {currentYear}</span>
+            Free Udemy<br/>
+            <span style={{ background: "var(--accent)", color: "white", padding: "0 10px" }}>Coupons.</span>
           </h1>
 
-          <p style={{
-            fontSize: "clamp(1rem, 2.5vw, 1.25rem)", color: "var(--muted)",
-            maxWidth: "650px", margin: "0 auto 2.5rem", lineHeight: 1.7
+          <p style={{ 
+            fontSize: "clamp(1.1rem, 3vw, 1.3rem)", 
+            color: "var(--muted)", 
+            maxWidth: "800px", 
+            lineHeight: 1.6,
+            fontWeight: 500,
+            marginBottom: "48px"
           }}>
-            Browse <strong style={{ color: "var(--text)" }}>{totalDeals}+ verified Udemy deals</strong> with{" "}
-            <strong style={{ color: "var(--text)" }}>{freeDeals}+ free courses</strong>. Save up to{" "}
-            <strong style={{ color: "var(--brand)" }}>{avgSavings}%</strong> on programming, web development,
-            data science, and marketing — updated daily.
+            Browse {totalDeals}+ verified Udemy deals with {freeDeals}+ free courses. Save up to {avgSavings}% on tech and business courses.
           </p>
 
-          <div style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
+          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
             {[
-              { label: `${totalDeals}+ Courses`, path: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z", color: "var(--brand)" },
-              { label: `${freeDeals}+ Free`, path: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z", color: "hsl(120, 70%, 45%)" },
-              { label: `Save ${avgSavings}%`, path: "M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z", color: "hsl(35, 90%, 68%)" },
-              { label: "Verified Daily", path: "M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z", color: "hsl(210, 100%, 60%)" }
-            ].map(stat => (
-              <div style={{
-                display: "flex", alignItems: "center", gap: "0.5rem",
-                background: "var(--card)", padding: "0.625rem 1.25rem",
-                borderRadius: "10px", border: "1px solid var(--border)",
-                fontSize: "0.875rem", fontWeight: 600, color: "var(--text)"
-              }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill={stat.color}>
-                  <path d={stat.path} />
-                </svg>
-                {stat.label}
+              { v: `${totalDeals}+`, l: "Courses" },
+              { v: `${freeDeals}+`, l: "100% Free" },
+              { v: `${avgSavings}%`, l: "Avg Savings" }
+            ].map(s => (
+              <div style={{ background: "white", border: "2px solid var(--border)", padding: "12px 24px", borderRadius: "4px", boxShadow: "4px 4px 0 var(--border)", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <span style="font-size: 1.5rem; font-weight: 900; color: var(--accent);">{s.v}</span>
+                <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--muted);">{s.l}</span>
               </div>
             ))}
           </div>
         </div>
-
-        <div style={{ position: "absolute", top: "20%", left: "5%", width: "280px", height: "280px", background: "var(--brand)", filter: "blur(120px)", opacity: 0.07, borderRadius: "50%", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "10%", right: "5%", width: "240px", height: "240px", background: "hsl(0, 84%, 60%)", filter: "blur(100px)", opacity: 0.07, borderRadius: "50%", pointerEvents: "none" }} />
       </section>
     )}
 
     {/* Page 2+ header */}
     {currentPage > 1 && (
-      <div style={{ background: "var(--card)", borderBottom: "1px solid var(--border)", padding: "1.5rem 0", textAlign: "center" }}>
+      <section style="padding: 64px 0 48px; border-bottom: 2px solid var(--border); background: var(--card);">
         <div class="container">
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text)", margin: "0 0 0.25rem" }}>
-            Udemy Deals & Free Coupons — Page {currentPage}
+          <h1 style={{ fontSize: "2.5rem", fontWeight: 900, letterSpacing: "-0.04em", marginBottom: "8px" }}>
+            Deals — Page {currentPage}
           </h1>
-          <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.9rem" }}>
-            Showing {startIndex + 1}–{Math.min(endIndex, allDeals.length)} of {allDeals.length} verified courses
+          <p style={{ color: "var(--muted)", fontWeight: 800, textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.1em" }}>
+            Showing {startIndex + 1}–{Math.min(endIndex, allDeals.length)} of {allDeals.length} courses
           </p>
         </div>
-      </div>
+      </section>
     )}
 
     {/* ── DEALS GRID ── */}
-    <section style={{ padding: "3rem 1rem 4rem" }}>
-      <div class="container" style={{ maxWidth: "1400px" }}>
+    <section style="padding: 80px 0;">
+      <div class="container">
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px;">
           <div>
-            <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text)", margin: "0 0 0.25rem" }}>
-              <span style={{ color: "var(--brand)" }}>Latest</span> Udemy Coupons & Deals
-            </h2>
-            <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.9rem" }}>
-              Showing {startIndex + 1}–{Math.min(endIndex, allDeals.length)} of {allDeals.length} courses
-              {currentPage > 1 ? ` — Page ${currentPage}` : ""}
-            </p>
+            <h2 style="font-size: 2rem; font-weight: 900; margin: 0; letter-spacing: -0.04em;">Latest Deals.</h2>
+            <p style="color: var(--muted); font-weight: 500; margin-top: 8px;">Freshly verified Udemy promo codes</p>
           </div>
-          <a href="/categories" style={{
-            display: "inline-flex", alignItems: "center", gap: "0.4rem",
-            padding: "0.5rem 1rem", background: "var(--card)",
-            border: "1px solid var(--border)", borderRadius: "8px",
-            color: "var(--text)", textDecoration: "none",
-            fontSize: "0.875rem", fontWeight: 600
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
-            </svg>
-            Browse by Category
+          <a href="/categories" class="btn btn-outline" style="padding: 12px 24px; font-size: 0.85rem;">
+            BROWSE CATEGORIES
           </a>
         </div>
 
-        {/* Deals grid — no key prop needed in Astro */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-          gap: "1.5rem",
-          marginBottom: "3rem"
-        }}>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-bottom: 64px;">
           {currentItems.map((deal: any) => (
             <DealCard deal={deal} />
           ))}
@@ -316,77 +264,37 @@ const structuredData = {
 
         {/* ── PAGINATION ── */}
         {totalPages > 1 && (
-          <nav aria-label="Deal pages pagination" style={{ marginTop: "2rem" }}>
-            <div style={{
-              display: "flex", justifyContent: "center",
-              alignItems: "center", gap: "0.75rem", flexWrap: "wrap"
-            }}>
-
-              {/* Previous button */}
+          <nav aria-label="Pagination" style="margin-top: 64px; padding-top: 48px; border-top: 2px solid var(--border);">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 16px; flex-wrap: wrap;">
               {prevUrl ? (
-                <a href={prevUrl} rel="prev" style={{
-                  display: "inline-flex", alignItems: "center", gap: "0.4rem",
-                  padding: "0.75rem 1.5rem", background: "var(--card)",
-                  border: "2px solid var(--brand)", borderRadius: "10px",
-                  color: "var(--brand)", textDecoration: "none",
-                  fontSize: "0.95rem", fontWeight: 600
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                  </svg>
-                  Previous
-                </a>
+                <a href={prevUrl} class="btn btn-outline" style="padding: 12px 24px;">← PREV</a>
               ) : (
-                <span style={{ padding: "0.75rem 1.5rem", opacity: 0.3, fontSize: "0.95rem", fontWeight: 600 }}>Previous</span>
+                <span class="btn btn-disabled" style="padding: 12px 24px; opacity: 0.5;">← PREV</span>
               )}
 
-              {/* FIX 3: Page numbers — pre-built array, no key prop, no >= operator */}
-              {pageItems.map((item) => {
-                if (item.type === 'ellipsis') {
-                  return <span style={{ color: "var(--muted)", padding: "0 0.25rem" }}>…</span>;
-                }
-                const p = item.value;
-                const isActive = p === currentPage;
-                const href = p === 1 ? baseDealsUrl : `${baseDealsUrl}/${p}`;
-                return (
-                  <a
-                    href={href}
-                    aria-current={isActive ? "page" : undefined}
-                    style={{
-                      display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      width: "40px", height: "40px", borderRadius: "8px",
-                      textDecoration: "none", fontSize: "0.9rem", fontWeight: 600,
-                      background: isActive ? "var(--brand)" : "var(--card)",
-                      color: isActive ? "var(--bg)" : "var(--text)",
-                      border: isActive ? "2px solid var(--brand)" : "1px solid var(--border)"
-                    }}
-                  >
-                    {p}
-                  </a>
-                );
-              })}
+              <div style="display: flex; gap: 8px;">
+                {pageItems.map((item) => {
+                  if (item.type === 'ellipsis') {
+                    return <span style="font-weight: 900; color: var(--muted); padding: 0 8px;">...</span>;
+                  }
+                  const isActive = item.value === currentPage;
+                  const href = item.value === 1 ? baseDealsUrl : `${baseDealsUrl}/${item.value}`;
+                  return (
+                    <a href={href} class={isActive ? "btn btn-active" : "btn btn-outline"} style="width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">
+                      {item.value}
+                    </a>
+                  );
+                })}
+              </div>
 
-              {/* Next button */}
               {nextUrl ? (
-                <a href={nextUrl} rel="next" style={{
-                  display: "inline-flex", alignItems: "center", gap: "0.4rem",
-                  padding: "0.75rem 1.5rem", background: "var(--card)",
-                  border: "2px solid var(--brand)", borderRadius: "10px",
-                  color: "var(--brand)", textDecoration: "none",
-                  fontSize: "0.95rem", fontWeight: 600
-                }}>
-                  Next
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
-                  </svg>
-                </a>
+                <a href={nextUrl} class="btn" style="padding: 12px 24px;">NEXT →</a>
               ) : (
-                <span style={{ padding: "0.75rem 1.5rem", opacity: 0.3, fontSize: "0.95rem", fontWeight: 600 }}>Next</span>
+                <span class="btn btn-disabled" style="padding: 12px 24px; opacity: 0.5;">NEXT →</span>
               )}
             </div>
-
-            <p style={{ textAlign: "center", color: "var(--muted)", fontSize: "0.85rem", marginTop: "1rem" }}>
-              Page {currentPage} of {totalPages} — {allDeals.length} total courses
+            <p style="text-align: center; color: var(--muted); font-weight: 800; font-size: 0.75rem; text-transform: uppercase; margin-top: 24px; letter-spacing: 0.05em;">
+              Page {currentPage} of {totalPages}
             </p>
           </nav>
         )}
@@ -394,155 +302,35 @@ const structuredData = {
       </div>
     </section>
 
-    {/* ── FAQ — page 1 only, data synced with schema ── */}
+    {/* ── FAQ — page 1 only ── */}
     {currentPage === 1 && (
-      <section class="card-gradient" style={{ padding: "4rem 1rem" }}>
-        <div class="container" style={{ maxWidth: "900px" }}>
-          <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-            <h2 style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)", fontWeight: 800, color: "var(--text)", marginBottom: "0.75rem" }}>
-              Frequently Asked Questions
-            </h2>
-            <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "550px", margin: "0 auto", lineHeight: 1.6 }}>
-              Everything you need to know about Udemy coupons and free courses on CoursesWyn
-            </p>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <section style="padding: 80px 0; background: var(--card); border-top: 2px solid var(--border);">
+        <div class="container" style="max-width: 800px;">
+          <h2 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 48px; text-align: center; letter-spacing: -0.02em;">Common Questions.</h2>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
             {faqs.map((faq) => (
-              <div class="faq-item" style={{
-                background: "var(--card)", borderRadius: "14px",
-                border: "1px solid var(--border)", overflow: "hidden"
-              }}>
-                <button
-                  class="faq-question"
-                  aria-expanded="false"
-                  style={{
-                    width: "100%", padding: "1.25rem 1.5rem",
-                    background: "transparent", border: "none",
-                    textAlign: "left", cursor: "pointer",
-                    display: "flex", justifyContent: "space-between",
-                    alignItems: "center", gap: "1rem",
-                    fontSize: "1rem", fontWeight: 600, color: "var(--text)"
-                  }}
-                >
-                  <span>{faq.q}</span>
-                  <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"
-                    style={{ flexShrink: 0, transition: "transform 0.25s ease" }}>
-                    <path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/>
-                  </svg>
-                </button>
-                <div class="faq-answer" style={{ maxHeight: "0", overflow: "hidden", transition: "max-height 0.3s ease" }}>
-                  <p style={{ padding: "0 1.5rem 1.25rem", color: "var(--muted)", lineHeight: 1.7, margin: 0, fontSize: "0.95rem" }}>
-                    {faq.a}
-                  </p>
+              <details class="neo-faq-details">
+                <summary style="padding: 24px; font-weight: 900; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem;">
+                  {faq.q}
+                  <span style="color: var(--accent); font-size: 1.5rem;">+</span>
+                </summary>
+                <div style="padding: 0 24px 24px; color: var(--muted); font-size: 1rem; line-height: 1.6; font-weight: 500;">
+                  {faq.a}
                 </div>
-              </div>
+              </details>
             ))}
           </div>
         </div>
       </section>
     )}
 
-    {/* ── CTA — page 1 only ── */}
-    {currentPage === 1 && (
-      <section class="hero-gradient" style={{ padding: "4rem 1rem" }}>
-        <div class="container" style={{ maxWidth: "700px", textAlign: "center" }}>
-          <h2 style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)", fontWeight: 800, color: "var(--text)", marginBottom: "1rem" }}>
-            Find Courses by Category
-          </h2>
-          <p style={{ color: "var(--muted)", maxWidth: "500px", margin: "0 auto 2rem", lineHeight: 1.6 }}>
-            Browse {totalDeals}+ free Udemy coupons organized by subject — programming, design, marketing, data science, and more.
-          </p>
-          <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/categories" style={{
-              display: "inline-flex", alignItems: "center", gap: "0.5rem",
-              padding: "0.875rem 2rem", background: "var(--brand)",
-              color: "var(--bg)", borderRadius: "10px", textDecoration: "none",
-              fontSize: "1rem", fontWeight: 700,
-              boxShadow: "0 4px 20px -4px hsla(45, 95%, 58%, 0.4)"
-            }}>
-              Browse Categories
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
-              </svg>
-            </a>
-            <a href="/popular" style={{
-              display: "inline-flex", alignItems: "center", gap: "0.5rem",
-              padding: "0.875rem 2rem", background: "transparent",
-              color: "var(--text)", border: "2px solid var(--border)",
-              borderRadius: "10px", textDecoration: "none",
-              fontSize: "1rem", fontWeight: 700
-            }}>
-              Most Popular
-            </a>
-          </div>
-        </div>
-      </section>
-    )}
-
-  </div>
+  </main>
 </Layout>
 
 <style>
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-  }
-
-  .hero-gradient {
-    background: linear-gradient(135deg, hsl(0, 0%, 100%) 0%, hsla(15, 85%, 55%, 0.02) 100%);
-  }
-
-  .card-gradient {
-    background: var(--bg);
-  }
-
-  .faq-item:hover {
-    border-color: var(--brand) !important;
-    transition: border-color 0.2s ease;
-  }
-
-  @media (max-width: 768px) {
-    h1 { font-size: 1.75rem !important; }
-  }
-
-  @media (max-width: 480px) {
-    h1 { font-size: 1.5rem !important; }
-  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  .btn-active { background: var(--accent) !important; color: white !important; border-color: var(--border) !important; }
+  .neo-faq-details { background: white; border: 2px solid var(--border); border-radius: 8px; margin-bottom: 16px; box-shadow: 4px 4px 0 var(--border); }
+  .neo-faq-details[open] { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--border); }
+  summary::-webkit-details-marker { display: none; }
 </style>
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const items = document.querySelectorAll('.faq-item');
-
-    items.forEach(item => {
-      const btn = item.querySelector('.faq-question') as HTMLButtonElement;
-      const answer = item.querySelector('.faq-answer') as HTMLElement;
-      const icon = item.querySelector('.faq-icon') as SVGElement;
-
-      if (!btn || !answer || !icon) return;
-
-      btn.addEventListener('click', () => {
-        const isOpen = btn.getAttribute('aria-expanded') === 'true';
-
-        // Close all
-        items.forEach(other => {
-          const otherBtn = other.querySelector('.faq-question') as HTMLButtonElement;
-          const otherAnswer = other.querySelector('.faq-answer') as HTMLElement;
-          const otherIcon = other.querySelector('.faq-icon') as SVGElement;
-          if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
-          if (otherAnswer) otherAnswer.style.maxHeight = '0';
-          if (otherIcon) otherIcon.style.transform = 'rotate(0deg)';
-        });
-
-        // Open current if was closed
-        if (!isOpen) {
-          btn.setAttribute('aria-expanded', 'true');
-          answer.style.maxHeight = answer.scrollHeight + 'px';
-          icon.style.transform = 'rotate(180deg)';
-        }
-      });
-    });
-  });
-</script>

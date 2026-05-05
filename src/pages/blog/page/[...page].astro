@@ -53,185 +53,175 @@ const structuredData = {
 };
 ---
 
-<Layout
-  title={title}
-  description={description}
-  canonical={canonical}
->
-  <div class="bg-[hsl(0,0%,98%)] min-h-screen pb-20">
-
-    <!-- Header Section -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-      <div class="text-center">
-        <h1 class="text-4xl md:text-6xl font-black text-[hsl(222,47%,8%)] mb-6 leading-tight">
-          Udemy Course Reviews &
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-[hsl(15,85%,55%)] to-[hsl(15,80%,65%)]">Learning Guides</span>
-        </h1>
-        <p class="text-xl md:text-2xl text-[hsl(215,20%,45%)] font-medium mb-6">
-          Page {page.currentPage} • Expert Insights, Tutorials & Reviews
-        </p>
-        <p class="text-[hsl(215,20%,45%)] max-w-3xl mx-auto leading-relaxed mb-10 text-lg">
-          Browse our comprehensive collection of Udemy course reviews, learning guides, tutorials, and expert insights.
-        </p>
-
-        <!-- Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 max-w-3xl mx-auto border-t border-b border-[hsl(0,0%,90%)] py-8">
-          <div>
-            <div class="text-4xl font-black text-[hsl(15,85%,55%)]">{posts.length}</div>
-            <div class="text-[hsl(215,20%,45%)] text-sm font-bold uppercase tracking-wider mt-1">Posts This Page</div>
-          </div>
-          <div>
-            <div class="text-4xl font-black text-[hsl(15,85%,55%)]">{page.currentPage}</div>
-            <div class="text-[hsl(215,20%,45%)] text-sm font-bold uppercase tracking-wider mt-1">Current Page</div>
-          </div>
-          <div>
-            <div class="text-4xl font-black text-[hsl(15,85%,55%)]">{page.lastPage}</div>
-            <div class="text-[hsl(215,20%,45%)] text-sm font-bold uppercase tracking-wider mt-1">Total Pages</div>
-          </div>
-          <div>
-            <div class="text-4xl font-black text-[hsl(15,85%,55%)]">{page.total}</div>
-            <div class="text-[hsl(215,20%,45%)] text-sm font-bold uppercase tracking-wider mt-1">Total Posts</div>
-          </div>
+<Layout title={title} description={description} canonical={canonical}>
+  <section style={{ padding: "80px 0", background: "var(--bg)" }}>
+    <div class="container">
+      
+      {/* ── Blog Header ── */}
+      <header style={{ marginBottom: "64px" }}>
+        <div style={{
+          display: "inline-block",
+          background: "var(--accent)",
+          color: "white",
+          padding: "4px 14px",
+          border: "2px solid var(--border)",
+          boxShadow: "3px 3px 0 var(--border)",
+          borderRadius: "4px",
+          fontSize: "0.75rem",
+          fontWeight: 800,
+          marginBottom: "24px",
+          letterSpacing: "0.1em",
+          textTransform: "uppercase"
+        }}>
+          Page {page.currentPage} of {page.lastPage}
         </div>
-      </div>
-    </div>
+        <h1 style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", fontWeight: 900, color: "var(--text)", letterSpacing: "-0.04em", lineHeight: 1.05, marginBottom: "24px" }}>
+          More <span style={{ background: "var(--accent)", color: "white", padding: "0 10px" }}>Articles</span>
+        </h1>
+        <p style={{ fontSize: "1.15rem", color: "var(--muted)", lineHeight: 1.6, maxWidth: "700px", fontWeight: 500 }}>
+          Browse all {page.total} expert guides and reviews. Showing {posts.length} articles on this page.
+        </p>
+      </header>
 
-    <!-- Blog Posts Grid -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-      <div class="flex items-center gap-3 mb-8">
-        <span class="w-1.5 h-8 bg-[hsl(15,85%,55%)] rounded-full"></span>
-        <h2 class="text-2xl font-bold text-[hsl(222,47%,8%)]">Latest Articles - Page {page.currentPage}</h2>
-      </div>
-
+      {/* ── Articles Grid ── */}
       {posts.length > 0 ? (
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "24px", marginBottom: "64px" }}>
           {posts.map((post: any) => (
-            <a
-              href={`/blog/${post.id}`}
-              class="group block bg-[hsl(0,0%,100%)] border border-[hsl(0,0%,90%)] rounded-2xl overflow-hidden hover:border-[hsl(15,85%,55%)] hover:shadow-xl hover:shadow-[hsla(15,85%,55%,0.15)] transition-all duration-300 hover:-translate-y-2"
-            >
-              <!-- Image -->
-              <div class="relative aspect-[16/9] overflow-hidden">
-                <img
-                  src={post.data.image?.src || post.data.image || 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&h=400&fit=crop'}
-                  alt={post.data.title}
-                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-                {post.data.tags && post.data.tags[0] && (
-                  <div class="absolute top-4 left-4">
-                    <span class="bg-[hsla(15,85%,55%,0.9)] backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-md border border-[hsla(15,85%,55%,0.5)] uppercase tracking-wider">
+            <article style={{
+              background: "var(--card)",
+              border: "2px solid var(--border)",
+              boxShadow: "4px 4px 0 var(--border)",
+              borderRadius: "8px",
+              overflow: "hidden",
+              transition: "all 0.15s ease",
+              display: "flex",
+              flexDirection: "column"
+            }} class="article-card">
+              <a href={`/blog/${post.id}`} style={{ textDecoration: "none", color: "inherit", height: "100%", display: "flex", flexDirection: "column" }}>
+                <div style={{ position: "relative", height: "200px", borderBottom: "2px solid var(--border)", overflow: "hidden" }}>
+                  <img 
+                    src={post.data.image?.src || post.data.image || '/og-image.jpg'} 
+                    alt={post.data.title}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    class="article-img"
+                  />
+                  {post.data.tags && post.data.tags[0] && (
+                    <div style={{
+                      position: "absolute", top: "12px", left: "12px",
+                      background: "var(--accent)", color: "white",
+                      border: "1.5px solid var(--border)", padding: "2px 8px",
+                      fontSize: "0.6rem", fontWeight: 800, borderRadius: "3px",
+                      textTransform: "uppercase", letterSpacing: "0.05em"
+                    }}>
                       {post.data.tags[0]}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <!-- Content -->
-              <div class="p-6">
-                <div class="flex flex-wrap items-center gap-2 mb-3 text-xs text-[hsl(215,20%,45%)]">
-                  <div class="flex items-center gap-1.5 bg-[hsl(0,0%,96%)] px-2 py-1 rounded border border-[hsl(0,0%,90%)]">
-                    <img src="/images/author.jpg" alt="Andrew Derek" class="w-5 h-5 rounded-full object-cover border border-[hsla(15,85%,55%,0.3)]" />
-                    <span class="truncate max-w-[80px] text-[hsl(222,47%,8%)] font-medium">
-                      Andrew Derek
-                    </span>
-                  </div>
-                  <span>•</span>
-                  <span>{formatDate(post)}</span>
+                    </div>
+                  )}
                 </div>
-
-                <h3 class="font-bold text-[hsl(222,47%,8%)] text-lg mb-3 leading-tight group-hover:text-[hsl(15,85%,55%)] transition-colors line-clamp-2">
-                  {post.data.title}
-                </h3>
-
-                <p class="text-[hsl(215,20%,45%)] text-sm leading-relaxed line-clamp-3 mb-4">
-                  {post.data.description}
-                </p>
-
-                <!-- Read More -->
-                <div class="flex items-center justify-between">
-                  <span class="inline-block px-4 py-2 bg-[hsla(15,85%,55%,0.1)] border border-[hsla(15,85%,55%,0.3)] text-[hsl(15,85%,55%)] text-xs font-bold rounded-lg group-hover:bg-[hsl(15,85%,55%)] group-hover:text-white transition-all">
-                    Read Article →
-                  </span>
+                <div style={{ padding: "24px", flex: 1, display: "flex", flexDirection: "column" }}>
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 900, color: "var(--text)", marginBottom: "16px", lineHeight: 1.25, letterSpacing: "-0.02em" }}>
+                    {post.data.title}
+                  </h3>
+                  <p style={{ color: "var(--muted)", fontSize: "0.88rem", lineHeight: 1.6, marginBottom: "20px", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", fontWeight: 500 }}>
+                    {post.data.description}
+                  </p>
+                  <div style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ fontSize: "0.72rem", color: "var(--muted)", fontWeight: 700, textTransform: "uppercase" }}>
+                      {formatDate(post)}
+                    </div>
+                    <div style={{ fontWeight: 800, color: "var(--accent)", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                      Read Review →
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </a>
+              </a>
+            </article>
           ))}
         </div>
       ) : (
-        <div class="text-center py-16">
-          <div class="text-[hsl(215,20%,45%)] text-lg mb-4">No blog posts found</div>
-          <a href="/blog" class="inline-block px-6 py-3 bg-[hsl(15,85%,55%)] text-white rounded-lg hover:bg-[hsl(15,85%,50%)] transition-colors">
+        <div style={{ textAlign: "center", padding: "64px 0" }}>
+          <p style={{ color: "var(--muted)", fontSize: "1.1rem" }}>No articles found.</p>
+          <a href="/blog" style={{ display: "inline-block", marginTop: "24px", padding: "12px 24px", background: "var(--accent)", color: "white", textDecoration: "none", borderRadius: "6px", fontWeight: 800 }}>
             Back to Blog
           </a>
         </div>
       )}
 
-      <!-- Pagination -->
-      <div class="flex justify-center">
-        <div class="flex items-center gap-2 bg-[hsl(0,0%,100%)] p-2 rounded-xl border border-[hsl(0,0%,90%)]">
-          {page.url.prev ? (
-            <a href={page.url.prev} class="px-4 h-10 flex items-center gap-2 rounded-lg text-[hsl(215,20%,45%)] hover:text-[hsl(222,47%,8%)] hover:bg-[hsl(0,0%,96%)] transition-all text-sm font-bold">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-              Previous
-            </a>
-          ) : null}
+      {/* ── Pagination ── */}
+      <div style={{ display: "flex", justifyContent: "center", gap: "12px", marginTop: "48px" }}>
+        {page.url.prev ? (
+          <a 
+            href={page.url.prev} 
+            style={{
+              padding: "12px 24px",
+              background: "var(--card)",
+              border: "2px solid var(--border)",
+              boxShadow: "3px 3px 0 var(--border)",
+              color: "var(--text)",
+              textDecoration: "none",
+              borderRadius: "6px",
+              fontWeight: 800,
+              fontSize: "0.85rem",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              transition: "all 0.15s ease"
+            }}
+            class="page-btn"
+          >
+            ← Prev
+          </a>
+        ) : null}
 
-          <span class="px-4 h-10 flex items-center rounded-lg bg-[hsl(15,85%,55%)] text-white font-bold text-sm">
-            Page {page.currentPage} of {page.lastPage}
-          </span>
+        <span style={{
+          padding: "12px 24px",
+          background: "var(--accent)",
+          border: "2px solid var(--border)",
+          boxShadow: "3px 3px 0 var(--border)",
+          color: "white",
+          borderRadius: "6px",
+          fontWeight: 800,
+          fontSize: "0.85rem"
+        }}>
+          Page {page.currentPage}
+        </span>
 
-          {page.url.next ? (
-            <a href={page.url.next} class="px-4 h-10 flex items-center gap-2 rounded-lg text-[hsl(215,20%,45%)] hover:text-[hsl(222,47%,8%)] hover:bg-[hsl(0,0%,96%)] transition-all text-sm font-bold">
-              Next
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            </a>
-          ) : null}
-        </div>
+        {page.url.next ? (
+          <a 
+            href={page.url.next} 
+            style={{
+              padding: "12px 24px",
+              background: "var(--card)",
+              border: "2px solid var(--border)",
+              boxShadow: "3px 3px 0 var(--border)",
+              color: "var(--text)",
+              textDecoration: "none",
+              borderRadius: "6px",
+              fontWeight: 800,
+              fontSize: "0.85rem",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              transition: "all 0.15s ease"
+            }}
+            class="page-btn"
+          >
+            Next →
+          </a>
+        ) : null}
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- SEO Content Section -->
-    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-      <div class="prose prose-lg max-w-none">
-        <h2 class="text-3xl font-bold text-[hsl(222,47%,8%)] text-center mb-8">Expert Udemy Course Guides & Reviews</h2>
+  <style>
+    .article-card:hover { transform: translate(-3px, -3px); box-shadow: 7px 7px 0 var(--border) !important; }
+    .article-card:hover .article-img { transform: scale(1.05); }
+    .article-img { transition: transform 0.4s ease; }
+    .page-btn:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--border) !important; }
 
-        <div class="text-[hsl(215,20%,45%)] space-y-6 leading-relaxed text-base">
-          <p>
-            Welcome to CoursesWyn's blog — your source for verified Udemy promo guides, discount strategies, and savings insights. Our team tracks thousands of course vouchers daily to bring you the best deals and practical learning paths.
-          </p>
-
-          <h3 class="text-[hsl(222,47%,8%)] font-bold text-xl">What You'll Find in Our Blog</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-            <div class="bg-[hsl(0,0%,100%)] border border-[hsl(0,0%,90%)] rounded-xl p-6">
-              <h4 class="text-[hsl(15,85%,55%)] font-bold text-lg mb-3">📋 Course Reviews</h4>
-              <p class="text-[hsl(215,25%,35%)] text-sm">In-depth reviews of popular Udemy courses with pros, cons, and honest feedback from real students.</p>
-            </div>
-            <div class="bg-[hsl(0,0%,100%)] border border-[hsl(0,0%,90%)] rounded-xl p-6">
-              <h4 class="text-[hsl(15,85%,55%)] font-bold text-lg mb-3">🛣️ Learning Paths</h4>
-              <p class="text-[hsl(215,25%,35%)] text-sm">Structured learning roadmaps to help you master specific skills and technologies.</p>
-            </div>
-            <div class="bg-[hsl(0,0%,100%)] border border-[hsl(0,0%,90%)] rounded-xl p-6">
-              <h4 class="text-[hsl(15,85%,55%)] font-bold text-lg mb-3">💡 Tutorials</h4>
-              <p class="text-[hsl(215,25%,35%)] text-sm">Step-by-step tutorials and guides for common development tasks and challenges.</p>
-            </div>
-            <div class="bg-[hsl(0,0%,100%)] border border-[hsl(0,0%,90%)] rounded-xl p-6">
-              <h4 class="text-[hsl(15,85%,55%)] font-bold text-lg mb-3">🔍 Comparisons</h4>
-              <p class="text-[hsl(215,25%,35%)] text-sm">Detailed comparisons between similar courses to help you choose the best option.</p>
-            </div>
-          </div>
-
-          <h3 class="text-[hsl(222,47%,8%)] font-bold text-xl">Why Trust Our Reviews?</h3>
-          <p>
-            Our blog content is created by experienced developers, educators, and Udemy course experts who have personally taken and reviewed hundreds of courses. We provide honest, unbiased opinions to help you make informed learning decisions.
-          </p>
-
-          <p class="text-sm mt-8 pt-6 border-t border-[hsl(0,0%,90%)] text-center">
-            <em><strong>Disclaimer:</strong> We are not affiliated with Udemy.com. All logos and trademarks belong to their respective owners. We merely provide educational content to help students make informed decisions.</em>
-          </p>
-        </div>
-      </div>
-    </section>
-
-  </div>
+    @media (max-width: 960px) {
+      .article-card[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
 </Layout>

@@ -46,7 +46,7 @@ export default function ActionsPanel({ deal }: { deal: { id: string; title: stri
   return (
     <div style={{ display: "flex", gap: 8 }}>
       <button onClick={share} className="pill" style={{ cursor: "pointer" }}>Share</button>
-      <button onClick={toggleWishlist} className="pill" style={{ cursor: "pointer", background: wishlisted ? "#151a28" : undefined }}>
+      <button onClick={toggleWishlist} className="pill" style={{ cursor: "pointer", background: wishlisted ? "var(--brand)" : undefined, color: wishlisted ? "white" : undefined }}>
         {wishlisted ? "Wishlisted" : "Add to wishlist"}
       </button>
     </div>

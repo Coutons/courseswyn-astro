@@ -1,358 +1,123 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout title="Search Udemy Courses — Verified Promo Codes & Vouchers | CoursesWyn">
-  <!-- Hero -->
-  <section class="search-hero">
-    <div class="hero-grid-bg"></div>
-    <div class="container hero-inner">
-      <div class="hero-badge">
-        <span class="badge-pulse"></span>
-        Live Deals — Updated Daily
+  <main style="background: var(--bg); color: var(--text);">
+    
+    {/* ── HERO ── */}
+    <section style="padding: 100px 0 80px; border-bottom: 2px solid var(--border); background: var(--card);">
+      <div class="container" style="text-align: center;">
+        <div style="display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: white; padding: 6px 16px; border: 2px solid var(--border); box-shadow: 3px 3px 0 var(--border); border-radius: 4px; font-weight: 900; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 32px;">
+          <span class="badge-pulse"></span> Live Deals — Updated Daily
+        </div>
+        <h1 id="search-title" style={{ 
+          fontSize: "clamp(2.5rem, 7vw, 4rem)", 
+          fontWeight: 900, 
+          lineHeight: 1.05, 
+          letterSpacing: "-0.04em",
+          marginBottom: "24px",
+          color: "var(--text)"
+        }}>
+          Search Udemy<br/>
+          <span style={{ background: "var(--accent)", color: "white", padding: "0 10px" }}>Promo Codes.</span>
+        </h1>
+        <p id="search-description" style={{ 
+          fontSize: "1.1rem", 
+          color: "var(--muted)", 
+          maxWidth: "700px", 
+          margin: "0 auto", 
+          lineHeight: 1.6, 
+          fontWeight: 500,
+          display: "none"
+        }}></p>
       </div>
-      <h1 id="search-title" class="hero-title">
-        Search Udemy Promo Codes
-      </h1>
-      <p id="search-description" class="hero-desc" style="display:none"></p>
-    </div>
-  </section>
+    </section>
 
-  <!-- Results section -->
-  <section class="results-section">
-    <div class="container">
+    {/* ── RESULTS ── */}
+    <section style="padding: 80px 0; min-height: 60vh;">
+      <div class="container">
+        
+        {/* Loading */}
+        <div id="search-loading" style="display: none; text-align: center; padding: 64px 0;">
+          <div class="loading-spinner"></div>
+          <h3 style="font-size: 1.5rem; font-weight: 900; color: var(--accent); margin-bottom: 8px;">Searching...</h3>
+          <p style="color: var(--muted); font-weight: 500;">Finding the best verified coupons for you</p>
+        </div>
 
-      <!-- Loading -->
-      <div id="search-loading" class="state-box" style="display:none">
-        <div class="loading-spinner"></div>
-        <p class="state-title">Searching courses…</p>
-        <p class="state-sub">Finding the best verified coupons for you</p>
-      </div>
+        {/* Grid */}
+        <div id="search-results" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 32px;"></div>
 
-      <!-- Grid -->
-      <div id="search-results" class="results-grid"></div>
-
-      <!-- No results -->
-      <div id="no-results" class="no-results-wrap" style="display:none">
-        <div class="no-results-card">
-          <div class="no-results-icon">🔍</div>
-          <h2 id="no-results-title" class="no-results-heading">No Courses Found</h2>
-          <p class="no-results-body">
-            We couldn't find any courses with verified coupons for that search.
-            Try <strong>free courses</strong>, <strong>discount codes</strong>, or browse popular categories below.
-          </p>
-          <div class="no-results-actions">
-            <a href="/search?q=free" class="action-btn action-green">🎁 Discount Deals</a>
-            <a href="/search?q=coupon" class="action-btn action-amber">💰 Promo Vouchers</a>
-          </div>
-          <div class="category-grid">
-            <a href="/categories/development"   class="cat-btn">💻 Development</a>
-            <a href="/categories/business"      class="cat-btn cat-green">💼 Business</a>
-            <a href="/categories/design"        class="cat-btn cat-amber">🎨 Design</a>
-            <a href="/categories/it-and-software" class="cat-btn cat-blue">💾 IT & Software</a>
+        {/* No Results */}
+        <div id="no-results" style="display: none; justify-content: center; padding: 64px 0;">
+          <div style="background: white; border: 2px solid var(--border); padding: 48px; border-radius: 8px; box-shadow: 8px 8px 0 var(--border); text-align: center; max-width: 600px;">
+            <div style="font-size: 3rem; margin-bottom: 24px;">🔍</div>
+            <h2 id="no-results-title" style="font-size: 2rem; font-weight: 900; margin-bottom: 16px;">No Courses Found</h2>
+            <p style="color: var(--muted); font-size: 1.1rem; line-height: 1.6; font-weight: 500; margin-bottom: 32px;">
+              We couldn't find any courses with verified coupons for that search. Try browsing these popular categories instead.
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
+              <a href="/categories/development" class="neo-cat-link">Development</a>
+              <a href="/categories/business" class="neo-cat-link">Business</a>
+              <a href="/categories/design" class="neo-cat-link">Design</a>
+              <a href="/categories/it-and-software" class="neo-cat-link">IT & Software</a>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Pagination -->
-      <div id="search-navigation" class="pagination" style="display:none">
-        <button id="prev-page" class="page-btn page-btn-ghost">← Previous</button>
-        <span id="page-info" class="page-info"></span>
-        <button id="next-page" class="page-btn page-btn-primary">Next →</button>
+        {/* Pagination */}
+        <div id="search-navigation" style="display: none; justify-content: center; align-items: center; gap: 24px; margin-top: 64px; padding-top: 48px; border-top: 2px solid var(--border);">
+          <button id="prev-page" class="btn btn-outline" style="padding: 12px 24px; font-size: 0.9rem;">← PREVIOUS</button>
+          <span id="page-info" style="font-weight: 900; font-size: 0.9rem; text-transform: uppercase; color: var(--muted);"></span>
+          <button id="next-page" class="btn" style="padding: 12px 24px; font-size: 0.9rem;">NEXT →</button>
+        </div>
+
       </div>
-    </div>
-  </section>
+    </section>
+
+  </main>
 </Layout>
 
-<style>
-  :root {
-    --bg-dark: #0b0d12;
-    --bg-card: #151921;
-    --border: rgba(255,255,255,0.07);
-    --green: var(--brand);
-    --green-dark: var(--secondary);
-    --amber: var(--secondary);
-    --blue: #00f2fe;
-    --red: #ef4444;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #475569;
-    --radius-card: 1.25rem;
-  }
-
-  .container {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
-  }
-
-  /* ===== HERO ===== */
-  .search-hero {
-    background: linear-gradient(160deg, #131720 0%, #0b0d12 60%);
-    padding: 5rem 0 4rem;
-    position: relative;
-    overflow: hidden;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .hero-grid-bg {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-  }
-
-  .hero-inner {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-  }
-
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(34,197,94,0.1);
-    border: 1px solid rgba(34,197,94,0.25);
-    color: var(--green);
-    padding: 0.4rem 1.1rem;
-    border-radius: 2rem;
-    font-size: 0.82rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    margin-bottom: 1.5rem;
-  }
-
-  .badge-pulse {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: blink 2s infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
-  }
-
-  .hero-title {
-    font-size: clamp(2rem, 4vw, 3.2rem);
-    font-weight: 800;
-    color: var(--text-primary);
-    margin: 0 0 1rem;
-    letter-spacing: -0.02em;
-    line-height: 1.15;
-  }
-
-  .hero-desc {
-    font-size: 1.05rem;
-    color: var(--text-secondary);
-    max-width: 680px;
-    margin: 0 auto;
-    line-height: 1.7;
-  }
-
-  /* ===== RESULTS ===== */
-  .results-section {
-    background: var(--bg-dark);
-    padding: 3rem 0 6rem;
-    min-height: 60vh;
-  }
-
-  /* Loading */
-  .state-box {
-    text-align: center;
-    padding: 4rem 0;
-  }
-
-  .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--border);
-    border-top-color: var(--green);
-    border-radius: 50%;
-    margin: 0 auto 1.5rem;
-    animation: spin 0.8s linear infinite;
-  }
-
+<style is:global>
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  .badge-pulse { width: 8px; height: 8px; border-radius: 50%; background: white; animation: blink 2s infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  .state-title {
-    color: var(--amber);
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 0 0 0.4rem;
+  .loading-spinner { width: 48px; height: 48px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; margin: 0 auto 24px; animation: spin 1s linear infinite; }
+  
+  .neo-cat-link { 
+    background: var(--bg); border: 2px solid var(--border); padding: 12px; border-radius: 4px; 
+    font-weight: 800; text-decoration: none; color: inherit; font-size: 0.85rem; transition: all 0.2s;
+    box-shadow: 3px 3px 0 var(--border);
   }
+  .neo-cat-link:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--border); border-color: var(--accent); }
 
-  .state-sub {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    margin: 0;
+  /* DYNAMIC CARD STYLES */
+  .rc-card {
+    background: white; border: 2px solid var(--border); border-radius: 8px; overflow: hidden;
+    transition: all 0.2s; display: flex; flex-direction: column; box-shadow: 6px 6px 0 var(--border);
+    text-decoration: none; color: inherit;
   }
-
-  /* Results grid */
-  .results-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 1.75rem;
-    margin-bottom: 3rem;
+  .rc-card:hover { transform: translate(-4px, -4px); box-shadow: 10px 10px 0 var(--border); border-color: var(--accent); }
+  .rc-img-wrap { height: 180px; position: relative; border-bottom: 2px solid var(--border); }
+  .rc-badge { position: absolute; top: 12px; left: 12px; padding: 4px 10px; font-size: 0.7rem; font-weight: 900; border: 2px solid var(--border); box-shadow: 2px 2px 0 var(--border); }
+  .rc-badge-free { background: var(--accent); color: white; }
+  .rc-badge-hot { background: #ff4757; color: white; }
+  .rc-date { position: absolute; bottom: 12px; right: 12px; background: white; border: 2px solid var(--border); padding: 2px 8px; font-size: 0.65rem; font-weight: 800; }
+  .rc-body { padding: 24px; flex: 1; display: flex; flex-direction: column; }
+  .rc-title { font-size: 1.1rem; font-weight: 900; margin: 0 0 12px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .rc-instructor { font-size: 0.8rem; font-weight: 700; color: var(--muted); margin-bottom: 12px; }
+  .rc-instructor strong { color: var(--text); }
+  .rc-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.5; margin-bottom: 20px; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 500; }
+  .rc-meta { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-light); }
+  .rc-rating { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; }
+  .rc-subcat { font-size: 0.7rem; font-weight: 900; background: var(--bg); border: 2px solid var(--border); padding: 2px 8px; border-radius: 4px; text-transform: uppercase; color: var(--muted); }
+  .rc-btn-primary { 
+    margin-top: 20px; padding: 12px; background: var(--accent); color: white; border: 2px solid var(--border);
+    font-weight: 900; text-align: center; font-size: 0.9rem; box-shadow: 4px 4px 0 var(--border);
+    transition: all 0.1s;
   }
-
-  /* No results */
-  .no-results-wrap {
-    display: flex;
-    justify-content: center;
-    padding: 3rem 0;
-  }
-
-  .no-results-card {
-    max-width: 620px;
-    width: 100%;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    padding: 3rem 2.5rem;
-    text-align: center;
-  }
-
-  .no-results-icon { font-size: 3rem; margin-bottom: 1rem; }
-
-  .no-results-heading {
-    color: var(--text-primary);
-    font-size: 1.8rem;
-    font-weight: 800;
-    margin: 0 0 1rem;
-  }
-
-  .no-results-body {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    line-height: 1.65;
-    margin: 0 0 2rem;
-  }
-
-  .no-results-body strong { color: var(--amber); }
-
-  .no-results-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-bottom: 2rem;
-  }
-
-  .action-btn {
-    display: inline-block;
-    padding: 0.85rem 2rem;
-    border-radius: 0.75rem;
-    font-weight: 700;
-    font-size: 0.95rem;
-    text-decoration: none;
-    transition: filter 0.2s;
-  }
-
-  .action-btn:hover { filter: brightness(1.1); }
-
-  .action-green {
-    background: var(--green);
-    color: #0a1a0f;
-  }
-
-  .action-amber {
-    background: var(--amber);
-    color: #1c0f00;
-  }
-
-  .category-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 0.75rem;
-    margin-top: 1rem;
-  }
-
-  .cat-btn {
-    display: block;
-    padding: 0.85rem;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border);
-    border-radius: 0.6rem;
-    color: var(--text-secondary);
-    font-size: 0.88rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background 0.2s, color 0.2s;
-  }
-
-  .cat-btn:hover { background: rgba(255,255,255,0.09); color: var(--text-primary); }
-  .cat-green { border-color: rgba(34,197,94,0.2); color: #86efac; }
-  .cat-amber { border-color: rgba(245,158,11,0.2); color: #fcd34d; }
-  .cat-blue  { border-color: rgba(96,165,250,0.2); color: var(--blue); }
-
-  /* Pagination */
-  .pagination {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    padding: 1.5rem 2rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    margin-top: 2rem;
-  }
-
-  .page-btn {
-    padding: 0.65rem 1.5rem;
-    border-radius: 0.6rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: 1px solid;
-  }
-
-  .page-btn:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-  }
-
-  .page-btn-ghost {
-    background: transparent;
-    border-color: var(--border);
-    color: var(--text-secondary);
-  }
-
-  .page-btn-ghost:not(:disabled):hover {
-    background: rgba(255,255,255,0.05);
-    color: var(--text-primary);
-  }
-
-  .page-btn-primary {
-    background: var(--green);
-    border-color: var(--green-dark);
-    color: #0a1a0f;
-  }
-
-  .page-btn-primary:not(:disabled):hover {
-    background: var(--green-dark);
-  }
-
-  .page-info {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    font-weight: 600;
-    min-width: 120px;
-    text-align: center;
-  }
-
-  @media (max-width: 640px) {
-    .results-grid { grid-template-columns: 1fr; }
-    .no-results-card { padding: 2rem 1.25rem; }
-  }
+  .rc-btn-primary:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--border); }
 </style>
 
 <script>
@@ -376,23 +141,20 @@ import Layout from '../layouts/Layout.astro';
   const ITEMS_PER_PAGE = 12;
   let allDeals: Deal[] = [];
 
-  // ── helpers ──────────────────────────────────────────────────────────────
-
   function renderCard(deal: Deal): string {
-    const price        = deal.price ?? 0;
+    const price = deal.price ?? 0;
     const originalPrice = deal.originalPrice ?? 0;
-    const hasDiscount  = originalPrice > 0 && price < originalPrice;
-    const discount     = hasDiscount ? Math.round(100 - (price / originalPrice) * 100) : 0;
-    const isFree       = price === 0;
-    const rating       = deal.rating ?? 0;
-    const students     = deal.students ?? 0;
+    const hasDiscount = originalPrice > 0 && price < originalPrice;
+    const discount = hasDiscount ? Math.round(100 - (price / originalPrice) * 100) : 0;
+    const isFree = price === 0;
+    const rating = deal.rating ?? 0;
     const updatedLabel = deal.updatedAt
       ? new Date(deal.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      : 'Recently updated';
+      : 'DAILY UPDATE';
 
     const imgHtml = deal.image
-      ? `<img src="${deal.image}" alt="${deal.title}" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:0.75rem 0.75rem 0 0;">`
-      : `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:3rem;opacity:0.3;">📚</div>`;
+      ? `<img src="${deal.image}" alt="${deal.title}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">`
+      : `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:3rem;background:var(--bg);">📚</div>`;
 
     const badgeHtml = isFree
       ? `<div class="rc-badge rc-badge-free">🎁 FREE</div>`
@@ -401,58 +163,33 @@ import Layout from '../layouts/Layout.astro';
         : '';
 
     const subcatHtml = deal.subcategory
-      ? `<a href="/topics/${deal.subcategory.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}"
-           class="rc-subcat">${deal.subcategory}</a>`
+      ? `<span class="rc-subcat">${deal.subcategory}</span>`
       : '';
 
     return `
-      <article class="rc-card">
+      <div class="rc-card">
         <div class="rc-img-wrap">
           ${imgHtml}
           ${badgeHtml}
-          <span class="rc-date">${updatedLabel}</span>
+          <span class="rc-date">${updatedLabel.toUpperCase()}</span>
         </div>
         <div class="rc-body">
-          <h2 class="rc-title">
-            <a href="/coupon/${deal.slug || deal.id}" class="rc-title-link">${deal.title}</a>
-          </h2>
-          ${deal.instructor
-            ? `<p class="rc-instructor">By <strong>${deal.instructor}</strong></p>`
-            : ''}
+          <h2 class="rc-title">${deal.title}</h2>
+          ${deal.instructor ? `<p class="rc-instructor">BY <strong>${deal.instructor.toUpperCase()}</strong></p>` : ''}
           <p class="rc-desc">${deal.description ?? 'Master this in-demand skill with comprehensive training from industry experts.'}</p>
           <div class="rc-meta">
-            <span class="rc-rating">★ ${rating.toFixed(1)} · ${students.toLocaleString()} students</span>
+            <span class="rc-rating">★ ${rating.toFixed(1)}</span>
             ${subcatHtml}
           </div>
-          <div class="rc-actions">
-            <a href="/coupon/${deal.slug || deal.id}" class="rc-btn-primary">🎯 Get Coupon</a>
-            ${deal.instructor
-              ? `<a href="/search?q=${encodeURIComponent(deal.instructor + ' free')}" class="rc-btn-secondary">Free Only</a>`
-              : ''}
-          </div>
+          <a href="/coupon/${deal.slug || deal.id}" class="rc-btn-primary">GET COUPON →</a>
         </div>
-      </article>`;
+      </div>`;
   }
-
-  function getEmptyStateHtml(query: string): string {
-    return `<div style="grid-column:1/-1;display:flex;justify-content:center;padding:2rem 0;">
-      <div style="text-align:center;max-width:420px;background:#151921;border:1px solid rgba(255,255,255,0.07);border-radius:1.25rem;padding:2.5rem 2rem;">
-        <div style="font-size:2.5rem;margin-bottom:1rem;">🔍</div>
-        <h3 style="color:#f8fafc;margin:0 0 0.5rem;font-size:1.3rem;">Enter a Search Term</h3>
-        <p style="color:#94a3b8;font-size:0.95rem;line-height:1.6;margin:0;">
-          Search for courses, instructors, or topics to find verified coupons and exclusive deals.
-        </p>
-      </div>
-    </div>`;
-  }
-
-  // ── display ───────────────────────────────────────────────────────────────
 
   function displayResults(): void {
     const container = document.getElementById('search-results');
     const noResults = document.getElementById('no-results');
-    const nav       = document.getElementById('search-navigation');
-
+    const nav = document.getElementById('search-navigation');
     if (!container) return;
 
     if (allDeals.length === 0) {
@@ -463,293 +200,67 @@ import Layout from '../layouts/Layout.astro';
     }
 
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const page  = allDeals.slice(start, start + ITEMS_PER_PAGE);
-
+    const page = allDeals.slice(start, start + ITEMS_PER_PAGE);
     container.innerHTML = page.map(renderCard).join('');
     if (noResults) noResults.style.display = 'none';
     if (nav) nav.style.display = allDeals.length > ITEMS_PER_PAGE ? 'flex' : 'none';
   }
 
   function updatePagination(): void {
-    const prevBtn  = document.getElementById('prev-page') as HTMLButtonElement | null;
-    const nextBtn  = document.getElementById('next-page') as HTMLButtonElement | null;
+    const prevBtn = document.getElementById('prev-page') as HTMLButtonElement | null;
+    const nextBtn = document.getElementById('next-page') as HTMLButtonElement | null;
     const pageInfo = document.getElementById('page-info');
-    const total    = Math.ceil(allDeals.length / ITEMS_PER_PAGE);
-
-    if (prevBtn) {
-      prevBtn.disabled = currentPage === 1;
-    }
-    if (nextBtn) {
-      nextBtn.disabled = currentPage >= total;
-    }
-    if (pageInfo) {
-      pageInfo.textContent = `Page ${currentPage} of ${total} · ${allDeals.length} results`;
-    }
-  }
-
-  function goToPage(page: number): void {
     const total = Math.ceil(allDeals.length / ITEMS_PER_PAGE);
-    if (page < 1 || page > total) return;
-    currentPage = page;
-    displayResults();
-    updatePagination();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (prevBtn) prevBtn.disabled = currentPage === 1;
+    if (nextBtn) nextBtn.disabled = currentPage >= total;
+    if (pageInfo) pageInfo.textContent = `PAGE ${currentPage} OF ${total} · ${allDeals.length} RESULTS`;
   }
-
-  // ── search ────────────────────────────────────────────────────────────────
 
   async function performSearch(): Promise<void> {
-    const params  = new URLSearchParams(window.location.search);
-    const query   = params.get('q') ?? '';
+    const params = new URLSearchParams(window.location.search);
+    const query = params.get('q') ?? '';
+    const container = document.getElementById('search-results');
+    const noResults = document.getElementById('no-results');
+    const nav = document.getElementById('search-navigation');
+    const loading = document.getElementById('search-loading');
+    const titleEl = document.getElementById('search-title');
+    const descEl = document.getElementById('search-description');
 
-    const container  = document.getElementById('search-results');
-    const noResults  = document.getElementById('no-results');
-    const nav        = document.getElementById('search-navigation');
-    const loading    = document.getElementById('search-loading');
-    const titleEl    = document.getElementById('search-title');
-    const descEl     = document.getElementById('search-description');
+    if (!query) return;
 
-    if (!query) {
-      if (container) container.innerHTML = getEmptyStateHtml('');
-      if (noResults) noResults.style.display = 'none';
-      if (nav) nav.style.display = 'none';
-      if (loading) loading.style.display = 'none';
-      return;
-    }
-
-    // Show loading state
     if (loading) loading.style.display = 'block';
     if (container) container.innerHTML = '';
     if (noResults) noResults.style.display = 'none';
     if (nav) nav.style.display = 'none';
 
     try {
-      const res   = await fetch('/api/deals');
+      const res = await fetch('/api/deals');
       const deals = (await res.json()) as Deal[];
-
       const q = query.toLowerCase();
-      allDeals = deals.filter((deal) =>
-        deal.title.toLowerCase().includes(q) ||
+      allDeals = deals.filter(deal => 
+        deal.title.toLowerCase().includes(q) || 
         (deal.description?.toLowerCase().includes(q) ?? false) ||
-        (deal.category?.toLowerCase().includes(q)    ?? false) ||
-        (deal.instructor?.toLowerCase().includes(q)  ?? false) ||
+        (deal.instructor?.toLowerCase().includes(q) ?? false) ||
         (deal.subcategory?.toLowerCase().includes(q) ?? false)
       );
-
       currentPage = 1;
-
-      if (titleEl) {
-        titleEl.textContent = `"${query}" — Verified Udemy Promo Codes`;
-      }
-      document.title = `${query} Udemy Promo Codes — ${allDeals.length} Results | CoursesWyn`;
-
+      if (titleEl) titleEl.innerHTML = `Search: <span style="background:var(--accent);color:white;padding:0 10px;">${query}</span>`;
       if (descEl) {
         descEl.style.display = 'block';
-        descEl.textContent = `Found ${allDeals.length} verified ${query} courses with exclusive promo codes. Browse discount vouchers verified by our experts — up to 100% off. Limited-time offers!`;
+        descEl.textContent = `Found ${allDeals.length} verified ${query} courses with exclusive promo codes. Updated daily by our experts.`;
       }
-
       displayResults();
       updatePagination();
     } catch (err) {
-      console.error('Search error:', err);
-      if (container) {
-        container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem 0;">
-          <div style="background:#151921;border:1px solid rgba(239,68,68,0.3);border-radius:1.25rem;padding:2rem;max-width:400px;margin:0 auto;">
-            <p style="color:#ef4444;font-size:1.1rem;font-weight:600;margin:0 0 0.5rem;">⚠️ Search Error</p>
-            <p style="color:#94a3b8;margin:0;">Unable to load results. Please try again later.</p>
-          </div>
-        </div>`;
-      }
+      console.error(err);
     } finally {
       if (loading) loading.style.display = 'none';
     }
   }
 
-  // ── init ──────────────────────────────────────────────────────────────────
-
   document.addEventListener('DOMContentLoaded', () => {
-    const prevBtn = document.getElementById('prev-page') as HTMLButtonElement | null;
-    const nextBtn = document.getElementById('next-page') as HTMLButtonElement | null;
-
-    prevBtn?.addEventListener('click', () => goToPage(currentPage - 1));
-    nextBtn?.addEventListener('click', () => goToPage(currentPage + 1));
-
+    document.getElementById('prev-page')?.addEventListener('click', () => { currentPage--; displayResults(); updatePagination(); window.scrollTo({top:0, behavior:'smooth'}); });
+    document.getElementById('next-page')?.addEventListener('click', () => { currentPage++; displayResults(); updatePagination(); window.scrollTo({top:0, behavior:'smooth'}); });
     performSearch();
   });
 </script>
-
-<!-- Card styles (injected once, used by JS-generated HTML) -->
-<style is:global>
-  .rc-card {
-    background: #151921;
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 1.25rem;
-    overflow: hidden;
-    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .rc-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 16px 40px rgba(0,0,0,0.45);
-    border-color: rgba(34,197,94,0.35);
-  }
-
-  .rc-img-wrap {
-    height: 180px;
-    position: relative;
-    background: #1c2230;
-    overflow: hidden;
-  }
-
-  .rc-badge {
-    position: absolute;
-    top: 0.75rem;
-    left: 0.75rem;
-    padding: 0.25rem 0.7rem;
-    border-radius: 2rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-  }
-
-  .rc-badge-free {
-    background: rgba(34,197,94,0.18);
-    border: 1px solid rgba(34,197,94,0.4);
-    color: #86efac;
-  }
-
-  .rc-badge-hot {
-    background: rgba(239,68,68,0.18);
-    border: 1px solid rgba(239,68,68,0.4);
-    color: #fca5a5;
-  }
-
-  .rc-date {
-    position: absolute;
-    bottom: 0.6rem;
-    right: 0.6rem;
-    background: rgba(0,0,0,0.65);
-    color: #94a3b8;
-    font-size: 0.72rem;
-    font-weight: 500;
-    padding: 0.2rem 0.5rem;
-    border-radius: 0.4rem;
-    backdrop-filter: blur(4px);
-  }
-
-  .rc-body {
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-  }
-
-  .rc-title {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #f8fafc;
-    margin: 0 0 0.5rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    line-height: 1.45;
-  }
-
-  .rc-title-link {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .rc-title-link:hover { color: var(--brand); }
-
-  .rc-instructor {
-    font-size: 0.85rem;
-    color: #94a3b8;
-    margin: 0 0 0.75rem;
-  }
-
-  .rc-instructor strong { color: #cbd5e1; }
-
-  .rc-desc {
-    font-size: 0.88rem;
-    color: #94a3b8;
-    line-height: 1.55;
-    margin: 0 0 1rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    flex: 1;
-  }
-
-  .rc-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-
-  .rc-rating {
-    font-size: 0.82rem;
-    color: #94a3b8;
-    font-weight: 500;
-  }
-
-  .rc-subcat {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--brand);
-    background: var(--brand-soft);
-    border: 1px solid rgba(0, 242, 254, 0.2);
-    padding: 0.2rem 0.6rem;
-    border-radius: 2rem;
-    text-decoration: none;
-  }
-
-  .rc-subcat:hover { background: rgba(34,197,94,0.15); }
-
-  .rc-actions {
-    display: flex;
-    gap: 0.75rem;
-  }
-
-  .rc-btn-primary {
-    flex: 1;
-    display: block;
-    padding: 0.75rem 1rem;
-    background: #22c55e;
-    color: #0a1a0f;
-    font-weight: 700;
-    font-size: 0.9rem;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 0.7rem;
-    transition: background 0.2s, transform 0.15s;
-  }
-
-  .rc-btn-primary:hover {
-    filter: brightness(1.2);
-    transform: translateY(-1px);
-  }
-
-  .rc-btn-secondary {
-    display: block;
-    padding: 0.75rem 1rem;
-    background: rgba(245,158,11,0.1);
-    border: 1px solid rgba(245,158,11,0.25);
-    color: #f59e0b;
-    font-weight: 600;
-    font-size: 0.85rem;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 0.7rem;
-    white-space: nowrap;
-    transition: background 0.2s;
-  }
-
-  .rc-btn-secondary:hover { background: rgba(245,158,11,0.2); }
-</style>

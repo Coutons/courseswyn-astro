@@ -1,5 +1,6 @@
 ---
 import "../styles/globals.css";
+import HeaderSearch from "../components/HeaderSearch";
 
 interface Props {
   title?: string;
@@ -7,6 +8,8 @@ interface Props {
   image?: string;
   type?: string;
   canonical?: string;
+  faqs?: Array<{ question: string; answer: string }>;
+  hideBreadcrumbs?: boolean;
 }
 
 
@@ -16,6 +19,8 @@ const {
   image, // No default - let each page provide its own image
   type = "website",
   canonical,
+  faqs = [],
+  hideBreadcrumbs = false,
 } = Astro.props;
 
 const siteUrl = import.meta.env.SITE || "https://courseswyn.com";
@@ -27,6 +32,23 @@ const absoluteImageUrl = image ? (image.startsWith('http') ? image : new URL(ima
 
 // Get current path for navigation active states
 const currentPath = Astro.url.pathname;
+
+// Breadcrumb logic for JSON-LD
+const pathSegments = currentPath.split('/').filter(Boolean);
+const breadcrumbList = [
+  {
+    "@type": "ListItem",
+    "position": 1,
+    "name": "Home",
+    "item": "https://courseswyn.com/"
+  },
+  ...pathSegments.map((segment, index) => ({
+    "@type": "ListItem",
+    "position": index + 2,
+    "name": segment.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+    "item": `https://courseswyn.com/${pathSegments.slice(0, index + 1).join('/')}`
+  }))
+];
 ---
 
 <!doctype html>
@@ -50,8 +72,8 @@ const currentPath = Astro.url.pathname;
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
-    <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
     
     <!-- DNS prefetch for external domains -->
     <link rel="dns-prefetch" href="//www.udemy.com" />
@@ -113,7 +135,7 @@ const currentPath = Astro.url.pathname;
     </script>
 
     <!-- Site Sitemap Structured Data -->
-    <script type="application/ld+json">
+    <script type="application/ld+json" is:inline>
     {
       "@context": "https://schema.org",
       "@type": "SiteNavigationElement",
@@ -140,6 +162,15 @@ const currentPath = Astro.url.pathname;
       }
     }
     </script>
+
+    <!-- BreadcrumbList Structured Data -->
+    {!currentPath.startsWith('/coupon/') && (
+      <script type="application/ld+json" is:inline set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": breadcrumbList
+      })} />
+    )}
 
     <!-- WebSite Structured Data -->
     <script type="application/ld+json">
@@ -201,6 +232,21 @@ const currentPath = Astro.url.pathname;
     }
     </script>
 
+    {faqs.length > 0 && (
+      <script type="application/ld+json" is:inline set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": faqs.map(faq => ({
+          "@type": "Question",
+          "name": faq.question,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": faq.answer
+          }
+        }))
+      })} />
+    )}
+
     <!-- Enhanced Open Graph / Facebook -->
     <meta property="og:type" content={type} />
     <meta property="og:url" content={canonicalURL} />
@@ -230,10 +276,7 @@ const currentPath = Astro.url.pathname;
     <meta property="article:publisher" content="https://courseswyn.com" />
 
     <!-- Optimized Font Loading for Core Web Vitals -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+
 
     <!-- Preload critical fonts -->
     <link
@@ -252,256 +295,75 @@ const currentPath = Astro.url.pathname;
      crossorigin="anonymous"></script>
 
     <style>
-      /* Basic styles */
       body {
         margin: 0;
         padding: 0;
         background: var(--bg);
         color: var(--text);
-        font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+        font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
       }
-      
-      /* Optimized social media hover effects */
-      .facebook-hover:hover,
-      .x-hover:hover,
-      .linkedin-hover:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.15);
-        border-color: var(--brand);
-      }
-
-      .facebook-hover:hover span,
-      .x-hover:hover span,
-      .linkedin-hover:hover span {
-        color: var(--brand);
-      }
-
-      /* Navigation dropdown hover effects */
-      .nav-dropdown {
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(-8px);
-        transition: all 0.2s ease;
-      }
-      .nav-link:hover + .nav-dropdown,
-      .nav-dropdown:hover {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0);
-        display: block;
-      }
-      .dropdown-item:hover {
-        background: hsla(15, 85%, 55%, 0.08) !important;
-        color: var(--brand) !important;
-      }
-      .footer-link:hover {
-        color: var(--brand) !important;
-      }
-      .breadcrumb-link:hover {
-        color: var(--brand) !important;
-      }
+      .breadcrumb-link:hover { color: var(--accent) !important; }
+      .nav-link:hover { border-bottom-color: var(--accent); }
     </style>
     <slot name="head" />
   </head>
   <body>
-    <header
-      class="site-header"
-      style={{
-        position: "sticky",
-        top: "0",
-        zIndex: 1000,
-        background: "hsla(0, 0%, 100%, 0.9)",
-        backdropFilter: "blur(20px) saturate(180%)",
-        borderBottom: "1px solid hsla(15, 85%, 55%, 0.1)",
-        boxShadow: "0 4px 20px hsla(15, 85%, 55%, 0.15)"
-      }}
-    >
-      <nav
-        class="container"
-        aria-label="Main navigation"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "12px 24px",
-          maxWidth: "1400px",
-          margin: "0 auto",
-          gap: "24px"
-        }}
-      >
-        <!-- Logo Section -->
-        <a href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", flexShrink: 0 }}>
-          <div style={{ 
-            width: "32px", height: "32px", 
-            background: "linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%)",
-            borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 0 15px var(--brand-soft)"
-          }}>
-            <span style={{ color: "#000", fontWeight: "900", fontSize: "1.1rem" }}>W</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-            <span style={{ fontSize: "1.3rem", fontWeight: "850", color: "var(--text)", letterSpacing: "-0.03em" }}>
-              Courses<span style={{ color: "var(--brand)" }}>Wyn</span>
-            </span>
-            <span style={{ fontSize: "0.6rem", color: "var(--brand)", fontWeight: "800", letterSpacing: "0.05em", opacity: 0.8, textTransform: "uppercase", display: "none", sm: "block" }}>
-              Verified Promo
-            </span>
-          </div>
+    {/* ── Ticker strip — live deals ── */}
+    <div class="ticker-strip" style={{ position: "relative", zIndex: 101 }}>
+      <div class="ticker-inner">
+        {["🔥 Python Bootcamp — FREE", "⚡ React 2026 — $9.99", "✅ Data Science — FREE", "🚀 AWS Certification — $12.99", "🎯 Web Dev Bootcamp — FREE", "💡 Machine Learning — $9.99", "🔥 Python Bootcamp — FREE", "⚡ React 2026 — $9.99", "✅ Data Science — FREE", "🚀 AWS Certification — $12.99", "🎯 Web Dev Bootcamp — FREE", "💡 Machine Learning — $9.99"].map(item => (
+          <span style={{ padding: "0 40px", fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.04em" }}>{item}</span>
+        ))}
+      </div>
+    </div>
+
+    {/* ── Main Header ── */}
+    <header class="site-header" style={{ height: "72px", display: "flex", alignItems: "center", borderBottom: "2px solid var(--border)", background: "var(--bg)" }}>
+      <nav class="container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+
+        {/* Logo */}
+        <a href="/" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none" }}>
+          <div style={{
+            width: "38px", height: "38px",
+            background: "var(--accent)",
+            border: "2px solid var(--border)",
+            boxShadow: "3px 3px 0 var(--border)",
+            borderRadius: "4px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "white", fontWeight: 900, fontSize: "1.1rem"
+          }}>W</div>
+          <span style={{ fontSize: "1.4rem", fontWeight: 900, letterSpacing: "-0.04em", color: "var(--text)" }}>CoursesWyn</span>
         </a>
 
-        <!-- Navigation Links -->
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, justifyContent: "flex-end" }}>
-          <div style={{ display: "flex", gap: "4px" }}>
-            {[
-              { label: "Free Udemy Coupons", url: "/udemy-coupon-code" },
-              { label: "Top Instructors", url: "/instructors", hot: true },
-              { label: "Course Categories", url: "/categories", hasDropdown: true },
-              { label: "Popular Topics", url: "/topics" },
-              { label: "Guides & Blog", url: "/blog" }
-            ].map(link => (
-              <div style={{ position: "relative" }}>
-                <a 
-                  href={link.url} 
-                  style={{
-                    fontSize: "0.85rem", fontWeight: "600",
-                    color: (currentPath === link.url || (link.url !== '/' && currentPath.startsWith(link.url))) ? "var(--brand)" : "var(--muted)",
-                    padding: "6px 12px", borderRadius: "8px",
-                    textDecoration: "none", transition: "all 0.2s",
-                    background: (currentPath === link.url || (link.url !== '/' && currentPath.startsWith(link.url))) ? "hsla(15, 85%, 55%, 0.1)" : "transparent",
-                    display: "flex", alignItems: "center", gap: "4px"
-                  }}
-                  class="nav-link"
-                >
-                  {link.label}
-                  {link.hasDropdown && (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: "2px" }}>
-                      <path d="M7 10l5 5 5-5z"/>
-                    </svg>
-                  )}
-                  {link.hot && (
-                    <span style={{ fontSize: "0.5rem", background: "var(--brand)", color: "#000", padding: "1px 4px", borderRadius: "4px", fontWeight: "900" }}>HOT</span>
-                  )}
-                </a>
-                {/* Dropdown Menu for Course Categories */}
-                {link.hasDropdown && (
-                  <div style={{
-                    position: "absolute",
-                    top: "100%",
-                    left: "0",
-                    marginTop: "8px",
-                    minWidth: "220px",
-                    background: "var(--card)",
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
-                    border: "1px solid var(--border)",
-                    padding: "8px",
-                    display: "none",
-                    zIndex: 100
-                  }} class="nav-dropdown">
-                    <a href="/categories/development" style={{
-                      display: "block",
-                      padding: "8px 12px",
-                      color: "var(--text)",
-                      textDecoration: "none",
-                      borderRadius: "6px",
-                      fontSize: "0.85rem",
-                      transition: "background 0.2s"
-                    }} class="dropdown-item">
-                      💻 Development
-                    </a>
-                    <a href="/categories/business" style={{
-                      display: "block",
-                      padding: "8px 12px",
-                      color: "var(--text)",
-                      textDecoration: "none",
-                      borderRadius: "6px",
-                      fontSize: "0.85rem",
-                      transition: "background 0.2s"
-                    }} class="dropdown-item">
-                      📈 Business
-                    </a>
-                    <a href="/categories/design" style={{
-                      display: "block",
-                      padding: "8px 12px",
-                      color: "var(--text)",
-                      textDecoration: "none",
-                      borderRadius: "6px",
-                      fontSize: "0.85rem",
-                      transition: "background 0.2s"
-                    }} class="dropdown-item">
-                      🎨 Design
-                    </a>
-                    <a href="/categories/marketing" style={{
-                      display: "block",
-                      padding: "8px 12px",
-                      color: "var(--text)",
-                      textDecoration: "none",
-                      borderRadius: "6px",
-                      fontSize: "0.85rem",
-                      transition: "background 0.2s"
-                    }} class="dropdown-item">
-                      📢 Marketing
-                    </a>
-                    <a href="/categories/it-software" style={{
-                      display: "block",
-                      padding: "8px 12px",
-                      color: "var(--text)",
-                      textDecoration: "none",
-                      borderRadius: "6px",
-                      fontSize: "0.85rem",
-                      transition: "background 0.2s"
-                    }} class="dropdown-item">
-                      🔧 IT & Software
-                    </a>
-                    <div style={{ height: "1px", background: "var(--border)", margin: "4px 0" }}></div>
-                    <a href="/categories" style={{
-                      display: "block",
-                      padding: "8px 12px",
-                      color: "var(--brand)",
-                      textDecoration: "none",
-                      borderRadius: "6px",
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
-                      transition: "background 0.2s"
-                    }} class="dropdown-item">
-                      View All Categories →
-                    </a>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+        {/* Nav links — Refactored to avoid duplicates and include key pages */}
+        <div style={{ display: "flex", alignItems: "center", gap: "24px" }} class="hidden xl:flex">
+          <a href="/udemy-coupon-code" class="nav-link" style={{ color: currentPath === '/udemy-coupon-code' ? "var(--accent)" : "var(--text)", fontWeight: 800 }}>DEALS</a>
+          <a href="/blog" class="nav-link" style={{ color: currentPath.startsWith('/blog') ? "var(--accent)" : "var(--text)", fontWeight: 800 }}>REVIEWS</a>
+          <a href="/udemy-coupons-guide" class="nav-link" style={{ color: currentPath === '/udemy-coupons-guide' ? "var(--accent)" : "var(--text)", fontWeight: 800 }}>GUIDE</a>
+          <a href="/topics" class="nav-link" style={{ color: currentPath === '/topics' ? "var(--accent)" : "var(--text)", fontWeight: 800 }}>TOPICS</a>
+          <a href="/popular" class="nav-link" style={{ color: currentPath === '/popular' ? "var(--accent)" : "var(--text)", fontWeight: 800 }}>TRENDING</a>
+          <a href="/success-stories" class="nav-link" style={{ color: currentPath === '/success-stories' ? "var(--accent)" : "var(--text)", fontWeight: 800 }}>STORIES</a>
+        </div>
 
-          <div style={{ width: "1px", height: "20px", background: "hsla(15, 85%, 55%, 0.2)", margin: "0 8px" }}></div>
-
-          {/* Search bar */}
-          <form action="/search" method="get" style={{ position: "relative", maxWidth: "160px", width: "100%" }}>
-            <input 
-              type="text" name="q" placeholder="Search..." 
-              style={{
-                background: "hsla(15, 85%, 55%, 0.05)", color: "var(--text)", border: "1px solid hsla(15, 85%, 55%, 0.2)",
-                borderRadius: "20px", padding: "6px 32px 6px 12px", fontSize: "0.8rem", width: "100%", outline: "none"
-              }}
-            />
-            <button type="submit" style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-            </button>
-          </form>
-
-          {/* Affiliate text */}
-          <div style={{ fontSize: "0.8rem", fontWeight: "900", color: "var(--brand)", letterSpacing: "1px", flexShrink: 0, paddingLeft: "12px", borderLeft: "1px solid hsla(15, 85%, 55%, 0.2)" }}>
-            679990
+        {/* Search & Actions */}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <HeaderSearch client:load />
+          <a href="/udemy-coupon-code" class="btn" style={{ padding: "6px 14px", fontSize: "0.75rem", background: "var(--text)", color: "white" }}>
+            COUPONS
+          </a>
+          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+            <span style={{ fontSize: "0.85rem", fontWeight: 900, color: "var(--accent)" }}>679990</span>
           </div>
         </div>
       </nav>
     </header>
 
-    {/* Breadcrumb Navigation - Hidden on Home and Blog Post pages (as they have their own) */}
-    {currentPath !== '/' && !currentPath.startsWith('/blog/') && (
+    {/* Breadcrumb */}
+    {!hideBreadcrumbs && currentPath !== '/' && !currentPath.includes('/blog/') && !currentPath.includes('/coupon/') && (
       <nav aria-label="Breadcrumb" style={{
-        background: "hsla(15, 85%, 55%, 0.03)",
-        borderBottom: "1px solid hsla(15, 85%, 55%, 0.08)",
-        padding: "12px 0"
+        background: "var(--bg)",
+        borderBottom: "2px solid var(--border)",
+        padding: "10px 0"
       }}>
         <div class="container" style={{
           maxWidth: "1400px",
@@ -537,6 +399,11 @@ const currentPath = Astro.url.pathname;
               <span style={{ color: "var(--text)", fontWeight: 500 }}>Popular Topics</span>
             </>
           )}
+          {currentPath.startsWith('/popular') && (
+            <>
+              <span style={{ color: "var(--text)", fontWeight: 500 }}>Trending Deals</span>
+            </>
+          )}
           {currentPath.startsWith('/blog') && (
             <>
               <span style={{ color: "var(--text)", fontWeight: 500 }}>Guides & Blog</span>
@@ -564,388 +431,150 @@ const currentPath = Astro.url.pathname;
       <slot />
     </main>
 
-    <footer
-      style={{
-        color: "hsl(215, 20%, 65%)",
-        padding: "80px 0 40px",
-        marginTop: "auto",
-        position: "relative",
-        overflow: "hidden",
-        background: "linear-gradient(135deg, hsl(0, 0%, 100%) 0%, hsla(15, 85%, 55%, 0.02) 100%)"
-      }}
-    >
-      <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 1rem" }}>
-        {/* Newsletter Section - Functional */}
-        <div style={{
-          background: "var(--card)",
-          padding: "1.5rem",
-          borderRadius: "16px",
-          marginBottom: "32px",
-          border: "1px solid var(--border)",
-          textAlign: "center",
-          position: "relative",
-          overflow: "hidden"
-        }}>
-          <h3 style={{
-            color: "var(--text)",
-            fontSize: "1.25rem",
-            fontWeight: 700,
-            marginBottom: "0.75rem",
-            background: "linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text"
-          }}>
-            Get Udemy Coupons
-          </h3>
-          <p style={{
-            color: "var(--muted)",
-            marginBottom: "1.5rem",
-            maxWidth: "500px",
-            margin: "0 auto 1.5rem",
-            fontSize: "0.9rem",
-            lineHeight: 1.5
-          }}>
-            Subscribe for daily Udemy coupon deals delivered to your inbox.
-          </p>
-          <form
-            action="/api/newsletter-signup"
-            method="POST"
-            style={{
-              display: "flex",
-              gap: "0.75rem",
-              maxWidth: "500px",
-              margin: "0 auto",
-              flexWrap: "wrap",
-              justifyContent: "center"
-            }}
-          >
+    <footer style={{
+      background: "var(--text)",
+      color: "rgba(255,255,255,0.7)",
+      borderTop: "2px solid var(--border)",
+      padding: "0"
+    }}>
+      {/* Newsletter bar — full width orange strip */}
+      <div style={{ background: "var(--accent)", borderBottom: "2px solid var(--border)", padding: "32px 0" }}>
+        <div class="container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "32px", flexWrap: "wrap" }}>
+          <div>
+            <p style={{ margin: "0 0 4px", fontSize: "1.1rem", fontWeight: 900, color: "white", letterSpacing: "-0.02em" }}>
+              Get daily Udemy promo codes in your inbox.
+            </p>
+            <p style={{ margin: 0, fontSize: "0.82rem", color: "rgba(255,255,255,0.75)", fontWeight: 500 }}>
+              No spam. Unsubscribe anytime. 100% verified deals only.
+            </p>
+          </div>
+          <form action="/api/newsletter-signup" method="POST" style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
             <input
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              required
-              autocomplete="email"
+              type="email" name="email" placeholder="your@email.com" required autocomplete="email"
               style={{
-                flex: 1,
-                minWidth: "200px",
-                padding: "0.75rem",
-                borderRadius: "8px",
-                border: "1px solid var(--border)",
-                background: "var(--input)",
-                color: "var(--text)",
-                fontSize: "0.9rem",
-                transition: "border-color 0.3s ease"
+                padding: "11px 16px", border: "2px solid white", borderRadius: "4px",
+                background: "rgba(255,255,255,0.15)", color: "white",
+                fontSize: "0.88rem", fontWeight: 600, outline: "none", width: "240px",
+                fontFamily: "inherit"
               }}
             />
-            <button
-              type="submit"
-              style={{
-                padding: "0.75rem 1.5rem",
-                borderRadius: "8px",
-                background: "linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%)",
-                color: "var(--bg)",
-                border: "none",
-                fontSize: "0.9rem",
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "transform 0.2s ease",
-                whiteSpace: "nowrap"
-              }}
-            >
-              Subscribe
-            </button>
+            <button type="submit" style={{
+              padding: "11px 24px", border: "2px solid white", borderRadius: "4px",
+              background: "white", color: "var(--accent)", fontWeight: 900,
+              fontSize: "0.85rem", cursor: "pointer", fontFamily: "inherit",
+              boxShadow: "3px 3px 0 rgba(0,0,0,0.2)", transition: "all 0.12s ease",
+              letterSpacing: "0.03em"
+            }}>SUBSCRIBE</button>
           </form>
         </div>
+      </div>
 
-        {/* Footer Links */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: "40px",
-          marginBottom: "48px",
-          maxWidth: "1200px",
-          margin: "0 auto 48px"
-        }}>
-          {/* About CoursesWyn */}
+      {/* Main footer grid */}
+      <div class="container" style={{ padding: "56px 24px 0" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 1fr 1fr", gap: "48px", paddingBottom: "48px", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+
+          {/* Brand column */}
           <div>
-            <h3
-              style={{
-                background: "linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                marginBottom: "16px",
-                fontSize: "1.2rem",
-                fontWeight: "700"
-              }}
-            >
-              CoursesWyn
-            </h3>
-            <p style={{
-              fontSize: "0.9rem",
-              lineHeight: "1.5",
-              color: "var(--muted)",
-              marginBottom: "16px"
-            }}>
-              Find the best <strong>online course deals</strong> and <strong>Udemy coupons</strong>. Daily updated
-              discounts for premium courses from top platforms.
+            <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: "10px", textDecoration: "none", marginBottom: "20px" }}>
+              <div style={{
+                width: "34px", height: "34px", background: "var(--accent)",
+                border: "2px solid white", borderRadius: "5px",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "white", fontWeight: 900, fontSize: "0.95rem",
+                boxShadow: "2px 2px 0 rgba(255,255,255,0.3)"
+              }}>W</div>
+              <span style={{ fontSize: "1.15rem", fontWeight: 900, color: "white", letterSpacing: "-0.04em" }}>CoursesWyn</span>
+            </a>
+            <p style={{ fontSize: "0.88rem", lineHeight: 1.65, color: "rgba(255,255,255,0.45)", marginBottom: "24px", maxWidth: "280px" }}>
+              Expert reviews of the <strong style={{ color: "rgba(255,255,255,0.75)" }}>best Udemy courses</strong> by topic, plus verified promo codes updated daily since 2023.
             </p>
-            <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginBottom: "16px" }}>
-              <a href="/about" style={{ color: "var(--brand)", textDecoration: "none", fontWeight: 600 }} class="footer-link">About</a> • 
-              <a href="/contact" style={{ color: "var(--brand)", textDecoration: "none", fontWeight: 600 }} class="footer-link">Contact</a> • 
-              <a href="/privacy" style={{ color: "var(--brand)", textDecoration: "none", fontWeight: 600 }} class="footer-link">Privacy</a>
-            </p>
-            
-            {/* Social Media Widget */}
-            <div style={{
-              display: "flex",
-              gap: "20px",
-              marginTop: "16px",
-              flexWrap: "wrap"
-            }}>
-              <a 
-                href="https://facebook.com/BestCouponPromo"
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  textDecoration: "none",
-                  transition: "all 0.3s ease",
-                  transform: "translateY(0)"
-                }}
-                class="facebook-hover"
-              >
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "8px",
-                  background: "linear-gradient(135deg, var(--brand-soft) 0%, var(--brand-glow) 100%)",
-                  border: "1px solid var(--brand-soft)",
-                  boxShadow: "0 2px 8px rgba(255, 193, 7, 0.12)",
-                  color: "var(--text)"
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                </div>
-                <span style={{
-                  fontSize: "14px",
-                  color: "var(--text)",
-                  fontWeight: "600",
-                  letterSpacing: "0.3px",
-                  transition: "color 0.3s ease"
-                }}>
-                  Facebook
-                </span>
-              </a>
-              
-              <a 
-                href="https://twitter.com/CoursesGift" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  textDecoration: "none",
-                  transition: "all 0.3s ease",
-                  transform: "translateY(0)"
-                }}
-                class="x-hover"
-              >
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "8px",
-                  background: "linear-gradient(135deg, var(--brand-soft) 0%, var(--brand-glow) 100%)",
-                  border: "1px solid var(--brand-soft)",
-                  boxShadow: "0 2px 8px rgba(255, 193, 7, 0.12)",
-                  color: "var(--text)"
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                  </svg>
-                </div>
-                <span style={{
-                  fontSize: "14px",
-                  color: "var(--text)",
-                  fontWeight: "600",
-                  letterSpacing: "0.3px",
-                  transition: "color 0.3s ease"
-                }}>
-                  X
-                </span>
-              </a>
-              
-              <a 
-                href="https://medium.com/@coursewyn" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  textDecoration: "none",
-                  transition: "all 0.3s ease",
-                  transform: "translateY(0)"
-                }}
-                class="linkedin-hover"
-              >
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "8px",
-                  background: "linear-gradient(135deg, var(--brand-soft) 0%, var(--brand-glow) 100%)",
-                  border: "1px solid var(--brand-soft)",
-                  boxShadow: "0 2px 8px rgba(187, 94, 52, 0.12)",
-                  color: "var(--text)"
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.82 6.82 0 010 12a6.82 6.82 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42s-3.38-2.88-3.38-6.42 1.51-6.42 3.38-6.42 3.38 2.88 3.38 6.42zM24 12c0 3.17-.53 5.75-1.19 5.75s-1.19-2.58-1.19-5.75.53-5.75 1.19-5.75S24 8.83 24 12z"/>
-                  </svg>
-                </div>
-                <span style={{
-                  fontSize: "14px",
-                  color: "var(--text)",
-                  fontWeight: "600",
-                  letterSpacing: "0.3px",
-                  transition: "color 0.3s ease"
-                }}>
-                  Medium
-                </span>
-              </a>
+            <div style={{ display: "flex", gap: "10px" }}>
+              {[
+                { href: "https://facebook.com/BestCouponPromo", label: "FB" },
+                { href: "https://twitter.com/CoursesGift", label: "X" },
+                { href: "https://medium.com/@coursewyn", label: "M" }
+              ].map(s => (
+                <a href={s.href} target="_blank" rel="noopener noreferrer" style={{
+                  width: "34px", height: "34px", border: "2px solid rgba(255,255,255,0.2)",
+                  borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "rgba(255,255,255,0.5)", textDecoration: "none", fontSize: "0.72rem",
+                  fontWeight: 900, transition: "all 0.12s ease"
+                }} class="footer-social-btn">{s.label}</a>
+              ))}
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Directory column */}
           <div>
-            <h3
-              style={{
-                background: "linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                marginBottom: "16px",
-                fontSize: "1.2rem",
-                fontWeight: "700"
-              }}
-            >
-              Quick Links
-            </h3>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: "12px" }}>
-                <a href="/udemy-coupon-code" style={{ color: "var(--muted)", textDecoration: "none", fontSize: "0.9rem", transition: "color 0.2s" }} class="footer-link">
-                  Free Udemy Coupons
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a href="/instructors" style={{ color: "var(--muted)", textDecoration: "none", fontSize: "0.9rem", transition: "color 0.2s" }} class="footer-link">
-                  Top Instructors
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a href="/categories" style={{ color: "var(--muted)", textDecoration: "none", fontSize: "0.9rem", transition: "color 0.2s" }} class="footer-link">
-                  Course Categories
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a href="/topics" style={{ color: "var(--muted)", textDecoration: "none", fontSize: "0.9rem", transition: "color 0.2s" }} class="footer-link">
-                  Popular Topics
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a href="/blog" style={{ color: "var(--muted)", textDecoration: "none", fontSize: "0.9rem", transition: "color 0.2s" }} class="footer-link">
-                  Guides & Blog
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a href="/sitemap" style={{ color: "var(--muted)", textDecoration: "none", fontSize: "0.9rem", transition: "color 0.2s" }} class="footer-link">
-                  Sitemap
-                </a>
-              </li>
+            <h4 style={{ color: "white", fontWeight: 800, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "20px" }}>Directory</h4>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
+              {[
+                { label: "Latest Coupons", href: "/udemy-coupon-code" },
+                { label: "Trending Deals", href: "/popular" },
+                { label: "All Topics", href: "/topics" },
+                { label: "Top Instructors", href: "/instructors" }
+              ].map(l => (
+                <li><a href={l.href} class="footer-nav-link">{l.label}</a></li>
+              ))}
             </ul>
           </div>
 
-          {/* Popular Categories */}
+          {/* Learning column */}
           <div>
-            <h3
-              style={{
-                background: "linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                marginBottom: "16px",
-                fontSize: "1.2rem",
-                fontWeight: "700"
-              }}
-            >
-              Popular Categories
-            </h3>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: "12px" }}>
-                <a href="/categories/development" style={{ color: "var(--muted)", textDecoration: "none", fontSize: "0.9rem", transition: "color 0.2s" }} class="footer-link">
-                  Web Development
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a href="/categories/business" style={{ color: "var(--muted)", textDecoration: "none", fontSize: "0.9rem", transition: "color 0.2s" }} class="footer-link">
-                  Business & Finance
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a href="/categories/design" style={{ color: "var(--muted)", textDecoration: "none", fontSize: "0.9rem", transition: "color 0.2s" }} class="footer-link">
-                  Graphic Design
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a href="/categories/marketing" style={{ color: "var(--muted)", textDecoration: "none", fontSize: "0.9rem", transition: "color 0.2s" }} class="footer-link">
-                  Digital Marketing
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a href="/categories/it-software" style={{ color: "var(--muted)", textDecoration: "none", fontSize: "0.9rem", transition: "color 0.2s" }} class="footer-link">
-                  IT & Software
-                </a>
-              </li>
+            <h4 style={{ color: "white", fontWeight: 800, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "20px" }}>Learning</h4>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
+              {[
+                { label: "Best Reviews", href: "/blog" },
+                { label: "Coupon Guide", href: "/udemy-coupons-guide" },
+                { label: "How to Redeem", href: "/how-to-redeem-coupon" },
+                { label: "Categories", href: "/categories" }
+              ].map(l => (
+                <li><a href={l.href} class="footer-nav-link">{l.label}</a></li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Company column */}
+          <div>
+            <h4 style={{ color: "white", fontWeight: 800, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "20px" }}>Company</h4>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
+              {[
+                { label: "About Us", href: "/about" },
+                { label: "Contact Us", href: "/contact" },
+                { label: "Sitemap Index", href: "/sitemap" },
+                { label: "Privacy Policy", href: "/privacy" }
+              ].map(l => (
+                <li><a href={l.href} class="footer-nav-link">{l.label}</a></li>
+              ))}
             </ul>
           </div>
         </div>
 
-        {/* Copyright */}
-        <div style={{
-          borderTop: "1px solid var(--border)",
-          paddingTop: "32px",
-          marginTop: "32px",
-          textAlign: "center"
-        }}>
-          <p style={{
-            fontSize: "0.85rem",
-            color: "var(--muted)",
-            marginBottom: "8px"
-          }}>
-            © {currentYear} CoursesWyn. Your trusted source for <strong>free Udemy coupons</strong>, <strong>verified promo codes</strong>, and <strong>discount deals</strong> for online learning.
+        {/* Bottom bar */}
+        <div style={{ padding: "24px 0", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+          <p style={{ margin: 0, fontSize: "0.78rem", color: "rgba(255,255,255,0.3)", fontWeight: 500 }}>
+            © {currentYear} CoursesWyn — Verified Udemy Promo Codes & Expert Reviews
           </p>
-          <p style={{
-            fontSize: "0.8rem",
-            color: "var(--muted)",
-            marginBottom: "0"
-          }}>
-            Daily updated <strong>Udemy course discounts</strong>, <strong>100% off coupons</strong>, and <strong>learning platform deals</strong>. Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer" style={{ color: "var(--brand)", textDecoration: "none" }}>Astro</a>
-          </p>
+          <div style={{ display: "flex", gap: "20px" }}>
+            {[{ l: "Terms", h: "/terms" }, { l: "Success Stories", h: "/success-stories" }].map(x => (
+              <a href={x.h} style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.25)", textDecoration: "none", fontWeight: 600, transition: "color 0.15s" }} class="footer-bottom-link">{x.l}</a>
+            ))}
+          </div>
         </div>
       </div>
+
+      <style>
+        .footer-nav-link { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.86rem; font-weight: 500; transition: color 0.15s; }
+        .footer-nav-link:hover { color: var(--accent); }
+        .footer-social-btn:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
+        .footer-bottom-link:hover { color: rgba(255,255,255,0.6) !important; }
+        @media (max-width: 900px) {
+          footer .container > div[style*="1.6fr"] { grid-template-columns: 1fr 1fr !important; }
+        }
+        @media (max-width: 600px) {
+          footer .container > div[style*="1.6fr"] { grid-template-columns: 1fr !important; }
+        }
+      </style>
     </footer>
 
     {/* Back to Top Button */}
@@ -955,25 +584,24 @@ const currentPath = Astro.url.pathname;
         position: "fixed",
         bottom: "20px",
         right: "20px",
-        width: "40px",
-        height: "40px",
-        borderRadius: "50%",
-        background: "linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%)",
-        color: "var(--bg)",
-        border: "none",
+        width: "44px",
+        height: "44px",
+        borderRadius: "6px",
+        background: "var(--bg)",
+        color: "var(--text)",
+        border: "2px solid var(--border)",
+        boxShadow: "4px 4px 0 var(--border)",
         cursor: "pointer",
         display: "none",
         alignItems: "center",
         justifyContent: "center",
-        boxShadow: "0 4px 12px rgba(187, 94, 52, 0.3)",
-        transition: "all 0.3s ease",
-        zIndex: 1000
+        transition: "all 0.15s ease",
+        zIndex: 1000,
+        fontWeight: 900
       }}
       aria-label="Back to top"
     >
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
-      </svg>
+      ↑
     </button>
 
     <script>
@@ -982,51 +610,13 @@ const currentPath = Astro.url.pathname;
       if (newsletterForm) {
         newsletterForm.addEventListener('submit', function(e) {
           e.preventDefault();
-          const emailInput = newsletterForm.querySelector('input[type="email"]') as HTMLInputElement;
+          const emailInput = newsletterForm.querySelector('input[name="email"]') as HTMLInputElement;
           
           if (emailInput) {
             const email = emailInput.value.trim();
-            
             if (email) {
-              const successMsg = document.createElement('p');
-              successMsg.textContent = 'Thank you for subscribing! We\'ll send you the latest Udemy coupons and deals.';
-              successMsg.style.color = 'var(--brand)';
-              successMsg.style.fontWeight = '600';
-              successMsg.style.marginTop = '1rem';
-              successMsg.style.textAlign = 'center';
-              
-              const existingMsg = newsletterForm.querySelector('.success-message');
-              if (existingMsg) {
-                existingMsg.remove();
-              }
-              
-              successMsg.className = 'success-message';
-              newsletterForm.appendChild(successMsg);
-              
+              alert('Thank you for subscribing! We\'ll send you the latest Udemy coupons and deals.');
               emailInput.value = '';
-              
-              setTimeout(() => {
-                successMsg.remove();
-              }, 5000);
-            } else {
-              const errorMsg = document.createElement('p');
-              errorMsg.textContent = 'Please enter a valid email address.';
-              errorMsg.style.color = '#ef4444';
-              errorMsg.style.fontWeight = '600';
-              errorMsg.style.marginTop = '1rem';
-              errorMsg.style.textAlign = 'center';
-              
-              const existingMsg = newsletterForm.querySelector('.error-message');
-              if (existingMsg) {
-                existingMsg.remove();
-              }
-              
-              errorMsg.className = 'error-message';
-              newsletterForm.appendChild(errorMsg);
-              
-              setTimeout(() => {
-                errorMsg.remove();
-              }, 3000);
             }
           }
         });
@@ -1034,7 +624,6 @@ const currentPath = Astro.url.pathname;
 
       // Back to top functionality
       const backToTopButton = document.getElementById('backToTop');
-      
       window.addEventListener('scroll', () => {
         if (backToTopButton) {
           if (window.pageYOffset > 300) {
@@ -1047,12 +636,10 @@ const currentPath = Astro.url.pathname;
       
       if (backToTopButton) {
         backToTopButton.addEventListener('click', () => {
-          window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         });
       }
+      
     </script>
   </body>
 </html>

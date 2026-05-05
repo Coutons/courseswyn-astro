@@ -6,20 +6,20 @@ export default function HeaderSearch() {
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
   
   const searchTerms = [
-    "JavaScript",
     "Python", 
-    "React",
-    "Web development",
-    "100 days of code",
-    "TypeScript",
-    "Node.js",
-    "Machine learning"
+    "JavaScript",
+    "React 2026",
+    "Web Dev",
+    "AI Agents",
+    "Cybersecurity",
+    "Data Science",
+    "Business"
   ];
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPlaceholder((prev) => (prev + 1) % searchTerms.length);
-    }, 2500);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -27,51 +27,53 @@ export default function HeaderSearch() {
     <form
       action="/search"
       method="get"
-      style={{ display: "flex", alignItems: "center", gap: 8 }}
+      style={{ display: "flex", alignItems: "center", position: "relative" }}
+      className="hidden md:flex"
     >
       <input
         type="search"
         name="q"
-        placeholder={`${searchTerms[currentPlaceholder]}...`}
+        placeholder={`Find ${searchTerms[currentPlaceholder]}...`}
         aria-label="Search courses"
         style={{
-          padding: "6px 10px",
-          borderRadius: 999,
-          border: "1px solid var(--brand-soft)",
-          background: "rgba(15, 19, 32, 0.8)",
-          color: "#e6e9f2",
-          minWidth: 180,
-          transition: "all 0.3s ease",
-          boxShadow: "0 0 0 0 transparent",
-        }}
-        onFocus={(e) => {
-          e.target.style.borderColor = "#3b82f6";
-          e.target.style.boxShadow = "0 0 0 2px rgba(59, 130, 246, 0.2)";
-        }}
-        onBlur={(e) => {
-          e.target.style.borderColor = "var(--brand-soft)";
-          e.target.style.boxShadow = "0 0 0 0 transparent";
+          padding: "8px 12px 8px 36px",
+          borderRadius: "4px",
+          border: "2px solid var(--border)",
+          background: "white",
+          color: "var(--text)",
+          minWidth: "180px",
+          width: "220px",
+          fontSize: "0.85rem",
+          fontWeight: 700,
+          outline: "none",
+          boxShadow: "2px 2px 0 var(--border)",
+          fontFamily: "inherit",
+          transition: "all 0.15s ease"
         }}
       />
+      <div style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </div>
       <button
         type="submit"
-        className="pill"
         style={{ 
-          padding: "6px 14px",
-          background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-          border: "1px solid #3b82f6",
-          transition: "all 0.2s ease"
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = "linear-gradient(135deg, #2563eb, #1e40af)";
-          e.currentTarget.style.transform = "translateY(-1px)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = "linear-gradient(135deg, #3b82f6, #1d4ed8)";
-          e.currentTarget.style.transform = "translateY(0)";
+          position: "absolute",
+          right: "4px",
+          background: "var(--accent)",
+          color: "white",
+          border: "1.5px solid var(--border)",
+          borderRadius: "2px",
+          padding: "4px 8px",
+          fontSize: "0.65rem",
+          fontWeight: 900,
+          cursor: "pointer",
+          letterSpacing: "0.05em"
         }}
       >
-        <span style={{ color: "#ffffff", fontWeight: 500 }}>Search</span>
+        GO
       </button>
     </form>
   );
