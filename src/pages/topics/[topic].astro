@@ -111,66 +111,160 @@ const generateRelatedSearches = (topic: string) => {
 
 const relatedSearches = generateRelatedSearches(topicName);
 
-// SEO description
-const topicDescription = `Discover the best Udemy courses for ${topicName} in 2026. Our comprehensive collection features expert-led tutorials covering ${topicName.toLowerCase()} fundamentals to advanced techniques. Whether you're a complete beginner looking to start your ${topicName.toLowerCase()} journey or an experienced professional seeking to deepen your expertise, you'll find high-quality courses with massive discounts. Learn from industry-leading instructors, gain practical skills through hands-on projects, and earn certificates to boost your career. From basic concepts to cutting-edge applications, our curated ${topicName.toLowerCase()} courses include interactive exercises, real-world examples, and lifetime access. Perfect for students, professionals, and anyone passionate about ${topicName.toLowerCase()}. Explore beginner-friendly introductions, intermediate skill-building courses, and advanced masterclasses. Get started today and transform your knowledge with the top-rated ${topicName.toLowerCase()} courses available on Udemy.`;
+const currentYear = new Date().getFullYear();
+const currentDate = new Date().toISOString().split('T')[0];
+
+// Calculate savings stats
+const avgDiscount = topicDeals.length > 0 
+  ? Math.round(topicDeals.reduce((acc, deal) => {
+      if (deal.originalPrice && deal.price !== undefined && deal.originalPrice > 0) {
+        return acc + ((deal.originalPrice - deal.price) / deal.originalPrice) * 100;
+      }
+      return acc;
+    }, 0) / topicDeals.length)
+  : 90;
+
+const freeCourses = topicDeals.filter(deal => deal.price === 0 || deal.price === null).length;
+
+// SEO description - optimized
+const topicDescription = `${topicDeals.length}+ verified Udemy ${topicName} courses with 100% off coupons. Find free ${topicName.toLowerCase()} courses for beginners to advanced learners. Save up to ${avgDiscount}% with daily verified deals. Learn from expert instructors with lifetime access and certificates. Updated ${currentDate}.`;
 
 // Get all topics for sidebar
 const topics = [...new Set(allDeals.map(deal => deal.subcategory).filter(sub => sub != null))];
 
 ---
 
-<Layout title={`Best Udemy Courses for ${topicName} in 2026`} description={topicDescription}>
+<Layout title={`${topicDeals.length}+ Free ${topicName} Courses [100% Off Coupons] ${currentYear} | CoursesWyn`} description={topicDescription}>
+  <!-- Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `https://courseswyn.com/topics/${topicSlug}`,
+        "url": `https://courseswyn.com/topics/${topicSlug}`,
+        "name": `${topicName} Courses - Free Udemy Coupons`,
+        "description": topicDescription,
+        "inLanguage": "en-US",
+        "dateModified": currentDate,
+        "breadcrumb": {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" },
+            { "@type": "ListItem", "position": 2, "name": "Topics", "item": "https://courseswyn.com/topics" },
+            { "@type": "ListItem", "position": 3, "name": topicName, "item": `https://courseswyn.com/topics/${topicSlug}` }
+          ]
+        },
+        "mainEntity": {
+          "@type": "ItemList",
+          "name": `${topicName} Courses`,
+          "numberOfItems": topicDeals.length,
+          "itemListElement": topicDeals.slice(0, 10).map((deal, i) => ({
+            "@type": "ListItem",
+            "position": i + 1,
+            "item": {
+              "@type": "Course",
+              "name": deal.title,
+              "url": `https://courseswyn.com/coupon/${deal.slug || deal.id}`,
+              "provider": { "@type": "Organization", "name": "Udemy" }
+            }
+          }))
+        }
+      }
+    ]
+  })} />
+
   <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "2rem 1rem" }}>
+    {/* Breadcrumb */}
+    <nav aria-label="Breadcrumb" style={{ marginBottom: "2rem" }}>
+      <ol style={{ display: "flex", listStyle: "none", padding: 0, margin: 0, gap: "10px", fontSize: "0.85rem", fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }} itemscope itemtype="https://schema.org/BreadcrumbList">
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" style={{ color: "inherit", textDecoration: "none" }} itemprop="item">
+            <span itemprop="name">Home</span>
+          </a>
+          <meta itemprop="position" content="1" />
+        </li>
+        <li style={{ color: "var(--border)" }}>/</li>
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/topics" style={{ color: "inherit", textDecoration: "none" }} itemprop="item">
+            <span itemprop="name">Topics</span>
+          </a>
+          <meta itemprop="position" content="2" />
+        </li>
+        <li style={{ color: "var(--border)" }}>/</li>
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" style={{ color: "var(--text)" }}>
+          <span itemprop="name">{topicName}</span>
+          <meta itemprop="position" content="3" />
+        </li>
+      </ol>
+    </nav>
+
     {/* Page Header */}
     <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-      <div style={{ marginBottom: "2rem" }}>
-        <img
-          src={categoryImage}
-          alt={`${topicName} courses`}
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "4px",
-            border: "2px solid var(--border)",
-            boxShadow: "4px 4px 0 var(--border)",
-            background: "white"
-          }}
-        />
+      <div style={{ display: "inline-block", background: "var(--accent)", color: "white", padding: "6px 16px", border: "2px solid var(--border)", boxShadow: "3px 3px 0 var(--border)", borderRadius: "4px", fontWeight: 900, fontSize: "0.75rem", textTransform: "uppercase", marginBottom: "1.5rem" }}>
+        {topicDeals.length}+ Verified Courses · Updated {currentYear}
       </div>
       <h1 style={{
-        fontSize: "clamp(2rem, 5vw, 3rem)",
+        fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
         fontWeight: "900",
         marginBottom: "1rem",
         color: "var(--text)",
-        lineHeight: 1.1,
+        lineHeight: 1.15,
         letterSpacing: "-0.03em"
       }}>
-        Best Udemy Courses for<br/>
-        <span style={{ background: "var(--accent)", color: "white", padding: "0 10px", display: "inline-block", transform: "rotate(-1deg)" }}>
-          {topicName}
-        </span> in 2026
+        {topicDeals.length}+ Free {topicName} Courses with <span style={{ background: "var(--accent)", color: "white", padding: "0 8px", display: "inline-block" }}>100% Off Coupons</span>
       </h1>
       <p style={{
-        fontSize: "1.1rem",
+        fontSize: "1.05rem",
         color: "var(--muted)",
-        maxWidth: "600px",
+        maxWidth: "700px",
         margin: "0 auto",
-        lineHeight: "1.6"
+        lineHeight: "1.6",
+        fontWeight: 500
       }}>
-        Discover {topicDeals.length}+ verified {topicName.toLowerCase()} courses with massive discounts. Learn from industry experts and advance your career today.
+        Find verified {topicName.toLowerCase()} courses with free coupon codes. {freeCourses}+ completely free courses available. 
+        Save up to {avgDiscount}% on beginner to advanced {topicName.toLowerCase()} training.
       </p>
+      <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center", marginTop: "1.5rem" }}>
+        {[
+          { v: `${topicDeals.length}+`, l: "Courses" },
+          { v: `${freeCourses}+`, l: "100% Free" },
+          { v: `${avgDiscount}%`, l: "Avg Savings" }
+        ].map(s => (
+          <div style="background: white; border: 2px solid var(--border); padding: 12px 24px; border-radius: 4px; box-shadow: 4px 4px 0 var(--border); display: flex; flex-direction: column; align-items: center;">
+            <span style="font-size: 1.5rem; font-weight: 900; color: var(--accent);">{s.v}</span>
+            <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--muted);">{s.l}</span>
+          </div>
+        ))}
+      </div>
       <a href="/udemy-coupon-code" style={{
         color: "var(--accent)",
         textDecoration: "none",
         fontWeight: "800",
         display: "inline-block",
-        marginTop: "1rem",
+        marginTop: "1.5rem",
         textTransform: "uppercase",
         fontSize: "0.85rem",
         letterSpacing: "0.05em"
       }}>
-        ← Back to all deals
+        ← Browse All Free Deals
       </a>
+    </div>
+
+    {/* SEO Description Block */}
+    <div style={{ marginBottom: "3rem", padding: "2rem", background: "white", border: "2px solid var(--border)", borderRadius: "8px", boxShadow: "4px 4px 0 var(--border)" }}>
+      <h2 style={{ fontSize: "1.4rem", fontWeight: 900, marginBottom: "1rem", color: "var(--text)" }}>
+        What Are {topicName} Courses on Udemy?
+      </h2>
+      <p style={{ color: "var(--muted)", lineHeight: 1.7, marginBottom: "1rem", fontWeight: 500 }}>
+        <strong style="color:var(--text)">{topicName}</strong> courses on Udemy cover everything from fundamentals to advanced techniques. 
+        Whether you're a complete beginner or experienced professional, you'll find expert-led training with hands-on projects.
+      </p>
+      <p style={{ color: "var(--muted)", lineHeight: 1.7, margin: 0, fontWeight: 500 }}>
+        Using our verified 100% off coupons, you can access premium {topicName.toLowerCase()} courses <strong style="color:var(--text)">completely free</strong>. 
+        Each course includes lifetime access, certificate of completion, and all learning materials. 
+        Browse our curated list below — all coupons tested daily.
+      </p>
     </div>
 
     {/* Deals Grid */}
@@ -217,24 +311,79 @@ const topics = [...new Set(allDeals.map(deal => deal.subcategory).filter(sub => 
       )}
     </div>
 
-    {/* Related Searches */}
-    <div style={{ marginTop: "3rem", padding: "2rem", background: "var(--card)", borderRadius: "12px", border: "1px solid var(--border)" }}>
-      <h2 style={{ color: "var(--text)", marginBottom: "1rem", fontSize: "1.5rem" }}>
-        Related Searches for {topicName}
+    {/* FAQ Section */}
+    <section style={{ marginTop: "3rem", padding: "3rem 2rem", background: "var(--card)", borderRadius: "12px", border: "2px solid var(--border)" }}>
+      <h2 style={{ color: "var(--text)", marginBottom: "1.5rem", fontSize: "1.75rem", fontWeight: 900, textAlign: "center" }}>
+        Frequently Asked Questions About {topicName} Courses
       </h2>
-      <p style={{ color: "var(--muted)", lineHeight: "1.6", fontSize: "1rem" }}>
-        {relatedSearches.join(', ')}
-      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        {[
+          { q: `Are there free ${topicName} courses on Udemy?`, a: `Yes! We have ${freeCourses}+ completely free ${topicName} courses available with 100% off coupons. These include beginner to advanced courses from top instructors. All you need is a free Udemy account to enroll.` },
+          { q: `How do I get ${topicName} courses for free?`, a: `Simply browse the courses above and click "Redeem Coupon" on any deal. You'll be redirected to Udemy with the discount pre-applied. If the coupon is 100% off, you can enroll without payment and get lifetime access.` },
+          { q: `Do free ${topicName} courses include certificates?`, a: `Yes! All Udemy courses accessed through our coupons include a certificate of completion. This certificate is identical to paid enrollments and can be added to your LinkedIn profile or resume.` },
+          { q: `How often are new ${topicName} courses added?`, a: `New ${topicName} courses and deals are added daily. We recommend bookmarking this page and checking back regularly. Popular topics often have multiple new free courses each week.` },
+          { q: `Are these ${topicName} coupon codes legitimate?`, a: `Absolutely! All coupons are verified and sourced directly from Udemy or authorized instructors. We test every coupon before listing. These are official promotional codes, not hacks or exploits.` },
+          { q: `What skill level are these ${topicName} courses for?`, a: `We curate ${topicName} courses for all levels — complete beginners, intermediate learners, and advanced professionals. Each course listing shows the skill level, so you can find the perfect match for your experience.` }
+        ].map((faq, i) => (
+          <details style="background: white; border: 2px solid var(--border); border-radius: 8px; box-shadow: 3px 3px 0 var(--border);" class="faq-item">
+            <summary style="padding: 20px 24px; font-weight: 800; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.05rem; list-style: none;">
+              {faq.q}
+              <span style="color: var(--accent); font-size: 1.3rem;">+</span>
+            </summary>
+            <div style="padding: 0 24px 20px; color: var(--muted); font-weight: 500; line-height: 1.6;">
+              {faq.a}
+            </div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    {/* Related Searches */}
+    <div style={{ marginTop: "3rem", padding: "2rem", background: "white", borderRadius: "12px", border: "2px solid var(--border)", boxShadow: "4px 4px 0 var(--border)" }}>
+      <h2 style={{ color: "var(--text)", marginBottom: "1rem", fontSize: "1.5rem", fontWeight: 900 }}>
+        Popular Searches for {topicName}
+      </h2>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+        {relatedSearches.slice(0, 12).map((search) => (
+          <span style={{ 
+            display: "inline-flex",
+            padding: "8px 16px",
+            background: "var(--card)",
+            border: "2px solid var(--border)",
+            borderRadius: "6px",
+            fontSize: "0.9rem",
+            fontWeight: 700,
+            color: "var(--text)"
+          }}>
+            {search}
+          </span>
+        ))}
+      </div>
     </div>
 
-    {/* Topic Description */}
-    <div style={{ marginTop: "2rem", padding: "2rem", background: "var(--card)", borderRadius: "12px", border: "1px solid var(--border)" }}>
-      <h2 style={{ color: "var(--text)", marginBottom: "1rem", fontSize: "1.5rem" }}>
-        About {topicName} Courses
-      </h2>
-      <p style={{ color: "var(--muted)", lineHeight: "1.6", fontSize: "1rem" }}>
-        {topicDescription}
+    {/* Back to Topics */}
+    <div style={{ marginTop: "3rem", textAlign: "center", padding: "2rem", background: "var(--card)", borderRadius: "12px", border: "2px solid var(--border)" }}>
+      <h3 style={{ color: "var(--text)", marginBottom: "1rem", fontSize: "1.3rem", fontWeight: 900 }}>
+        Explore More Course Topics
+      </h3>
+      <p style={{ color: "var(--muted)", marginBottom: "1.5rem", lineHeight: 1.6 }}>
+        Discover free courses in other categories. We have 50+ specialized topics with verified coupons.
       </p>
+      <a href="/topics" style={{
+        display: "inline-block",
+        padding: "14px 28px",
+        background: "var(--accent)",
+        color: "white",
+        border: "2px solid var(--border)",
+        boxShadow: "4px 4px 0 var(--border)",
+        borderRadius: "6px",
+        textDecoration: "none",
+        fontWeight: 900,
+        textTransform: "uppercase",
+        letterSpacing: "0.05em"
+      }}>
+        Browse All Topics →
+      </a>
     </div>
 
     {/* Pagination */}
@@ -315,4 +464,10 @@ const topics = [...new Set(allDeals.map(deal => deal.subcategory).filter(sub => 
       </div>
     )}
   </div>
+
+<style>
+  .faq-item[open] { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--border); }
+  .faq-item summary::-webkit-details-marker { display: none; }
+</style>
+
 </Layout>

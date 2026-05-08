@@ -88,192 +88,174 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
     canonical={`https://courseswyn.com/coupon/${deal.slug || deal.id}`}
     hideBreadcrumbs={true}
 >
-    <!-- Enhanced Structured Data for SEO -->
+    <!-- Enhanced Structured Data for SEO - Based on CourseSpeak Pattern -->
     <script type="application/ld+json" set:html={
         JSON.stringify({
             "@context": "https://schema.org",
-            "@type": "Course",
-            "name": deal.title,
-            "description": deal.seoDescription || deal.description,
-            "image": deal.seoOgImage || deal.image,
-            "thumbnailUrl": deal.seoOgImage || deal.image,
-            "provider": {
-                "@type": "Organization",
-                "name": deal.provider,
-                "url": deal.provider === "Udemy" ? "https://www.udemy.com" : deal.provider === "Coursera" ? "https://www.coursera.org" : undefined
-            },
-            "offers": {
-                "@type": "Offer",
-                "price": deal.price.toString(),
-                "priceCurrency": "USD",
-                "availability": "https://schema.org/InStock",
-                "url": deal.url,
-                "priceValidUntil": deal.expiresAt ? new Date(deal.expiresAt).toISOString().split('T')[0] : undefined,
-                "seller": {
-                    "@type": "Organization",
-                    "name": deal.provider
-                }
-            },
-            "aggregateRating": deal.rating ? {
-                "@type": "AggregateRating",
-                "ratingValue": deal.rating.toString(),
-                "reviewCount": Math.max(1, Math.round(deal.students ?? 0)),
-                "bestRating": "5",
-                "worstRating": "1"
-            } : undefined,
-            "creator": deal.instructor ? {
-                "@type": "Person",
-                "name": deal.instructor
-            } : undefined,
-            "educationalLevel": deal.level || "All Levels",
-            "teaches": (() => {
-                if (deal.skills && deal.skills.length > 0) return deal.skills.join(", ");
-                const extractedSkills = new Set<string>();
-                if (deal.category) extractedSkills.add(deal.category);
-                if (deal.subcategory) extractedSkills.add(deal.subcategory);
-                if (deal.learn && deal.learn.length > 0) {
-                    deal.learn.slice(0, 5).forEach(item => {
-                        const words = item.toLowerCase().split(' ');
-                        if (words.includes('python')) extractedSkills.add('Python');
-                        if (words.includes('javascript') || words.includes('js')) extractedSkills.add('JavaScript');
-                        if (words.includes('react')) extractedSkills.add('React');
-                        if (words.includes('html')) extractedSkills.add('HTML');
-                        if (words.includes('css')) extractedSkills.add('CSS');
-                        if (words.includes('data') && words.includes('analysis')) extractedSkills.add('Data Analysis');
-                        if (words.includes('machine') && words.includes('learning')) extractedSkills.add('Machine Learning');
-                        if (words.includes('web') && words.includes('development')) extractedSkills.add('Web Development');
-                        if (words.includes('mobile') && words.includes('development')) extractedSkills.add('Mobile Development');
-                    });
-                }
-                return Array.from(extractedSkills).slice(0, 10).join(", ") || deal.learn?.join(", ") || "";
-            })(),
-            "inLanguage": deal.language || "English",
-            "url": `https://courseswyn.com/coupon/${deal.slug || deal.id}`,
-            "datePublished": deal.createdAt ? new Date(deal.createdAt).toISOString().split('T')[0] : undefined,
-            "dateModified": deal.updatedAt ? new Date(deal.updatedAt).toISOString().split('T')[0] : undefined,
-            "timeRequired": deal.duration ? `PT${deal.duration.replace(/[^\d]/g, '')}H` : undefined,
-            "hasCourseInstance": {
-                "@type": "CourseInstance",
-                "courseMode": "online",
-                "instructor": deal.instructor ? {
-                    "@type": "Person",
-                    "name": deal.instructor
-                } : undefined
-            },
-            "about": [
-                deal.category ? {
-                    "@type": "Thing",
-                    "name": deal.category
-                } : null,
-                deal.subcategory ? {
-                    "@type": "Thing",
-                    "name": deal.subcategory
-                } : null
-            ].filter(Boolean),
-            "educationalCredentialAwarded": deal.category ? `${deal.category} Certificate` : undefined,
-            "occupationalCredentialAwarded": deal.category ? {
-                "@type": "EducationalOccupationalCredential",
-                "name": `${deal.category} Certification`,
-                "educationalLevel": "Professional Certificate"
-            } : undefined
-        })
-    } />
-
-    <!-- Product Schema for Rich Results -->
-    <script type="application/ld+json" set:html={
-        JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Product",
-            "name": deal.title,
-            "image": deal.seoOgImage || deal.image,
-            "description": deal.seoDescription || deal.description,
-            "brand": {
-                "@type": "Brand",
-                "name": deal.provider
-            },
-            "offers": {
-                "@type": "Offer",
-                "url": `https://courseswyn.com/coupon/${deal.slug || deal.id}`,
-                "priceCurrency": "USD",
-                "price": deal.price.toString(),
-                "priceValidUntil": deal.expiresAt ? new Date(deal.expiresAt).toISOString().split('T')[0] : undefined,
-                "availability": "https://schema.org/InStock",
-                "seller": {
-                    "@type": "Organization",
-                    "name": "CoursesWyn"
-                }
-            },
-            "aggregateRating": deal.rating ? {
-                "@type": "AggregateRating",
-                "ratingValue": deal.rating.toString(),
-                "reviewCount": Math.max(1, Math.round(deal.students ?? 0)),
-                "bestRating": "5",
-                "worstRating": "1"
-            } : undefined
-        })
-    } />
-
-    <!-- Breadcrumb Structured Data -->
-    <script type="application/ld+json" set:html={
-        JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            "itemListElement": [
+            "@graph": [
                 {
-                    "@type": "ListItem",
-                    "position": 1,
-                    "name": "Home",
-                    "item": "https://courseswyn.com"
-                },
-                {
-                    "@type": "ListItem",
-                    "position": 2,
-                    "name": "Udemy Coupon Code",
-                    "item": "https://courseswyn.com/udemy-coupon-code"
-                },
-                deal.category ? {
-                    "@type": "ListItem",
-                    "position": 3,
-                    "name": deal.category,
-                    "item": `https://courseswyn.com/categories/${deal.category.toLowerCase().replace(/\s+/g, '-')}`
-                } : null,
-                {
-                    "@type": "ListItem",
-                    "position": deal.category ? 4 : 3,
-                    "name": deal.title,
-                    "item": `https://courseswyn.com/coupon/${deal.slug || deal.id}`
-                }
-            ].filter(Boolean)
-        })
-    } />
-
-    <!-- Enhanced FAQ Structured Data for Featured Snippets -->
-    {(deal.faqs && deal.faqs.length > 0) && (
-        <script type="application/ld+json" set:html={
-            JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "FAQPage",
-                "mainEntity": deal.faqs.slice(0, 8).map((faq: any) => ({
-                    "@type": "Question",
-                    "name": faq.q,
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": faq.a.replace(/<[^>]*>/g, '').trim()
-                    }
-                })),
-                "publisher": {
-                    "@type": "Organization",
-                    "name": "CoursesWyn",
-                    "url": "https://courseswyn.com"
-                },
-                "about": {
                     "@type": "Course",
+                    "@id": `https://courseswyn.com/coupon/${deal.slug || deal.id}#course`,
                     "name": deal.title,
-                    "url": `https://courseswyn.com/coupon/${deal.slug || deal.id}`
+                    "description": deal.seoDescription || deal.description || `${deal.title} - Learn from expert instructors with verified coupons`,
+                    "url": `https://courseswyn.com/coupon/${deal.slug || deal.id}`,
+                    "image": deal.seoOgImage || deal.image || `https://courseswyn.com/logo.png`,
+                    "provider": {
+                        "@type": "Organization",
+                        "name": deal.provider || "Udemy",
+                        "url": deal.provider === "Udemy" ? "https://www.udemy.com" : `https://courseswyn.com`
+                    },
+                    "instructor": deal.instructor ? {
+                        "@type": "Person",
+                        "name": deal.instructor,
+                        "jobTitle": "Course Instructor",
+                        "affiliation": {
+                            "@type": "Organization",
+                            "name": deal.provider || "Udemy"
+                        }
+                    } : undefined,
+                    "offers": [
+                        {
+                            "@type": "Offer",
+                            "price": deal.price || 0,
+                            "priceCurrency": "USD",
+                            "availability": "https://schema.org/InStock",
+                            "validThrough": deal.expiresAt || undefined,
+                            "url": deal.url || `https://courseswyn.com/coupon/${deal.slug || deal.id}`,
+                            "seller": {
+                                "@type": "Organization",
+                                "name": deal.provider || "Udemy"
+                            }
+                        },
+                        deal.coupon ? {
+                            "@type": "Offer",
+                            "name": `${deal.title} - Coupon Deal`,
+                            "price": Math.max(0, (deal.price || 0) - ((deal.originalPrice || 0) - (deal.price || 0))),
+                            "priceCurrency": "USD",
+                            "availability": "https://schema.org/LimitedAvailability",
+                            "validThrough": deal.expiresAt || undefined,
+                            "url": deal.url || `https://courseswyn.com/coupon/${deal.slug || deal.id}`,
+                            "description": `Use coupon code ${deal.coupon} for discount on ${deal.title}`,
+                            "seller": {
+                                "@type": "Organization",
+                                "name": deal.provider || "Udemy"
+                            }
+                        } : null
+                    ].filter(Boolean),
+                    "aggregateRating": deal.rating ? {
+                        "@type": "AggregateRating",
+                        "ratingValue": deal.rating,
+                        "ratingCount": deal.students || 1,
+                        "bestRating": 5,
+                        "worstRating": 1
+                    } : undefined,
+                    "timeRequired": deal.duration ? `PT${deal.duration.replace(/[^\d]/g, '')}H` : undefined,
+                    "inLanguage": deal.language || "en",
+                    "teaches": deal.learn ? deal.learn.join(", ") : (deal.skills && deal.skills.length > 0 ? deal.skills.join(", ") : undefined),
+                    "educationalLevel": deal.level || "Beginner to Advanced",
+                    "educationalUse": "Professional Development",
+                    "datePublished": deal.createdAt ? new Date(deal.createdAt).toISOString() : new Date().toISOString(),
+                    "dateModified": deal.updatedAt ? new Date(deal.updatedAt).toISOString() : new Date().toISOString(),
+                    "expires": deal.expiresAt || undefined,
+                    "hasCourseInstance": {
+                        "@type": "CourseInstance",
+                        "courseMode": "online",
+                        "instructor": deal.instructor ? {
+                            "@type": "Person",
+                            "name": deal.instructor
+                        } : undefined
+                    }
+                },
+                {
+                    "@type": "BreadcrumbList",
+                    "itemListElement": [
+                        {
+                            "@type": "ListItem",
+                            "position": 1,
+                            "name": "Home",
+                            "item": "https://courseswyn.com"
+                        },
+                        {
+                            "@type": "ListItem",
+                            "position": 2,
+                            "name": "Deals",
+                            "item": "https://courseswyn.com"
+                        },
+                        deal.category ? {
+                            "@type": "ListItem",
+                            "position": 3,
+                            "name": deal.category,
+                            "item": `https://courseswyn.com/categories/${deal.category.toLowerCase().replace(/\s+/g, '-')}`
+                        } : null,
+                        {
+                            "@type": "ListItem",
+                            "position": deal.category ? 4 : 3,
+                            "name": deal.title,
+                            "item": `https://courseswyn.com/coupon/${deal.slug || deal.id}`
+                        }
+                    ].filter(Boolean)
+                },
+                ...(deal.faqs && deal.faqs.length > 0 ? [{
+                    "@type": "FAQPage",
+                    "@id": `https://courseswyn.com/coupon/${deal.slug || deal.id}#faq`,
+                    "mainEntity": deal.faqs.slice(0, 5).map((faq: any) => ({
+                        "@type": "Question",
+                        "name": faq.q,
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": faq.a.replace(/<[^>]*>/g, '').trim()
+                        }
+                    }))
+                }] : []),
+                {
+                    "@type": "WebPage",
+                    "@id": `https://courseswyn.com/coupon/${deal.slug || deal.id}#webpage`,
+                    "url": `https://courseswyn.com/coupon/${deal.slug || deal.id}`,
+                    "name": `${deal.title} - Udemy Coupon & Discount Code`,
+                    "description": `Get ${deal.title} with ${discountPercentage > 0 ? discountPercentage + '% off' : 'free access'} using verified coupon code. ${deal.students ? deal.students.toLocaleString() + ' students enrolled.' : ''} Limited time offer.`,
+                    "inLanguage": "en-US",
+                    "isPartOf": {
+                        "@type": "WebSite",
+                        "name": "CoursesWyn",
+                        "url": "https://courseswyn.com"
+                    },
+                    "datePublished": deal.createdAt ? new Date(deal.createdAt).toISOString() : new Date().toISOString(),
+                    "dateModified": deal.updatedAt ? new Date(deal.updatedAt).toISOString() : new Date().toISOString(),
+                    "publisher": {
+                        "@type": "Organization",
+                        "name": "CoursesWyn",
+                        "url": "https://courseswyn.com",
+                        "logo": {
+                            "@type": "ImageObject",
+                            "url": "https://courseswyn.com/logo.png"
+                        },
+                        "sameAs": [
+                            "https://www.facebook.com/courseswyn",
+                            "https://twitter.com/courseswyn"
+                        ]
+                    }
+                },
+                {
+                    "@type": "Organization",
+                    "@id": "https://courseswyn.com#organization",
+                    "name": "CoursesWyn",
+                    "url": "https://courseswyn.com",
+                    "logo": "https://courseswyn.com/logo.png",
+                    "description": "CoursesWyn provides verified Udemy coupons and discount codes for premium online courses. We help learners worldwide access quality education at affordable prices.",
+                    "foundingDate": "2024",
+                    "sameAs": [
+                        "https://www.facebook.com/courseswyn",
+                        "https://twitter.com/courseswyn"
+                    ],
+                    "contactPoint": {
+                        "@type": "ContactPoint",
+                        "contactType": "customer service",
+                        "availableLanguage": "English"
+                    }
                 }
-            })
-        } />
-    )}
+            ]
+        })
+    } />
 
     {
         /* We pass client:load to ensure interactivity (tabs, hydration) works immediately */

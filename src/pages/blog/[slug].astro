@@ -89,6 +89,11 @@ const relatedCourses = [
   }
 ];
 
+// Get author from post frontmatter or default to Andrew Derek
+const authorName = data.author || "Andrew Derek";
+const authorBio = (data as any).authorBio || "Expert in digital education and curriculum mapping with 8+ years of experience.";
+const authorInitials = authorName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+
 // Article structured data with subtle course mentions
 const articleSchema = {
   "@context": "https://schema.org",
@@ -100,10 +105,10 @@ const articleSchema = {
   dateModified: (data.updatedAt || data.pubDate).toISOString(),
   author: {
     "@type": "Person",
-    name: "Andrew Derek",
+    name: authorName,
     url: "https://courseswyn.com",
     jobTitle: "Lead Course Analyst",
-    description: "Expert in digital education and curriculum mapping with 8+ years of experience."
+    description: authorBio
   },
   publisher: {
     "@type": "Organization",
@@ -152,13 +157,26 @@ const structuredData = articleSchema;
       <div class="container" style={{ position: "relative", zIndex: 2 }}>
         
         {/* Breadcrumb */}
-        <nav style={{ marginBottom: "40px" }}>
-          <ol style={{ display: "flex", listStyle: "none", padding: 0, margin: 0, gap: "10px", fontSize: "0.85rem", fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            <li><a href="/" style={{ color: "inherit", textDecoration: "none" }}>Home</a></li>
+        <nav style={{ marginBottom: "40px" }} aria-label="Breadcrumb">
+          <ol style={{ display: "flex", listStyle: "none", padding: 0, margin: 0, gap: "10px", fontSize: "0.85rem", fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }} itemscope itemtype="https://schema.org/BreadcrumbList">
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+              <a href="/" style={{ color: "inherit", textDecoration: "none" }} itemprop="item">
+                <span itemprop="name">Home</span>
+              </a>
+              <meta itemprop="position" content="1" />
+            </li>
             <li>/</li>
-            <li><a href="/blog" style={{ color: "inherit", textDecoration: "none" }}>Guides</a></li>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+              <a href="/blog" style={{ color: "inherit", textDecoration: "none" }} itemprop="item">
+                <span itemprop="name">Blog</span>
+              </a>
+              <meta itemprop="position" content="2" />
+            </li>
             <li>/</li>
-            <li style={{ color: "var(--text)" }}>Article</li>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" style={{ color: "var(--text)", maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span itemprop="name" title={title}>{title.length > 40 ? title.substring(0, 40) + '...' : title}</span>
+              <meta itemprop="position" content="3" />
+            </li>
           </ol>
         </nav>
 
@@ -211,9 +229,9 @@ const structuredData = articleSchema;
                 border: "2px solid var(--border)", borderRadius: "6px",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 color: "white", fontWeight: 900, fontSize: "1.1rem"
-              }}>AD</div>
+              }}>{authorInitials}</div>
               <div>
-                <p style={{ margin: 0, fontWeight: 900, fontSize: "1rem", color: "var(--text)" }}>Andrew Derek</p>
+                <p style={{ margin: 0, fontWeight: 900, fontSize: "1rem", color: "var(--text)" }}>{authorName}</p>
                 <p style={{ margin: 0, fontSize: "0.75rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>Lead Analyst</p>
               </div>
             </div>
@@ -272,7 +290,7 @@ const structuredData = articleSchema;
           </div>
 
           <footer style={{ marginTop: "80px", paddingTop: "40px", borderTop: "2px solid var(--border)" }}>
-            <AuthorBox />
+            <AuthorBox name={authorName} bio={authorBio} />
           </footer>
         </main>
 
