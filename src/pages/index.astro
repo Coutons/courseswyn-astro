@@ -14,9 +14,13 @@ const featuredArticles = allBlogPosts
   .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime())
   .slice(0, 6);
 
-const featuredHero   = featuredArticles[0];
-const featuredSide   = featuredArticles.slice(1, 3);
+const featuredSide = featuredArticles.slice(0, 3);
 const remainingPosts = featuredArticles.slice(3, 6);
+
+// Manual hero article - Claude Code
+const heroArticle = await getCollection("blog").then(posts => 
+  posts.find(p => p.id === "best-udemy-claude-code-courses-2026")
+);
 
 const allDeals = await readDeals();
 const latestDeals = allDeals.slice(0, 6);
@@ -118,7 +122,7 @@ const topTopics = Object.entries(topicCounts)
         </div>
 
         {/* Right: Featured article card */}
-        {featuredHero && (
+        {heroArticle && (
           <div>
             <div style={{
               border: "2px solid var(--border)",
@@ -130,8 +134,8 @@ const topTopics = Object.entries(topicCounts)
             }} class="hero-card">
               <div style={{ height: "240px", overflow: "hidden", borderBottom: "2px solid var(--border)", position: "relative" }}>
                 <img
-                  src={typeof featuredHero.data.image === 'string' ? featuredHero.data.image : (featuredHero.data.image as any)?.src || '/og-image.jpg'}
-                  alt={featuredHero.data.title}
+                  src={typeof heroArticle.data.image === 'string' ? heroArticle.data.image : (heroArticle.data.image as any)?.src || '/og-image.jpg'}
+                  alt={heroArticle.data.title}
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
                 <div style={{
@@ -141,19 +145,19 @@ const topTopics = Object.entries(topicCounts)
                   padding: "3px 10px", fontSize: "0.68rem", fontWeight: 800,
                   textTransform: "uppercase", letterSpacing: "0.08em", borderRadius: "4px"
                 }}>
-                  {featuredHero.data.tags?.[0] || "Featured"}
+                  {heroArticle.data.tags?.[0] || "Featured"}
                 </div>
               </div>
               <div style={{ padding: "28px" }}>
                 <p style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "10px" }}>
-                  #{1} EDITOR'S PICK
+                  #1 EDITOR'S PICK
                 </p>
                 <h2 style={{ fontSize: "1.3rem", fontWeight: 900, lineHeight: 1.2, marginBottom: "16px", color: "var(--text)" }}>
-                  <a href={`/blog/${featuredHero.id}`} style={{ textDecoration: "none", color: "inherit" }}>
-                    {featuredHero.data.title}
+                  <a href={`/blog/${heroArticle.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+                    {heroArticle.data.title}
                   </a>
                 </h2>
-                <a href={`/blog/${featuredHero.id}`} style={{
+                <a href={`/blog/${heroArticle.id}`} style={{
                   display: "inline-flex", alignItems: "center", gap: "6px",
                   fontWeight: 800, fontSize: "0.88rem", color: "var(--accent)",
                   textDecoration: "none", textTransform: "uppercase", letterSpacing: "0.06em"
@@ -257,17 +261,17 @@ const topTopics = Object.entries(topicCounts)
               border: "2px solid var(--border)", borderRadius: "8px",
               overflow: "hidden", background: "var(--card)",
               boxShadow: "4px 4px 0 var(--border)",
-              display: "flex", flex: 1,
               transition: "all 0.15s ease"
             }} class="article-card">
-              <div style={{ width: "120px", flexShrink: 0, borderRight: "2px solid var(--border)", overflow: "hidden" }}>
+              <div style={{ height: "180px", overflow: "hidden", borderBottom: "2px solid var(--border)" }}>
                 <img
                   src={typeof post.data.image === 'string' ? post.data.image : (post.data.image as any)?.src || '/og-image.jpg'}
                   alt={post.data.title}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s ease" }}
+                  class="article-img"
                 />
               </div>
-              <div style={{ padding: "20px", flex: 1 }}>
+              <div style={{ padding: "20px" }}>
                 <span style={{
                   display: "inline-block", border: "1.5px solid var(--border)",
                   padding: "1px 8px", fontSize: "0.65rem", fontWeight: 800,
@@ -281,7 +285,10 @@ const topTopics = Object.entries(topicCounts)
                     {post.data.title}
                   </a>
                 </h3>
-                <a href={`/blog/${post.id}`} style={{ fontWeight: 700, color: "var(--accent)", textDecoration: "none", fontSize: "0.78rem" }}>
+                <p style={{ color: "var(--muted)", fontSize: "0.8rem", lineHeight: 1.5, marginBottom: "14px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                  {post.data.description}
+                </p>
+                <a href={`/blog/${post.id}`} style={{ fontWeight: 700, color: "var(--accent)", textDecoration: "none", fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                   Read →
                 </a>
               </div>
@@ -300,7 +307,7 @@ const topTopics = Object.entries(topicCounts)
               boxShadow: "4px 4px 0 var(--border)",
               transition: "all 0.15s ease"
             }} class="article-card">
-              <div style={{ height: "160px", overflow: "hidden", borderBottom: "2px solid var(--border)" }}>
+              <div style={{ height: "180px", overflow: "hidden", borderBottom: "2px solid var(--border)" }}>
                 <img
                   src={typeof post.data.image === 'string' ? post.data.image : (post.data.image as any)?.src || '/og-image.jpg'}
                   alt={post.data.title}
@@ -322,6 +329,9 @@ const topTopics = Object.entries(topicCounts)
                     {post.data.title}
                   </a>
                 </h3>
+                <p style={{ color: "var(--muted)", fontSize: "0.8rem", lineHeight: 1.5, marginBottom: "14px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                  {post.data.description}
+                </p>
                 <a href={`/blog/${post.id}`} style={{ fontWeight: 700, color: "var(--accent)", textDecoration: "none", fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Read →</a>
               </div>
             </article>
@@ -415,7 +425,194 @@ const topTopics = Object.entries(topicCounts)
     </div>
   </section>
 
-  <!-- ══ 7. FAQ ═════════════════════════════════════════════════════════════ -->
+  <!-- ══ 7. TESTIMONIALS ═══════════════════════════════════════════════════ -->
+  <section style={{ padding: "80px 0", background: "var(--card)", borderBottom: "2px solid var(--border)" }}>
+    <div class="container">
+      <div style={{ textAlign: "center", marginBottom: "48px" }}>
+        <p style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--muted)", marginBottom: "8px" }}>
+          Social Proof
+        </p>
+        <h2 style={{ fontSize: "2rem", fontWeight: 900, color: "var(--text)", margin: 0, letterSpacing: "-0.04em" }}>
+          What Learners Say<br/>
+          <span style={{ background: "var(--accent)", color: "white", padding: "0 8px" }}>About Us</span>
+        </h2>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "24px" }}>
+        {[
+          { name: "Sarah M.", role: "Frontend Developer", text: "Found the perfect React course here. Saved $200 compared to buying directly from Udemy. The course reviews are actually accurate!" },
+          { name: "James K.", role: "Data Analyst", text: "The AWS certification guide helped me pass my exam on the first try. The promo codes work every single time. Best resource for Udemy learners." },
+          { name: "Emily R.", role: "Career Changer", text: "Used CoursesWyn to find Python courses that actually taught me job skills. Got hired 3 months after completing the recommended learning path." }
+        ].map((testimonial, i) => (
+          <div style={{
+            border: "2px solid var(--border)", borderRadius: "8px",
+            padding: "32px", background: "var(--bg)",
+            boxShadow: "4px 4px 0 var(--border)"
+          }}>
+            <div style={{ fontSize: "2rem", color: "var(--accent)", marginBottom: "16px" }}>★</div>
+            <p style={{ fontSize: "0.95rem", lineHeight: 1.7, color: "var(--text)", marginBottom: "20px" }}>
+              {testimonial.text}
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{
+                width: "48px", height: "48px", borderRadius: "50%",
+                background: "var(--accent)", display: "flex",
+                alignItems: "center", justifyContent: "center",
+                color: "white", fontWeight: 800, fontSize: "1.2rem"
+              }}>
+                {testimonial.name[0]}
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, color: "var(--text)", fontSize: "0.95rem" }}>{testimonial.name}</div>
+                <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{testimonial.role}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 8. POPULAR COURSES BY CATEGORY ═══════════════════════════════════ -->
+  <section style={{ padding: "80px 0", background: "var(--bg)", borderBottom: "2px solid var(--border)" }}>
+    <div class="container">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "40px" }}>
+        <div>
+          <p style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--muted)", marginBottom: "8px" }}>
+            Trending Now
+          </p>
+          <h2 style={{ fontSize: "2rem", fontWeight: 900, color: "var(--text)", margin: 0, letterSpacing: "-0.04em" }}>
+            Popular Courses<br/>
+            <span style={{ background: "var(--accent)", color: "white", padding: "0 8px" }}>by Category</span>
+          </h2>
+        </div>
+        <a href="/blog" class="btn btn-outline" style={{ fontSize: "0.85rem", padding: "10px 20px" }}>All Categories →</a>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
+        {[
+          { name: "React & Next.js", count: "50+ courses", icon: "⚛️", link: "/blog/best-react-nextjs-courses-2026" },
+          { name: "AWS Certification", count: "40+ courses", icon: "☁️", link: "/blog/best-aws-certification-courses-2026" },
+          { name: "SQL & Databases", count: "35+ courses", icon: "🗄️", link: "/blog/best-sql-courses-2026" },
+          { name: "Python Programming", count: "60+ courses", icon: "🐍", link: "/blog/top-10-python-courses-on-udemy" },
+          { name: "Machine Learning", count: "45+ courses", icon: "🤖", link: "/blog/top-ai-and-machine-learning-courses-on-udemy-2026" },
+          { name: "Web Development", count: "80+ courses", icon: "🌐", link: "/blog/best-udemy-courses-2026" },
+          { name: "Data Science", count: "55+ courses", icon: "📊", link: "/blog/best-data-science-courses-udemy" },
+          { name: "Cybersecurity", count: "30+ courses", icon: "🔒", link: "/blog/best-udemy-cybersecurity-courses-with-ai-integration-for-2026" }
+        ].map((cat, i) => (
+          <a href={cat.link} style={{
+            textDecoration: "none", display: "block"
+          }}>
+            <div style={{
+              border: "2px solid var(--border)", borderRadius: "8px",
+              padding: "24px", background: "var(--card)",
+              boxShadow: "4px 4px 0 var(--border)",
+              transition: "all 0.15s ease",
+              height: "100%"
+            }} class="category-card">
+              <div style={{ fontSize: "2.5rem", marginBottom: "16px" }}>{cat.icon}</div>
+              <h3 style={{ fontSize: "1rem", fontWeight: 800, color: "var(--text)", marginBottom: "8px", margin: "0 0 8px" }}>
+                {cat.name}
+              </h3>
+              <p style={{ fontSize: "0.8rem", color: "var(--muted)", margin: 0 }}>{cat.count}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 9. LEARNING PATHS ══════════════════════════════════════════════════ -->
+  <section style={{ padding: "80px 0", background: "var(--text)", borderBottom: "2px solid var(--border)" }}>
+    <div class="container">
+      <div style={{ textAlign: "center", marginBottom: "48px" }}>
+        <p style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--accent)", marginBottom: "8px" }}>
+          Career Guidance
+        </p>
+        <h2 style={{ fontSize: "2rem", fontWeight: 900, color: "white", margin: 0, letterSpacing: "-0.04em" }}>
+          Learning Paths<br/>
+          <span style={{ background: "var(--accent)", color: "white", padding: "0 8px" }}>to Your Dream Job</span>
+        </h2>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0" }}>
+        {[
+          { title: "Frontend Developer", time: "4-6 months", courses: "5 courses", desc: "HTML → CSS → JavaScript → React → Next.js", link: "/blog/best-react-nextjs-courses-2026" },
+          { title: "Backend Developer", time: "5-7 months", courses: "6 courses", desc: "Node.js → Express → MongoDB → PostgreSQL → AWS", link: "/blog/best-aws-certification-courses-2026" },
+          { title: "Data Scientist", time: "6-9 months", courses: "7 courses", desc: "Python → SQL → Machine Learning → Deep Learning → AI", link: "/blog/best-data-science-courses-udemy" }
+        ].map((path, i) => (
+          <div style={{
+            padding: "48px 36px",
+            borderRight: i < 2 ? "2px solid rgba(255,255,255,0.12)" : "none"
+          }}>
+            <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--accent)", display: "block", marginBottom: "20px", textTransform: "uppercase", letterSpacing: "0.15em" }}>
+              PATH {i + 1}
+            </span>
+            <h3 style={{ fontSize: "1.3rem", fontWeight: 900, color: "white", marginBottom: "12px", letterSpacing: "-0.03em" }}>
+              {path.title}
+            </h3>
+            <div style={{ display: "flex", gap: "16px", marginBottom: "16px" }}>
+              <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}>⏱ {path.time}</span>
+              <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}>📚 {path.courses}</span>
+            </div>
+            <p style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.6, fontSize: "0.92rem", marginBottom: "20px", margin: "0 0 20px" }}>
+              {path.desc}
+            </p>
+            <a href={path.link} style={{
+              display: "inline-block", background: "var(--accent)", color: "white",
+              padding: "10px 20px", fontWeight: 700, fontSize: "0.85rem",
+              textDecoration: "none", textTransform: "uppercase", letterSpacing: "0.06em"
+            }}>
+              Start Path →
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 10. PLATFORM COMPARISONS ═════════════════════════════════════════════ -->
+  <section style={{ padding: "80px 0", background: "var(--bg)" }}>
+    <div class="container">
+      <div style={{ textAlign: "center", marginBottom: "48px" }}>
+        <p style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--muted)", marginBottom: "8px" }}>
+          Make Informed Choices
+        </p>
+        <h2 style={{ fontSize: "2rem", fontWeight: 900, color: "var(--text)", margin: 0, letterSpacing: "-0.04em" }}>
+          Platform<br/>
+          <span style={{ background: "var(--accent)", color: "white", padding: "0 8px" }}>Comparisons</span>
+        </h2>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "24px" }}>
+        {[
+          { title: "Udemy vs Coursera", desc: "Which platform offers better value for your learning goals? We compare pricing, course quality, and certificates.", link: "/blog/udemy-vs-coursera-vs-pluralsight" },
+          { title: "Udemy vs LinkedIn Learning", desc: "Corporate training vs individual learning. Find out which platform suits your needs better.", link: "/blog/udemy-vs-linkedin-learning" },
+          { title: "Udemy vs Pluralsight", desc: "Technical skills focus. Compare course libraries, pricing models, and learning paths.", link: "/blog/udemy-vs-coursera-vs-pluralsight" },
+          { title: "Udemy vs Skillshare", desc: "Creative skills vs technical skills. Which platform has better courses for your goals?", link: "/blog" }
+        ].map((comp, i) => (
+          <a href={comp.link} style={{
+            textDecoration: "none", display: "block"
+          }}>
+            <div style={{
+              border: "2px solid var(--border)", borderRadius: "8px",
+              padding: "28px", background: "var(--card)",
+              boxShadow: "4px 4px 0 var(--border)",
+              transition: "all 0.15s ease"
+            }} class="comparison-card">
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 900, color: "var(--text)", marginBottom: "12px", margin: "0 0 12px" }}>
+                {comp.title}
+              </h3>
+              <p style={{ color: "var(--muted)", fontSize: "0.9rem", lineHeight: 1.6, margin: 0 }}>
+                {comp.desc}
+              </p>
+              <div style={{ marginTop: "16px", fontWeight: 700, color: "var(--accent)", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Read Comparison →
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 12. FAQ ═════════════════════════════════════════════════════════════ -->
   <section style={{ padding: "80px 0", background: "var(--bg)" }}>
     <div class="container" style={{ maxWidth: "900px" }}>
       <h2 style={{ fontSize: "2rem", fontWeight: 900, marginBottom: "48px", letterSpacing: "-0.04em" }}>
@@ -447,6 +644,8 @@ const topTopics = Object.entries(topicCounts)
     .hero-card:hover { transform: translate(-3px, -3px); box-shadow: 11px 11px 0 var(--border) !important; }
     .article-card:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--border) !important; }
     .article-card:hover .article-img { transform: scale(1.04); }
+    .category-card:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--border) !important; }
+    .comparison-card:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--border) !important; }
     .faq-item:hover h3 { color: var(--accent); }
 
     @media (max-width: 900px) {
@@ -454,9 +653,12 @@ const topTopics = Object.entries(topicCounts)
       section > .container > div[style*="grid-template-columns: 1.4fr 1fr"] { grid-template-columns: 1fr !important; }
       section > .container > div[style*="repeat(3, 1fr)"] { grid-template-columns: 1fr !important; }
       section > .container > div[style*="repeat(3, 1fr)"] > div { border-right: none !important; border-top: 2px solid rgba(255,255,255,0.12); }
+      section > .container > div[style*="repeat(4, 1fr)"] { grid-template-columns: repeat(2, 1fr) !important; }
+      section > .container > div[style*="repeat(2, 1fr)"] { grid-template-columns: 1fr !important; }
     }
     @media (max-width: 600px) {
       section > .container > div[style*="repeat(3, 1fr)"] + div { grid-template-columns: 1fr !important; }
+      section > .container > div[style*="repeat(4, 1fr)"] { grid-template-columns: 1fr !important; }
     }
   </style>
 
