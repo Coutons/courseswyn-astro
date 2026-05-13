@@ -1,133 +1,73 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import DealCard from '../../components/DealCard.astro';
-import type { Deal } from '../../types/deal.d.ts';
+import type { Deal } from '../../types/deal';
 import { readDeals } from '../../lib/store';
 import { parseInstructors, createInstructorSlug } from '../../lib/instructors';
-interface InstructorData {
-  name: string;
-  slug: string;
-  courses: Deal[];
-  totalStudents: number;
-  avgRating: number;
-  categories: string[];
-  totalReviews: number;
-  courseCount: number;
-  providers: string[];
-}
 
-// ─────────────────────────────────────────────
-// TYPES
-// ─────────────────────────────────────────────
-interface Instructor {
-  name: string;
-  courses: Deal[];
-  totalStudents: number;
-  avgRating: number;
-  categories: string[];
-  totalReviews: number;
-  provider: string;
-  courseCount: number;
-}
+const siteUrl = 'https://courseswyn.com';
 
-// ─────────────────────────────────────────────
-// GENERATE STATIC PATHS
-// ─────────────────────────────────────────────
 export async function getStaticPaths() {
   const deals: Deal[] = await readDeals();
-  const instructorMap = new Map<string, Deal[]>();
+  const slugToName = new Map<string, string>();
 
-  deals.forEach((deal: Deal) => {
-    if (!deal.instructor) return;
-    if (!instructorMap.has(deal.instructor)) {
-      instructorMap.set(deal.instructor, []);
-    }
-    instructorMap.get(deal.instructor)!.push(deal);
-  });
-
-  const paths = [];
-  for (const [name, courses] of instructorMap.entries()) {
-    if (courses.length >= 3) {
+  for (const deal of deals) {
+    if (!deal.instructor) continue;
+    for (const name of parseInstructors(deal.instructor)) {
       const slug = createInstructorSlug(name);
-      paths.push({
-        params: { instructor: slug },
-        props: { instructorName: name, instructorSlug: slug }
-      });
+      if (!slug) continue;
+      if (!slugToName.has(slug)) {
+        slugToName.set(slug, name);
+      }
     }
   }
-  return paths;
+
+  return Array.from(slugToName.entries()).map(([instructor, instructorName]) => ({
+    params: { instructor },
+    props: { instructorName },
+  }));
 }
 
-// ─────────────────────────────────────────────
-// PAGE PROPS
-// ─────────────────────────────────────────────
-const { instructorName, instructorSlug } = Astro.props;
-const { instructor } = Astro.params;
+const { instructorName: instructorNameProp } = Astro.props as { instructorName?: string };
+const slugParam = Astro.params.instructor ?? '';
 
-let finalInstructorName = instructorName;
-if (!finalInstructorName && instructor) {
-  const deals: Deal[] = await readDeals();
-  const slugToName = new Map<string, string>();
-  deals.forEach(deal => {
-    if (deal.instructor) {
-      slugToName.set(createInstructorSlug(deal.instructor), deal.instructor);
+const deals: Deal[] = await readDeals();
+
+function dealMatchesInstructorSlug(deal: Deal, targetSlug: string): boolean {
+  if (!deal.instructor) return false;
+  return parseInstructors(deal.instructor).some((n) => createInstructorSlug(n) === targetSlug);
+}
+
+let instructorName = instructorNameProp;
+if (!instructorName && slugParam) {
+  for (const deal of deals) {
+    if (!deal.instructor) continue;
+    for (const n of parseInstructors(deal.instructor)) {
+      if (createInstructorSlug(n) === slugParam) {
+        instructorName = n;
+        break;
+      }
     }
-  });
-  finalInstructorName = slugToName.get(instructor) || instructor;
+    if (instructorName) break;
+  }
 }
 
-if (!finalInstructorName) {
+if (!instructorName || !slugParam) {
   return Astro.redirect('/instructors');
 }
 
-const deals: Deal[] = await readDeals();
-const instructorCourses = deals.filter(d => d.instructor === finalInstructorName);
+const instructorCourses = deals
+  .filter((d) => dealMatchesInstructorSlug(d, slugParam))
+  .sort((a, b) => (b.students ?? 0) - (a.students ?? 0));
 
-// ─────────────────────────────────────────────
-// DATA AGGREGATION
-// ─────────────────────────────────────────────
-const instructorMap = new Map<string, Instructor>();
+if (instructorCourses.length === 0) {
+  return Astro.redirect('/instructors');
+}
 
-deals.forEach((deal: Deal) => {
-  if (!deal.instructor) return;
+const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
+const currentYear = new Date().getFullYear();
+const canonicalUrl = `${siteUrl}/instructor/${slugParam}`;
 
-  if (!instructorMap.has(deal.instructor)) {
-    instructorMap.set(deal.instructor, {
-      name: deal.instructor,
-      courses: [],
-      totalStudents: 0,
-      avgRating: 0,
-      categories: [],
-      totalReviews: 0,
-      provider: deal.provider || 'Udemy',
-      courseCount: 0,
-    });
-  }
-
-  const inst = instructorMap.get(deal.instructor)!;
-  inst.courses.push(deal);
-  if (deal.students) inst.totalStudents += deal.students;
-  if (deal.rating) {
-    const count = inst.courses.length;
-    inst.avgRating = (inst.avgRating * (count - 1) + deal.rating) / count;
-    inst.totalReviews += deal.students || 0;
-  }
-  if (deal.category && !inst.categories.includes(deal.category)) {
-    inst.categories.push(deal.category);
-  }
-});
-
-const instructors: Instructor[] = Array.from(instructorMap.values())
-  .map((inst) => ({
-    ...inst,
-    courseCount: inst.courses.length,
-    avgRating: Number(inst.avgRating.toFixed(1)),
-  }))
-  .sort((a, b) => b.totalStudents - a.totalStudents);
-
-// ─────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────
 function getMaxDiscount(courses: Deal[]): number {
   return Math.max(
     0,
@@ -143,188 +83,142 @@ function hasFree(courses: Deal[]): boolean {
 }
 
 function getInitials(name: string): string {
-  return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
-}
-
-function getTopDeals(courses: Deal[]): Deal[] {
-  return courses
-    .filter((c) => c.originalPrice && c.price !== undefined && c.price < c.originalPrice)
-    .sort((a, b) => {
-      const da = Math.round(100 - ((a.price ?? 0) / (a.originalPrice ?? 1)) * 100);
-      const db = Math.round(100 - ((b.price ?? 0) / (b.originalPrice ?? 1)) * 100);
-      return db - da;
-    })
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
     .slice(0, 2);
 }
 
-// ─────────────────────────────────────────────
-// AGGREGATED STATS
-// ─────────────────────────────────────────────
-const totalCourses  = instructors.reduce((s, i) => s + i.courseCount, 0);
-const totalStudents = instructors.reduce((s, i) => s + i.totalStudents, 0);
-const avgRating     = (
-  instructors.reduce((s, i) => s + i.avgRating, 0) / (instructors.length || 1)
-).toFixed(1);
-const allCategories = Array.from(new Set(instructors.flatMap((i) => i.categories))).sort();
-const totalFree     = instructors.reduce((s, i) => s + (hasFree(i.courses) ? 1 : 0), 0);
-
-const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
-const currentYear  = new Date().getFullYear();
-
-// ─────────────────────────────────────────────
-// SEO
-// ─────────────────────────────────────────────
-const siteUrl      = 'https://courseswyn.com';
-const canonicalUrl = `${siteUrl}/instructors`;
-const title        = `Udemy Instructor Promo Codes & Verified Coupons ${currentMonth} ${currentYear} | CoursesWyn`;
-const description  = `Browse ${instructors.length} verified Udemy instructors offering ${totalCourses}+ daily deals. Get verified promo codes and discount vouchers updated daily.`;
-
-const faqs = [
-  {
-    q: 'Who are the top Udemy instructors with free coupons?',
-    a: `CoursesWyn features ${instructors.length} verified Udemy instructors who regularly share free and discounted coupons. Top instructors include those in development, data science, design, and business.`,
-  },
-  {
-    q: 'How do I get a free course from a Udemy instructor?',
-    a: 'Click "View All Coupons" on any instructor card to see their latest verified deals. Click the coupon link — it redirects to Udemy with the discount automatically applied.',
-  }
-];
+const totalStudents = instructorCourses.reduce((s, c) => s + (c.students ?? 0), 0);
+const rated = instructorCourses.filter((c) => typeof c.rating === 'number' && isFinite(c.rating!));
+const avgRating =
+  rated.length > 0
+    ? (rated.reduce((s, c) => s + (c.rating as number), 0) / rated.length).toFixed(1)
+    : '—';
+const provider = instructorCourses[0]?.provider || 'Udemy';
+const maxDisc = getMaxDiscount(instructorCourses);
+const title = `${instructorName} — Udemy Coupons & Promo Codes ${currentMonth} ${currentYear} | CoursesWyn`;
+const description = `Verified ${instructorCourses.length} Udemy coupon${instructorCourses.length === 1 ? '' : 's'} from ${instructorName}. ${provider} deals updated daily — up to ${maxDisc}% off${hasFree(instructorCourses) ? ', including free courses' : ''}.`;
 ---
 
 <Layout title={title} description={description} canonical={canonicalUrl}>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+            { '@type': 'ListItem', position: 2, name: 'Instructors', item: `${siteUrl}/instructors` },
+            { '@type': 'ListItem', position: 3, name: instructorName, item: canonicalUrl },
+          ],
+        },
+        {
+          '@type': 'CollectionPage',
+          url: canonicalUrl,
+          name: title,
+          description,
+          mainEntity: {
+            '@type': 'ItemList',
+            numberOfItems: instructorCourses.length,
+          },
+        },
+      ],
+    })}
+  />
+
   <main style="background: var(--bg); color: var(--text);">
-    
-    {/* ── HERO ── */}
-    <section style="padding: 100px 0 80px; border-bottom: 2px solid var(--border); background: var(--card);">
-      <div class="container">
-        <div style="display: inline-block; background: var(--accent); color: white; padding: 4px 14px; border: 2px solid var(--border); box-shadow: 3px 3px 0 var(--border); border-radius: 4px; fontSize: 0.75rem; fontWeight: 800; marginBottom: 32px; textTransform: uppercase; letterSpacing: 0.1em;">
-          Updated {currentMonth} {currentYear}
+    <section style="padding: 100px 0 60px; border-bottom: 2px solid var(--border); background: var(--card);">
+      <div class="inst-container">
+        <nav style="font-size: 0.85rem; font-weight: 600; color: var(--muted); margin-bottom: 24px;">
+          <a href="/" style="color: var(--accent); text-decoration: none;">Home</a>
+          <span aria-hidden="true"> / </span>
+          <a href="/instructors" style="color: var(--accent); text-decoration: none;">Instructors</a>
+          <span aria-hidden="true"> / </span>
+          <span style="color: var(--text);">{instructorName}</span>
+        </nav>
+
+        <div
+          style="display: inline-block; background: var(--accent); color: white; padding: 4px 14px; border: 2px solid var(--border); box-shadow: 3px 3px 0 var(--border); border-radius: 4px; font-size: 0.75rem; font-weight: 800; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em;"
+        >
+          {provider} · {currentMonth} {currentYear}
         </div>
 
-        <h1 style={{ 
-          fontSize: "clamp(2.5rem, 7vw, 4.5rem)", 
-          fontWeight: 900, 
-          lineHeight: 1.05, 
-          letterSpacing: "-0.04em",
-          marginBottom: "32px"
-        }}>
-          Instructor<br/>
-          <span style={{ background: "var(--accent)", color: "white", padding: "0 10px" }}>Promo Codes.</span>
-        </h1>
-        
-        <p style={{ 
-          fontSize: "clamp(1.1rem, 3vw, 1.3rem)", 
-          color: "var(--muted)", 
-          maxWidth: "800px", 
-          lineHeight: 1.6,
-          fontWeight: 500,
-          marginBottom: "48px"
-        }}>
-          Exclusive discount codes from <strong>{instructors.length} expert instructors</strong>. 
-          Browse <strong>{totalCourses.toLocaleString()} courses</strong> with up to <strong>100% off</strong> — verified daily.
-        </p>
-
-        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-          {[
-            { v: instructors.length, l: "Instructors" },
-            { v: totalCourses.toLocaleString(), l: "Courses" },
-            { v: totalFree, l: "Free Deals" }
-          ].map(s => (
-            <div style="background: white; border: 2px solid var(--border); padding: 12px 24px; border-radius: 4px; box-shadow: 4px 4px 0 var(--border); display: flex; flex-direction: column; align-items: center;">
-              <span style="font-size: 1.5rem; font-weight: 900; color: var(--accent);">{s.v}</span>
-              <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--muted);">{s.l}</span>
+        <div style="display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap;">
+          <div
+            style="width: 80px; height: 80px; min-width: 80px; background: var(--accent); border: 2px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 1.75rem; box-shadow: 4px 4px 0 var(--border);"
+          >
+            {getInitials(instructorName)}
+          </div>
+          <div style="flex: 1; min-width: 220px;">
+            <h1
+              style="font-size: clamp(2rem, 6vw, 3.25rem); font-weight: 900; line-height: 1.05; letter-spacing: -0.04em; margin: 0 0 12px;"
+            >
+              {instructorName}
+            </h1>
+            <p
+              style="font-size: 1.05rem; color: var(--muted); line-height: 1.6; font-weight: 500; margin: 0 0 24px; max-width: 720px;"
+            >
+              {instructorCourses.length} active coupon{instructorCourses.length === 1 ? '' : 's'} with verified Udemy discounts.
+            </p>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <div
+                style="background: white; border: 2px solid var(--border); padding: 10px 18px; border-radius: 4px; box-shadow: 3px 3px 0 var(--border);"
+              >
+                <span style="font-size: 1.25rem; font-weight: 900; color: var(--accent);">{instructorCourses.length}</span>
+                <span style="display: block; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--muted);">Coupons</span>
+              </div>
+              <div
+                style="background: white; border: 2px solid var(--border); padding: 10px 18px; border-radius: 4px; box-shadow: 3px 3px 0 var(--border);"
+              >
+                <span style="font-size: 1.25rem; font-weight: 900; color: var(--accent);">{totalStudents.toLocaleString()}</span>
+                <span style="display: block; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--muted);">Students (sum)</span>
+              </div>
+              <div
+                style="background: white; border: 2px solid var(--border); padding: 10px 18px; border-radius: 4px; box-shadow: 3px 3px 0 var(--border);"
+              >
+                <span style="font-size: 1.25rem; font-weight: 900; color: var(--accent);">{avgRating}</span>
+                <span style="display: block; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--muted);">Avg rating</span>
+              </div>
+              <div
+                style="background: white; border: 2px solid var(--border); padding: 10px 18px; border-radius: 4px; box-shadow: 3px 3px 0 var(--border);"
+              >
+                <span style="font-size: 1.25rem; font-weight: 900; color: var(--accent);">Up to {maxDisc}%</span>
+                <span style="display: block; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--muted);">Max off</span>
+              </div>
+              {hasFree(instructorCourses) && (
+                <div
+                  style="background: #22c55e; color: white; border: 2px solid var(--border); padding: 10px 18px; border-radius: 4px; box-shadow: 3px 3px 0 var(--border); align-self: center; font-size: 0.75rem; font-weight: 900; text-transform: uppercase;"
+                >
+                  Free deals
+                </div>
+              )}
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding: 64px 0 80px;">
+      <div class="inst-container">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 28px;">
+          {instructorCourses.map((deal) => (
+            <DealCard deal={deal} />
           ))}
         </div>
       </div>
     </section>
-
-    {/* ── GRID ── */}
-    <section style="padding: 80px 0;">
-      <div class="container">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 32px;">
-          {instructors.map((instructor) => {
-            const maxDisc = getMaxDiscount(instructor.courses);
-            const free = hasFree(instructor.courses);
-            const topDeals = getTopDeals(instructor.courses);
-
-            return (
-              <article class="neo-inst-card">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
-                  <div style="width: 64px; height: 64px; background: var(--accent); border: 2px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 1.5rem; box-shadow: 3px 3px 0 var(--border);">
-                    {getInitials(instructor.name)}
-                  </div>
-                  {free && (
-                    <span style="background: #22c55e; color: white; padding: 4px 12px; border: 2px solid var(--border); border-radius: 4px; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; box-shadow: 2px 2px 0 var(--border);">FREE DEALS</span>
-                  )}
-                </div>
-
-                <h3 style="font-size: 1.3rem; font-weight: 900; margin: 0 0 8px; color: var(--text);">{instructor.name}</h3>
-                <p style="font-size: 0.85rem; color: var(--muted); font-weight: 600; margin: 0 0 24px;">{instructor.provider} · {instructor.courseCount} Courses</p>
-
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 2px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 24px; box-shadow: 2px 2px 0 var(--border);">
-                  {[
-                    { l: "Students", v: instructor.totalStudents > 1000 ? (instructor.totalStudents/1000).toFixed(1) + 'k' : instructor.totalStudents },
-                    { l: "Rating", v: instructor.avgRating + "★" },
-                    { l: "Max Off", v: maxDisc + "%" }
-                  ].map(s => (
-                    <div style="background: white; padding: 12px 8px; textAlign: center;">
-                      <div style="font-size: 0.95rem; font-weight: 900; color: var(--text);">{s.v}</div>
-                      <div style="font-size: 0.65rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">{s.l}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {topDeals.length > 0 && (
-                  <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px;">
-                    {topDeals.map(deal => (
-                      <a href={`/coupon/${deal.slug || deal.id}`} style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 4px; text-decoration: none; color: var(--text); font-size: 0.85rem; font-weight: 700; transition: all 0.15s;">
-                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{deal.title}</span>
-                        <span style="color: var(--accent); flex-shrink: 0; margin-left: 8px;">→</span>
-                      </a>
-                    ))}
-                  </div>
-                )}
-
-                <a href={`/search?q=${encodeURIComponent(instructor.name)}`} class="btn" style="width: 100%; display: block; text-align: center; padding: 14px; font-size: 0.9rem;">
-                  VIEW ALL COUPONS
-                </a>
-              </article>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-
-    {/* ── FAQ ── */}
-    <section style="padding: 80px 0; border-top: 2px solid var(--border); background: var(--card);">
-      <div class="container" style="max-width: 800px;">
-        <h2 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 48px; text-align: center; letter-spacing: -0.02em;">Common Questions.</h2>
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-          {faqs.map(faq => (
-            <details class="neo-details">
-              <summary style="padding: 24px; font-weight: 900; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem;">
-                {faq.q}
-                <span style="color: var(--accent); font-size: 1.5rem;">+</span>
-              </summary>
-              <div style="padding: 0 24px 24px; color: var(--muted); font-size: 1rem; line-height: 1.6; font-weight: 500;">{faq.a}</div>
-            </details>
-          ))}
-        </div>
-      </div>
-    </section>
-
   </main>
 
   <style>
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-    .neo-inst-card {
-      background: white; border: 2px solid var(--border); border-radius: 8px; padding: 32px;
-      box-shadow: 6px 6px 0 var(--border); transition: all 0.2s;
+    .inst-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
     }
-    .neo-inst-card:hover { transform: translate(-4px, -4px); box-shadow: 10px 10px 0 var(--border); border-color: var(--accent); }
-    .neo-details { border: 2px solid var(--border); border-radius: 8px; background: white; margin-bottom: 12px; box-shadow: 4px 4px 0 var(--border); }
-    .neo-details[open] { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--border); }
-    summary::-webkit-details-marker { display: none; }
   </style>
 </Layout>
