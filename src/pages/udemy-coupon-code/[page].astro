@@ -1,5 +1,5 @@
 ---
-export const prerender = false;
+export const prerender = true;
 import Layout from "../../layouts/Layout.astro";
 import DealCard from "../../components/DealCard.astro";
 import { readDeals } from "../../lib/store";
@@ -7,10 +7,11 @@ import { readDeals } from "../../lib/store";
 export async function getStaticPaths() {
   const allDeals = await readDeals();
   const PAGE_SIZE = 12;
-  const totalPages = Math.ceil(allDeals.length / PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(allDeals.length / PAGE_SIZE));
+  const extraPages = Math.max(0, totalPages - 1);
 
-  // Start from page 2 — page 1 is handled by /deals.astro
-  return Array.from({ length: totalPages - 1 }, (_, i) => ({
+  // Start from page 2 — page 1 is handled by udemy-coupon-code/index.astro
+  return Array.from({ length: extraPages }, (_, i) => ({
     params: { page: String(i + 2) }
   }));
 }
