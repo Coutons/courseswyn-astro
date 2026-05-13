@@ -43,7 +43,7 @@ export default function RelatedList({ items, initial = 4, step = 4 }: { items: I
                       <span className="pill" style={{ background: "#3b82f6", color: "#0b0d12", fontWeight: 800 }}>New</span>
                     )}
                     {isBestSeller(r.price, r.originalPrice, r.students) && (
-                      <span className="pill" style={{ background: "#f59e0b", color: "#0b0d12", fontWeight: 800 }}>Best Seller</span>
+                      <span className="pill" style={{ background: "#10b981", color: "#0b0d12", fontWeight: 800 }}>Best Seller</span>
                     )}
                   </div>
                 </div>

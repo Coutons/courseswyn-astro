@@ -1,4 +1,5 @@
 ---
+export const prerender = false;
 import Layout from "../../layouts/Layout.astro";
 import DealCard from "../../components/DealCard.astro";
 import { readDeals } from "../../lib/store";
@@ -18,18 +19,28 @@ const allDeals = await readDeals();
 const PAGE_SIZE = 12;
 
 const currentPage = Math.max(2, parseInt(Astro.params.page || '2', 10));
+const selectedLanguage = Astro.url.searchParams.get('language');
 
-const totalPages = Math.ceil(allDeals.length / PAGE_SIZE);
+// Filter deals by language if selected
+let filteredDeals = allDeals;
+if (selectedLanguage) {
+  filteredDeals = allDeals.filter((d: any) => 
+    d.language && d.language.toLowerCase() === selectedLanguage.toLowerCase()
+  );
+}
+
+const totalPages = Math.ceil(filteredDeals.length / PAGE_SIZE);
 const startIndex = (currentPage - 1) * PAGE_SIZE;
 const endIndex = startIndex + PAGE_SIZE;
-const currentItems = allDeals.slice(startIndex, endIndex);
+const currentItems = filteredDeals.slice(startIndex, endIndex);
 
 // Pagination URLs
 const siteUrl = "https://courseswyn.com";
 const baseDealsUrl = `${siteUrl}/udemy-coupon-code`;
-const currentUrl = `${baseDealsUrl}/${currentPage}`;
-const prevUrl = currentPage === 2 ? baseDealsUrl : `${baseDealsUrl}/${currentPage - 1}`;
-const nextUrl = currentPage < totalPages ? `${baseDealsUrl}/${currentPage + 1}` : null;
+const langQuery = selectedLanguage ? `?language=${encodeURIComponent(selectedLanguage)}` : "";
+const currentUrl = `${baseDealsUrl}/${currentPage}${langQuery}`;
+const prevUrl = currentPage === 2 ? `${baseDealsUrl}${langQuery}` : `${baseDealsUrl}/${currentPage - 1}${langQuery}`;
+const nextUrl = currentPage < totalPages ? `${baseDealsUrl}/${currentPage + 1}${langQuery}` : null;
 
 // SEO
 const currentDate = new Date();
@@ -41,8 +52,9 @@ const currentYear = currentDate.getFullYear();
 const totalDeals = allDeals.length;
 const freeDeals = allDeals.filter((d: any) => d.price === 0 || d.price === null).length;
 
-const pageTitle = `Udemy Deals Page ${currentPage} of ${totalPages} — Free Coupons | CoursesWyn`;
-const pageDescription = `Page ${currentPage} of verified Udemy coupons. Browse ${totalDeals}+ free courses and 100% off deals updated daily — ${currentMonth} ${currentYear}.`;
+const langSuffix = selectedLanguage ? ` in ${selectedLanguage}` : "";
+const pageTitle = `Udemy Deals${langSuffix} Page ${currentPage} of ${totalPages} — Free Coupons | CoursesWyn`;
+const pageDescription = `Page ${currentPage} of verified Udemy coupons${langSuffix}. Browse ${totalDeals}+ free courses and 100% off deals updated daily — ${currentMonth} ${currentYear}.`;
 
 // Build page number list — no key prop, no >= operator
 type PageItem = { type: 'page'; value: number } | { type: 'ellipsis'; id: string };
@@ -94,7 +106,7 @@ const structuredData = {
             "@type": "Course",
             "name": deal.title,
             "description": deal.description || `Get ${deal.title} free with a verified 100% off coupon.`,
-            "url": `${siteUrl}/coupon/${deal.id}`,
+            "url": `${siteUrl}/coupon/${deal.slug}`,
             "image": deal.image,
             "provider": {
               "@type": "Organization",
@@ -144,10 +156,10 @@ const structuredData = {
     <div style={{ background: "var(--card)", borderBottom: "1px solid var(--border)", padding: "1.5rem 0", textAlign: "center" }}>
       <div class="container">
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text)", margin: "0 0 0.25rem" }}>
-          <span style={{ color: "var(--brand)" }}>Udemy Deals</span> & Free Coupons — Page {currentPage}
+          <span style={{ color: "var(--brand)" }}>Udemy Deals</span> {selectedLanguage && <span style={{ color: "var(--brand)" }}>in {selectedLanguage}</span>} & Free Coupons — Page {currentPage}
         </h1>
         <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.9rem" }}>
-          Showing {startIndex + 1}–{Math.min(endIndex, allDeals.length)} of {allDeals.length} verified courses
+          Showing {startIndex + 1}–{Math.min(endIndex, filteredDeals.length)} of {filteredDeals.length} verified courses
           · Page {currentPage} of {totalPages}
         </p>
       </div>
@@ -160,20 +172,20 @@ const structuredData = {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text)", margin: "0 0 0.2rem" }}>
-              <span style={{ color: "var(--brand)" }}>Latest</span> Udemy Coupons
+              <span style={{ color: "var(--brand)" }}>Latest</span> {selectedLanguage ? selectedLanguage : ''} Udemy Coupons
             </h2>
             <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.85rem" }}>
-              {startIndex + 1}–{Math.min(endIndex, allDeals.length)} of {allDeals.length} courses · Page {currentPage} of {totalPages}
+              {startIndex + 1}–{Math.min(endIndex, filteredDeals.length)} of {filteredDeals.length} courses · Page {currentPage} of {totalPages}
             </p>
           </div>
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <a href={baseDealsUrl} style={{
+            <a href={`${baseDealsUrl}${langQuery}`} style={{
               display: "inline-flex", alignItems: "center", gap: "0.4rem",
               padding: "0.5rem 1rem", background: "var(--card)",
               border: "1px solid var(--border)", borderRadius: "8px",
               color: "var(--muted)", textDecoration: "none", fontSize: "0.8rem", fontWeight: 600
             }}>
-              ← All Deals
+              ← All {selectedLanguage ? selectedLanguage : ''} Deals
             </a>
             <a href="/categories" style={{
               display: "inline-flex", alignItems: "center", gap: "0.4rem",
@@ -196,9 +208,26 @@ const structuredData = {
           gap: "1.5rem",
           marginBottom: "3rem"
         }}>
-          {currentItems.map((deal: any) => (
-            <DealCard deal={deal} />
-          ))}
+          {currentItems.length > 0 ? (
+            currentItems.map((deal: any) => (
+              <DealCard deal={deal} />
+            ))
+          ) : (
+            <div style={{
+              gridColumn: "1 / -1", textAlign: "center", padding: "4rem 1.5rem",
+              background: "var(--card)", border: "1px solid var(--border)",
+              borderRadius: "12px", boxShadow: "0 10px 30px -10px rgba(0,0,0,0.05)"
+            }}>
+              <div style={{ fontSize: "3.5rem", marginBottom: "1.5rem" }}>🔍</div>
+              <h3 style={{ fontSize: "1.75rem", fontWeight: 700, marginBottom: "0.75rem", color: "var(--text)" }}>No {selectedLanguage} Courses Found</h3>
+              <p style={{ color: "var(--muted)", fontWeight: 500, marginBottom: "2rem", maxWidth: "500px", margin: "0 auto 2rem" }}>We couldn't find any verified free courses in {selectedLanguage} on this page.</p>
+              <a href={baseDealsUrl} style={{
+                display: "inline-flex", padding: "0.75rem 2rem", background: "var(--brand)",
+                color: "var(--bg)", borderRadius: "10px", textDecoration: "none",
+                fontWeight: 700, boxShadow: "0 4px 15px -4px var(--brand)"
+              }}>VIEW ALL LANGUAGES</a>
+            </div>
+          )}
         </div>
 
         {/* ── PAGINATION ── */}
@@ -229,7 +258,7 @@ const structuredData = {
               }
               const p = item.value;
               const isActive = p === currentPage;
-              const href = p === 1 ? baseDealsUrl : `${baseDealsUrl}/${p}`;
+              const href = p === 1 ? `${baseDealsUrl}${langQuery}` : `${baseDealsUrl}/${p}${langQuery}`;
               return (
                 <a
                   href={href}
@@ -296,7 +325,7 @@ const structuredData = {
             padding: "0.75rem 1.5rem", background: "var(--brand)",
             color: "var(--bg)", borderRadius: "10px", textDecoration: "none",
             fontSize: "0.95rem", fontWeight: 700,
-            boxShadow: "0 4px 20px -4px hsla(45, 95%, 58%, 0.4)"
+            boxShadow: "0 4px 20px -4px var(--brand-soft)"
           }}>
             Browse Categories
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">

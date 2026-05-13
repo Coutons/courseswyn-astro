@@ -1,4 +1,5 @@
 ---
+export const prerender = false;
 import Layout from '../../layouts/Layout.astro';
 import { readDeals } from '../../lib/store';
 import DealCard from '../../components/DealCard.astro';
@@ -57,14 +58,14 @@ function slugifyCategory(name: string) {
 }
 
 const { category } = Astro.params;
-const urlParams = new URLSearchParams(Astro.url.search);
-const page = urlParams.get('page');
+const selectedLanguage = Astro.url.searchParams.get('language');
+const page = Astro.url.searchParams.get('page');
 
 // Read all deals
 const allDeals = await readDeals();
 
 // Filter deals for this category
-const categoryDeals = allDeals.filter(deal => {
+let categoryDeals = allDeals.filter(deal => {
   if (!deal.category || !category) return false;
 
   const normalizedDealCategory = normName(deal.category);
@@ -73,6 +74,13 @@ const categoryDeals = allDeals.filter(deal => {
   const dealSlug = slugifyCategory(normalizedDealCategory);
   return dealSlug === category;
 });
+
+// Further filter by language if selected
+if (selectedLanguage) {
+  categoryDeals = categoryDeals.filter((d: any) => 
+    d.language && d.language.toLowerCase() === selectedLanguage.toLowerCase()
+  );
+}
 
 // Pagination
 const PAGE_SIZE = 12;
@@ -89,8 +97,9 @@ const categoryName = displayName;
 const allCategories = [...new Set(allDeals.map(deal => normName(deal.category)).filter(Boolean))].filter(cat => cat !== categoryName);
 
 // Create dynamic meta description with keywords
+const langSuffix = selectedLanguage ? ` in ${selectedLanguage}` : "";
 const categoryKeywords = `${categoryName.toLowerCase()}, ${categoryName.toLowerCase()} courses, ${categoryName.toLowerCase()} certification, learn ${categoryName.toLowerCase()}, ${categoryName.toLowerCase()} tutorial`;
-const metaDescription = `Browse ${categoryDeals.length}+ verified ${categoryName.toLowerCase()} courses with massive discounts up to 90% off. Learn ${categoryKeywords} from industry experts. Udemy coupons updated daily.`;
+const metaDescription = `Browse ${categoryDeals.length}+ verified ${categoryName.toLowerCase()} courses${langSuffix} with massive discounts up to 90% off. Learn ${categoryKeywords} from industry experts. Udemy coupons updated daily.`;
 ---
 
 <Layout title={`${categoryName} Courses - Udemy Promo Codes & Discount Vouchers 2026 | CoursesWyn`} description={metaDescription}>
@@ -114,7 +123,7 @@ const metaDescription = `Browse ${categoryDeals.length}+ verified ${categoryName
             "item": {
               "@type": "Course",
               "name": deal.title,
-              "url": `https://courseswyn.com/coupon/${deal.slug || deal.id}`,
+              "url": `https://courseswyn.com/coupon/${deal.slug}`,
               "image": deal.image,
               "provider": {
                 "@type": "Organization",
@@ -205,7 +214,7 @@ const metaDescription = `Browse ${categoryDeals.length}+ verified ${categoryName
         WebkitTextFillColor: "transparent",
         backgroundClip: "text"
       }}>
-        {categoryName} Promo Codes
+        {categoryName} {selectedLanguage && <span style={{ color: "var(--brand)" }}>in {selectedLanguage}</span>} Promo Codes
       </h1>
       <p style={{ 
         fontSize: "1.1rem", 
@@ -214,7 +223,7 @@ const metaDescription = `Browse ${categoryDeals.length}+ verified ${categoryName
         margin: "0 auto",
         lineHeight: "1.6"
       }}>
-        Discover {categoryDeals.length}+ verified {categoryName.toLowerCase()} courses with massive discounts. Learn from industry experts and advance your career today.
+        Discover {categoryDeals.length}+ verified {categoryName.toLowerCase()} courses{selectedLanguage ? ` in ${selectedLanguage}` : ''} with massive discounts. Learn from industry experts and advance your career today.
       </p>
       <a href="/udemy-coupon-code" style={{ 
         color: "var(--brand)", 
@@ -248,10 +257,10 @@ const metaDescription = `Browse ${categoryDeals.length}+ verified ${categoryName
           border: "1px solid var(--border)"
         }}>
           <h3 style={{ color: "var(--text)", marginBottom: "1rem", fontSize: "1.5rem" }}>
-            No courses found in {categoryName}
+            No {selectedLanguage ? selectedLanguage : ''} courses found in {categoryName}
           </h3>
           <p style={{ color: "var(--muted)", marginBottom: "1.5rem", lineHeight: "1.6" }}>
-            We couldn't find any courses in this category. Try browsing our other categories or check back later for new courses.
+            We couldn't find any {selectedLanguage ? selectedLanguage : ''} courses in this category. Try browsing our other categories or check back later for new courses.
           </p>
           <a href="/udemy-coupon-code" style={{ 
             padding: "12px 24px",
@@ -275,7 +284,7 @@ const metaDescription = `Browse ${categoryDeals.length}+ verified ${categoryName
           {/* Previous Button */}
           {currentPage > 1 && (
             <a
-              href={`/categories/${category}?page=${currentPage - 1}`}
+              href={`/categories/${category}?page=${currentPage - 1}${selectedLanguage ? `&language=${encodeURIComponent(selectedLanguage)}` : ''}`}
               style={{
                 padding: "8px 12px",
                 background: "var(--card)",
@@ -300,7 +309,7 @@ const metaDescription = `Browse ${categoryDeals.length}+ verified ${categoryName
             )
             .map((pageNum) => (
               <a
-                href={`/categories/${category}?page=${pageNum}`}
+                href={`/categories/${category}?page=${pageNum}${selectedLanguage ? `&language=${encodeURIComponent(selectedLanguage)}` : ''}`}
                 style={{
                   padding: "8px 12px",
                   background: pageNum === currentPage 
@@ -323,7 +332,7 @@ const metaDescription = `Browse ${categoryDeals.length}+ verified ${categoryName
           {/* Next Button */}
           {currentPage < totalPages && (
             <a
-              href={`/categories/${category}?page=${currentPage + 1}`}
+              href={`/categories/${category}?page=${currentPage + 1}${selectedLanguage ? `&language=${encodeURIComponent(selectedLanguage)}` : ''}`}
               style={{
                 padding: "8px 12px",
                 background: "var(--card)",

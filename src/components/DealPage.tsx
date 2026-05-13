@@ -158,10 +158,10 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
         "@graph": [
             {
                 "@type": "Course",
-                "@id": `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug || deal.id}#course`,
+                "@id": `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug}#course`,
                 "name": deal.title,
                 "description": deal.description || `${deal.title} - Learn from expert instructors with verified coupons`,
-                "url": `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug || deal.id}`,
+                "url": `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug}`,
                 "image": deal.image || `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/logo.svg`,
                 "provider": {
                     "@type": "Organization",
@@ -184,7 +184,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                         "priceCurrency": "USD",
                         "availability": "https://schema.org/InStock",
                         "validThrough": deal.expiresAt || undefined,
-                        "url": deal.url || `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug || deal.id}`,
+                        "url": deal.url || `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug}`,
                         "seller": {
                             "@type": "Organization",
                             "name": deal.provider || "Udemy"
@@ -197,7 +197,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                         "priceCurrency": "USD",
                         "availability": "https://schema.org/LimitedAvailability",
                         "validThrough": deal.expiresAt || undefined,
-                        "url": deal.url || `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug || deal.id}`,
+                        "url": deal.url || `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug}`,
                         "description": `Use coupon code ${deal.coupon} for discount on ${deal.title}`,
                         "seller": {
                             "@type": "Organization",
@@ -254,13 +254,13 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                         "@type": "ListItem",
                         "position": 4,
                         "name": deal.title,
-                        "item": `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug || deal.id}`
+                        "item": `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug}`
                     }
                 ].filter(Boolean)
             },
             {
                 "@type": "FAQPage",
-                "@id": `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug || deal.id}#faq`,
+                "@id": `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug}#faq`,
                 "mainEntity": autoFAQs.slice(0, 5).map(faq => ({
                     "@type": "Question",
                     "name": faq.q,
@@ -272,8 +272,8 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
             },
             {
                 "@type": "WebPage",
-                "@id": `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug || deal.id}#webpage`,
-                "url": `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug || deal.id}`,
+                "@id": `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug}#webpage`,
+                "url": `${typeof window !== 'undefined' ? window.location.origin : 'https://courseswyn.com'}/coupon/${deal.slug}`,
                 "name": `${deal.title} - Udemy Coupon & Discount Code`,
                 "description": `Get ${deal.title} with ${discountPct > 0 ? discountPct + '% off coupon' : 'special discount'} using verified voucher. ${deal.students ? deal.students.toLocaleString() + ' students enrolled.' : ''} Limited time offer.`,
                 "inLanguage": "en-US",
@@ -294,7 +294,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                     },
                     "sameAs": [
                         "https://www.facebook.com/CoursesWynOfficial/",
-                        "https://x.com/courses_peak"
+                        "https://x.com/courseswyn"
                     ]
                 }
             },
@@ -308,7 +308,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                 "foundingDate": "2024",
                 "sameAs": [
                     "https://www.facebook.com/CoursesWynOfficial/",
-                    "https://x.com/courses_peak"
+                    "https://x.com/courseswyn"
                 ],
                 "contactPoint": {
                     "@type": "ContactPoint",
@@ -414,7 +414,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                     <div style={{ display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap", fontSize: "0.9rem", fontWeight: 700 }}>
                         {deal.rating && (
                             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                <span style={{ color: "#f59e0b", fontSize: "1.2rem" }}>★</span>
+                                <span style={{ color: "#10b981", fontSize: "1.2rem" }}>★</span>
                                 <span>{deal.rating.toFixed(1)} out of 5</span>
                             </div>
                         )}
@@ -734,10 +734,10 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                             </p>
                             <div style={{ display: "flex", alignItems: "center", gap: "32px", flexWrap: "wrap" }}>
                                 <div style={{ textAlign: "center", minWidth: "100px" }}>
-                                    <div style={{ fontSize: "3.5rem", fontWeight: 900, color: "#f59e0b", lineHeight: 1 }}>
+                                    <div style={{ fontSize: "3.5rem", fontWeight: 900, color: "#10b981", lineHeight: 1 }}>
                                         {deal.rating.toFixed(1)}
                                     </div>
-                                    <div style={{ color: "#f59e0b", fontSize: "1.1rem", margin: "4px 0" }}>★★★★★</div>
+                                    <div style={{ color: "#10b981", fontSize: "1.1rem", margin: "4px 0" }}>★★★★★</div>
                                     <div style={{ color: "var(--muted)", fontSize: "0.8rem", fontWeight: 600 }}>
                                         {deal.students?.toLocaleString() || "Many"} Verified Ratings
                                     </div>
@@ -753,7 +753,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                         <div key={star} style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
                                             <span style={{ color: "var(--muted)", fontSize: "0.8rem", width: "50px", flexShrink: 0, fontWeight: 700 }}>{star} star{star !== 1 ? 's' : ''}</span>
                                             <div style={{ flex: 1, height: "8px", background: "var(--border)", borderRadius: "4px", overflow: "hidden" }}>
-                                                <div style={{ width: `${pct}%`, height: "100%", background: "#f59e0b", borderRadius: "4px" }}></div>
+                                                <div style={{ width: `${pct}%`, height: "100%", background: "#10b981", borderRadius: "4px" }}></div>
                                             </div>
                                             <span style={{ color: "var(--muted)", fontSize: "0.8rem", width: "35px", textAlign: "right", fontWeight: 700 }}>{pct}%</span>
                                         </div>

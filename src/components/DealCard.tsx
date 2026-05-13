@@ -32,7 +32,7 @@ export default function DealCard({ deal }: { deal: any }) {
     <article className="card">
       <header className="card-header">
         <h3 title={deal.title}>
-          <a href={`/coupon/${deal.slug || deal.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+          <a href={`/coupon/${deal.slug}`} style={{ color: "inherit", textDecoration: "none" }}>
             {title}
           </a>
         </h3>

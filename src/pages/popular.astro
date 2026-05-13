@@ -1,13 +1,22 @@
 ---
+export const prerender = false;
 import Layout from "../layouts/Layout.astro";
 import DealCard from "../components/DealCard.astro";
 import { readDeals } from "../lib/store";
 import { normName, slugifyCategory } from "../lib/utils";
 
 const allDeals = await readDeals();
+const selectedLanguage = Astro.url.searchParams.get('language');
 
-// ── INTENTIONAL: 5.0★ rated courses — by design, showing highest-rated ────────
-const popularCourses = allDeals
+// ── INTENTIONAL: 4.5+★ rated courses — by design, showing highest-rated ────────
+let filteredDeals = allDeals;
+if (selectedLanguage) {
+  filteredDeals = allDeals.filter((d: any) => 
+    d.language && d.language.toLowerCase() === selectedLanguage.toLowerCase()
+  );
+}
+
+const popularCourses = filteredDeals
   .filter(deal => deal.rating && deal.rating >= 4.5)
   .sort((a, b) => (b.rating || 0) - (a.rating || 0))
   .slice(0, 100);
@@ -31,9 +40,12 @@ const categories = Array.from(categoryMap.entries())
   .map(([name, count]) => ({ name, count }));
 
 // ── SEO — popular online courses keyword matching URL path ───────
-const pageTitle = `100+ Most Popular Online Courses 2026 — High-Rated Udemy Courses | CoursesWyn`;
-const pageDescription = `Browse 100+ popular online courses with 4.5-5.0★ ratings. Discover trending Udemy courses in programming, design, marketing & data science — with verified free coupons updated daily.`;
-const canonicalUrl = "https://courseswyn.com/popular";
+const langSuffix = selectedLanguage ? ` in ${selectedLanguage}` : "";
+const pageTitle = `${popularCourses.length}+ Most Popular Online Courses 2026${langSuffix} — High-Rated Udemy Courses | CoursesWyn`;
+const pageDescription = `Browse ${popularCourses.length}+ popular online courses${langSuffix} with 4.5-5.0★ ratings. Discover trending Udemy courses in programming, design, marketing & data science — with verified free coupons updated daily.`;
+const canonicalUrl = selectedLanguage 
+  ? `https://courseswyn.com/popular?language=${encodeURIComponent(selectedLanguage)}`
+  : "https://courseswyn.com/popular";
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -147,8 +159,8 @@ const structuredData = {
           letterSpacing: "-0.04em",
           marginBottom: "32px"
         }}>
-          Popular<br/>
-          <span style={{ background: "var(--accent)", color: "white", padding: "0 10px" }}>Courses.</span>
+          Popular {selectedLanguage && <span style={{ color: "var(--brand)" }}>{selectedLanguage}</span>}<br/>
+          <span style={{ background: "var(--brand)", color: "white", padding: "0 10px" }}>Courses.</span>
         </h1>
         
         <p style={{ 
@@ -193,9 +205,18 @@ const structuredData = {
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-bottom: 64px;">
-          {popularCourses.map(course => (
-            <DealCard deal={course} />
-          ))}
+          {popularCourses.length > 0 ? (
+            popularCourses.map(course => (
+              <DealCard deal={course} />
+            ))
+          ) : (
+            <div style="grid-column: 1 / -1; text-align: center; padding: 64px 24px; background: white; border: 2px solid var(--border); border-radius: 4px; box-shadow: 4px 4px 0 var(--border);">
+              <div style="font-size: 3rem; margin-bottom: 16px;">🔍</div>
+              <h3 style="font-size: 1.5rem; font-weight: 900; margin-bottom: 8px;">No Popular {selectedLanguage} Courses</h3>
+              <p style="color: var(--muted); font-weight: 500; margin-bottom: 24px;">We don't have any 4.5★+ rated {selectedLanguage} courses at the moment.</p>
+              <a href="/popular" class="btn" style="padding: 12px 32px;">VIEW ALL POPULAR COURSES</a>
+            </div>
+          )}
         </div>
 
         <div style="text-align: center;">

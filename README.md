@@ -5,7 +5,7 @@
 [![Expert Reviews](https://img.shields.io/badge/66%2B_Expert_Reviews-No_Affiliate_Bias-A435F0?style=for-the-badge)](https://courseswyn.com/blog)
 [![Astro Showcase](https://img.shields.io/badge/Official_Astro_Showcase-February_2026-BC52EE?style=for-the-badge)](https://courseswyn.com/blog/astro-showcase-courseswyn)
 
-CoursesWyn.com is an independent platform dedicated to vetting the Udemy ecosystem. We read thousands of reviews, audit curriculums, and verify promo codes so you don't have to. Featured in the **Official Astro Showcase February 2026**.
+Courseswyn.com is an independent platform dedicated to vetting the Udemy ecosystem. We read thousands of reviews, audit curriculums, and verify promo codes so you don't have to. Featured in the **Official Astro Showcase February 2026**.
 
 Get expert-reviewed courses and verified promo codes at [courseswyn.com](https://courseswyn.com)
 
@@ -80,7 +80,7 @@ We publish in-depth, "opinionated" course reviews across all major categories. B
 | Expert Articles | 66+ in-depth guides |
 | Update Frequency | Daily (4-hour window) |
 | Lighthouse Score | 95+ (All Categories) |
-| Tech Stack | Astro 6.2, React 19, Tailwind CSS |
+| Tech Stack | Astro 6.3, React 19, Tailwind CSS |
 
 ---
 
@@ -109,7 +109,7 @@ Open [http://localhost:4321](http://localhost:4321) in your browser.
 
 ## Tech Stack
 
-- **Framework**: [Astro 6.2](https://astro.build) (Islands Architecture)
+- **Framework**: [Astro 6.3](https://astro.build) (Islands Architecture)
 - **UI Library**: [React 19](https://react.dev)
 - **Styling**: [Tailwind CSS 3.4](https://tailwindcss.com) (Neo-Brutalist Design)
 - **Content**: MDX with Zod schema validation

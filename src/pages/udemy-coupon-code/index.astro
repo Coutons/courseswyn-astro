@@ -1,4 +1,5 @@
 ---
+export const prerender = false;
 import Layout from "../../layouts/Layout.astro";
 import DealCard from "../../components/DealCard.astro";
 import { readDeals } from "../../lib/store";
@@ -7,23 +8,33 @@ const allDeals = await readDeals();
 
 const PAGE_SIZE = 12;
 
-// Get current page from URL params
+// Get current page and language from URL params
 const currentPage = Math.max(1, parseInt(Astro.params.page || '1', 10));
+const selectedLanguage = Astro.url.searchParams.get('language');
+
+// Filter deals by language if selected
+let filteredDeals = allDeals;
+if (selectedLanguage) {
+  filteredDeals = allDeals.filter((d: any) => 
+    d.language && d.language.toLowerCase() === selectedLanguage.toLowerCase()
+  );
+}
 
 // Pagination calculation
-const totalPages = Math.ceil(allDeals.length / PAGE_SIZE);
+const totalPages = Math.ceil(filteredDeals.length / PAGE_SIZE);
 const startIndex = (currentPage - 1) * PAGE_SIZE;
 const endIndex = startIndex + PAGE_SIZE;
-const currentItems = allDeals.slice(startIndex, endIndex);
+const currentItems = filteredDeals.slice(startIndex, endIndex);
 
 // Pagination URLs
 const siteUrl = "https://courseswyn.com";
 const baseDealsUrl = `${siteUrl}/udemy-coupon-code`;
-const currentUrl = currentPage === 1 ? baseDealsUrl : `${baseDealsUrl}/${currentPage}`;
+const langQuery = selectedLanguage ? `?language=${encodeURIComponent(selectedLanguage)}` : "";
+const currentUrl = currentPage === 1 ? `${baseDealsUrl}${langQuery}` : `${baseDealsUrl}/${currentPage}${langQuery}`;
 const prevUrl = currentPage > 1
-  ? (currentPage === 2 ? baseDealsUrl : `${baseDealsUrl}/${currentPage - 1}`)
+  ? (currentPage === 2 ? `${baseDealsUrl}${langQuery}` : `${baseDealsUrl}/${currentPage - 1}${langQuery}`)
   : null;
-const nextUrl = currentPage < totalPages ? `${baseDealsUrl}/${currentPage + 1}` : null;
+const nextUrl = currentPage < totalPages ? `${baseDealsUrl}/${currentPage + 1}${langQuery}` : null;
 
 // Dynamic SEO
 const currentDate = new Date();
@@ -44,13 +55,14 @@ const avgSavings = (() => {
 })();
 
 // Page-aware title & description - SEO optimized
+const langSuffix = selectedLanguage ? ` in ${selectedLanguage}` : "";
 const pageTitle = currentPage === 1
-  ? `${totalDeals}+ Free Udemy Coupons & 100% Off Deals [${currentMonth} ${currentYear}] | CoursesWyn`
-  : `Udemy Coupon Codes Page ${currentPage} of ${totalPages} | 100% Free Courses`;
+  ? `${totalDeals}+ Free Udemy Coupons${langSuffix} & 100% Off Deals [${currentMonth} ${currentYear}] | CoursesWyn`
+  : `Udemy Coupon Codes${langSuffix} Page ${currentPage} of ${totalPages} | 100% Free Courses`;
 
 const pageDescription = currentPage === 1
-  ? `Find ${totalDeals}+ verified free Udemy courses and 100% off coupon codes for ${currentMonth} ${currentYear}. Get ${freeDeals}+ completely free programming, Python, JavaScript, AWS certification courses. Save up to ${avgSavings}% with daily verified deals. No payment required for free coupons.`
-  : `Browse page ${currentPage} of verified Udemy coupon codes. Discover ${totalDeals}+ free courses and 100% off deals updated daily on CoursesWyn. Get instant access to premium courses at zero cost.`;
+  ? `Find ${totalDeals}+ verified free Udemy courses${langSuffix} and 100% off coupon codes for ${currentMonth} ${currentYear}. Get ${freeDeals}+ completely free programming, Python, JavaScript, AWS certification courses. Save up to ${avgSavings}% with daily verified deals. No payment required for free coupons.`
+  : `Browse page ${currentPage} of verified Udemy coupon codes${langSuffix}. Discover ${totalDeals}+ free courses and 100% off deals updated daily on CoursesWyn. Get instant access to premium courses at zero cost.`;
 
 // FAQ data - SEO optimized with long-tail keywords
 const faqs = [
@@ -135,7 +147,7 @@ const structuredData = {
             "@type": "Course",
             "name": deal.title,
             "description": deal.description || `Get ${deal.title} free with a verified 100% off coupon on CoursesWyn.`,
-            "url": `${siteUrl}/coupon/${deal.slug || deal.id}`,
+            "url": `${siteUrl}/coupon/${deal.slug}`,
             "image": deal.image,
             "provider": {
               "@type": "Organization",
@@ -205,7 +217,7 @@ const structuredData = {
             letterSpacing: "-0.04em",
             marginBottom: "20px"
           }}>
-            {totalDeals}+ Free Udemy Coupons & <span style={{ background: "var(--accent)", color: "white", padding: "0 8px" }}>100% Off Deals</span>
+            {totalDeals}+ Free Udemy Coupons {selectedLanguage && <span style={{ color: "var(--brand)" }}>in {selectedLanguage}</span>} & <span style={{ background: "var(--brand)", color: "white", padding: "0 8px" }}>100% Off Deals</span>
           </h1>
 
           <p style={{ 
@@ -249,11 +261,11 @@ const structuredData = {
     {currentPage > 1 && (
       <section style="padding: 64px 0 48px; border-bottom: 2px solid var(--border); background: var(--card);">
         <div class="container">
-          <h1 style={{ fontSize: "2.5rem", fontWeight: 900, letterSpacing: "-0.04em", marginBottom: "8px" }}>
-            Deals — Page {currentPage}
+            <h1 style={{ fontSize: "2.5rem", fontWeight: 900, letterSpacing: "-0.04em", marginBottom: "8px" }}>
+            {selectedLanguage ? `${selectedLanguage} Courses` : 'Deals'} — Page {currentPage}
           </h1>
           <p style={{ color: "var(--muted)", fontWeight: 800, textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.1em" }}>
-            Showing {startIndex + 1}–{Math.min(endIndex, allDeals.length)} of {allDeals.length} courses
+            Showing {startIndex + 1}–${Math.min(endIndex, filteredDeals.length)} of {filteredDeals.length} courses
           </p>
         </div>
       </section>
@@ -286,12 +298,12 @@ const structuredData = {
         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px;">
           <div>
             <h2 style="font-size: 1.75rem; font-weight: 900; margin: 0; letter-spacing: -0.04em;">
-              {currentPage === 1 ? `${totalDeals}+ Verified Free Courses` : `Page ${currentPage} — Free Udemy Courses`}
+              {currentPage === 1 ? `${filteredDeals.length}+ Verified ${selectedLanguage ? selectedLanguage : ''} Free Courses` : `Page ${currentPage} — Free Udemy Courses`}
             </h2>
             <p style="color: var(--muted); font-weight: 500; margin-top: 8px;">
               {currentPage === 1 
                 ? `100% off coupon codes for ${currentMonth} ${currentYear} — programming, web development, data science & more`
-                : `Showing courses ${startIndex + 1}–${Math.min(endIndex, allDeals.length)} of ${allDeals.length} total deals`
+                : `Showing courses ${startIndex + 1}–${Math.min(endIndex, filteredDeals.length)} of ${filteredDeals.length} total deals`
               }
             </p>
           </div>
@@ -301,9 +313,18 @@ const structuredData = {
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-bottom: 64px;">
-          {currentItems.map((deal: any) => (
-            <DealCard deal={deal} />
-          ))}
+          {currentItems.length > 0 ? (
+            currentItems.map((deal: any) => (
+              <DealCard deal={deal} />
+            ))
+          ) : (
+            <div style="grid-column: 1 / -1; text-align: center; padding: 64px 24px; background: white; border: 2px solid var(--border); border-radius: 8px; box-shadow: 4px 4px 0 var(--border);">
+              <div style="font-size: 3rem; margin-bottom: 16px;">🔍</div>
+              <h3 style="font-size: 1.5rem; font-weight: 900; margin-bottom: 8px;">No {selectedLanguage} Courses Found</h3>
+              <p style="color: var(--muted); font-weight: 500; margin-bottom: 24px;">We couldn't find any verified free courses in {selectedLanguage} right now.</p>
+              <a href={baseDealsUrl} class="btn" style="padding: 12px 32px;">VIEW ALL LANGUAGES</a>
+            </div>
+          )}
         </div>
 
         {/* ── PAGINATION ── */}
@@ -322,7 +343,7 @@ const structuredData = {
                     return <span style="font-weight: 900; color: var(--muted); padding: 0 8px;">...</span>;
                   }
                   const isActive = item.value === currentPage;
-                  const href = item.value === 1 ? baseDealsUrl : `${baseDealsUrl}/${item.value}`;
+                  const href = item.value === 1 ? `${baseDealsUrl}${langQuery}` : `${baseDealsUrl}/${item.value}${langQuery}`;
                   return (
                     <a href={href} class={isActive ? "btn btn-active" : "btn btn-outline"} style="width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">
                       {item.value}
