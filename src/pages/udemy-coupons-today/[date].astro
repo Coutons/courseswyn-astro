@@ -1,10 +1,10 @@
 ---
-import Layout from '../../../layouts/Layout.astro';
-import { getDeals, getAvailableDates } from '../../../lib/store.js';
+import Layout from '../../layouts/Layout.astro';
+import { getDeals, getAvailableDates } from '../../lib/store.js';
 
 export async function getStaticPaths() {
   const dates = await getAvailableDates();
-  return dates.map(date => ({ params: { date } }));
+  return dates.map(item => ({ params: { date: item.date } }));
 }
 
 const siteUrl = "https://courseswyn.com";
@@ -35,10 +35,10 @@ const nextDate = next.toISOString().substring(0, 10);
 const totalCoupons = allDeals.length;
 const catCount = categories.length;
 const topCats = categories.slice(0, 3).map(([c]) => c).join(', ');
-const pageUrl = `${siteUrl}/blog/top-udemy-coupons/${date}/`;
+const pageUrl = `${siteUrl}/udemy-coupons-today/${date}/`;
 
 // @ts-ignore - Astro frontmatter variables
-const pageTitle = `Udemy Coupons ${dateLabel} - Daily Discount Deals | CoursesWyn`;
+const pageTitle = `Udemy Coupons Today (${dateLabel}) - Daily Discount Deals | CoursesWyn`;
 // @ts-ignore - Astro frontmatter variables  
 const metaDescription = `${allDeals.length} verified Udemy coupons on ${dateLabel} — free courses in Development, Design, Business & more. Daily discount codes.`;
 
@@ -84,7 +84,7 @@ const jsonLd = {
     {
       "@type": "BlogPosting",
       "@id": `${pageUrl}#article`,
-      "headline": `Top Udemy Coupons (${dateLabel})`,
+      "headline": `Udemy Coupons Today (${dateLabel})`,
       "description": metaDescription,
       "url": pageUrl,
       "datePublished": `${date}T00:00:00Z`,
@@ -97,8 +97,8 @@ const jsonLd = {
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
-        { "@type": "ListItem", "position": 2, "name": "Blog", "item": `${siteUrl}/blog` },
-        { "@type": "ListItem", "position": 3, "name": `Top Udemy Coupons ${dateLabel}`, "item": pageUrl },
+        { "@type": "ListItem", "position": 2, "name": "Udemy Coupons Today", "item": `${siteUrl}/udemy-coupons-today/` },
+        { "@type": "ListItem", "position": 3, "name": dateLabel, "item": pageUrl },
       ],
     },
     {
@@ -137,7 +137,7 @@ const jsonLd = {
   <article class="post-root" itemscope itemtype="https://schema.org/BlogPosting">
     <div class="post-container">
       <header class="post-header">
-        <h1 class="post-title" itemprop="headline">Top Udemy Coupons ({dateLabel})</h1>
+        <h1 class="post-title" itemprop="headline">Udemy Coupons Today ({dateLabel})</h1>
         <p class="post-meta">
           <time itemprop="datePublished" datetime={`${date}T00:00:00Z`}>{dateLabel}</time>
           · {totalCoupons} coupons · {catCount} categories
@@ -151,7 +151,7 @@ const jsonLd = {
       <div class="filter-row">
         <span class="tab tab-active" aria-current="true">Select All</span>
         {/* @ts-ignore */}
-        <a href={`/blog/top-udemy-coupons/${new Date().toISOString().substring(0, 10)}/`} class="tab">Last 24 Hrs</a>
+        <a href={`/udemy-coupons-today/${new Date().toISOString().substring(0, 10)}/`} class="tab">Last 24 Hrs</a>
       </div>
 
       <!-- Categories: grid of course cards per category -->
@@ -187,18 +187,18 @@ const jsonLd = {
                     </div>
                     <div class="card-pricing">
                       <div class="price-info">
-                        {deal.price != null && deal.price > 0 && (
-                          <>
-                            <span class="current-price">${deal.price.toFixed(2)}</span>
-                            {deal.originalPrice && <span class="original-price">${deal.originalPrice.toFixed(2)}</span>}
-                            {deal.originalPrice && <span class="discount-price">{Math.round((1 - deal.price / deal.originalPrice) * 100)}% OFF</span>}
-                          </>
-                        )}
-                        {deal.price === 0 && <span class="current-price">Free</span>}
+                        <span class="current-price">
+                          {deal.price === 0 ? 'FREE' : `$${deal.price.toFixed(2)}`}
+                        </span>
+                        {deal.originalPrice && <span class="original-price">${deal.originalPrice.toFixed(2)}</span>}
                       </div>
                       <div class="card-actions">
-                        <span class="verified-badge">✓ Verified</span>
-                        <a href={deal.url} target="_blank" rel="noopener noreferrer" class="card-button">Get Deal</a>
+                        {deal.originalPrice && (
+                          <span class="discount-badge">
+                            {Math.round((1 - deal.price / deal.originalPrice) * 100)}% OFF
+                          </span>
+                        )}
+                        <a href={deal.url} target="_blank" rel="noopener noreferrer" class="card-button">Get Coupon</a>
                       </div>
                     </div>
                   </div>
@@ -228,18 +228,18 @@ const jsonLd = {
                         </div>
                         <div class="card-pricing">
                           <div class="price-info">
-                            {deal.price != null && deal.price > 0 && (
-                              <>
-                                <span class="current-price">${deal.price.toFixed(2)}</span>
-                                {deal.originalPrice && <span class="original-price">${deal.originalPrice.toFixed(2)}</span>}
-                                {deal.originalPrice && <span class="discount-price">{Math.round((1 - deal.price / deal.originalPrice) * 100)}% OFF</span>}
-                              </>
-                            )}
-                            {deal.price === 0 && <span class="current-price">Free</span>}
+                            <span class="current-price">
+                              {deal.price === 0 ? 'FREE' : `$${deal.price.toFixed(2)}`}
+                            </span>
+                            {deal.originalPrice && <span class="original-price">${deal.originalPrice.toFixed(2)}</span>}
                           </div>
                           <div class="card-actions">
-                            <span class="verified-badge">✓ Verified</span>
-                            <a href={`/coupon/${deal.slug}`} class="card-button">Get Deal</a>
+                            {deal.originalPrice && (
+                              <span class="discount-badge">
+                                {Math.round((1 - deal.price / deal.originalPrice) * 100)}% OFF
+                              </span>
+                            )}
+                            <a href={`/coupon/${deal.slug}`} class="card-button">Get Coupon</a>
                           </div>
                         </div>
                       </div>
@@ -347,9 +347,9 @@ const jsonLd = {
       </section>
 
       <nav class="date-nav" aria-label="Article navigation">
-        <a href={`/blog/top-udemy-coupons/${prevDate}/`} class="nav-btn">← {prev.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</a>
-        <a href="/blog/" class="nav-btn nav-mid">All Articles</a>
-        {!isToday && <a href={`/blog/top-udemy-coupons/${nextDate}/`} class="nav-btn">{next.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} →</a>}
+        <a href={`/udemy-coupons-today/${prevDate}/`} class="nav-btn">← {prev.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</a>
+        <a href="/udemy-coupons-today/" class="nav-btn nav-mid">All Dates</a>
+        {!isToday && <a href={`/udemy-coupons-today/${nextDate}/`} class="nav-btn">{next.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} →</a>}
       </nav>
     </div>
   </article>
@@ -406,20 +406,21 @@ const jsonLd = {
   .course-card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    transition: all 0.2s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: row;
     align-items: stretch;
     text-decoration: none;
     color: inherit;
+    position: relative;
   }
   .course-card:hover {
     border-color: var(--brand);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    transform: translateY(-2px);
+    box-shadow: 0 20px 40px var(--brand-soft);
+    transform: translateY(-4px) scale(1.01);
   }
   .card-image {
     flex-shrink: 0;
@@ -513,13 +514,14 @@ const jsonLd = {
     color: var(--muted);
     text-decoration: line-through;
   }
-  .discount-price {
+  .discount-badge {
     font-size: 0.8125rem;
-    font-weight: 600;
-    color: #22c55e;
-    background: rgba(34, 197, 94, 0.1);
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent) 0%, #d946ef 100%);
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px var(--accent-soft);
   }
   .card-actions {
     display: flex;
@@ -529,11 +531,11 @@ const jsonLd = {
   .verified-badge {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #16a34a;
-    background: rgba(22, 163, 74, 0.1);
+    color: var(--accent);
+    background: var(--accent-soft);
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
-    border: 1px solid rgba(22, 163, 74, 0.2);
+    border: 1px solid var(--accent-soft);
   }
   .card-button {
     display: inline-flex;

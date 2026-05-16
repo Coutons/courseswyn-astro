@@ -168,21 +168,25 @@ export async function getDeals(options: {
  */
 const MAX_BLOG_DAYS = 90;
 
-export async function getAvailableDates(): Promise<string[]> {
+export async function getAvailableDates(): Promise<{date: string, image?: string}[]> {
   const deals = await readDealsFromFile();
-  const dates = new Set<string>();
+  const dateMap = new Map<string, string | undefined>();
 
   deals.forEach(deal => {
     const date = new Date(deal.updatedAt ?? deal.createdAt ?? deal.expiresAt ?? 0);
     const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD
-    dates.add(dateString);
+    if (!dateMap.has(dateString)) {
+      dateMap.set(dateString, deal.image);
+    }
   });
 
   const today = new Date().toISOString().split('T')[0];
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-  dates.add(today);
-  dates.add(yesterday);
+  if (!dateMap.has(today)) dateMap.set(today, undefined);
 
-  const sortedDates = Array.from(dates).sort().reverse().slice(0, MAX_BLOG_DAYS);
+  const sortedDates = Array.from(dateMap.entries())
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .slice(0, MAX_BLOG_DAYS)
+    .map(([date, image]) => ({ date, image }));
+
   return sortedDates;
 }

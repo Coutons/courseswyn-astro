@@ -4,37 +4,33 @@ import Layout from "../../layouts/Layout.astro";
 import DealCard from "../../components/DealCard.astro";
 import { readDeals } from "../../lib/store";
 
-const allDeals = await readDeals();
-
-const PAGE_SIZE = 12;
-
-// Get current page and language from URL params
-const currentPage = Math.max(1, parseInt(Astro.params.page || '1', 10));
-const selectedLanguage = Astro.url.searchParams.get('language');
-
-// Filter deals by language if selected
-let filteredDeals = allDeals;
-if (selectedLanguage) {
-  filteredDeals = allDeals.filter((d: any) => 
-    d.language && d.language.toLowerCase() === selectedLanguage.toLowerCase()
-  );
+export async function getStaticPaths({ paginate }: { paginate: any }) {
+  const allDeals = await readDeals();
+  return paginate(allDeals, { pageSize: 12 });
 }
 
-// Pagination calculation
-const totalPages = Math.ceil(filteredDeals.length / PAGE_SIZE);
-const startIndex = (currentPage - 1) * PAGE_SIZE;
-const endIndex = startIndex + PAGE_SIZE;
-const currentItems = filteredDeals.slice(startIndex, endIndex);
+const { page } = Astro.props as { page: any };
+const currentItems = page.data;
+const currentPage = page.currentPage;
+const totalPages = page.lastPage;
+
+// We still need allDeals for stats
+const allDeals = await readDeals();
+
+const selectedLanguage = Astro.url.searchParams.get('language');
+let filteredDeals = allDeals;
+
+const startIndex = page.start;
+const endIndex = page.end + 1; // page.end is inclusive, so +1 for display math
 
 // Pagination URLs
 const siteUrl = "https://courseswyn.com";
 const baseDealsUrl = `${siteUrl}/udemy-coupon-code`;
 const langQuery = selectedLanguage ? `?language=${encodeURIComponent(selectedLanguage)}` : "";
 const currentUrl = currentPage === 1 ? `${baseDealsUrl}${langQuery}` : `${baseDealsUrl}/${currentPage}${langQuery}`;
-const prevUrl = currentPage > 1
-  ? (currentPage === 2 ? `${baseDealsUrl}${langQuery}` : `${baseDealsUrl}/${currentPage - 1}${langQuery}`)
-  : null;
-const nextUrl = currentPage < totalPages ? `${baseDealsUrl}/${currentPage + 1}${langQuery}` : null;
+
+const prevUrl = page.url.prev ? `${page.url.prev}${langQuery}` : null;
+const nextUrl = page.url.next ? `${page.url.next}${langQuery}` : null;
 
 // Dynamic SEO
 const currentDate = new Date();
