@@ -73,10 +73,10 @@ export default function DealCard({ deal }: { deal: any }) {
           <span className="price">{p === 0 ? "Free" : `$${p.toFixed(2)}`}</span>
           {hasDiscount && (
             <>
-              <span className="original" style={{ textDecoration: "line-through", color: "var(--muted)" }}>
+              <span className="original" style={{ textDecoration: "line-through", color: "var(--text)" }}>
                 ${op.toFixed(2)}
               </span>
-              <span className="discount" style={{ background: "#ef4444", color: "white", padding: "2px 6px", borderRadius: 4, fontSize: 12, fontWeight: 600 }}>
+              <span className="discount" style={{ background: "#ef4444", color: "var(--bg-primary)", padding: "2px 6px", borderRadius: 4, fontSize: 12, fontWeight: 600 }}>
                 {discountPct}% OFF
               </span>
             </>

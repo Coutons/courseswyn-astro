@@ -414,7 +414,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                 <div style={{ display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap", fontSize: "0.9rem", fontWeight: 700 }}>
                     {deal.rating && (
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <span style={{ color: "#10b981", fontSize: "1.2rem" }}>★</span>
+                            <span style={{ color: "#eed49f", fontSize: "1.2rem" }}>★</span>
                             <span>{deal.rating.toFixed(1)} out of 5</span>
                         </div>
                     )}
@@ -492,16 +492,16 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                         <div style={{
                             marginTop: "24px",
                             padding: "16px",
-                            background: "linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05))",
-                            border: "2px solid #22c55e",
+                            background: "linear-gradient(135deg, var(--brand-soft), var(--brand-glow))",
+                            border: "2px solid var(--brand)",
                             borderRadius: "8px",
                             fontSize: "0.9rem",
-                            color: "#22c55e"
+                            color: "var(--text)"
                         }}>
                             <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
                                 <span style={{ fontSize: "1.2rem", lineHeight: 1 }}>💡</span>
                                 <div>
-                                    <strong style={{ display: "block", marginBottom: "4px" }}>Tip:</strong>
+                                    <strong style={{ display: "block", marginBottom: "4px", color: "var(--brand)" }}>Tip:</strong>
                                     For best results, apply the coupon in a regular browser window rather than incognito/private mode.
                                 </div>
                             </div>
@@ -526,7 +526,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px", fontSize: "0.95rem", color: "var(--text)" }}>
                                 {deal.learn.map((point, idx) => (
                                     <div key={idx} style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                                        <span style={{ color: "#22c55e", marginTop: "3px", flexShrink: 0 }}>✓</span>
+                                        <span style={{ color: "var(--brand)", marginTop: "3px", flexShrink: 0 }}>✓</span>
                                         <span>{point.endsWith('.') ? point : point + '.'}</span>
                                     </div>
                                 ))}
@@ -653,7 +653,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
 
                     {/* Pros Section */}
                     <div style={{ marginBottom: "24px" }}>
-                        <h3 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#22c55e", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
+                        <h3 style={{ fontSize: "1.1rem", fontWeight: 900, color: "var(--brand)", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
                             <span style={{ fontSize: "1.2rem" }}>✓</span>
                             What We Like (Pros)
                         </h3>
@@ -679,7 +679,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
 
                     {/* Cons Section */}
                     <div style={{ marginBottom: "24px" }}>
-                        <h3 style={{ fontSize: "1.1rem", fontWeight: 900, color: "#ef4444", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
+                        <h3 style={{ fontSize: "1.1rem", fontWeight: 900, color: "var(--accent)", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
                             <span style={{ fontSize: "1.2rem" }}>!</span>
                             Keep in Mind (Cons)
                         </h3>
@@ -702,20 +702,20 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                     {/* Final Verdict */}
                     <div style={{
                         display: "flex", alignItems: "center", justifyContent: "space-between",
-                        padding: "16px 24px", background: "#22c55e", borderRadius: "8px",
+                        padding: "16px 24px", background: "var(--brand)", borderRadius: "8px",
                         border: "2px solid var(--border)", boxShadow: "6px 6px 0 var(--border)"
                     }}>
                         <div>
-                            <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "white", marginBottom: "4px" }}>
+                            <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "var(--bg)", marginBottom: "4px" }}>
                                 Final Verdict: Worth It
                             </div>
-                            <div style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.9)", fontWeight: 600 }}>
+                            <div style={{ fontSize: "0.85rem", color: "var(--bg)", opacity: 0.9, fontWeight: 600 }}>
                                 This course offers exceptional value with current pricing
                             </div>
                         </div>
                         <div style={{
-                            width: "40px", height: "40px", borderRadius: "50%", background: "rgba(255,255,255,0.2)",
-                            display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "1.2rem", fontWeight: 900
+                            width: "40px", height: "40px", borderRadius: "50%", background: "var(--bg)",
+                            display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand)", fontSize: "1.2rem", fontWeight: 900
                         }}>
                             ✓
                         </div>
@@ -734,10 +734,10 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                         </p>
                         <div style={{ display: "flex", alignItems: "center", gap: "32px", flexWrap: "wrap" }}>
                             <div style={{ textAlign: "center", minWidth: "100px" }}>
-                                <div style={{ fontSize: "3.5rem", fontWeight: 900, color: "#10b981", lineHeight: 1 }}>
+                                <div style={{ fontSize: "3.5rem", fontWeight: 900, color: "#eed49f", lineHeight: 1 }}>
                                     {deal.rating.toFixed(1)}
                                 </div>
-                                <div style={{ color: "#10b981", fontSize: "1.1rem", margin: "4px 0" }}>★★★★★</div>
+                                <div style={{ color: "#eed49f", fontSize: "1.1rem", margin: "4px 0" }}>★★★★★</div>
                                 <div style={{ color: "var(--muted)", fontSize: "0.8rem", fontWeight: 600 }}>
                                     {deal.students?.toLocaleString() || "Many"} Verified Ratings
                                 </div>
@@ -753,7 +753,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                     <div key={star} style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
                                         <span style={{ color: "var(--muted)", fontSize: "0.8rem", width: "50px", flexShrink: 0, fontWeight: 700 }}>{star} star{star !== 1 ? 's' : ''}</span>
                                         <div style={{ flex: 1, height: "8px", background: "var(--border)", borderRadius: "4px", overflow: "hidden" }}>
-                                            <div style={{ width: `${pct}%`, height: "100%", background: "#10b981", borderRadius: "4px" }}></div>
+                                            <div style={{ width: `${pct}%`, height: "100%", background: "var(--brand)", borderRadius: "4px" }}></div>
                                         </div>
                                         <span style={{ color: "var(--muted)", fontSize: "0.8rem", width: "35px", textAlign: "right", fontWeight: 700 }}>{pct}%</span>
                                     </div>
@@ -1084,7 +1084,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
             {/* Right Column / Sidebar */}
             <aside style={{ position: "relative" }}>
                 <div style={{
-                    position: "sticky", top: "40px", background: "white",
+                    position: "sticky", top: "40px", background: "var(--bg-primary)",
                     border: "2px solid var(--border)", borderRadius: "12px",
                     overflow: "hidden", boxShadow: "10px 10px 0 var(--border)"
                 }}>
@@ -1097,7 +1097,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                             />
                             <div style={{
                                 position: "absolute", top: "12px", right: "12px",
-                                background: "#22c55e", color: "white", padding: "4px 10px",
+                                background: "var(--brand)", color: "var(--bg)", padding: "4px 10px",
                                 borderRadius: "4px", fontSize: "0.65rem", fontWeight: 900,
                                 border: "2px solid var(--border)", boxShadow: "2px 2px 0 var(--border)"
                             }}>
@@ -1113,7 +1113,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                     {price === 0 ? "FREE" : `$${price.toFixed(2)}`}
                                 </span>
                                 {originalPrice > price && (
-                                    <span style={{ fontSize: "1.1rem", color: "var(--muted)", textDecoration: "line-through", fontWeight: 600 }}>
+                                    <span style={{ fontSize: "1.1rem", color: "var(--text)", textDecoration: "line-through", fontWeight: 600 }}>
                                         ${originalPrice.toFixed(2)}
                                     </span>
                                 )}
@@ -1126,7 +1126,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                     }}>
                                         {discountPct}% OFF
                                     </span>
-                                    <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#22c55e" }}>
+                                    <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--brand)" }}>
                                         SAVE ${(originalPrice - price).toFixed(2)}
                                     </span>
                                 </div>
@@ -1139,7 +1139,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                 borderRadius: "8px", padding: "16px", marginBottom: "24px",
                                 boxShadow: "3px 3px 0 var(--border)"
                             }}>
-                                <div style={{ fontSize: "0.7rem", fontWeight: 900, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "8px", textAlign: "center" }}>
+                                <div style={{ fontSize: "0.7rem", fontWeight: 900, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "8px", textAlign: "center" }}>
                                     Coupon expires in:
                                 </div>
                                 <div style={{ display: "flex", justifyContent: "center", gap: "12px", fontWeight: 900, fontSize: "1.1rem" }}>
@@ -1153,10 +1153,10 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
 
                         {deal.coupon && (
                             <div style={{ marginBottom: "24px" }}>
-                                <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--muted)", marginBottom: "8px", textTransform: "uppercase" }}>Coupon Code:</div>
+                                <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--text)", marginBottom: "8px", textTransform: "uppercase" }}>Coupon Code:</div>
                                 <div style={{
                                     display: "flex", border: "2px solid var(--border)", borderRadius: "8px",
-                                    overflow: "hidden", background: "var(--bg)", boxShadow: "3px 3px 0 var(--border)"
+                                    overflow: "hidden", background: "var(--bg-primary)", boxShadow: "3px 3px 0 var(--border)"
                                 }}>
                                     <code style={{
                                         flex: 1, padding: "12px", fontSize: "0.9rem", fontWeight: 900,
@@ -1285,8 +1285,8 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                             onClick={handleCopyCoupon}
                             className="btn"
                             style={{
-                                background: couponCopied ? "#22c55e" : "var(--text)",
-                                color: "white", width: "100%", padding: "16px",
+                                background: couponCopied ? "var(--brand)" : "var(--text)",
+                                color: couponCopied ? "var(--bg)" : "white", width: "100%", padding: "16px",
                                 fontSize: "1rem", fontWeight: 900
                             }}
                         >
