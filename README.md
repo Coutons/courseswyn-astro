@@ -1,7 +1,7 @@
 # CoursesWyn — The Internet's Most Opinionated Udemy Course Reviews
 
 [![Live Site](https://img.shields.io/badge/CoursesWyn.com-Expert_Udemy_Reviews-FF5D01?style=for-the-badge&logo=udemy&logoColor=white)](https://courseswyn.com)
-[![Course Audits](https://img.shields.io/badge/1,233%2B_Course_Audits-100%25_Verified-38B2AC?style=for-the-badge)](https://courseswyn.com/udemy-coupon-code)
+[![Course Audits](https://img.shields.io/badge/1,240%2B_Course_Audits-100%25_Verified-38B2AC?style=for-the-badge)](https://courseswyn.com/udemy-coupon-code)
 [![Expert Reviews](https://img.shields.io/badge/66%2B_Expert_Reviews-No_Affiliate_Bias-A435F0?style=for-the-badge)](https://courseswyn.com/blog)
 [![Astro Showcase](https://img.shields.io/badge/Official_Astro_Showcase-February_2026-BC52EE?style=for-the-badge)](https://courseswyn.com/blog/astro-showcase-courseswyn)
 
@@ -15,8 +15,8 @@ Get expert-reviewed courses and verified promo codes at [courseswyn.com](https:/
 
 [CoursesWyn](https://courseswyn.com) provides independent expert course reviews and verified Udemy promo codes. We focus on quality over quantity, highlighting only the gold standard of digital education.
 
-- **100,000+** learners trust our data-driven rankings and savings guides.
-- **1,233+** courses manually audited for curriculum depth and instructor credibility.
+- **150,000+** learners trust our data-driven rankings and savings guides.
+- **1,240+** courses manually audited for curriculum depth and instructor credibility.
 - **66+** in-depth expert reviews covering AI, Web Development, and Cloud Computing.
 - **Real-time** deal tracking with a strict 4-hour update window for all promo codes.
 - **Featured** in the Official Astro Showcase for high-performance implementation.
@@ -75,8 +75,8 @@ We publish in-depth, "opinionated" course reviews across all major categories. B
 
 | Metric | Value |
 |---|---|
-| Active Learners | 100,000+ worldwide |
-| Courses Audited | 1,233+ expert reviews |
+| Active Learners | 150,000+ worldwide |
+| Courses Audited | 1,240+ expert reviews |
 | Expert Articles | 66+ in-depth guides |
 | Update Frequency | Daily (4-hour window) |
 | Lighthouse Score | 95+ (All Categories) |
