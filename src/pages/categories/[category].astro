@@ -33,7 +33,7 @@ export async function getStaticPaths() {
   const categories = [...new Set(allDeals.map(deal => normName(deal.category)).filter(cat => cat != null))];
   return categories.map(category => ({
     params: { category: slugifyCategory(category!) },
-    props: {}
+    props: { allDeals }
   }));
 }
 
@@ -58,11 +58,12 @@ function slugifyCategory(name: string) {
 }
 
 const { category } = Astro.params;
+const { allDeals: propAllDeals } = Astro.props as { allDeals?: any[] };
 const selectedLanguage = Astro.url.searchParams.get('language');
 const page = Astro.url.searchParams.get('page');
 
-// Read all deals
-const allDeals = await readDeals();
+// Use allDeals from props, or read if in dev mode
+const allDeals = propAllDeals || await readDeals();
 
 // Filter deals for this category
 let categoryDeals = allDeals.filter(deal => {

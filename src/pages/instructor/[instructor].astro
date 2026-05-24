@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import DealCard from '../../components/DealCard.astro';
-import type { Deal } from '../../types/deal';
+import type { Deal } from '../../types/deal.d.ts';
 import { readDeals } from '../../lib/store';
 import { parseInstructors, createInstructorSlug } from '../../lib/instructors';
 
@@ -24,14 +24,15 @@ export async function getStaticPaths() {
 
   return Array.from(slugToName.entries()).map(([instructor, instructorName]) => ({
     params: { instructor },
-    props: { instructorName },
+    props: { instructorName, allDeals: deals },
   }));
 }
 
-const { instructorName: instructorNameProp } = Astro.props as { instructorName?: string };
+const { instructorName: instructorNameProp, allDeals: propAllDeals } = Astro.props as { instructorName?: string; allDeals?: Deal[] };
 const slugParam = Astro.params.instructor ?? '';
 
-const deals: Deal[] = await readDeals();
+// Use allDeals from props, or read if in dev mode
+const deals: Deal[] = propAllDeals || await readDeals();
 
 function dealMatchesInstructorSlug(deal: Deal, targetSlug: string): boolean {
   if (!deal.instructor) return false;
