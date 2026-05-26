@@ -18,7 +18,7 @@ Get expert-reviewed courses and verified promo codes at [courseswyn.com](https:/
 - **150,000+** learners trust our data-driven rankings and savings guides.
 - **1,240+** courses manually audited for curriculum depth and instructor credibility.
 - **66+** in-depth expert reviews covering AI, Web Development, and Cloud Computing.
-- **Real-time** deal tracking with a strict 4-hour update window for all promo codes.
+- **Real-time** deal tracking with a strict 4-hour update & purge window for all promo codes.
 - **Featured** in the Official Astro Showcase for high-performance implementation.
 
 ---
