@@ -7,12 +7,20 @@ import { readDeals } from '../../lib/store';
 export async function getStaticPaths() {
   const allDeals = await readDeals();
   const paths = [];
+  const generated = new Set();
+
   for (const deal of allDeals) {
-    paths.push({
-      params: { slug: deal.id },
-      props: { deal }
-    });
-    if (deal.slug && deal.slug !== deal.id) {
+    // Skip deals whose id or slug already end with .amp (they'll be handled by the normal [slug].astro page)
+    if (!deal.id.endsWith('.amp') && !generated.has(deal.id)) {
+      generated.add(deal.id);
+      paths.push({
+        params: { slug: deal.id },
+        props: { deal }
+      });
+    }
+
+    if (deal.slug && deal.slug !== deal.id && !deal.slug.endsWith('.amp') && !generated.has(deal.slug)) {
+      generated.add(deal.slug);
       paths.push({
         params: { slug: deal.slug },
         props: { deal }
