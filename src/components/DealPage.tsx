@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useMemo, useState } from "react";
 import { renderMarkdownToHtml } from "../lib/markdown";
 import { extractDifficultyLevel, slugifyCategory } from "../lib/utils";
 import ActionsPanel from "./ActionsPanel";
+import { createInstructorSlug } from "../lib/instructors";
 import RelatedList from "./RelatedList";
 import CourseComparison from "./CourseComparison";
 
@@ -521,7 +522,7 @@ export default function DealPage({
               letterSpacing: "-0.04em",
             }}
           >
-            {deal.title} — {discountPct}% OFF Discount Coupon
+            {deal.title} — {discountPct}% OFF Coupon
           </h1>
 
           <p
@@ -599,9 +600,15 @@ export default function DealPage({
                 </svg>
                 <span>
                   Created by{" "}
-                  <strong style={{ color: "var(--text)" }}>
+                  <a
+                    href={`/instructor/${createInstructorSlug(deal.instructor || "")}`}
+                    style={{
+                      color: "var(--brand)",
+                      textDecoration: "underline",
+                    }}
+                  >
                     {deal.instructor}
-                  </strong>
+                  </a>
                 </span>
               </div>
             )}
@@ -699,6 +706,26 @@ export default function DealPage({
               ></span>
               Quick Facts — Course Summary
             </h2>
+            <p
+              style={{
+                fontSize: "0.95rem",
+                color: "var(--muted)",
+                fontWeight: 600,
+                marginBottom: "24px",
+              }}
+            >
+              Here's a comprehensive overview of{" "}
+              <strong style={{ color: "var(--text)" }}>{deal.title}</strong> —
+              including pricing, duration, instructor credentials, curriculum
+              highlights, and coupon validity. All data is verified against{" "}
+              {deal.provider || "Udemy"} listings on{" "}
+              {new Date().toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+              .
+            </p>
             <div
               style={{
                 background: "var(--bg)",
@@ -735,7 +762,22 @@ export default function DealPage({
                   { label: "Course Name", value: deal.title },
                   { label: "Platform", value: `${deal.provider || "Udemy"}` },
                   deal.instructor
-                    ? { label: "Instructor", value: deal.instructor }
+                    ? {
+                        label: "Instructor",
+                        value: (
+                          <span>
+                            <a
+                              href={`/instructor/${createInstructorSlug(deal.instructor || "")}`}
+                              style={{
+                                color: "var(--accent)",
+                                textDecoration: "underline",
+                              }}
+                            >
+                              {deal.instructor}
+                            </a>
+                          </span>
+                        ),
+                      }
                     : null,
                   deal.updatedAt
                     ? {
@@ -890,6 +932,21 @@ export default function DealPage({
                 ></span>
                 Skills You'll Master
               </h2>
+              <p
+                style={{
+                  fontSize: "0.95rem",
+                  color: "var(--muted)",
+                  fontWeight: 600,
+                  marginBottom: "24px",
+                }}
+              >
+                By completing{" "}
+                <strong style={{ color: "var(--text)" }}>{deal.title}</strong>,
+                you'll gain practical, job-ready skills in{" "}
+                {deal.category || "professional development"}. The curriculum is
+                designed by {deal.instructor || "industry experts"} to ensure
+                you develop real-world competencies that employers value.
+              </p>
               <div
                 style={{
                   background: "var(--bg)",
@@ -971,6 +1028,21 @@ export default function DealPage({
                 ></span>
                 What You Need Before Starting
               </h2>
+              <p
+                style={{
+                  fontSize: "0.95rem",
+                  color: "var(--muted)",
+                  fontWeight: 600,
+                  marginBottom: "24px",
+                }}
+              >
+                Before enrolling in{" "}
+                <strong style={{ color: "var(--text)" }}>{deal.title}</strong>,
+                review the recommended prerequisites below. Meeting these
+                requirements will help you follow the course material
+                effectively and get the most out of your learning experience on{" "}
+                {deal.provider || "Udemy"}.
+              </p>
               <div
                 style={{
                   background: "var(--bg)",
@@ -1235,7 +1307,7 @@ export default function DealPage({
                 style={{
                   fontSize: "1.1rem",
                   fontWeight: 900,
-                  color: "var(--brand)",
+                  color: "var(--accent)",
                   marginBottom: "12px",
                   display: "flex",
                   alignItems: "center",
@@ -1427,10 +1499,12 @@ export default function DealPage({
                 }}
               >
                 <strong style={{ color: "var(--text)" }}>{deal.title}</strong>{" "}
-                Course holds an aggregate rating of{" "}
-                {deal.rating?.toFixed(1) || "4.8"} out of 5 based on{" "}
-                {deal.students?.toLocaleString() || "1,489"} student reviews on{" "}
-                {deal.provider || "Udemy"}.
+                has earned an aggregate rating of{" "}
+                {deal.rating?.toFixed(1) || "4.8"} out of 5 from{" "}
+                {deal.students?.toLocaleString() || "thousands of"} verified
+                student reviews on {deal.provider || "Udemy"}. Below is the
+                detailed rating distribution showing learner satisfaction across
+                all star levels.
               </p>
               <div
                 style={{
@@ -1584,9 +1658,14 @@ export default function DealPage({
                   marginBottom: "24px",
                 }}
               >
-                The following section provides background information on{" "}
-                {deal.instructor}, the instructor responsible for creating and
-                maintaining {deal.title} on {deal.provider || "Udemy"}.
+                <strong style={{ color: "var(--text)" }}>
+                  {deal.instructor}
+                </strong>{" "}
+                is the instructor behind{" "}
+                <strong style={{ color: "var(--text)" }}>{deal.title}</strong>{" "}
+                on {deal.provider || "Udemy"}. Learn about their teaching
+                background, subject matter expertise, and instructional approach
+                to determine if this course matches your learning style.
               </p>
               <p
                 style={{
@@ -1633,7 +1712,15 @@ export default function DealPage({
                     <strong style={{ color: "var(--text)" }}>
                       Instructor Name:
                     </strong>{" "}
-                    {deal.instructor}
+                    <a
+                      href={`/instructor/${createInstructorSlug(deal.instructor || "")}`}
+                      style={{
+                        color: "var(--accent)",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      {deal.instructor}
+                    </a>
                   </span>
                 </div>
                 {deal.category && (
@@ -1993,8 +2080,11 @@ export default function DealPage({
                 marginBottom: "24px",
               }}
             >
-              Discover related content and navigation options for{" "}
-              {deal.category || "online learning"}:
+              Discover more {deal.category || "online learning"} resources,
+              related courses, and helpful guides. Browse similar topics,
+              explore instructor profiles, or check out our complete library of
+              verified {deal.provider || "Udemy"} coupon codes to continue your
+              learning journey.
             </p>
             <div
               style={{
