@@ -1,116 +1,428 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { getCollection } from "astro:content";
 import { readDeals } from "../lib/store";
 
-const deals = await readDeals();
-const blogPosts = await getCollection("blog");
+const allDeals = await readDeals();
 
-// Extract categories and topics from deals
-const categories = [...new Set(deals.map(d => d.category).filter(Boolean))].sort();
-const topics = [...new Set(deals.map(d => d.subcategory).filter(Boolean))].sort();
+// Extract unique categories
+const categories = [...new Set(allDeals.map(d => d.category).filter(Boolean))].sort();
 
-const pageTitle = "Sitemap — All Courses & Guides | CoursesWyn";
-const pageDescription = "Complete sitemap for CoursesWyn. Find all Udemy course reviews, verified coupon categories, instructor guides, and career insights in one place.";
+// Extract unique topics
+const topics = [...new Set(allDeals.map(d => d.subcategory).filter(Boolean))].sort() as string[];
+
+// Extract unique instructors (split comma-separated names)
+const instructorSet = new Set<string>();
+allDeals.forEach(d => {
+  if (!d.instructor) return;
+  d.instructor
+    .split(',')
+    .map(name => name.trim())
+    .filter(name => name.length > 0)
+    .forEach(name => instructorSet.add(name));
+});
+const instructors = Array.from(instructorSet).sort();
+
+// Get available dates for blog
+const dates = [...new Set(
+  allDeals.map(d => {
+    const date = new Date(d.updatedAt ?? d.createdAt ?? d.expiresAt ?? 0);
+    return date.toISOString().split('T')[0];
+  })
+)].sort().reverse().slice(0, 30);
+
+const currentDate = new Date();
+const monthNames = ["January","February","March","April","May","June",
+  "July","August","September","October","November","December"];
+const currentMonth = monthNames[currentDate.getMonth()];
+const currentYear = currentDate.getFullYear();
+
+const pageTitle = `Sitemap | CoursesWyn - Free Udemy Courses ${currentMonth} ${currentYear}`;
+const pageDescription = "Navigate CoursesWyn easily. Find all pages, categories, topics, instructors, and blog posts in one place.";
+const canonical = "https://courseswyn.com/sitemap";
+const siteUrl = "https://courseswyn.com";
+
+// FAQ data for Schema
+const faqs = [
+  {
+    q: "What is the CoursesWyn Sitemap?",
+    a: "The CoursesWyn Sitemap is a comprehensive navigation page that helps users discover all available pages, course categories, learning topics, instructors, and daily coupon updates on our platform."
+  },
+  {
+    q: "How can I find free Udemy courses by category?",
+    a: "Browse our Course Categories section on this page to find free Udemy courses organized by subject including Programming, Development, IT & Software, Business, Marketing, and more."
+  },
+  {
+    q: "How often is the site map updated?",
+    a: "Our site map updates automatically daily as new free Udemy courses are added to our database. Check the Daily Updates section for the latest coupon codes posted each day."
+  },
+  {
+    q: "Can I search for courses by instructor?",
+    a: "Yes! Our Top Instructors section lists all course creators on the platform. Click any instructor name to see all their available free courses with 100% off coupons."
+  },
+  {
+    q: "How do I find today's free Udemy coupons?",
+    a: "Visit the Daily Updates section on this site map or go directly to our blog page to see the latest Udemy coupon codes added today, updated every 24 hours."
+  }
+];
+
+// JSON-LD Structured Data
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": `${canonical}#webpage`,
+      "url": canonical,
+      "name": pageTitle,
+      "description": pageDescription,
+      "isPartOf": { "@id": `${siteUrl}/#website` },
+      "breadcrumb": { "@id": `${canonical}#breadcrumb` },
+      "inLanguage": "en-US",
+      "dateModified": currentDate.toISOString().split('T')[0]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": `${canonical}#breadcrumb`,
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
+        { "@type": "ListItem", "position": 2, "name": "Sitemap", "item": canonical }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${canonical}#faq`,
+      "mainEntity": faqs.map(faq => ({
+        "@type": "Question",
+        "name": faq.q,
+        "acceptedAnswer": { "@type": "Answer", "text": faq.a }
+      }))
+    },
+    {
+      "@type": "SiteNavigationElement",
+      "@id": `${canonical}#navigation`,
+      "name": "CoursesWyn Site Navigation",
+      "hasPart": [
+        { "@type": "SiteNavigationElement", "name": "Home", "url": `${siteUrl}/` },
+        { "@type": "SiteNavigationElement", "name": "All Coupons", "url": `${siteUrl}/udemy-coupon-code` },
+        { "@type": "SiteNavigationElement", "name": "Categories", "url": `${siteUrl}/categories` },
+        { "@type": "SiteNavigationElement", "name": "Topics", "url": `${siteUrl}/topics` },
+        { "@type": "SiteNavigationElement", "name": "Instructors", "url": `${siteUrl}/instructors` },
+        { "@type": "SiteNavigationElement", "name": "Blog", "url": `${siteUrl}/blog` },
+        { "@type": "SiteNavigationElement", "name": "Udemy Coupons Today", "url": `${siteUrl}/udemy-coupons-today` }
+      ]
+    }
+  ]
+};
 ---
 
-<Layout title={pageTitle} description={pageDescription}>
-  <main style="background: var(--bg); color: var(--text);">
-    
-    {/* ── HERO ── */}
-    <section style="padding: 100px 0 60px; border-bottom: 2px solid var(--border); background: var(--card);">
-      <div class="container">
-        <h1 style={{ 
-          fontSize: "clamp(2.5rem, 7vw, 4rem)", 
-          fontWeight: 900, 
-          lineHeight: 1.05, 
-          letterSpacing: "-0.04em",
-          marginBottom: "24px"
+<Layout title={pageTitle} description={pageDescription} canonical={canonical}>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  </Fragment>
+  <div style={{ minHeight: "100vh", color: "var(--text)" }}>
+    {/* Hero */}
+    <section style={{ padding: "4rem 1rem", textAlign: "center", background: "linear-gradient(135deg, hsl(222, 47%, 7%) 0%, hsl(222, 43%, 10%) 100%)" }}>
+      <div class="container" style={{ maxWidth: "900px" }}>
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: "0.5rem",
+          background: "var(--brand-soft)", padding: "0.5rem 1rem",
+          borderRadius: "9999px", marginBottom: "1.5rem",
+          fontSize: "0.875rem", color: "var(--brand)", fontWeight: 600
         }}>
-          Site<br/>
-          <span style={{ background: "var(--accent)", color: "white", padding: "0 10px" }}>Navigation.</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+          </svg>
+          Site Navigation
+        </div>
+        <h1 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, marginBottom: "1rem" }}>
+          Sitemap
         </h1>
-        <p style={{ fontSize: "1.1rem", color: "var(--muted)", maxWidth: "600px", fontWeight: 500 }}>
-          Find every page, guide, and category on the CoursesWyn platform.
+        <p style={{ color: "var(--muted)", fontSize: "1.1rem", maxWidth: "600px", margin: "0 auto", lineHeight: 1.6 }}>
+          Explore all pages and sections of CoursesWyn. Find free Udemy courses by category, topic, instructor, or date.
         </p>
       </div>
     </section>
 
-    {/* ── GRID ── */}
-    <section style="padding: 80px 0;">
-      <div class="container">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 48px;">
-          
-          {/* Main Pages */}
-          <div>
-            <h2 class="sitemap-heading">Main Sections</h2>
-            <ul class="sitemap-list">
-              <li><a href="/">Home</a></li>
-              <li><a href="/blog">Best Courses (Reviews)</a></li>
-              <li><a href="/udemy-coupon-code">Latest Coupons</a></li>
-              <li><a href="/instructors">Instructors</a></li>
-              <li><a href="/categories">Categories</a></li>
-              <li><a href="/topics">Topics</a></li>
-              <li><a href="/popular">Popular Deals</a></li>
-            </ul>
-          </div>
+    {/* Main Content */}
+    <section style={{ padding: "3rem 1rem" }}>
+      <div class="container" style={{ maxWidth: "1200px" }}>
 
-          {/* Resources */}
-          <div>
-            <h2 class="sitemap-heading">Resources</h2>
-            <ul class="sitemap-list">
-              <li><a href="/udemy-coupons-guide">Coupons Guide</a></li>
-              <li><a href="/how-to-redeem-coupon">How to Redeem</a></li>
-              <li><a href="/success-stories">Success Stories</a></li>
-              <li><a href="/about">About Us</a></li>
-              <li><a href="/contact">Contact</a></li>
-              <li><a href="/privacy">Privacy Policy</a></li>
-              <li><a href="/terms">Terms of Use</a></li>
-            </ul>
+        {/* Main Pages */}
+        <div style={{ marginBottom: "3rem" }}>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--brand)">
+              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+            Main Pages
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1rem" }}>
+            {[
+              { href: "/", label: "Home", desc: "Latest free Udemy courses" },
+              { href: "/udemy-coupon-code", label: "All Coupons", desc: "Browse all verified deals" },
+              { href: "/categories", label: "Categories", desc: "Courses by subject" },
+              { href: "/topics", label: "Topics", desc: "Courses by specific topics" },
+              { href: "/instructors", label: "Instructors", desc: "Top course creators" },
+              { href: "/blog", label: "Blog", desc: "Daily coupon updates" },
+              { href: "/how-to-redeem-coupon", label: "How to Redeem", desc: "Coupon redemption guide" },
+              { href: "/udemy-coupons-today", label: "Udemy Coupons Today", desc: "Daily coupon updates" },
+              { href: "/popular", label: "Popular", desc: "Most viewed courses" },
+              { href: "/about", label: "About", desc: "About CoursesWyn" },
+              { href: "/success-stories", label: "Success Stories", desc: "Learner achievements" },
+            ].map(page => (
+              <a href={page.href} style={{
+                display: "block",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "12px",
+                padding: "1.25rem",
+                textDecoration: "none",
+                color: "var(--text)",
+                transition: "all 0.2s ease"
+              }}>
+                <div style={{ fontWeight: 600, marginBottom: "0.25rem", color: "var(--brand)" }}>{page.label}</div>
+                <div style={{ fontSize: "0.9rem", color: "var(--muted)" }}>{page.desc}</div>
+              </a>
+            ))}
           </div>
-
-          {/* Blog Content */}
-          <div>
-            <h2 class="sitemap-heading">Editorial Guides</h2>
-            <ul class="sitemap-list">
-              {blogPosts.slice(0, 10).map(post => (
-                <li><a href={`/blog/${post.id}`}>{post.data.title}</a></li>
-              ))}
-              {blogPosts.length > 10 && (
-                <li><a href="/blog" style="color: var(--accent); font-weight: 900;">View All Guides →</a></li>
-              )}
-            </ul>
-          </div>
-
-          {/* Top Categories */}
-          <div>
-            <h2 class="sitemap-heading">Categories</h2>
-            <ul class="sitemap-list">
-              {categories.slice(0, 10).map(cat => (
-                <li><a href={`/categories/${cat.toLowerCase().replace(/\s+/g, '-')}`}>{cat}</a></li>
-              ))}
-              <li><a href="/categories" style="color: var(--accent); font-weight: 900;">View All Categories →</a></li>
-            </ul>
-          </div>
-
         </div>
+
+        {/* Categories */}
+        <div style={{ marginBottom: "3rem" }}>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--brand)">
+              <path d="M12 2l-5.5 9h11z"/>
+              <circle cx="17.5" cy="17.5" r="4.5"/>
+              <path d="M3 13.5h8v8H3z"/>
+            </svg>
+            Course Categories
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "0.75rem" }}>
+            {categories.map(cat => {
+              const catSlug = cat.toLowerCase()
+                .replace(/&/g, ' and ')
+                .replace(/[^\w\s-]/g, '')
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+              return (
+              <a href={`/categories/${encodeURIComponent(catSlug)}`} style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "8px",
+                padding: "0.75rem 1rem",
+                textDecoration: "none",
+                color: "var(--text)",
+                fontSize: "0.9rem",
+                transition: "all 0.2s ease"
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--brand)">
+                  <path d="M12 2l-5.5 9h11z"/>
+                </svg>
+                {cat}
+              </a>
+              );}
+            )}
+          </div>
+
+        {/* Topics */}
+        <div style={{ marginBottom: "3rem" }}>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--brand)">
+              <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+            </svg>
+            Learning Topics
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "0.75rem" }}>
+            {topics.slice(0, 50).map(topic => {
+              const topicSlug = topic.toLowerCase()
+                .replace(/&/g, ' and ')
+                .replace(/[^\w\s-]/g, '')
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+              return (
+              <a href={`/topics/${encodeURIComponent(topicSlug)}`} style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "8px",
+                padding: "0.75rem 1rem",
+                textDecoration: "none",
+                color: "var(--text)",
+                fontSize: "0.9rem",
+                transition: "all 0.2s ease"
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--brand)">
+                  <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2z"/>
+                </svg>
+                {topic}
+              </a>
+              );}
+            )}
+          </div>
+        </div>
+
+        {/* Instructors */}
+        <div style={{ marginBottom: "3rem" }}>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--brand)">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            Top Instructors
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "0.75rem" }}>
+            {instructors.slice(0, 50).map(instructor => {
+              const slug = instructor.toLowerCase()
+                .replace(/[^\w\s-]/g, "")
+                .replace(/\s+/g, "-")
+                .replace(/-+/g, "-")
+                .substring(0, 100);
+              return (
+                <a href={`/instructor/${slug}`} style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "8px",
+                  padding: "0.75rem 1rem",
+                  textDecoration: "none",
+                  color: "var(--text)",
+                  fontSize: "0.9rem",
+                  transition: "all 0.2s ease"
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--brand)">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                  {instructor}
+                </a>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Blog Dates */}
+        <div style={{ marginBottom: "3rem" }}>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--brand)">
+              <path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+              <path d="M14 17H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+            </svg>
+            Daily Updates (Udemy Coupons Today)
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "0.75rem" }}>
+            {dates.map(date => (
+              <a href={`/udemy-coupons-today/${date}`} style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "8px",
+                padding: "0.75rem 1rem",
+                textDecoration: "none",
+                color: "var(--text)",
+                fontSize: "0.9rem",
+                transition: "all 0.2s ease"
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--brand)">
+                  <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/>
+                </svg>
+                {date}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Info Pages */}
+        <div style={{ marginBottom: "3rem" }}>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--brand)">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+            Information
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1rem" }}>
+            {[
+              { href: "/privacy", label: "Privacy Policy", desc: "How we handle your data" },
+              { href: "/terms", label: "Terms of Service", desc: "Terms and conditions" },
+              { href: "/udemy-coupons-guide", label: "Udemy Coupons Guide", desc: "Complete coupon guide" },
+              { href: "/contact", label: "Contact", desc: "Get in touch with us" },
+              { href: "/affiliate-disclosure", label: "Affiliate Disclosure", desc: "Our affiliate relationships" },
+            ].map(page => (
+              <a href={page.href} style={{
+                display: "block",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "12px",
+                padding: "1.25rem",
+                textDecoration: "none",
+                color: "var(--text)",
+                transition: "all 0.2s ease"
+              }}>
+                <div style={{ fontWeight: 600, marginBottom: "0.25rem", color: "var(--brand)" }}>{page.label}</div>
+                <div style={{ fontSize: "0.9rem", color: "var(--muted)" }}>{page.desc}</div>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* FAQ Section - Schema matched */}
+        <div style={{ marginBottom: "3rem" }} id="faq">
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--brand)">
+              <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/>
+            </svg>
+            Frequently Asked Questions
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {faqs.map((faq, index) => (
+              <div
+                itemscope
+                itemprop="mainEntity"
+                itemtype="https://schema.org/Question"
+                style={{
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "12px",
+                  overflow: "hidden"
+                }}
+              >
+                <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border)" }}>
+                  <h3 itemprop="name" style={{ margin: 0, fontSize: "1rem", fontWeight: 600, color: "var(--text)" }}>
+                    <span style={{ color: "var(--brand)", marginRight: "0.5rem" }}>Q{index + 1}.</span>
+                    {faq.q}
+                  </h3>
+                </div>
+                <div
+                  itemscope
+                  itemprop="acceptedAnswer"
+                  itemtype="https://schema.org/Answer"
+                  style={{ padding: "1.25rem 1.5rem", background: "var(--brand-soft)" }}
+                >
+                  <p itemprop="text" style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6, fontSize: "0.95rem" }}>
+                    {faq.a}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </section>
-
-  </main>
-
-  <style>
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-    .sitemap-heading {
-      font-size: 1.2rem; font-weight: 900; text-transform: uppercase;
-      letter-spacing: 0.1em; color: var(--text); margin-bottom: 24px;
-      padding-bottom: 12px; border-bottom: 2px solid var(--border);
-    }
-    .sitemap-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-    .sitemap-list a { 
-      text-decoration: none; color: var(--muted); font-weight: 600; font-size: 0.95rem;
-      transition: all 0.15s ease;
-    }
-    .sitemap-list a:hover { color: var(--accent); transform: translateX(4px); display: inline-block; }
-  </style>
+  </div>
 </Layout>
+
+<style>
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+</style>
