@@ -1,0 +1,124 @@
+---
+interface Props {
+  title: string;
+  image: string;
+  url: string;
+  price?: number;
+  originalPrice?: number;
+  rating?: number;
+  instructor?: string;
+  students?: number;
+  description?: string;
+  slug?: string; // fallback: cari dari coupons.json
+}
+
+const {
+  title,
+  image,
+  url,
+  price: propPrice,
+  originalPrice: propOrig,
+  rating: propRating,
+  instructor,
+  students,
+  description,
+  slug,
+} = Astro.props;
+
+// Try to get data from coupons.json if slug is provided and no direct data
+let dealImage = image;
+let dealUrl = url;
+let dealTitle = title;
+let dealPrice = propPrice ?? 9.99;
+let dealOrig = propOrig ?? 199.99;
+let dealRating = propRating ?? 0;
+let dealInstructor = instructor ?? "";
+let dealStudents = students ?? 0;
+let dealDesc = description ?? "";
+
+if (slug && !image) {
+  try {
+    const fs = await import("fs");
+    const path = await import("path");
+    const dealsPath = path.join(process.cwd(), "src", "data", "coupons.json");
+    const raw = fs.readFileSync(dealsPath, "utf-8");
+    const deals = JSON.parse(raw);
+    const deal = deals.find((d: any) => d.slug === slug);
+    if (deal) {
+      dealImage = dealImage || deal.image || "";
+      dealUrl = dealUrl || deal.url || url;
+      dealTitle = dealTitle || deal.title || title;
+      dealPrice = dealPrice || (deal.price ?? 9.99);
+      dealOrig = dealOrig || (deal.originalPrice ?? 199.99);
+      dealRating = dealRating || (deal.rating ?? 0);
+      dealInstructor = dealInstructor || deal.instructor || "";
+      dealStudents = dealStudents || (deal.students ?? 0);
+      dealDesc = dealDesc || deal.description || "";
+    }
+  } catch {}
+}
+
+const hasDiscount = dealOrig > dealPrice && dealPrice > 0;
+const discountPct = hasDiscount ? Math.round(100 - (dealPrice / dealOrig) * 100) : 0;
+---
+
+<div class="deal-embed">
+  <a href={dealUrl} target="_blank" rel="noopener noreferrer" class="deal-embed-inner">
+    <div class="deal-embed-image">
+      {dealImage ? (
+        <img src={dealImage} alt={dealTitle} loading="lazy" />
+      ) : (
+        <div class="deal-embed-placeholder">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" opacity="0.3">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+        </div>
+      )}
+    </div>
+    <div class="deal-embed-body">
+      <div class="deal-embed-badge">
+        <span class="deal-embed-brand">UDEMY</span>
+        <span class="deal-embed-type">Course</span>
+      </div>
+      <div class="deal-embed-title">{dealTitle}</div>
+      {dealInstructor && <div class="deal-embed-instructor">{dealInstructor}</div>}
+      <div class="deal-embed-meta">
+        {dealRating > 0 && <span>⭐ {dealRating.toFixed(1)}</span>}
+        {dealStudents > 0 && <span>· {dealStudents.toLocaleString()} students</span>}
+      </div>
+      {dealDesc && <div class="deal-embed-desc">{dealDesc.slice(0, 120)}...</div>}
+      <div class="deal-embed-footer">
+        <div class="deal-embed-price">
+          <span class="deal-embed-current">${dealPrice.toFixed(2)}</span>
+          {hasDiscount && <span class="deal-embed-original">${dealOrig.toFixed(2)}</span>}
+          {hasDiscount && <span class="deal-embed-discount">-{discountPct}%</span>}
+        </div>
+        <span class="deal-embed-cta">Enroll Now →</span>
+      </div>
+    </div>
+  </a>
+</div>
+
+<style>
+  .deal-embed { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 1rem 0 2rem; background: var(--card); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .deal-embed:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+  .deal-embed-inner { display: flex; text-decoration: none; color: inherit; }
+  .deal-embed-image { width: 180px; min-height: 140px; flex-shrink: 0; background: var(--bg); overflow: hidden; }
+  .deal-embed-image img { width: 100%; height: 100%; object-fit: cover; }
+  .deal-embed-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+  .deal-embed-body { flex: 1; padding: 1rem; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+  .deal-embed-badge { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .deal-embed-brand { background: var(--brand-soft); color: var(--brand); font-size: 0.6rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.04em; }
+  .deal-embed-type { color: var(--muted); font-size: 0.7rem; }
+  .deal-embed-title { font-size: 0.9rem; font-weight: 600; color: var(--text); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .deal-embed-instructor { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+  .deal-embed-meta { font-size: 0.72rem; color: var(--muted); display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+  .deal-embed-desc { font-size: 0.75rem; color: var(--muted); line-height: 1.4; margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+  .deal-embed-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .deal-embed-price { display: flex; align-items: center; gap: 6px; }
+  .deal-embed-current { font-size: 1rem; font-weight: 700; color: var(--brand); }
+  .deal-embed-original { font-size: 0.72rem; color: var(--muted); text-decoration: line-through; }
+  .deal-embed-discount { font-size: 0.6rem; font-weight: 700; color: white; background: var(--brand); padding: 1px 6px; border-radius: 4px; }
+  .deal-embed-cta { font-size: 0.75rem; font-weight: 600; color: var(--brand); }
+  @media (max-width: 640px) { .deal-embed-inner { flex-direction: column; } .deal-embed-image { width: 100%; height: 140px; } }
+</style>
