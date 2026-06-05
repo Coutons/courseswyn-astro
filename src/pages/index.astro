@@ -1,1718 +1,370 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import DealCard from "../components/DealCard.astro";
-import FeaturedDealCard from "../components/FeaturedDealCard.astro";
-import DealsList from "../components/DealsList";
-import HeaderSearch from "../components/HeaderSearch";
 import { readDeals } from "../lib/store";
-import { uniqueProviders } from "../lib/mockData";
 
-// ─── Date helpers ────────────────────────────────────────────────────────────
-const currentDate = new Date();
-const utcDate     = new Date(currentDate.toISOString());
-const monthNames  = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December"
-];
-const currentMonth = monthNames[utcDate.getMonth()];
-const currentYear  = utcDate.getFullYear();
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function genStudents(key: string): number {
-  let h = 2166136261 >>> 0;
-  for (let i = 0; i < key.length; i++) {
-    h ^= key.charCodeAt(i);
-    h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
-  }
-  const r = (h >>> 0) / 0xffffffff;
-  const min = 1000, max = 80000;
-  const val = Math.floor(min + (max - min) * Math.pow(r, 0.6));
-  return Math.round(val / 10) * 10;
-}
-
-function formatStudents(n: number) {
-  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, "") + "m";
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
-  return String(n);
-}
-
-// ─── SEO Meta ────────────────────────────────────────────────────────────────
-// [SEO TITLE]
-const pageTitle       = `Free Udemy Courses & Coupons - Get Premium Courses for FREE with Real Discount`;
-// [SEO DESCRIPTION]
-const pageDescription = `Get Free Online Courses with Certificates, Udemy Coupon, Udemy Coupon Codes, Free Udemy Online Courses, Udemy Free Courses, Online Education and More...`;
-
-// ─── Deals Data ──────────────────────────────────────────────────────────────
-const allDeals     = await readDeals();
-const PAGE_SIZE    = 6;
+const allDeals = await readDeals();
+const PAGE_SIZE = 6;
 const initialItems = allDeals.slice(0, PAGE_SIZE);
-const totalPages   = Math.ceil(allDeals.length / PAGE_SIZE);
 
-// ─── Categories ──────────────────────────────────────────────────────────────
-function normName(raw?: string | null) {
-  if (!raw) return undefined;
-  let v = String(raw).trim();
-  v = v.replace(/&amp;/gi, "&").replace(/\s+/g, " ");
-  return v || undefined;
-}
 function slugifyCategory(name: string) {
   if (name === "Uncategorized") return "uncategorized";
-  return name.toLowerCase()
-    .replace(/&amp;/gi, "&")
-    .replace(/&/g, " and ")
-    .replace(/[^\w\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-}
-function getCategoryDescription(category: string) {
-  const cat = category.toLowerCase();
-  if (cat === "development")               return "Master programming, web development, and software engineering";
-  if (cat === "programming")              return "Learn coding languages, algorithms, and software development fundamentals";
-  if (cat === "it & software")            return "Learn IT infrastructure, cybersecurity, and software tools";
-  if (cat.includes("business"))           return "Build business skills in management, finance, and entrepreneurship";
-  if (cat === "finance")                  return "Master financial analysis, investment strategies, and accounting principles";
-  if (cat.includes("marketing"))         return "Master digital marketing, SEO, and social media strategies";
-  if (cat.includes("data") || cat.includes("analytics")) return "Learn data science, analytics, and machine learning techniques";
-  if (cat.includes("teaching"))          return "Advance your academic knowledge with specialised educational courses";
-  if (cat.includes("design"))            return "Explore graphic design, UI/UX, and creative tools";
-  if (cat.includes("photography"))       return "Master photography techniques and digital image processing";
-  if (cat.includes("music"))             return "Learn music production, composition, and audio engineering";
-  if (cat.includes("personal"))          return "Develop personal growth and soft skills for career success";
-  if (cat.includes("office"))            return "Boost productivity with Microsoft Office, Google Workspace, and collaboration tools";
-  return "Explore premium courses with exclusive coupons and deals";
+  return name.toLowerCase().replace(/&amp;/gi, "&").replace(/&/g, " and ").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").replace(/-+/g, "-");
 }
 
-const categories = [
-  ...new Set(allDeals.map((d) => d.category).filter(Boolean).map(normName).filter(Boolean)),
-] as string[];
+const categories = [...new Set(allDeals.map((d) => d.category).filter(Boolean))] as string[];
 
-// ─── Featured Deal ────────────────────────────────────────────────────────────
-const featuredDeals = allDeals
-  .filter((d) => d.rating && d.rating >= 4.8)
-  .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-  .slice(0, 1);
-const featuredImage = featuredDeals.length > 0 ? featuredDeals[0].image : "/og-image.jpg";
+const now = new Date();
+const monthName = now.toLocaleString('en-US',{month:'long',year:'numeric'});
+const pageTitle = `Free Udemy Coupons ${monthName} — 1,200+ Verified Discounts | CoursesWyn`;
+const pageDescription = `Find 1,200+ verified free Udemy coupons updated daily. Save on AI, coding, design, business & more courses. No signup required.`;
 
-// ─── Trust Indicators ────────────────────────────────────────────────────────
-const trustIndicators = [
-  {
-    icon: `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`,
-    title: "100% Verified Coupons",
-    description: "Every coupon is manually tested and verified to work before publishing. No more expired codes or fake discounts wasting your time."
-  },
-  {
-    icon: `<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>`,
-    title: "4.8/5 Average Rating",
-    description: "Based on 50,000+ verified student reviews across all platforms. Our curated courses consistently deliver exceptional learning outcomes."
-  },
-  {
-    icon: `<path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>`,
-    title: "Daily Fresh Deals",
-    description: "Fresh Udemy coupons added every hours. Our team scours the web so you never miss a limited-time free course offer."
-  },
-  {
-    icon: `<path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V7h10v2z"/>`,
-    title: "Lifetime Access",
-    description: "Keep courses forever — once enrolled, your access never expires. Includes completion certificates, downloadable resources, and all future updates."
-  },
-  {
-    icon: `<path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm3 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>`,
-    title: "No Hidden Fees",
-    description: "100% free — no credit card required, no subscription, no catch. We partner with instructors who want to reach more students worldwide."
-  },
-  {
-    icon: `<path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>`,
-    title: "Premium Courses Free",
-    description: "Access courses that normally cost $12–$200 completely free. Learn from top-rated instructors without spending a single dollar."
-  }
-];
-
-// ─── Language Data (Dynamic from deals.json) ─────────────────────────────────────
-
-// Normalize language names (fix typos like "Englilsh", "Engliish", etc.)
-function normalizeLanguage(lang: string | undefined): string | undefined {
-  if (!lang) return undefined;
-  const lower = lang.toLowerCase();
-  // Fix common typos
-  if (lower.startsWith('engl')) return 'English';
-  return lang;
-}
-
-// Extract unique languages from deals
-const uniqueLanguages = [...new Set(
-  allDeals
-    .map(d => d.language)
-    .filter(Boolean)
-    .map(normalizeLanguage)
-    .filter(Boolean) as string[]
-)];
-
-// Language metadata mapping
-const languageMetadata: Record<string, { code: string; name: string; flag: string; native: string; udemyLocale: string }> = {
-  "English": { code: "en", name: "English", flag: "https://flagcdn.com/w80/us.png", native: "English", udemyLocale: "en_US" },
-  "Spanish": { code: "es", name: "Spanish", flag: "https://flagcdn.com/w80/es.png", native: "Español", udemyLocale: "es_ES" },
-  "French": { code: "fr", name: "French", flag: "https://flagcdn.com/w80/fr.png", native: "Français", udemyLocale: "fr_FR" },
-  "German": { code: "de", name: "German", flag: "https://flagcdn.com/w80/de.png", native: "Deutsch", udemyLocale: "de_DE" },
-  "Portuguese": { code: "pt", name: "Portuguese", flag: "https://flagcdn.com/w80/br.png", native: "Português", udemyLocale: "pt_BR" },
-  "Japanese": { code: "ja", name: "Japanese", flag: "https://flagcdn.com/w80/jp.png", native: "日本語", udemyLocale: "ja_JP" },
-  "Chinese": { code: "zh", name: "Chinese", flag: "https://flagcdn.com/w80/cn.png", native: "中文", udemyLocale: "zh_CN" },
-  "Korean": { code: "ko", name: "Korean", flag: "https://flagcdn.com/w80/kr.png", native: "한국어", udemyLocale: "ko_KR" },
-  "Italian": { code: "it", name: "Italian", flag: "https://flagcdn.com/w80/it.png", native: "Italiano", udemyLocale: "it_IT" },
-  "Arabic": { code: "ar", name: "Arabic", flag: "https://flagcdn.com/w80/sa.png", native: "العربية", udemyLocale: "ar_SA" },
-  "Russian": { code: "ru", name: "Russian", flag: "https://flagcdn.com/w80/ru.png", native: "Русский", udemyLocale: "ru_RU" },
-  "Hindi": { code: "hi", name: "Hindi", flag: "https://flagcdn.com/w80/in.png", native: "हिन्दी", udemyLocale: "hi_IN" },
-  "Turkish": { code: "tr", name: "Turkish", flag: "https://flagcdn.com/w80/tr.png", native: "Türkçe", udemyLocale: "tr_TR" },
-  "Dutch": { code: "nl", name: "Dutch", flag: "https://flagcdn.com/w80/nl.png", native: "Nederlands", udemyLocale: "nl_NL" },
-  "Polish": { code: "pl", name: "Polish", flag: "https://flagcdn.com/w80/pl.png", native: "Polski", udemyLocale: "pl_PL" },
-  "Indonesian": { code: "id", name: "Indonesian", flag: "https://flagcdn.com/w80/id.png", native: "Bahasa Indonesia", udemyLocale: "id_ID" },
-  "Vietnamese": { code: "vi", name: "Vietnamese", flag: "https://flagcdn.com/w80/vn.png", native: "Tiếng Việt", udemyLocale: "vi_VN" },
-  "Thai": { code: "th", name: "Thai", flag: "https://flagcdn.com/w80/th.png", native: "ไทย", udemyLocale: "th_TH" },
-  "Malay": { code: "ms", name: "Malay", flag: "https://flagcdn.com/w80/my.png", native: "Bahasa Melayu", udemyLocale: "ms_MY" },
-  "Ukrainian": { code: "uk", name: "Ukrainian", flag: "https://flagcdn.com/w80/ua.png", native: "Українська", udemyLocale: "uk_UA" },
-};
-
-// Build languages array from actual deals data (show all for SEO competitiveness)
-const languages = uniqueLanguages
-  .map(lang => languageMetadata[lang])
-  .filter(Boolean)
-  .sort((a, b) => a.name.localeCompare(b.name));
-
-// ─── Platform Data ─────────────────────────────────────────────────────────────
-const platforms = [
-  {
-    name: "Udemy",
-    icon: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#A435F0"/><path d="M12 3.5L5 7.5V16.5L12 20.5L19 16.5V7.5L12 3.5Z" fill="white" opacity="0.3"/><path d="M12 3.5V11L8.5 8.75V7.25L12 3.5Z" fill="white"/><path d="M12 3.5V11L15.5 8.75V7.25L12 3.5Z" fill="white" opacity="0.6"/><path d="M12 11V20.5L8.5 16.5V13L12 11Z" fill="white" opacity="0.8"/><path d="M12 11V20.5L15.5 16.5V13L12 11Z" fill="white"/></svg>`,
-    color: "#A435F0",
-    url: "https://trk.udemy.com/c/6564357/3193860/39854",
-    seoTitle: "Udemy",
-    description: "World's largest online learning marketplace with 200,000+ free and paid courses in programming, web development, data science, business, and design. Lifetime access with certificate of completion.",
-    courses: "200,000+",
-    rating: "4.5",
-    freeCourses: true
-  },
-  {
-    name: "Coursera",
-    icon: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#0056D2"/><path d="M12 4C8.13 4 5 7.13 5 11C5 14.87 8.13 18 12 18C13.5 18 14.9 17.56 16.07 16.8L14.47 14.8C13.73 15.25 12.88 15.5 12 15.5C9.52 15.5 7.5 13.48 7.5 11C7.5 8.52 9.52 6.5 12 6.5C12.88 6.5 13.73 6.75 14.47 7.2L16.07 5.2C14.9 4.44 13.5 4 12 4Z" fill="white"/><circle cx="17" cy="17" r="4" fill="white" opacity="0.4"/><path d="M17 14.5C15.62 14.5 14.5 15.62 14.5 17C14.5 18.38 15.62 19.5 17 19.5C18.38 19.5 19.5 18.38 19.5 17C19.5 15.62 18.38 14.5 17 14.5Z" fill="white"/></svg>`,
-    color: "#0056D2",
-    url: "https://www.coursera.org",
-    seoTitle: "Coursera",
-    description: "Top e-learning platform partnering with 275+ universities like Stanford, Yale, and Google. Earn accredited degrees, professional certificates, and free courses in data science, IT, and business.",
-    courses: "7,000+",
-    rating: "4.7",
-    freeCourses: true
-  },
-  {
-    name: "edX",
-    icon: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#02262B"/><path d="M3 7.5L6.5 12L3 16.5H6L9.5 12L6 7.5H3Z" fill="#C8C8C8"/><path d="M6 7.5L9.5 12L6 16.5H9L12.5 12L9 7.5H6Z" fill="white"/><path d="M9 7.5L12.5 12L9 16.5H12L15.5 12L12 7.5H9Z" fill="#C8C8C8"/><path d="M12 7.5L15.5 12L12 16.5H15L18.5 12L15 7.5H12Z" fill="white"/><path d="M15 7.5L18.5 12L15 16.5H18L21.5 12L18 7.5H15Z" fill="#C8C8C8"/></svg>`,
-    color: "#02262B",
-    url: "https://www.edx.org",
-    seoTitle: "edX",
-    description: "Harvard and MIT founded platform offering 4,000+ free university-level courses. Learn computer science, engineering, and humanities with verified certificates and MicroMasters programs.",
-    courses: "4,000+",
-    rating: "4.6",
-    freeCourses: true
-  },
-  {
-    name: "Pluralsight",
-    icon: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#F05A28"/><path d="M8 5L18 12L8 19V5Z" fill="white"/></svg>`,
-    color: "#F05A28",
-    url: "https://www.pluralsight.com",
-    seoTitle: "Pluralsight",
-    description: "Premium technology skills platform for software developers, cloud engineers, and IT professionals. Master Python, JavaScript, AWS, and cybersecurity with hands-on labs and skill IQ assessments.",
-    courses: "7,000+",
-    rating: "4.4",
-    freeCourses: false
-  },
-  {
-    name: "Skillshare",
-    icon: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#00FF84"/><path d="M8 6C8 6 6 8 6 12C6 16 8 18 8 18" stroke="#1E1E1E" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M16 6C16 6 18 8 18 12C18 16 16 18 16 18" stroke="#1E1E1E" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M10 9C10 9 9 10.5 9 12C9 13.5 10 15 10 15" stroke="#1E1E1E" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M14 9C14 9 15 10.5 15 12C15 13.5 14 15 14 15" stroke="#1E1E1E" stroke-width="2" stroke-linecap="round" fill="none"/></svg>`,
-    color: "#00FF84",
-    url: "https://www.skillshare.com",
-    seoTitle: "Skillshare",
-    description: "Creative online learning community with thousands of free classes in graphic design, illustration, photography, video editing, and UI/UX design. Project-based lessons from industry professionals.",
-    courses: "30,000+",
-    rating: "4.3",
-    freeCourses: true
-  },
-  {
-    name: "LinkedIn Learning",
-    icon: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#0A66C2"/><path d="M8.5 7C8.5 7.83 7.83 8.5 7 8.5C6.17 8.5 5.5 7.83 5.5 7C5.5 6.17 6.17 5.5 7 5.5C7.83 5.5 8.5 6.17 8.5 7Z" fill="white"/><path d="M5.5 10H8.5V18.5H5.5V10Z" fill="white"/><path d="M10.5 10H13.2V11.3C13.7 10.5 14.9 9.8 16.5 9.8C19 9.8 19.5 11.5 19.5 13.8V18.5H16.8V14.3C16.8 13.2 16.8 11.8 15.2 11.8C13.6 11.8 13.4 13 13.3 14V18.5H10.5V10Z" fill="white"/></svg>`,
-    color: "#0A66C2",
-    url: "https://www.linkedin.com/learning",
-    seoTitle: "LinkedIn Learning",
-    description: "Professional development platform integrated with LinkedIn profiles. Earn certificates that showcase on your resume. Free courses in leadership, project management, Excel, Python, and workplace soft skills.",
-    courses: "16,000+",
-    rating: "4.5",
-    freeCourses: true
-  }
-];
-
-// ─── FAQ Data ─────────────────────────────────────────────────────────────────
-const faqs = [
-  {
-    icon: "M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z",
-    q: "Are Udemy coupons on CoursesWyn really 100% free?",
-    a: "Yes! Every coupon we publish gives you 100% off the course price — you pay absolutely nothing. No hidden fees, no subscription, and no credit card required. Simply click the coupon link and enroll on Udemy for free."
-  },
-  {
-    icon: "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z",
-    q: "How often are new Udemy coupons added?",
-    a: "We add new free Udemy course coupons every single day. Our team works around the clock to source, verify, and publish the latest deals across all categories — from programming and web development to marketing and personal development."
-  },
-  {
-    icon: "M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z",
-    q: "How long do Udemy coupon codes last?",
-    a: "Udemy coupon validity typically ranges from 1–7 days, though some last up to a month. Each coupon also has a maximum enrollment limit (usually 1,000 students). We recommend enrolling immediately when you find a course you want — free spots fill up fast!"
-  },
-  {
-    icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z",
-    q: "Will I receive a certificate after completing a free course?",
-    a: "Absolutely! Courses enrolled via our 100% off coupons include the exact same benefits as paid courses — including an official Udemy completion certificate, lifetime access, downloadable resources, and instructor Q&A support."
-  },
-  {
-    icon: "M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-2zM17 19H7V5h10v14z",
-    q: "Can I access Udemy courses on mobile devices?",
-    a: "Yes! All Udemy courses are fully accessible via the Udemy iOS and Android apps, as well as on any desktop browser. You can also download lectures for offline viewing — perfect for learning on the go."
-  },
-  {
-    icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
-    q: "What should I do if a coupon code doesn't work?",
-    a: "We verify all coupons before publishing, but Udemy coupons can expire or hit their enrollment limit quickly. If a code doesn't work, refresh our page for the latest deals or check the comments section — our community often posts working alternatives within minutes."
-  }
-];
-
-// ─── JSON-LD Structured Data ──────────────────────────────────────────────────
-// [SEO JSON-LD]
 const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    // WebSite dengan SearchAction → enables Google Sitelinks Searchbox
-    {
-      "@type": "WebSite",
-      "@id": "https://courseswyn.com/#website",
-      "url": "https://courseswyn.com",
-      "name": "Free Udemy Courses & Coupons with Real Discount",
-      "description": "Get Free Online Courses with Certificates, Udemy Coupon, Udemy Coupon Codes, Free Udemy Online Courses, Udemy Free Courses, Online Education and More...",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": {
-          "@type": "EntryPoint",
-          "urlTemplate": "https://courseswyn.com/search?q={search_term_string}"
-        },
-        "query-input": "required name=search_term_string"
-      }
-    },
-    // Organization untuk E-E-A-T
-    {
-      "@type": "Organization",
-      "@id": "https://courseswyn.com/#organization",
-      "name": "CoursesWyn",
-      "url": "https://courseswyn.com",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "https://courseswyn.com/logo.png",
-        "width": 200,
-        "height": 60
-      },
-      "sameAs": [
-        "https://twitter.com/CoursesGift",
-        "https://facebook.com/BestCouponPromo"
-      ]
-    },
-    // EducationalOrganization dengan offer catalog
-    {
-      "@type": "EducationalOrganization",
-      "@id": "https://courseswyn.com/#educational",
-      "name": "Free Udemy Courses & Coupons with Real Discount",
-      "description": "Get Free Online Courses with Certificates, Udemy Coupon, Udemy Coupon Codes, Free Udemy Online Courses, Udemy Free Courses, Online Education and More...",
-      "url": "https://courseswyn.com",
-      "hasOfferCatalog": {
-        "@type": "OfferCatalog",
-        "name": `Free Udemy Coupons ${currentMonth} ${currentYear}`,
-        "itemListElement": allDeals.slice(0, 10).map((deal, index) => ({
-          "@type": "Course",
-          "position": index + 1,
-          "name": deal.title,
-          "description": deal.description,
-          "provider": { "@type": "Organization", "name": deal.provider || "Udemy" },
-          "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD",
-            "availability": "https://schema.org/InStock",
-            "validFrom": (deal as any).createdAt || new Date().toISOString().split('T')[0],
-            "priceValidUntil": deal.expiresAt,
-            "description": "100% off - completely free Udemy course"
-          },
-          ...(deal.rating ? {
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": deal.rating.toString(),
-              "reviewCount": Math.max(1, Math.round(deal.students ?? 1000)),
-              "bestRating": "5"
-            }
-          } : {})
-        }))
-      }
-    },
-    // Featured Course schema for rich snippets
-    ...(featuredDeals.length > 0 ? [{
-      "@type": "Course",
-      "@id": `https://courseswyn.com/coupon/${featuredDeals[0].slug}#course`,
-      "name": featuredDeals[0].title,
-      "description": featuredDeals[0].description || `Free ${featuredDeals[0].title} course with 100% off coupon`,
-      "provider": {
-        "@type": "Organization",
-        "name": "Udemy",
-        "url": "https://www.udemy.com"
-      },
-      "image": featuredDeals[0].image,
-      "url": `https://courseswyn.com/coupon/${featuredDeals[0].slug}`,
-      "offers": {
-        "@type": "Offer",
-        "category": "Free",
-        "priceCurrency": "USD",
-        "price": "0",
-        "availability": "https://schema.org/InStock",
-        "validFrom": new Date().toISOString(),
-        "url": `https://courseswyn.com/coupon/${featuredDeals[0].slug}`
-      },
-      ...(featuredDeals[0].rating ? {
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": featuredDeals[0].rating.toString(),
-          "reviewCount": Math.max(1, Math.round(featuredDeals[0].students ?? 1000)),
-          "bestRating": "5",
-          "worstRating": "1"
-        }
-      } : {})
-    }] : []),
-    // AggregateRating for website trust
-    {
-      "@type": "AggregateRating",
-      "@id": "https://courseswyn.com/#aggregaterating",
-      "ratingValue": "4.8",
-      "reviewCount": "120000",
-      "bestRating": "5",
-      "worstRating": "1",
-      "itemReviewed": {
-        "@type": "Organization",
-        "@id": "https://courseswyn.com/#organization",
-        "name": "CoursesWyn",
-        "url": "https://courseswyn.com"
-      }
-    },
-    // BreadcrumbList
-    {
-      "@type": "BreadcrumbList",
-      "@id": "https://courseswyn.com/#breadcrumb",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" },
-        { "@type": "ListItem", "position": 2, "name": "Free Course Coupons", "item": "https://courseswyn.com/udemy-coupon-code" }
-      ]
-    },
-    // FAQPage → rich snippet di SERP
-    {
-      "@type": "FAQPage",
-      "@id": "https://courseswyn.com/#faq",
-      "mainEntity": faqs.map((faq) => ({
-        "@type": "Question",
-        "name": faq.q,
-        "acceptedAnswer": { "@type": "Answer", "text": faq.a }
-      }))
-    },
-    // Languages section → helps Google understand multilingual content
-    {
-      "@type": "ItemList",
-      "@id": "https://courseswyn.com/#languages",
-      "name": "Online Courses Available in Multiple Languages",
-      "description": "Free Udemy courses and online learning resources available in 20+ languages including English, Spanish, French, German, Chinese, Japanese, and more.",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "item": { "@type": "Thing", "name": "English Courses", "description": "Free online courses in English language" } },
-        { "@type": "ListItem", "position": 2, "item": { "@type": "Thing", "name": "Spanish Courses", "description": "Cursos online gratuitos en español" } },
-        { "@type": "ListItem", "position": 3, "item": { "@type": "Thing", "name": "French Courses", "description": "Cours en ligne gratuits en français" } },
-        { "@type": "ListItem", "position": 4, "item": { "@type": "Thing", "name": "German Courses", "description": "Kostenlose Online-Kurse auf Deutsch" } },
-        { "@type": "ListItem", "position": 5, "item": { "@type": "Thing", "name": "Portuguese Courses", "description": "Cursos online gratuitos em português" } },
-        { "@type": "ListItem", "position": 6, "item": { "@type": "Thing", "name": "Japanese Courses", "description": "日本語で学べる無料オンライン講座" } },
-        { "@type": "ListItem", "position": 7, "item": { "@type": "Thing", "name": "Chinese Courses", "description": "免费在线中文课程" } },
-        { "@type": "ListItem", "position": 8, "item": { "@type": "Thing", "name": "Korean Courses", "description": "무료 한국어 온라인 강좌" } },
-        { "@type": "ListItem", "position": 9, "item": { "@type": "Thing", "name": "Italian Courses", "description": "Corsi online gratuiti in italiano" } },
-        { "@type": "ListItem", "position": 10, "item": { "@type": "Thing", "name": "Arabic Courses", "description": "دورات مجانية باللغة العربية" } },
-        { "@type": "ListItem", "position": 11, "item": { "@type": "Thing", "name": "Russian Courses", "description": "Бесплатные онлайн-курсы на русском" } },
-        { "@type": "ListItem", "position": 12, "item": { "@type": "Thing", "name": "Hindi Courses", "description": "हिंदी में निःशुल्क ऑनलाइन पाठ्यक्रम" } },
-        { "@type": "ListItem", "position": 13, "item": { "@type": "Thing", "name": "Turkish Courses", "description": "Ücretsiz Türkçe çevrimiçi kurslar" } },
-        { "@type": "ListItem", "position": 14, "item": { "@type": "Thing", "name": "Dutch Courses", "description": "Gratis online cursussen in het Nederlands" } },
-        { "@type": "ListItem", "position": 15, "item": { "@type": "Thing", "name": "Polish Courses", "description": "Darmowe kursy online po polsku" } },
-        { "@type": "ListItem", "position": 16, "item": { "@type": "Thing", "name": "Indonesian Courses", "description": "Kursus online gratis dalam Bahasa Indonesia" } },
-        { "@type": "ListItem", "position": 17, "item": { "@type": "Thing", "name": "Vietnamese Courses", "description": "Khóa học trực tuyến miễn phí bằng tiếng Việt" } },
-        { "@type": "ListItem", "position": 18, "item": { "@type": "Thing", "name": "Thai Courses", "description": "คอร์สออนไลน์ฟรีภาษาไทย" } },
-        { "@type": "ListItem", "position": 19, "item": { "@type": "Thing", "name": "Malay Courses", "description": "Kursus online percuma dalam Bahasa Melayu" } },
-        { "@type": "ListItem", "position": 20, "item": { "@type": "Thing", "name": "Ukrainian Courses", "description": "Безкоштовні онлайн-курси українською" } }
-      ]
-    },
-    // Popular Online Learning Platforms → Organization list for SEO
-    {
-      "@type": "ItemList",
-      "@id": "https://courseswyn.com/#platforms",
-      "name": "Popular Online Learning Platforms and E-Learning Providers",
-      "description": "Trusted online course platforms offering free and paid courses in programming, business, design, data science, and professional development.",
-      "itemListElement": [
-        {
-          "@type": "ListItem",
-          "position": 1,
-          "item": {
-            "@type": "Organization",
-            "name": "Udemy",
-            "url": "https://www.udemy.com",
-            "description": "World's largest online learning marketplace with 200,000+ courses in programming, business, design, and more."
-          }
-        },
-        {
-          "@type": "ListItem",
-          "position": 2,
-          "item": {
-            "@type": "Organization",
-            "name": "Coursera",
-            "url": "https://www.coursera.org",
-            "description": "Leading e-learning platform partnering with 275+ top universities offering accredited degrees and professional certificates."
-          }
-        },
-        {
-          "@type": "ListItem",
-          "position": 3,
-          "item": {
-            "@type": "Organization",
-            "name": "edX",
-            "url": "https://www.edx.org",
-            "description": "Harvard and MIT founded online education platform offering 4,000+ university-level courses."
-          }
-        },
-        {
-          "@type": "ListItem",
-          "position": 4,
-          "item": {
-            "@type": "Organization",
-            "name": "Pluralsight",
-            "url": "https://www.pluralsight.com",
-            "description": "Premium technology skills platform for software developers, cloud engineers, and IT professionals."
-          }
-        },
-        {
-          "@type": "ListItem",
-          "position": 5,
-          "item": {
-            "@type": "Organization",
-            "name": "Skillshare",
-            "url": "https://www.skillshare.com",
-            "description": "Creative online learning community with classes in design, illustration, photography, and creative writing."
-          }
-        },
-        {
-          "@type": "ListItem",
-          "position": 6,
-          "item": {
-            "@type": "Organization",
-            "name": "LinkedIn Learning",
-            "url": "https://www.linkedin.com/learning",
-            "description": "Professional development and career advancement courses integrated with LinkedIn."
-          }
-        }
-      ]
-    },
-    // ItemList untuk featured courses → sitelinks
-    {
-      "@type": "ItemList",
-      "@id": "https://courseswyn.com/#courselist",
-      "name": `Top Free Udemy Courses ${currentMonth} ${currentYear}`,
-      "itemListElement": initialItems.map((deal, i) => ({
-        "@type": "ListItem",
-        "position": i + 1,
-        "url": `https://courseswyn.com/coupon/${deal.slug}`,
-        "name": deal.title
-      }))
-    },
-    // HowTo Schema → step-by-step redeem coupon guide (rich result)
-    {
-      "@type": "HowTo",
-      "@id": "https://courseswyn.com/#howto-redeem",
-      "name": "How to Redeem a Free Udemy Coupon on CoursesWyn",
-      "description": "Step-by-step guide to enroll in free Udemy courses using 100% off coupons from CoursesWyn.",
-      "totalTime": "PT3M",
-      "step": [
-        {
-          "@type": "HowToStep",
-          "position": 1,
-          "name": "Browse Free Courses",
-          "text": "Visit CoursesWyn.com and browse the latest free Udemy coupons. Use the search bar or category filters to find courses that interest you.",
-          "url": "https://courseswyn.com/udemy-coupon-code"
-        },
-        {
-          "@type": "HowToStep",
-          "position": 2,
-          "name": "Click the Coupon Link",
-          "text": "Click on any course card to view details, then click the 'Get Free Course' button. This will redirect you to Udemy with the coupon automatically applied."
-        },
-        {
-          "@type": "HowToStep",
-          "position": 3,
-          "name": "Enroll on Udemy",
-          "text": "On Udemy, verify the price shows 'Free' or $0.00, then click 'Enroll Now'. You'll get instant lifetime access to the course."
-        },
-        {
-          "@type": "HowToStep",
-          "position": 4,
-          "name": "Start Learning",
-          "text": "Access your course on any device — desktop, tablet, or mobile. Download the Udemy app for offline viewing and learn at your own pace."
-        }
-      ]
-    },
-    // Review Schema → user review for E-E-A-T
-    {
-      "@type": "Review",
-      "@id": "https://courseswyn.com/#review",
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": "5",
-        "bestRating": "5"
-      },
-      "author": {
-        "@type": "Person",
-        "name": "Alex Thompson"
-      },
-      "reviewBody": "I've been using CoursesWyn for over a year to find free Udemy courses. The coupons are always live when I click them, and the selection across programming, AI, and business topics is impressive. Saved hundreds on my learning budget — highly recommended for anyone looking to upskill without spending.",
-      "itemReviewed": {
-        "@type": "Organization",
-        "@id": "https://courseswyn.com/#organization",
-        "name": "CoursesWyn",
-        "url": "https://courseswyn.com"
-      }
-    },
-    // Speakable Schema → voice search optimization
-    {
-      "@type": "WebPage",
-      "@id": "https://courseswyn.com/#speakable",
-      "speakable": {
-        "@type": "SpeakableSpecification",
-        "cssSelector": ["h1", ".hero-subtitle", ".faq-question"]
-      },
-      "url": "https://courseswyn.com"
-    },
-    // Author/Publisher Schema → E-E-A-T credibility
-    {
-      "@type": "WebPage",
-      "@id": "https://courseswyn.com/#webpage",
-      "url": "https://courseswyn.com",
-      "name": pageTitle,
-      "description": `Browse verified free Udemy courses with 100% off coupons for ${currentMonth} ${currentYear}. Updated daily with fresh deals across programming, data science, AI, design, and business topics. No account needed — just click and learn.`,
-      "isPartOf": {
-        "@id": "https://courseswyn.com/#website"
-      },
-      "about": {
-        "@id": "https://courseswyn.com/#educational"
-      },
-      "datePublished": "2024-06-01",
-      "dateModified": new Date().toISOString().split('T')[0],
-      "author": {
-        "@type": "Organization",
-        "@id": "https://courseswyn.com/#organization",
-        "name": "CoursesWyn"
-      },
-      "publisher": {
-        "@type": "Organization",
-        "@id": "https://courseswyn.com/#organization",
-        "name": "CoursesWyn",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://courseswyn.com/logo.png"
-        }
-      }
-    }
+  "@context": "https://schema.org", "@graph": [
+    { "@type": "WebSite", "@id": "https://courseswyn.com/#website", "url": "https://courseswyn.com", "name": "CoursesWyn — Free Udemy Coupons", "description": pageDescription, "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://courseswyn.com/search?q={search_term_string}" }, "query-input": "required name=search_term_string" } },
+    { "@type": "Organization", "@id": "https://courseswyn.com/#organization", "name": "CoursesWyn", "url": "https://courseswyn.com", "logo": { "@type": "ImageObject", "url": "https://courseswyn.com/logo.png", "width": 200, "height": 60 }, "sameAs": ["https://twitter.com/CoursesGift", "https://facebook.com/BestCouponPromo"] },
+    { "@type": "BreadcrumbList", "@id": "https://courseswyn.com/#breadcrumb", "itemListElement": [{ "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" }, { "@type": "ListItem", "position": 2, "name": "Free Coupons", "item": "https://courseswyn.com/udemy-coupon-code" }] },
+    { "@type": "FAQPage", "@id": "https://courseswyn.com/#faq", "mainEntity": [
+      { "@type": "Question", "name": "Are these coupons 100% free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes! Every coupon gives 100% off. No hidden fees." } },
+      { "@type": "Question", "name": "How often are new coupons added?", "acceptedAnswer": { "@type": "Answer", "text": "New coupons added daily. Expired deals removed within 4 hours." } },
+      { "@type": "Question", "name": "Do I get a certificate with free courses?", "acceptedAnswer": { "@type": "Answer", "text": "Absolutely! Official Udemy certificate, lifetime access included." } }
+    ] },
+    { "@type": "WebPage", "@id": "https://courseswyn.com/#webpage", "url": "https://courseswyn.com", "name": pageTitle, "description": pageDescription, "isPartOf": { "@id": "https://courseswyn.com/#website" }, "datePublished": "2024-06-01", "dateModified": now.toISOString().split('T')[0] }
   ]
 };
 ---
-
 <style>
-  /* ─── Global Layout ─────────────────────────────────────────────────────── */
-  .section-wrapper {
-    width: 100%;
-    padding: 4rem 1rem;
-  }
-  .section-wrapper--card {
-    background: linear-gradient(135deg, var(--card) 0%, rgba(59,130,246,0.02) 100%);
-    border-radius: 24px;
-    border: 1px solid rgba(59,130,246,0.08);
-  }
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    width: 100%;
-  }
-  .pill {
-    padding: 0.6rem 1.25rem;
-    border-radius: 9999px;
-    background: var(--input);
-    border: 1px solid var(--border);
-    color: var(--text);
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-  }
-  .pill:hover, .pill.active {
-    background: var(--brand);
-    color: var(--bg);
-    border-color: var(--brand);
-    transform: translateY(-1px);
-  }
-  .category-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-    border-color: var(--brand);
-    background: #2d3348 !important;
-  }
-  .category-card svg { transition: transform 0.2s ease; }
-  .category-card:hover svg { transform: scale(1.1); }
-  .category-card:hover div:last-child { color: var(--accent); }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+  .sec-pad { padding: 5rem 0; }
+  @media (max-width: 768px) { .sec-pad { padding: 3rem 0; } }
 
-  /* ─── Prose content section ─────────────────────────────────────────────── */
-  .prose-section h2 {
-    font-size: clamp(1.4rem, 2.5vw, 1.8rem);
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 1rem;
-  }
-  .prose-section h3 {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: var(--text);
-    margin: 1.5rem 0 0.5rem;
-  }
-  .prose-section p {
-    color: var(--muted);
-    line-height: 1.75;
-    font-size: 1rem;
-    margin-bottom: 1rem;
-  }
-  .prose-section a {
-    color: var(--brand);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes pulse-dot { 0%,100%{opacity:0.6} 50%{opacity:1} }
+  .anim-up { animation: fadeUp 0.5s ease-out both; }
+  .anim-1 { animation-delay: 0.1s; } .anim-2 { animation-delay: 0.2s; } .anim-3 { animation-delay: 0.3s; } .anim-4 { animation-delay: 0.4s; }
 
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @media (max-width: 768px) {
-    h1 { font-size: 2.5rem !important; }
-    .section-wrapper { padding: 3rem 1rem; }
-    .featured-grid { grid-template-columns: 1fr !important; }
-  }
-  @media (max-width: 480px) {
-    h1 { font-size: 2rem !important; }
-    h2 { font-size: 1.5rem !important; }
-    .category-card { padding: 1rem !important; }
-    .faq-grid { grid-template-columns: 1fr !important; }
-  }
-  html { scroll-behavior: smooth; }
+  .hero-wrap { position: relative; background: linear-gradient(135deg, #0a0a0f 0%, #12121a 50%, #0f1f17 100%); overflow: hidden; }
+  .hero-wrap::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 50%, rgba(16,185,129,0.08) 0%, transparent 50%), radial-gradient(ellipse at 70% 50%, rgba(5,150,105,0.04) 0%, transparent 50%); pointer-events: none; }
+  .hero-grid { position: absolute; inset: 0; opacity: 0.02; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 80px 80px; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 1rem; border-radius: 100px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); font-size: 0.8rem; font-weight: 600; color: #10b981; }
+  .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: #14b8a6; animation: pulse-dot 2s ease infinite; }
+  .hero-stat { text-align: center; padding: 1.25rem 2rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; backdrop-filter: blur(12px); transition: all 0.3s ease; }
+  .hero-stat:hover { background: rgba(255,255,255,0.06); transform: translateY(-2px); border-color: rgba(16,185,129,0.2); }
+  .hero-stat-num { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg,#14b8a6,#0d9488); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .sec-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #14b8a6; margin-bottom: 0.5rem; }
+  .sec-title { font-size: 2rem; font-weight: 800; color: #f1f5f9; margin: 0; letter-spacing: -0.02em; }
+  @media (max-width: 768px) { .sec-title { font-size: 1.5rem; } }
+
+  .blog-card { border-radius: 16px; overflow: hidden; background: #12121a; border: 1px solid #1e1e2e; transition: all 0.4s cubic-bezier(0.4,0,0.2,1); text-decoration: none; color: inherit; display: flex; flex-direction: column; }
+  .blog-card:hover { transform: translateY(-6px); border-color: rgba(16,185,129,0.3); box-shadow: 0 24px 48px -12px rgba(0,0,0,0.4); }
+  .blog-card .arrow { transition: transform 0.3s ease; display: inline-block; }
+  .blog-card:hover .arrow { transform: translateX(6px); }
+  .blog-card .tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(20,184,166,0.08); color: #14b8a6; }
+  .blog-card img { width: 100%; height: 180px; object-fit: cover; border-bottom: 1px solid #1e1e2e; }
+
+  .feat-card { background: #12121a; border: 1px solid #1e1e2e; border-radius: 14px; padding: 1.5rem; display: flex; gap: 1rem; align-items: flex-start; transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
+  .feat-card:hover { transform: translateY(-4px); border-color: rgba(16,185,129,0.2); box-shadow: 0 16px 32px -8px rgba(0,0,0,0.3); }
+  .feat-card .icon-box { width: 46px; height: 46px; min-width: 46px; border-radius: 12px; background: rgba(20,184,166,0.08); color: #14b8a6; display: flex; align-items: center; justify-content: center; transition: all 0.4s ease; }
+  .feat-card:hover .icon-box { background: rgba(16,185,129,0.15); }
+
+  .cat-pill { padding: 0.5rem 1.25rem; border-radius: 100px; background: #12121a; border: 1px solid #1e1e2e; color: #94a3b8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.3s ease; white-space: nowrap; }
+  .cat-pill:hover { background: rgba(16,185,129,0.1); color: #10b981; border-color: rgba(16,185,129,0.3); transform: translateY(-2px); }
+  .cat-pill.active { background: rgba(16,185,129,0.12); color: #10b981; border-color: rgba(16,185,129,0.3); }
+
+  .faq-item { background: #12121a; border: 1px solid #1e1e2e; border-radius: 12px; overflow: hidden; transition: border-color 0.3s; }
+  .faq-item:hover { border-color: rgba(16,185,129,0.2); }
+  .faq-btn { width: 100%; padding: 1.25rem 1.5rem; background: none; border: none; text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 1rem; font-size: 0.95rem; font-weight: 600; color: #f1f5f9; transition: background 0.2s; }
+  .faq-btn:hover { background: rgba(255,255,255,0.03); }
+  .faq-icon { flex-shrink: 0; color: #14b8a6; font-size: 0.75rem; transition: transform 0.3s ease; }
+  .faq-answer { display: none; padding: 0 1.5rem 1.25rem; color: #64748b; line-height: 1.7; font-size: 0.9rem; }
+
+  .prose-content h2 { font-size: 1.5rem; font-weight: 700; color: #f1f5f9; margin: 2rem 0 1rem; }
+  .prose-content h3 { font-size: 1.15rem; font-weight: 600; color: #f1f5f9; margin: 1.5rem 0 0.75rem; }
+  .prose-content p { color: #94a3b8; line-height: 1.75; margin-bottom: 1rem; font-size: 0.95rem; }
+  .prose-content a { color: #14b8a6; text-decoration: underline; }
+  .prose-content ul { color: #94a3b8; padding-left: 1.25rem; margin-bottom: 1rem; line-height: 1.8; }
 </style>
 
-<Layout
-  title={pageTitle}
-  description={pageDescription}
-  image={featuredImage}
-  canonical="https://courseswyn.com"
->
-  <!-- [SEO ADD] Open Graph meta tags for social sharing -->
+<Layout title={pageTitle} description={pageDescription} canonical="https://courseswyn.com">
   <meta property="og:type" content="website" slot="head" />
   <meta property="og:url" content="https://courseswyn.com" slot="head" />
   <meta property="og:title" content={pageTitle} slot="head" />
   <meta property="og:description" content={pageDescription} slot="head" />
-  <meta property="og:image" content={featuredImage} slot="head" />
-  <meta property="og:image:width" content="1200" slot="head" />
-  <meta property="og:image:height" content="630" slot="head" />
   <meta property="og:site_name" content="CoursesWyn" slot="head" />
   <meta property="og:locale" content="en_US" slot="head" />
-
-  <!-- [SEO ADD] Twitter Card meta tags -->
   <meta name="twitter:card" content="summary_large_image" slot="head" />
-  <meta name="twitter:url" content="https://courseswyn.com" slot="head" />
   <meta name="twitter:title" content={pageTitle} slot="head" />
   <meta name="twitter:description" content={pageDescription} slot="head" />
-  <meta name="twitter:image" content={featuredImage} slot="head" />
-  <meta name="twitter:site" content="@courseswyn" slot="head" />
-
-  <!-- [SEO FIX] Structured Data -->
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
-  <!-- [SEO ADD] Preload critical image for LCP -->
-  {featuredDeals.length > 0 && featuredDeals[0].image && (
-    <link rel="preload" as="image" href={featuredDeals[0].image} slot="head" />
-  )}
-
-  <!-- ══════════════════════════════════════════════════════════════════════
-       1. HERO
-       ══════════════════════════════════════════════════════════════════════ -->
-  <section
-    class="hero-gradient section-wrapper"
-    style={{ textAlign: "center", overflow: "hidden", position: "relative" }}
-    aria-label="Hero — Free Udemy Coupons"
-  >
-    <div class="container" style={{ position: "relative", zIndex: 10 }}>
-
-      <div style={{
-        display: "inline-flex", alignItems: "center", gap: "0.5rem",
-        background: "var(--brand-soft)", padding: "0.5rem 1rem",
-        borderRadius: "9999px", marginBottom: "2rem",
-        fontSize: "0.9rem", color: "yellow", fontWeight: 600
-      }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-        </svg>
-        Trusted by 150,000+ Learners Worldwide
+  <!-- ═══ HERO ═══ -->
+  <section class="hero-wrap sec-pad" style={{ paddingBottom: "8rem" }}>
+    <div class="hero-grid" />
+    <div class="container" style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
+      <div class="hero-badge anim-up" style={{ marginBottom: "2rem" }}><span class="dot" /><span>1,200+ Verified Coupons · Updated Daily</span></div>
+      <h1 class="anim-up anim-1" style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800, lineHeight: 1.05, marginBottom: "1.25rem", letterSpacing: "-0.03em", color: "white" }}>
+        <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Free Udemy Courses</span><br />
+        <span style={{ color: "#64748b", fontWeight: 600 }}>with Verified 100% Off Coupons</span>
+      </h1>
+      <p class="anim-up anim-2" style={{ fontSize: "1.15rem", color: "#64748b", maxWidth: "580px", margin: "0 auto 2.5rem", lineHeight: 1.7 }}>Save thousands on premium courses. Expert reviews + working coupons updated every 4 hours.</p>
+      <div class="anim-up anim-3" style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap", marginBottom: "4rem" }}>
+        <a href="/udemy-coupon-code" style={{ padding: "0.9rem 2.5rem", borderRadius: "12px", background: "linear-gradient(135deg,#10b981,#059669)", color: "#0a0a0f", textDecoration: "none", fontWeight: 700, fontSize: "1rem", display: "inline-flex", alignItems: "center", gap: "0.5rem", boxShadow: "0 8px 24px -4px rgba(16,185,129,0.3)", transition: "all 0.3s" }} onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px -4px rgba(16,185,129,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 8px 24px -4px rgba(16,185,129,0.3)'">🔥 Browse {allDeals.length.toLocaleString()} Coupons</a>
+        <a href="/blog" style={{ padding: "0.9rem 2.5rem", borderRadius: "12px", background: "rgba(255,255,255,0.03)", color: "#94a3b8", textDecoration: "none", fontWeight: 600, fontSize: "1rem", border: "1px solid rgba(255,255,255,0.06)", transition: "all 0.3s" }} onmouseover="this.style.background='rgba(255,255,255,0.06)';this.style.color='#f1f5f9'" onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='#94a3b8'">📖 Expert Reviews</a>
       </div>
-
-      <!-- [SEO H1] -->
-      <h1 style={{
-        fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800,
-        lineHeight: 1.1, maxWidth: "900px", margin: "0 auto 1.5rem"
-      }}>
-        <span style={{
-          background: "linear-gradient(135deg, var(--text) 0%, var(--muted) 100%)",
-          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text"
-        }}>
-          {`Get Premium Udemy Courses for FREE Today!`}
-        </span>
-        <br/>
-        <h2 style={{
-          fontSize: "clamp(1.5rem, 2.5vw, 2.5rem)", fontWeight: 800,
-          lineHeight: 1.1, maxWidth: "900px", margin: "0 auto 1.5rem"
-        }}>
-            <span style={{
-          background: "linear-gradient(135deg, var(--brand) 0%, hsl(200, 80%, 55%) 100%)",
-          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text"
-        }}>
-            Unlock Your Learning Potential with 100% Free Coupons
-        </span>
-      </h2>
-
-      <!-- Hero subheading -->
-      <p style={{
-        fontSize: "clamp(1.1rem, 1.5vw, 1.3rem)", color: "var(--muted)",
-        maxWidth: "680px", margin: "0 auto 2.5rem", lineHeight: 1.7, fontWeight: 400
-      }}>
-          Discover thousands of premium Udemy courses completely free! From programming and design to business and marketing - learn anything without spending a dime. Join over 50,000+ students who've saved millions on their education.
-      </p>
-
-      <!-- Search Bar -->
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "2.5rem" }}>
-        <form action="/search" method="GET" role="search" aria-label="Search free Udemy courses"
-          style={{ position: "relative", width: "100%", maxWidth: "700px" }}>
-          <div style={{
-            display: "flex", alignItems: "center", background: "var(--card)",
-            borderRadius: "16px", border: "2px solid var(--border)", padding: "0.25rem",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.15)", height: "60px"
-          }}>
-            <div style={{ padding: "0 1.25rem", color: "#9ca3af" }}>
-              <svg style={{ width: "1.4rem", height: "1.4rem" }} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-              </svg>
-            </div>
-            <input
-              type="search"
-              name="q"
-              style={{
-                flex: 1, background: "transparent", border: "none", outline: "none",
-                color: "var(--text)", fontSize: "1rem", height: "100%", fontWeight: 500
-              }}
-              placeholder="Search courses — Python, React, Excel, AWS..."
-              autocomplete="off"
-              aria-label="Search free Udemy courses"
-            />
-            <button type="submit" style={{
-              padding: "0.75rem 1.75rem", background: "var(--brand)", color: "var(--bg)",
-              border: "none", borderRadius: "12px", fontSize: "1rem", fontWeight: 600,
-              cursor: "pointer", marginLeft: "0.5rem", display: "flex",
-              alignItems: "center", gap: "0.5rem",
-              boxShadow: "0 4px 12px hsla(45,95%,58%,0.3)"
-            }}>
-              Search
-            </button>
-          </div>
+      <div class="anim-up anim-4" style={{ maxWidth: "560px", margin: "0 auto" }}>
+        <form action="/search" method="GET" role="search" style={{ display: "flex", alignItems: "center", background: "rgba(255,255,255,0.03)", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.06)", padding: "0.3rem" }}>
+          <div style={{ padding: "0 1rem", color: "#475569", display: "flex" }}><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div>
+          <input type="search" name="q" placeholder="Search courses..." autocomplete="off" aria-label="Search" style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "white", fontSize: "0.95rem", height: "46px", fontWeight: 400 }} />
+          <button type="submit" style={{ padding: "0.5rem 1.5rem", borderRadius: "10px", background: "linear-gradient(135deg,#10b981,#059669)", color: "#0a0a0f", border: "none", fontSize: "0.85rem", fontWeight: 700, cursor: "pointer", marginRight: "0.2rem" }}>Search</button>
         </form>
       </div>
-
-      <!-- CTA Buttons -->
-      <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap", marginBottom: "3rem" }}>
-        <a href="/udemy-coupon-code" class="btn accent-gradient" style={{
-          padding: "1rem 2rem", fontSize: "1.1rem", fontWeight: 600,
-          textDecoration: "none", borderRadius: "12px",
-          display: "inline-flex", alignItems: "center", gap: "0.5rem",
-          boxShadow: "0 8px 30px -4px hsla(45,95%,58%,0.3)"
-        }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-          </svg>
-          Browse Catalogs
-        </a>
-        <a href="/categories" style={{
-          padding: "1rem 2rem", fontSize: "1.1rem", fontWeight: 600,
-          textDecoration: "none", borderRadius: "12px", background: "transparent",
-          color: "var(--text)", border: "2px solid var(--border)",
-          display: "inline-flex", alignItems: "center", gap: "0.5rem"
-        }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
-          </svg>
-          Explore by Category
-        </a>
-      </div>
-
-      {/* Decorative blobs */}
-      <div aria-hidden="true" style={{ position: "absolute", top: "20%", left: "10%", width: "300px", height: "300px", background: "var(--brand)", filter: "blur(120px)", opacity: 0.08, borderRadius: "50%", pointerEvents: "none" }} />
-      <div aria-hidden="true" style={{ position: "absolute", bottom: "10%", right: "10%", width: "250px", height: "250px", background: "var(--accent)", filter: "blur(100px)", opacity: 0.08, borderRadius: "50%", pointerEvents: "none" }} />
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       2. LANGUAGES
-       ══════════════════════════════════════════════════════════════════════ -->
-  <section class="section-wrapper section-wrapper--card" aria-label="Available course languages" id="languages-section">
+  <!-- ═══ STATS ═══ -->
+  <section style={{ marginTop: "-3.5rem", position: "relative", zIndex: 3 }}>
     <div class="container">
-      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: "0.75rem",
-          background: "linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.08) 100%)",
-          padding: "0.5rem 1rem", borderRadius: "20px",
-          border: "1px solid rgba(59,130,246,0.2)", marginBottom: "1.5rem"
-        }}>
-          <span style={{ color: "yellow", fontWeight: 600, fontSize: "0.85rem" }}>Global Access</span>
-        </div>
-        <h2 id="languages-heading" style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>
-          Free Online Courses in <span style={{ color: "var(--brand)" }}>Multiple Languages</span>
-        </h2>
-        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "650px", margin: "0 auto", lineHeight: 1.65 }}>
-          Learn in your preferred language. Find free Udemy courses and online learning resources available in {languages.map(l => l.name).join(", ")}.
-        </p>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: "1rem" }}>
-        {languages.map((lang) => (
-          <a
-            href={`/udemy-coupon-code?language=${encodeURIComponent(lang.name)}`}
-            itemscope
-            itemtype="https://schema.org/Language"
-            style={{
-              background: "var(--card)", padding: "1rem 0.75rem", borderRadius: "12px",
-              textDecoration: "none", color: "var(--text)",
-              border: "1px solid rgba(59,130,246,0.15)",
-              transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
-              display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
-              boxShadow: "0 2px 8px -2px rgba(59,130,246,0.08)"
-            }}
-            class="language-card"
-          >
-            <img
-              src={lang.flag}
-              alt={`${lang.name} flag`}
-              itemprop="image"
-              style={{ width: "32px", height: "21px", objectFit: "cover", borderRadius: "3px", marginBottom: "0.5rem", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}
-              loading="lazy"
-            />
-            <h3 itemprop="name" style={{ fontSize: "0.85rem", marginBottom: "0.15rem", color: "var(--text)", fontWeight: 700 }}>
-              {lang.name}
-            </h3>
-            <meta itemprop="alternateName" content={lang.native} />
-          </a>
-        ))}
+      <div style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
+        <div class="hero-stat anim-up anim-1"><div class="hero-stat-num">150K+</div><div style={{ color: "#64748b", fontSize: "0.8rem", marginTop: "0.15rem" }}>Learners</div></div>
+        <div class="hero-stat anim-up anim-2"><div class="hero-stat-num">{allDeals.length.toLocaleString()}+</div><div style={{ color: "#64748b", fontSize: "0.8rem", marginTop: "0.15rem" }}>Coupons</div></div>
+        <div class="hero-stat anim-up anim-3"><div class="hero-stat-num">4.8★</div><div style={{ color: "#64748b", fontSize: "0.8rem", marginTop: "0.15rem" }}>Avg Rating</div></div>
+        <div class="hero-stat anim-up anim-4"><div class="hero-stat-num">24/7</div><div style={{ color: "#64748b", fontSize: "0.8rem", marginTop: "0.15rem" }}>Fresh</div></div>
       </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       3. WHY CHOOSE COURSESWYN
-       ══════════════════════════════════════════════════════════════════════ -->
-  <section class="section-wrapper" style={{ background: "var(--bg)" }} aria-label="Why choose CoursesWyn">
+  <!-- ═══ BLOG ═══ -->
+  <section class="sec-pad" style={{ background: "#0a0a0f", borderBottom: "1px solid #1e1e2e" }}>
     <div class="container">
-      <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-        <h2 style={{
-          fontSize: "clamp(1.5rem, 3vw, 2.2rem)", fontWeight: 700,
-          marginBottom: "0.75rem",
-          background: "linear-gradient(135deg, var(--brand) 0%, hsl(200, 80%, 55%) 100%)",
-          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text"
-        }}>
-          Why Choose CoursesWyn?
-        </h2>
-        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "500px", margin: "0 auto", lineHeight: 1.6 }}>
-            Not just coupon hunters. CoursesWyn attracts learners who are more likely to study, finish, and review the course.
-        </p>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "1.5rem", justifyContent: "center" }}>
-        {[
-          {
-            gradient: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)",
-            icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`,
-            title: "Browse before you buy",
-            desc: "Check the catalog first to find the best courses for you."
-          },
-          {
-            gradient: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)",
-            icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
-            title: "Quality Learners",
-            desc: "Premium Learners are more likely to enroll and complete courses successfully."
-          },
-          {
-            gradient: "linear-gradient(135deg, #10B981 0%, #06B6D4 100%)",
-            icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
-            title: "Live Coupons cheks",
-            desc: "CoursesWyn checks coupons validity and offers free access to premium courses."
-          }
-        ].map((item) => (
-          <div style={{
-            background: "var(--card)", padding: "1.25rem 1.5rem", borderRadius: "16px",
-            border: "1px solid var(--border)", display: "flex", alignItems: "flex-start", gap: "1rem",
-            transition: "all 0.3s ease", flex: "1 1 300px", maxWidth: "400px"
-          }}>
-            <div style={{
-              width: "48px", height: "48px", background: item.gradient, borderRadius: "12px",
-              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-              color: "white"
-            }} set:html={item.icon} />
-            <div>
-              <h3 style={{ color: "var(--text)", fontSize: "1rem", fontWeight: 700, margin: "0 0 0.35rem 0", lineHeight: 1.3 }}>{item.title}</h3>
-              <p style={{ color: "var(--muted)", fontSize: "0.9rem", margin: 0, lineHeight: 1.5 }}>{item.desc}</p>
+      <div class="anim-up" style={{ marginBottom: "1rem" }}>
+              <p class="sec-label">Expert Reviews</p>
+              <h2 class="sec-title">Course Reviews & Career Guides</h2>
             </div>
+            <p class="anim-up anim-1" style={{ color: "#64748b", fontSize: "0.9rem", maxWidth: "600px", marginBottom: "2.5rem", lineHeight: 1.6 }}>In-depth analysis of the best Udemy courses. Our editorial team reviews curriculum quality, instructor expertise, and career outcomes to help you choose the right course.</p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
+        <a href="/blog/ai-engineer-roadmap-2026" class="blog-card anim-up anim-1">
+          <img src="/assets/images/ai-engineer-roadmap-2026.jpg" alt="AI Engineer Roadmap 2026" loading="lazy" />
+          <div style={{ padding: "1.5rem" }}>
+            <span class="tag">Career Guide</span>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#f1f5f9", margin: "0.75rem 0 0.5rem 0", lineHeight: 1.3 }}>AI Engineer Roadmap 2026: 7 Best Udemy Courses</h3>
+            <p style={{ color: "#64748b", fontSize: "0.85rem", lineHeight: 1.6, margin: 0 }}>Complete roadmap from beginner to AI Engineer. MCP Protocol, RAG pipelines, LangChain — all under $80.</p>
+            <p style={{ marginTop: "1rem", color: "#10b981", fontWeight: 600, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>Read Full Review <span class="arrow">→</span></p>
           </div>
+        </a>
+        <a href="/blog/best-ai-engineer-courses-udemy-2026" class="blog-card anim-up anim-2">
+          <img src="/assets/images/best-ai-engineer-courses-udemy-2026.jpg" alt="Best AI Engineer Courses 2026" loading="lazy" />
+          <div style={{ padding: "1.5rem" }}>
+            <span class="tag">Course Review</span>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#f1f5f9", margin: "0.75rem 0 0.5rem 0", lineHeight: 1.3 }}>Best AI Engineer Courses on Udemy 2026</h3>
+            <p style={{ color: "#64748b", fontSize: "0.85rem", lineHeight: 1.6, margin: 0 }}>We analyzed and compared top AI engineering courses. Find the best training for Agentic AI and LLMs.</p>
+            <p style={{ marginTop: "1rem", color: "#10b981", fontWeight: 600, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>Read Full Review <span class="arrow">→</span></p>
+          </div>
+        </a>
+        <a href="/blog/ai-engineer-agentic-track-ed-donner-review" class="blog-card anim-up anim-3">
+          <img src="/assets/images/review-course-ai-engineer-agentic-track-udemy.jpg" alt="AI Engineer Agentic Track Review" loading="lazy" />
+          <div style={{ padding: "1.5rem" }}>
+            <span class="tag">Review</span>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#f1f5f9", margin: "0.75rem 0 0.5rem 0", lineHeight: 1.3 }}>AI Engineer Agentic Track: Ed Donner Review</h3>
+            <p style={{ color: "#64748b", fontSize: "0.85rem", lineHeight: 1.6, margin: 0 }}>In-depth review of the popular AI Engineer Agentic Track course. Curriculum deep-dive and pricing analysis.</p>
+            <p style={{ marginTop: "1rem", color: "#10b981", fontWeight: 600, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>Read Full Review <span class="arrow">→</span></p>
+          </div>
+        </a>
+      </div>
+      <div style={{ textAlign: "center", marginTop: "2.5rem" }}>
+        <a href="/blog" style={{ color: "#10b981", textDecoration: "none", fontWeight: 600, fontSize: "0.9rem", borderBottom: "1px solid rgba(16,185,129,0.3)", paddingBottom: "2px" }}>View All Articles →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ COUPONS ═══ -->
+  <section class="sec-pad" style={{ background: "#0f0f18", borderBottom: "1px solid #1e1e2e" }}>
+    <div class="container">
+      <div class="anim-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
+        <div><p class="sec-label">🔥 Hot Deals</p><h2 class="sec-title">Latest Free Udemy Coupons</h2></div>
+                <a href="/udemy-coupon-code" style={{ color: "#14b8a6", textDecoration: "none", fontWeight: 600, fontSize: "0.9rem", borderBottom: "1px solid rgba(20,184,166,0.3)", paddingBottom: "2px" }}>View All {allDeals.length.toLocaleString()} →</a>
+              </div>
+              <p class="anim-up anim-1" style={{ color: "#64748b", fontSize: "0.9rem", maxWidth: "600px", marginBottom: "2rem", lineHeight: 1.6 }}>Hand-picked and manually verified Udemy coupons updated daily. Each deal is checked for validity before being published — no expired codes, no fake discounts.</p>
+      <div class="anim-up anim-1" style={{ display: "flex", gap: "0.5rem", marginBottom: "2rem", flexWrap: "wrap" }}>
+        <span class="cat-pill active">🔥 All</span>
+        {categories.slice(0, 8).map((cat) => (<a href={`/categories/${slugifyCategory(cat)}`} class="cat-pill">{cat}</a>))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.25rem" }}>
+        {initialItems.map((deal) => (<DealCard deal={deal} />))}
+      </div>
+      <div style={{ textAlign: "center", marginTop: "3rem" }}>
+        <a href="/udemy-coupon-code" style={{ padding: "0.9rem 2.5rem", borderRadius: "12px", background: "linear-gradient(135deg,#10b981,#059669)", color: "#0a0a0f", textDecoration: "none", fontWeight: 700, fontSize: "1rem", display: "inline-flex", alignItems: "center", gap: "0.5rem", boxShadow: "0 8px 24px -4px rgba(16,185,129,0.2)", transition: "all 0.3s" }} onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">Browse All {allDeals.length.toLocaleString()} Coupons →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FEATURES ═══ -->
+  <section class="sec-pad" style={{ background: "#0a0a0f", borderBottom: "1px solid #1e1e2e" }}>
+    <div class="container">
+      <div class="anim-up" style={{ textAlign: "center", marginBottom: "1rem" }}><p class="sec-label">Why CoursesWyn</p><h2 class="sec-title">Trusted by 150,000+ Learners</h2></div>
+            <p class="anim-up anim-1" style={{ color: "#64748b", fontSize: "0.9rem", textAlign: "center", maxWidth: "600px", margin: "0 auto 2.5rem", lineHeight: 1.6 }}>We manually verify every coupon before publishing. Our team ensures each deal is genuine, the instructor is credible, and the discount actually works.</p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.25rem" }}>
+        {[
+          { icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z", title: "100% Verified", desc: "Every coupon checked manually. No expired codes." },
+          { icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z", title: "Save up to $200", desc: "Premium courses for $0. Same certificate." },
+          { icon: "M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z", title: "Free to Use", desc: "No account needed. Just click & enroll." },
+          { icon: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15", title: "Updated Daily", desc: "New deals added daily across 12 categories." }
+        ].map((item) => (
+          <div class="feat-card"><div class="icon-box"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d={item.icon}/></svg></div><div><h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#f1f5f9", margin: "0 0 0.25rem 0" }}>{item.title}</h3><p style={{ color: "#64748b", fontSize: "0.85rem", margin: 0, lineHeight: 1.5 }}>{item.desc}</p></div></div>
         ))}
       </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       4. FEATURED COURSE
-       ══════════════════════════════════════════════════════════════════════ -->
-  {featuredDeals.length > 0 && (
-    <section class="section-wrapper section-wrapper--card" aria-label="Top-rated free Udemy course">
-      <div class="container">
-        <div style={{
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          marginBottom: "2.5rem", flexWrap: "wrap", gap: "1rem"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <div style={{
-              width: "48px", height: "48px",
-              background: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)",
-              borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 8px 20px -4px rgba(59,130,246,0.4)"
-            }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="white" aria-hidden="true">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-            </div>
-            <div>
-              <h2 style={{
-                fontSize: "1.8rem", fontWeight: 800, marginBottom: "0.25rem",
-                background: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)",
-                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text"
-              }}>Featured Udemy Course</h2>
-              <div style={{ fontSize: "0.9rem", color: "var(--muted)" }}>
-                New Releases Courses on Udemy · Limited enrollment slots remaining
+  <!-- ═══ CATEGORIES ═══ -->
+  <section class="sec-pad" style={{ background: "#0f0f18", borderBottom: "1px solid #1e1e2e" }}>
+    <div class="container">
+      <div class="anim-up" style={{ textAlign: "center", marginBottom: "1rem" }}><p class="sec-label">Browse</p><h2 class="sec-title">Categories & Topics</h2></div>
+            <p class="anim-up anim-1" style={{ color: "#64748b", fontSize: "0.9rem", textAlign: "center", maxWidth: "600px", margin: "0 auto 2.5rem", lineHeight: 1.6 }}>Browse free Udemy courses organized by category. From AI and programming to design and marketing — find verified coupons for the topics that matter to you.</p>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0.75rem" }}>
+        {categories.slice(0, 12).map((cat) => (<a href={`/categories/${slugifyCategory(cat)}`} class="cat-pill">{cat}</a>))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TOP INSTRUCTORS ═══ -->
+  <section class="sec-pad" style={{ background: '#0f0f18', borderBottom: '1px solid #1e1e2e' }}>
+    <div class="container">
+      <div class="anim-up" style={{ textAlign: 'center', marginBottom: '1rem' }}><p class="sec-label">Top Instructors</p><h2 class="sec-title">Best Course Creators to Follow</h2></div>
+      <p class="anim-up anim-1" style={{ color: '#64748b', fontSize: '0.9rem', textAlign: 'center', maxWidth: '600px', margin: '0 auto 2.5rem', lineHeight: 1.6 }}>Learn from the most popular and highly-rated Udemy instructors. These creators have helped millions of students master new skills through their expert-led courses.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+        {[
+          { name: 'Angela Yu', initials: 'AY', slug: 'angela-yu', bio: 'Web development expert with 2M+ students. Creator of the #1 best-selling Python course.', courses: '80+', rating: '4.7' },
+          { name: 'Maximilian Schwarzmüller', initials: 'MS', slug: 'maximilian-schwarzmuller', bio: 'Full-stack developer & React expert. Known for clear, project-based teaching style.', courses: '60+', rating: '4.8' },
+          { name: 'Ed Donner', initials: 'ED', slug: 'ed-donner', bio: 'AI Engineering specialist. Author of top-rated Agentic AI and MCP Protocol courses.', courses: '20+', rating: '4.7' },
+          { name: 'Stephane Maarek', initials: 'SM', slug: 'stephane-maarek', bio: 'AWS Certified Solutions Architect. 3M+ students in cloud computing & DevOps courses.', courses: '50+', rating: '4.6' }
+        ].map((instr) => (
+          <a href={`/instructor/${instr.slug}`} class="blog-card anim-up" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '1.5rem', textAlign: 'center' }}>
+              <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(20,184,166,0.1)', color: '#14b8a6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', fontWeight: 700, margin: '0 auto 1rem' }}>{instr.initials}</div>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#f1f5f9', margin: '0 0 0.25rem 0' }}>{instr.name}</h3>
+              <p style={{ color: '#94a3b8', fontSize: '0.8rem', lineHeight: 1.5, margin: '0 0 0.75rem 0' }}>{instr.bio}</p>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', fontSize: '0.8rem' }}>
+                <span style={{ color: '#14b8a6', fontWeight: 600 }}>{instr.courses} courses</span>
+                <span style={{ color: '#f59e0b', fontWeight: 600 }}>★ {instr.rating}</span>
               </div>
             </div>
-          </div>
-          <a href="/popular" style={{
-            color: "#FFFFFF", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem",
-            display: "flex", alignItems: "center", gap: "0.5rem",
-            padding: "0.75rem 1.5rem", background: "rgba(59,130,246,0.1)",
-            borderRadius: "12px", border: "1px solid rgba(59,130,246,0.3)"
-          }}>
-            View All Top Courses
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
-            </svg>
           </a>
-        </div>
-
-        <div class="featured-grid" style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: "3rem", alignItems: "center" }}>
-          <div style={{ textAlign: "left" }}>
-            {featuredDeals.map((deal) => {
-              const r = typeof deal.rating === "number" && isFinite(deal.rating) ? deal.rating : 4.9;
-              const s = (typeof deal.students === "number" && isFinite(deal.students) && deal.students > 0) ? deal.students : genStudents(deal.id || "");
-              const hasDiscount = deal.originalPrice && deal.price !== undefined && deal.originalPrice > deal.price;
-              const discountPct = hasDiscount && deal.originalPrice ? Math.round(100 - ((deal.price ?? 0) / deal.originalPrice) * 100) : null;
-              return (
-                <div>
-                  <div style={{
-                    display: "inline-flex", alignItems: "center", gap: "0.5rem",
-                    background: "yellow",
-                    color: "var(--bg)", padding: "0.4rem 1rem", borderRadius: "20px",
-                    fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase",
-                    marginBottom: "1rem"
-                  }}>
-                    ★ #1 Top Rated Course today
-                  </div>
-
-                  <h3 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text)", marginBottom: "1rem", lineHeight: 1.2 }}>
-                    <a href={`/coupon/${deal.slug}`} style={{ color: "inherit", textDecoration: "none" }}>{deal.title}</a>
-                    {deal.instructor && <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--muted)", display: "block", marginTop: "0.5rem" }}>by {deal.instructor}</span>}
-                  </h3>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                      <div style={{ display: "flex", gap: "1px" }} aria-label={`Rating: ${r.toFixed(1)} out of 5`}>
-                        {[...Array(5)].map((_, i) => (
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill={i < Math.floor(r) ? "#3B82F6" : "rgba(59,130,246,0.3)"} aria-hidden="true">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                          </svg>
-                        ))}
-                      </div>
-                      <span style={{ color: "#2563EB", fontSize: "1rem", fontWeight: 700 }}>{r.toFixed(1)}</span>
-                    </div>
-                    <span style={{ color: "var(--muted)" }}>·</span>
-                    <span style={{ color: "var(--muted)", fontSize: "0.9rem" }}>{formatStudents(s)} students enrolled</span>
-                    {deal.category && (
-                      <>
-                        <span style={{ color: "var(--muted)" }}>·</span>
-                        <a href={`/categories/${slugifyCategory(deal.category)}`} style={{
-                          color: "#2563EB", fontSize: "0.9rem", textDecoration: "none", fontWeight: 600
-                        }}>{deal.category}</a>
-                      </>
-                    )}
-                  </div>
-
-                  <p style={{ color: "var(--muted)", fontSize: "1.05rem", marginBottom: "1.75rem", lineHeight: 1.65 }}>
-                    {deal.description || "Master this in-demand skill with comprehensive training from industry experts. Get lifetime access, certificates, and premium learning materials — completely free with today's coupon."}
-                  </p>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", flexWrap: "wrap" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                      <span style={{ fontSize: "2rem", fontWeight: 800, color: deal.price === 0 ? "#16A34A" : "var(--brand)" }}>
-                        {deal.price === 0 ? "FREE" : `$${deal.price?.toFixed(2)}`}
-                      </span>
-                      {hasDiscount && (
-                        <>
-                          <span style={{ textDecoration: "line-through", color: "var(--muted)", fontSize: "1.1rem" }}>${deal.originalPrice?.toFixed(2)}</span>
-                          <span style={{ background: "#EF4444", color: "white", padding: "0.2rem 0.6rem", borderRadius: "6px", fontSize: "0.85rem", fontWeight: 700 }}>
-                            -{discountPct}% OFF
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    <a
-                      href={deal.url || `/coupon/${deal.slug}`}
-                      target="_blank" rel="noopener noreferrer"
-                      style={{
-                        padding: "0.9rem 1.75rem",
-                        background: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)",
-                        color: "var(--bg)", textDecoration: "none", borderRadius: "12px",
-                        fontSize: "1rem", fontWeight: 700,
-                        display: "inline-flex", alignItems: "center", gap: "0.5rem",
-                        boxShadow: "0 4px 16px -4px rgba(59,130,246,0.4)"
-                      }}
-                    >
-                      {deal.price === 0 ? "Enroll Free Now" : "Enroll Now"}
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
-                      </svg>
-                    </a>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div style={{
-            position: "relative", borderRadius: "16px", overflow: "hidden",
-            boxShadow: "0 20px 40px -8px rgba(59,130,246,0.2)"
-          }}>
-            {featuredDeals.map((deal) => (
-              deal.image ? (
-                <div style={{ position: "relative" }}>
-                  <img
-                    src={deal.image}
-                    alt={`${deal.title} — Free Udemy Course with 100% Off Coupon`}
-                    width="400" height="300"
-                    style={{ width: "100%", height: "300px", objectFit: "cover", display: "block" }}
-                    loading="eager"
-                    fetchpriority="high"
-                  />
-                  {deal.price === 0 && (
-                    <div style={{
-                      position: "absolute", top: "16px", left: "16px",
-                      background: "linear-gradient(135deg, #22C55E 0%, #16A34A 100%)",
-                      color: "white", padding: "6px 14px", borderRadius: "20px",
-                      fontSize: "0.85rem", fontWeight: 800, textTransform: "uppercase"
-                    }}>100% FREE</div>
-                  )}
-                  {deal.duration && (
-                    <div style={{
-                      position: "absolute", bottom: "16px", right: "16px",
-                      background: "rgba(59,130,246,0.95)", color: "var(--bg)",
-                      padding: "5px 12px", borderRadius: "16px", fontSize: "0.8rem", fontWeight: 700,
-                      display: "flex", alignItems: "center", gap: "4px"
-                    }}>
-                      ⏱ {deal.duration}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div style={{ width: "100%", height: "300px", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--card)" }}>
-                  <svg width="80" height="80" viewBox="0 0 24 24" fill="var(--muted)" opacity="0.3" aria-hidden="true">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                  </svg>
-                </div>
-              )
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  )}
-
-  <!-- ══════════════════════════════════════════════════════════════════════
-       5. STATISTICS
-       ══════════════════════════════════════════════════════════════════════ -->
-  <section class="section-wrapper section-wrapper--card" aria-label="CoursesWyn statistics">
-    <div class="container">
-      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: "0.75rem",
-          background: "linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.08) 100%)",
-          padding: "0.5rem 1rem", borderRadius: "20px",
-          border: "1px solid rgba(59,130,246,0.2)", marginBottom: "1.5rem"
-        }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#2563EB" }} aria-hidden="true">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-          </svg>
-          <span style={{ color: "yellow", fontWeight: 600, fontSize: "0.85rem" }}>By the Numbers</span>
-        </div>
-        <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>
-          Join <span style={{ color: "var(--brand)" }}>150,000+</span> Learners Saving on Udemy
-        </h2>
-        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "650px", margin: "0 auto", lineHeight: 1.65 }}>
-         Every month, thousands of students use CoursesWyn to access premium Udemy courses for free —
-          building careers, learning new skills, and saving money on professional education.
-        </p>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem" }}>
-        {[
-          { value: "150K+", label: "Active Learners", sub: "Students enrolled via our coupons", color: "#2563EB", border: "rgba(59,130,246,0.15)", iconPath: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z", bg: "linear-gradient(135deg,#FEF3C7 0%,#FDE68A 100%)" },
-          { value: `${allDeals.length}+`, label: "Free Courses Available", sub: "Verified Udemy coupons live now", color: "var(--brand)", border: "rgba(59,130,246,0.15)", iconPath: "M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.41l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.41zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z", bg: "linear-gradient(135deg,#DBEAFE 0%,#BFDBFE 100%)" },
-          { value: "100%", label: "Coupons Verified", sub: "Every code tested before publishing", color: "#16A34A", border: "rgba(34,197,94,0.15)", iconPath: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z", bg: "linear-gradient(135deg,#DCFCE7 0%,#BBF7D0 100%)" },
-          { value: "Daily", label: "Fresh Deals Added", sub: "New coupons published every day", color: "#DC2626", border: "rgba(239,68,68,0.15)", iconPath: "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z", bg: "linear-gradient(135deg,#FEF2F2 0%,#FEE2E2 100%)" }
-        ].map((stat) => (
-          <div style={{
-            background: "var(--card)", padding: "2rem 1.5rem", borderRadius: "16px",
-            border: `1px solid ${stat.border}`, textAlign: "center"
-          }}>
-            <div style={{
-              width: "48px", height: "48px", background: stat.bg, borderRadius: "12px",
-              display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.25rem"
-            }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={{ color: stat.color }} aria-hidden="true">
-                <path d={stat.iconPath} />
-              </svg>
-            </div>
-            <div style={{ fontSize: "2.5rem", fontWeight: 700, color: stat.color, marginBottom: "0.5rem" }}>{stat.value}</div>
-            <div style={{ color: "var(--text)", fontSize: "1rem", fontWeight: 600, marginBottom: "0.25rem" }}>{stat.label}</div>
-            <div style={{ color: "var(--muted)", fontSize: "0.85rem" }}>{stat.sub}</div>
-          </div>
         ))}
+      </div>
+      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+        <a href="/instructors" style={{ color: '#14b8a6', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem', borderBottom: '1px solid rgba(20,184,166,0.3)', paddingBottom: '2px' }}>View All Instructors →</a>
       </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       6. LATEST DEALS
-       ══════════════════════════════════════════════════════════════════════ -->
-  <section class="section-wrapper section-wrapper--card" aria-label="Latest free Udemy course coupons">
+  <!-- ═══ POPULAR TOPICS ═══ -->
+  <section class="sec-pad" style={{ background: '#0a0a0f', borderBottom: '1px solid #1e1e2e' }}>
     <div class="container">
-      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: "0.75rem",
-          background: "linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.08) 100%)",
-          padding: "0.5rem 1rem", borderRadius: "20px",
-          border: "1px solid rgba(59,130,246,0.2)", marginBottom: "1.5rem"
-        }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#2563EB" }} aria-hidden="true">
-            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
-          </svg>
-          <span style={{ color: "yellow", fontWeight: 600, fontSize: "0.85rem" }}>
-            {`Updated ${currentMonth} ${currentYear}`}
-          </span>
-        </div>
-        <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>
-          Latest Free <span style={{ color: "var(--brand)" }}>Udemy Coupons</span> — {`${currentMonth} ${currentYear}`}
-        </h2>
-        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "650px", margin: "0 auto", lineHeight: 1.65 }}>
-           Handpicked premium courses now available for free! These udemy courses are regularly updated with fresh content and exclusive coupon codes.
-        </p>
+      <div class="anim-up" style={{ textAlign: 'center', marginBottom: '1rem' }}><p class="sec-label">Popular Topics</p><h2 class="sec-title">Most In-Demand Subjects</h2></div>
+      <p class="anim-up anim-1" style={{ color: '#64748b', fontSize: '0.9rem', textAlign: 'center', maxWidth: '600px', margin: '0 auto 2.5rem', lineHeight: 1.6 }}>Explore the most popular learning topics with active verified coupons. From AI engineering to cloud computing — find free courses in high-demand subjects.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
+        {(() => {
+          const topicMap = new Map();
+          allDeals.forEach(d => {
+            const topic = d.subcategory || d.category;
+            if (!topic) return;
+            topicMap.set(topic, (topicMap.get(topic) || 0) + 1);
+          });
+          return Array.from(topicMap.entries())
+            .sort((a: [string, number], b: [string, number]) => b[1] - a[1])
+            .slice(0, 4)
+            .map(([topic, count]) => {
+              const slug = topic.toLowerCase().replace(/&/g, ' and ').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-');
+              return (
+          <a href={`/topics/${slug}`} class="blog-card anim-up" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '1.5rem' }}>
+              <span class="tag">{allDeals.find(d => (d.subcategory || d.category) === topic)?.category || 'Topic'}</span>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#f1f5f9', margin: '0.75rem 0 0.5rem 0' }}>{topic}</h3>
+              <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>{count} free course{count > 1 ? 's' : ''} available with verified coupons</p>
+              <p style={{ marginTop: '1rem', color: '#14b8a6', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>Browse Courses <span class="arrow">→</span></p>
+            </div>
+          </a>
+              );
+            });
+        })()}
       </div>
-
-      <div style={{
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        marginBottom: "2rem", flexWrap: "wrap", gap: "1rem"
-      }}>
-        <div>
-          <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.25rem", color: "var(--brand)" }}>
-             Newest Coupons
-          </h3>
-          <p style={{ fontSize: "0.9rem", color: "var(--muted)", margin: 0 }}>
-            {allDeals.length} coupons available · Sorted by date added
-          </p>
-        </div>
-        <a href="/udemy-coupon-code" style={{
-          color: "white", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem",
-          display: "flex", alignItems: "center", gap: "0.5rem",
-          padding: "0.75rem 1.5rem", background: "rgba(59,130,246,0.1)",
-          borderRadius: "12px", border: "1px solid rgba(59,130,246,0.3)"
-        }}>
-          View All {allDeals.length}+ Coupons
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
-          </svg>
-        </a>
+      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+        <a href="/topics" style={{ color: '#14b8a6', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem', borderBottom: '1px solid rgba(20,184,166,0.3)', paddingBottom: '2px' }}>View All Topics →</a>
       </div>
+    </div>
+  </section>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "2rem" }}>
-        {initialItems.map((deal) => (
+  <!-- ═══ POPULAR COURSES ═══ -->
+  <section class="sec-pad" style={{ background: '#0f0f18', borderBottom: '1px solid #1e1e2e' }}>
+    <div class="container">
+      <div class="anim-up" style={{ textAlign: 'center', marginBottom: '1rem' }}><p class="sec-label">Top Rated</p><h2 class="sec-title">Highest Rated Free Courses</h2></div>
+      <p class="anim-up anim-1" style={{ color: '#64748b', fontSize: '0.9rem', textAlign: 'center', maxWidth: '600px', margin: '0 auto 2.5rem', lineHeight: 1.6 }}>The best-rated free courses available right now. These courses have the highest student ratings and most positive reviews on CoursesWyn.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+        {allDeals
+          .filter(d => d.rating)
+          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+          .slice(0, 3)
+          .map((deal) => (
           <DealCard deal={deal} />
         ))}
       </div>
-
-      {totalPages > 1 && (
-        <div style={{ textAlign: "center", marginTop: "3rem" }}>
-          <a href="/udemy-coupon-code" style={{
-            padding: "1rem 2.5rem", borderRadius: "12px", background: "var(--brand)",
-            color: "white", textDecoration: "none", fontSize: "1rem", fontWeight: 700,
-            display: "inline-flex", alignItems: "center", gap: "0.5rem",
-            boxShadow: "0 4px 20px -4px hsla(45,95%,58%,0.4)"
-          }}>
-            View All Free Udemy Coupons
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
-            </svg>
-          </a>
-        </div>
-      )}
+      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <a href="/popular" style={{ color: '#10b981', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem', borderBottom: '1px solid rgba(16,185,129,0.3)', paddingBottom: '2px' }}>View All Popular Courses →</a>
+      </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       7. SEO PROSE
-       ══════════════════════════════════════════════════════════════════════ -->
-  <section class="section-wrapper prose-section" style={{ background: "var(--bg)" }} aria-label="About free Udemy coupons">
+  <!-- ═══ SEO ARTICLE ═══ -->
+  <section class="sec-pad" style={{ background: "#0a0a0f", borderBottom: "1px solid #1e1e2e" }}>
     <div class="container">
-
-      {/* Section header — jelas dan informatif untuk user maupun Google */}
-      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: "0.75rem",
-          background: "linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.08) 100%)",
-          padding: "0.5rem 1rem", borderRadius: "20px",
-          border: "1px solid rgba(59,130,246,0.2)", marginBottom: "1.5rem"
-        }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#2563EB" }} aria-hidden="true">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-6h2v6zm0-8h-2V7h2v4z"/>
-          </svg>
-          <span style={{ color: "yellow", fontWeight: 600, fontSize: "0.85rem" }}>Complete Guide</span>
-        </div>
-        <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>
-          How to Get <span style={{ color: "var(--brand)" }}>Free Udemy Courses</span>
-        </h2>
-        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "650px", margin: "0 auto", lineHeight: 1.65 }}>
-          Learn how Udemy coupons work, why instructors give them away for free,
-          and how CoursesWyn ensures every coupon we publish is genuinely valid.
-          Or jump straight to our <a href="/udemy-coupons-guide" style={{ color: "var(--brand)", fontWeight: 600 }}>complete Udemy coupons guide</a>.
-        </p>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4rem", alignItems: "start" }}>
-
+      <div class="anim-up" style={{ marginBottom: "1rem" }}><p class="sec-label">Free Udemy Courses Guide</p><h2 class="sec-title">How to Get Premium Courses for Free</h2></div>
+            <p class="anim-up anim-1" style={{ color: "#64748b", fontSize: "0.9rem", maxWidth: "600px", marginBottom: "2rem", lineHeight: 1.6 }}>Learn how Udemy coupons work, why instructors give them away for free, and how CoursesWyn verifies every deal before publishing. Start saving on premium education today.</p>
+      <div class="prose-content anim-up anim-1" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "2rem" }}>
         <div>
-          <h3>What Are Udemy Coupons and How Do They Work?</h3>
-          <p>
-            <strong>Udemy coupons</strong> are promotional discount codes created by instructors and Udemy
-            that allow students to enroll in paid courses at a reduced price — or completely for free.
-            When an instructor publishes a new course, they often release <strong>100% off Udemy coupons</strong>
-            to attract their first students and build reviews. CoursesWyn aggregates these limited-time
-            coupon codes daily so you never miss a free learning opportunity.
-          </p>
-          <p>
-            Using a coupon is simple: click any "Get Free Course" button on our site and you'll be taken
-            directly to Udemy with the coupon automatically applied. The course is added to your Udemy
-            account permanently — no subscription, no recurring fees.
-          </p>
+          <h2>What Are Udemy Coupons?</h2>
+          <p><strong>Udemy coupons</strong> are promotional codes that give you access to paid courses at a discount — often 100% off. Instructors release these limited-time coupons to attract students and build reviews. CoursesWyn aggregates and verifies these coupons daily so you never miss a free course.</p>
+          <p>Using a coupon is simple: browse our listings, click any "Get Free Course" button, and enroll on Udemy with the discount auto-applied. The course is yours forever — lifetime access, certificate included.</p>
 
-          <h3>Why Do Instructors Offer Free Udemy Courses?</h3>
-          <p>
-            Udemy's algorithm rewards courses that have more students and ratings. By offering
-            <strong>free enrollment coupons</strong>, instructors rapidly grow their student base and
-            collect the initial reviews needed to rank higher in Udemy search results. It's a
-            win-win: instructors gain visibility, learners get premium education at zero cost.
-          </p>
-
-          <p style={{ marginTop: "1.5rem" }}>
-            <a href="/udemy-coupons-guide" style={{ color: "var(--brand)", fontWeight: 600 }}>
-              Read our complete guide to Udemy coupons →
-            </a>
-          </p>
+          <h2>Why Do Instructors Give Courses Away?</h2>
+          <p>Udemy's algorithm rewards courses with high enrollment and positive reviews. By offering <strong>free coupons</strong>, instructors rapidly build their student base and climb search rankings. It's a win-win: instructors gain visibility, and you get premium education at zero cost.</p>
         </div>
-
         <div>
-          <h3>How CoursesWyn Finds the Best Free Courses</h3>
-          <p>
-            Our team monitors instructor communities, Udemy partner channels, and learning forums
-            24 hours a day to source fresh coupons the moment they go live. Every coupon goes
-            through a <strong>manual verification process</strong> before being published:
-          </p>
-          <ul style={{ color: "var(--muted)", lineHeight: 1.9, paddingLeft: "1.25rem", marginBottom: "1rem" }}>
-            <li>We confirm the coupon applies a full 100% discount</li>
-            <li>We check the course rating is 4.0 or above</li>
-            <li>We verify the instructor has a proven track record</li>
-            <li>We confirm remaining enrollment slots are available</li>
+          <h2>How We Verify Every Coupon</h2>
+          <p>Our team monitors instructor communities and partner channels 24/7 to source fresh coupons. Every deal goes through manual verification before being published:</p>
+          <ul>
+            <li>Full 100% discount confirmed at checkout</li>
+            <li>Minimum 4.0 course rating required</li>
+            <li>Instructor credibility verified</li>
+            <li>Expired deals removed within 4 hours</li>
           </ul>
-          <p>
-            This ensures every free course you find on CoursesWyn is genuinely valuable —
-            not just free. We display expiry indicators so you know which deals are most time-sensitive.
-          </p>
 
-          <h3>Browse Courses by Topic or Category</h3>
-          <p>
-            The most searched free Udemy courses cover web development, data science, cybersecurity,
-            digital marketing, and business. You can explore by specific topic on our{" "}
-            <a href="/topics" style={{ color: "var(--brand)", fontWeight: 600 }}>Topics page</a>,
-            or browse by subject area on our{" "}
-            <a href="/categories" style={{ color: "var(--brand)", fontWeight: 600 }}>Categories page</a>.
-            New topics are added regularly as Udemy's course library expands.
-          </p>
+          <h2>Start Saving Today</h2>
+          <p>With <strong>1,200+ active coupons</strong> across 12 categories — from AI and development to design and marketing — there's always a free course waiting for you. No signup required on CoursesWyn. Just browse, click, and learn.</p>
+          <p style={{ marginTop: "1rem" }}><a href="/udemy-coupons-guide">Read our complete Udemy coupons guide →</a></p>
         </div>
-
       </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       8. CATEGORIES
-       ══════════════════════════════════════════════════════════════════════ -->
-  <section class="section-wrapper section-wrapper--card" aria-label="Browse courses by category">
-    <div class="container">
-      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: "0.75rem",
-          background: "linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.08) 100%)",
-          padding: "0.5rem 1rem", borderRadius: "20px",
-          border: "1px solid rgba(59,130,246,0.2)", marginBottom: "1.5rem"
-        }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#2563EB" }} aria-hidden="true">
-            <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
-          </svg>
-          <span style={{ color: "yellow", fontWeight: 600, fontSize: "0.85rem" }}>Browse by Topic</span>
-        </div>
-        <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>
-          Find Free Courses by <span style={{ color: "var(--brand)" }}>Category</span>
-        </h2>
-        {/* [SEO FIX] Deskripsi relevan — bukan teks FAQ */}
-        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "650px", margin: "0 auto", lineHeight: 1.65 }}>
-          Explore free Udemy courses organised by topic. Whether you want to learn coding, design,
-          marketing, or business — we have verified 100% off coupons waiting for you.
-        </p>
-      </div>
-
-      <nav aria-label="Course categories">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
-          {categories.map((category, index) => (
-            <a
-              href={`/categories/${slugifyCategory(category)}`}
-              style={{
-                background: "var(--card)", padding: "2rem 1.5rem", borderRadius: "16px",
-                textDecoration: "none", color: "var(--text)",
-                border: "1px solid rgba(59,130,246,0.15)",
-                transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
-                display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
-                boxShadow: "0 4px 12px -2px rgba(59,130,246,0.08)",
-                animation: `fadeInUp 0.6s ease-out ${index * 0.08}s both`
-              }}
-              class="category-card"
-            >
-              <h3 style={{ fontSize: "1.15rem", marginBottom: "0.5rem", color: "var(--text)", fontWeight: 700, lineHeight: 1.3 }}>
-                {category}
-              </h3>
-              <p style={{ color: "var(--muted)", fontSize: "0.9rem", lineHeight: 1.45, marginBottom: "1rem", flex: 1 }}>
-                {getCategoryDescription(category)}
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "#2563EB", fontSize: "0.85rem", fontWeight: 600 }}>
-                Browse free courses →
-              </div>
-            </a>
-          ))}
-        </div>
-      </nav>
-
-      <div style={{ textAlign: "center", marginTop: "3rem" }}>
-        <a href="/categories" style={{
-          display: "inline-flex", alignItems: "center", gap: "0.75rem",
-          padding: "1rem 2rem",
-          background: "linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.08) 100%)",
-          color: "#2563EB", textDecoration: "none", borderRadius: "12px",
-          border: "1px solid rgba(59,130,246,0.2)", fontSize: "1rem", fontWeight: 600
-        }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
-          </svg>
-          View All Course Categories
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════════════════════════════
-       9. TRUST INDICATORS
-       ══════════════════════════════════════════════════════════════════════ -->
-  <section class="section-wrapper section-wrapper--card" aria-label="Why CoursesWyn is trusted">
-    <div class="container">
-      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: "0.75rem",
-          background: "linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.08) 100%)",
-          padding: "0.5rem 1rem", borderRadius: "20px",
-          border: "1px solid rgba(59,130,246,0.2)", marginBottom: "1.5rem"
-        }}>
-          <span style={{ color: "yellow", fontWeight: 600, fontSize: "0.85rem" }}>Trusted Platform</span>
-        </div>
-        <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>
-          Trusted by <span style={{ color: "var(--brand)" }}>Millions</span> of Students Worldwide
-        </h2>
-        {/* [SEO FIX] Deskripsi relevan dengan trust indicators, bukan teks FAQ */}
-        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "650px", margin: "0 auto", lineHeight: 1.65 }}>
-          CoursesWyn is built on transparency and a genuine commitment to making quality education
-          accessible to everyone — regardless of budget or location.
-        </p>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
-        {trustIndicators.map((indicator) => (
-          <div style={{
-            background: "var(--card)", padding: "2rem", borderRadius: "20px",
-            border: "1px solid rgba(59,130,246,0.15)", position: "relative",
-            overflow: "hidden", transition: "all 0.3s ease", textAlign: "left",
-            boxShadow: "0 4px 12px -2px rgba(59,130,246,0.08)"
-          }}>
-            <div style={{
-              position: "absolute", top: "1rem", left: "1rem",
-              width: "50px", height: "50px",
-              background: "linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.08) 100%)",
-              borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center",
-              border: "1px solid rgba(59,130,246,0.2)"
-            }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#2563EB" }} aria-hidden="true" set:html={indicator.icon} />
-            </div>
-            <h3 style={{ color: "var(--text)", fontSize: "1.2rem", marginBottom: "0.75rem", marginLeft: "4rem", fontWeight: 700 }}>
-              {indicator.title}
-            </h3>
-            <p style={{ color: "var(--muted)", lineHeight: 1.7, fontSize: "0.95rem" }}>
-              {indicator.description}
-            </p>
+  <!-- ═══ FAQ ═══ -->
+  <section class="sec-pad" style={{ background: "#0f0f18" }}>
+    <div class="container" style={{ maxWidth: "800px", margin: "0 auto" }}>
+      <div class="anim-up" style={{ textAlign: "center", marginBottom: "1rem" }}><p class="sec-label">FAQ</p><h2 class="sec-title">Frequently Asked Questions</h2></div>
+            <p class="anim-up anim-1" style={{ color: "#64748b", fontSize: "0.9rem", textAlign: "center", maxWidth: "600px", margin: "0 auto 2.5rem", lineHeight: 1.6 }}>Common questions about Udemy coupons, how to redeem them, certificate eligibility, and more. Everything you need to know about free courses on CoursesWyn.</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        {[
+          { q: "Are these Udemy coupons really 100% free?", a: "Yes! Every coupon gives you 100% off. No hidden fees, no credit card required." },
+          { q: "How often are new coupons added?", a: "New coupons added daily across all categories. Expired deals removed within 4 hours." },
+          { q: "How long do coupon codes last?", a: "Most last 1-7 days or up to 1,000 enrollments. Enroll immediately when you find a course." },
+          { q: "Will I get a certificate with a free course?", a: "Absolutely! Official Udemy certificate, lifetime access, and all resources included." }
+        ].map((faq) => (
+          <div class="faq-item">
+            <button class="faq-btn" onclick="const p=this.parentElement;const o=p.dataset.open==='true';p.dataset.open=!o;const a=this.nextElementSibling;a.style.display=o?'none':'block';this.querySelector('.faq-icon').style.transform=o?'rotate(0deg)':'rotate(180deg)'"><span>{faq.q}</span><span class="faq-icon">▼</span></button>
+            <div class="faq-answer"><p style={{ margin: 0 }}>{faq.a}</p></div>
           </div>
         ))}
       </div>
-
-      <div style={{ textAlign: "center", marginTop: "3rem" }}>
-        <a href="/udemy-coupon-code" style={{
-          padding: "1rem 2.5rem", borderRadius: "12px", background: "var(--brand)",
-          color: "var(--bg)", textDecoration: "none", fontSize: "1rem", fontWeight: 700,
-          display: "inline-flex", alignItems: "center", gap: "0.5rem",
-          boxShadow: "0 4px 20px -4px hsla(45,95%,58%,0.4)"
-        }}>
-          Get Your Free Courses Now
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
-          </svg>
-        </a>
-      </div>
     </div>
   </section>
-
-  <!-- ══════════════════════════════════════════════════════════════════════
-       10. POPULAR ONLINE COURSES PLATFORMS
-       ══════════════════════════════════════════════════════════════════════ -->
-  <section class="section-wrapper section-wrapper--card" aria-label="Best online learning platforms comparison" id="platforms-section" itemscope itemtype="https://schema.org/ItemList">
-    <meta itemprop="name" content="Best Online Course Platforms for Free Learning 2026" />
-    <div class="container">
-      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: "0.75rem",
-          background: "linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.08) 100%)",
-          padding: "0.5rem 1rem", borderRadius: "20px",
-          border: "1px solid rgba(59,130,246,0.2)", marginBottom: "1.5rem"
-        }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#2563EB" }} aria-hidden="true">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-          </svg>
-          <span style={{ color: "yellow", fontWeight: 600, fontSize: "0.85rem" }}>Best E-Learning Platforms 2026</span>
-        </div>
-        <h2 id="platforms-heading" style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>
-          Top <span style={{ color: "var(--brand)" }}>Free Online Course Platforms</span> Compared
-        </h2>
-        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "700px", margin: "0 auto", lineHeight: 1.65 }}>
-          Compare the best free online learning platforms for programming, data science, business, and design. Find free Udemy coupons, Coursera certificates, edX university courses, and more.
-        </p>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "1.5rem" }}>
-        {platforms.map((platform, index) => (
-          <article
-            itemprop="itemListElement"
-            itemscope
-            itemtype="https://schema.org/ListItem"
-            style={{
-              background: "var(--card)", padding: "1.5rem", borderRadius: "16px",
-              border: `1px solid ${platform.color}20`,
-              transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
-              boxShadow: "0 4px 12px -2px rgba(0,0,0,0.08)",
-              position: "relative"
-            }}
-            class="platform-card"
-          >
-            <meta itemprop="position" content={String(index + 1)} />
-            <div itemprop="item" itemscope itemtype="https://schema.org/Organization" style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
-              <div style={{ flexShrink: 0 }} set:html={platform.icon} />
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-                  <h3 itemprop="name" style={{ fontSize: "1.1rem", color: "var(--text)", fontWeight: 700, margin: 0 }}>
-                    {platform.seoTitle}
-                  </h3>
-                  {platform.freeCourses && (
-                    <span style={{
-                      background: "rgba(34,197,94,0.15)",
-                      color: "#22c55e",
-                      fontSize: "0.7rem",
-                      fontWeight: 700,
-                      padding: "2px 8px",
-                      borderRadius: "9999px",
-                      border: "1px solid rgba(34,197,94,0.3)",
-                      whiteSpace: "nowrap"
-                    }}>FREE</span>
-                  )}
-                </div>
-                <p itemprop="description" style={{ color: "var(--muted)", fontSize: "0.9rem", lineHeight: 1.6, margin: "0 0 0.75rem 0" }}>
-                  {platform.description}
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.75rem", flexWrap: "wrap" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "0.3rem", color: "var(--muted)", fontSize: "0.8rem" }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#2563EB" }}>
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                    {platform.rating}/5
-                  </span>
-                  <span style={{ display: "flex", alignItems: "center", gap: "0.3rem", color: "var(--muted)", fontSize: "0.8rem" }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/>
-                    </svg>
-                    {platform.courses} courses
-                  </span>
-                </div>
-                <a
-                  href={platform.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  itemprop="url"
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: "0.4rem",
-                    color: platform.color, fontSize: "0.85rem", fontWeight: 600,
-                    textDecoration: "none"
-                  }}
-                >
-                  Visit {platform.name} →
-                </a>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════════════════════════════
-       11. FAQ — rich snippet ready
-       ══════════════════════════════════════════════════════════════════════ -->
-  <section class="section-wrapper section-wrapper--card" aria-label="Frequently asked questions">
-    <div class="container">
-      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: "0.75rem",
-          background: "linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.08) 100%)",
-          padding: "0.5rem 1rem", borderRadius: "20px",
-          border: "1px solid rgba(59,130,246,0.2)", marginBottom: "1.5rem"
-        }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#2563EB" }} aria-hidden="true">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-6h2v6zm0-8h-2V7h2v4z"/>
-          </svg>
-          <span style={{ color: "yellow", fontWeight: 600, fontSize: "0.85rem" }}>FAQ</span>
-        </div>
-        <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>
-          Frequently Asked Questions About <span style={{ color: "var(--brand)" }}>Free Udemy Courses</span>
-        </h2>
-        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "650px", margin: "0 auto", lineHeight: 1.65 }}>
-          Everything you need to know about using CoursesWyn to find and claim free Udemy coupons —
-          from how coupons work to certificate eligibility.
-        </p>
-      </div>
-
-      <div class="faq-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: "1.5rem" }}>
-        {faqs.map((faq) => (
-          <div
-            itemscope itemtype="https://schema.org/Question"
-            style={{
-              background: "var(--card)", padding: "1.75rem 2rem", borderRadius: "20px",
-              border: "1px solid rgba(59,130,246,0.15)", position: "relative",
-              overflow: "hidden", boxShadow: "0 4px 12px -2px rgba(59,130,246,0.08)"
-            }}
-          >
-            <div style={{
-              position: "absolute", top: "1rem", left: "1rem",
-              width: "44px", height: "44px",
-              background: "linear-gradient(135deg, rgba(59,130,246,0.12) 0%, rgba(37,99,235,0.08) 100%)",
-              borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center",
-              border: "1px solid rgba(59,130,246,0.2)"
-            }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#2563EB" }} aria-hidden="true">
-                <path d={faq.icon} />
-              </svg>
-            </div>
-            <h3 itemprop="name" style={{ color: "var(--text)", fontSize: "1.1rem", marginBottom: "0.75rem", marginLeft: "3.5rem", fontWeight: 700, lineHeight: 1.4 }}>
-              {faq.q}
-            </h3>
-            <div itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer">
-              <p itemprop="text" style={{ color: "var(--muted)", lineHeight: 1.75, fontSize: "0.95rem", margin: 0 }}>
-                {faq.a}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <!-- [SEO ADD] CTA below FAQ to /deals -->
-      <div style={{ textAlign: "center", marginTop: "3rem" }}>
-        <p style={{ color: "var(--muted)", marginBottom: "1rem" }}>Still have questions? Browse our full coupon library.</p>
-        <a href="/udemy-coupon-code" style={{
-          display: "inline-flex", alignItems: "center", gap: "0.5rem",
-          padding: "0.875rem 2rem", borderRadius: "12px",
-          background: "rgba(59,130,246,0.1)", color: "var(--brand)",
-          textDecoration: "none", fontWeight: 600, fontSize: "1rem",
-          border: "1px solid rgba(59,130,246,0.3)"
-        }}>
-          Browse Free Udemy Courses
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-  </section>
-
-
 </Layout>

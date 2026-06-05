@@ -704,28 +704,8 @@ export default function DealPage({
                   borderRadius: "9999px",
                 }}
               ></span>
-              Quick Facts — Course Summary
+              Quick Facts — {deal.title} Overview
             </h2>
-            <p
-              style={{
-                fontSize: "0.95rem",
-                color: "var(--muted)",
-                fontWeight: 600,
-                marginBottom: "24px",
-              }}
-            >
-              Here's a comprehensive overview of{" "}
-              <strong style={{ color: "var(--text)" }}>{deal.title}</strong> —
-              including pricing, duration, instructor credentials, curriculum
-              highlights, and coupon validity. All data is verified against{" "}
-              {deal.provider || "Udemy"} listings on{" "}
-              {new Date().toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-              .
-            </p>
             <div
               style={{
                 background: "var(--bg)",
@@ -762,22 +742,7 @@ export default function DealPage({
                   { label: "Course Name", value: deal.title },
                   { label: "Platform", value: `${deal.provider || "Udemy"}` },
                   deal.instructor
-                    ? {
-                        label: "Instructor",
-                        value: (
-                          <span>
-                            <a
-                              href={`/instructor/${createInstructorSlug(deal.instructor || "")}`}
-                              style={{
-                                color: "var(--accent)",
-                                textDecoration: "underline",
-                              }}
-                            >
-                              {deal.instructor}
-                            </a>
-                          </span>
-                        ),
-                      }
+                    ? { label: "Instructor", value: deal.instructor }
                     : null,
                   deal.updatedAt
                     ? {
@@ -930,23 +895,8 @@ export default function DealPage({
                     borderRadius: "9999px",
                   }}
                 ></span>
-                Skills You'll Master
+                Skills You'll Master in This Course
               </h2>
-              <p
-                style={{
-                  fontSize: "0.95rem",
-                  color: "var(--muted)",
-                  fontWeight: 600,
-                  marginBottom: "24px",
-                }}
-              >
-                By completing{" "}
-                <strong style={{ color: "var(--text)" }}>{deal.title}</strong>,
-                you'll gain practical, job-ready skills in{" "}
-                {deal.category || "professional development"}. The curriculum is
-                designed by {deal.instructor || "industry experts"} to ensure
-                you develop real-world competencies that employers value.
-              </p>
               <div
                 style={{
                   background: "var(--bg)",
@@ -1026,23 +976,8 @@ export default function DealPage({
                     borderRadius: "9999px",
                   }}
                 ></span>
-                What You Need Before Starting
+                Prerequisites for This Course
               </h2>
-              <p
-                style={{
-                  fontSize: "0.95rem",
-                  color: "var(--muted)",
-                  fontWeight: 600,
-                  marginBottom: "24px",
-                }}
-              >
-                Before enrolling in{" "}
-                <strong style={{ color: "var(--text)" }}>{deal.title}</strong>,
-                review the recommended prerequisites below. Meeting these
-                requirements will help you follow the course material
-                effectively and get the most out of your learning experience on{" "}
-                {deal.provider || "Udemy"}.
-              </p>
               <div
                 style={{
                   background: "var(--bg)",
@@ -1648,25 +1583,8 @@ export default function DealPage({
                     borderRadius: "9999px",
                   }}
                 ></span>
-                Instructor Profile
+                About the Instructor — {deal.instructor}
               </h2>
-              <p
-                style={{
-                  fontSize: "0.95rem",
-                  color: "var(--muted)",
-                  fontWeight: 600,
-                  marginBottom: "24px",
-                }}
-              >
-                <strong style={{ color: "var(--text)" }}>
-                  {deal.instructor}
-                </strong>{" "}
-                is the instructor behind{" "}
-                <strong style={{ color: "var(--text)" }}>{deal.title}</strong>{" "}
-                on {deal.provider || "Udemy"}. Learn about their teaching
-                background, subject matter expertise, and instructional approach
-                to determine if this course matches your learning style.
-              </p>
               <p
                 style={{
                   fontSize: "0.95rem",
@@ -1712,15 +1630,7 @@ export default function DealPage({
                     <strong style={{ color: "var(--text)" }}>
                       Instructor Name:
                     </strong>{" "}
-                    <a
-                      href={`/instructor/${createInstructorSlug(deal.instructor || "")}`}
-                      style={{
-                        color: "var(--accent)",
-                        textDecoration: "underline",
-                      }}
-                    >
-                      {deal.instructor}
-                    </a>
+                    {deal.instructor}
                   </span>
                 </div>
                 {deal.category && (
@@ -1776,9 +1686,7 @@ export default function DealPage({
               </div>
               <div style={{ marginTop: "24px" }}>
                 <a
-                  href={deal.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={`/instructor/${createInstructorSlug(deal.instructor || "")}`}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -1789,7 +1697,7 @@ export default function DealPage({
                     fontWeight: 700,
                   }}
                 >
-                  View Full Instructor Profile on {deal.provider || "Udemy"} ↗
+                  View Full Instructor Profile ↗
                 </a>
               </div>
             </section>

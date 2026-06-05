@@ -3,8 +3,6 @@ import Layout from "../../layouts/Layout.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
 import AuthorBox from "../../components/AuthorBox.astro";
 import ReadingProgress from "../../components/blog/ReadingProgress.astro";
-import FastFacts from "../../components/blog/FastFacts.astro";
-import udemyImage from '../../assets/images/Udemy Personal Plan Offers.png';
 
 
 
@@ -46,7 +44,7 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 const allPosts = await getCollection("blog");
-const post = allPosts?.find(p => {
+const post = allPosts?.find((p: any) => {
   // glob() loader generates IDs like "best-chatgpt-courses/index"
   const normalizedId = p.id.replace(/\/index$/, '');
   return normalizedId === slug || p.id === slug || (p.data as any).slug === slug;
@@ -71,6 +69,8 @@ const readingTime = Math.ceil(words / wordsPerMinute);
 const title = data.title;
 const description = data.description;
 const canonical = `https://courseswyn.com/blog/${post.id}/`;
+
+// Get related courses based on tags (subtle recommendations)
 const ogImage = data.image && typeof data.image === 'object' && 'src' in data.image ? data.image.src : data.image;
 
 // Get related courses based on tags (subtle recommendations)
@@ -132,7 +132,30 @@ const articleSchema = {
 };
 
 // Use article schema as default
-const structuredData = articleSchema;
+let structuredData: any = articleSchema;
+
+// If article has FAQ data in frontmatter, add FAQPage schema
+const articleFaqs = (data as any).faqs;
+if (articleFaqs && Array.isArray(articleFaqs) && articleFaqs.length > 0) {
+  structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      articleSchema,
+      {
+        "@type": "FAQPage",
+        "@id": `${canonical}#faq`,
+        "mainEntity": articleFaqs.slice(0, 8).map((faq: { q: string; a: string }) => ({
+          "@type": "Question",
+          "name": faq.q,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": faq.a
+          }
+        }))
+      }
+    ]
+  };
+}
 ---
 
 <Layout
@@ -145,232 +168,125 @@ const structuredData = articleSchema;
 
   <article style={{ background: "var(--bg)", minHeight: "100vh" }}>
 
-    {/* ── Editorial Header Section ── */}
-    <header style={{
-      padding: "80px 0 60px",
-      borderBottom: "2px solid var(--border)",
-      background: "var(--bg)",
-      position: "relative",
-      overflow: "hidden"
-    }}>
-      <div class="container" style={{ position: "relative", zIndex: 2 }}>
+    {/* ── Article Header ── */}
+    <header style={{ padding: "4rem 0 2rem" }}>
+      <div class="container" style={{ maxWidth: "900px", margin: "0 auto" }}>
 
         {/* Breadcrumb */}
-        <nav style={{ marginBottom: "40px" }} aria-label="Breadcrumb">
-          <ol style={{ display: "flex", listStyle: "none", padding: 0, margin: 0, gap: "10px", fontSize: "0.85rem", fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }} itemscope itemtype="https://schema.org/BreadcrumbList">
+        <nav style={{ marginBottom: "2rem", fontSize: "0.85rem" }} aria-label="Breadcrumb">
+          <ol style={{ display: "flex", listStyle: "none", padding: 0, margin: 0, gap: "8px", color: "var(--muted)" }} itemscope itemtype="https://schema.org/BreadcrumbList">
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-              <a href="/" style={{ color: "inherit", textDecoration: "none" }} itemprop="item">
-                <span itemprop="name">Home</span>
-              </a>
+              <a href="/" style={{ color: "var(--brand)", textDecoration: "none" }} itemprop="item"><span itemprop="name">Home</span></a>
               <meta itemprop="position" content="1" />
             </li>
             <li>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-              <a href="/blog" style={{ color: "inherit", textDecoration: "none" }} itemprop="item">
-                <span itemprop="name">Blog</span>
-              </a>
+              <a href="/blog" style={{ color: "var(--brand)", textDecoration: "none" }} itemprop="item"><span itemprop="name">Blog</span></a>
               <meta itemprop="position" content="2" />
             </li>
             <li>/</li>
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" style={{ color: "var(--text)", maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              <span itemprop="name" title={title}>{title.length > 40 ? title.substring(0, 40) + '...' : title}</span>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" style={{ color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span itemprop="name">{title}</span>
               <meta itemprop="position" content="3" />
             </li>
           </ol>
         </nav>
 
-        <div style={{ maxWidth: "1000px" }}>
-          <div style={{ display: "flex", gap: "12px", marginBottom: "24px" }}>
-            <span style={{
-              background: "var(--color-primary)", color: "var(--color-text)",
-              padding: "4px 12px", border: "2px solid var(--border)",
-              boxShadow: "3px 3px 0 var(--border)", borderRadius: "4px",
-              fontSize: "0.7rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em"
-            }}>Editorial Review</span>
-            {data.tags && data.tags.slice(0, 2).map((tag: string) => (
-              <span style={{
-                background: "var(--bg)", color: "var(--text)",
-                padding: "4px 12px", border: "2px solid var(--border)",
-                borderRadius: "4px", fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase"
-              }}>{tag}</span>
+        {/* Tags */}
+        {data.tags && data.tags.length > 0 && (
+          <div style={{ display: "flex", gap: "8px", marginBottom: "1.5rem", flexWrap: "wrap" }}>
+            {data.tags.slice(0, 3).map((tag: string) => (
+              <span style={{ fontSize: "0.8rem", color: "var(--brand)", fontWeight: 500 }}>#{tag}</span>
             ))}
           </div>
+        )}
 
-          <h1 style={{
-            fontSize: "clamp(2.5rem, 8vw, 4.5rem)",
-            fontWeight: 900,
-            color: "var(--text)",
-            lineHeight: 1.05,
-            letterSpacing: "-0.04em",
-            marginBottom: "32px"
-          }}>
-            {title}
-          </h1>
+        {/* Title */}
+        <h1 style={{
+          fontSize: "clamp(2rem, 4vw, 2.8rem)",
+          fontWeight: 800,
+          color: "var(--text)",
+          lineHeight: 1.2,
+          letterSpacing: "-0.02em",
+          marginBottom: "1.5rem"
+        }}>
+          {title}
+        </h1>
 
-          <p style={{
-            fontSize: "clamp(1.1rem, 3vw, 1.5rem)",
-            color: "var(--text)",
-            lineHeight: 1.5,
-            maxWidth: "850px",
-            fontWeight: 500,
-            marginBottom: "40px",
-            borderLeft: "6px solid var(--accent)",
-            paddingLeft: "24px"
-          }}>
-            {description}
-          </p>
+        {/* Description */}
+        <p style={{
+          fontSize: "1.15rem",
+          color: "var(--muted)",
+          lineHeight: 1.6,
+          marginBottom: "2rem"
+        }}>
+          {description}
+        </p>
 
-          {/* Meta info */}
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "32px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{
-                width: "48px", height: "48px", background: "var(--bg)",
-                border: "2px solid var(--border)", borderRadius: "6px",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "var(--text)", fontWeight: 900, fontSize: "1.1rem"
-              }}>{authorInitials}</div>
-              <div>
-                <p style={{ margin: 0, fontWeight: 900, fontSize: "1rem", color: "var(--text)" }}>{authorName}</p>
-                <p style={{ margin: 0, fontSize: "0.75rem", fontWeight: 700, color: "var(--text)", textTransform: "uppercase" }}>Lead Analyst</p>
-              </div>
-            </div>
-
-            <div style={{ height: "40px", width: "2px", background: "var(--border)", opacity: 0.2 }}></div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px", background: "var(--bg)", padding: "10px 16px", border: "2px solid var(--border)", boxShadow: "3px 3px 0 var(--border)", borderRadius: "4px" }}>
-              <span style={{ fontSize: "0.65rem", fontWeight: 900, color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                {data.updatedAt ? "Last Major Update" : "Original Publication"}
-              </span>
-              <span style={{ fontSize: "1rem", fontWeight: 900, color: "var(--text)" }}>
-                {new Date(data.updatedAt || data.pubDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-              </span>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px", background: "var(--bg)", padding: "10px 16px", border: "2px solid var(--border)", boxShadow: "3px 3px 0 var(--border)", borderRadius: "4px" }}>
-              <span style={{ fontSize: "0.65rem", fontWeight: 900, color: "var(--text)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Reading Time</span>
-              <span style={{ fontSize: "1rem", fontWeight: 900, color: "var(--text)" }}>{readingTime} min read</span>
-            </div>
-          </div>
+        {/* Meta */}
+        <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", flexWrap: "wrap", fontSize: "0.9rem", color: "var(--muted)", paddingTop: "1.5rem", borderTop: "1px solid var(--border)" }}>
+          <span>By <strong style={{ color: "var(--text)" }}>{authorName}</strong></span>
+          <span>·</span>
+          <span>{new Date(data.updatedAt || data.pubDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+          <span>·</span>
+          <span>{readingTime} min read</span>
         </div>
       </div>
-
-      {/* Decorative large background text */}
-      <div style={{
-        position: "absolute", bottom: "-40px", right: "-20px",
-        fontSize: "12rem", fontWeight: 900, color: "var(--border)",
-        opacity: 0.03, pointerEvents: "none", whiteSpace: "nowrap",
-        zIndex: 1
-      }}>EDITORIAL</div>
     </header>
 
-    <div class="container" style={{ padding: "60px 24px" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "60px", alignItems: "start" }}>
+    <div class="container" style={{ maxWidth: "900px", margin: "0 auto", paddingBottom: "4rem" }}>
 
-        {/* Main Content Area */}
-        <main style={{ minWidth: 0 }}>
+      {/* Article Image */}
+      {data.image && (
+        <div style={{ marginBottom: "3rem", borderRadius: "12px", overflow: "hidden" }}>
+          <img
+            src={typeof data.image === 'string' ? data.image : data.image && typeof data.image === 'object' && 'src' in data.image ? data.image.src : ''}
+            alt={title}
+            style={{ width: "100%", height: "auto", objectFit: "cover" }}
+          />
+        </div>
+      )}
 
-          {/* Article Image */}
-          {data.image && (
-            <div style={{
-              width: "100%", height: "auto", maxHeight: "500px",
-              border: "2px solid var(--border)", boxShadow: "8px 8px 0 var(--border)",
-              borderRadius: "8px", overflow: "hidden", marginBottom: "60px"
-            }}>
-              <img
-                src={typeof data.image === 'string' ? data.image : data.image && typeof data.image === 'object' && 'src' in data.image ? data.image.src : ''}
-                alt={title}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </div>
-          )}
-
-          <div class="prose neo-content" style={{ maxWidth: "100%" }}>
-            <Content />
-          </div>
-
-          <footer style={{ marginTop: "80px", paddingTop: "40px", borderTop: "2px solid var(--border)" }}>
-            <AuthorBox name={authorName} bio={authorBio} />
-          </footer>
-        </main>
-
-        {/* Sidebar */}
-        <aside style={{ position: "sticky", top: "100px" }}>
-
-          {/* Table of Contents */}
-          {headings && headings.length > 0 && (
-            <div style={{
-              background: "var(--bg)", border: "2px solid var(--border)",
-              boxShadow: "4px 4px 0 var(--border)", borderRadius: "8px",
-              padding: "24px", marginBottom: "32px"
-            }}>
-              <h4 style={{
-                fontSize: "0.75rem", fontWeight: 900, textTransform: "uppercase",
-                letterSpacing: "0.1em", color: "var(--text)", marginBottom: "20px",
-                display: "flex", alignItems: "center", gap: "8px"
-              }}>
-                <span style={{ width: "8px", height: "8px", background: "var(--bg)", borderRadius: "50%" }}></span>
-                Contents
-              </h4>
-              <nav>
-                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
-                  {headings.filter(h => h.depth === 2).map((heading) => (
-                    <li>
-                      <a href={`#${heading.slug}`} style={{
-                        fontSize: "0.88rem", fontWeight: 700, color: "var(--text)",
-                        textDecoration: "none", transition: "color 0.15s"
-                      }} class="toc-link">
-                        {heading.text}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            </div>
-          )}
-
-          {/* Social Share */}
-          <div style={{
-            background: "var(--bg)", color: "var(--text)", borderRadius: "8px",
-            border: "2px solid var(--border)", boxShadow: "4px 4px 0 var(--border)",
-            padding: "24px"
-          }}>
-            <h4 style={{ fontSize: "0.7rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "16px", color: "var(--color-primary)" }}>Spread Knowledge</h4>
-            <div style={{ display: "flex", gap: "10px" }}>
-              <a href={`https://twitter.com/intent/tweet?url=${canonical}&text=${title}`} target="_blank" rel="noopener noreferrer" style={{ width: "38px", height: "38px", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", color: "white", textDecoration: "none" }} class="share-btn">X</a>
-              <a href={`https://www.facebook.com/sharer/sharer.php?u=${canonical}`} target="_blank" rel="noopener noreferrer" style={{ width: "38px", height: "38px", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", color: "white", textDecoration: "none" }} class="share-btn">FB</a>
-              <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${canonical}`} target="_blank" rel="noopener noreferrer" style={{ width: "38px", height: "38px", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", color: "white", textDecoration: "none" }} class="share-btn">LN</a>
-            </div>
-          </div>
-        </aside>
+      {/* Content */}
+      <div class="prose neo-content" style={{ maxWidth: "100%" }}>
+        <Content />
       </div>
+
+      {/* Footer */}
+      <footer style={{ marginTop: "4rem", paddingTop: "2rem", borderTop: "1px solid var(--border)" }}>
+        <AuthorBox name={authorName} bio={authorBio} image="/images/author.jpg" />
+      </footer>
+
     </div>
   </article>
 
   <style is:global>
-    .neo-content h2 { font-size: 2.2rem; font-weight: 900; margin: 60px 0 24px; letter-spacing: -0.03em; border-bottom: 3px solid var(--border); padding-bottom: 12px; color: var(--text); }
-    .neo-content h3 { font-size: 1.6rem; font-weight: 900; margin: 40px 0 16px; letter-spacing: -0.02em; color: var(--text); }
-    .neo-content p { font-size: 1.1rem; line-height: 1.7; margin-bottom: 24px; color: var(--text); font-weight: 500; }
-    .neo-content ul, .neo-content ol { margin-bottom: 24px; padding-left: 24px; color: var(--text); }
-    .neo-content li { margin-bottom: 12px; font-weight: 500; line-height: 1.6; color: var(--text); }
-    .neo-content strong { font-weight: 900; color: var(--text); }
-    .neo-content a { color: var(--accent); font-weight: 800; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
-    .neo-content img { border: 2px solid var(--border); box-shadow: 6px 6px 0 var(--border); border-radius: 6px; margin: 32px 0; }
-    .neo-content blockquote { border-left: 4px solid var(--brand); padding: 16px 24px; margin: 32px 0; background: var(--card); border-radius: 0 8px 8px 0; }
-    .neo-content blockquote p { margin-bottom: 0; color: var(--muted); font-style: italic; }
-    .neo-content code { background: var(--card); padding: 2px 8px; border-radius: 4px; font-size: 0.9em; color: var(--text); border: 1px solid var(--border); }
-    .neo-content pre { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; overflow-x: auto; margin: 32px 0; }
-    .neo-content pre code { background: none; border: none; padding: 0; }
-    .neo-content hr { border: none; border-top: 2px solid var(--border); margin: 48px 0; }
-    .neo-content table { width: 100%; border-collapse: collapse; margin: 32px 0; }
-    .neo-content th, .neo-content td { border: 1px solid var(--border); padding: 12px; text-align: left; color: var(--text); }
-    .neo-content th { background: var(--card); font-weight: 800; }
+    .neo-content { max-width: 900px; margin: 0 auto; }
+    .neo-content h2 { font-size: 1.8rem; font-weight: 700; margin: 3rem 0 1rem; letter-spacing: -0.02em; color: var(--text); }
+    .neo-content h3 { font-size: 1.4rem; font-weight: 600; margin: 2rem 0 0.75rem; color: var(--text); }
+    .neo-content p { font-size: 1.05rem; line-height: 1.8; margin-bottom: 1.5rem; color: var(--text); font-weight: 400; }
+    .neo-content ul, .neo-content ol { margin-bottom: 1.5rem; padding-left: 1.5rem; color: var(--text); }
+    .neo-content li { margin-bottom: 0.5rem; font-weight: 400; line-height: 1.7; }
+    .neo-content strong { font-weight: 700; color: var(--text); }
+    .neo-content a { color: var(--brand); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+    .neo-content a:hover { opacity: 0.8; }
+    .neo-content img { border-radius: 8px; margin: 2rem 0; width: 100%; }
+    .neo-content blockquote { border-left: 3px solid var(--brand); padding: 1rem 1.5rem; margin: 2rem 0; background: var(--card); border-radius: 0 8px 8px 0; }
+    .neo-content blockquote p { margin-bottom: 0; color: var(--muted); }
+    .neo-content code { background: var(--card); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; color: var(--text); }
+    .neo-content pre { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; overflow-x: auto; margin: 2rem 0; }
+    .neo-content hr { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+    .neo-content table { width: 100%; border-collapse: collapse; margin: 2rem 0; font-size: 0.9rem; }
+    .neo-content th { background: var(--card); padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: var(--text); border: 1px solid var(--border); }
+    .neo-content td { padding: 0.75rem 1rem; border: 1px solid var(--border); color: var(--text); }
+    .neo-content tr:nth-child(even) { background: var(--card); }
 
-    .toc-link:hover { color: var(--accent) !important; text-decoration: underline; }
-    .share-btn:hover { background: var(--accent); border-color: var(--accent) !important; color: white; }
+    .toc-link:hover { color: var(--brand) !important; }
 
-    @media (max-width: 1000px) {
-      article .container > div { grid-template-columns: 1fr !important; }
-      aside { position: static !important; }
+    @media (max-width: 768px) {
+      .neo-content h2 { font-size: 1.5rem; }
+      .neo-content h3 { font-size: 1.2rem; }
+      .neo-content p { font-size: 1rem; }
     }
   </style>
 </Layout>
