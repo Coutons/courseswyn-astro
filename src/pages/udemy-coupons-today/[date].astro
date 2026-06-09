@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { getDeals, getAvailableDates } from '../../lib/store.js';
+import { formatDateWIB, toISODateWIB } from '../../lib/date';
 
 export async function getStaticPaths() {
   const dates = await getAvailableDates();
@@ -19,18 +20,14 @@ for (const deal of allDeals) {
 }
 const categories = Object.entries(grouped).sort((a, b) => b[1].length - a[1].length);
 
-// @ts-ignore
 const dateObj = new Date(`${date}T00:00:00.000Z`);
-const dateLabel = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-// @ts-ignore
-const isToday = date === new Date().toISOString().substring(0, 10);
+const dateLabel = formatDateWIB(dateObj, { year: 'numeric', month: 'long', day: 'numeric' });
+const isToday = date === toISODateWIB();
 
-// @ts-ignore
 const prev = new Date(dateObj.getTime() - 86400000);
-// @ts-ignore
 const next = new Date(dateObj.getTime() + 86400000);
-const prevDate = prev.toISOString().substring(0, 10);
-const nextDate = next.toISOString().substring(0, 10);
+const prevDate = toISODateWIB(prev);
+const nextDate = toISODateWIB(next);
 
 const totalCoupons = allDeals.length;
 const catCount = categories.length;
@@ -150,8 +147,7 @@ const jsonLd = {
 
       <div class="filter-row">
         <span class="tab tab-active" aria-current="true">Select All</span>
-        {/* @ts-ignore */}
-        <a href={`/udemy-coupons-today/${new Date().toISOString().substring(0, 10)}/`} class="tab">Last 24 Hrs</a>
+        <a href={`/udemy-coupons-today/${toISODateWIB()}/`} class="tab">Last 24 Hrs</a>
       </div>
 
       <!-- Categories: grid of course cards per category -->
@@ -347,9 +343,9 @@ const jsonLd = {
       </section>
 
       <nav class="date-nav" aria-label="Article navigation">
-        <a href={`/udemy-coupons-today/${prevDate}/`} class="nav-btn">← {prev.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</a>
+        <a href={`/udemy-coupons-today/${prevDate}/`} class="nav-btn">← {formatDateWIB(prev, { month: 'short', day: 'numeric' })}</a>
         <a href="/udemy-coupons-today/" class="nav-btn nav-mid">All Dates</a>
-        {!isToday && <a href={`/udemy-coupons-today/${nextDate}/`} class="nav-btn">{next.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} →</a>}
+        {!isToday && <a href={`/udemy-coupons-today/${nextDate}/`} class="nav-btn">{formatDateWIB(next, { month: 'short', day: 'numeric' })} →</a>}
       </nav>
     </div>
   </article>

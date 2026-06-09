@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import { readDeals } from '../../lib/store';
 import DealCard from '../../components/DealCard.astro';
+import { toISODateWIB } from '../../lib/date';
 
 // Function to decode HTML entities
 const decodeHtml = (str: string) => str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
@@ -112,8 +113,8 @@ const generateRelatedSearches = (topic: string) => {
 
 const relatedSearches = generateRelatedSearches(topicName);
 
-const currentYear = new Date().getFullYear();
-const currentDate = new Date().toISOString().split('T')[0];
+const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
+const currentDate = toISODateWIB();
 
 // Calculate savings stats
 const avgDiscount = topicDeals.length > 0 

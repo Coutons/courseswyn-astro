@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import { readDeals } from '../lib/store';
 import type { Deal } from '../types/deal.d';
 import { parseInstructors, createInstructorSlug } from '../lib/instructors';
+import { formatDateWIB } from '../lib/date';
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -115,8 +116,8 @@ function getTopDeals(courses: Deal[]): Deal[] {
 const totalCoupons = deals.length;
 const totalFree = instructors.reduce((s, i) => s + (hasFree(i.courses) ? 1 : 0), 0);
 
-const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
-const currentYear = new Date().getFullYear();
+const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', timeZone: 'Asia/Jakarta' });
+const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
 
 const siteUrl = 'https://courseswyn.com';
 const canonicalUrl = `${siteUrl}/instructors`;

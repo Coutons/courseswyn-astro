@@ -62,11 +62,39 @@ const list = listRaw.map((c) => {
   return { ...c, slug, description };
 });
 
+// FAQ data for categories page
+const faqs = [
+  {
+    q: "Are all courses in each category really free?",
+    a: "Most coupons listed on CoursesWyn apply a 100% discount, making the course temporarily free. Some coupons apply a partial discount (e.g., 90% off). The price shown reflects the coupon price at time of verification."
+  },
+  {
+    q: "How often are categories updated?",
+    a: "New courses are added to categories daily as we source and verify fresh Udemy coupons. Each category page shows only deals with currently active coupons."
+  },
+  {
+    q: "Can I browse subcategories?",
+    a: "Yes — each category page includes subcategory filters so you can narrow down results. For example, within Development you can filter by Web Development, Mobile Development, Game Development, and more."
+  },
+  {
+    q: "Which categories have the most courses?",
+    a: `The largest categories on CourseWyn are currently ${list.slice(0, 3).map(c => c.name).join(", ")} — reflecting the most popular learning topics on Udemy.`
+  },
+  {
+    q: "Do category pages include all Udemy courses?",
+    a: "Category pages show only courses with currently active verified coupons. This ensures you only see deals that actually work. We remove expired coupons daily to maintain quality."
+  },
+  {
+    q: "Can I filter categories by language?",
+    a: "Yes! You can filter courses by language within each category. We support English, Spanish, Portuguese, French, German, Japanese, Chinese, and many other languages, making learning accessible globally."
+  }
+];
+
 const totalCategories = list.length;
 const totalCourses = deals.length;
 
 // Proper interpolated values for structured data
-const pageTitle = `Browse ${totalCategories}+ Course Categories — ${totalCourses}+ Free Udemy Coupons | CoursesWyn`;
+const pageTitle = `Online Course Categories — ${totalCourses}+ Free Udemy Coupons | CourseWyn`;
 const pageDescription = `Explore ${totalCategories} course categories with ${totalCourses}+ verified Udemy coupons. Python, web development, data science, AI, design, business & more — updated daily.`;
 
 // Build structured data with real interpolated values (not template strings)
@@ -74,175 +102,423 @@ const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "WebPage",
-      "@id": "https://courseswyn.com/categories#webpage",
+      "@type": "BreadcrumbList",
+      "@id": "https://courseswyn.com/categories#breadcrumb",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" },
+        { "@type": "ListItem", "position": 2, "name": "Course Categories", "item": "https://courseswyn.com/categories" }
+      ]
+    },
+    {
+      "@type": "CollectionPage",
+      "@id": "https://courseswyn.com/categories",
       "url": "https://courseswyn.com/categories",
       "name": pageTitle,
       "description": pageDescription,
-      "isPartOf": { "@id": "https://courseswyn.com/#website" },
-      "inLanguage": "en-US",
+      "isPartOf": { "@id": "https://courseswyn.com" },
+      "breadcrumb": { "@id": "https://courseswyn.com/categories#breadcrumb" },
       "dateModified": new Date().toISOString().split("T")[0],
-      "breadcrumb": {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" },
-          { "@type": "ListItem", "position": 2, "name": "Categories", "item": "https://courseswyn.com/categories" }
-        ]
+      "inLanguage": "en-US",
+      "about": {
+        "@type": "Thing",
+        "name": "Udemy Course Categories",
+        "description": "Browse course categories with verified Udemy coupons and discounts for online learning"
+      },
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Learners worldwide seeking free and discounted online courses by category",
+        "geographicArea": ["United States", "United Kingdom", "India", "Canada", "Australia", "Germany", "France", "Brazil", "Japan", "Global"]
+      },
+      "mainEntity": {
+        "@type": "ItemList",
+        "name": "Udemy Course Categories on CourseWyn",
+        "description": `${totalCategories} categories with ${totalCourses}+ verified coupon deals`,
+        "numberOfItems": totalCategories,
+        "itemListElement": list.map((c, i) => ({
+          "@type": "ListItem",
+          "position": i + 1,
+          "item": {
+            "@type": "ItemList",
+            "name": `${c.name} Courses`,
+            "description": c.description,
+            "url": `https://courseswyn.com/categories/${c.slug}`,
+            "numberOfItems": c.count,
+            "areaServed": ["United States", "United Kingdom", "India", "Canada", "Australia", "Germany", "France", "Brazil", "Japan", "Global"]
+          }
+        }))
       }
     },
     {
-      "@type": "ItemList",
-      "@id": "https://courseswyn.com/categories#list",
-      "name": "Udemy Course Categories on CoursesWyn",
-      "description": `${totalCategories} categories with ${totalCourses}+ verified coupon deals`,
-      "numberOfItems": totalCategories,
-      "itemListElement": list.map((c, i) => ({
-        "@type": "ListItem",
-        "position": i + 1,
-        "item": {
-          "@type": "ItemList",
-          "name": `${c.name} Courses`,
-          "description": c.description,
-          "url": `https://courseswyn.com/categories/${c.slug}`,
-          "numberOfItems": c.count
-        }
+      "@type": "FAQPage",
+      "@id": "https://courseswyn.com/categories#faq",
+      "mainEntity": faqs.map(faq => ({
+        "@type": "Question",
+        "name": faq.q,
+        "acceptedAnswer": { "@type": "Answer", "text": faq.a }
       }))
-    },
-    {
-      "@type": "Organization",
-      "@id": "https://courseswyn.com/#organization",
-      "name": "CoursesWyn",
-      "url": "https://courseswyn.com",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "https://courseswyn.com/logo.svg"
-      },
-      "sameAs": [
-        "https://x.com/courseswyn",
-        "https://www.facebook.com/BestCouponPromo/",
-        "https://www.linkedin.com/company/courseswyn"
-      ]
     }
   ]
 };
 ---
 
 <Layout title={pageTitle} description={pageDescription}>
+  <!-- Structured Data with real interpolated values -->
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-  <main style="background: var(--bg); color: var(--text);">
-    
-    {/* ── HERO ── */}
-    <section style="padding: 100px 0 80px; border-bottom: 2px solid var(--border); background: var(--bg);">
-      <div class="container">
-        <h1 style={{ 
-          fontSize: "clamp(2.5rem, 7vw, 4.5rem)", 
-          fontWeight: 900, 
-          lineHeight: 1.05, 
-          letterSpacing: "-0.04em",
-          marginBottom: "32px"
-        }}>
-          {totalCategories}+ Course<br/>
-          <span style={{ background: "var(--bg)", color: "var(--text)", padding: "0 10px" }}>Categories.</span>
-        </h1>
-        
-        <p style={{ 
-          fontSize: "clamp(1.1rem, 3vw, 1.3rem)", 
-          color: "var(--muted)", 
-          maxWidth: "800px", 
-          lineHeight: 1.6,
-          fontWeight: 500,
-          marginBottom: "48px"
-        }}>
-          CoursesWyn organizes <strong style="color:var(--text)">{totalCourses}+ verified Udemy coupons</strong> across {totalCategories} learning categories — updated daily.
-        </p>
+  <div style="min-height: 100vh; color: var(--text); background: var(--bg);">
+    <main>
 
-        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-          {[
-            { v: `${totalCategories}+`, l: "Categories" },
-            { v: `${totalCourses}+`, l: "Courses" },
-            { v: "100%", l: "Verified" }
-          ].map(s => (
-            <div style="background: var(--bg); border: 2px solid var(--border); padding: 12px 24px; border-radius: 4px; box-shadow: 4px 4px 0 var(--border); display: flex; flex-direction: column; align-items: center;">
-              <span style="font-size: 1.5rem; font-weight: 900; color: var(--text);">{s.v}</span>
-              <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--muted);">{s.l}</span>
-            </div>
-          ))}
+      <!-- ── Hero ── -->
+      <section
+        aria-labelledby="categories-hero-heading"
+        style="background: linear-gradient(135deg, hsl(222,47%,7%) 0%, hsl(222,43%,10%) 100%); padding: clamp(4rem,10vw,8rem) 1rem 4rem; text-align: center; position: relative; overflow: hidden;"
+      >
+        <!-- Decorative blobs (aria-hidden) -->
+        <div aria-hidden="true" style="position:absolute;top:20%;left:10%;width:300px;height:300px;background:var(--brand);filter:blur(120px);opacity:.08;border-radius:50%;pointer-events:none;"></div>
+        <div aria-hidden="true" style="position:absolute;bottom:10%;right:10%;width:250px;height:250px;background:hsl(0,84%,60%);filter:blur(100px);opacity:.08;border-radius:50%;pointer-events:none;"></div>
+
+        <div class="container" style="position:relative;z-index:1;">
+
+          <!-- Badge -->
+          <div aria-hidden="true" style="display:inline-flex;align-items:center;gap:.5rem;background:var(--brand-soft,rgba(168,85,247,.12));padding:.5rem 1rem;border-radius:9999px;margin-bottom:1.5rem;font-size:.875rem;color:var(--brand);font-weight:600;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Browse All Categories
+          </div>
+
+          <!--
+            H1: keyword-rich, uses real interpolated numbers.
+            Avoid duplicate of page <title> — complementary phrasing.
+          -->
+          <h1
+            id="categories-hero-heading"
+            style="font-size:clamp(2rem,5vw,3.5rem);font-weight:800;line-height:1.1;margin:0 auto 1.25rem;max-width:900px;color:var(--text);"
+          >
+            {totalCategories}+ Course Categories —
+            <span style="background:linear-gradient(135deg,var(--brand),hsl(35,90%,68%));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+              Find Free Udemy Coupons
+            </span>
+            by Topic
+          </h1>
+
+          <!-- Unique intro paragraph — important for E-E-A-T & topic relevance -->
+          <p style="font-size:clamp(1rem,2.5vw,1.2rem);color:var(--muted);max-width:680px;margin:0 auto 2.5rem;line-height:1.7;">
+            CoursesWyn organizes <strong style="color:var(--text);">{totalCourses}+ verified Udemy coupons</strong> across {totalCategories} learning categories — from programming and data science to design and business. Browse by topic to find discounted courses in your field, updated daily.
+          </p>
+
+          <!-- Stats row -->
+          <ul role="list" aria-label="Site statistics" style="display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;list-style:none;padding:0;margin:0;">
+            {[
+              { value: `${totalCategories}+`, label: "Categories" },
+              { value: `${totalCourses}+`, label: "Udemy Courses" },
+              { value: "100%", label: "Verified Coupons" },
+              { value: "Daily", label: "Fresh Updates" },
+            ].map(({ value, label }) => (
+              <li style="background:var(--card,#1f2330);padding:.75rem 1.5rem;border-radius:12px;border:1px solid var(--border,#2d3748);display:flex;flex-direction:column;align-items:center;min-width:110px;">
+                <strong style="color:var(--brand);font-size:1.3rem;line-height:1;">{value}</strong>
+                <span style="color:var(--muted);font-size:.8rem;margin-top:.25rem;">{label}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-      </div>
-    </section>
+      </section>
 
-    {/* ── GRID ── */}
-    <section style="padding: 80px 0;">
-      <div class="container">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
-          {list.map((c) => (
-            <a href={`/categories/${c.slug}`} class="neo-cat-card">
-              <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
-                <div style="background: var(--bg); color: var(--text); width: 56px; height: 56px; border-radius: 4px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.5rem; box-shadow: 3px 3px 0 var(--border);">
-                  {c.name.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <h3 style="font-size: 1.25rem; font-weight: 900; margin: 0;">{c.name}</h3>
-                  <div style="font-size: 0.85rem; font-weight: 800; color: var(--text); text-transform: uppercase;">{c.count} Courses</div>
+      <!-- ── Categories Grid ── -->
+      <section
+        aria-labelledby="categories-grid-heading"
+        style="padding:4rem 1rem;background:var(--bg);"
+      >
+        <div class="container" style="max-width:1400px;">
+          <div style="text-align:center;margin-bottom:3rem;">
+            <h2
+              id="categories-grid-heading"
+              style="font-size:clamp(1.6rem,4vw,2.2rem);font-weight:800;color:var(--text);margin-bottom:.75rem;"
+            >
+              Browse All {totalCategories} Categories
+            </h2>
+            <!--
+              Unique descriptive paragraph under H2 — helps Google understand
+              the page's topical depth and gives each section a distinct role.
+            -->
+            <p style="color:var(--muted);font-size:1rem;max-width:580px;margin:0 auto;line-height:1.65;">
+              Each category links to a dedicated page listing all available Udemy coupons in that topic. Subcategories are shown below each card to help you narrow down your search.
+            </p>
+          </div>
+
+          {list.length === 0 ? (
+            <div style="text-align:center;padding:3rem;background:var(--card);border-radius:16px;border:1px solid var(--border);">
+              <h3 style="color:var(--text);margin-bottom:1rem;">No categories found</h3>
+              <p style="color:var(--muted);margin-bottom:1.5rem;">We loaded {deals.length} deals but couldn't group them into categories. Please try again later.</p>
+              <a href="/deals" style="padding:.875rem 1.75rem;background:var(--brand);color:#fff;text-decoration:none;border-radius:10px;font-weight:600;">Browse All Deals</a>
+            </div>
+          ) : (
+            <ul
+              role="list"
+              aria-label="Course categories"
+              style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;list-style:none;padding:0;margin:0;"
+            >
+              {list.map((c) => (
+                <li style="position:relative;">
+                  <a
+                    href={`/categories/${c.slug}`}
+                    title={`Browse ${c.count} ${c.name} courses with Udemy coupons`}
+                    style="display:block;background:var(--card,#1f2330);border:1px solid var(--border,#2d3748);border-radius:16px;padding:1.5rem;text-decoration:none;color:inherit;transition:border-color .2s,transform .2s;height:100%;"
+                  >
+                    <!-- Category header -->
+                    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+                      <!-- Icon initial -->
+                      <div
+                        aria-hidden="true"
+                        style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--brand),hsl(35,90%,60%));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1.25rem;flex-shrink:0;"
+                      >
+                        {c.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <!-- H3 inside list item: helps topic hierarchy for crawlers -->
+                        <h3 style="margin:0;color:var(--text);font-size:1.1rem;font-weight:700;line-height:1.2;margin-bottom:.2rem;">
+                          {c.name} Courses
+                        </h3>
+                        <p style="margin:0;color:var(--muted);font-size:.875rem;">
+                          <strong style="color:var(--brand);">{c.count}</strong> Udemy coupons
+                        </p>
+                      </div>
+                    </div>
+
+                    <!-- SEO description per category -->
+                    <p style="color:var(--muted);font-size:.85rem;line-height:1.55;margin:0 0 1rem;">
+                      {c.description}
+                    </p>
+
+                    <!-- Subcategory tags -->
+                    {c.subs.size > 0 && (
+                      <div>
+                        <p style="color:var(--muted);font-size:.78rem;font-weight:600;margin:0 0 .5rem;text-transform:uppercase;letter-spacing:.04em;">
+                          Topics:
+                        </p>
+                        <ul role="list" style="display:flex;gap:.4rem;flex-wrap:wrap;list-style:none;padding:0;margin:0;">
+                          {Array.from(c.subs.entries())
+                            .sort((a, b) => b[1] - a[1])
+                            .slice(0, 4)
+                            .map(([sub]) => (
+                              <li>
+                                <span style="display:inline-block;padding:.3rem .65rem;border-radius:20px;font-size:.75rem;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);color:var(--brand);font-weight:500;">
+                                  {sub}
+                                </span>
+                              </li>
+                            ))}
+                          {c.subs.size > 4 && (
+                            <li style="display:inline-flex;align-items:center;">
+                              <span style="font-size:.75rem;color:var(--muted);padding:.3rem .4rem;">+{c.subs.size - 4} more</span>
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      <!-- ── ABOUT COURSE CATEGORIES — SEO Content ── -->
+      <section style="padding:4rem 1rem;background:var(--card);">
+        <div class="container" style="max-width:1400px;">
+          <div style="text-align:center;margin-bottom:3rem;">
+            <h2 style="font-size:clamp(1.5rem,4vw,2rem);font-weight:800;color:var(--text);margin-bottom:.75rem;">
+              About Course Categories
+            </h2>
+            <p style="color:var(--muted);font-size:1rem;max-width:700px;margin:0 auto;line-height:1.6;">
+              Everything you need to know about browsing and using course categories to find the perfect Udemy coupons for your learning goals
+            </p>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;">
+            <div style="background:var(--bg);padding:2rem;border-radius:12px;border:1px solid var(--border);">
+              <h3 style="font-size:1.25rem;font-weight:700;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--brand)">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                What Are Course Categories?
+              </h3>
+              <p style="color:var(--muted);line-height:1.7;margin:0;">
+                CoursesWyn organizes Udemy courses into {totalCategories} distinct categories based on subject matter. Each category contains courses with verified coupons, making it easy to find discounted courses in your specific area of interest. From programming to design, business to personal development, our categories cover all major learning topics.
+              </p>
+            </div>
+
+            <div style="background:var(--bg);padding:2rem;border-radius:12px;border:1px solid var(--border);">
+              <h3 style="font-size:1.25rem;font-weight:700;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="hsl(120,70%,45%)">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+                How to Browse Categories
+              </h3>
+              <p style="color:var(--muted);line-height:1.7;margin:0;">
+                Simply click on any category card to view all available courses with coupons in that topic. Each category page shows course count, subcategories for filtering, and detailed descriptions. You can further filter by language, rating, and price to find exactly what you need. All coupons are verified and updated daily.
+              </p>
+            </div>
+
+            <div style="background:var(--bg);padding:2rem;border-radius:12px;border:1px solid var(--border);">
+              <h3 style="font-size:1.25rem;font-weight:700;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="hsl(210,100%,60%)">
+                  <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                </svg>
+                Subcategory Filtering
+              </h3>
+              <p style="color:var(--muted);line-height:1.7;margin:0;">
+                Each category includes subcategories for more precise filtering. For example, the Development category includes Web Development, Mobile Development, Game Development, and more. This granular organization helps you find courses that match your exact learning needs without browsing through irrelevant content.
+              </p>
+            </div>
+
+            <div style="background:var(--bg);padding:2rem;border-radius:12px;border:1px solid var(--border);">
+              <h3 style="font-size:1.25rem;font-weight:700;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="hsl(35,90%,68%)">
+                  <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
+                </svg>
+                Global Category Access
+              </h3>
+              <p style="color:var(--muted);line-height:1.7;margin:0;">
+                Our course categories work globally, serving learners in the US, UK, India, Canada, Australia, Germany, France, Brazil, Japan, and 150+ other countries. All categories support multiple languages including English, Spanish, Portuguese, French, German, Japanese, Chinese, and more. Find courses in your preferred language and region.
+              </p>
+            </div>
+
+            <div style="background:var(--bg);padding:2rem;border-radius:12px;border:1px solid var(--border);">
+              <h3 style="font-size:1.25rem;font-weight:700;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="hsl(280,70%,60%)">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                Verified Coupons Only
+              </h3>
+              <p style="color:var(--muted);line-height:1.7;margin:0;">
+                Every course listed in our categories has a verified, working coupon. Our team manually checks each coupon daily to ensure it provides the advertised discount. Expired or invalid coupons are immediately removed, so you can trust that every deal you see is legitimate and ready to use.
+              </p>
+            </div>
+
+            <div style="background:var(--bg);padding:2rem;border-radius:12px;border:1px solid var(--border);">
+              <h3 style="font-size:1.25rem;font-weight:700;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="hsl(200,70%,60%)">
+                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                </svg>
+                Popular Categories
+              </h3>
+              <p style="color:var(--muted);line-height:1.7;margin:0;">
+                The most popular categories on CoursesWyn are {list.slice(0, 3).map(c => c.name).join(", ")}. These categories reflect the most in-demand skills in today's job market. Whether you want to learn programming, data science, digital marketing, or business management, our popular categories have the most courses and coupons available.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── AFFILIATE DISCLOSURE ── -->
+      <section style="padding:3rem 1rem;background:linear-gradient(135deg,rgba(255,193,7,0.05) 0%,rgba(255,165,0,0.03) 100%);">
+        <div class="container" style="max-width:1400px;">
+          <div style="background:var(--card);border:1px solid rgba(255,193,7,0.2);border-radius:12px;padding:2rem;text-align:center;max-width:900px;margin:0 auto;">
+            <div style="display:inline-flex;align-items:center;gap:0.5rem;background:rgba(255,193,7,0.1);padding:0.5rem 1rem;border-radius:20px;margin-bottom:1rem;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--brand)">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0 2h-2v2h2v-2z"/>
+              </svg>
+              <span style="color:#92400E;font-weight:600;font-size:0.85rem;">Transparency First</span>
+            </div>
+            <h3 style="font-size:1.25rem;font-weight:700;color:var(--text);margin-bottom:0.75rem;">
+              Affiliate Disclosure
+            </h3>
+            <p style="color:var(--muted);font-size:0.95rem;line-height:1.6;margin-bottom:1.5rem;max-width:650px;margin:0 auto 1.5rem;">
+              CoursesWyn is an affiliate marketing platform. We earn small commissions from qualifying purchases made through our links. This helps us maintain and improve CoursesWyn at no cost to you. Our affiliate relationships do not influence which courses we recommend.
+            </p>
+            <a href="/affiliate-disclosure" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.75rem 1.5rem;background:var(--brand);color:var(--bg);text-decoration:none;border-radius:8px;font-size:0.9rem;font-weight:600;transition:all 0.2s ease;">
+              Read Full Disclosure
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── FAQ ── -->
+      <section style="padding:4rem 1rem;background:var(--bg);">
+        <div class="container" style="max-width:1400px;">
+          <div style="text-align:center;margin-bottom:3rem;">
+            <h2 style="font-size:clamp(1.5rem,4vw,2rem);font-weight:800;color:var(--text);margin-bottom:0.75rem;">
+              Frequently Asked Questions About Course Categories
+            </h2>
+            <p style="color:var(--muted);font-size:1rem;max-width:700px;margin:0 auto;line-height:1.6;">
+              Get answers to common questions about browsing course categories, finding coupons by topic, and filtering courses on CoursesWyn
+            </p>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:1.5rem;">
+            {faqs.map((faq) => (
+              <div style="background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;">
+                <div style="padding:1.25rem 1.5rem;">
+                  <h3 style="margin:0;color:var(--text);font-size:1rem;font-weight:700;margin-bottom:0.75rem;">
+                    {faq.q}
+                  </h3>
+                  <p style="color:var(--muted);line-height:1.7;margin:0;font-size:0.95rem;">
+                    {faq.a}
+                  </p>
                 </div>
               </div>
-              <p style="margin: 0 0 24px; color: var(--text); font-size: 0.95rem; line-height: 1.6; font-weight: 500;">
-                {c.description}
-              </p>
-              {c.subs.size > 0 && (
-                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                  {Array.from(c.subs.entries()).slice(0, 3).map(([sub]) => (
-                    <span style="background: var(--bg); border: 1.5px solid var(--border); padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
-                      {sub}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </a>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    {/* ── FAQ ── */}
-    <section style="padding: 80px 0; border-top: 2px solid var(--border); background: var(--bg);">
-      <div class="container" style="max-width: 800px;">
-        <h2 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 48px; text-align: center; letter-spacing: -0.02em;">How It Works.</h2>
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-          {[
-            { q: "Are all courses really free?", a: "Most coupons apply a 100% discount. Some apply 90-95% off. Each category page shows only deals with currently active coupons." },
-            { q: "How often are categories updated?", a: "New courses are added daily. When a coupon expires, it's automatically removed from the list." }
-          ].map(faq => (
-            <details class="neo-details">
-              <summary style="padding: 24px; font-weight: 900; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem;">
-                {faq.q}
-                <span style="color: var(--accent); font-size: 1.5rem;">+</span>
-              </summary>
-              <div style="padding: 0 24px 24px; color: var(--muted); font-size: 1rem; line-height: 1.6; font-weight: 500;">{faq.a}</div>
-            </details>
-          ))}
+      <!-- ── What You Can Learn ── -->
+      <section
+        aria-labelledby="learning-paths-heading"
+        style="padding:4rem 1rem;background:linear-gradient(135deg,hsl(222,47%,7%),hsl(222,43%,10%));"
+      >
+        <div class="container" style="max-width:1400px;text-align:center;">
+          <h2
+            id="learning-paths-heading"
+            style="font-size:clamp(1.5rem,3.5vw,2rem);font-weight:800;color:var(--text);margin-bottom:.75rem;"
+          >
+            How CoursesWyn's Categories Work
+          </h2>
+          <p style="color:var(--muted);font-size:1rem;line-height:1.7;max-width:700px;margin:0 auto 2.5rem;">
+            Every category page on CoursesWyn lists real Udemy courses with verified discount coupons. Coupons are checked daily — when a coupon expires, it's removed or replaced. You can filter by subcategory to find exactly the skill you're looking for, whether it's Python for beginners, advanced Kubernetes, or UX design fundamentals.
+          </p>
         </div>
-      </div>
-    </section>
+      </section>
 
-  </main>
+      <!-- ── CTA ── -->
+      <section style="padding:4rem 1rem;background:var(--bg);text-align:center;">
+        <div class="container" style="max-width:1400px;">
+          <div style="max-width:700px;margin:0 auto;">
+            <h2 style="font-size:clamp(1.4rem,3vw,1.9rem);font-weight:800;color:var(--text);margin-bottom:.75rem;">
+              Can't Find What You're Looking For?
+            </h2>
+            <p style="color:var(--muted);line-height:1.65;margin-bottom:2rem;">
+              Browse our full collection of <strong style="color:var(--text);">{totalCourses}+ Udemy deals</strong> or reach out to suggest a new category.
+            </p>
+            <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+              <a
+                href="/udemy-coupon-code"
+                style="padding:.9rem 2rem;background:var(--brand);color:#fff;text-decoration:none;border-radius:10px;font-size:1rem;font-weight:700;transition:opacity .2s;"
+              >
+                Browse All Coupons
+              </a>
+              <a
+                href="/contact"
+                style="padding:.9rem 2rem;background:transparent;color:var(--brand);text-decoration:none;border-radius:10px;font-size:1rem;font-weight:700;border:2px solid var(--brand);transition:background .2s;"
+              >
+                Request a Category
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
 
   <style>
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-    .neo-cat-card {
-      background: var(--bg-secondary);
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      padding: 32px;
-      text-decoration: none;
-      color: inherit;
-      transition: all 0.2s;
-      box-shadow: 4px 4px 0 var(--border);
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    a[href^="/categories/"]:hover {
+      border-color: var(--brand) !important;
+      transform: translateY(-2px);
     }
-    .neo-cat-card:hover { transform: translate(-4px, -4px); box-shadow: 8px 8px 0 var(--border); border-color: var(--accent); }
-    .neo-details { border: 2px solid var(--border); border-radius: 8px; background: var(--bg); margin-bottom: 12px; box-shadow: 4px 4px 0 var(--border); }
-    .neo-details[open] { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--border); }
-    summary::-webkit-details-marker { display: none; }
   </style>
 </Layout>

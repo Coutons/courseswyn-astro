@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { readDeals } from '../lib/store';
+import { toISODateWIB } from '../lib/date';
 
 const allDeals = await readDeals();
 
@@ -32,7 +33,7 @@ const maxCoursesInTopic = Math.max(...topicsData.map(t => t.count));
 
 // SEO settings - optimized
 const currentDate = new Date();
-const currentYear = currentDate.getFullYear();
+const currentYear = Number(currentDate.toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
 
 const title = `${totalTopics}+ Udemy Course Topics with Free 100% Off Coupons [${currentYear}] | CoursesWyn`;
 const description = `Browse ${totalTopics}+ specialized Udemy course topics with verified free coupons. Find 100% off deals on Python, AI, data science, web development, cloud certification & more. ${totalCourses}+ courses with daily verified discount codes. No payment required for free coupons.`;
@@ -83,7 +84,7 @@ const structuredData = {
       "name": title,
       "description": description,
       "inLanguage": "en-US",
-      "dateModified": new Date().toISOString().split('T')[0],
+      "dateModified": toISODateWIB(),
       "isPartOf": { "@id": "https://courseswyn.com" },
       "breadcrumb": {
         "@type": "BreadcrumbList",

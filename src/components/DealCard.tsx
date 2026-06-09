@@ -86,7 +86,7 @@ export default function DealCard({ deal }: { deal: any }) {
           <span>⭐ {r.toFixed(1)}</span>
           <span>👥 {formatStudents(s)}</span>
           {mounted && deal.updatedAt && (
-            <span suppressHydrationWarning>Updated {new Date(deal.updatedAt).toLocaleDateString()}</span>
+            <span suppressHydrationWarning>Updated {new Date(deal.updatedAt).toLocaleDateString('en-US', { timeZone: 'Asia/Jakarta' })}</span>
           )}
         </div>
       </div>

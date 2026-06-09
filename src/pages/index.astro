@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import DealCard from "../components/DealCard.astro";
 import { readDeals } from "../lib/store";
+import { formatStringWIB, toISODateWIB } from "../lib/date";
 
 const allDeals = await readDeals();
 const PAGE_SIZE = 6;
@@ -15,9 +16,9 @@ function slugifyCategory(name: string) {
 const categories = [...new Set(allDeals.map((d) => d.category).filter(Boolean))] as string[];
 
 const now = new Date();
-const monthName = now.toLocaleString('en-US',{month:'long',year:'numeric'});
-const pageTitle = `Free Udemy Coupons ${monthName} — 1,200+ Verified Discounts | CoursesWyn`;
-const pageDescription = `Find 1,200+ verified free Udemy coupons updated daily. Save on AI, coding, design, business & more courses. No signup required.`;
+const monthName = formatStringWIB(now, { month:'long', year:'numeric' });
+const pageTitle = `100% Off Udemy Coupons ${monthName} — 1,200+ Free Verified Codes | CoursesWyn`;
+const pageDescription = `Get 1,200+ verified 100% off Udemy coupons updated daily for ${monthName}. Free courses in AI, coding, web dev, data science & more. No signup required.`;
 
 const jsonLd = {
   "@context": "https://schema.org", "@graph": [
@@ -29,7 +30,7 @@ const jsonLd = {
       { "@type": "Question", "name": "How often are new coupons added?", "acceptedAnswer": { "@type": "Answer", "text": "New coupons added daily. Expired deals removed within 4 hours." } },
       { "@type": "Question", "name": "Do I get a certificate with free courses?", "acceptedAnswer": { "@type": "Answer", "text": "Absolutely! Official Udemy certificate, lifetime access included." } }
     ] },
-    { "@type": "WebPage", "@id": "https://courseswyn.com/#webpage", "url": "https://courseswyn.com", "name": pageTitle, "description": pageDescription, "isPartOf": { "@id": "https://courseswyn.com/#website" }, "datePublished": "2024-06-01", "dateModified": now.toISOString().split('T')[0] }
+    { "@type": "WebPage", "@id": "https://courseswyn.com/#webpage", "url": "https://courseswyn.com", "name": pageTitle, "description": pageDescription, "isPartOf": { "@id": "https://courseswyn.com/#website" }, "datePublished": "2024-06-01", "dateModified": toISODateWIB(now) }
   ]
 };
 ---
@@ -86,16 +87,7 @@ const jsonLd = {
   .prose-content ul { color: #94a3b8; padding-left: 1.25rem; margin-bottom: 1rem; line-height: 1.8; }
 </style>
 
-<Layout title={pageTitle} description={pageDescription} canonical="https://courseswyn.com">
-  <meta property="og:type" content="website" slot="head" />
-  <meta property="og:url" content="https://courseswyn.com" slot="head" />
-  <meta property="og:title" content={pageTitle} slot="head" />
-  <meta property="og:description" content={pageDescription} slot="head" />
-  <meta property="og:site_name" content="CoursesWyn" slot="head" />
-  <meta property="og:locale" content="en_US" slot="head" />
-  <meta name="twitter:card" content="summary_large_image" slot="head" />
-  <meta name="twitter:title" content={pageTitle} slot="head" />
-  <meta name="twitter:description" content={pageDescription} slot="head" />
+<Layout title={pageTitle} description={pageDescription} canonical="https://courseswyn.com" image="/assets/images/og-default.svg">
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
   <!-- ═══ HERO ═══ -->
@@ -104,8 +96,8 @@ const jsonLd = {
     <div class="container" style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
       <div class="hero-badge anim-up" style={{ marginBottom: "2rem" }}><span class="dot" /><span>1,200+ Verified Coupons · Updated Daily</span></div>
       <h1 class="anim-up anim-1" style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800, lineHeight: 1.05, marginBottom: "1.25rem", letterSpacing: "-0.03em", color: "white" }}>
-        <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Free Udemy Courses</span><br />
-        <span style={{ color: "#64748b", fontWeight: 600 }}>with Verified 100% Off Coupons</span>
+        <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Free Udemy Coupons</span><br />
+        <span style={{ color: "#64748b", fontWeight: 600 }}>with Verified 100% Off Codes</span>
       </h1>
       <p class="anim-up anim-2" style={{ fontSize: "1.15rem", color: "#64748b", maxWidth: "580px", margin: "0 auto 2.5rem", lineHeight: 1.7 }}>Save thousands on premium courses. Expert reviews + working coupons updated every 4 hours.</p>
       <div class="anim-up anim-3" style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap", marginBottom: "4rem" }}>

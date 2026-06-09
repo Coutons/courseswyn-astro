@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import type { Deal } from "@/types/deal";
+import { toISODateWIB } from "@/lib/date";
 
 const DEFAULT_DATA_DIR = path.join(process.cwd(), "src", "data");
 
@@ -174,13 +175,13 @@ export async function getAvailableDates(): Promise<{date: string, image?: string
 
   deals.forEach(deal => {
     const date = new Date(deal.updatedAt ?? deal.createdAt ?? deal.expiresAt ?? 0);
-    const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD
+    const dateString = toISODateWIB(date); // YYYY-MM-DD in WIB
     if (!dateMap.has(dateString)) {
       dateMap.set(dateString, deal.image);
     }
   });
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = toISODateWIB();
   if (!dateMap.has(today)) dateMap.set(today, undefined);
 
   const sortedDates = Array.from(dateMap.entries())

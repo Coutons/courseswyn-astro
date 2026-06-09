@@ -4,6 +4,7 @@ import DealCard from '../../components/DealCard.astro';
 import type { Deal } from '../../types/deal.d.ts';
 import { readDeals } from '../../lib/store';
 import { parseInstructors, createInstructorSlug } from '../../lib/instructors';
+import { formatDateWIB } from '../../lib/date';
 
 const siteUrl = 'https://courseswyn.com';
 
@@ -65,8 +66,8 @@ if (instructorCourses.length === 0) {
   return Astro.redirect('/instructors');
 }
 
-const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
-const currentYear = new Date().getFullYear();
+const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', timeZone: 'Asia/Jakarta' });
+const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
 const canonicalUrl = `${siteUrl}/instructor/${slugParam}`;
 
 function getMaxDiscount(courses: Deal[]): number {

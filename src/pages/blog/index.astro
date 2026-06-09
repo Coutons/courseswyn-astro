@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { getCollection } from "astro:content";
+import { formatDateWIB, toISODateWIB } from "../../lib/date";
 
 const siteUrl = "https://courseswyn.com";
 
@@ -24,7 +25,7 @@ const featuredPost = posts[0];
 const otherPosts = posts.slice(1, 10);
 
 const currentDate = new Date();
-const currentYear = currentDate.getFullYear();
+const currentYear = Number(currentDate.toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
 
 const title = `Best Udemy Course Reviews & Free Coupon Guides ${currentYear} | CoursesWyn Blog`;
 const description = `Expert-reviewed guides to the best Udemy courses with verified 100% off coupon codes. Find free programming, AI, data science, cloud certification courses and step-by-step career roadmaps. Updated daily with working deals.`;
@@ -119,7 +120,7 @@ const structuredData = {
               <div>
                 <p style={{ fontWeight: 800, margin: 0, fontSize: "0.9rem" }}>Andrew Derek</p>
                 <p style={{ fontSize: "0.75rem", color: "var(--muted)", margin: 0, fontWeight: 700 }}>
-                  Updated {new Date(featuredPost.data.updatedAt || featuredPost.data.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  Updated {formatDateWIB(featuredPost.data.updatedAt || featuredPost.data.pubDate, { month: 'short', day: 'numeric', year: 'numeric' })}
                 </p>
               </div>
             </div>
@@ -167,7 +168,7 @@ const structuredData = {
                 </p>
                 <div style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ fontSize: "0.72rem", color: "var(--text)", fontWeight: 700, textTransform: "uppercase" }}>
-                    {new Date(post.data.updatedAt || post.data.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {formatDateWIB(post.data.updatedAt || post.data.pubDate, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </div>
                   <div style={{ fontWeight: 800, color: "var(--accent)", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                     Read Review →

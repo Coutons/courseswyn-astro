@@ -75,7 +75,7 @@ export default function DealPage({
         original > price ? Math.round(100 - (price / original) * 100) : 0;
       generated.push({
         q: `Does the discount code for "${deal.title}" actually work?`,
-        a: `Yes! This promo code was verified and tested on ${deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "recently"}. The ${discount}% discount is applied automatically when you click the coupon button${deal.expiresAt ? ` and remains valid until ${new Date(deal.expiresAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}` : ""}.`,
+        a: `Yes! This promo code was verified and tested on ${deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Jakarta" }) : "recently"}. The ${discount}% discount is applied automatically when you click the coupon button${deal.expiresAt ? ` and remains valid until ${new Date(deal.expiresAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Jakarta" })}` : ""}.`,
       });
     }
 
@@ -661,6 +661,7 @@ export default function DealPage({
                   {new Date(deal.updatedAt).toLocaleDateString("en-US", {
                     month: "long",
                     year: "numeric",
+                    timeZone: "Asia/Jakarta",
                   })}
                 </span>
               </div>
@@ -749,7 +750,7 @@ export default function DealPage({
                         label: "Coupon Last Verified",
                         value: new Date(deal.updatedAt).toLocaleDateString(
                           "en-US",
-                          { year: "numeric", month: "long", day: "numeric" },
+                          { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Jakarta" },
                         ),
                       }
                     : null,
@@ -1188,11 +1189,13 @@ export default function DealPage({
                       year: "numeric",
                       month: "long",
                       day: "numeric",
+                      timeZone: "Asia/Jakarta",
                     })
                   : new Date().toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
+                      timeZone: "Asia/Jakarta",
                     })}
                 .
               </span>

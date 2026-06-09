@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { readDeals } from "../lib/store";
+import { toISODateWIB } from "../lib/date";
 
 const allDeals = await readDeals();
 
@@ -26,15 +27,15 @@ const instructors = Array.from(instructorSet).sort();
 const dates = [...new Set(
   allDeals.map(d => {
     const date = new Date(d.updatedAt ?? d.createdAt ?? d.expiresAt ?? 0);
-    return date.toISOString().split('T')[0];
+    return toISODateWIB(date);
   })
 )].sort().reverse().slice(0, 30);
 
 const currentDate = new Date();
 const monthNames = ["January","February","March","April","May","June",
   "July","August","September","October","November","December"];
-const currentMonth = monthNames[currentDate.getMonth()];
-const currentYear = currentDate.getFullYear();
+const currentMonth = currentDate.toLocaleString('en-US', { month: 'long', timeZone: 'Asia/Jakarta' });
+const currentYear = Number(currentDate.toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
 
 const pageTitle = `Sitemap | CoursesWyn - Free Udemy Courses ${currentMonth} ${currentYear}`;
 const pageDescription = "Navigate CoursesWyn easily. Find all pages, categories, topics, instructors, and blog posts in one place.";
@@ -78,7 +79,7 @@ const structuredData = {
       "isPartOf": { "@id": `${siteUrl}/#website` },
       "breadcrumb": { "@id": `${canonical}#breadcrumb` },
       "inLanguage": "en-US",
-      "dateModified": currentDate.toISOString().split('T')[0]
+      "dateModified": toISODateWIB(currentDate)
     },
     {
       "@type": "BreadcrumbList",

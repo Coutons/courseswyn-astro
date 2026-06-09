@@ -1,6 +1,7 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
 import { getCollection } from "astro:content";
+import { formatDateWIB } from "../../../lib/date";
 
 export async function getStaticPaths({ paginate }: { paginate: any }) {
   const posts = await getCollection('blog');
@@ -20,11 +21,11 @@ const posts: any[] = page?.data ?? [];
 function formatDate(post: any) {
   const isUpdated = !!post.data.updatedAt;
   const date = post.data.updatedAt || post.data.pubDate;
-  const formatted = new Intl.DateTimeFormat('en-US', {
+  const formatted = formatDateWIB(date, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-  }).format(date);
+  });
   return isUpdated ? `Updated ${formatted}` : formatted;
 }
 
