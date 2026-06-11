@@ -135,15 +135,11 @@ export async function getDeals(options: {
 } = {}): Promise<Deal[]> {
   let deals = await readDealsFromFile();
 
-  // Filter by date (YYYY-MM-DD format)
+  // Filter by date (YYYY-MM-DD format, WIB-aware)
   if (options.date) {
-    const targetDate = new Date(options.date);
-    const nextDay = new Date(targetDate);
-    nextDay.setDate(targetDate.getDate() + 1);
-
     deals = deals.filter(deal => {
       const dealDate = new Date(deal.updatedAt ?? deal.createdAt ?? deal.expiresAt ?? 0);
-      return dealDate >= targetDate && dealDate < nextDay;
+      return toISODateWIB(dealDate) === options.date;
     });
   }
 
