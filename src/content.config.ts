@@ -39,6 +39,8 @@ const blog = defineCollection({
     image: z.union([z.string(), z.object({ src: z.string() })]).optional(),
     author: z.string().optional(),
     draft: z.boolean().optional(),
+    slug: z.string().optional(),
+    faqs: z.array(z.object({ q: z.string(), a: z.string() })).optional(),
   }),
 });
 

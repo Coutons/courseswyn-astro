@@ -1,8 +1,26 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import DealCard from "../components/DealCard.astro";
+import { getCollection } from "astro:content";
 import { readDeals } from "../lib/store";
 import { formatStringWIB, toISODateWIB } from "../lib/date";
+
+const allPosts = await getCollection("blog");
+const latestPosts = allPosts.sort((a, b) => {
+  const dateA = a.data.updatedAt || a.data.pubDate;
+  const dateB = b.data.updatedAt || b.data.pubDate;
+  return dateB.getTime() - dateA.getTime();
+}).slice(0, 3);
+
+function resolveImage(imagePath: string | undefined | { src: string }): string | null {
+  if (!imagePath) return null;
+  if (typeof imagePath === 'object' && 'src' in imagePath) return imagePath.src;
+  if (typeof imagePath !== 'string') return null;
+  if (imagePath.startsWith('http')) return imagePath;
+  const filename = imagePath.split('/').pop();
+  if (!filename) return null;
+  return `/assets/images/${filename}`;
+}
 
 const allDeals = await readDeals();
 const PAGE_SIZE = 6;
@@ -135,33 +153,22 @@ const jsonLd = {
             </div>
             <p class="anim-up anim-1" style={{ color: "#64748b", fontSize: "0.9rem", maxWidth: "600px", marginBottom: "2.5rem", lineHeight: 1.6 }}>In-depth analysis of the best Udemy courses. Our editorial team reviews curriculum quality, instructor expertise, and career outcomes to help you choose the right course.</p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
-        <a href="/blog/ai-engineer-roadmap-2026" class="blog-card anim-up anim-1">
-          <img src="/assets/images/ai-engineer-roadmap-2026.jpg" alt="AI Engineer Roadmap 2026" loading="lazy" />
+        {latestPosts.map((post, i) => {
+          const imgSrc = resolveImage(post.data.image) || '/placeholder.jpg';
+          const primaryTag = post.data.tags?.[0] || 'Review';
+          const animClass = `blog-card anim-up anim-${i + 1}`;
+          return (
+        <a href={`/blog/${post.id}`} class={animClass}>
+          <img src={imgSrc} alt={post.data.title} loading={i === 0 ? 'eager' : 'lazy'} />
           <div style={{ padding: "1.5rem" }}>
-            <span class="tag">Career Guide</span>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#f1f5f9", margin: "0.75rem 0 0.5rem 0", lineHeight: 1.3 }}>AI Engineer Roadmap 2026: 7 Best Udemy Courses</h3>
-            <p style={{ color: "#64748b", fontSize: "0.85rem", lineHeight: 1.6, margin: 0 }}>Complete roadmap from beginner to AI Engineer. MCP Protocol, RAG pipelines, LangChain — all under $80.</p>
+            <span class="tag">{primaryTag}</span>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#f1f5f9", margin: "0.75rem 0 0.5rem 0", lineHeight: 1.3 }}>{post.data.title}</h3>
+            <p style={{ color: "#64748b", fontSize: "0.85rem", lineHeight: 1.6, margin: 0 }}>{post.data.description}</p>
             <p style={{ marginTop: "1rem", color: "#10b981", fontWeight: 600, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>Read Full Review <span class="arrow">→</span></p>
           </div>
         </a>
-        <a href="/blog/best-ai-engineer-courses-udemy-2026" class="blog-card anim-up anim-2">
-          <img src="/assets/images/best-ai-engineer-courses-udemy-2026.jpg" alt="Best AI Engineer Courses 2026" loading="lazy" />
-          <div style={{ padding: "1.5rem" }}>
-            <span class="tag">Course Review</span>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#f1f5f9", margin: "0.75rem 0 0.5rem 0", lineHeight: 1.3 }}>Best AI Engineer Courses on Udemy 2026</h3>
-            <p style={{ color: "#64748b", fontSize: "0.85rem", lineHeight: 1.6, margin: 0 }}>We analyzed and compared top AI engineering courses. Find the best training for Agentic AI and LLMs.</p>
-            <p style={{ marginTop: "1rem", color: "#10b981", fontWeight: 600, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>Read Full Review <span class="arrow">→</span></p>
-          </div>
-        </a>
-        <a href="/blog/ai-engineer-agentic-track-ed-donner-review" class="blog-card anim-up anim-3">
-          <img src="/assets/images/review-course-ai-engineer-agentic-track-udemy.jpg" alt="AI Engineer Agentic Track Review" loading="lazy" />
-          <div style={{ padding: "1.5rem" }}>
-            <span class="tag">Review</span>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#f1f5f9", margin: "0.75rem 0 0.5rem 0", lineHeight: 1.3 }}>AI Engineer Agentic Track: Ed Donner Review</h3>
-            <p style={{ color: "#64748b", fontSize: "0.85rem", lineHeight: 1.6, margin: 0 }}>In-depth review of the popular AI Engineer Agentic Track course. Curriculum deep-dive and pricing analysis.</p>
-            <p style={{ marginTop: "1rem", color: "#10b981", fontWeight: 600, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>Read Full Review <span class="arrow">→</span></p>
-          </div>
-        </a>
+          );
+        })}
       </div>
       <div style={{ textAlign: "center", marginTop: "2.5rem" }}>
         <a href="/blog" style={{ color: "#10b981", textDecoration: "none", fontWeight: 600, fontSize: "0.9rem", borderBottom: "1px solid rgba(16,185,129,0.3)", paddingBottom: "2px" }}>View All Articles →</a>
