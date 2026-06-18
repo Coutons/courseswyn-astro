@@ -7,7 +7,7 @@ tags:
   - udemy
   - black-friday
   - deals
-image: /images/udemy-black-friday-2026.png
+image: /assets/images/udemy-black-friday-2026.png
 ---
 
 <script type="application/ld+json">

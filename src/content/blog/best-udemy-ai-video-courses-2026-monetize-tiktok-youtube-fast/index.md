@@ -65,7 +65,7 @@ Four courses cleared this bar consistently. These courses sit at the intersectio
 
 Before diving into the individual reviews, here's something worth knowing upfront: Udemy is officially bundling the two strongest courses on this list together — and the bundle page is live right now.
 
-[![Udemy AI Video Bundle - AI Video Creation Mastery + Monetize YouTube/Facebook/TikTok Faster with Super AI Videos](../../../assets/images/udemy-ai-video-bundle-2026.jpg)](https://trk.udemy.com/1G59Om)
+[![Udemy AI Video Bundle - AI Video Creation Mastery + Monetize YouTube/Facebook/TikTok Faster with Super AI Videos](/assets/images/udemy-ai-video-bundle-2026.jpg)](https://trk.udemy.com/1G59Om)
 
 **What's in the bundle:**
 

@@ -28,7 +28,7 @@ This course positions itself as both a certification-aligned preparation program
 
 Unlike most AI-related courses on Udemy, the **AIGP Certification Masterclass** is not rooted in engineering culture or startup experimentation. Its foundation is governance, privacy, and compliance — a distinction that becomes immediately clear through the background of its instructor, **Dr. Kyle David**.
 
-![Dr. Kyle David](../../../assets/images/kyle-david.jpg)
+![Dr. Kyle David](/assets/images/kyle-david.jpg)
 
 Dr. David’s professional authority is built not on developing machine learning models, but on designing and teaching the systems that **control** technology once it enters regulated environments. His credentials — including AIGP, CIPP, CIPM, FIP, and CISSP — place him firmly within the global community responsible for privacy engineering, trust frameworks, certification standards, and institutional governance.
 
@@ -62,7 +62,7 @@ The result is a structured learning journey that builds governance thinking prog
 
 The defining characteristic of the **AI Governance Professional (AIGP) Certification Masterclass Course** is intellectual discipline. Concepts are introduced methodically, revisited across multiple contexts, and reinforced through scenario-based reasoning. Rather than overwhelming learners with volume, the course builds a coherent governance worldview.
 
-![Student Reviews for AI Governance Professional (AIGP) Certification Course](../../../assets/images/students-reviews-aigp-course.jpg)
+![Student Reviews for AI Governance Professional (AIGP) Certification Course](/assets/images/students-reviews-aigp-course.jpg)
 
 AI governance is consistently framed as a system of trade-offs. Learners are encouraged to reason through tensions between innovation and risk, automation and accountability, efficiency and ethics. This framing avoids both alarmism and complacency, reflecting how governance decisions are actually made in professional environments.
 
