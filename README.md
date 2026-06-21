@@ -1,7 +1,7 @@
 # CoursesWyn — The Internet's Most Opinionated Udemy Course Reviews
 
 [![Live Site](https://img.shields.io/badge/CoursesWyn.com-Expert_Udemy_Reviews-FF5D01?style=for-the-badge&logo=udemy&logoColor=white)](https://courseswyn.com)
-[![Course Audits](https://img.shields.io/badge/1.2k%2B_Course_Audits-100%25_Verified-38B2AC?style=for-the-badge)](https://courseswyn.com/udemy-coupon-code)
+[![Course Audits](https://img.shields.io/badge/1.3k%2B_Course_Audits-100%25_Verified-38B2AC?style=for-the-badge)](https://courseswyn.com/udemy-coupon-code)
 [![Expert Reviews](https://img.shields.io/badge/66%2B_Expert_Reviews-No_Affiliate_Bias-A435F0?style=for-the-badge)](https://courseswyn.com/blog)
 [![Astro Showcase](https://img.shields.io/badge/Official_Astro_Showcase-February_2026-BC52EE?style=for-the-badge)](https://courseswyn.com/blog/astro-showcase-courseswyn)
 
@@ -76,7 +76,7 @@ We publish in-depth, "opinionated" course reviews across all major categories. B
 | Metric | Value |
 |---|---|
 | Active Learners | 150,000+ worldwide |
-| Courses Audited | 1.2k+ expert reviews |
+| Courses Audited | 1.3k+ expert reviews |
 | Expert Articles | 66+ in-depth guides |
 | Update Frequency | Daily (4-hour window) |
 | Lighthouse Score | 95+ (All Categories) |
@@ -110,8 +110,8 @@ Open [http://localhost:4321](http://localhost:4321) in your browser.
 ## Tech Stack
 
 - **Framework**: [Astro 6.4](https://astro.build) (Islands Architecture)
-- **UI Library**: [React 19](https://react.dev)
-- **Styling**: [Tailwind CSS 6.4](https://tailwindcss.com) (Neo-Brutalist Design)
+- **UI Library**: [React](https://react.dev)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com) (Neo-Brutalist Design)
 - **Content**: MDX with Zod schema validation
 - **Deployment**: Vercel with Global CDN
 - **SEO**: Automated Schema.org LD+JSON injection
