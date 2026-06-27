@@ -3,6 +3,7 @@ export const prerender = true;
 import Layout from "../../layouts/Layout.astro";
 import DealCard from "../../components/DealCard.astro";
 import { readDeals } from "../../lib/store";
+import { slugifyCategory } from "../../lib/utils";
 
 export async function getStaticPaths({ paginate }: { paginate: any }) {
   const allDeals = await readDeals();
@@ -16,6 +17,10 @@ const totalPages = page.lastPage;
 
 // We still need allDeals for stats
 const allDeals = await readDeals();
+
+const catsSet = new Set<string>();
+allDeals.forEach((d: any) => { if (d.category) catsSet.add(d.category); });
+const categories = Array.from(catsSet).sort();
 
 const selectedLanguage = Astro.url.searchParams.get('language');
 let filteredDeals = allDeals;
@@ -196,58 +201,34 @@ const structuredData = {
 
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-  <main style="background: var(--bg); color: var(--text);">
+  <main style={{ background: "#fafafa" }}>
 
-    {/* ── HERO — page 1 only ── */}
+    {/* ── HERO ── */}
     {currentPage === 1 && (
-      <section style="padding: 100px 0 80px; border-bottom: 2px solid var(--border); background: var(--bg);">
-        <div class="container">
-          <div style="display: inline-flex; align-items: center; gap: 8px; background: var(--color-primary); color: var(--color-text); padding: 6px 16px; border: 2px solid var(--border); box-shadow: 3px 3px 0 var(--border); border-radius: 4px; font-weight: 900; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 32px;">
-            Updated Daily — {currentMonth} {currentYear}
-          </div>
-
-          <h1 style={{
-            fontSize: "clamp(2.2rem, 5vw, 3.5rem)",
-            fontWeight: 900,
-            lineHeight: 1.1,
-            letterSpacing: "-0.04em",
-            marginBottom: "20px"
-          }}>
-            {totalDeals}+ Free Udemy Coupons {selectedLanguage && <span style={{ color: "var(--bg-secondary)" }}>in {selectedLanguage}</span>} & <span style={{ background: "var(--bg-secondary)", color: "var(--color-text)", padding: "0 8px" }}>100% Off Deals</span>
-          </h1>
-
-          <p style={{
-            fontSize: "clamp(1rem, 2.5vw, 1.15rem)",
-            color: "var(--text)",
-            maxWidth: "800px",
-            lineHeight: 1.5,
-            fontWeight: 500,
-            marginBottom: "16px"
-          }}>
-            Verified working coupon codes for {currentMonth} {currentYear}. Get {freeDeals}+ completely free courses — programming, Python, JavaScript, AWS certification, data science & more.
-          </p>
-          <p style={{
-            fontSize: "0.95rem",
-            color: "var(--text)",
-            maxWidth: "800px",
-            lineHeight: 1.5,
-            fontWeight: 500,
-            marginBottom: "32px"
-          }}>
-            <strong style="color:var(--text)">How it works:</strong> Click any course below, the discount auto-applies at checkout. No credit card needed for free coupons. Updated daily by our team.
-          </p>
-
-          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            {[
-              { v: `${totalDeals}+`, l: "Courses" },
-              { v: `${freeDeals}+`, l: "100% Free" },
-              { v: `${avgSavings}%`, l: "Avg Savings" }
-            ].map(s => (
-              <div style={{ background: "var(--bg)", border: "2px solid var(--border)", padding: "12px 24px", borderRadius: "4px", boxShadow: "4px 4px 0 var(--border)", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <span style="font-size: 1.5rem; font-weight: 900; color: var(--color-primary);">{s.v}</span>
-                <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text);">{s.l}</span>
-              </div>
-            ))}
+      <section style={{ background: "white", borderBottom: "1px solid #e5e7eb", paddingTop: "96px", paddingBottom: "48px" }}>
+        <div class="container" style={{ maxWidth: "90rem", margin: "0 auto", padding: "0 1.5rem" }}>
+          <div style={{ maxWidth: "768px" }}>
+            <h1 style={{ fontSize: "clamp(2.5rem, 5vw, 3.5rem)", fontWeight: 900, letterSpacing: "-0.03em", color: "#111827", margin: "0 0 16px", lineHeight: 1.1 }}>
+              {totalDeals}+ Free Udemy Coupons
+            </h1>
+            <p style={{ fontSize: "1.125rem", color: "#6b7280", lineHeight: 1.6, maxWidth: "640px", margin: "0 0 8px", fontWeight: 500 }}>
+              Verified working coupon codes for {currentMonth} {currentYear}. Get {freeDeals}+ completely free courses — programming, Python, JavaScript, AWS, data science & more.
+            </p>
+            <p style={{ fontSize: "0.95rem", color: "#6b7280", lineHeight: 1.6, margin: "0 0 32px", fontWeight: 500 }}>
+              <strong style={{ color: "#111827" }}>How it works:</strong> Click any course below, the discount auto-applies at checkout. No credit card needed for free coupons.
+            </p>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              {[
+                { v: `${totalDeals}+`, l: "Courses" },
+                { v: `${freeDeals}+`, l: "100% Free" },
+                { v: `${avgSavings}%`, l: "Avg Savings" }
+              ].map(s => (
+                <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", padding: "10px 20px", borderRadius: "12px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <span style={{ fontSize: "1.5rem", fontWeight: 900, color: "#f97316" }}>{s.v}</span>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "#6b7280", letterSpacing: "0.05em" }}>{s.l}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -255,93 +236,140 @@ const structuredData = {
 
     {/* Page 2+ header */}
     {currentPage > 1 && (
-      <section style="padding: 64px 0 48px; border-bottom: 2px solid var(--border); background: var(--bg);">
+      <section style={{ background: "white", borderBottom: "1px solid #e5e7eb", paddingTop: "96px", paddingBottom: "48px" }}>
         <div class="container">
-            <h1 style={{ fontSize: "2.5rem", fontWeight: 900, letterSpacing: "-0.04em", marginBottom: "8px" }}>
+          <h1 style={{ fontSize: "2.5rem", fontWeight: 900, letterSpacing: "-0.03em", color: "#111827", margin: "0 0 8px" }}>
             {selectedLanguage ? `${selectedLanguage} Courses` : 'Deals'} — Page {currentPage}
           </h1>
-          <p style={{ color: "var(--text)", fontWeight: 800, textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.1em" }}>
-            Showing {startIndex + 1}–${Math.min(endIndex, filteredDeals.length)} of {filteredDeals.length} courses
+          <p style={{ color: "#6b7280", fontWeight: 600, textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.1em" }}>
+            Showing {startIndex + 1}–{Math.min(endIndex, filteredDeals.length)} of {filteredDeals.length} courses
           </p>
         </div>
       </section>
     )}
 
-    {/* ── DEALS GRID ── */}
-    <section style="padding: 80px 0;">
-      <div class="container">
+    {/* ── MAIN LAYOUT: sidebar + content ── */}
+    <div class="container" style={{ maxWidth: "90rem", margin: "0 auto", padding: "0 1.5rem", display: "flex", gap: "24px", paddingTop: "32px", paddingBottom: "64px" }}>
 
-        {/* SEO Description Block */}
+      {/* Sidebar */}
+      <aside style={{ width: "240px", flexShrink: 0, display: "none" }} class="deals-sidebar">
+        <div style={{ position: "sticky", top: "96px", display: "flex", flexDirection: "column", gap: "24px" }}>
+
+          {/* Search */}
+          <div>
+            <h3 style={{ fontSize: "0.75rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#111827", margin: "0 0 8px" }}>Search</h3>
+            <form action="/udemy-coupon-code" method="get" style={{ position: "relative" }}>
+              <svg style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#9ca3af", width: "14px", height: "14px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" name="q" placeholder="Find courses..." style={{ width: "100%", padding: "8px 10px 8px 32px", background: "white", border: "1px solid #e5e7eb", borderRadius: "8px", fontSize: "0.85rem", fontWeight: 500, color: "#111827", outline: "none" }} />
+            </form>
+          </div>
+
+          <div style={{ height: "1px", background: "#e5e7eb" }}></div>
+
+          {/* Categories */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+              <h3 style={{ fontSize: "0.75rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#111827", margin: 0 }}>Categories</h3>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <a href={baseDealsUrl} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", fontSize: "0.85rem", borderRadius: "8px", textDecoration: "none", fontWeight: 700, color: "#f97316", background: "#fff7ed" }}>
+                <span>All</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </a>
+              {categories.slice(0, 10).map((cat: string) => {
+                const catSlug = slugifyCategory(cat);
+                return (
+                  <a href={`/categories/${catSlug}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", fontSize: "0.85rem", borderRadius: "8px", textDecoration: "none", fontWeight: 600, color: "#6b7280" }}
+                    onmouseover="this.style.background='#f9fafb';this.style.color='#111827'" onmouseout="this.style.background='';this.style.color='#6b7280'">
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cat}</span>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+
+        {/* SEO Description */}
         {currentPage === 1 && (
-          <div style="margin-bottom: 48px; padding: 32px; background: var(--bg); border: 2px solid var(--border); border-radius: 8px; box-shadow: 4px 4px 0 var(--border);">
-            <h2 style="font-size: 1.5rem; font-weight: 900; margin: 0 0 16px 0; letter-spacing: -0.02em; color: var(--text);">
+          <div style={{ marginBottom: "32px", padding: "24px", background: "white", border: "1px solid #e5e7eb", borderRadius: "16px" }}>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 900, color: "#111827", margin: "0 0 12px", letterSpacing: "-0.02em" }}>
               Why Use Udemy 100% Off Coupons?
             </h2>
-            <p style="color: var(--text); font-weight: 500; line-height: 1.7; margin-bottom: 16px;">
-              Udemy 100% off coupons are promotional codes issued by course instructors that reduce the price of a course to
-              <strong style="color:var(--text)">$0.00 — completely free</strong>. These aren't hacks or illegal methods; they're legitimate marketing
-              strategies instructors use to build their student base, generate reviews for new courses, and increase visibility in Udemy's search algorithm.
-            </p>
-            <p style="color: var(--text); font-weight: 500; line-height: 1.7; margin: 0;">
-              When you enroll using a free coupon, you get <strong style="color:var(--text)">identical benefits</strong> to paying students:
-              full video content, downloadable resources, Q&A access with instructors, and a
-              <strong style="color:var(--text)">certificate of completion</strong> that you can add to your resume or LinkedIn.
-              The only difference? You paid nothing. Browse our verified deals below — updated daily by our team.
+            <p style={{ color: "#6b7280", fontSize: "0.9rem", lineHeight: 1.7, fontWeight: 500, margin: 0 }}>
+              Udemy 100% off coupons reduce courses to <strong style={{ color: "#111827" }}>$0.00 — completely free</strong>. These are legitimate promotional codes issued by instructors to build their student base. When you enroll, you get the same full content, lifetime access, and certificate as paying students. Browse our verified deals below — updated daily.
             </p>
           </div>
         )}
 
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px;">
+        {/* Section header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" }}>
           <div>
-            <h2 style="font-size: 1.75rem; font-weight: 900; margin: 0; letter-spacing: -0.04em;">
-              {currentPage === 1 ? `${filteredDeals.length}+ Verified ${selectedLanguage ? selectedLanguage : ''} Free Courses` : `Page ${currentPage} — Free Udemy Courses`}
+            <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "#111827", margin: 0, letterSpacing: "-0.02em" }}>
+              {currentPage === 1 ? `Free Courses` : `Page ${currentPage} — Free Courses`}
             </h2>
-            <p style="color: var(--muted); font-weight: 500; margin-top: 8px;">
+            <p style={{ color: "#6b7280", fontSize: "0.9rem", fontWeight: 500, marginTop: "4px" }}>
               {currentPage === 1
-                ? `100% off coupon codes for ${currentMonth} ${currentYear} — programming, web development, data science & more`
-                : `Showing courses ${startIndex + 1}–${Math.min(endIndex, filteredDeals.length)} of ${filteredDeals.length} total deals`
+                ? `100% off coupon codes for ${currentMonth} ${currentYear}`
+                : `Showing ${startIndex + 1}–${Math.min(endIndex, filteredDeals.length)} of ${filteredDeals.length} deals`
               }
             </p>
           </div>
-          <a href="/categories" class="btn btn-outline" style="padding: 12px 24px; font-size: 0.85rem;">
-            BROWSE CATEGORIES
+          <a href="/categories" style={{ color: "#111827", textDecoration: "none", fontWeight: 700, fontSize: "0.9rem", borderBottom: "2px solid rgba(0,0,0,0.15)", paddingBottom: "2px", whiteSpace: "nowrap" }}>
+            Browse Categories
           </a>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-bottom: 64px;">
+        {/* Deals Grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px", marginBottom: "48px" }}>
           {currentItems.length > 0 ? (
             currentItems.map((deal: any) => (
               <DealCard deal={deal} />
             ))
           ) : (
-            <div style="grid-column: 1 / -1; text-align: center; padding: 64px 24px; background: white; border: 2px solid var(--border); border-radius: 8px; box-shadow: 4px 4px 0 var(--border);">
-              <div style="font-size: 3rem; margin-bottom: 16px;">🔍</div>
-              <h3 style="font-size: 1.5rem; font-weight: 900; margin-bottom: 8px;">No {selectedLanguage} Courses Found</h3>
-              <p style="color: var(--muted); font-weight: 500; margin-bottom: 24px;">We couldn't find any verified free courses in {selectedLanguage} right now.</p>
-              <a href={baseDealsUrl} class="btn" style="padding: 12px 32px;">VIEW ALL LANGUAGES</a>
+            <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "64px 24px", background: "white", border: "1px solid #e5e7eb", borderRadius: "16px" }}>
+              <div style={{ fontSize: "3rem", marginBottom: "16px" }}>🔍</div>
+              <h3 style={{ fontSize: "1.25rem", fontWeight: 900, color: "#111827", marginBottom: "8px" }}>No {selectedLanguage} Courses Found</h3>
+              <p style={{ color: "#6b7280", fontWeight: 500, marginBottom: "24px" }}>We couldn't find any verified free courses in {selectedLanguage} right now.</p>
+              <a href={baseDealsUrl} style={{ padding: "12px 32px", borderRadius: "10px", background: "#111827", color: "white", textDecoration: "none", fontWeight: 700, fontSize: "0.9rem", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                View All Courses
+              </a>
             </div>
           )}
         </div>
 
         {/* ── PAGINATION ── */}
         {totalPages > 1 && (
-          <nav aria-label="Pagination" style="margin-top: 64px; padding-top: 48px; border-top: 2px solid var(--border);">
-            <div style="display: flex; justify-content: center; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <nav aria-label="Pagination" style={{ paddingTop: "32px", borderTop: "1px solid #e5e7eb" }}>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
               {prevUrl ? (
-                <a href={prevUrl} class="btn btn-outline" style="padding: 12px 24px;">← PREV</a>
+                <a href={prevUrl} style={{ padding: "10px 20px", borderRadius: "10px", border: "1px solid #e5e7eb", background: "white", color: "#111827", textDecoration: "none", fontWeight: 700, fontSize: "0.85rem", transition: "all 0.2s" }}
+                  onmouseover="this.style.borderColor='#f97316';this.style.color='#f97316'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#111827'">← PREV</a>
               ) : (
-                <span class="btn btn-disabled" style="padding: 12px 24px; opacity: 0.5;">← PREV</span>
+                <span style={{ padding: "10px 20px", borderRadius: "10px", border: "1px solid #e5e7eb", background: "#f9fafb", color: "#d1d5db", fontWeight: 700, fontSize: "0.85rem" }}>← PREV</span>
               )}
 
-              <div style="display: flex; gap: 8px;">
-                {pageItems.map((item) => {
+              <div style={{ display: "flex", gap: "6px" }}>
+                {pageItems.map((item: any) => {
                   if (item.type === 'ellipsis') {
-                    return <span style="font-weight: 900; color: #c0c0c0; padding: 0 8px;">...</span>;
+                    return <span style={{ fontWeight: 700, color: "#9ca3af", padding: "0 6px" }}>...</span>;
                   }
                   const isActive = item.value === currentPage;
                   const href = item.value === 1 ? `${baseDealsUrl}${langQuery}` : `${baseDealsUrl}/${item.value}${langQuery}`;
                   return (
-                    <a href={href} class={isActive ? "btn btn-active" : "btn btn-outline"} style="width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">
+                    <a href={href} style={{
+                      width: "40px", height: "40px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                      borderRadius: "10px", fontSize: "0.85rem", fontWeight: 700, textDecoration: "none", transition: "all 0.2s",
+                      background: isActive ? "#f97316" : "white",
+                      color: isActive ? "white" : "#111827",
+                      border: isActive ? "none" : "1px solid #e5e7eb"
+                    }}
+                    onmouseover={"this.style.background='#f97316';this.style.color='white';this.style.borderColor='#f97316'" }
+                    onmouseout={isActive ? "" : "this.style.background='white';this.style.color='#111827';this.style.borderColor='#e5e7eb'"}
+                    >
                       {item.value}
                     </a>
                   );
@@ -349,38 +377,39 @@ const structuredData = {
               </div>
 
               {nextUrl ? (
-                <a href={nextUrl} class="btn" style="padding: 12px 24px;">NEXT →</a>
+                <a href={nextUrl} style={{ padding: "10px 20px", borderRadius: "10px", border: "1px solid #e5e7eb", background: "white", color: "#111827", textDecoration: "none", fontWeight: 700, fontSize: "0.85rem", transition: "all 0.2s" }}
+                  onmouseover="this.style.borderColor='#f97316';this.style.color='#f97316'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#111827'">NEXT →</a>
               ) : (
-                <span class="btn btn-disabled" style="padding: 12px 24px; opacity: 0.5;">NEXT →</span>
+                <span style={{ padding: "10px 20px", borderRadius: "10px", border: "1px solid #e5e7eb", background: "#f9fafb", color: "#d1d5db", fontWeight: 700, fontSize: "0.85rem" }}>NEXT →</span>
               )}
             </div>
-            <p style="text-align: center; color: #c0c0c0; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; margin-top: 24px; letter-spacing: 0.05em;">
+            <p style={{ textAlign: "center", color: "#9ca3af", fontWeight: 700, fontSize: "0.75rem", textTransform: "uppercase", marginTop: "16px", letterSpacing: "0.05em" }}>
               Page {currentPage} of {totalPages}
             </p>
           </nav>
         )}
 
       </div>
-    </section>
+    </div>
 
     {/* ── FAQ — page 1 only ── */}
     {currentPage === 1 && (
-      <section style="padding: 80px 0; background: var(--bg); border-top: 2px solid var(--border);">
-        <div class="container" style="max-width: 800px;">
-          <h2 style="font-size: 2rem; font-weight: 900; margin-bottom: 16px; text-align: center; letter-spacing: -0.02em;">
-            Frequently Asked Questions About Free Udemy Coupons
+      <section style={{ background: "white", borderTop: "1px solid #e5e7eb", padding: "80px 0" }}>
+        <div class="container" style={{ maxWidth: "800px", margin: "0 auto" }}>
+          <h2 style={{ fontSize: "2rem", fontWeight: 900, color: "#111827", marginBottom: "8px", textAlign: "center", letterSpacing: "-0.02em" }}>
+            Frequently Asked Questions
           </h2>
-          <p style="text-align: center; color: #c0c0c0; font-weight: 500; margin-bottom: 48px; line-height: 1.6;">
+          <p style={{ textAlign: "center", color: "#6b7280", fontWeight: 500, marginBottom: "48px", lineHeight: 1.6, fontSize: "1rem" }}>
             Everything you need to know about getting Udemy courses for free with 100% off coupon codes
           </p>
-          <div style="display: flex; flex-direction: column; gap: 16px;">
-            {faqs.map((faq) => (
-              <details class="neo-faq-details">
-                <summary style="padding: 24px; font-weight: 900; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem;">
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {faqs.map((faq, idx) => (
+              <details style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: "12px", overflow: "hidden" }}>
+                <summary style={{ padding: "20px 24px", fontWeight: 700, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.95rem", color: "#111827", listStyle: "none" }}>
                   {faq.q}
-                  <span style="color: var(--accent); font-size: 1.5rem;">+</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" style={{ flexShrink: 0 }}><polyline points="6 9 12 15 18 9"/></svg>
                 </summary>
-                <div style="padding: 0 24px 24px; color: #c0c0c0; font-size: 1rem; line-height: 1.6; font-weight: 500;">
+                <div style={{ padding: "0 24px 20px", color: "#6b7280", fontSize: "0.9rem", lineHeight: 1.7, fontWeight: 500 }}>
                   {faq.a}
                 </div>
               </details>
@@ -392,28 +421,29 @@ const structuredData = {
 
     {/* ── RELATED RESOURCES — page 1 only ── */}
     {currentPage === 1 && (
-      <section style="padding: 80px 0; background: var(--bg); border-top: 2px solid var(--border);">
+      <section style={{ background: "#fafafa", borderTop: "1px solid #e5e7eb", padding: "80px 0" }}>
         <div class="container">
-          <h2 style="font-size: 2rem; font-weight: 900; margin-bottom: 16px; letter-spacing: -0.02em; text-align: center;">
+          <h2 style={{ fontSize: "2rem", fontWeight: 900, color: "#111827", marginBottom: "8px", letterSpacing: "-0.02em", textAlign: "center" }}>
             Explore AI & Tech Learning Paths
           </h2>
-          <p style="text-align: center; color: #c0c0c0; font-weight: 500; margin-bottom: 48px; line-height: 1.6; max-width: 700px; margin: 0 auto 48px;">
+          <p style={{ textAlign: "center", color: "#6b7280", fontWeight: 500, marginBottom: "48px", lineHeight: 1.6, maxWidth: "600px", margin: "0 auto 48px", fontSize: "1rem" }}>
             Discover the hottest AI courses with verified 100% off coupons. Master ChatGPT, AI agents, machine learning, and automation.
           </p>
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px;">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
             {[
               { title: "ChatGPT & Prompt Engineering", desc: "Master AI writing, coding, and automation with ChatGPT", link: "/blog/best-chatgpt-courses-udemy-2026", icon: "🤖" },
               { title: "AI Agent Development", desc: "Build autonomous AI agents with LangChain, CrewAI & AutoGPT", link: "/blog/best-udemy-agentic-ai-courses-2026", icon: "🧠" },
               { title: "Cursor AI Coding", desc: "Code faster with AI-powered IDE assistance", link: "/blog/best-cursor-ai-courses-udemy", icon: "⚡" },
-              { title: "LangChain & RAG Systems", desc: "Build AI apps with retrieval-augmented generation", link: "/blog/best-langchain-langgraph-courses-udemy-2026-rag-agents-production", icon: " " },
+              { title: "LangChain & RAG Systems", desc: "Build AI apps with retrieval-augmented generation", link: "/blog/best-langchain-langgraph-courses-udemy-2026-rag-agents-production", icon: "🔗" },
               { title: "AI for Web Development", desc: "Create websites and apps with AI assistance", link: "/blog/best-ai-web-development-courses-udemy-2026", icon: "🌐" },
               { title: "Generative AI Mastery", desc: "Complete guide to GPT, image generation & AI tools", link: "/blog/top-10-best-generative-ai-courses-udemy", icon: "✨" }
             ].map(resource => (
-              <a href={resource.link} style="text-decoration: none; color: inherit;">
-                <div style="background: var(--bg); border: 2px solid var(--border); border-radius: 8px; padding: 24px; box-shadow: 4px 4px 0 var(--border); transition: all 0.15s ease; height: 100%;" class="resource-card">
-                  <div style="font-size: 2rem; margin-bottom: 12px;">{resource.icon}</div>
-                  <h3 style="font-size: 1.1rem; font-weight: 900; margin-bottom: 8px; color: var(--text);">{resource.title}</h3>
-                  <p style="margin: 0; color: #c0c0c0; font-size: 0.9rem; font-weight: 500; line-height: 1.5;">{resource.desc}</p>
+              <a href={resource.link} style={{ textDecoration: "none", color: "inherit" }}>
+                <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: "16px", padding: "24px", transition: "all 0.3s ease", height: "100%" }}
+                  onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,0.06)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+                  <div style={{ fontSize: "2rem", marginBottom: "12px" }}>{resource.icon}</div>
+                  <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#111827", marginBottom: "6px" }}>{resource.title}</h3>
+                  <p style={{ margin: 0, color: "#6b7280", fontSize: "0.85rem", fontWeight: 500, lineHeight: 1.5 }}>{resource.desc}</p>
                 </div>
               </a>
             ))}
@@ -426,10 +456,9 @@ const structuredData = {
 </Layout>
 
 <style>
-  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-  .btn-active { background: var(--accent) !important; color: #c0c0c0 !important; border-color: var(--border) !important; }
-  .neo-faq-details { background: var(--bg); border: 2px solid var(--border); border-radius: 8px; margin-bottom: 16px; box-shadow: 4px 4px 0 var(--border); }
-  .neo-faq-details[open] { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--border); }
-  summary::-webkit-details-marker { display: none; }
-  .resource-card:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--border); }
+  .container { max-width: 90rem; margin: 0 auto; padding: 0 1.5rem; }
+  details summary::-webkit-details-marker { display: none; }
+  details[open] summary svg { transform: rotate(180deg); }
+  details summary svg { transition: transform 0.2s ease; }
+  @media (min-width: 900px) { .deals-sidebar { display: block !important; } }
 </style>

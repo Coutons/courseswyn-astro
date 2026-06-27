@@ -396,13 +396,12 @@ export default function DealPage({
   return (
     <div
       style={{
-        background: "var(--bg)",
-        color: "var(--text)",
+        background: "#fafafa",
+        color: "#111827",
         minHeight: "100vh",
         fontFamily: "'Inter', sans-serif",
       }}
     >
-      {/* Structured Data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -411,259 +410,85 @@ export default function DealPage({
       />
 
       {/* ── HEADER / BREADCRUMBS ── */}
-      <header
-        style={{
-          padding: "40px 0",
-          borderBottom: "2px solid var(--border)",
-          background: "var(--card)",
-        }}
-      >
-        <div
-          className="container"
-          style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}
-        >
+      <header style={{ padding: "40px 0", borderBottom: "1px solid rgba(0,0,0,0.07)", background: "white" }}>
+        <div className="container" style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 1.5rem" }}>
           <nav aria-label="Breadcrumb" style={{ marginBottom: "24px" }}>
-            <ol
-              itemScope
-              itemType="https://schema.org/BreadcrumbList"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontSize: "0.75rem",
-                fontWeight: 800,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                listStyle: "none",
-                margin: 0,
-                padding: 0,
-              }}
-            >
-              <li
-                itemProp="itemListElement"
-                itemScope
-                itemType="https://schema.org/ListItem"
-              >
-                <a
-                  href="/"
-                  itemProp="item"
-                  style={{ color: "var(--muted)", textDecoration: "none" }}
-                >
-                  <span itemProp="name">Home</span>
-                </a>
+            <ol itemScope itemType="https://schema.org/BreadcrumbList" style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", listStyle: "none", margin: 0, padding: 0 }}>
+              <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                <a href="/" itemProp="item" style={{ color: "#6b7280", textDecoration: "none" }}><span itemProp="name">Home</span></a>
                 <meta itemProp="position" content="1" />
               </li>
-              <li style={{ color: "var(--border)" }}>/</li>
-              <li
-                itemProp="itemListElement"
-                itemScope
-                itemType="https://schema.org/ListItem"
-              >
-                <a
-                  href="/udemy-coupon-code"
-                  itemProp="item"
-                  style={{ color: "var(--muted)", textDecoration: "none" }}
-                >
-                  <span itemProp="name">Coupons</span>
-                </a>
+              <li style={{ color: "#e5e7eb" }}>/</li>
+              <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                <a href="/udemy-coupon-code" itemProp="item" style={{ color: "#6b7280", textDecoration: "none" }}><span itemProp="name">Coupons</span></a>
                 <meta itemProp="position" content="2" />
               </li>
               {deal.category && (
                 <>
-                  <li style={{ color: "var(--border)" }}>/</li>
-                  <li
-                    itemProp="itemListElement"
-                    itemScope
-                    itemType="https://schema.org/ListItem"
-                  >
-                    <a
-                      href={`/categories/${slugifyCategory(deal.category)}`}
-                      itemProp="item"
-                      style={{ color: "var(--muted)", textDecoration: "none" }}
-                    >
-                      <span itemProp="name">{deal.category}</span>
-                    </a>
+                  <li style={{ color: "#e5e7eb" }}>/</li>
+                  <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                    <a href={`/categories/${slugifyCategory(deal.category)}`} itemProp="item" style={{ color: "#6b7280", textDecoration: "none" }}><span itemProp="name">{deal.category}</span></a>
                     <meta itemProp="position" content="3" />
                   </li>
                 </>
               )}
               {deal.subcategory && deal.subcategory !== deal.category && (
                 <>
-                  <li style={{ color: "var(--border)" }}>/</li>
-                  <li
-                    itemProp="itemListElement"
-                    itemScope
-                    itemType="https://schema.org/ListItem"
-                  >
-                    <a
-                      href={`/topics/${slugifyCategory(deal.subcategory)}`}
-                      itemProp="item"
-                      style={{ color: "var(--muted)", textDecoration: "none" }}
-                    >
-                      <span itemProp="name">{deal.subcategory}</span>
-                    </a>
-                    <meta
-                      itemProp="position"
-                      content={String(deal.category ? 4 : 3)}
-                    />
+                  <li style={{ color: "#e5e7eb" }}>/</li>
+                  <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                    <a href={`/topics/${slugifyCategory(deal.subcategory)}`} itemProp="item" style={{ color: "#6b7280", textDecoration: "none" }}><span itemProp="name">{deal.subcategory}</span></a>
+                    <meta itemProp="position" content={String(deal.category ? 4 : 3)} />
                   </li>
                 </>
               )}
             </ol>
           </nav>
 
-          <h1
-            style={{
-              fontSize: "clamp(2rem, 5vw, 3.5rem)",
-              fontWeight: 900,
-              lineHeight: 1.1,
-              marginBottom: "16px",
-              color: "var(--text)",
-              letterSpacing: "-0.04em",
-            }}
-          >
+          <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, lineHeight: 1.1, marginBottom: "16px", color: "#111827", letterSpacing: "-0.03em" }}>
             {deal.title} — {discountPct}% OFF Coupon
           </h1>
 
-          <p
-            style={{
-              fontSize: "1.1rem",
-              lineHeight: 1.6,
-              color: "var(--muted)",
-              fontWeight: 500,
-              marginBottom: "24px",
-            }}
-          >
+          <p style={{ fontSize: "1.1rem", lineHeight: 1.6, color: "#6b7280", fontWeight: 500, marginBottom: "24px" }}>
             {deal.description}
           </p>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "24px",
-              flexWrap: "wrap",
-              fontSize: "0.9rem",
-              fontWeight: 700,
-            }}
-          >
+          <div style={{ display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap", fontSize: "0.9rem", fontWeight: 700 }}>
             {deal.rating && (
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "6px" }}
-              >
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ color: "#eed49f", fontSize: "1.2rem" }}>★</span>
                 <span>{deal.rating.toFixed(1)} out of 5</span>
               </div>
             )}
             {deal.students && (
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "6px" }}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 00-3-3.87" />
-                  <path d="M16 3.13a4 4 0 010 7.75" />
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" />
                 </svg>
                 <span>{deal.students.toLocaleString()} students</span>
               </div>
             )}
             {deal.instructor && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  color: "var(--muted)",
-                }}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path
-                    d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#6b7280" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5">
+                  <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span>
-                  Created by{" "}
-                  <a
-                    href={`/instructor/${createInstructorSlug(deal.instructor || "")}`}
-                    style={{
-                      color: "var(--brand)",
-                      textDecoration: "underline",
-                    }}
-                  >
-                    {deal.instructor}
-                  </a>
-                </span>
+                <span>Created by <a href={`/instructor/${createInstructorSlug(deal.instructor || "")}`} style={{ color: "#f97316", textDecoration: "underline" }}>{deal.instructor}</a></span>
               </div>
             )}
             {deal.language && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  color: "var(--muted)",
-                }}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M2 12h20" />
-                  <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#6b7280" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5">
+                  <circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
                 </svg>
                 <span>{deal.language}</span>
               </div>
             )}
             {deal.updatedAt && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  color: "var(--muted)",
-                }}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 6v6l4 2" />
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#6b7280" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5">
+                  <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
                 </svg>
-                <span>
-                  Updated{" "}
-                  {new Date(deal.updatedAt).toLocaleDateString("en-US", {
-                    month: "long",
-                    year: "numeric",
-                    timeZone: "Asia/Jakarta",
-                  })}
-                </span>
+                <span>Updated {new Date(deal.updatedAt).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "Asia/Jakarta" })}</span>
               </div>
             )}
           </div>
@@ -671,203 +496,50 @@ export default function DealPage({
       </header>
 
       {/* ── MAIN CONTENT ── */}
-      <div
-        className="container"
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "60px 24px",
-          display: "grid",
-          gridTemplateColumns: "1fr 360px",
-          gap: "60px",
-        }}
-      >
+      <div className="container" style={{ maxWidth: "1280px", margin: "0 auto", padding: "60px 1.5rem", display: "grid", gridTemplateColumns: "1fr 360px", gap: "60px" }}>
         {/* Left Column */}
         <main style={{ minWidth: 0 }}>
           {/* Key Takeaways Section */}
           <section style={{ marginBottom: "60px" }}>
-            <h2
-              style={{
-                fontSize: "1.75rem",
-                fontWeight: 900,
-                marginBottom: "32px",
-                letterSpacing: "-0.03em",
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-              }}
-            >
-              <span
-                style={{
-                  width: "6px",
-                  height: "32px",
-                  background: "var(--accent)",
-                  borderRadius: "9999px",
-                }}
-              ></span>
+            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Overview</div>
+            <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "32px", letterSpacing: "-0.03em", color: "#111827" }}>
               Quick Facts — {deal.title} Overview
             </h2>
-            <div
-              style={{
-                background: "var(--bg)",
-                border: "2px solid var(--border)",
-                borderRadius: "16px",
-                padding: "32px",
-                boxShadow: "6px 6px 0 var(--border)",
-                marginBottom: "40px",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "0.95rem",
-                  lineHeight: 1.7,
-                  color: "var(--muted)",
-                  fontWeight: 600,
-                  marginBottom: "24px",
-                }}
-              >
-                Here's a quick overview of everything you need to know about{" "}
-                <strong style={{ color: "var(--text)" }}>{deal.title}</strong>{" "}
-                before you enroll:
+            <div style={{ background: "white", border: "3px solid rgba(0,0,0,0.07)", borderRadius: "20px", padding: "32px", marginBottom: "40px" }}>
+              <p style={{ fontSize: "0.95rem", lineHeight: 1.7, color: "#6b7280", fontWeight: 600, marginBottom: "24px" }}>
+                Here's a quick overview of everything you need to know about <strong style={{ color: "#111827" }}>{deal.title}</strong> before you enroll:
               </p>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                  gap: "16px",
-                  fontSize: "0.95rem",
-                  color: "var(--text)",
-                }}
-              >
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px", fontSize: "0.95rem", color: "#111827" }}>
                 {[
                   { label: "Course Name", value: deal.title },
                   { label: "Platform", value: `${deal.provider || "Udemy"}` },
-                  deal.instructor
-                    ? { label: "Instructor", value: deal.instructor }
-                    : null,
-                  deal.updatedAt
-                    ? {
-                        label: "Coupon Last Verified",
-                        value: new Date(deal.updatedAt).toLocaleDateString(
-                          "en-US",
-                          { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Jakarta" },
-                        ),
-                      }
-                    : null,
-                  {
-                    label: "Level",
-                    value: extractDifficultyLevel(deal.title, deal.description),
-                  },
-                  deal.category
-                    ? { label: "Topic", value: deal.category }
-                    : null,
-                  deal.subcategory && deal.subcategory !== deal.category
-                    ? { label: "Subtopic", value: deal.subcategory }
-                    : null,
-                  deal.duration
-                    ? {
-                        label: "Total Time",
-                        value: `${deal.duration} of video content`,
-                      }
-                    : null,
-                  deal.language
-                    ? { label: "Language", value: deal.language }
-                    : null,
-                  {
-                    label: "Access Type",
-                    value: "Unlimited lifetime access + updates",
-                  },
-                  {
-                    label: "Certificate",
-                    value:
-                      "Included upon completion from " +
-                      (deal.provider || "Udemy"),
-                  },
-                  deal.learn && deal.learn.length > 0
-                    ? {
-                        label: "Main Skills",
-                        value: deal.learn.slice(0, 3).join(" · "),
-                      }
-                    : null,
-                  deal.requirements && deal.requirements.length > 0
-                    ? {
-                        label: "Requirements",
-                        value: deal.requirements.slice(0, 2).join(" · "),
-                      }
-                    : null,
-                  deal.price && deal.originalPrice
-                    ? {
-                        label: "Current Price",
-                        value: `$${deal.price.toFixed(2)} (was $${deal.originalPrice.toFixed(2)}). You save $${(deal.originalPrice - deal.price).toFixed(2)} with ${discountPct}% discount.`,
-                      }
-                    : null,
-                  {
-                    label: "How to Apply",
-                    value:
-                      "Click the coupon button to activate your discount automatically",
-                  },
-                ]
-                  .filter(Boolean)
-                  .map((item, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        display: "flex",
-                        gap: "10px",
-                        alignItems: "flex-start",
-                      }}
-                    >
-                      <span
-                        style={{
-                          color: "var(--muted)",
-                          marginTop: "2px",
-                          flexShrink: 0,
-                        }}
-                      >
-                        •
-                      </span>
-                      <span>
-                        <strong style={{ color: "var(--text)" }}>
-                          {item!.label}:
-                        </strong>{" "}
-                        {item!.value}
-                      </span>
-                    </div>
-                  ))}
+                  deal.instructor ? { label: "Instructor", value: deal.instructor } : null,
+                  deal.updatedAt ? { label: "Coupon Last Verified", value: new Date(deal.updatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Jakarta" }) } : null,
+                  { label: "Level", value: extractDifficultyLevel(deal.title, deal.description) },
+                  deal.category ? { label: "Topic", value: deal.category } : null,
+                  deal.subcategory && deal.subcategory !== deal.category ? { label: "Subtopic", value: deal.subcategory } : null,
+                  deal.duration ? { label: "Total Time", value: `${deal.duration} of video content` } : null,
+                  deal.language ? { label: "Language", value: deal.language } : null,
+                  { label: "Access Type", value: "Unlimited lifetime access + updates" },
+                  { label: "Certificate", value: "Included upon completion from " + (deal.provider || "Udemy") },
+                  deal.learn && deal.learn.length > 0 ? { label: "Main Skills", value: deal.learn.slice(0, 3).join(" · ") } : null,
+                  deal.requirements && deal.requirements.length > 0 ? { label: "Requirements", value: deal.requirements.slice(0, 2).join(" · ") } : null,
+                  deal.price && deal.originalPrice ? { label: "Current Price", value: `$${deal.price.toFixed(2)} (was $${deal.originalPrice.toFixed(2)}). You save $${(deal.originalPrice - deal.price).toFixed(2)} with ${discountPct}% discount.` } : null,
+                  { label: "How to Apply", value: "Click the coupon button to activate your discount automatically" },
+                ].filter(Boolean).map((item, idx) => (
+                  <div key={idx} style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                    <span style={{ color: "#f97316", marginTop: "2px", flexShrink: 0, fontWeight: 700 }}>•</span>
+                    <span><strong style={{ color: "#111827" }}>{item!.label}:</strong> {item!.value}</span>
+                  </div>
+                ))}
               </div>
 
-              <div
-                style={{
-                  marginTop: "24px",
-                  padding: "16px",
-                  background:
-                    "linear-gradient(135deg, var(--brand-soft), var(--brand-glow))",
-                  border: "2px solid var(--brand)",
-                  borderRadius: "8px",
-                  fontSize: "0.9rem",
-                  color: "var(--text)",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: "8px",
-                  }}
-                >
+              <div style={{ marginTop: "24px", padding: "16px", background: "linear-gradient(135deg, rgba(249,115,22,0.08), rgba(249,115,22,0.04))", border: "1px solid rgba(249,115,22,0.3)", borderRadius: "12px", fontSize: "0.9rem", color: "#111827" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
                   <span style={{ fontSize: "1.2rem", lineHeight: 1 }}>💡</span>
                   <div>
-                    <strong
-                      style={{
-                        display: "block",
-                        marginBottom: "4px",
-                        color: "var(--brand)",
-                      }}
-                    >
-                      Tip:
-                    </strong>
-                    For best results, apply the coupon in a regular browser
-                    window rather than incognito/private mode.
+                    <strong style={{ display: "block", marginBottom: "4px", color: "#f97316" }}>Tip:</strong>
+                    For best results, apply the coupon in a regular browser window rather than incognito/private mode.
                   </div>
                 </div>
               </div>
@@ -877,47 +549,37 @@ export default function DealPage({
           {/* What You'll Learn Section */}
           {deal.learn && deal.learn.length > 0 && (
             <section style={{ marginBottom: "60px" }}>
-              <h2
+            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Skills</div>
+            <h2
                 style={{
                   fontSize: "1.75rem",
                   fontWeight: 900,
                   marginBottom: "32px",
                   letterSpacing: "-0.03em",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
+                  color: "#111827",
                 }}
               >
-                <span
-                  style={{
-                    width: "6px",
-                    height: "32px",
-                    background: "var(--accent)",
-                    borderRadius: "9999px",
-                  }}
-                ></span>
                 Skills You'll Master in This Course
               </h2>
               <div
                 style={{
-                  background: "var(--bg)",
-                  border: "2px solid var(--border)",
-                  borderRadius: "16px",
+                  background: "#ffffff",
+                  border: "3px solid rgba(0,0,0,0.07)",
+                  borderRadius: "20px",
                   padding: "32px",
-                  boxShadow: "6px 6px 0 var(--border)",
                 }}
               >
                 <p
                   style={{
                     fontSize: "0.95rem",
                     lineHeight: 1.7,
-                    color: "var(--muted)",
+                    color: "#6b7280",
                     fontWeight: 600,
                     marginBottom: "24px",
                   }}
                 >
                   By the end of{" "}
-                  <strong style={{ color: "var(--text)" }}>{deal.title}</strong>
+                  <strong style={{ color: "#111827" }}>{deal.title}</strong>
                   , you'll have these practical skills:
                 </p>
                 <div
@@ -926,7 +588,7 @@ export default function DealPage({
                     gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
                     gap: "16px",
                     fontSize: "0.95rem",
-                    color: "var(--text)",
+                    color: "#111827",
                   }}
                 >
                   {deal.learn.map((point, idx) => (
@@ -940,7 +602,7 @@ export default function DealPage({
                     >
                       <span
                         style={{
-                          color: "var(--brand)",
+                          color: "#f97316",
                           marginTop: "3px",
                           flexShrink: 0,
                         }}
@@ -958,47 +620,37 @@ export default function DealPage({
           {/* Requirements Section */}
           {deal.requirements && deal.requirements.length > 0 && (
             <section style={{ marginBottom: "60px" }}>
-              <h2
+            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Prerequisites</div>
+            <h2
                 style={{
-                  fontSize: "1.75rem",
+                fontSize: "1.75rem",
                   fontWeight: 900,
                   marginBottom: "32px",
                   letterSpacing: "-0.03em",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
+                  color: "#111827",
                 }}
               >
-                <span
-                  style={{
-                    width: "6px",
-                    height: "32px",
-                    background: "var(--accent)",
-                    borderRadius: "9999px",
-                  }}
-                ></span>
                 Prerequisites for This Course
               </h2>
               <div
                 style={{
-                  background: "var(--bg)",
-                  border: "2px solid var(--border)",
-                  borderRadius: "16px",
+                  background: "#ffffff",
+                  border: "3px solid rgba(0,0,0,0.07)",
+                  borderRadius: "20px",
                   padding: "32px",
-                  boxShadow: "6px 6px 0 var(--border)",
                 }}
               >
                 <p
                   style={{
                     fontSize: "0.95rem",
                     lineHeight: 1.7,
-                    color: "var(--muted)",
+                    color: "#6b7280",
                     fontWeight: 600,
                     marginBottom: "24px",
                   }}
                 >
                   Before enrolling in{" "}
-                  <strong style={{ color: "var(--text)" }}>{deal.title}</strong>
+                  <strong style={{ color: "#111827" }}>{deal.title}</strong>
                   , make sure you have:
                 </p>
                 <div
@@ -1007,7 +659,7 @@ export default function DealPage({
                     gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
                     gap: "16px",
                     fontSize: "0.95rem",
-                    color: "var(--text)",
+                    color: "#111827",
                   }}
                 >
                   {deal.requirements.map((req, idx) => (
@@ -1021,7 +673,7 @@ export default function DealPage({
                     >
                       <span
                         style={{
-                          color: "var(--muted)",
+                          color: "#6b7280",
                           marginTop: "2px",
                           flexShrink: 0,
                         }}
@@ -1037,35 +689,18 @@ export default function DealPage({
           )}
 
           {/* Course Content Section */}
-          <section style={{ marginBottom: "60px" }}>
-            <h2
-              style={{
-                fontSize: "1.75rem",
-                fontWeight: 900,
-                marginBottom: "32px",
-                letterSpacing: "-0.03em",
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-              }}
-            >
-              <span
-                style={{
-                  width: "6px",
-                  height: "32px",
-                  background: "var(--accent)",
-                  borderRadius: "9999px",
-                }}
-              ></span>
+          <section style={{ marginBottom: "60px"               }}>
+            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Course Content</div>
+            <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "32px", letterSpacing: "-0.03em", color: "#111827" }}>
               About This {deal.provider || "Udemy"} Course
             </h2>
             <div
               style={{
-                background: "var(--bg)",
-                border: "2px solid var(--border)",
+                background: "#ffffff",
+                border: "3px solid rgba(0,0,0,0.07)",
                 borderRadius: "16px",
                 padding: "32px",
-                boxShadow: "6px 6px 0 var(--border)",
+                
                 marginBottom: "40px",
               }}
             >
@@ -1073,16 +708,16 @@ export default function DealPage({
                 style={{
                   fontSize: "0.95rem",
                   lineHeight: 1.7,
-                  color: "var(--muted)",
+                  color: "#6b7280",
                   fontWeight: 600,
                   marginBottom: "24px",
                 }}
               >
                 The following is the full official course description for{" "}
-                <strong style={{ color: "var(--text)" }}>{deal.title}</strong>{" "}
+                <strong style={{ color: "#111827" }}>{deal.title}</strong>{" "}
                 as published on <strong>{deal.provider || "Udemy"}</strong> by
                 instructor{" "}
-                <strong style={{ color: "var(--accent)" }}>
+                <strong style={{ color: "#f97316" }}>
                   {deal.instructor}
                 </strong>
                 :
@@ -1093,7 +728,7 @@ export default function DealPage({
                 style={{
                   fontSize: "1.05rem",
                   lineHeight: 1.8,
-                  color: "var(--text)",
+                  color: "#111827",
                   fontWeight: 500,
                 }}
                 suppressHydrationWarning={true}
@@ -1139,30 +774,13 @@ export default function DealPage({
           {/* Expert Review Section */}
           <section
             style={{
-              borderTop: "2px solid var(--border)",
+              borderTop: "1px solid rgba(0,0,0,0.07)",
               paddingTop: "60px",
               marginBottom: "60px",
             }}
           >
-            <h2
-              style={{
-                fontSize: "1.75rem",
-                fontWeight: 900,
-                marginBottom: "32px",
-                letterSpacing: "-0.03em",
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-              }}
-            >
-              <span
-                style={{
-                  width: "6px",
-                  height: "32px",
-                  background: "var(--accent)",
-                  borderRadius: "9999px",
-                }}
-              ></span>
+            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Expert Review</div>
+            <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "32px", letterSpacing: "-0.03em", color: "#111827" }}>
               Is the {deal.title} Coupon Worth It?
             </h2>
 
@@ -1173,15 +791,15 @@ export default function DealPage({
                 gap: "8px",
                 marginBottom: "24px",
                 fontSize: "0.85rem",
-                color: "var(--muted)",
+                color: "#6b7280",
               }}
             >
               <span>
                 Expert review by{" "}
-                <strong style={{ color: "var(--text)" }}>Andrew Derek</strong>,
+                <strong style={{ color: "#111827" }}>Andrew Derek</strong>,
                 Lead Course Analyst at CoursesWyn.
               </span>
-              <span style={{ color: "var(--border)" }}>•</span>
+              <span style={{ color: "rgba(0,0,0,0.07)" }}>•</span>
               <span>
                 Last updated:{" "}
                 {deal.updatedAt
@@ -1204,7 +822,7 @@ export default function DealPage({
             <p
               style={{
                 fontSize: "1rem",
-                color: "var(--text)",
+                color: "#111827",
                 lineHeight: 1.75,
                 marginBottom: "16px",
                 fontWeight: 500,
@@ -1212,7 +830,7 @@ export default function DealPage({
             >
               Based on analysis of the curriculum structure, student engagement
               metrics, and verified rating data,
-              <strong style={{ color: "var(--text)" }}> {deal.title}</strong> is
+              <strong style={{ color: "#111827" }}> {deal.title}</strong> is
               a high-value resource for learners seeking to build skills in
               {deal.category || "professional development"}.
               {deal.instructor
@@ -1245,7 +863,7 @@ export default function DealPage({
                 style={{
                   fontSize: "1.1rem",
                   fontWeight: 900,
-                  color: "var(--accent)",
+                  color: "#f97316",
                   marginBottom: "12px",
                   display: "flex",
                   alignItems: "center",
@@ -1259,7 +877,7 @@ export default function DealPage({
                 style={{
                   margin: 0,
                   paddingLeft: "24px",
-                  color: "var(--text)",
+                  color: "#111827",
                   fontSize: "0.95rem",
                   lineHeight: 1.6,
                   fontWeight: 500,
@@ -1296,7 +914,7 @@ export default function DealPage({
                 style={{
                   fontSize: "1.1rem",
                   fontWeight: 900,
-                  color: "var(--accent)",
+                  color: "#f97316",
                   marginBottom: "12px",
                   display: "flex",
                   alignItems: "center",
@@ -1309,20 +927,20 @@ export default function DealPage({
               <p
                 style={{
                   fontSize: "0.95rem",
-                  color: "var(--muted)",
+                  color: "#6b7280",
                   marginBottom: "12px",
                   fontWeight: 600,
                 }}
               >
                 The following limitations should be considered before enrolling
                 in{" "}
-                <strong style={{ color: "var(--text)" }}>{deal.title}</strong>:
+                <strong style={{ color: "#111827" }}>{deal.title}</strong>:
               </p>
               <ul
                 style={{
                   margin: 0,
                   paddingLeft: "24px",
-                  color: "var(--text)",
+                  color: "#111827",
                   fontSize: "0.95rem",
                   lineHeight: 1.6,
                   fontWeight: 500,
@@ -1351,10 +969,10 @@ export default function DealPage({
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "16px 24px",
-                background: "var(--brand)",
+                background: "#f97316",
                 borderRadius: "8px",
-                border: "2px solid var(--border)",
-                boxShadow: "6px 6px 0 var(--border)",
+                border: "3px solid rgba(0,0,0,0.07)",
+                
               }}
             >
               <div>
@@ -1362,7 +980,7 @@ export default function DealPage({
                   style={{
                     fontSize: "1.1rem",
                     fontWeight: 900,
-                    color: "var(--bg)",
+                    color: "#ffffff",
                     marginBottom: "4px",
                   }}
                 >
@@ -1371,7 +989,7 @@ export default function DealPage({
                 <div
                   style={{
                     fontSize: "0.85rem",
-                    color: "var(--bg)",
+                    color: "#ffffff",
                     opacity: 0.9,
                     fontWeight: 600,
                   }}
@@ -1384,11 +1002,11 @@ export default function DealPage({
                   width: "40px",
                   height: "40px",
                   borderRadius: "50%",
-                  background: "var(--bg)",
+                  background: "#ffffff",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "var(--brand)",
+                  color: "#f97316",
                   fontSize: "1.2rem",
                   fontWeight: 900,
                 }}
@@ -1402,41 +1020,24 @@ export default function DealPage({
           {deal.rating && (
             <section
               style={{
-                borderTop: "2px solid var(--border)",
+                borderTop: "1px solid rgba(0,0,0,0.07)",
                 paddingTop: "60px",
                 marginBottom: "60px",
               }}
             >
-              <h2
-                style={{
-                  fontSize: "1.75rem",
-                  fontWeight: 900,
-                  marginBottom: "32px",
-                  letterSpacing: "-0.03em",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                }}
-              >
-                <span
-                  style={{
-                    width: "6px",
-                    height: "32px",
-                    background: "var(--accent)",
-                    borderRadius: "9999px",
-                  }}
-                ></span>
+              <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Rating</div>
+            <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "32px", letterSpacing: "-0.03em", color: "#111827" }}>
                 Course Rating Summary
               </h2>
               <p
                 style={{
                   fontSize: "0.95rem",
-                  color: "var(--muted)",
+                  color: "#6b7280",
                   fontWeight: 600,
                   marginBottom: "24px",
                 }}
               >
-                <strong style={{ color: "var(--text)" }}>{deal.title}</strong>{" "}
+                <strong style={{ color: "#111827" }}>{deal.title}</strong>{" "}
                 has earned an aggregate rating of{" "}
                 {deal.rating?.toFixed(1) || "4.8"} out of 5 from{" "}
                 {deal.students?.toLocaleString() || "thousands of"} verified
@@ -1474,7 +1075,7 @@ export default function DealPage({
                   </div>
                   <div
                     style={{
-                      color: "var(--muted)",
+                      color: "#6b7280",
                       fontSize: "0.8rem",
                       fontWeight: 600,
                     }}
@@ -1501,7 +1102,7 @@ export default function DealPage({
                     >
                       <span
                         style={{
-                          color: "var(--muted)",
+                          color: "#6b7280",
                           fontSize: "0.8rem",
                           width: "50px",
                           flexShrink: 0,
@@ -1514,7 +1115,7 @@ export default function DealPage({
                         style={{
                           flex: 1,
                           height: "8px",
-                          background: "var(--border)",
+                          background: "rgba(0,0,0,0.07)",
                           borderRadius: "4px",
                           overflow: "hidden",
                         }}
@@ -1523,14 +1124,14 @@ export default function DealPage({
                           style={{
                             width: `${pct}%`,
                             height: "100%",
-                            background: "var(--brand)",
+                            background: "#f97316",
                             borderRadius: "4px",
                           }}
                         ></div>
                       </div>
                       <span
                         style={{
-                          color: "var(--muted)",
+                          color: "#6b7280",
                           fontSize: "0.8rem",
                           width: "35px",
                           textAlign: "right",
@@ -1546,7 +1147,7 @@ export default function DealPage({
               <p
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--muted)",
+                  color: "#6b7280",
                   marginTop: "16px",
                   fontStyle: "italic",
                   fontWeight: 600,
@@ -1562,36 +1163,19 @@ export default function DealPage({
           {deal.instructor && (
             <section
               style={{
-                borderTop: "2px solid var(--border)",
+                borderTop: "1px solid rgba(0,0,0,0.07)",
                 paddingTop: "60px",
                 marginBottom: "60px",
               }}
             >
-              <h2
-                style={{
-                  fontSize: "1.75rem",
-                  fontWeight: 900,
-                  marginBottom: "32px",
-                  letterSpacing: "-0.03em",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                }}
-              >
-                <span
-                  style={{
-                    width: "6px",
-                    height: "32px",
-                    background: "var(--accent)",
-                    borderRadius: "9999px",
-                  }}
-                ></span>
+            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Instructor</div>
+            <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "32px", letterSpacing: "-0.03em", color: "#111827" }}>
                 About the Instructor — {deal.instructor}
               </h2>
               <p
                 style={{
                   fontSize: "0.95rem",
-                  color: "var(--text)",
+                  color: "#111827",
                   lineHeight: 1.6,
                   marginBottom: "24px",
                   fontWeight: 500,
@@ -1610,7 +1194,7 @@ export default function DealPage({
                   gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
                   gap: "16px",
                   fontSize: "0.95rem",
-                  color: "var(--text)",
+                  color: "#111827",
                 }}
               >
                 <div
@@ -1622,7 +1206,7 @@ export default function DealPage({
                 >
                   <span
                     style={{
-                      color: "var(--muted)",
+                      color: "#6b7280",
                       marginTop: "2px",
                       flexShrink: 0,
                     }}
@@ -1630,7 +1214,7 @@ export default function DealPage({
                     •
                   </span>
                   <span>
-                    <strong style={{ color: "var(--text)" }}>
+                    <strong style={{ color: "#111827" }}>
                       Instructor Name:
                     </strong>{" "}
                     {deal.instructor}
@@ -1646,7 +1230,7 @@ export default function DealPage({
                   >
                     <span
                       style={{
-                        color: "var(--muted)",
+                        color: "#6b7280",
                         marginTop: "2px",
                         flexShrink: 0,
                       }}
@@ -1654,7 +1238,7 @@ export default function DealPage({
                       •
                     </span>
                     <span>
-                      <strong style={{ color: "var(--text)" }}>
+                      <strong style={{ color: "#111827" }}>
                         Subject Area:
                       </strong>{" "}
                       {deal.category}
@@ -1670,7 +1254,7 @@ export default function DealPage({
                 >
                   <span
                     style={{
-                      color: "var(--muted)",
+                      color: "#6b7280",
                       marginTop: "2px",
                       flexShrink: 0,
                     }}
@@ -1678,7 +1262,7 @@ export default function DealPage({
                     •
                   </span>
                   <span>
-                    <strong style={{ color: "var(--text)" }}>
+                    <strong style={{ color: "#111827" }}>
                       Teaching Approach:
                     </strong>{" "}
                     Practical, project-based instruction focused on real-world
@@ -1695,7 +1279,7 @@ export default function DealPage({
                     alignItems: "center",
                     gap: "8px",
                     fontSize: "0.95rem",
-                    color: "var(--accent)",
+                    color: "#f97316",
                     textDecoration: "none",
                     fontWeight: 700,
                   }}
@@ -1710,43 +1294,34 @@ export default function DealPage({
           {autoFAQs.length > 0 && (
             <section
               style={{
-                borderTop: "2px solid var(--border)",
+                borderTop: "1px solid rgba(0,0,0,0.07)",
                 paddingTop: "60px",
                 marginBottom: "60px",
               }}
             >
-              <h2
+            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>FAQ</div>
+            <h2
                 style={{
                   fontSize: "1.75rem",
                   fontWeight: 900,
                   marginBottom: "32px",
                   letterSpacing: "-0.03em",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
+                  color: "#111827",
                 }}
               >
-                <span
-                  style={{
-                    width: "6px",
-                    height: "32px",
-                    background: "var(--accent)",
-                    borderRadius: "9999px",
-                  }}
-                ></span>
                 Frequently Asked Questions
               </h2>
               <p
                 style={{
                   fontSize: "0.95rem",
-                  color: "var(--muted)",
+                  color: "#6b7280",
                   fontWeight: 600,
                   marginBottom: "24px",
                 }}
               >
                 The following questions and answers cover the most common
                 queries about{" "}
-                <strong style={{ color: "var(--text)" }}>{deal.title}</strong>,
+                <strong style={{ color: "#111827" }}>{deal.title}</strong>,
                 its coupon code, pricing, and enrollment process.
               </p>
               <div
@@ -1760,13 +1335,13 @@ export default function DealPage({
                   <div
                     key={idx}
                     style={{
-                      border: "2px solid var(--border)",
+                      border: "3px solid rgba(0,0,0,0.07)",
                       borderRadius: "8px",
-                      background: "var(--bg)",
+                      background: "#ffffff",
                       boxShadow:
                         expandedFAQ === idx
-                          ? "4px 4px 0 var(--border)"
-                          : "2px 2px 0 var(--border)",
+                          ? "0 2px 12px rgba(0,0,0,0.06)"
+                          : "0 1px 4px rgba(0,0,0,0.04)",
                       transition: "all 0.2s",
                     }}
                   >
@@ -1786,7 +1361,7 @@ export default function DealPage({
                         alignItems: "center",
                         fontSize: "0.95rem",
                         fontWeight: 900,
-                        color: "var(--text)",
+                        color: "#111827",
                         gap: "16px",
                       }}
                     >
@@ -1808,11 +1383,11 @@ export default function DealPage({
                       <div
                         style={{
                           padding: "0 24px 24px",
-                          borderTop: "2px solid var(--border)",
-                          color: "var(--text)",
+                          borderTop: "1px solid rgba(0,0,0,0.07)",
+                          color: "#111827",
                           fontWeight: 500,
                           lineHeight: 1.6,
-                          background: "var(--card)",
+                          background: "#ffffff",
                         }}
                       >
                         {faq.a}
@@ -1827,52 +1402,35 @@ export default function DealPage({
           {/* Author Profile Section */}
           <section
             style={{
-              borderTop: "2px solid var(--border)",
+              borderTop: "1px solid rgba(0,0,0,0.07)",
               paddingTop: "60px",
               marginBottom: "60px",
             }}
           >
-            <h2
-              style={{
-                fontSize: "1.75rem",
-                fontWeight: 900,
-                marginBottom: "32px",
-                letterSpacing: "-0.03em",
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-              }}
-            >
-              <span
-                style={{
-                  width: "6px",
-                  height: "32px",
-                  background: "var(--accent)",
-                  borderRadius: "9999px",
-                }}
-              ></span>
+            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Author</div>
+            <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "32px", letterSpacing: "-0.03em", color: "#111827" }}>
               About the Author
             </h2>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "24px",
-                flexWrap: "wrap",
-                background: "var(--bg)",
-                border: "2px solid var(--border)",
-                borderRadius: "16px",
-                padding: "32px",
-                boxShadow: "6px 6px 0 var(--border)",
-              }}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "24px",
+                  flexWrap: "wrap",
+                  background: "#ffffff",
+                  border: "3px solid rgba(0,0,0,0.07)",
+                  borderRadius: "20px",
+                  padding: "32px",
+                  
+                }}
             >
               <div
                 style={{
                   width: "80px",
                   height: "80px",
                   borderRadius: "50%",
-                  background: "var(--accent)",
+                  background: "#f97316",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1890,7 +1448,7 @@ export default function DealPage({
                   style={{
                     fontSize: "1.25rem",
                     fontWeight: 900,
-                    color: "var(--text)",
+                    color: "#111827",
                     marginBottom: "8px",
                   }}
                 >
@@ -1899,7 +1457,7 @@ export default function DealPage({
                 <p
                   style={{
                     fontSize: "0.95rem",
-                    color: "var(--muted)",
+                    color: "#6b7280",
                     lineHeight: 1.6,
                     marginBottom: "16px",
                     fontWeight: 600,
@@ -1924,7 +1482,7 @@ export default function DealPage({
                     <span
                       style={{
                         fontSize: "0.85rem",
-                        color: "var(--muted)",
+                        color: "#6b7280",
                         fontWeight: 700,
                       }}
                     >
@@ -1942,7 +1500,7 @@ export default function DealPage({
                     <span
                       style={{
                         fontSize: "0.85rem",
-                        color: "var(--muted)",
+                        color: "#6b7280",
                         fontWeight: 700,
                       }}
                     >
@@ -1957,36 +1515,19 @@ export default function DealPage({
           {/* Internal Links Section */}
           <section
             style={{
-              borderTop: "2px solid var(--border)",
+              borderTop: "1px solid rgba(0,0,0,0.07)",
               paddingTop: "60px",
               marginBottom: "60px",
             }}
           >
-            <h2
-              style={{
-                fontSize: "1.75rem",
-                fontWeight: 900,
-                marginBottom: "32px",
-                letterSpacing: "-0.03em",
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-              }}
-            >
-              <span
-                style={{
-                  width: "6px",
-                  height: "32px",
-                  background: "var(--accent)",
-                  borderRadius: "9999px",
-                }}
-              ></span>
+            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Resources</div>
+            <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "32px", letterSpacing: "-0.03em", color: "#111827" }}>
               Explore More Resources
             </h2>
             <p
               style={{
                 fontSize: "0.95rem",
-                color: "var(--muted)",
+                color: "#6b7280",
                 fontWeight: 600,
                 marginBottom: "24px",
               }}
@@ -2013,32 +1554,32 @@ export default function DealPage({
                     alignItems: "center",
                     gap: "12px",
                     padding: "16px 20px",
-                    background: "var(--bg)",
-                    border: "2px solid var(--border)",
+                    background: "#ffffff",
+                    border: "3px solid rgba(0,0,0,0.07)",
                     borderRadius: "12px",
                     textDecoration: "none",
-                    color: "var(--text)",
+                    color: "#111827",
                     fontWeight: 700,
                     fontSize: "0.95rem",
-                    boxShadow: "3px 3px 0 var(--border)",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
                     transition: "all 0.2s ease",
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLElement).style.transform =
                       "translate(-2px, -2px)";
                     (e.currentTarget as HTMLElement).style.boxShadow =
-                      "5px 5px 0 var(--border)";
+                      "5px 5px 0 rgba(0,0,0,0.07)";
                   }}
                   onMouseLeave={(e) => {
                     (e.currentTarget as HTMLElement).style.transform =
                       "translate(0, 0)";
                     (e.currentTarget as HTMLElement).style.boxShadow =
-                      "3px 3px 0 var(--border)";
+                      "3px 3px 0 rgba(0,0,0,0.07)";
                   }}
                 >
                   <span style={{ fontSize: "1.2rem" }}>📁</span>
                   <span>All {deal.category} Courses</span>
-                  <span style={{ marginLeft: "auto", color: "var(--accent)" }}>
+                  <span style={{ marginLeft: "auto", color: "#f97316" }}>
                     →
                   </span>
                 </a>
@@ -2051,32 +1592,32 @@ export default function DealPage({
                     alignItems: "center",
                     gap: "12px",
                     padding: "16px 20px",
-                    background: "var(--bg)",
-                    border: "2px solid var(--border)",
+                    background: "#ffffff",
+                    border: "3px solid rgba(0,0,0,0.07)",
                     borderRadius: "12px",
                     textDecoration: "none",
-                    color: "var(--text)",
+                    color: "#111827",
                     fontWeight: 700,
                     fontSize: "0.95rem",
-                    boxShadow: "3px 3px 0 var(--border)",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
                     transition: "all 0.2s ease",
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLElement).style.transform =
                       "translate(-2px, -2px)";
                     (e.currentTarget as HTMLElement).style.boxShadow =
-                      "5px 5px 0 var(--border)";
+                      "5px 5px 0 rgba(0,0,0,0.07)";
                   }}
                   onMouseLeave={(e) => {
                     (e.currentTarget as HTMLElement).style.transform =
                       "translate(0, 0)";
                     (e.currentTarget as HTMLElement).style.boxShadow =
-                      "3px 3px 0 var(--border)";
+                      "3px 3px 0 rgba(0,0,0,0.07)";
                   }}
                 >
                   <span style={{ fontSize: "1.2rem" }}>📂</span>
                   <span>{deal.subcategory} Courses</span>
-                  <span style={{ marginLeft: "auto", color: "var(--accent)" }}>
+                  <span style={{ marginLeft: "auto", color: "#f97316" }}>
                     →
                   </span>
                 </a>
@@ -2088,32 +1629,32 @@ export default function DealPage({
                   alignItems: "center",
                   gap: "12px",
                   padding: "16px 20px",
-                  background: "var(--bg)",
-                  border: "2px solid var(--border)",
+                  background: "#ffffff",
+                  border: "3px solid rgba(0,0,0,0.07)",
                   borderRadius: "12px",
                   textDecoration: "none",
-                  color: "var(--text)",
+                  color: "#111827",
                   fontWeight: 700,
                   fontSize: "0.95rem",
-                  boxShadow: "3px 3px 0 var(--border)",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
                   transition: "all 0.2s ease",
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.transform =
                     "translate(-2px, -2px)";
                   (e.currentTarget as HTMLElement).style.boxShadow =
-                    "5px 5px 0 var(--border)";
+                    "5px 5px 0 rgba(0,0,0,0.07)";
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.transform =
                     "translate(0, 0)";
                   (e.currentTarget as HTMLElement).style.boxShadow =
-                    "3px 3px 0 var(--border)";
+                    "3px 3px 0 rgba(0,0,0,0.07)";
                 }}
               >
                 <span style={{ fontSize: "1.2rem" }}>🎫</span>
                 <span>All Udemy Coupons</span>
-                <span style={{ marginLeft: "auto", color: "var(--accent)" }}>
+                <span style={{ marginLeft: "auto", color: "#f97316" }}>
                   →
                 </span>
               </a>
@@ -2124,32 +1665,32 @@ export default function DealPage({
                   alignItems: "center",
                   gap: "12px",
                   padding: "16px 20px",
-                  background: "var(--bg)",
-                  border: "2px solid var(--border)",
+                  background: "#ffffff",
+                  border: "3px solid rgba(0,0,0,0.07)",
                   borderRadius: "12px",
                   textDecoration: "none",
-                  color: "var(--text)",
+                  color: "#111827",
                   fontWeight: 700,
                   fontSize: "0.95rem",
-                  boxShadow: "3px 3px 0 var(--border)",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
                   transition: "all 0.2s ease",
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.transform =
                     "translate(-2px, -2px)";
                   (e.currentTarget as HTMLElement).style.boxShadow =
-                    "5px 5px 0 var(--border)";
+                    "5px 5px 0 rgba(0,0,0,0.07)";
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.transform =
                     "translate(0, 0)";
                   (e.currentTarget as HTMLElement).style.boxShadow =
-                    "3px 3px 0 var(--border)";
+                    "3px 3px 0 rgba(0,0,0,0.07)";
                 }}
               >
                 <span style={{ fontSize: "1.2rem" }}>🏠</span>
                 <span>Homepage</span>
-                <span style={{ marginLeft: "auto", color: "var(--accent)" }}>
+                <span style={{ marginLeft: "auto", color: "#f97316" }}>
                   →
                 </span>
               </a>
@@ -2160,32 +1701,32 @@ export default function DealPage({
                   alignItems: "center",
                   gap: "12px",
                   padding: "16px 20px",
-                  background: "var(--bg)",
-                  border: "2px solid var(--border)",
+                  background: "#ffffff",
+                  border: "3px solid rgba(0,0,0,0.07)",
                   borderRadius: "12px",
                   textDecoration: "none",
-                  color: "var(--text)",
+                  color: "#111827",
                   fontWeight: 700,
                   fontSize: "0.95rem",
-                  boxShadow: "3px 3px 0 var(--border)",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
                   transition: "all 0.2s ease",
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.transform =
                     "translate(-2px, -2px)";
                   (e.currentTarget as HTMLElement).style.boxShadow =
-                    "5px 5px 0 var(--border)";
+                    "5px 5px 0 rgba(0,0,0,0.07)";
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.transform =
                     "translate(0, 0)";
                   (e.currentTarget as HTMLElement).style.boxShadow =
-                    "3px 3px 0 var(--border)";
+                    "3px 3px 0 rgba(0,0,0,0.07)";
                 }}
               >
                 <span style={{ fontSize: "1.2rem" }}>📝</span>
                 <span>Course Reviews & Guides</span>
-                <span style={{ marginLeft: "auto", color: "var(--accent)" }}>
+                <span style={{ marginLeft: "auto", color: "#f97316" }}>
                   →
                 </span>
               </a>
@@ -2196,7 +1737,7 @@ export default function DealPage({
           {relatedDeals.length > 0 && (
             <section
               style={{
-                borderTop: "2px solid var(--border)",
+                borderTop: "1px solid rgba(0,0,0,0.07)",
                 paddingTop: "60px",
                 marginBottom: "60px",
               }}
@@ -2207,25 +1748,15 @@ export default function DealPage({
                   fontWeight: 900,
                   marginBottom: "32px",
                   letterSpacing: "-0.03em",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
+                  color: "#111827",
                 }}
               >
-                <span
-                  style={{
-                    width: "6px",
-                    height: "32px",
-                    background: "var(--accent)",
-                    borderRadius: "9999px",
-                  }}
-                ></span>
                 More {deal.category || "Udemy"} Courses You Might Like
               </h2>
               <p
                 style={{
                   fontSize: "0.95rem",
-                  color: "var(--muted)",
+                  color: "#6b7280",
                   fontWeight: 600,
                   marginBottom: "24px",
                 }}
@@ -2244,18 +1775,18 @@ export default function DealPage({
             style={{
               position: "sticky",
               top: "40px",
-              background: "var(--bg-primary)",
-              border: "2px solid var(--border)",
-              borderRadius: "12px",
+              background: "#ffffff",
+              border: "3px solid rgba(0,0,0,0.07)",
+              borderRadius: "20px",
               overflow: "hidden",
-              boxShadow: "10px 10px 0 var(--border)",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
             }}
           >
             {deal.image && (
               <div
                 style={{
                   height: "200px",
-                  borderBottom: "2px solid var(--border)",
+                  borderBottom: "3px solid rgba(0,0,0,0.07)",
                   position: "relative",
                 }}
               >
@@ -2269,14 +1800,14 @@ export default function DealPage({
                     position: "absolute",
                     top: "12px",
                     right: "12px",
-                    background: "var(--brand)",
-                    color: "var(--bg)",
+                    background: "#f97316",
+                    color: "#ffffff",
                     padding: "4px 10px",
                     borderRadius: "4px",
                     fontSize: "0.65rem",
                     fontWeight: 900,
-                    border: "2px solid var(--border)",
-                    boxShadow: "2px 2px 0 var(--border)",
+                    border: "3px solid rgba(0,0,0,0.07)",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
                   }}
                 >
                   ✓ VERIFIED
@@ -2304,7 +1835,7 @@ export default function DealPage({
                     style={{
                       fontSize: "2rem",
                       fontWeight: 900,
-                      color: "var(--brand)",
+                      color: "#f97316",
                     }}
                   >
                     {price === 0 ? "FREE" : `$${price.toFixed(2)}`}
@@ -2313,7 +1844,7 @@ export default function DealPage({
                     <span
                       style={{
                         fontSize: "1.1rem",
-                        color: "var(--muted)",
+                        color: "#6b7280",
                         textDecoration: "line-through",
                         fontWeight: 600,
                       }}
@@ -2332,8 +1863,8 @@ export default function DealPage({
                   >
                     <span
                       style={{
-                        background: "var(--brand)",
-                        color: "var(--bg)",
+                        background: "#f97316",
+                        color: "#ffffff",
                         padding: "2px 8px",
                         borderRadius: "4px",
                         fontSize: "0.75rem",
@@ -2346,7 +1877,7 @@ export default function DealPage({
                       style={{
                         fontSize: "0.85rem",
                         fontWeight: 800,
-                        color: "var(--brand)",
+                        color: "#f97316",
                       }}
                     >
                       SAVE ${(originalPrice - price).toFixed(2)}
@@ -2358,22 +1889,22 @@ export default function DealPage({
               {countdown && (
                 <div
                   style={{
-                    background: "var(--bg)",
-                    border: "2px solid var(--border)",
-                    borderRadius: "8px",
-                    padding: "16px",
+                    background: "#ffffff",
+                    border: "3px solid rgba(0,0,0,0.07)",
+                    borderRadius: "20px",
+                    padding: "12px",
                     marginBottom: "24px",
-                    boxShadow: "3px 3px 0 var(--border)",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
                   }}
                 >
                   <div
                     style={{
-                      fontSize: "0.7rem",
+                      fontSize: "0.6rem",
                       fontWeight: 900,
-                      color: "var(--text)",
+                      color: "#111827",
                       textTransform: "uppercase",
                       letterSpacing: "0.1em",
-                      marginBottom: "8px",
+                      marginBottom: "6px",
                       textAlign: "center",
                     }}
                   >
@@ -2383,9 +1914,9 @@ export default function DealPage({
                     style={{
                       display: "flex",
                       justifyContent: "center",
-                      gap: "12px",
+                      gap: "8px",
                       fontWeight: 900,
-                      fontSize: "1.1rem",
+                      fontSize: "0.85rem",
                     }}
                   >
                     <div>{countdown.days}d</div>
@@ -2402,7 +1933,7 @@ export default function DealPage({
                     style={{
                       fontSize: "0.75rem",
                       fontWeight: 900,
-                      color: "var(--text)",
+                      color: "#111827",
                       marginBottom: "8px",
                       textTransform: "uppercase",
                     }}
@@ -2411,12 +1942,12 @@ export default function DealPage({
                   </div>
                   <div
                     style={{
-                      display: "flex",
-                      border: "2px solid var(--border)",
-                      borderRadius: "8px",
-                      overflow: "hidden",
-                      background: "var(--bg-primary)",
-                      boxShadow: "3px 3px 0 var(--border)",
+                    display: "flex",
+                    border: "3px solid rgba(0,0,0,0.07)",
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    background: "#ffffff",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
                     }}
                   >
                     <code
@@ -2425,7 +1956,7 @@ export default function DealPage({
                         padding: "12px",
                         fontSize: "0.9rem",
                         fontWeight: 900,
-                        color: "var(--text)",
+                        color: "#111827",
                         letterSpacing: "0.1em",
                         textAlign: "center",
                       }}
@@ -2437,8 +1968,8 @@ export default function DealPage({
                     <button
                       onClick={() => setIsModalOpen(true)}
                       style={{
-                        background: "var(--brand)",
-                        color: "var(--bg)",
+                        background: "#f97316",
+                        color: "#ffffff",
                         border: "none",
                         padding: "0 16px",
                         cursor: "pointer",
@@ -2456,7 +1987,6 @@ export default function DealPage({
                 href={deal.url}
                 target="_blank"
                 rel="noopener noreferrer nofollow"
-                className="btn"
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -2464,9 +1994,13 @@ export default function DealPage({
                   gap: "10px",
                   width: "100%",
                   padding: "18px",
-                  fontSize: "1rem",
+                  fontSize: "1.1rem",
                   fontWeight: 900,
-                  boxShadow: "6px 6px 0 var(--border)",
+                  color: "white",
+                  background: "linear-gradient(135deg, #f97316, #ec4899, #a855f7)",
+                  borderRadius: "12px",
+                  textDecoration: "none",
+                  transition: "all 0.2s",
                 }}
               >
                 REDEEM COUPON
@@ -2509,7 +2043,7 @@ export default function DealPage({
                       fontWeight: 700,
                     }}
                   >
-                    <span style={{ color: "var(--muted)" }}>{label}</span>
+                    <span style={{ color: "#6b7280" }}>{label}</span>
                     <span>{value}</span>
                   </div>
                 ))}
@@ -2519,7 +2053,7 @@ export default function DealPage({
                 style={{
                   marginTop: "32px",
                   paddingTop: "24px",
-                  borderTop: "2px dashed var(--border)",
+                  borderTop: "2px dashed rgba(0,0,0,0.07)",
                 }}
               >
                 <ActionsPanel deal={{ ...deal, url: deal.url || "" }} />
@@ -2530,12 +2064,12 @@ export default function DealPage({
       </div>
 
       <style>{`
-                .neo-prose { color: var(--text); }
+                .neo-prose { color: #111827; }
                 .neo-prose h2, .neo-prose h3 { font-weight: 900; margin-top: 2em; margin-bottom: 0.75em; letter-spacing: -0.02em; }
                 .neo-prose p { margin-bottom: 1.5em; }
                 .neo-prose ul { margin-bottom: 1.5em; padding-left: 1.5em; list-style: none; }
                 .neo-prose li { position: relative; margin-bottom: 0.75em; }
-                .neo-prose li::before { content: "→"; position: absolute; left: -1.5em; color: var(--accent); font-weight: 900; }
+                .neo-prose li::before { content: "•"; position: absolute; left: -1.5em; color: #f97316; font-weight: 900; }
                 .neo-prose strong { font-weight: 800; }
 
                 @media (max-width: 960px) {
@@ -2566,12 +2100,12 @@ export default function DealPage({
         >
           <div
             style={{
-              background: "var(--bg)",
-              border: "4px solid var(--border)",
+              background: "#ffffff",
+              border: "4px solid rgba(0,0,0,0.07)",
               padding: "40px",
               maxWidth: "500px",
               width: "100%",
-              boxShadow: "12px 12px 0 var(--border)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
               position: "relative",
             }}
             onClick={(e) => e.stopPropagation()}
@@ -2584,7 +2118,7 @@ export default function DealPage({
                 right: "12px",
                 background: "none",
                 border: "none",
-                color: "var(--text)",
+                color: "#111827",
                 fontSize: "1.5rem",
                 fontWeight: 900,
                 cursor: "pointer",
@@ -2605,7 +2139,7 @@ export default function DealPage({
             </h3>
             <p
               style={{
-                color: "var(--muted)",
+                color: "#6b7280",
                 fontSize: "0.9rem",
                 textAlign: "center",
                 marginBottom: "32px",
@@ -2618,12 +2152,12 @@ export default function DealPage({
 
             <div
               style={{
-                background: "var(--card)",
-                border: "3px solid var(--border)",
+                background: "#ffffff",
+                border: "3px solid rgba(0,0,0,0.07)",
                 padding: "20px",
                 marginBottom: "32px",
                 textAlign: "center",
-                boxShadow: "4px 4px 0 var(--border)",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
               }}
             >
               <code
@@ -2644,8 +2178,8 @@ export default function DealPage({
                 onClick={handleCopyCoupon}
                 className="btn"
                 style={{
-                  background: couponCopied ? "var(--brand)" : "var(--brand)",
-                  color: couponCopied ? "var(--bg)" : "var(--bg)",
+                  background: couponCopied ? "#f97316" : "#f97316",
+                  color: couponCopied ? "#ffffff" : "#ffffff",
                   width: "100%",
                   padding: "16px",
                   fontSize: "1rem",
@@ -2665,7 +2199,7 @@ export default function DealPage({
                   textAlign: "center",
                   fontSize: "1rem",
                   fontWeight: 900,
-                  background: "var(--accent)",
+                  background: "#f97316",
                   color: "white",
                 }}
               >
