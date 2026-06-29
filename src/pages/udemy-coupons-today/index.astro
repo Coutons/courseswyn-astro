@@ -5,7 +5,8 @@ import { formatDateWIB } from '../../lib/date';
 
 const dates = await getAvailableDates();
 const latestDate = dates[0]?.date;
-const displayDeals = await getDeals({ date: latestDate, limit: 12, sortBy: 'rating' });
+const latestDeals = await getDeals({ date: latestDate, sortBy: 'rating' });
+const latestCount = latestDeals.length;
 
 const siteUrl = "https://courseswyn.com";
 const pageUrl = `${siteUrl}/udemy-coupons-today/`;
@@ -60,37 +61,23 @@ const jsonLd = {
 
       {latestDate && (
         <section class="latest-section">
-          <div class="latest-head">
-            <h2>Latest Update: {formatDateLabel(latestDate)}</h2>
-            <a href={`/udemy-coupon-today/${latestDate}/`} class="view-all-btn">View All {formatDateLabel(latestDate)} Coupons →</a>
-          </div>
-          
-          <div class="latest-grid">
-            {displayDeals.map(deal => (
-              <div class="mini-card">
-                <div class="mini-img">
-                  <img src={deal.image} alt={deal.title} loading="lazy" />
-                  {deal.originalPrice && (
-                    <span class="mini-save">
-                      -{Math.round((1 - deal.price / deal.originalPrice) * 100)}%
-                    </span>
-                  )}
-                </div>
-                <div class="mini-body">
-                  <h3 class="mini-title">{deal.title}</h3>
-                  <div class="mini-meta">
-                    <div class="mini-pricing">
-                      <span class="mini-price">
-                        {deal.price === 0 ? 'FREE' : `$${deal.price.toFixed(2)}`}
-                      </span>
-                      {deal.originalPrice && <span class="mini-old">${deal.originalPrice.toFixed(2)}</span>}
-                    </div>
-                    <span class="mini-cat">{deal.category}</span>
-                  </div>
-                  <a href={`/coupon/${deal.slug}`} class="mini-link">Get Coupon</a>
-                </div>
+          <div class="latest-banner">
+            <div class="latest-banner-body">
+              <span class="latest-badge">New Update</span>
+              <h2 class="latest-heading">Latest Update: {formatDateLabel(latestDate)}</h2>
+              <p class="latest-sub">
+                {latestCount} verified free Udemy coupons added today. 
+                Hand-picked and tested — grab them before they expire.
+              </p>
+              <div class="latest-meta">
+                <span>{latestCount} Free Courses</span>
+                <span>100% Off</span>
+                <span>Verified</span>
               </div>
-            ))}
+              <a href={`/udemy-coupon-today/${latestDate}/`} class="latest-btn">
+                Browse All {formatDateLabel(latestDate)} Deals →
+              </a>
+            </div>
           </div>
         </section>
       )}
@@ -164,26 +151,17 @@ const jsonLd = {
   .archive-title { font-size: 3rem; font-weight: 900; color: var(--text); letter-spacing: -0.05em; margin-bottom: 1rem; }
   .archive-desc { font-size: 1.25rem; color: var(--muted); max-width: 700px; margin: 0 auto; line-height: 1.6; }
 
-  .latest-section { margin-bottom: 5rem; padding: 2rem; background: var(--card); border: 2px solid var(--border); border-radius: 24px; box-shadow: 8px 8px 0 var(--border); }
-  .latest-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
-  .latest-head h2 { font-size: 1.5rem; font-weight: 800; margin: 0; }
-  .view-all-btn { color: var(--brand); text-decoration: none; font-weight: 700; font-size: 0.9375rem; transition: transform 0.2s; }
-  .view-all-btn:hover { transform: translateX(5px); }
-
-  .latest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
-  .mini-card { background: var(--bg); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; }
-  .mini-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
-  .mini-img { height: 120px; overflow: hidden; background: var(--border); }
-  .mini-save { position: absolute; top: 8px; right: 8px; background: #ef4444; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-  .mini-body { padding: 1.25rem; flex: 1; display: flex; flex-direction: column; }
-  .mini-title { font-size: 0.9375rem; font-weight: 700; margin: 0 0 0.75rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.8rem; }
-  .mini-meta { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.25rem; }
-  .mini-pricing { display: flex; align-items: center; gap: 0.5rem; }
-  .mini-price { font-size: 1.125rem; font-weight: 800; color: var(--accent); }
-  .mini-old { font-size: 0.8125rem; color: var(--muted); text-decoration: line-through; }
-  .mini-cat { font-size: 0.75rem; color: var(--muted); font-weight: 500; background: var(--bg); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); align-self: flex-start; }
-  .mini-link { margin-top: auto; display: block; text-align: center; background: var(--brand); color: var(--bg); text-decoration: none; font-weight: 700; font-size: 0.875rem; padding: 0.6rem; border-radius: 8px; transition: all 0.2s; }
-  .mini-link:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 12px var(--brand-soft); }
+  .latest-section { margin-bottom: 5rem; }
+  .latest-banner { background: linear-gradient(135deg, var(--brand) 0%, #ea580c 100%); border-radius: 24px; overflow: hidden; position: relative; }
+  .latest-banner::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 80% 20%, rgba(255,255,255,0.15) 0%, transparent 60%); }
+  .latest-banner-body { position: relative; padding: 3rem; text-align: center; }
+  .latest-badge { display: inline-block; background: rgba(255,255,255,0.2); color: white; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 14px; border-radius: 99px; margin-bottom: 1rem; backdrop-filter: blur(4px); }
+  .latest-heading { font-size: 2rem; font-weight: 900; color: white; margin: 0 0 0.75rem; letter-spacing: -0.02em; }
+  .latest-sub { color: rgba(255,255,255,0.85); font-size: 1.05rem; line-height: 1.6; max-width: 600px; margin: 0 auto 1.5rem; }
+  .latest-meta { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 2rem; }
+  .latest-meta span { color: rgba(255,255,255,0.9); font-size: 0.85rem; font-weight: 700; background: rgba(255,255,255,0.1); padding: 4px 14px; border-radius: 99px; backdrop-filter: blur(4px); }
+  .latest-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: white; color: var(--brand); text-decoration: none; font-weight: 800; font-size: 1rem; padding: 1rem 2rem; border-radius: 16px; transition: all 0.3s; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+  .latest-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
 
   .history-section { margin-bottom: 5rem; }
   .history-section h2 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
