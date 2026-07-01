@@ -15,8 +15,8 @@ Get expert-reviewed courses and verified promo codes at [courseswyn.com](https:/
 
 [CoursesWyn](https://courseswyn.com) provides independent expert course reviews and verified Udemy promo codes. We focus on quality over quantity, highlighting only the gold standard of digital education.
 
-- **150,000+** learners trust our data-driven rankings and savings guides.
-- **1.2k+** courses manually audited for curriculum depth and instructor credibility.
+- **1.5M+** learners trust our data-driven rankings and savings guides.
+- **1.3k+** courses manually audited for curriculum depth and instructor credibility.
 - **66+** in-depth expert reviews covering AI, Web Development, and Cloud Computing.
 - **Real-time** deal tracking with a strict 4-hour update & purge window for all promo codes.
 - **Featured** in the Official Astro Showcase for high-performance implementation.
@@ -75,12 +75,12 @@ We publish in-depth, "opinionated" course reviews across all major categories. B
 
 | Metric | Value |
 |---|---|
-| Active Learners | 150,000+ worldwide |
+| Active Learners | 1,5M+ worldwide |
 | Courses Audited | 1.3k+ expert reviews |
 | Expert Articles | 66+ in-depth guides |
 | Update Frequency | Daily (4-hour window) |
 | Lighthouse Score | 95+ (All Categories) |
-| Tech Stack | Astro 6.4, React 19, Tailwind CSS |
+| Tech Stack | Astro 7, React 19, Tailwind CSS |
 
 ---
 
@@ -109,7 +109,7 @@ Open [http://localhost:4321](http://localhost:4321) in your browser.
 
 ## Tech Stack
 
-- **Framework**: [Astro 6.4](https://astro.build) (Islands Architecture)
+- **Framework**: [Astro 7](https://astro.build) (Islands Architecture)
 - **UI Library**: [React](https://react.dev)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com) (Neo-Brutalist Design)
 - **Content**: MDX with Zod schema validation
