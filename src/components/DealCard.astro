@@ -29,35 +29,38 @@ interface Deal {
 const { deal } = Astro.props;
 
 function formatStudents(n: number) {
+  if (!n) return "";
   if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
   if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
   return String(n);
 }
 
-function genRating(key: string): number {
-  let h = 2166136261 >>> 0;
-  for (let i = 0; i < key.length; i++) {
-    h ^= key.charCodeAt(i);
-    h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
-  }
-  const r = (h >>> 0) / 0xffffffff;
-  return Math.round((4.5 + 0.3 * r) * 10) / 10;
+function timeAgo(dateStr: string | undefined): string | null {
+  if (!dateStr) return null;
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  return `${Math.floor(days / 30)}mo ago`;
 }
 
-function genStudents(key: string): number {
-  let h = 2166136261 >>> 0;
-  for (let i = 0; i < key.length; i++) {
-    h ^= key.charCodeAt(i);
-    h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
-  }
-  const r = (h >>> 0) / 0xffffffff;
-  const min = 1000, max = 80000;
-  const val = Math.floor(min + (max - min) * Math.pow(r, 0.6));
-  return Math.round(val / 10) * 10;
+function expiresIn(dateStr: string | undefined): string | null {
+  if (!dateStr) return null;
+  const diff = new Date(dateStr).getTime() - Date.now();
+  if (diff <= 0) return null;
+  const hrs = Math.floor(diff / 3600000);
+  if (hrs < 1) return `${Math.floor(diff / 60000)}m left`;
+  if (hrs < 24) return `${hrs}h left`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d left`;
 }
 
-const r = typeof deal.rating === "number" && isFinite(deal.rating) ? deal.rating : genRating(deal.id || "");
-const s = (typeof deal.students === "number" && isFinite(deal.students) && deal.students > 0) ? deal.students : genStudents(deal.id || "");
+const r = typeof deal.rating === "number" && isFinite(deal.rating) ? deal.rating : null;
+const s = (typeof deal.students === "number" && isFinite(deal.students) && deal.students > 0) ? deal.students : null;
 const p = (typeof deal.price === "number" && isFinite(deal.price)) ? deal.price : 9.99;
 const op = (typeof deal.originalPrice === "number" && isFinite(deal.originalPrice) && deal.originalPrice > 0) ? deal.originalPrice : 199.99;
 const hasDiscount = op > p && p > 0;
@@ -130,14 +133,16 @@ const durationLabel = duration ? duration.replace(/^(\d+)\s*hours?.*$/i, "$1h") 
   <!-- Body -->
   <div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column", gap: "10px" }}>
 
-    <!-- Rating + Students (inline like krishnaik) -->
+    <!-- Rating + Students -->
     <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "3px", color: "#f59e0b", fontWeight: 700 }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        {r.toFixed(1)}
-      </div>
-      <span style={{ color: "#9ca3af", fontSize: "0.7rem" }}>|</span>
-      <span style={{ color: "#6b7280", fontWeight: 500 }}>{formatStudents(s)} students</span>
+      {r && (
+        <div style={{ display: "flex", alignItems: "center", gap: "3px", color: "#f59e0b", fontWeight: 700 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          {r.toFixed(1)}
+        </div>
+      )}
+      {r && s && <span style={{ color: "#9ca3af", fontSize: "0.7rem" }}>|</span>}
+      {s && <span style={{ color: "#6b7280", fontWeight: 500 }}>{formatStudents(s)} students</span>}
     </div>
 
     <!-- Title -->
@@ -178,6 +183,19 @@ const durationLabel = duration ? duration.replace(/^(\d+)\s*hours?.*$/i, "$1h") 
         <span style={{ fontSize: "0.78rem", color: "#9ca3af", fontWeight: 600 }}>
           {durationLabel}
         </span>
+      )}
+    </div>
+
+    <!-- Verified + Expiry -->
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.7rem", color: "#9ca3af", fontWeight: 600 }}>
+      {timeAgo(deal.updatedAt) && (
+        <span style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+          Verified {timeAgo(deal.updatedAt)}
+        </span>
+      )}
+      {expiresIn(deal.expiresAt) && (
+        <span style={{ color: "#ef4444" }}>{expiresIn(deal.expiresAt)}</span>
       )}
     </div>
 

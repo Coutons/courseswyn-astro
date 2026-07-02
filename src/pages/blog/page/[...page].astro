@@ -5,7 +5,7 @@ import { formatDateWIB } from "../../../lib/date";
 
 export async function getStaticPaths({ paginate }: { paginate: any }) {
   const posts = await getCollection('blog');
-  const sortedPosts = posts.sort((a, b) => {
+  const sortedPosts = posts.sort((a: any, b: any) => {
     const dateA = a.data.updatedAt || a.data.pubDate;
     const dateB = b.data.updatedAt || b.data.pubDate;
     return dateB.getTime() - dateA.getTime();
@@ -29,7 +29,7 @@ function formatDate(post: any) {
   return isUpdated ? `Updated ${formatted}` : formatted;
 }
 
-const title = `Latest Udemy Course Reviews & Learning Guides - Page ${page.currentPage} | Courses Wyn`;
+const title = `Udemy Course Reviews & Learning Guides — Page ${page.currentPage} | CoursesWyn`;
 const description = "Browse all Udemy Courses guides, tutorials, comparisons, and reviews. Find the best Udemy Courses for your project.";
 const canonical = `https://courseswyn.com/blog/page/${page.currentPage}`;
 
@@ -55,6 +55,11 @@ const structuredData = {
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    {page.url.prev && <link rel="prev" href={page.url.prev} />}
+    {page.url.next && <link rel="next" href={page.url.next} />}
+    {page.currentPage > 1 && <meta name="robots" content="noindex, follow" />}
+  </Fragment>
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
   <section style={{ padding: "80px 0", background: "var(--bg)" }}>
     <div class="container">

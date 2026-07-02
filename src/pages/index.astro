@@ -23,28 +23,40 @@ function resolveImage(imagePath: string | undefined | { src: string }): string |
 }
 
 const allDeals = await readDeals();
-const PAGE_SIZE = 3;
-const initialItems = allDeals.slice(0, PAGE_SIZE);
 
-function slugifyCategory(name: string) {
-  if (name === "Uncategorized") return "uncategorized";
-  return name.toLowerCase().replace(/&amp;/gi, "&").replace(/&/g, " and ").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").replace(/-+/g, "-");
-}
-
-const categories = [...new Set(allDeals.map((d) => d.category).filter(Boolean))] as string[];
+const categoryList = [...new Set(allDeals.map((d) => d.category).filter(Boolean))] as string[];
+const categoryCards = categoryList.slice(0, 8).map((name) => ({
+  name,
+  count: allDeals.filter((d) => d.category === name).length,
+  slug: name === "Uncategorized" ? "uncategorized" : name.toLowerCase().replace(/&/g, "and").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-"),
+}));
 
 const now = new Date();
+const expiringDeals = allDeals
+  .filter((d) => d.expiresAt && new Date(d.expiresAt) > now)
+  .sort((a: any, b: any) => new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime())
+  .slice(0, 8);
+
+const hoursUntilExpiry = (dateStr: string) => {
+  const diff = new Date(dateStr).getTime() - now.getTime();
+  if (diff <= 0) return "Expired";
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(hours / 24);
+  if (days > 0) return `${days}d ${hours % 24}h left`;
+  return `${hours}h left`;
+};
+
 const monthName = formatStringWIB(now, { month: 'long', year: 'numeric' });
-const pageTitle = `1.3K+ Free Udemy Courses [Update Today] - 100% Off Coupon 2026`;
-const pageDescription = `List of udemy FREE courses with 100% off coupon code. Use these udemy free coupon and get udemy free courses download not needed. Only udemy login needed.`;
+const pageTitle = `Udemy Coupons & Verified Promo Codes [Updated ${monthName}] | CoursesWyn`;
+const pageDescription = `Find verified Udemy coupon codes and course deals. Browse expert reviews, get 100% off promo codes, and discover top-rated courses in programming, AI, design & more. Updated daily.`;
 
 const jsonLd = {
   "@context": "https://schema.org", "@graph": [
-    { "@type": "WebSite", "@id": "https://courseswyn.com/#website", "url": "https://courseswyn.com", "name": "CoursesWyn - Free Udemy Coupons", "description": pageDescription, "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://courseswyn.com/search?q={search_term_string}" }, "query-input": "required name=search_term_string" } },
+    { "@type": "WebSite", "@id": "https://courseswyn.com/#website", "url": "https://courseswyn.com", "name": "CoursesWyn", "description": pageDescription, "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://courseswyn.com/search?q={search_term_string}" }, "query-input": "required name=search_term_string" } },
     { "@type": "Organization", "@id": "https://courseswyn.com/#organization", "name": "CoursesWyn", "url": "https://courseswyn.com", "logo": { "@type": "ImageObject", "url": "https://courseswyn.com/logo.png", "width": 200, "height": 60 }, "sameAs": ["https://twitter.com/CoursesGift", "https://facebook.com/BestCouponPromo"] },
-    { "@type": "BreadcrumbList", "@id": "https://courseswyn.com/#breadcrumb", "itemListElement": [{ "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" }, { "@type": "ListItem", "position": 2, "name": "Free Coupons", "item": "https://courseswyn.com/udemy-coupon-code" }] },
+    { "@type": "BreadcrumbList", "@id": "https://courseswyn.com/#breadcrumb", "itemListElement": [{ "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" }, { "@type": "ListItem", "position": 2, "name": "Coupons", "item": "https://courseswyn.com/udemy-coupon-code" }] },
     { "@type": "FAQPage", "@id": "https://courseswyn.com/#faq", "mainEntity": [
-      { "@type": "Question", "name": "Are these coupons 100% free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes! Every coupon gives 100% off. No hidden fees." } },
+      { "@type": "Question", "name": "Are these coupons 100% free?", "acceptedAnswer": { "@type": "Answer", "text": "Most coupons give 100% off. Some offer discounts — each deal shows the exact savings before you click." } },
       { "@type": "Question", "name": "How often are new coupons added?", "acceptedAnswer": { "@type": "Answer", "text": "New coupons added daily. Expired deals removed within 4 hours." } },
       { "@type": "Question", "name": "Do I get a certificate with free courses?", "acceptedAnswer": { "@type": "Answer", "text": "Absolutely! Official Udemy certificate, lifetime access included." } }
     ] },
@@ -53,274 +65,250 @@ const jsonLd = {
 };
 ---
 
-<style>
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  .anim-up { animation: fadeUp 0.5s ease-out both; }
-  .anim-1 { animation-delay: 0.1s; } .anim-2 { animation-delay: 0.2s; } .anim-3 { animation-delay: 0.3s; } .anim-4 { animation-delay: 0.4s; }
-</style>
-
 <Layout title={pageTitle} description={pageDescription} canonical="https://courseswyn.com" image="/assets/images/og-default.svg">
-  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+
+  <style>
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .anim-up { animation: fadeUp 0.5s ease-out both; }
+    .anim-1 { animation-delay: 0.1s; } .anim-2 { animation-delay: 0.2s; }
+    .card-hover { transition: all 0.25s ease; }
+    .card-hover:hover { transform: translateY(-3px); box-shadow: 0 12px 28px -8px rgba(0,0,0,0.1); }
+    .btn-p { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.9rem 2.2rem; border-radius: 10px; background: #ea580c; color: white; text-decoration: none; font-weight: 800; font-size: 1rem; transition: all 0.25s; box-shadow: 0 4px 14px rgba(234,88,12,0.25); }
+    .btn-p:hover { background: #d97706; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(234,88,12,0.35); }
+    .btn-s { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.85rem 2rem; border-radius: 10px; background: transparent; color: #111827; text-decoration: none; font-weight: 700; font-size: 1rem; border: 2px solid #cbd5e1; transition: all 0.25s; }
+    .btn-s:hover { border-color: #ea580c; color: #ea580c; }
+    .blog-card { transition: all 0.3s ease; }
+    .blog-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px -8px rgba(0,0,0,0.12); }
+    .blog-card:hover img { transform: scale(1.05); }
+  </style>
 
   <!-- HERO -->
-  <section style={{ background: "linear-gradient(135deg, #eef2ff, #faf5ff, #fdf2f8)", padding: "6rem 0 8rem", position: "relative", overflow: "hidden" }}>
-    <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "600px", height: "600px", background: "radial-gradient(circle, rgba(249,115,22,0.1) 0%, rgba(236,72,153,0.06) 40%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }}></div>
-    <div style={{ position: "absolute", bottom: "-15%", left: "-5%", width: "500px", height: "500px", background: "radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }}></div>
-    <div class="container" style={{ position: "relative", zIndex: 2 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4rem", alignItems: "center" }}>
-        <div class="anim-up">
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1.25rem", borderRadius: "100px", background: "linear-gradient(135deg, rgba(249,115,22,0.12), rgba(236,72,153,0.12))", border: "2px solid rgba(249,115,22,0.35)", fontSize: "0.85rem", fontWeight: 700, color: "#c2410c" }}>
-            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f97316", boxShadow: "0 0 10px rgba(249,115,22,0.5)" }}></span>
-            Trusted by 1.5M+ Learners
-          </div>
-          <h1 style={{ fontSize: "clamp(2.5rem, 5vw, 3.5rem)", fontWeight: 900, lineHeight: 1.1, color: "#111827", margin: "1.5rem 0 1rem", letterSpacing: "-0.03em" }}>
-            Free Udemy Courses<br />
-            <span style={{ background: "linear-gradient(135deg, #ea580c, #db2777, #9333ea)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>100% Off Coupon 2026</span>
-          </h1>
-          <p style={{ fontSize: "1.125rem", color: "#6b7280", maxWidth: "480px", lineHeight: 1.7, fontWeight: 500 }}>
-              List of udemy FREE courses with 100% off coupon code. Use these <span class="text-orange-600 dark:text-orange-400 font-bold">udemy free coupon </span> get udemy free courses download not needed. Only udemy login needed.
-          </p>
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginTop: "2rem" }}>
-            <a href="/udemy-coupon-code" style={{ padding: "0.85rem 2.5rem", borderRadius: "12px", background: "linear-gradient(135deg,#f97316,#ea580c)", color: "white", textDecoration: "none", fontWeight: 700, fontSize: "1rem", display: "inline-flex", alignItems: "center", gap: "0.5rem", boxShadow: "0 8px 24px rgba(249,115,22,0.3)", transition: "all 0.3s" }} onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(249,115,22,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 8px 24px rgba(249,115,22,0.3)'">
-              Browse Coupons
-            </a>
-            <a href="/blog" style={{ padding: "0.85rem 2.5rem", borderRadius: "12px", background: "white", color: "#111827", textDecoration: "none", fontWeight: 700, fontSize: "1rem", border: "2px solid #111827", transition: "all 0.3s" }} onmouseover="this.style.background='#111827';this.style.color='white'" onmouseout="this.style.background='white';this.style.color='#111827'">
-              Expert Reviews
-            </a>
-          </div>
-          <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", marginTop: "2.5rem", paddingTop: "1.5rem", borderTop: "2px solid rgba(0,0,0,0.08)" }}>
-            <div><div style={{ fontSize: "1.75rem", fontWeight: 900, color: "#111827" }}>1.5M+</div><div style={{ color: "#6b7280", fontSize: "0.875rem", fontWeight: 600 }}>Learners</div></div>
-            <div style={{ width: "1px", height: "3rem", background: "rgba(0,0,0,0.1)" }}></div>
-            <div><div style={{ fontSize: "1.75rem", fontWeight: 900, color: "#111827" }}>{allDeals.length.toLocaleString()}+</div><div style={{ color: "#6b7280", fontSize: "0.875rem", fontWeight: 600 }}>Coupons</div></div>
-            <div style={{ width: "1px", height: "3rem", background: "rgba(0,0,0,0.1)" }}></div>
-            <div><div style={{ fontSize: "1.75rem", fontWeight: 900, color: "#111827" }}>4.8</div><div style={{ color: "#6b7280", fontSize: "0.875rem", fontWeight: 600 }}>Avg Rating</div></div>
-          </div>
+  <section style="background:linear-gradient(135deg,#f8fafc,#f1f5f9,#faf5ff);padding:5rem 0 4rem;border-bottom:1px solid #e2e8f0">
+    <div class="container" style="max-width:800px">
+      <div class="anim-up" style="text-align:center">
+        <span style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.35rem 1rem;border-radius:100px;background:white;border:1px solid #e2e8f0;font-size:0.8rem;font-weight:700;color:#ea580c;margin-bottom:1rem">
+          <span style="width:7px;height:7px;border-radius:50%;background:#22c55e"></span>
+          Verified Daily
+        </span>
+        <h1 style="font-size:clamp(2rem,4vw,3rem);font-weight:900;line-height:1.15;color:#0f172a;margin:0 0 0.75rem;letter-spacing:-0.03em">
+          {allDeals.length.toLocaleString()}+ Udemy Coupons & Verified Promo Codes
+        </h1>
+        <p style="font-size:1.1rem;color:#475569;max-width:600px;margin:0 auto 1.25rem;line-height:1.6">
+          Hand-picked Udemy coupon codes and course deals across {categoryList.length} categories. From 100% off free courses to top-rated classes at the best price — updated every day.
+        </p>
+        <form action="/search" method="GET" style="display:flex;gap:0.5rem;max-width:460px;margin:0 auto 1.75rem">
+          <input type="text" name="q" placeholder="Search courses..." aria-label="Search courses" style="flex:1;padding:0 1rem;border-radius:10px;border:2px solid #e2e8f0;font-size:0.95rem;font-weight:500;color:#0f172a;outline:none;background:white;height:48px;font-family:inherit" />
+          <button type="submit" style="height:48px;padding:0 1.5rem;border-radius:10px;background:#111827;color:white;border:none;font-weight:700;font-size:0.95rem;cursor:pointer;font-family:inherit">Search</button>
+        </form>
+        <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+          <a href="/udemy-coupon-code" class="btn-p">Browse All Coupons</a>
+          <a href="/categories" class="btn-s">All Categories</a>
         </div>
-        <div class="anim-up anim-2" style={{ display: "flex", justifyContent: "center", position: "relative" }}>
-          <div style={{ width: "100%", maxWidth: "540px", aspectRatio: "1", borderRadius: "24px", background: "linear-gradient(135deg, #eef2ff, #faf5ff)", position: "relative", overflow: "hidden", border: "4px solid rgba(0,0,0,0.06)", boxShadow: "0 24px 48px rgba(0,0,0,0.08)", outline: "4px solid rgba(249,115,22,0.15)" }}>
-            <img src="/images/udemy-worth-it-2026.jpg" alt="CoursesWyn" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          </div>
-          <div style={{ position: "absolute", bottom: "-1rem", right: "-1rem", background: "linear-gradient(135deg, white, #f9fafb)", padding: "1rem 1.5rem", borderRadius: "16px", boxShadow: "0 8px 24px rgba(0,0,0,0.1)", border: "2px solid rgba(0,0,0,0.06)", display: "flex", alignItems: "center", gap: "0.75rem", zIndex: 3 }}>
-            <div style={{ width: "48px", height: "48px", background: "linear-gradient(135deg, #f97316, #db2777)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "white", boxShadow: "0 4px 12px rgba(249,115,22,0.3)" }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
-            <div>
-              <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "#111827", lineHeight: 1 }}>1.5M+</div>
-              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#6b7280", whiteSpace: "nowrap" }}>Students Enrolled</div>
-            </div>
-          </div>
+        <div style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;margin-top:2rem;padding-top:1.5rem;border-top:1px solid #e2e8f0">
+          <div><div style="font-size:1.4rem;font-weight:900;color:#0f172a">{allDeals.length.toLocaleString()}+</div><div style="color:#64748b;font-size:0.8rem;font-weight:600">Coupons Listed</div></div>
+          <div style="width:1px;background:#e2e8f0"></div>
+          <div><div style="font-size:1.4rem;font-weight:900;color:#0f172a">{categoryList.length}</div><div style="color:#64748b;font-size:0.8rem;font-weight:600">Categories</div></div>
+          <div style="width:1px;background:#e2e8f0"></div>
+          <div><div style="font-size:1.4rem;font-weight:900;color:#0f172a">Daily</div><div style="color:#64748b;font-size:0.8rem;font-weight:600">Updates</div></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- NOT SURE WHERE TO START -->
-  <section style={{ background: "#fff7ed", borderTop: "1px solid #fed7aa", borderBottom: "1px solid #fed7aa", padding: "2.5rem 0" }}>
+  <!-- LATEST DEALS -->
+  <section style="padding:4rem 0;background:white">
     <div class="container">
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: "1.5rem", flexWrap: "wrap" }}>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:2rem">
         <div>
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "#111827", margin: "0 0 0.25rem" }}>Not sure where to start?</h2>
-          <p style={{ color: "#6b7280", fontSize: "1rem", margin: 0, lineHeight: 1.5 }}>
-            Browse our curated categories - know exactly what to learn and which courses to take.
-          </p>
+          <span style="font-size:0.8rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#ea580c;display:block;margin-bottom:0.4rem">Fresh Deals</span>
+          <h2 style="font-size:clamp(1.6rem,2.5vw,2.2rem);font-weight:900;color:#0f172a;margin:0;letter-spacing:-0.02em">Latest Udemy Coupons</h2>
         </div>
-        <a href="/categories" style={{ padding: "0.85rem 2rem", borderRadius: "12px", background: "#ea580c", color: "white", textDecoration: "none", fontWeight: 700, fontSize: "1rem", display: "inline-flex", alignItems: "center", gap: "0.5rem", boxShadow: "0 4px 16px rgba(234,88,12,0.2)", transition: "all 0.3s", flexShrink: 0 }} onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(234,88,12,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(234,88,12,0.2)'">
-          Browse Categories
+        <a href="/popular" style="font-size:0.9rem;font-weight:700;color:#ea580c;text-decoration:none;white-space:nowrap">See Popular Courses &rarr;</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem">
+        {allDeals.slice(0, 6).map((deal) => (<DealCard deal={deal} />))}
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPIRING SOON -->
+  {expiringDeals.length > 0 && (
+  <section style="padding:3rem 0;background:#fff7ed;border-top:1px solid #fed7aa;border-bottom:1px solid #fed7aa">
+    <div class="container">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem">
+        <div>
+          <span style="font-size:0.8rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#ea580c;display:block;margin-bottom:0.4rem">Hurry! Limited Time</span>
+          <h2 style="font-size:clamp(1.6rem,2.5vw,2.2rem);font-weight:900;color:#0f172a;margin:0;letter-spacing:-0.02em">
+            <span style="display:inline-flex;align-items:center;gap:0.4rem">
+              Expiring Soon
+              <span style="font-size:0.6rem;background:#dc2626;color:white;padding:0.1rem 0.45rem;border-radius:4px;font-weight:800">LIVE</span>
+            </span>
+          </h2>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0.75rem">
+        {expiringDeals.map((deal) => (
+          <a href={`/coupon/${deal.slug}`} class="card-hover" style="background:white;border:1px solid #fed7aa;border-radius:10px;padding:0.85rem 1rem;text-decoration:none;color:inherit;display:flex;align-items:center;gap:0.75rem">
+            {deal.image && <img src={deal.image} alt="" style="width:44px;height:44px;border-radius:6px;object-fit:cover;flex-shrink:0" />}
+            <div style="flex:1;min-width:0">
+              <div style="font-size:0.85rem;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{deal.title}</div>
+              <div style="display:flex;gap:0.5rem;margin-top:0.2rem">
+                <span style="font-size:0.7rem;color:#dc2626;font-weight:700">{deal.expiresAt ? hoursUntilExpiry(deal.expiresAt) : ''}</span>
+                <span style="font-size:0.7rem;color:#64748b;font-weight:600">{deal.category}</span>
+              </div>
+            </div>
+            <span style="font-size:0.8rem;color:#ea580c;font-weight:800;flex-shrink:0">&rarr;</span>
+          </a>
+        ))}
+      </div>
+      <div style="text-align:center;margin-top:1.25rem">
+        <a href="/popular" class="btn-p" style="background:#dc2626">
+          View Expiring Deals &rarr;
+        </a>
+      </div>
+    </div>
+  </section>
+  )}
+
+  <!-- CATEGORIES -->
+  <section style="padding:3rem 0;background:#f8fafc;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <span style="font-size:0.8rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#ea580c;display:block;margin-bottom:0.4rem">Browse by Category</span>
+        <h2 style="font-size:clamp(1.6rem,2.5vw,2.2rem);font-weight:900;color:#0f172a;margin:0;letter-spacing:-0.02em">All Categories</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem">
+        {categoryCards.map((cat) => (
+          <a href={`/categories/${cat.slug}`} class="card-hover" style="background:white;border:1px solid #e2e8f0;border-radius:10px;padding:0.9rem 1.1rem;text-decoration:none;color:inherit;display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:0.9rem;font-weight:700;color:#0f172a">{cat.name}</span>
+            <span style="font-size:0.75rem;font-weight:700;color:#94a3b8;background:#f1f5f9;padding:0.15rem 0.55rem;border-radius:6px">{cat.count}</span>
+          </a>
+        ))}
+        <a href="/categories" class="card-hover" style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:0.9rem 1.1rem;text-decoration:none;color:inherit;display:flex;align-items:center;justify-content:center;gap:0.4rem;font-weight:700;font-size:0.85rem;color:#64748b">
+          +{categoryList.length - 8} more &rarr;
         </a>
       </div>
     </div>
   </section>
 
-  <!-- OUR IMPACT -->
-  <section style={{ padding: "5rem 0", background: "linear-gradient(135deg, #f3f4f6, #f1f5f9, #f3f4f6)", borderTop: "4px solid rgba(0,0,0,0.06)", borderBottom: "4px solid rgba(0,0,0,0.06)" }}>
+  <!-- HOW IT WORKS + TRUST -->
+  <section style="padding:3rem 0;background:white">
     <div class="container">
-      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-        <span style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: "0.75rem" }}>Our Impact</span>
-        <h2 style={{ fontSize: "2.5rem", fontWeight: 900, color: "#111827", margin: 0, letterSpacing: "-0.02em" }}>Join a Global Community</h2>
+      <div style="text-align:center;margin-bottom:2rem">
+        <span style="font-size:0.8rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#ea580c;display:block;margin-bottom:0.4rem">How It Works</span>
+        <h2 style="font-size:clamp(1.6rem,2.5vw,2.2rem);font-weight:900;color:#0f172a;margin:0;letter-spacing:-0.02em">Start Saving in Three Steps</h2>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "2rem" }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ width: "80px", height: "80px", margin: "0 auto 1rem", borderRadius: "16px", background: "white", border: "2px solid rgba(0,0,0,0.06)", boxShadow: "0 4px 12px rgba(0,0,0,0.04)", display: "flex", alignItems: "center", justifyContent: "center", color: "#ef4444", fontSize: "1.5rem" }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-bottom:2.5rem;position:relative">
+        <div style="text-align:center;padding:1.5rem 1rem;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;position:relative">
+          <div style="width:48px;height:48px;margin:0 auto 0.75rem;border-radius:50%;background:linear-gradient(135deg,#fef3c7,#fde68a);display:flex;align-items:center;justify-content:center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 900, color: "#111827" }}>1.5M+</div>
-          <div style={{ color: "#6b7280", fontSize: "0.9rem", fontWeight: 600 }}>Students Enrolled</div>
+          <span style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#ea580c;color:white;width:22px;height:22px;border-radius:50%;font-size:0.7rem;font-weight:900;display:flex;align-items:center;justify-content:center">1</span>
+          <h3 style="font-size:0.95rem;font-weight:800;color:#0f172a;margin:0 0 0.35rem">Browse Coupons</h3>
+          <p style="font-size:0.8rem;color:#64748b;line-height:1.5;margin:0">Explore {allDeals.length.toLocaleString()}+ deals sorted by category, popularity, or date.</p>
         </div>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ width: "80px", height: "80px", margin: "0 auto 1rem", borderRadius: "16px", background: "white", border: "2px solid rgba(0,0,0,0.06)", boxShadow: "0 4px 12px rgba(0,0,0,0.04)", display: "flex", alignItems: "center", justifyContent: "center", color: "#22c55e", fontSize: "1.5rem" }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+        <div style="display:none;align-items:center;justify-content:center;font-size:1.5rem;color:#cbd5e1;font-weight:300">&#8594;</div>
+        <div style="text-align:center;padding:1.5rem 1rem;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;position:relative">
+          <div style="width:48px;height:48px;margin:0 auto 0.75rem;border-radius:50%;background:linear-gradient(135deg,#dbeafe,#bfdbfe);display:flex;align-items:center;justify-content:center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 900, color: "#111827" }}>{allDeals.length.toLocaleString()}+</div>
-          <div style={{ color: "#6b7280", fontSize: "0.9rem", fontWeight: 600 }}>Active Coupons</div>
+          <span style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#ea580c;color:white;width:22px;height:22px;border-radius:50%;font-size:0.7rem;font-weight:900;display:flex;align-items:center;justify-content:center">2</span>
+          <h3 style="font-size:0.95rem;font-weight:800;color:#0f172a;margin:0 0 0.35rem">Redeem Code</h3>
+          <p style="font-size:0.8rem;color:#64748b;line-height:1.5;margin:0">Click any deal to reveal the coupon. No signup or account needed.</p>
         </div>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ width: "80px", height: "80px", margin: "0 auto 1rem", borderRadius: "16px", background: "white", border: "2px solid rgba(0,0,0,0.06)", boxShadow: "0 4px 12px rgba(0,0,0,0.04)", display: "flex", alignItems: "center", justifyContent: "center", color: "#eab308", fontSize: "1.5rem" }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <div style="text-align:center;padding:1.5rem 1rem;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;position:relative">
+          <div style="width:48px;height:48px;margin:0 auto 0.75rem;border-radius:50%;background:linear-gradient(135deg,#d1fae5,#a7f3d0);display:flex;align-items:center;justify-content:center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
           </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 900, color: "#111827" }}>12+</div>
-          <div style={{ color: "#6b7280", fontSize: "0.9rem", fontWeight: 600 }}>Categories</div>
-        </div>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ width: "80px", height: "80px", margin: "0 auto 1rem", borderRadius: "16px", background: "white", border: "2px solid rgba(0,0,0,0.06)", boxShadow: "0 4px 12px rgba(0,0,0,0.04)", display: "flex", alignItems: "center", justifyContent: "center", color: "#f97316", fontSize: "1.5rem" }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 900, color: "#111827" }}>4.8/5</div>
-          <div style={{ color: "#6b7280", fontSize: "0.9rem", fontWeight: 600 }}>Average Rating</div>
+          <span style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#ea580c;color:white;width:22px;height:22px;border-radius:50%;font-size:0.7rem;font-weight:900;display:flex;align-items:center;justify-content:center">3</span>
+          <h3 style="font-size:0.95rem;font-weight:800;color:#0f172a;margin:0 0 0.35rem">Learn Free or Save Big</h3>
+          <p style="font-size:0.8rem;color:#64748b;line-height:1.5;margin:0">Hundreds of courses at 100% off. Others at the best price guaranteed.</p>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- COURSES -->
-  <section style={{ background: "white", padding: "6rem 0" }}>
-    <div class="container">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "1rem", marginBottom: "3rem" }}>
-        <div>
-          <span style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: "0.75rem" }}>Hot Deals</span>
-          <h2 style={{ fontSize: "2.5rem", fontWeight: 900, color: "#111827", margin: 0, letterSpacing: "-0.02em" }}>Latest Free Udemy Coupons</h2>
-        </div>
-        <a href="/udemy-coupon-code" style={{ color: "#111827", textDecoration: "none", fontWeight: 700, fontSize: "1rem", borderBottom: "2px solid rgba(0,0,0,0.15)", paddingBottom: "2px", whiteSpace: "nowrap" }}>
-          View All {allDeals.length.toLocaleString()}
-        </a>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
-        {initialItems.map((deal) => (<DealCard deal={deal} />))}
-      </div>
-      <div style={{ textAlign: "center", marginTop: "3rem" }}>
-        <a href="/udemy-coupon-code" style={{ padding: "0.85rem 2.5rem", borderRadius: "12px", background: "#111827", color: "white", textDecoration: "none", fontWeight: 700, fontSize: "1rem", display: "inline-flex", alignItems: "center", gap: "0.5rem", transition: "all 0.3s" }} onmouseover="this.style.opacity='0.85';this.style.transform='translateY(-2px)'" onmouseout="this.style.opacity='1';this.style.transform=''">
-          Browse All {allDeals.length.toLocaleString()} Coupons
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- UDEMY SUCCESS -->
-  <section style={{ background: "white", padding: "6rem 0" }}>
-    <div class="container">
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4rem", alignItems: "start" }}>
-        <div>
-          <span style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: "0.75rem" }}>Udemy Success</span>
-          <h2 style={{ fontSize: "2.5rem", fontWeight: 900, color: "#111827", margin: "0 0 1rem", letterSpacing: "-0.02em", lineHeight: 1.2 }}>Students Learning on Udemy</h2>
-          <p style={{ color: "#6b7280", fontSize: "1.125rem", lineHeight: 1.7, marginBottom: "2.5rem" }}>
-            With over 1.5 million students enrolled and a 4.8-star rating, CoursesWyn's curated coupons help learners access premium Udemy courses for free.
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-              <div style={{ width: "48px", height: "48px", flexShrink: 0, borderRadius: "12px", background: "#fff7ed", color: "#f97316", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-              </div>
-              <div>
-                <h3 style={{ fontSize: "1.25rem", fontWeight: 900, color: "#111827", margin: "0 0 0.25rem" }}>Comprehensive Curriculum</h3>
-                <p style={{ color: "#6b7280", fontSize: "1rem", margin: 0, lineHeight: 1.6 }}>From Python basics to advanced GenAI and MLOps - courses for every skill level.</p>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-              <div style={{ width: "48px", height: "48px", flexShrink: 0, borderRadius: "12px", background: "#fff7ed", color: "#f97316", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-              </div>
-              <div>
-                <h3 style={{ fontSize: "1.25rem", fontWeight: 900, color: "#111827", margin: "0 0 0.25rem" }}>Verified Coupons</h3>
-                <p style={{ color: "#6b7280", fontSize: "1rem", margin: 0, lineHeight: 1.6 }}>Every coupon manually checked. No expired codes, no fake discounts.</p>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-              <div style={{ width: "48px", height: "48px", flexShrink: 0, borderRadius: "12px", background: "#fff7ed", color: "#f97316", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </div>
-              <div>
-                <h3 style={{ fontSize: "1.25rem", fontWeight: 900, color: "#111827", margin: "0 0 0.25rem" }}>Hands-On Learning</h3>
-                <p style={{ color: "#6b7280", fontSize: "1rem", margin: 0, lineHeight: 1.6 }}>Build real-world projects with practical, project-based courses.</p>
-              </div>
-            </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;padding-top:2rem;border-top:1px solid #e2e8f0">
+        <div style="text-align:center;padding:1.25rem 0.75rem;background:white;border-radius:10px;border:1px solid #e2e8f0">
+          <div style="width:36px;height:36px;margin:0 auto 0.6rem;border-radius:8px;background:#fef2f2;display:flex;align-items:center;justify-content:center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M2 12h20"/></svg>
           </div>
+          <h3 style="font-size:0.85rem;font-weight:800;color:#0f172a;margin:0 0 0.25rem">Always Free Options</h3>
+          <p style="font-size:0.75rem;color:#64748b;line-height:1.5;margin:0">Fresh courses at 100% off added daily. No credit card needed.</p>
         </div>
-        <div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-            <div style={{ textAlign: "center", background: "#fff7ed", padding: "2rem 1.5rem", borderRadius: "16px", border: "1px solid #fed7aa" }}>
-              <div style={{ fontSize: "2.5rem", fontWeight: 900, color: "#ea580c" }}>1.5M+</div>
-              <div style={{ color: "#c2410c", fontSize: "1rem", fontWeight: 600 }}>Total Udemy Students</div>
-            </div>
-            <div style={{ textAlign: "center", background: "#eff6ff", padding: "2rem 1.5rem", borderRadius: "16px", border: "1px solid #bfdbfe" }}>
-              <div style={{ fontSize: "2.5rem", fontWeight: 900, color: "#2563eb" }}>4.8</div>
-              <div style={{ color: "#1d4ed8", fontSize: "1rem", fontWeight: 600 }}>Average Rating</div>
-            </div>
-            <div style={{ textAlign: "center", background: "#f0fdf4", padding: "2rem 1.5rem", borderRadius: "16px", border: "1px solid #bbf7d0" }}>
-              <div style={{ fontSize: "2.5rem", fontWeight: 900, color: "#16a34a" }}>{allDeals.length.toLocaleString()}+</div>
-              <div style={{ color: "#15803d", fontSize: "1rem", fontWeight: 600 }}>Free Courses</div>
-            </div>
-            <a href="/udemy-coupon-code" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", padding: "0.85rem 2.5rem", borderRadius: "16px", background: "linear-gradient(135deg, #ea580c, #db2777, #9333ea)", color: "white", textDecoration: "none", fontWeight: 900, fontSize: "1.125rem", boxShadow: "0 12px 24px rgba(234,88,12,0.3)", transition: "all 0.3s" }} onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 16px 32px rgba(234,88,12,0.4)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 12px 24px rgba(234,88,12,0.3)'">
-              Explore Free Courses
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </a>
+        <div style="text-align:center;padding:1.25rem 0.75rem;background:white;border-radius:10px;border:1px solid #e2e8f0">
+          <div style="width:36px;height:36px;margin:0 auto 0.6rem;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round"><path d="M9 12l2 2 4-4"/><path d="M12 2a10 10 0 1 0 10 10"/></svg>
           </div>
+          <h3 style="font-size:0.85rem;font-weight:800;color:#0f172a;margin:0 0 0.25rem">Manually Verified</h3>
+          <p style="font-size:0.75rem;color:#64748b;line-height:1.5;margin:0">Every coupon checked by hand. Expired deals removed within hours.</p>
+        </div>
+        <div style="text-align:center;padding:1.25rem 0.75rem;background:white;border-radius:10px;border:1px solid #e2e8f0">
+          <div style="width:36px;height:36px;margin:0 auto 0.6rem;border-radius:8px;background:#fefce8;display:flex;align-items:center;justify-content:center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <h3 style="font-size:0.85rem;font-weight:800;color:#0f172a;margin:0 0 0.25rem">{categoryList.length} Categories</h3>
+          <p style="font-size:0.75rem;color:#64748b;line-height:1.5;margin:0">From AI and web dev to design and business — all refreshed daily.</p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- BLOG -->
-  <section style={{ background: "white", padding: "6rem 0", borderTop: "1px solid #f3f4f6" }}>
+  {latestPosts.length > 0 && (
+  <section style="padding:3rem 0;background:#f8fafc;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0">
     <div class="container">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "3rem" }}>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.5rem">
         <div>
-          <span style={{ display: "block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: "0.75rem" }}>Expert Reviews</span>
-          <h2 style={{ fontSize: "2.5rem", fontWeight: 900, color: "#111827", margin: 0, letterSpacing: "-0.02em" }}>Course Reviews & Career Guides</h2>
+          <span style="font-size:0.8rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#ea580c;display:block;margin-bottom:0.4rem">Expert Reviews</span>
+          <h2 style="font-size:clamp(1.6rem,2.5vw,2.2rem);font-weight:900;color:#0f172a;margin:0;letter-spacing:-0.02em">Course Reviews & Career Guides</h2>
         </div>
-        <a href="/blog" style={{ color: "#111827", textDecoration: "none", fontWeight: 700, fontSize: "1rem", borderBottom: "2px solid rgba(0,0,0,0.15)", paddingBottom: "2px", whiteSpace: "nowrap" }}>View All Articles</a>
+        <a href="/blog" style="font-size:0.9rem;font-weight:700;color:#ea580c;text-decoration:none">View all &rarr;</a>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem">
         {latestPosts.map((post: any, i: any) => {
-          const imgSrc = resolveImage(post.data.image) || '/placeholder.jpg';
+          const imgSrc = resolveImage(post.data.image) || '';
           const primaryTag = post.data.tags?.[0] || 'Review';
           return (
-        <a href={`/blog/${post.id}`} class="blog-card" style={{ background: "white", border: "3px solid rgba(0,0,0,0.07)", borderRadius: "20px", overflow: "hidden", textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", transition: "all 0.3s ease" }}>
-          <div style={{ position: "relative", aspectRatio: "16/9", overflow: "hidden", background: "linear-gradient(135deg, #f3f4f6, #e5e7eb)" }}>
-            <img src={imgSrc} alt={post.data.title} loading={i === 0 ? 'eager' : 'lazy'} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            <span style={{ position: "absolute", top: "12px", left: "12px", background: "linear-gradient(135deg, #dc2626, #e11d48)", color: "white", padding: "4px 12px", borderRadius: "8px", fontSize: "0.65rem", fontWeight: 800, letterSpacing: "0.02em" }}>{primaryTag}</span>
+        <a href={`/blog/${post.id}`} class="blog-card" style="background:white;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column">
+          <div style="position:relative;aspect-ratio:16/9;overflow:hidden;background:#f1f5f9">
+            {imgSrc && <img src={imgSrc} alt={post.data.title} loading={i === 0 ? 'eager' : 'lazy'} style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s" />}
+            <span style="position:absolute;top:10px;left:10px;background:#0f172a;color:white;padding:3px 10px;border-radius:6px;font-size:0.65rem;font-weight:800">{primaryTag}</span>
           </div>
-          <div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column" }}>
-            <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#111827", margin: 0, lineHeight: 1.35, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{post.data.title}</h3>
-            <p style={{ color: "#6b7280", fontSize: "0.85rem", lineHeight: 1.5, margin: "10px 0 0", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{post.data.description}</p>
-            <span style={{ marginTop: "auto", paddingTop: "14px", color: "#f97316", fontWeight: 700, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "4px" }}>
-              Read Review
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          <div style="padding:1rem;flex:1;display:flex;flex-direction:column">
+            <h3 style="font-size:0.9rem;font-weight:700;color:#0f172a;margin:0;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{post.data.title}</h3>
+            <p style="color:#64748b;font-size:0.8rem;line-height:1.5;margin:0.4rem 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{post.data.description}</p>
+            <span style="margin-top:auto;padding-top:0.75rem;color:#ea580c;font-weight:700;font-size:0.8rem;display:flex;align-items:center;gap:0.25rem">
+              Read Review &rarr;
             </span>
           </div>
         </a>
           );
         })}
       </div>
-      <style>
-        .blog-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 16px 32px -8px rgba(0,0,0,0.12); border-color: rgba(249,115,22,0.3); }
-        .blog-card:hover img { transform: scale(1.05); transition: transform 0.5s ease; }
-        .blog-card img { transition: transform 0.5s ease; }
-      </style>
     </div>
   </section>
+  )}
 
   <!-- FAQ -->
-  <section style={{ background: "white", padding: "6rem 0" }}>
-    <div class="container" style={{ maxWidth: "800px", margin: "0 auto" }}>
-      <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-        <span style={{ display: "block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: "0.75rem" }}>FAQ</span>
-        <h2 style={{ fontSize: "2.5rem", fontWeight: 900, color: "#111827", margin: 0, letterSpacing: "-0.02em" }}>Frequently Asked Questions</h2>
+  <section style="padding:3rem 0;background:white">
+    <div class="container" style="max-width:640px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <span style="font-size:0.8rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#ea580c;display:block;margin-bottom:0.4rem">FAQ</span>
+        <h2 style="font-size:clamp(1.6rem,2.5vw,2.2rem);font-weight:900;color:#0f172a;margin:0;letter-spacing:-0.02em">Frequently Asked Questions</h2>
       </div>
-      <p style={{ color: "#6b7280", fontSize: "1.125rem", textAlign: "center", maxWidth: "550px", margin: "0 auto 3rem", lineHeight: 1.6 }}>Common questions about Udemy coupons, how to redeem them, certificate eligibility, and more.</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+      <div style="display:flex;flex-direction:column;gap:0.5rem">
         {[
-          { q: "Are these Udemy coupons really 100% free?", a: "Yes! Every coupon gives you 100% off. No hidden fees, no credit card required." },
-          { q: "How often are new coupons added?", a: "New coupons added daily across all categories. Expired deals removed within 4 hours." },
-          { q: "How long do coupon codes last?", a: "Most last 1-7 days or up to 1,000 enrollments. Enroll immediately when you find a course." },
-          { q: "Will I get a certificate with a free course?", a: "Absolutely! Official Udemy certificate, lifetime access, and all resources included." }
+          { q: "Are all coupons 100% free?", a: "Most give 100% off. Some offer discounts — each deal shows the exact savings before you click." },
+          { q: "How often are new coupons added?", a: "New coupons added daily across all categories. Expired deals removed within hours." },
+          { q: "Will I get a certificate with a free course?", a: "Yes! Official Udemy certificate with lifetime access included for all courses." },
+          { q: "How long do coupons last?", a: "Usually 1-7 days or until 1,000 enrollments. Enroll immediately when you see a course you like." }
         ].map((faq) => (
-          <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: "12px", overflow: "hidden" }}>
-            <button onclick="const p=this.parentElement;const o=p.dataset.open==='true';p.dataset.open=!o;const a=this.nextElementSibling;a.style.display=o?'none':'block';this.querySelector('.fi').style.transform=o?'rotate(0deg)':'rotate(180deg)'" style={{ width: "100%", padding: "1.25rem 1.5rem", background: "none", border: "none", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", fontSize: "1rem", fontWeight: 700, color: "#111827", fontFamily: "inherit" }}>
+          <div style="background:white;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+            <button onclick="const p=this.parentElement;const o=p.dataset.open==='true';p.dataset.open=!o;const a=this.nextElementSibling;a.style.display=o?'none':'block';this.querySelector('.fi').style.transform=o?'rotate(0deg)':'rotate(180deg)'" style="width:100%;padding:0.85rem 1.25rem;background:none;border:none;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:1rem;font-size:0.9rem;font-weight:700;color:#0f172a;font-family:inherit">
               <span>{faq.q}</span>
-              <span class="fi" style={{ flexShrink: 0, color: "#f97316", fontSize: "0.75rem", transition: "transform 0.3s" }}>▼</span>
+              <span class="fi" style="flex-shrink:0;color:#ea580c;font-size:0.65rem;transition:transform 0.3s">▼</span>
             </button>
-            <div class="faq-answer" style={{ display: "none", padding: "0 1.5rem 1.25rem", color: "#6b7280", lineHeight: 1.7, fontSize: "0.95rem" }}>
-              <p style={{ margin: 0 }}>{faq.a}</p>
-            </div>
+            <div style="display:none;padding:0 1.25rem 0.85rem;color:#64748b;line-height:1.6;font-size:0.85rem"><p style="margin:0">{faq.a}</p></div>
           </div>
         ))}
       </div>
@@ -328,19 +316,16 @@ const jsonLd = {
   </section>
 
   <!-- CTA -->
-  <section style={{ background: "linear-gradient(135deg, #fff7ed, #fef2f2, #faf5ff)", padding: "6rem 0", textAlign: "center", borderTop: "4px solid #fed7aa", borderBottom: "4px solid #fed7aa" }}>
-    <div class="container" style={{ maxWidth: "700px", margin: "0 auto" }}>
-      <h2 style={{ fontSize: "3rem", fontWeight: 900, color: "#111827", margin: "0 0 1rem", letterSpacing: "-0.02em", lineHeight: 1.2 }}>Ready to Start Learning?</h2>
-      <p style={{ color: "#6b7280", fontSize: "1.25rem", maxWidth: "500px", margin: "0 auto 2.5rem", lineHeight: 1.7, fontWeight: 600 }}>
-        Join over 1.5 million students saving on premium Udemy courses. Start learning for free today.
-      </p>
-      <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-        <a href="/udemy-coupon-code" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", padding: "1rem 2.5rem", borderRadius: "16px", background: "linear-gradient(135deg, #ea580c, #db2777, #9333ea)", color: "white", textDecoration: "none", fontWeight: 900, fontSize: "1.125rem", boxShadow: "0 12px 24px rgba(234,88,12,0.3)", transition: "all 0.3s" }} onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 16px 32px rgba(234,88,12,0.4)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 12px 24px rgba(234,88,12,0.3)'">
-          Browse Free Coupons
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+  <section style="background:#0f172a;padding:4rem 0;text-align:center;border-top:1px solid #1e293b">
+    <div class="container" style="max-width:540px;margin:0 auto">
+      <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);font-weight:900;color:white;margin:0 0 0.75rem;letter-spacing:-0.02em;line-height:1.2">Ready to Save on Udemy?</h2>
+      <p style="color:#94a3b8;font-size:0.95rem;margin:0 auto 1.5rem;line-height:1.5">Join thousands of students who never pay full price. Start learning today with verified coupons.</p>
+      <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+        <a href="/udemy-coupon-code" class="btn-p">
+          Browse {allDeals.length.toLocaleString()} Coupons &rarr;
         </a>
-        <a href="/contact" style={{ padding: "1rem 2.5rem", borderRadius: "12px", background: "white", color: "#111827", textDecoration: "none", fontWeight: 700, fontSize: "1rem", border: "2px solid #111827", transition: "all 0.3s" }}>
-          Contact Us
+        <a href="/categories" class="btn-s" style="border-color:#334155;color:#cbd5e1">
+          Browse Categories &rarr;
         </a>
       </div>
     </div>
