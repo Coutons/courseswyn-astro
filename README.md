@@ -23,7 +23,7 @@
 ## Preview
 
 <p align="center">
-  <img src="screenshot.jpg" alt="CoursesWyn.com — Verified Udemy coupon codes, 100% OFF daily deals and expert course reviews with ratings" width="80%">
+  <img src="screenshot.jpeg" alt="CoursesWyn.com — Verified Udemy coupon codes, 100% OFF daily deals and expert course reviews with ratings" width="80%">
   <br><em>CoursesWyn — Daily Verified Promo Codes & Savings Strategies for Lifelong Learners</em>
 </p>
 
