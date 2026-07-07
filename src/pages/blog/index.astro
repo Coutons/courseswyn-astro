@@ -5,7 +5,6 @@ import { formatDateWIB, toISODateWIB } from "../../lib/date";
 
 const siteUrl = "https://courseswyn.com";
 
-// Helper: convert relative image paths from MDX frontmatter to a usable URL
 function resolveImage(imagePath: string | undefined): string | null {
   if (!imagePath) return null;
   if (imagePath.startsWith('http')) return imagePath;
@@ -31,276 +30,300 @@ const title = `Best Udemy Course Reviews & Free Coupon Guides ${currentYear} | C
 const description = `Expert-reviewed guides to the best Udemy courses with verified 100% off coupon codes. Find free programming, AI, data science, cloud certification courses and step-by-step career roadmaps. Updated daily with working deals.`;
 const canonical = `https://courseswyn.com/blog`;
 
+const allTags = [...new Set(posts.flatMap((p: any) => p.data.tags || []))];
+
 const structuredData = {
   "@context": "https://schema.org",
-  "@type": "Blog",
-  headline: title,
-  description: description,
-  url: canonical,
-  blogPost: posts.map((post: any) => ({
-    "@type": "BlogPosting",
-    headline: post.data.title,
-    description: post.data.description,
-    url: `https://courseswyn.com/blog/${post.id}`,
-    datePublished: post.data.pubDate.toISOString(),
-    author: {
-      "@type": "Person",
-      name: "Andrew Derek",
-      url: "mailto:admin@courseswyn.com",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "@id": `${canonical}#breadcrumb`,
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": canonical }
+      ]
     },
-  })),
+    {
+      "@type": "CollectionPage",
+      "@id": canonical,
+      "url": canonical,
+      "name": title,
+      "description": description,
+      "isPartOf": { "@id": `${siteUrl}/#website` },
+      "inLanguage": "en-US",
+      "dateModified": toISODateWIB(posts[0]?.data?.updatedAt || posts[0]?.data?.pubDate || new Date()),
+      "mainEntity": {
+        "@type": "ItemList",
+        "numberOfItems": posts.length,
+        "itemListElement": posts.slice(0, 10).map((post: any, i: number) => ({
+          "@type": "ListItem",
+          "position": i + 1,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": post.data.title,
+            "description": post.data.description,
+            "url": `${siteUrl}/blog/${post.id}/`,
+            "datePublished": post.data.pubDate.toISOString(),
+            "dateModified": (post.data.updatedAt || post.data.pubDate).toISOString(),
+            "author": { "@type": "Person", "name": "Andrew Derek" }
+          }
+        }))
+      }
+    }
+  ]
 };
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
-  <section style={{ padding: "80px 0", background: "var(--bg)" }}>
-    <div class="container">
 
-      {/* ── Blog Header ── */}
-      <header style={{ marginBottom: "64px" }}>
-        <div style={{
-          display: "inline-block",
-          background: "var(--bg)",
-          color: "var(--text)",
-          padding: "4px 14px",
-          border: "2px solid var(--border)",
-          boxShadow: "3px 3px 0 var(--border)",
-          borderRadius: "4px",
-          fontSize: "0.75rem",
-          fontWeight: 800,
-          marginBottom: "24px",
-          letterSpacing: "0.1em",
-          textTransform: "uppercase"
-        }}>
-          Editorial Room
-        </div>
-        <h1 style={{ fontSize: "clamp(2.2rem, 5vw, 3.5rem)", fontWeight: 900, color: "var(--text)", letterSpacing: "-0.04em", lineHeight: 1.1, marginBottom: "20px" }}>
-          Best Udemy Course Reviews & <span style={{ background: "var(--color-primary)", color: "var(--text)", padding: "0 8px" }}>Free Coupon Guides</span>
+  <main class="cc-root">
+    <div class="cc-container">
+
+      <nav class="cc-breadcrumb" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="/">Home</a></li>
+          <li>Blog</li>
+        </ol>
+      </nav>
+
+      <header class="cc-header">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="cc-header-icon">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          <path d="M8 7h8"/><path d="M8 11h6"/>
+        </svg>
+        <h1 class="cc-title">
+          Course Reviews & <span class="cc-title-highlight">Free Coupon Guides</span>
         </h1>
-        <p style={{ fontSize: "1.05rem", color: "var(--text)", lineHeight: 1.6, maxWidth: "750px", fontWeight: 500, marginBottom: "12px" }}>
+        <p class="cc-subtitle">
           Our editorial team analyzes thousands of Udemy courses to identify the highest-quality learning resources.
           Each guide includes verified 100% off coupon codes, curriculum breakdowns, and real career outcomes data.
         </p>
-        <p style={{ fontSize: "0.95rem", color: "var(--text)", lineHeight: 1.5, maxWidth: "750px", fontWeight: 500 }}>
-          <strong style="color:var(--text)">Browse by category:</strong> Programming • AI & Machine Learning • Cloud Certification • Data Science • Web Development • Career Guides
-        </p>
+        <div class="cc-stats-bar">
+          <div class="cc-stat">
+            <span class="cc-stat-value">{posts.length}</span>
+            <span class="cc-stat-label">Total Guides</span>
+          </div>
+          <div class="cc-stat-divider"></div>
+          <div class="cc-stat">
+            <span class="cc-stat-value">{allTags.length}</span>
+            <span class="cc-stat-label">Topics</span>
+          </div>
+          <div class="cc-stat-divider"></div>
+          <div class="cc-stat">
+            <span class="cc-stat-value">{posts.filter((p: any) => p.data.updatedAt).length}</span>
+            <span class="cc-stat-label">Updated {currentYear}</span>
+          </div>
+        </div>
       </header>
 
-      {/* ── Featured Post ── */}
-      {featuredPost && (
-        <article style={{
-          display: "grid",
-          gridTemplateColumns: "1.3fr 1fr",
-          gap: "0",
-          marginBottom: "64px",
-          border: "2px solid var(--border)",
-          boxShadow: "8px 8px 0 var(--border)",
-          borderRadius: "8px",
-          overflow: "hidden",
-          background: "var(--bg)"
-        }} class="featured-card">
-          <div style={{ height: "100%", minHeight: "450px", borderRight: "2px solid var(--border)" }}>
-            <img
-              src={typeof featuredPost.data.image === 'string' ? featuredPost.data.image : (featuredPost.data.image as any)?.src || '/assets/images/og-default.svg'}
-              alt={featuredPost.data.title}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          </div>
-          <div style={{ padding: "56px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-            <span style={{ color: "var(--accent)", fontWeight: 800, textTransform: "uppercase", fontSize: "0.72rem", letterSpacing: "0.12em", marginBottom: "16px" }}>Featured Guide</span>
-            <h2 style={{ fontSize: "2.2rem", fontWeight: 900, marginBottom: "20px", lineHeight: 1.15, letterSpacing: "-0.03em" }}>
-              <a href={`/blog/${featuredPost.id}`} style={{ color: "inherit", textDecoration: "none" }}>{featuredPost.data.title}</a>
-            </h2>
-            <p style={{ fontSize: "1rem", color: "var(--text)", lineHeight: 1.6, marginBottom: "32px", fontWeight: 500 }}>
-              {featuredPost.data.description}
-            </p>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", borderTop: "2px solid var(--border)", paddingTop: "24px" }}>
-              <div style={{ width: "40px", height: "40px", borderRadius: "4px", background: "var(--accent)", border: "2px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, color: "white" }}>AD</div>
-              <div>
-                <p style={{ fontWeight: 800, margin: 0, fontSize: "0.9rem" }}>Andrew Derek</p>
-                <p style={{ fontSize: "0.75rem", color: "var(--muted)", margin: 0, fontWeight: 700 }}>
-                  Updated {formatDateWIB(featuredPost.data.updatedAt || featuredPost.data.pubDate, { month: 'short', day: 'numeric', year: 'numeric' })}
-                </p>
-              </div>
-            </div>
-          </div>
-        </article>
-      )}
+      <div class="cc-section cc-guide-topics">
+        <div class="cc-topic-list">
+          {[
+            { name: "AI & Machine Learning", link: "/blog/top-ai-and-machine-learning-courses-on-udemy-2026" },
+            { name: "ChatGPT & Prompt Engineering", link: "/blog/best-chatgpt-courses-udemy-2026" },
+            { name: "AI Agent Development", link: "/blog/best-udemy-agentic-ai-courses-2026" },
+            { name: "Cursor AI Coding", link: "/blog/best-cursor-ai-courses-udemy" },
+            { name: "Programming & Development", link: "/blog/best-udemy-courses-2026" },
+            { name: "React & Next.js", link: "/blog/best-react-nextjs-courses-2026" },
+            { name: "Python", link: "/blog/top-10-python-courses-on-udemy" },
+            { name: "AWS Certification", link: "/blog/best-aws-certification-courses-2026" },
+            { name: "Cloud Computing", link: "/blog/cloud-computing-courses-udemy-2026" },
+            { name: "Data Science", link: "/blog/best-data-science-courses-udemy" },
+            { name: "SQL & Databases", link: "/blog/best-sql-courses-2026" },
+            { name: "Career Guides", link: "/blog/ai-engineer-roadmap-2026" },
+            { name: "Platform Comparisons", link: "/blog/udemy-vs-coursera-vs-pluralsight" },
+            { name: "Free Courses Guide", link: "/udemy-coupons-guide" }
+          ].map(tag => (
+            <a href={tag.link} class="cc-topic-tag">
+              {tag.name}
+            </a>
+          ))}
+        </div>
+      </div>
 
-      {/* ── Recent Guides Grid ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "24px" }}>
-        {otherPosts.map((post: any) => (
-          <article style={{
-            background: "var(--bg)",
-            border: "2px solid var(--border)",
-            boxShadow: "4px 4px 0 var(--border)",
-            borderRadius: "8px",
-            overflow: "hidden",
-            transition: "all 0.15s ease",
-            display: "flex",
-            flexDirection: "column"
-          }} class="article-card">
-            <a href={`/blog/${post.id}`} style={{ textDecoration: "none", color: "inherit", height: "100%", display: "flex", flexDirection: "column" }}>
-              <div style={{ position: "relative", height: "200px", borderBottom: "2px solid var(--border)", overflow: "hidden" }}>
+      <section class="cc-deals-section">
+        <div class="cc-deals-header">
+          <h2 class="cc-deals-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Latest Guides
+          </h2>
+          <p class="cc-deals-desc">{otherPosts.length + 1} articles on this page</p>
+        </div>
+
+        <div class="cc-grid">
+          {featuredPost && (
+            <a href={`/blog/${featuredPost.id}`} class="cc-card cc-card-featured">
+              <div class="cc-card-img">
                 <img
-                  src={typeof post.data.image === 'string' ? post.data.image : (post.data.image as any)?.src || '/assets/images/og-default.svg'}
-                  alt={post.data.title}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  class="article-img"
+                  src={resolveImage(typeof featuredPost.data.image === 'string' ? featuredPost.data.image : (featuredPost.data.image as any)?.src) || '/assets/images/og-default.svg'}
+                  alt={featuredPost.data.title}
+                  loading="eager"
                 />
-                <div style={{
-                  position: "absolute", top: "12px", left: "12px",
-                  background: "var(--bg)", color: "var(--text)",
-                  border: "1.5px solid var(--border)", padding: "2px 8px",
-                  fontSize: "0.6rem", fontWeight: 800, borderRadius: "3px",
-                  textTransform: "uppercase", letterSpacing: "0.05em"
-                }}>
-                  {post.data.tags?.[0] || 'Guide'}
-                </div>
+                <span class="cc-badge-featured">Featured</span>
+                <span class="cc-badge-tag">{featuredPost.data.tags?.[0] || 'Guide'}</span>
               </div>
-              <div style={{ padding: "24px", flex: 1, display: "flex", flexDirection: "column" }}>
-                <h3 style={{ fontSize: "1.2rem", fontWeight: 900, color: "var(--text)", marginBottom: "16px", lineHeight: 1.25, letterSpacing: "-0.02em" }}>
-                  {post.data.title}
-                </h3>
-                <p style={{ color: "var(--text)", fontSize: "0.88rem", lineHeight: 1.6, marginBottom: "20px", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", fontWeight: 500 }}>
-                  {post.data.description}
-                </p>
-                <div style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ fontSize: "0.72rem", color: "var(--text)", fontWeight: 700, textTransform: "uppercase" }}>
-                    {formatDateWIB(post.data.updatedAt || post.data.pubDate, { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </div>
-                  <div style={{ fontWeight: 800, color: "var(--accent)", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    Read Review →
-                  </div>
+              <div class="cc-card-body">
+                <h3 class="cc-card-title">{featuredPost.data.title}</h3>
+                <p class="cc-card-excerpt">{featuredPost.data.description}</p>
+                <div class="cc-card-footer">
+                  <span class="cc-card-date">
+                    {formatDateWIB(featuredPost.data.updatedAt || featuredPost.data.pubDate, { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
+                  <span class="cc-card-action">Read Review →</span>
                 </div>
               </div>
             </a>
-          </article>
-        ))}
-      </div>
-
-      {/* ── SEO Content Section ── */}
-      <div style={{ marginTop: "80px", padding: "48px", background: "var(--bg)", border: "2px solid var(--border)", borderRadius: "8px", boxShadow: "4px 4px 0 var(--border)" }}>
-        <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "24px", letterSpacing: "-0.02em", color: "var(--text)" }}>
-          What Makes Our Udemy Course Reviews Different?
-        </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "32px", marginBottom: "32px" }}>
-          <div>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 900, marginBottom: "12px", color: "var(--text)" }}>📊 Data-Driven Analysis</h3>
-            <p style={{ color: "var(--text)", fontSize: "0.95rem", lineHeight: 1.6, margin: 0 }}>
-              We don't just list popular courses. We analyze review sentiment, completion rates, and career outcome data to identify courses that actually deliver results.
-            </p>
-          </div>
-          <div>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 900, marginBottom: "12px", color: "var(--text)" }}>✅ Verified Free Coupons</h3>
-            <p style={{ color: "var(--muted)", fontSize: "0.95rem", lineHeight: 1.6, margin: 0 }}>
-              Every guide includes working 100% off coupon codes tested by our team. We update daily to ensure you never encounter expired deals.
-            </p>
-          </div>
-          <div>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 900, marginBottom: "12px", color: "var(--text)" }}>🎯 Career-Focused Roadmaps</h3>
-            <p style={{ color: "var(--muted)", fontSize: "0.95rem", lineHeight: 1.6, margin: 0 }}>
-              Our learning paths are designed by industry professionals who know what employers actually want. Skip the fluff, learn the skills that get you hired.
-            </p>
-          </div>
+          )}
+          {otherPosts.map((post: any) => (
+            <a href={`/blog/${post.id}`} class="cc-card">
+              <div class="cc-card-img">
+                <img
+                  src={resolveImage(typeof post.data.image === 'string' ? post.data.image : (post.data.image as any)?.src) || '/assets/images/og-default.svg'}
+                  alt={post.data.title}
+                  loading="lazy"
+                />
+                <span class="cc-badge-tag">{post.data.tags?.[0] || 'Guide'}</span>
+              </div>
+              <div class="cc-card-body">
+                <h3 class="cc-card-title">{post.data.title}</h3>
+                <p class="cc-card-excerpt">{post.data.description}</p>
+                <div class="cc-card-footer">
+                  <span class="cc-card-date">
+                    {formatDateWIB(post.data.updatedAt || post.data.pubDate, { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
+                  <span class="cc-card-action">Read Review →</span>
+                </div>
+              </div>
+            </a>
+          ))}
         </div>
+      </section>
 
-        <div style={{ borderTop: "2px solid var(--border)", paddingTop: "32px" }}>
-          <h3 style={{ fontSize: "1.2rem", fontWeight: 900, marginBottom: "20px", color: "var(--text)" }}>
-            Browse Articles by Topic
-          </h3>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
-            {[
-              { name: "AI & Machine Learning", link: "/blog/top-ai-and-machine-learning-courses-on-udemy-2026" },
-              { name: "ChatGPT & Prompt Engineering", link: "/blog/best-chatgpt-courses-udemy-2026" },
-              { name: "AI Agent Development", link: "/blog/best-udemy-agentic-ai-courses-2026" },
-              { name: "Cursor AI Coding", link: "/blog/best-cursor-ai-courses-udemy" },
-              { name: "Programming & Development", link: "/blog/best-udemy-courses-2026" },
-              { name: "React & Next.js", link: "/blog/best-react-nextjs-courses-2026" },
-              { name: "Python", link: "/blog/top-10-python-courses-on-udemy" },
-              { name: "AWS Certification", link: "/blog/best-aws-certification-courses-2026" },
-              { name: "Cloud Computing", link: "/blog/cloud-computing-courses-udemy-2026" },
-              { name: "Data Science", link: "/blog/best-data-science-courses-udemy" },
-              { name: "SQL & Databases", link: "/blog/best-sql-courses-2026" },
-              { name: "Career Guides", link: "/blog/ai-engineer-roadmap-2026" },
-              { name: "Platform Comparisons", link: "/blog/udemy-vs-coursera-vs-pluralsight" },
-              { name: "Free Courses Guide", link: "/udemy-coupons-guide" }
-            ].map(tag => (
-              <a
-                href={tag.link}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "8px 16px",
-                  background: "var(--card)",
-                  border: "2px solid var(--border)",
-                  borderRadius: "6px",
-                  textDecoration: "none",
-                  color: "var(--text)",
-                  fontWeight: 700,
-                  fontSize: "0.85rem",
-                  transition: "all 0.15s ease"
-                }}
-                class="topic-tag"
-              >
-                {tag.name}
-              </a>
-            ))}
-          </div>
+      <section class="cc-seo-section">
+        <h2>What Makes Our Udemy Course Reviews Different?</h2>
+        <p>We don't just list popular courses. We analyze review sentiment, completion rates, and career outcome data to identify courses that actually deliver results.</p>
+        <p>Every guide includes working 100% off coupon codes tested by our team. We update daily to ensure you never encounter expired deals.</p>
+        <p>Our learning paths are designed by industry professionals who know what employers actually want. Skip the fluff, learn the skills that get you hired.</p>
+      </section>
+
+      <div class="cc-section">
+        <h3 class="cc-section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Browse Articles by Topic
+        </h3>
+        <div class="cc-topic-list" style="margin-top: 0.75rem;">
+          {[
+            { name: "AI & Machine Learning", link: "/blog/top-ai-and-machine-learning-courses-on-udemy-2026" },
+            { name: "ChatGPT & Prompt Engineering", link: "/blog/best-chatgpt-courses-udemy-2026" },
+            { name: "AI Agent Development", link: "/blog/best-udemy-agentic-ai-courses-2026" },
+            { name: "Cursor AI Coding", link: "/blog/best-cursor-ai-courses-udemy" },
+            { name: "Programming & Development", link: "/blog/best-udemy-courses-2026" },
+            { name: "React & Next.js", link: "/blog/best-react-nextjs-courses-2026" },
+            { name: "Python", link: "/blog/top-10-python-courses-on-udemy" },
+            { name: "AWS Certification", link: "/blog/best-aws-certification-courses-2026" },
+            { name: "Cloud Computing", link: "/blog/cloud-computing-courses-udemy-2026" },
+            { name: "Data Science", link: "/blog/best-data-science-courses-udemy" },
+            { name: "SQL & Databases", link: "/blog/best-sql-courses-2026" },
+            { name: "Career Guides", link: "/blog/ai-engineer-roadmap-2026" },
+            { name: "Platform Comparisons", link: "/blog/udemy-vs-coursera-vs-pluralsight" },
+            { name: "Free Courses Guide", link: "/udemy-coupons-guide" }
+          ].map(tag => (
+            <a href={tag.link} class="cc-topic-tag">
+              {tag.name}
+            </a>
+          ))}
         </div>
       </div>
 
-      {/* Pagination Navigation */}
       {posts.length > 10 && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: "48px" }}>
-          <a
-            href="/blog/page/2"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "14px 28px",
-              background: "var(--brand)",
-              color: "var(--bg)",
-              textDecoration: "none",
-              borderRadius: "6px",
-              fontWeight: 800,
-              fontSize: "0.85rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              border: "2px solid var(--border)",
-              boxShadow: "4px 4px 0 var(--border)",
-              transition: "all 0.15s ease"
-            }}
-            class="view-all-btn"
-          >
+        <nav class="cc-pagination" style="border-top: 1px solid var(--border); margin-top: 2rem;">
+          <a href="/blog/page/2" class="cc-page-link cc-page-more">
             View All Articles
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
-        </div>
+        </nav>
       )}
+
     </div>
-  </section>
-
-  <style>
-    .view-all-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--border) !important; }
-    .featured-card:hover { transform: translate(-2px, -2px); box-shadow: 10px 10px 0 var(--border) !important; }
-    .article-card:hover { transform: translate(-3px, -3px); box-shadow: 7px 7px 0 var(--border) !important; }
-    .article-card:hover .article-img { transform: scale(1.05); }
-    .article-img { transition: transform 0.4s ease; }
-    .topic-tag:hover { background: var(--accent) !important; color: white !important; transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--border); }
-
-    @media (max-width: 960px) {
-      article[style*="grid-template-columns"] {
-        grid-template-columns: 1fr !important;
-      }
-      .featured-card div[style*="border-right"] {
-        border-right: none !important;
-        border-bottom: 2px solid var(--border);
-      }
-    }
-  </style>
+  </main>
 </Layout>
+
+<style>
+  .cc-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+  .cc-container { max-width: 1024px; margin: 0 auto; }
+
+  .cc-breadcrumb { display: flex; justify-content: center; margin-bottom: 1rem; }
+  .cc-breadcrumb ol { list-style: none; display: flex; align-items: center; gap: 0.5rem; padding: 0; margin: 0; font-size: 0.8rem; color: var(--muted); }
+  .cc-breadcrumb li:not(:last-child)::after { content: '/'; margin-left: 0.5rem; color: var(--border); }
+  .cc-breadcrumb a { color: var(--brand); text-decoration: none; }
+  .cc-breadcrumb a:hover { text-decoration: underline; }
+
+  .cc-header { text-align: center; margin-bottom: 2rem; }
+  .cc-header-icon { display: block; margin: 0 auto 0.75rem; color: var(--brand); }
+  .cc-title { font-size: 1.8rem; font-weight: 900; color: var(--text); margin: 0 0 0.5rem; letter-spacing: -0.03em; }
+  .cc-title-highlight { background: var(--brand); color: #fff; padding: 0 6px; }
+  .cc-subtitle { font-size: 0.92rem; color: var(--muted); max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.65; }
+
+  .cc-stats-bar { display: inline-flex; align-items: center; gap: 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1.5rem; }
+  .cc-stat { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+  .cc-stat-value { font-size: 1.15rem; font-weight: 800; color: var(--text); }
+  .cc-stat-label { font-size: 0.68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+  .cc-stat-divider { width: 1px; height: 32px; background: var(--border); }
+
+  .cc-deals-section { margin-bottom: 2rem; }
+  .cc-deals-header { margin-bottom: 1rem; }
+  .cc-deals-title { font-size: 1.1rem; font-weight: 800; color: var(--text); margin: 0 0 0.15rem; display: flex; align-items: center; gap: 0.5rem; }
+  .cc-deals-title svg { color: var(--brand); flex-shrink: 0; }
+  .cc-deals-desc { font-size: 0.85rem; color: var(--muted); margin: 0; }
+
+  .cc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; }
+
+  .cc-card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; text-decoration: none; transition: all 0.2s; }
+  .cc-card:hover { border-color: var(--brand); transform: translateY(-2px); }
+  .cc-card:hover .cc-card-title { color: var(--brand); }
+  .cc-card-featured { grid-column: 1 / -1; }
+  .cc-card-featured .cc-card-img { aspect-ratio: 16/7; }
+  .cc-card-featured .cc-card-title { font-size: 1rem; }
+
+  .cc-card-img { position: relative; width: 100%; aspect-ratio: 5/2; overflow: hidden; background: var(--border); }
+  .cc-card-img img { width: 100%; height: 100%; object-fit: cover; }
+  .cc-badge-featured { position: absolute; top: 6px; left: 6px; background: linear-gradient(135deg, var(--brand), #9333ea); color: white; font-size: 0.65rem; font-weight: 800; padding: 3px 9px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .cc-badge-tag { position: absolute; bottom: 6px; left: 6px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); color: white; font-size: 0.6rem; font-weight: 600; padding: 2px 7px; border-radius: 3px; }
+
+  .cc-card-body { padding: 1rem; display: flex; flex-direction: column; gap: 0.4rem; flex: 1; }
+  .cc-card-title { font-size: 1rem; font-weight: 700; color: var(--text); margin: 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .cc-card-excerpt { font-size: 0.85rem; color: var(--muted); margin: 0; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .cc-card-footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; padding-top: 0.5rem; border-top: 1px solid var(--border); }
+  .cc-card-date { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+  .cc-card-action { font-size: 0.78rem; font-weight: 700; color: var(--brand); }
+
+  .cc-section { margin-bottom: 2rem; }
+  .cc-section-title { font-size: 1.1rem; font-weight: 800; color: var(--text); margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.65rem; }
+  .cc-section-title svg { color: var(--brand); flex-shrink: 0; }
+
+  .cc-guide-topics { margin-bottom: 1.5rem; }
+  .cc-topic-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .cc-topic-tag { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 100px; border: 1px solid var(--border); font-size: 0.85rem; font-weight: 600; color: var(--text); text-decoration: none; transition: all 0.2s; background: var(--card); }
+  .cc-topic-tag:hover { border-color: var(--brand); color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, var(--card)); }
+
+  .cc-seo-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+  .cc-seo-section h2 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0 0 0.75rem; }
+  .cc-seo-section p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.75rem; }
+  .cc-seo-section p:last-child { margin-bottom: 0; }
+
+  .cc-pagination { display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 1.5rem 0; }
+  .cc-page-link { font-size: 0.85rem; font-weight: 700; color: var(--brand); text-decoration: none; padding: 0.4rem 0.85rem; border-radius: 6px; border: 1px solid var(--border); transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+  .cc-page-link:hover { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, transparent); }
+  .cc-page-more { border-color: var(--brand); background: var(--brand); color: white; }
+  .cc-page-more:hover { border-color: var(--brand); background: var(--brand); opacity: 0.9; }
+
+  @media (max-width: 768px) {
+    .cc-grid { grid-template-columns: repeat(2, 1fr); gap: 0.65rem; }
+    .cc-title { font-size: 1.4rem; }
+    .cc-stats-bar { gap: 1rem; padding: 0.6rem 1rem; }
+  }
+  @media (max-width: 480px) {
+    .cc-grid { grid-template-columns: 1fr; }
+  }
+</style>

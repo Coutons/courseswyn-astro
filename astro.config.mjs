@@ -6,7 +6,9 @@ import mdx from '@astrojs/mdx';
 
 export default defineConfig({
   output: 'static',
-  integrations: [react(), sitemap(), mdx()],
+  integrations: [react(), sitemap({
+    filter: (page) => !page.includes('.amp')
+  }), mdx()],
   site: 'https://courseswyn.com',
   base: '/'
 });

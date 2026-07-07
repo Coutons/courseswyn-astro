@@ -14,20 +14,11 @@ export async function getStaticPaths() {
   const generated = new Set();
 
   for (const deal of allDeals) {
-    // Generate path for ID (fallback)
-    if (!deal.id.endsWith('.amp') && !generated.has(deal.id)) {
-      generated.add(deal.id);
+    const s = deal.slug || deal.id;
+    if (!s.endsWith('.amp') && !generated.has(s)) {
+      generated.add(s);
       paths.push({
-        params: { slug: deal.id },
-        props: { deal, allDeals }
-      });
-    }
-
-    // Generate path for slug
-    if (deal.slug && deal.slug !== deal.id && !deal.slug.endsWith('.amp') && !generated.has(deal.slug)) {
-      generated.add(deal.slug);
-      paths.push({
-        params: { slug: deal.slug },
+        params: { slug: s },
         props: { deal, allDeals }
       });
     }
