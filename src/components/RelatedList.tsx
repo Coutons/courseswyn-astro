@@ -36,14 +36,14 @@ export default function RelatedList({ items, initial = 4, step = 4 }: { items: I
                     width="300"
                     height="200"
                     loading="lazy"
-                    style={{ width: "100%", height: "140px", borderRadius: 8, border: "1px solid hsl(0, 0%, 90%)", objectFit: "cover" }} 
+                    style={{ width: "100%", height: "140px", borderRadius: 8, border: "1px solid var(--border)", objectFit: "cover" }} 
                   />
                   <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
                     {isNew(r.updatedAt) && (
-                      <span className="pill" style={{ background: "#3b82f6", color: "#0b0d12", fontWeight: 800 }}>New</span>
+                      <span className="pill" style={{ background: "#3b82f6", color: "#fff", fontWeight: 800 }}>New</span>
                     )}
                     {isBestSeller(r.price, r.originalPrice, r.students) && (
-                      <span className="pill" style={{ background: "#10b981", color: "#0b0d12", fontWeight: 800 }}>Best Seller</span>
+                      <span className="pill" style={{ background: "#10b981", color: "#fff", fontWeight: 800 }}>Best Seller</span>
                     )}
                   </div>
                 </div>
@@ -53,8 +53,8 @@ export default function RelatedList({ items, initial = 4, step = 4 }: { items: I
                   {r.title}
                 </a>
               </h4>
-              <div style={{ color: "hsl(215, 25%, 35%)", fontSize: 12 }}>{r.category || r.provider}</div>
-              <div style={{ display: "flex", gap: 12, alignItems: "center", color: "hsl(215, 25%, 35%)", fontSize: 12 }}>
+              <div style={{ color: "var(--muted)", fontSize: 12 }}>{r.category || r.provider}</div>
+              <div style={{ display: "flex", gap: 12, alignItems: "center", color: "var(--muted)", fontSize: 12 }}>
                 <span>⭐ {formatRating(r.rating)}</span>
                 <span>👥 {formatStudents(r.students)}</span>
               </div>
@@ -64,7 +64,7 @@ export default function RelatedList({ items, initial = 4, step = 4 }: { items: I
                   <span className="muted" style={{ textDecoration: "line-through", fontSize: 12 }}>{formatPrice(r.originalPrice)}</span>
                 )}
                 {r.originalPrice && r.price && r.originalPrice > r.price && (
-                  <span className="pill" style={{ background: "#ef4444", color: "#0b0d12", fontWeight: 800 }}>{discountPct(r.price, r.originalPrice)}% OFF</span>
+                  <span className="pill" style={{ background: "#ef4444", color: "#fff", fontWeight: 800 }}>{discountPct(r.price, r.originalPrice)}% OFF</span>
                 )}
               </div>
               {r.updatedAt && (

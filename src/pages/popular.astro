@@ -148,76 +148,93 @@ const structuredData = {
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" slot="head" />
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-  <main style="background: #fafafa;">
+  <style>
+    .hero-gradient-text {
+      background: linear-gradient(135deg, var(--brand), #60a5fa, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .cat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; text-align: center; text-decoration: none; color: inherit; transition: all 0.3s ease; display: block; }
+    .cat-card:hover { transform: translateY(-4px); border-color: var(--brand); }
+    .faq-grid { display: grid; gap: 0.75rem; }
+    .faq-item { background: transparent; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .faq-item summary { padding: 1.25rem; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1rem; color: var(--text); list-style: none; }
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item[open] summary { border-bottom: 1px solid var(--border); }
+    .faq-item .fi { transition: transform 0.3s; flex-shrink: 0; }
+    .faq-item[open] .fi { transform: rotate(180deg); }
+    .faq-answer { padding: 0 1.25rem 1.25rem; color: var(--muted); line-height: 1.7; font-size: 0.9rem; }
+  </style>
 
+  <main>
     {/* ── HERO ── */}
-    <section style="background: linear-gradient(135deg, #eef2ff, #faf5ff, #fdf2f8); padding: 6rem 0 5rem; position: relative; overflow: hidden;">
-      <div aria-hidden="true" style="position:absolute;top:-20%;right:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(249,115,22,0.1) 0%,rgba(236,72,153,0.06) 40%,transparent 70%);border-radius:50%;pointer-events:none;"></div>
-      <div aria-hidden="true" style="position:absolute;bottom:-15%;left:-5%;width:500px;height:500px;background:radial-gradient(circle,rgba(99,102,241,0.06) 0%,transparent 70%);border-radius:50%;pointer-events:none;"></div>
-      <div class="container" style="position:relative;z-index:1;">
-        <h1 style="font-size:clamp(2.5rem,5vw,3.5rem);font-weight:900;line-height:1.1;color:#111827;margin:0 0 1rem;letter-spacing:-0.03em;">
-          Popular {selectedLanguage && <span style="color:#f97316">{selectedLanguage}</span>}<br/>
-          <span style="background:linear-gradient(135deg,#ea580c,#db2777,#9333ea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Courses.</span>
-        </h1>
-        <p style="font-size:1.125rem;color:#6b7280;max-width:640px;line-height:1.7;font-weight:500;margin:0 0 2.5rem;">
-          Discover {totalPopular}+ trending online courses with exceptional student ratings. Popular Udemy courses with verified free coupons.
-        </p>
-        <div style="display:flex;gap:2rem;flex-wrap:wrap;padding-top:1.5rem;border-top:2px solid rgba(0,0,0,0.08);">
-          {[
-            { v: `${totalPopular}+`, l: "Popular" },
-            { v: `${avgRating}★`, l: "Avg Rating" },
-            { v: "100%", l: "Free Codes" }
-          ].map(s => (
-            <div style="display:flex;flex-direction:column;">
-              <span style="font-size:1.75rem;font-weight:900;color:#111827;">{s.v}</span>
-              <span style="color:#6b7280;font-size:.875rem;font-weight:600;">{s.l}</span>
-            </div>
-          ))}
+    <section class="hero">
+      <div class="container">
+        <div class="hero-content anim-up">
+          <h1>
+            <span style="display:block">Popular{selectedLanguage ? ` ${selectedLanguage}` : ''}</span>
+            <span class="hero-gradient-text" style="display:block;font-size:clamp(2.5rem,6vw,4.5rem)">Courses</span>
+            <span style="display:block">Top-Rated Udemy Coupons</span>
+          </h1>
+          <p>Discover <strong>{totalPopular}+ trending online courses</strong> with exceptional student ratings. Popular Udemy courses with verified free coupons.</p>
+          <div style="display:flex;gap:2rem;flex-wrap:wrap;padding-top:1.5rem;border-top:2px solid var(--border);">
+            {[
+              { v: `${totalPopular}+`, l: "Popular" },
+              { v: `${avgRating}★`, l: "Avg Rating" },
+              { v: "100%", l: "Free Codes" }
+            ].map(s => (
+              <div style="display:flex;flex-direction:column;">
+                <span style="font-size:1.75rem;font-weight:900;color:var(--text);">{s.v}</span>
+                <span style="color:var(--text-secondary);font-size:.875rem;font-weight:600;">{s.l}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
 
     {/* ── COURSES GRID ── */}
-    <section style="background:white;padding:5rem 0;">
+    <section class="section">
       <div class="container">
-        <div style="display:inline-block;font-size:1rem;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:#ea580c;margin-bottom:.75rem;">Top Rated</div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:3rem;">
-          <h2 style="font-size:2.5rem;font-weight:900;color:#111827;margin:0;letter-spacing:-0.02em;">Top Rated Courses</h2>
-          <span style="font-size:0.8rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.1em;">Sorted by Popularity</span>
+        <span class="section-title">Top Rated</span>
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;">
+          <h2 class="section-heading" style="margin:0;">Top Rated Courses with Verified Coupons</h2>
+          <span style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.1em;">Sorted by Popularity</span>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;margin-bottom:64px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.25rem;margin-bottom:3rem;">
           {popularCourses.length > 0 ? (
             popularCourses.map(course => (
               <DealCard deal={course} />
             ))
           ) : (
-            <div style="grid-column:1/-1;text-align:center;padding:64px 24px;background:white;border:3px solid rgba(0,0,0,0.07);border-radius:20px;">
-              <h3 style="font-size:1.5rem;font-weight:900;color:#111827;margin-bottom:8px;">No Popular {selectedLanguage} Courses</h3>
-              <p style="color:#6b7280;font-weight:500;margin-bottom:24px;">We don't have any 4.5★+ rated {selectedLanguage} courses at the moment.</p>
-              <a href="/popular" style="padding:12px 32px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;text-decoration:none;border-radius:12px;font-weight:700;">View All Popular Courses</a>
+            <div style="grid-column:1/-1;text-align:center;padding:4rem 2rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);">
+              <h3 style="font-size:1.5rem;font-weight:900;color:var(--text);margin-bottom:8px;">No Popular {selectedLanguage} Courses</h3>
+              <p style="color:var(--text-secondary);font-weight:500;margin-bottom:24px;">We don't have any 4.5★+ rated {selectedLanguage} courses at the moment.</p>
+              <a href="/popular" class="btn btn-primary" style="padding:12px 32px;border-radius:12px;font-weight:700;text-decoration:none;">View All Popular Courses</a>
             </div>
           )}
         </div>
 
         <div style="text-align:center;">
-          <a href="/udemy-coupon-code" style="padding:1rem 2.5rem;background:#111827;color:#fff;text-decoration:none;border-radius:12px;font-size:1.1rem;font-weight:700;transition:all 0.3s ease;">
-            Browse All {totalDeals}+ Deals
+          <a href="/udemy-coupon-code" class="btn btn-primary btn-lg" style="padding:1rem 2.5rem;border-radius:999px;font-size:1.1rem;">
+            Browse All {totalDeals.toLocaleString()}+ Deals
           </a>
         </div>
       </div>
     </section>
 
     {/* ── CATEGORIES ── */}
-    <section style="background:#fafafa;padding:5rem 0;">
+    <section class="section" style="padding-top:0;">
       <div class="container">
-        <div style="display:inline-block;font-size:1rem;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:#ea580c;margin-bottom:.75rem;">Categories</div>
-        <h2 style="font-size:2.5rem;font-weight:900;color:#111827;margin:0 0 3rem;letter-spacing:-0.02em;">Browse Categories</h2>
+        <span class="section-title">Categories</span>
+        <h2 class="section-heading" style="margin:0 0 2.5rem;">Browse Categories</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;">
           {categories.map(cat => (
-            <a href={`/categories/${slugifyCategory(cat.name)}`} style="display:block;background:white;border:3px solid rgba(0,0,0,0.07);border-radius:20px;padding:1.5rem;text-align:center;text-decoration:none;color:inherit;transition:all 0.3s ease;" class="cat-card">
-              <div style="font-weight:900;font-size:1rem;color:#111827;margin-bottom:4px;">{cat.name}</div>
-              <div style="font-size:0.75rem;font-weight:800;color:#f97316;text-transform:uppercase;">{cat.count} Courses</div>
+            <a href={`/categories/${slugifyCategory(cat.name)}`} class="cat-card">
+              <div style="font-weight:900;font-size:1rem;color:var(--text);margin-bottom:4px;">{cat.name}</div>
+              <div style="font-size:0.75rem;font-weight:800;color:var(--brand);text-transform:uppercase;">{cat.count} Courses</div>
             </a>
           ))}
         </div>
@@ -225,11 +242,11 @@ const structuredData = {
     </section>
 
     {/* ── FAQ ── */}
-    <section style="background:white;padding:5rem 0;">
+    <section class="section" style="padding-top:0;">
       <div class="container" style="max-width:800px;">
-        <div style="display:inline-block;font-size:1rem;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:#ea580c;margin-bottom:.75rem;">FAQ</div>
-        <h2 style="font-size:2.5rem;font-weight:900;color:#111827;margin:0 0 3rem;letter-spacing:-0.02em;">Common Questions</h2>
-        <div style="display:flex;flex-direction:column;gap:16px;">
+        <span class="section-title">FAQ</span>
+        <h2 class="section-heading" style="margin:0 0 2rem;">Common Questions</h2>
+        <div class="faq-grid">
           {[
             {
               q: "What are popular online courses on CoursesWyn?",
@@ -248,29 +265,18 @@ const structuredData = {
               a: "Yes. All Udemy courses listed on CoursesWyn include a certificate of completion you can share on LinkedIn or add to your resume — regardless of whether you enrolled using a free coupon."
             }
           ].map(faq => (
-            <details style="background:white;border:3px solid rgba(0,0,0,0.07);border-radius:20px;overflow:hidden;" class="faq-item">
-              <summary style="padding:1.5rem;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:1.05rem;color:#111827;list-style:none;">
+            <details class="faq-item">
+              <summary>
                 {faq.q}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="3" class="fi" style="transition:transform 0.3s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="3" class="fi"><polyline points="6 9 12 15 18 9"/></svg>
               </summary>
-              <div style="padding:0 1.5rem 1.5rem;color:#6b7280;font-size:1rem;line-height:1.7;">
-                {faq.a}
-              </div>
+              <div class="faq-answer">{faq.a}</div>
             </details>
           ))}
         </div>
       </div>
     </section>
-
   </main>
-
-  <style>
-    .container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
-    .cat-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 16px 32px -8px rgba(0,0,0,0.12); border-color: rgba(249,115,22,0.3) !important; }
-    .faq-item[open] summary { border-bottom: 1px solid rgba(0,0,0,0.07); }
-    .faq-item[open] .fi { transform: rotate(180deg); }
-    .faq-item summary::-webkit-details-marker { display: none; }
-  </style>
 
   <script define:vars={{ totalPopular }}>
     const GEO_COPY = {

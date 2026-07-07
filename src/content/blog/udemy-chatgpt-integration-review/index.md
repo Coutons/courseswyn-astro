@@ -346,7 +346,7 @@ The competition for learner attention just moved into conversational AI.
       "url": "https://courseswyn.com/",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://courseswyn.com/logo.png"
+        "url": "https://courseswyn.com/logo.svg"
       }
     },
 

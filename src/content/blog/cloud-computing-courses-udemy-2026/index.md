@@ -319,7 +319,7 @@ CoursesWyn is led by a team of experienced software engineers and educators pass
         "name": "CoursesWyn",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://courseswyn.com/logo.png"
+          "url": "https://courseswyn.com/logo.svg"
         }
       },
       "datePublished": "2026-01-18T08:00:00.000Z",

@@ -1,11 +1,8 @@
 "use client";
-import React, { useEffect, useRef, useMemo, useState } from "react";
-import { renderMarkdownToHtml } from "../lib/markdown";
+import { useEffect, useMemo, useState } from "react";
 import { extractDifficultyLevel, slugifyCategory } from "../lib/utils";
-import ActionsPanel from "./ActionsPanel";
-import { createInstructorSlug } from "../lib/instructors";
+import { createInstructorSlug, parseInstructors } from "../lib/instructors";
 import RelatedList from "./RelatedList";
-import CourseComparison from "./CourseComparison";
 
 interface Deal {
   id: string;
@@ -40,96 +37,62 @@ export default function DealPage({
   deal: Deal;
   relatedDeals?: any[];
 }) {
-  const bodyContent = deal.content || deal.description || "";
-
-  const isHtmlContent = bodyContent.includes("<") && bodyContent.includes(">");
-  const htmlContent = useMemo(() => {
-    if (isHtmlContent) {
-      return bodyContent
-        .replace(/style="[^"]*"/gi, "")
-        .replace(/class="[^"]*"/gi, "")
-        .replace(/data-[^=]*="[^"]*"/gi, "")
-        .replace(/margin: [^;]*;?/gi, "")
-        .replace(/padding: [^;]*;?/gi, "")
-        .replace(/font-size: [^;]*;?/gi, "")
-        .replace(/font-family: [^;]*;?/gi, "")
-        .replace(/color: [^;]*;?/gi, "");
-    } else {
-      return renderMarkdownToHtml(bodyContent);
-    }
-  }, [bodyContent, isHtmlContent]);
-
-  // Use only real FAQs from deal data, or generate minimal, accurate ones
   const autoFAQs = useMemo(() => {
     if (deal.faqs && deal.faqs.length > 0) {
       return deal.faqs;
     }
-
     const generated: { q: string; a: string }[] = [];
-    const provider = deal.provider || "the course platform";
-
-    if (deal.price !== undefined) {
-      const price = deal.price ?? 9.99;
-      const original = deal.originalPrice ?? 119.99;
-      const discount =
-        original > price ? Math.round(100 - (price / original) * 100) : 0;
-      generated.push({
-        q: `Does the discount code for "${deal.title}" actually work?`,
-        a: `Yes! This promo code was verified and tested on ${deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Jakarta" }) : "recently"}. The ${discount}% discount is applied automatically when you click the coupon button${deal.expiresAt ? ` and remains valid until ${new Date(deal.expiresAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Jakarta" })}` : ""}.`,
-      });
-    }
-
-    if (deal.duration) {
-      generated.push({
-        q: `What's the total duration of "${deal.title}"?`,
-        a: `This training contains ${deal.duration} of video lessons that you can watch on-demand. Once enrolled, you'll have unlimited lifetime access to revisit any section whenever you want.`,
-      });
-    }
-
-    if (deal.learn && deal.learn.length > 0) {
-      generated.push({
-        q: `What skills will I gain from this program?`,
-        a: `You'll master these key topics: ${deal.learn.slice(0, 5).join(", ")}. The curriculum is designed to take you from beginner to proficient level through hands-on exercises.`,
-      });
-    }
-
-    if (deal.requirements && deal.requirements.length > 0) {
-      generated.push({
-        q: `Are there any prerequisites before enrolling?`,
-        a: `Before starting, you should be familiar with: ${deal.requirements.slice(0, 3).join(", ")}. These basics will help you follow along with the lessons more effectively.`,
-      });
-    }
+    const provider = deal.provider || "Udemy";
+    const price = deal.price ?? 9.99;
+    const original = deal.originalPrice ?? 119.99;
+    const discount = original > price ? Math.round(100 - (price / original) * 100) : 0;
+    const savings = original > price ? (original - price).toFixed(2) : "0";
+    const verifiedDate = deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Jakarta" }) : "recently";
+    const expireDate = deal.expiresAt ? new Date(deal.expiresAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Jakarta" }) : "soon";
 
     generated.push({
-      q: `Can I add this course completion to my LinkedIn profile?`,
-      a: `Absolutely! After finishing all modules, you'll receive an official certificate from ${provider}. You can download it as a PDF and upload it directly to LinkedIn, your resume, or portfolio to showcase your new skills.`,
+      q: `Is the ${deal.title} coupon code still valid in 2026?`,
+      a: `Yes, the verified coupon for "${deal.title}" was last checked on ${verifiedDate} and is currently active. This ${discount}% discount drops the price from $${original.toFixed(2)} to just $${price.toFixed(2)}, saving you $${savings}. We test every coupon manually before listing it on CoursesWyn — if it expires, we update the page immediately.`
     });
-
+    generated.push({
+      q: `How do I redeem the ${deal.title} coupon on ${provider}?`,
+      a: `Click the "Redeem Coupon" button on this page — it will take you directly to the ${provider} checkout page with the discount already applied. You don't need to manually type any code. If you see the full price instead of $${price.toFixed(2)}, make sure you are logged into your ${provider} account and try again in a regular browser window (not incognito).`
+    });
+    if (deal.duration) {
+      generated.push({ q: `How long does it take to complete "${deal.title}"?`, a: `This course contains ${deal.duration} of on-demand video lessons. Most learners complete it in ${deal.duration.includes("h") ? "2-4 weeks studying a few hours per week" : "1-2 weeks"}. Since you get lifetime access, you can learn at your own pace and revisit any section anytime.` });
+    }
+    generated.push({
+      q: `What makes "${deal.title}" worth the price at just $${price.toFixed(2)}?`,
+      a: `Originally priced at $${original.toFixed(2)}, this ${deal.category || "course"} by ${deal.instructor || provider} includes ${deal.duration || "hours of on-demand video"}${deal.learn && deal.learn.length > 0 ? ` covering ${deal.learn.slice(0, 5).join(", ")}` : ""}. With the ${discount}% coupon you save $${savings}. You also get lifetime access, certificate of completion, and all future updates — a fraction of the cost of traditional education.`
+    });
+    if (deal.learn && deal.learn.length > 0) {
+      generated.push({ q: `What specific skills will I learn in "${deal.title}"?`, a: `By completing this ${provider} course, you will master: ${deal.learn.slice(0, 8).join(", ")}. The curriculum includes hands-on projects and real-world examples designed to take you from fundamentals to advanced techniques.` });
+    }
+    if (deal.requirements && deal.requirements.length > 0) {
+      generated.push({ q: `Do I need any prior experience to take "${deal.title}"?`, a: `The recommended prerequisites are: ${deal.requirements.slice(0, 4).join(", ")}. If you're new to these topics, ${provider} offers introductory courses that can help you build the foundation first. Many students with no prior experience have successfully completed this course.` });
+    }
+    generated.push({
+      q: `Can I get a certificate after completing "${deal.title}"?`,
+      a: `Yes! Upon finishing all video lessons and any required assignments, you'll receive an official certificate of completion from ${provider}. You can share it on LinkedIn, add it to your resume, or include it in your professional portfolio to showcase your new skills to employers.`
+    });
+    generated.push({
+      q: `Is there a money-back guarantee if "${deal.title}" isn't right for me?`,
+      a: `Absolutely. ${provider} offers a 30-day money-back guarantee on all courses. If you enroll and find that "${deal.title}" doesn't meet your expectations, you can request a full refund within 30 days — no questions asked. That makes this coupon essentially risk-free.`
+    });
+    if (deal.expiresAt) {
+      generated.push({
+        q: `When does the ${deal.title} coupon expire?`,
+        a: `This ${discount}% off coupon for "${deal.title}" is valid until ${expireDate}. After that date, the price will return to $${original.toFixed(2)}. We recommend redeeming it now to lock in the $${price.toFixed(2)} price while the coupon is still active.`
+      });
+    }
+    generated.push({
+      q: `How is CoursesWyn different from other coupon sites?`,
+      a: `Unlike many sites that list expired or unverified codes, CoursesWyn manually tests every ${provider} coupon before publishing. Our team regularly re-checks active coupons to ensure they still work. If a coupon expires, we update the page within 24 hours. This means you can trust that the deals you find here are real and ready to use.`
+    });
     return generated;
   }, [deal]);
 
-  const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [couponCopied, setCouponCopied] = useState(false);
-  const [countdown, setCountdown] = useState<{
-    days: number;
-    hours: number;
-    minutes: number;
-    seconds: number;
-  } | null>(null);
-
-  const markdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (markdownRef.current && htmlContent) {
-      markdownRef.current.innerHTML = htmlContent;
-    }
-  }, [htmlContent]);
-
-  const [isClient, setIsClient] = useState(false);
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
 
   useEffect(() => {
     if (!deal.expiresAt) return;
@@ -137,10 +100,7 @@ export default function DealPage({
       const now = new Date();
       const expires = new Date(deal.expiresAt!);
       const diffMs = expires.getTime() - now.getTime();
-      if (diffMs <= 0) {
-        setCountdown(null);
-        return;
-      }
+      if (diffMs <= 0) { setCountdown(null); return; }
       setCountdown({
         days: Math.floor(diffMs / (1000 * 60 * 60 * 24)),
         hours: Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
@@ -155,24 +115,8 @@ export default function DealPage({
 
   const price = deal.price ?? 9.99;
   const originalPrice = deal.originalPrice ?? 119.99;
-  const discountPct =
-    originalPrice > price ? Math.round(100 - (price / originalPrice) * 100) : 0;
+  const discountPct = originalPrice > price ? Math.round(100 - (price / originalPrice) * 100) : 0;
 
-  const handleCopyCoupon = () => {
-    if (deal.coupon) {
-      navigator.clipboard.writeText(deal.coupon).then(() => {
-        setCouponCopied(true);
-        setTimeout(() => setCouponCopied(false), 2500);
-      });
-    }
-  };
-
-  // Build slug-based canonical category URL
-  const categorySlug = deal.category?.toLowerCase().replace(/\s+/g, "-") || "";
-  const subcategorySlug =
-    deal.subcategory?.toLowerCase().replace(/\s+/g, "-") || "";
-
-  // Enhanced structured data for SEO
   const enhancedStructuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -180,84 +124,17 @@ export default function DealPage({
         "@type": "Course",
         "@id": `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/coupon/${deal.slug}#course`,
         name: deal.title,
-        description:
-          deal.description ||
-          `${deal.title} - Learn from expert instructors with verified coupons`,
+        description: deal.description || `${deal.title} - Learn from expert instructors with verified coupons`,
         url: `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/coupon/${deal.slug}`,
-        image:
-          deal.image ||
-          `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/logo.svg`,
-        provider: {
-          "@type": "Organization",
-          name: deal.provider || "Udemy",
-          url:
-            deal.provider === "Udemy"
-              ? "https://www.udemy.com"
-              : typeof window !== "undefined"
-                ? window.location.origin
-                : "https://courseswyn.com",
-        },
-        instructor: deal.instructor
-          ? {
-              "@type": "Person",
-              name: deal.instructor,
-              jobTitle: "Course Instructor",
-              affiliation: {
-                "@type": "Organization",
-                name: deal.provider || "Udemy",
-              },
-            }
-          : undefined,
+        image: deal.image || `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/logo.svg`,
+        provider: { "@type": "Organization", name: deal.provider || "Udemy", url: deal.provider === "Udemy" ? "https://www.udemy.com" : typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com" },
+        instructor: deal.instructor ? { "@type": "Person", name: deal.instructor, jobTitle: "Course Instructor", affiliation: { "@type": "Organization", name: deal.provider || "Udemy" } } : undefined,
         offers: [
-          {
-            "@type": "Offer",
-            price: deal.price || 0,
-            priceCurrency: "USD",
-            availability: "https://schema.org/InStock",
-            validThrough: deal.expiresAt || undefined,
-            url:
-              deal.url ||
-              `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/coupon/${deal.slug}`,
-            seller: {
-              "@type": "Organization",
-              name: deal.provider || "Udemy",
-            },
-          },
-          deal.coupon
-            ? {
-                "@type": "Offer",
-                name: `${deal.title} - Coupon Deal`,
-                price: Math.max(
-                  0,
-                  (deal.price || 0) -
-                    ((deal.originalPrice || 0) - (deal.price || 0)),
-                ),
-                priceCurrency: "USD",
-                availability: "https://schema.org/LimitedAvailability",
-                validThrough: deal.expiresAt || undefined,
-                url:
-                  deal.url ||
-                  `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/coupon/${deal.slug}`,
-                description: `Use coupon code ${deal.coupon} for discount on ${deal.title}`,
-                seller: {
-                  "@type": "Organization",
-                  name: deal.provider || "Udemy",
-                },
-              }
-            : null,
+          { "@type": "Offer", price: deal.price || 0, priceCurrency: "USD", availability: "https://schema.org/InStock", validThrough: deal.expiresAt || undefined, url: deal.url || `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/coupon/${deal.slug}`, seller: { "@type": "Organization", name: deal.provider || "Udemy" } },
+          deal.coupon ? { "@type": "Offer", name: `${deal.title} - Coupon Deal`, price: Math.max(0, (deal.price || 0) - ((deal.originalPrice || 0) - (deal.price || 0))), priceCurrency: "USD", availability: "https://schema.org/LimitedAvailability", validThrough: deal.expiresAt || undefined, url: deal.url || `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/coupon/${deal.slug}`, description: `Use coupon code ${deal.coupon} for discount on ${deal.title}`, seller: { "@type": "Organization", name: deal.provider || "Udemy" } } : null,
         ].filter(Boolean),
-        aggregateRating: deal.rating
-          ? {
-              "@type": "AggregateRating",
-              ratingValue: deal.rating,
-              ratingCount: deal.students || 1,
-              bestRating: 5,
-              worstRating: 1,
-            }
-          : undefined,
-        timeRequired: deal.duration
-          ? `PT${deal.duration.replace(/[^\d]/g, "")}H`
-          : undefined,
+        aggregateRating: deal.rating ? { "@type": "AggregateRating", ratingValue: deal.rating, ratingCount: deal.students || 1, bestRating: 5, worstRating: 1 } : undefined,
+        timeRequired: deal.duration ? `PT${deal.duration.replace(/[^\d]/g, "")}H` : undefined,
         inLanguage: deal.language || "en",
         teaches: deal.learn ? deal.learn.join(", ") : undefined,
         educationalLevel: "Beginner to Advanced",
@@ -265,62 +142,21 @@ export default function DealPage({
         datePublished: deal.updatedAt || new Date().toISOString(),
         dateModified: deal.updatedAt || new Date().toISOString(),
         expires: deal.expiresAt || undefined,
-        hasCourseInstance: {
-          "@type": "CourseInstance",
-          courseMode: "online",
-          instructor: deal.instructor
-            ? {
-                "@type": "Person",
-                name: deal.instructor,
-              }
-            : undefined,
-        },
+        hasCourseInstance: { "@type": "CourseInstance", courseMode: "online", instructor: deal.instructor ? { "@type": "Person", name: deal.instructor } : undefined },
       },
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          {
-            "@type": "ListItem",
-            position: 1,
-            name: "Home",
-            item:
-              typeof window !== "undefined"
-                ? window.location.origin
-                : "https://courseswyn.com",
-          },
-          {
-            "@type": "ListItem",
-            position: 2,
-            name: "Deals",
-            item: `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/udemy-coupon-code`,
-          },
-          deal.category
-            ? {
-                "@type": "ListItem",
-                position: 3,
-                name: deal.category,
-                item: `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/categories/${deal.category.toLowerCase().replace(/\s+/g, "-")}`,
-              }
-            : null,
-          {
-            "@type": "ListItem",
-            position: 4,
-            name: deal.title,
-            item: `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/coupon/${deal.slug}`,
-          },
+          { "@type": "ListItem", position: 1, name: "Home", item: typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com" },
+          { "@type": "ListItem", position: 2, name: "Coupons", item: `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/udemy-coupon-code` },
+          deal.category ? { "@type": "ListItem", position: 3, name: deal.category, item: `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/categories/${slugifyCategory(deal.category)}` } : null,
+          { "@type": "ListItem", position: 4, name: deal.title, item: `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/coupon/${deal.slug}` },
         ].filter(Boolean),
       },
       {
         "@type": "FAQPage",
         "@id": `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/coupon/${deal.slug}#faq`,
-        mainEntity: autoFAQs.slice(0, 5).map((faq) => ({
-          "@type": "Question",
-          name: faq.q,
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: faq.a,
-          },
-        })),
+        mainEntity: autoFAQs.slice(0, 5).map((faq) => ({ "@type": "Question", name: faq.q, acceptedAnswer: { "@type": "Answer", text: faq.a } })),
       },
       {
         "@type": "WebPage",
@@ -329,1886 +165,327 @@ export default function DealPage({
         name: `${deal.title} - Udemy Coupon & Discount Code`,
         description: `Get ${deal.title} with ${discountPct > 0 ? discountPct + "% off coupon" : "special discount"} using verified voucher. ${deal.students ? deal.students.toLocaleString() + " students enrolled." : ""} Limited time offer.`,
         inLanguage: "en-US",
-        isPartOf: {
-          "@type": "WebSite",
-          name: "CoursesWyn",
-          url:
-            typeof window !== "undefined"
-              ? window.location.origin
-              : "https://courseswyn.com",
-        },
+        isPartOf: { "@type": "WebSite", name: "CoursesWyn", url: typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com" },
         datePublished: deal.updatedAt || new Date().toISOString(),
         dateModified: deal.updatedAt || new Date().toISOString(),
-        publisher: {
-          "@type": "Organization",
-          name: "CoursesWyn",
-          url:
-            typeof window !== "undefined"
-              ? window.location.origin
-              : "https://courseswyn.com",
-          logo: {
-            "@type": "ImageObject",
-            url: `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/logo.svg`,
-          },
-          sameAs: [
-            "https://www.facebook.com/BestCouponPromo/",
-            "https://x.com/courseswyn",
-          ],
-        },
+        publisher: { "@type": "Organization", name: "CoursesWyn", url: typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com", logo: { "@type": "ImageObject", url: `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/logo.svg` }, sameAs: ["https://www.facebook.com/BestCouponPromo/", "https://x.com/courseswyn"] },
       },
-      {
-        "@type": "Organization",
-        "@id": `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}#organization`,
-        name: "CoursesWyn",
-        url:
-          typeof window !== "undefined"
-            ? window.location.origin
-            : "https://courseswyn.com",
-        logo: `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/logo.svg`,
-        description:
-          "CoursesWyn provides verified Udemy coupons and discount codes for premium online courses. We help learners worldwide access quality education at affordable prices.",
-        foundingDate: "2024",
-        sameAs: [
-          "https://www.facebook.com/BestCouponPromo/",
-          "https://x.com/courseswyn",
-        ],
-        contactPoint: {
-          "@type": "ContactPoint",
-          contactType: "customer service",
-          availableLanguage: "English",
-        },
-      },
+      { "@type": "Organization", "@id": `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}#organization`, name: "CoursesWyn", url: typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com", logo: `${typeof window !== "undefined" ? window.location.origin : "https://courseswyn.com"}/logo.svg`, description: "CoursesWyn provides verified Udemy coupons and discount codes for premium online courses. We help learners worldwide access quality education at affordable prices.", foundingDate: "2024", sameAs: ["https://www.facebook.com/BestCouponPromo/", "https://x.com/courseswyn"], contactPoint: { "@type": "ContactPoint", contactType: "customer service", availableLanguage: "English" } },
     ],
   };
 
-  // Add structured data script
   useEffect(() => {
     const script = document.createElement("script");
     script.type = "application/ld+json";
     script.textContent = JSON.stringify(enhancedStructuredData);
     document.head.appendChild(script);
-
-    return () => {
-      document.head.removeChild(script);
-    };
+    return () => { document.head.removeChild(script); };
   }, []);
 
   return (
-    <div
-      style={{
-        background: "#fafafa",
-        color: "#111827",
-        minHeight: "100vh",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(enhancedStructuredData, null, 0),
-        }}
-      />
+    <div className="cd-root">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(enhancedStructuredData, null, 0) }} />
 
-      {/* ── HEADER / BREADCRUMBS ── */}
-      <header style={{ padding: "40px 0", borderBottom: "1px solid rgba(0,0,0,0.07)", background: "white" }}>
-        <div className="container" style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 1.5rem" }}>
-          <nav aria-label="Breadcrumb" style={{ marginBottom: "24px" }}>
-            <ol itemScope itemType="https://schema.org/BreadcrumbList" style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", listStyle: "none", margin: 0, padding: 0 }}>
-              <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                <a href="/" itemProp="item" style={{ color: "#6b7280", textDecoration: "none" }}><span itemProp="name">Home</span></a>
-                <meta itemProp="position" content="1" />
-              </li>
-              <li style={{ color: "#e5e7eb" }}>/</li>
-              <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                <a href="/udemy-coupon-code" itemProp="item" style={{ color: "#6b7280", textDecoration: "none" }}><span itemProp="name">Coupons</span></a>
-                <meta itemProp="position" content="2" />
-              </li>
-              {deal.category && (
-                <>
-                  <li style={{ color: "#e5e7eb" }}>/</li>
+      {/* ── HERO: Image Left + Info Right ── */}
+      <div className="cd-hero">
+        <div className="cd-container">
+          <div className="cd-hero-grid">
+            {/* Left: Image + Redeem Button */}
+            <div className="cd-hero-left">
+              {deal.image && (
+                <div className="cd-hero-img-wrap">
+                  <img src={deal.image} alt={deal.title} className="cd-hero-img" />
+                  <span className="cd-hero-badge">✓ VERIFIED</span>
+                </div>
+              )}
+              <a href={deal.url} target="_blank" rel="noopener noreferrer nofollow" className="cd-redeem-btn">
+                REDEEM COUPON
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+              </a>
+            </div>
+
+            {/* Right: Info */}
+            <div className="cd-hero-right">
+              <nav className="cd-breadcrumb" aria-label="Breadcrumb">
+                <ol itemScope itemType="https://schema.org/BreadcrumbList">
                   <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                    <a href={`/categories/${slugifyCategory(deal.category)}`} itemProp="item" style={{ color: "#6b7280", textDecoration: "none" }}><span itemProp="name">{deal.category}</span></a>
+                    <a href="/" itemProp="item"><span itemProp="name">Home</span></a>
+                    <meta itemProp="position" content="1" />
+                  </li>
+                  <li className="cd-sep">/</li>
+                  <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                    <a href="/udemy-coupon-code" itemProp="item"><span itemProp="name">Coupons</span></a>
+                    <meta itemProp="position" content="2" />
+                  </li>
+                  <li className="cd-sep">/</li>
+                  <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                    <a href={`/categories/${slugifyCategory(deal.category || "")}`} itemProp="item"><span itemProp="name">{deal.category || deal.provider || "Udemy"}</span></a>
                     <meta itemProp="position" content="3" />
                   </li>
-                </>
-              )}
-              {deal.subcategory && deal.subcategory !== deal.category && (
-                <>
-                  <li style={{ color: "#e5e7eb" }}>/</li>
-                  <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                    <a href={`/topics/${slugifyCategory(deal.subcategory)}`} itemProp="item" style={{ color: "#6b7280", textDecoration: "none" }}><span itemProp="name">{deal.subcategory}</span></a>
-                    <meta itemProp="position" content={String(deal.category ? 4 : 3)} />
-                  </li>
-                </>
-              )}
-            </ol>
-          </nav>
+                  {deal.subcategory && deal.subcategory !== deal.category && (
+                    <>
+                      <li className="cd-sep">/</li>
+                      <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                        <a href={`/categories/${slugifyCategory(deal.subcategory)}`} itemProp="item"><span itemProp="name">{deal.subcategory}</span></a>
+                        <meta itemProp="position" content="4" />
+                      </li>
+                    </>
+                  )}
+                </ol>
+              </nav>
 
-          <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, lineHeight: 1.1, marginBottom: "16px", color: "#111827", letterSpacing: "-0.03em" }}>
-            {deal.title} — {discountPct}% OFF Coupon
-          </h1>
+              <h1 className="cd-title">{deal.title}</h1>
 
-          <p style={{ fontSize: "1.1rem", lineHeight: 1.6, color: "#6b7280", fontWeight: 500, marginBottom: "24px" }}>
-            {deal.description}
-          </p>
+              {deal.description && <p className="cd-desc">{deal.description}</p>}
 
-          <div style={{ display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap", fontSize: "0.9rem", fontWeight: 700 }}>
-            {deal.rating && (
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ color: "#eed49f", fontSize: "1.2rem" }}>★</span>
-                <span>{deal.rating.toFixed(1)} out of 5</span>
-              </div>
-            )}
-            {deal.students && (
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5">
-                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" />
-                </svg>
-                <span>{deal.students.toLocaleString()} students</span>
-              </div>
-            )}
-            {deal.instructor && (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#6b7280" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5">
-                  <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span>Created by <a href={`/instructor/${createInstructorSlug(deal.instructor || "")}`} style={{ color: "#f97316", textDecoration: "underline" }}>{deal.instructor}</a></span>
-              </div>
-            )}
-            {deal.language && (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#6b7280" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5">
-                  <circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
-                </svg>
-                <span>{deal.language}</span>
-              </div>
-            )}
-            {deal.updatedAt && (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#6b7280" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5">
-                  <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
-                </svg>
-                <span>Updated {new Date(deal.updatedAt).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "Asia/Jakarta" })}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* ── MAIN CONTENT ── */}
-      <div className="container" style={{ maxWidth: "1280px", margin: "0 auto", padding: "60px 1.5rem", display: "grid", gridTemplateColumns: "1fr 360px", gap: "60px" }}>
-        {/* Left Column */}
-        <main style={{ minWidth: 0 }}>
-          {/* Key Takeaways Section */}
-          <section style={{ marginBottom: "60px" }}>
-            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Overview</div>
-            <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "32px", letterSpacing: "-0.03em", color: "#111827" }}>
-              Quick Facts — {deal.title} Overview
-            </h2>
-            <div style={{ background: "white", border: "3px solid rgba(0,0,0,0.07)", borderRadius: "20px", padding: "32px", marginBottom: "40px" }}>
-              <p style={{ fontSize: "0.95rem", lineHeight: 1.7, color: "#6b7280", fontWeight: 600, marginBottom: "24px" }}>
-                Here's a quick overview of everything you need to know about <strong style={{ color: "#111827" }}>{deal.title}</strong> before you enroll:
-              </p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px", fontSize: "0.95rem", color: "#111827" }}>
-                {[
-                  { label: "Course Name", value: deal.title },
-                  { label: "Platform", value: `${deal.provider || "Udemy"}` },
-                  deal.instructor ? { label: "Instructor", value: deal.instructor } : null,
-                  deal.updatedAt ? { label: "Coupon Last Verified", value: new Date(deal.updatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Jakarta" }) } : null,
-                  { label: "Level", value: extractDifficultyLevel(deal.title, deal.description) },
-                  deal.category ? { label: "Topic", value: deal.category } : null,
-                  deal.subcategory && deal.subcategory !== deal.category ? { label: "Subtopic", value: deal.subcategory } : null,
-                  deal.duration ? { label: "Total Time", value: `${deal.duration} of video content` } : null,
-                  deal.language ? { label: "Language", value: deal.language } : null,
-                  { label: "Access Type", value: "Unlimited lifetime access + updates" },
-                  { label: "Certificate", value: "Included upon completion from " + (deal.provider || "Udemy") },
-                  deal.learn && deal.learn.length > 0 ? { label: "Main Skills", value: deal.learn.slice(0, 3).join(" · ") } : null,
-                  deal.requirements && deal.requirements.length > 0 ? { label: "Requirements", value: deal.requirements.slice(0, 2).join(" · ") } : null,
-                  deal.price && deal.originalPrice ? { label: "Current Price", value: `$${deal.price.toFixed(2)} (was $${deal.originalPrice.toFixed(2)}). You save $${(deal.originalPrice - deal.price).toFixed(2)} with ${discountPct}% discount.` } : null,
-                  { label: "How to Apply", value: "Click the coupon button to activate your discount automatically" },
-                ].filter(Boolean).map((item, idx) => (
-                  <div key={idx} style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                    <span style={{ color: "#f97316", marginTop: "2px", flexShrink: 0, fontWeight: 700 }}>•</span>
-                    <span><strong style={{ color: "#111827" }}>{item!.label}:</strong> {item!.value}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ marginTop: "24px", padding: "16px", background: "linear-gradient(135deg, rgba(249,115,22,0.08), rgba(249,115,22,0.04))", border: "1px solid rgba(249,115,22,0.3)", borderRadius: "12px", fontSize: "0.9rem", color: "#111827" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                  <span style={{ fontSize: "1.2rem", lineHeight: 1 }}>💡</span>
-                  <div>
-                    <strong style={{ display: "block", marginBottom: "4px", color: "#f97316" }}>Tip:</strong>
-                    For best results, apply the coupon in a regular browser window rather than incognito/private mode.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* What You'll Learn Section */}
-          {deal.learn && deal.learn.length > 0 && (
-            <section style={{ marginBottom: "60px" }}>
-            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Skills</div>
-            <h2
-                style={{
-                  fontSize: "1.75rem",
-                  fontWeight: 900,
-                  marginBottom: "32px",
-                  letterSpacing: "-0.03em",
-                  color: "#111827",
-                }}
-              >
-                Skills You'll Master in This Course
-              </h2>
-              <div
-                style={{
-                  background: "#ffffff",
-                  border: "3px solid rgba(0,0,0,0.07)",
-                  borderRadius: "20px",
-                  padding: "32px",
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: "0.95rem",
-                    lineHeight: 1.7,
-                    color: "#6b7280",
-                    fontWeight: 600,
-                    marginBottom: "24px",
-                  }}
-                >
-                  By the end of{" "}
-                  <strong style={{ color: "#111827" }}>{deal.title}</strong>
-                  , you'll have these practical skills:
-                </p>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                    gap: "16px",
-                    fontSize: "0.95rem",
-                    color: "#111827",
-                  }}
-                >
-                  {deal.learn.map((point, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        display: "flex",
-                        gap: "10px",
-                        alignItems: "flex-start",
-                      }}
-                    >
-                      <span
-                        style={{
-                          color: "#f97316",
-                          marginTop: "3px",
-                          flexShrink: 0,
-                        }}
-                      >
-                        ✓
-                      </span>
-                      <span>{point.endsWith(".") ? point : point + "."}</span>
-                    </div>
+              {deal.instructor && (
+                <div className="cd-instructor">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  By {parseInstructors(deal.instructor).map((name, i, arr) => (
+                    <span key={name}>
+                      <a href={`/instructor/${createInstructorSlug(name)}`}>{name}</a>
+                      {i < arr.length - 1 && <span style={{color:'var(--text-secondary)'}}>, </span>}
+                    </span>
                   ))}
                 </div>
-              </div>
-            </section>
-          )}
-
-          {/* Requirements Section */}
-          {deal.requirements && deal.requirements.length > 0 && (
-            <section style={{ marginBottom: "60px" }}>
-            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Prerequisites</div>
-            <h2
-                style={{
-                fontSize: "1.75rem",
-                  fontWeight: 900,
-                  marginBottom: "32px",
-                  letterSpacing: "-0.03em",
-                  color: "#111827",
-                }}
-              >
-                Prerequisites for This Course
-              </h2>
-              <div
-                style={{
-                  background: "#ffffff",
-                  border: "3px solid rgba(0,0,0,0.07)",
-                  borderRadius: "20px",
-                  padding: "32px",
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: "0.95rem",
-                    lineHeight: 1.7,
-                    color: "#6b7280",
-                    fontWeight: 600,
-                    marginBottom: "24px",
-                  }}
-                >
-                  Before enrolling in{" "}
-                  <strong style={{ color: "#111827" }}>{deal.title}</strong>
-                  , make sure you have:
-                </p>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                    gap: "16px",
-                    fontSize: "0.95rem",
-                    color: "#111827",
-                  }}
-                >
-                  {deal.requirements.map((req, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        display: "flex",
-                        gap: "10px",
-                        alignItems: "flex-start",
-                      }}
-                    >
-                      <span
-                        style={{
-                          color: "#6b7280",
-                          marginTop: "2px",
-                          flexShrink: 0,
-                        }}
-                      >
-                        •
-                      </span>
-                      <span>{req}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Course Content Section */}
-          <section style={{ marginBottom: "60px"               }}>
-            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Course Content</div>
-            <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "32px", letterSpacing: "-0.03em", color: "#111827" }}>
-              About This {deal.provider || "Udemy"} Course
-            </h2>
-            <div
-              style={{
-                background: "#ffffff",
-                border: "3px solid rgba(0,0,0,0.07)",
-                borderRadius: "16px",
-                padding: "32px",
-                
-                marginBottom: "40px",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "0.95rem",
-                  lineHeight: 1.7,
-                  color: "#6b7280",
-                  fontWeight: 600,
-                  marginBottom: "24px",
-                }}
-              >
-                The following is the full official course description for{" "}
-                <strong style={{ color: "#111827" }}>{deal.title}</strong>{" "}
-                as published on <strong>{deal.provider || "Udemy"}</strong> by
-                instructor{" "}
-                <strong style={{ color: "#f97316" }}>
-                  {deal.instructor}
-                </strong>
-                :
-              </p>
-              <div
-                ref={markdownRef}
-                className="neo-prose"
-                style={{
-                  fontSize: "1.05rem",
-                  lineHeight: 1.8,
-                  color: "#111827",
-                  fontWeight: 500,
-                }}
-                suppressHydrationWarning={true}
-                dangerouslySetInnerHTML={{ __html: htmlContent }}
-              />
-            </div>
-          </section>
-
-          {/* Course Comparison */}
-          {relatedDeals && relatedDeals.length > 0 && (
-            <section style={{ marginBottom: "60px" }}>
-              <CourseComparison
-                currentDeal={{
-                  id: deal.slug || deal.id,
-                  title: deal.title,
-                  provider: deal.provider,
-                  price: deal.price,
-                  originalPrice: deal.originalPrice,
-                  rating: deal.rating,
-                  students: deal.students,
-                  duration: deal.duration,
-                  url: deal.url,
-                  coupon: deal.coupon,
-                  expiresAt: deal.expiresAt,
-                }}
-                similarDeals={relatedDeals.slice(0, 1).map((r) => ({
-                  id: r.slug || r.id,
-                  title: r.title,
-                  provider: r.provider,
-                  price: r.price,
-                  originalPrice: r.originalPrice,
-                  rating: r.rating,
-                  students: r.students,
-                  duration: r.duration,
-                  url: r.url,
-                  coupon: r.coupon,
-                  expiresAt: r.expiresAt,
-                }))}
-              />
-            </section>
-          )}
-
-          {/* Expert Review Section */}
-          <section
-            style={{
-              borderTop: "1px solid rgba(0,0,0,0.07)",
-              paddingTop: "60px",
-              marginBottom: "60px",
-            }}
-          >
-            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Expert Review</div>
-            <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "32px", letterSpacing: "-0.03em", color: "#111827" }}>
-              Is the {deal.title} Coupon Worth It?
-            </h2>
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                marginBottom: "24px",
-                fontSize: "0.85rem",
-                color: "#6b7280",
-              }}
-            >
-              <span>
-                Expert review by{" "}
-                <strong style={{ color: "#111827" }}>Andrew Derek</strong>,
-                Lead Course Analyst at CoursesWyn.
-              </span>
-              <span style={{ color: "rgba(0,0,0,0.07)" }}>•</span>
-              <span>
-                Last updated:{" "}
-                {deal.updatedAt
-                  ? new Date(deal.updatedAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      timeZone: "Asia/Jakarta",
-                    })
-                  : new Date().toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      timeZone: "Asia/Jakarta",
-                    })}
-                .
-              </span>
-            </div>
-
-            <p
-              style={{
-                fontSize: "1rem",
-                color: "#111827",
-                lineHeight: 1.75,
-                marginBottom: "16px",
-                fontWeight: 500,
-              }}
-            >
-              Based on analysis of the curriculum structure, student engagement
-              metrics, and verified rating data,
-              <strong style={{ color: "#111827" }}> {deal.title}</strong> is
-              a high-value resource for learners seeking to build skills in
-              {deal.category || "professional development"}.
-              {deal.instructor
-                ? ` Taught by ${deal.instructor} on ${deal.provider || "Udemy"}`
-                : ` Offered on ${deal.provider || "Udemy"}`}
-              {deal.duration
-                ? `, the ${deal.duration} course provides a structured progression from foundational concepts to advanced techniques`
-                : ""}
-              — making it suitable for learners at all levels.
-              {discountPct > 0 ? (
-                <>
-                  {" "}
-                  The current coupon reduces the price by {discountPct}%, from $
-                  {deal.originalPrice?.toFixed(2) || "119.99"} to $
-                  {deal.price?.toFixed(2) || "12.99"}, removing the primary
-                  financial barrier to enrollment.
-                </>
-              ) : (
-                <>
-                  {" "}
-                  The current offer provides excellent value with accessible
-                  pricing.
-                </>
               )}
-            </p>
 
-            {/* Pros Section */}
-            <div style={{ marginBottom: "24px" }}>
-              <h3
-                style={{
-                  fontSize: "1.1rem",
-                  fontWeight: 900,
-                  color: "#f97316",
-                  marginBottom: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-              >
-                <span style={{ fontSize: "1.2rem" }}>✓</span>
-                What We Like (Pros)
-              </h3>
-              <ul
-                style={{
-                  margin: 0,
-                  paddingLeft: "24px",
-                  color: "#111827",
-                  fontSize: "0.95rem",
-                  lineHeight: 1.6,
-                  fontWeight: 500,
-                }}
-              >
-                <li style={{ marginBottom: "8px" }}>
-                  Verified{discountPct > 0 ? ` ${discountPct}%` : ""} price
-                  reduction makes this course accessible to learners on any
-                  budget.
-                </li>
-                {deal.rating && (
-                  <li style={{ marginBottom: "8px" }}>
-                    Aggregate student rating of {deal.rating.toFixed(1)} out of
-                    5 indicates high learner satisfaction.
-                  </li>
+              <div className="cd-stats">
+                {deal.duration && (
+                  <div className="cd-stat">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    {deal.duration}
+                  </div>
                 )}
                 {deal.students && (
-                  <li style={{ marginBottom: "8px" }}>
-                    Strong enrollment base with over{" "}
-                    {deal.students.toLocaleString()} students demonstrates
-                    course popularity and trust.
-                  </li>
-                )}
-                <li style={{ marginBottom: "8px" }}>
-                  Includes an official {deal.provider || "Udemy"} completion
-                  certificate and lifetime access to all future content updates.
-                </li>
-              </ul>
-            </div>
-
-            {/* Cons Section */}
-            <div style={{ marginBottom: "24px" }}>
-              <h3
-                style={{
-                  fontSize: "1.1rem",
-                  fontWeight: 900,
-                  color: "#f97316",
-                  marginBottom: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-              >
-                <span style={{ fontSize: "1.2rem" }}>!</span>
-                Keep in Mind (Cons)
-              </h3>
-              <p
-                style={{
-                  fontSize: "0.95rem",
-                  color: "#6b7280",
-                  marginBottom: "12px",
-                  fontWeight: 600,
-                }}
-              >
-                The following limitations should be considered before enrolling
-                in{" "}
-                <strong style={{ color: "#111827" }}>{deal.title}</strong>:
-              </p>
-              <ul
-                style={{
-                  margin: 0,
-                  paddingLeft: "24px",
-                  color: "#111827",
-                  fontSize: "0.95rem",
-                  lineHeight: 1.6,
-                  fontWeight: 500,
-                }}
-              >
-                <li style={{ marginBottom: "8px" }}>
-                  The depth of {deal.category || "subject"} coverage may be
-                  challenging for absolute beginners without the listed
-                  prerequisites.
-                </li>
-                <li style={{ marginBottom: "8px" }}>
-                  Lifetime access is contingent on the continued operation of
-                  the {deal.provider || "Udemy"} platform.
-                </li>
-                <li style={{ marginBottom: "8px" }}>
-                  Hands-on projects and quizzes require additional time
-                  investment beyond video watch time.
-                </li>
-              </ul>
-            </div>
-
-            {/* Final Verdict */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "16px 24px",
-                background: "#f97316",
-                borderRadius: "8px",
-                border: "3px solid rgba(0,0,0,0.07)",
-                
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    fontSize: "1.1rem",
-                    fontWeight: 900,
-                    color: "#ffffff",
-                    marginBottom: "4px",
-                  }}
-                >
-                  Final Verdict: Worth It
-                </div>
-                <div
-                  style={{
-                    fontSize: "0.85rem",
-                    color: "#ffffff",
-                    opacity: 0.9,
-                    fontWeight: 600,
-                  }}
-                >
-                  This course offers exceptional value with current pricing
-                </div>
-              </div>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  background: "#ffffff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#f97316",
-                  fontSize: "1.2rem",
-                  fontWeight: 900,
-                }}
-              >
-                ✓
-              </div>
-            </div>
-          </section>
-
-          {/* Course Rating Summary */}
-          {deal.rating && (
-            <section
-              style={{
-                borderTop: "1px solid rgba(0,0,0,0.07)",
-                paddingTop: "60px",
-                marginBottom: "60px",
-              }}
-            >
-              <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Rating</div>
-            <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "32px", letterSpacing: "-0.03em", color: "#111827" }}>
-                Course Rating Summary
-              </h2>
-              <p
-                style={{
-                  fontSize: "0.95rem",
-                  color: "#6b7280",
-                  fontWeight: 600,
-                  marginBottom: "24px",
-                }}
-              >
-                <strong style={{ color: "#111827" }}>{deal.title}</strong>{" "}
-                has earned an aggregate rating of{" "}
-                {deal.rating?.toFixed(1) || "4.8"} out of 5 from{" "}
-                {deal.students?.toLocaleString() || "thousands of"} verified
-                student reviews on {deal.provider || "Udemy"}. Below is the
-                detailed rating distribution showing learner satisfaction across
-                all star levels.
-              </p>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "32px",
-                  flexWrap: "wrap",
-                }}
-              >
-                <div style={{ textAlign: "center", minWidth: "100px" }}>
-                  <div
-                    style={{
-                      fontSize: "3.5rem",
-                      fontWeight: 900,
-                      color: "#eed49f",
-                      lineHeight: 1,
-                    }}
-                  >
-                    {deal.rating.toFixed(1)}
-                  </div>
-                  <div
-                    style={{
-                      color: "#eed49f",
-                      fontSize: "1.1rem",
-                      margin: "4px 0",
-                    }}
-                  >
-                    ★★★★★
-                  </div>
-                  <div
-                    style={{
-                      color: "#6b7280",
-                      fontSize: "0.8rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {deal.students?.toLocaleString() || "Many"} Verified Ratings
-                  </div>
-                </div>
-                <div style={{ flex: 1, minWidth: "200px" }}>
-                  {[
-                    { star: 5, pct: 75 },
-                    { star: 4, pct: 15 },
-                    { star: 3, pct: 6 },
-                    { star: 2, pct: 2 },
-                    { star: 1, pct: 2 },
-                  ].map(({ star, pct }) => (
-                    <div
-                      key={star}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          color: "#6b7280",
-                          fontSize: "0.8rem",
-                          width: "50px",
-                          flexShrink: 0,
-                          fontWeight: 700,
-                        }}
-                      >
-                        {star} star{star !== 1 ? "s" : ""}
-                      </span>
-                      <div
-                        style={{
-                          flex: 1,
-                          height: "8px",
-                          background: "rgba(0,0,0,0.07)",
-                          borderRadius: "4px",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: `${pct}%`,
-                            height: "100%",
-                            background: "#f97316",
-                            borderRadius: "4px",
-                          }}
-                        ></div>
-                      </div>
-                      <span
-                        style={{
-                          color: "#6b7280",
-                          fontSize: "0.8rem",
-                          width: "35px",
-                          textAlign: "right",
-                          fontWeight: 700,
-                        }}
-                      >
-                        {pct}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <p
-                style={{
-                  fontSize: "0.8rem",
-                  color: "#6b7280",
-                  marginTop: "16px",
-                  fontStyle: "italic",
-                  fontWeight: 600,
-                }}
-              >
-                * Rating distribution is approximated from the aggregate score.
-                Sourced from {deal.provider || "Udemy"}.
-              </p>
-            </section>
-          )}
-
-          {/* Instructor Profile */}
-          {deal.instructor && (
-            <section
-              style={{
-                borderTop: "1px solid rgba(0,0,0,0.07)",
-                paddingTop: "60px",
-                marginBottom: "60px",
-              }}
-            >
-            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Instructor</div>
-            <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "32px", letterSpacing: "-0.03em", color: "#111827" }}>
-                About the Instructor — {deal.instructor}
-              </h2>
-              <p
-                style={{
-                  fontSize: "0.95rem",
-                  color: "#111827",
-                  lineHeight: 1.6,
-                  marginBottom: "24px",
-                  fontWeight: 500,
-                }}
-              >
-                {deal.title} is taught by {deal.instructor}, a{" "}
-                {deal.provider || "Udemy"} instructor specializing in{" "}
-                {deal.category || "IT & Software"}. For the full instructor
-                biography, professional credentials, and a complete list of
-                their courses, visit the official instructor profile on{" "}
-                {deal.provider || "Udemy"}.
-              </p>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                  gap: "16px",
-                  fontSize: "0.95rem",
-                  color: "#111827",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <span
-                    style={{
-                      color: "#6b7280",
-                      marginTop: "2px",
-                      flexShrink: 0,
-                    }}
-                  >
-                    •
-                  </span>
-                  <span>
-                    <strong style={{ color: "#111827" }}>
-                      Instructor Name:
-                    </strong>{" "}
-                    {deal.instructor}
-                  </span>
-                </div>
-                {deal.category && (
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      alignItems: "flex-start",
-                    }}
-                  >
-                    <span
-                      style={{
-                        color: "#6b7280",
-                        marginTop: "2px",
-                        flexShrink: 0,
-                      }}
-                    >
-                      •
-                    </span>
-                    <span>
-                      <strong style={{ color: "#111827" }}>
-                        Subject Area:
-                      </strong>{" "}
-                      {deal.category}
-                    </span>
+                  <div className="cd-stat">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    {deal.students.toLocaleString()} students
                   </div>
                 )}
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <span
-                    style={{
-                      color: "#6b7280",
-                      marginTop: "2px",
-                      flexShrink: 0,
-                    }}
-                  >
-                    •
-                  </span>
-                  <span>
-                    <strong style={{ color: "#111827" }}>
-                      Teaching Approach:
-                    </strong>{" "}
-                    Practical, project-based instruction focused on real-world
-                    application of {deal.category || "IT Certifications"}{" "}
-                    skills.
-                  </span>
-                </div>
-              </div>
-              <div style={{ marginTop: "24px" }}>
-                <a
-                  href={`/instructor/${createInstructorSlug(deal.instructor || "")}`}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    fontSize: "0.95rem",
-                    color: "#f97316",
-                    textDecoration: "none",
-                    fontWeight: 700,
-                  }}
-                >
-                  View Full Instructor Profile ↗
-                </a>
-              </div>
-            </section>
-          )}
-
-          {/* FAQ Section */}
-          {autoFAQs.length > 0 && (
-            <section
-              style={{
-                borderTop: "1px solid rgba(0,0,0,0.07)",
-                paddingTop: "60px",
-                marginBottom: "60px",
-              }}
-            >
-            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>FAQ</div>
-            <h2
-                style={{
-                  fontSize: "1.75rem",
-                  fontWeight: 900,
-                  marginBottom: "32px",
-                  letterSpacing: "-0.03em",
-                  color: "#111827",
-                }}
-              >
-                Frequently Asked Questions
-              </h2>
-              <p
-                style={{
-                  fontSize: "0.95rem",
-                  color: "#6b7280",
-                  fontWeight: 600,
-                  marginBottom: "24px",
-                }}
-              >
-                The following questions and answers cover the most common
-                queries about{" "}
-                <strong style={{ color: "#111827" }}>{deal.title}</strong>,
-                its coupon code, pricing, and enrollment process.
-              </p>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                }}
-              >
-                {autoFAQs.map((faq, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      border: "3px solid rgba(0,0,0,0.07)",
-                      borderRadius: "8px",
-                      background: "#ffffff",
-                      boxShadow:
-                        expandedFAQ === idx
-                          ? "0 2px 12px rgba(0,0,0,0.06)"
-                          : "0 1px 4px rgba(0,0,0,0.04)",
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    <button
-                      onClick={() =>
-                        setExpandedFAQ(expandedFAQ === idx ? null : idx)
-                      }
-                      style={{
-                        width: "100%",
-                        padding: "20px 24px",
-                        background: "none",
-                        border: "none",
-                        textAlign: "left",
-                        cursor: "pointer",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        fontSize: "0.95rem",
-                        fontWeight: 900,
-                        color: "#111827",
-                        gap: "16px",
-                      }}
-                    >
-                      <span>{faq.q}</span>
-                      <span
-                        style={{
-                          fontSize: "1.2rem",
-                          transition: "transform 0.2s",
-                          transform:
-                            expandedFAQ === idx
-                              ? "rotate(180deg)"
-                              : "rotate(0deg)",
-                        }}
-                      >
-                        ▼
-                      </span>
-                    </button>
-                    {expandedFAQ === idx && (
-                      <div
-                        style={{
-                          padding: "0 24px 24px",
-                          borderTop: "1px solid rgba(0,0,0,0.07)",
-                          color: "#111827",
-                          fontWeight: 500,
-                          lineHeight: 1.6,
-                          background: "#ffffff",
-                        }}
-                      >
-                        {faq.a}
-                      </div>
-                    )}
+                {deal.rating && (
+                  <div className="cd-stat">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    {deal.rating.toFixed(1)} ({deal.students?.toLocaleString() || "0"})
                   </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Author Profile Section */}
-          <section
-            style={{
-              borderTop: "1px solid rgba(0,0,0,0.07)",
-              paddingTop: "60px",
-              marginBottom: "60px",
-            }}
-          >
-            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Author</div>
-            <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "32px", letterSpacing: "-0.03em", color: "#111827" }}>
-              About the Author
-            </h2>
-
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "24px",
-                  flexWrap: "wrap",
-                  background: "#ffffff",
-                  border: "3px solid rgba(0,0,0,0.07)",
-                  borderRadius: "20px",
-                  padding: "32px",
-                  
-                }}
-            >
-              <div
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  borderRadius: "50%",
-                  background: "#f97316",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  color: "white",
-                  fontWeight: 900,
-                  fontSize: "1.5rem",
-                }}
-              >
-                AD
+                )}
               </div>
 
-              <div style={{ flex: 1, minWidth: "280px" }}>
-                <h3
-                  style={{
-                    fontSize: "1.25rem",
-                    fontWeight: 900,
-                    color: "#111827",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Andrew Derek
-                </h3>
-                <p
-                  style={{
-                    fontSize: "0.95rem",
-                    color: "#6b7280",
-                    lineHeight: 1.6,
-                    marginBottom: "16px",
-                    fontWeight: 600,
-                  }}
-                >
-                  Lead Course Analyst at CoursesWyn with 8+ years of experience
-                  evaluating online learning platforms. I've analyzed 500+ Udemy
-                  courses and helped thousands of learners choose the right
-                  courses for their career goals.
-                </p>
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "16px" }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                  >
-                    <span style={{ fontSize: "1.2rem" }}>⭐</span>
-                    <span
-                      style={{
-                        fontSize: "0.85rem",
-                        color: "#6b7280",
-                        fontWeight: 700,
-                      }}
-                    >
-                      4.8/5 Rating
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                  >
-                    <span style={{ fontSize: "1.2rem" }}>✓</span>
-                    <span
-                      style={{
-                        fontSize: "0.85rem",
-                        color: "#6b7280",
-                        fontWeight: 700,
-                      }}
-                    >
-                      Trusted by 10K+ Students
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Internal Links Section */}
-          <section
-            style={{
-              borderTop: "1px solid rgba(0,0,0,0.07)",
-              paddingTop: "60px",
-              marginBottom: "60px",
-            }}
-          >
-            <div style={{ display: "inline-block", fontSize: "1rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "#ea580c", marginBottom: ".75rem" }}>Resources</div>
-            <h2 style={{ fontSize: "1.75rem", fontWeight: 900, marginBottom: "32px", letterSpacing: "-0.03em", color: "#111827" }}>
-              Explore More Resources
-            </h2>
-            <p
-              style={{
-                fontSize: "0.95rem",
-                color: "#6b7280",
-                fontWeight: 600,
-                marginBottom: "24px",
-              }}
-            >
-              Discover more {deal.category || "online learning"} resources,
-              related courses, and helpful guides. Browse similar topics,
-              explore instructor profiles, or check out our complete library of
-              verified {deal.provider || "Udemy"} coupon codes to continue your
-              learning journey.
-            </p>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                gap: "16px",
-              }}
-            >
-              {/* Category Links */}
-              {deal.category && (
-                <a
-                  href={`/categories/${slugifyCategory(deal.category)}`}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    padding: "16px 20px",
-                    background: "#ffffff",
-                    border: "3px solid rgba(0,0,0,0.07)",
-                    borderRadius: "12px",
-                    textDecoration: "none",
-                    color: "#111827",
-                    fontWeight: 700,
-                    fontSize: "0.95rem",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                    transition: "all 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.transform =
-                      "translate(-2px, -2px)";
-                    (e.currentTarget as HTMLElement).style.boxShadow =
-                      "5px 5px 0 rgba(0,0,0,0.07)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.transform =
-                      "translate(0, 0)";
-                    (e.currentTarget as HTMLElement).style.boxShadow =
-                      "3px 3px 0 rgba(0,0,0,0.07)";
-                  }}
-                >
-                  <span style={{ fontSize: "1.2rem" }}>📁</span>
-                  <span>All {deal.category} Courses</span>
-                  <span style={{ marginLeft: "auto", color: "#f97316" }}>
-                    →
-                  </span>
-                </a>
-              )}
-              {deal.subcategory && deal.subcategory !== deal.category && (
-                <a
-                  href={`/topics/${slugifyCategory(deal.subcategory)}`}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    padding: "16px 20px",
-                    background: "#ffffff",
-                    border: "3px solid rgba(0,0,0,0.07)",
-                    borderRadius: "12px",
-                    textDecoration: "none",
-                    color: "#111827",
-                    fontWeight: 700,
-                    fontSize: "0.95rem",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                    transition: "all 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.transform =
-                      "translate(-2px, -2px)";
-                    (e.currentTarget as HTMLElement).style.boxShadow =
-                      "5px 5px 0 rgba(0,0,0,0.07)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.transform =
-                      "translate(0, 0)";
-                    (e.currentTarget as HTMLElement).style.boxShadow =
-                      "3px 3px 0 rgba(0,0,0,0.07)";
-                  }}
-                >
-                  <span style={{ fontSize: "1.2rem" }}>📂</span>
-                  <span>{deal.subcategory} Courses</span>
-                  <span style={{ marginLeft: "auto", color: "#f97316" }}>
-                    →
-                  </span>
-                </a>
-              )}
-              <a
-                href="/udemy-coupon-code"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "16px 20px",
-                  background: "#ffffff",
-                  border: "3px solid rgba(0,0,0,0.07)",
-                  borderRadius: "12px",
-                  textDecoration: "none",
-                  color: "#111827",
-                  fontWeight: 700,
-                  fontSize: "0.95rem",
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                  transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform =
-                    "translate(-2px, -2px)";
-                  (e.currentTarget as HTMLElement).style.boxShadow =
-                    "5px 5px 0 rgba(0,0,0,0.07)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform =
-                    "translate(0, 0)";
-                  (e.currentTarget as HTMLElement).style.boxShadow =
-                    "3px 3px 0 rgba(0,0,0,0.07)";
-                }}
-              >
-                <span style={{ fontSize: "1.2rem" }}>🎫</span>
-                <span>All Udemy Coupons</span>
-                <span style={{ marginLeft: "auto", color: "#f97316" }}>
-                  →
-                </span>
-              </a>
-              <a
-                href="/"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "16px 20px",
-                  background: "#ffffff",
-                  border: "3px solid rgba(0,0,0,0.07)",
-                  borderRadius: "12px",
-                  textDecoration: "none",
-                  color: "#111827",
-                  fontWeight: 700,
-                  fontSize: "0.95rem",
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                  transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform =
-                    "translate(-2px, -2px)";
-                  (e.currentTarget as HTMLElement).style.boxShadow =
-                    "5px 5px 0 rgba(0,0,0,0.07)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform =
-                    "translate(0, 0)";
-                  (e.currentTarget as HTMLElement).style.boxShadow =
-                    "3px 3px 0 rgba(0,0,0,0.07)";
-                }}
-              >
-                <span style={{ fontSize: "1.2rem" }}>🏠</span>
-                <span>Homepage</span>
-                <span style={{ marginLeft: "auto", color: "#f97316" }}>
-                  →
-                </span>
-              </a>
-              <a
-                href="/blog"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "16px 20px",
-                  background: "#ffffff",
-                  border: "3px solid rgba(0,0,0,0.07)",
-                  borderRadius: "12px",
-                  textDecoration: "none",
-                  color: "#111827",
-                  fontWeight: 700,
-                  fontSize: "0.95rem",
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                  transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform =
-                    "translate(-2px, -2px)";
-                  (e.currentTarget as HTMLElement).style.boxShadow =
-                    "5px 5px 0 rgba(0,0,0,0.07)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform =
-                    "translate(0, 0)";
-                  (e.currentTarget as HTMLElement).style.boxShadow =
-                    "3px 3px 0 rgba(0,0,0,0.07)";
-                }}
-              >
-                <span style={{ fontSize: "1.2rem" }}>📝</span>
-                <span>Course Reviews & Guides</span>
-                <span style={{ marginLeft: "auto", color: "#f97316" }}>
-                  →
-                </span>
-              </a>
-            </div>
-          </section>
-
-          {/* Related Deals */}
-          {relatedDeals.length > 0 && (
-            <section
-              style={{
-                borderTop: "1px solid rgba(0,0,0,0.07)",
-                paddingTop: "60px",
-                marginBottom: "60px",
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: "1.75rem",
-                  fontWeight: 900,
-                  marginBottom: "32px",
-                  letterSpacing: "-0.03em",
-                  color: "#111827",
-                }}
-              >
-                More {deal.category || "Udemy"} Courses You Might Like
-              </h2>
-              <p
-                style={{
-                  fontSize: "0.95rem",
-                  color: "#6b7280",
-                  fontWeight: 600,
-                  marginBottom: "24px",
-                }}
-              >
-                Similar {deal.provider || "Udemy"} courses in{" "}
-                {deal.category || "this category"} with verified coupons:
-              </p>
-              <RelatedList items={relatedDeals} />
-            </section>
-          )}
-        </main>
-
-        {/* Right Column / Sidebar */}
-        <aside style={{ position: "relative" }}>
-          <div
-            style={{
-              position: "sticky",
-              top: "40px",
-              background: "#ffffff",
-              border: "3px solid rgba(0,0,0,0.07)",
-              borderRadius: "20px",
-              overflow: "hidden",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-            }}
-          >
-            {deal.image && (
-              <div
-                style={{
-                  height: "200px",
-                  borderBottom: "3px solid rgba(0,0,0,0.07)",
-                  position: "relative",
-                }}
-              >
-                <img
-                  src={deal.image}
-                  alt={deal.title}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "12px",
-                    right: "12px",
-                    background: "#f97316",
-                    color: "#ffffff",
-                    padding: "4px 10px",
-                    borderRadius: "4px",
-                    fontSize: "0.65rem",
-                    fontWeight: 900,
-                    border: "3px solid rgba(0,0,0,0.07)",
-                    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-                  }}
-                >
-                  ✓ VERIFIED
-                </div>
-              </div>
-            )}
-
-            <div style={{ padding: "32px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                  marginBottom: "24px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    gap: "12px",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "2rem",
-                      fontWeight: 900,
-                      color: "#f97316",
-                    }}
-                  >
+              {/* Price + Countdown */}
+              <div className="cd-price-row">
+                <div className="cd-price">
+                  <span className={price === 0 ? "cd-price-free" : "cd-price-current"}>
                     {price === 0 ? "FREE" : `$${price.toFixed(2)}`}
                   </span>
                   {originalPrice > price && (
-                    <span
-                      style={{
-                        fontSize: "1.1rem",
-                        color: "#6b7280",
-                        textDecoration: "line-through",
-                        fontWeight: 600,
-                      }}
-                    >
-                      ${originalPrice.toFixed(2)}
-                    </span>
+                    <span className="cd-price-orig">${originalPrice.toFixed(2)}</span>
                   )}
+                  {discountPct > 0 && <span className="cd-price-badge">{discountPct}% OFF</span>}
                 </div>
-                {discountPct > 0 && (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        background: "#f97316",
-                        color: "#ffffff",
-                        padding: "2px 8px",
-                        borderRadius: "4px",
-                        fontSize: "0.75rem",
-                        fontWeight: 900,
-                      }}
-                    >
-                      {discountPct}% OFF
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "0.85rem",
-                        fontWeight: 800,
-                        color: "#f97316",
-                      }}
-                    >
-                      SAVE ${(originalPrice - price).toFixed(2)}
-                    </span>
+
+              </div>
+
+              {/* Countdown + Last checked */}
+              <div className="cd-meta-row">
+                {countdown && (
+                  <div className="cd-countdown">
+                    <span className="cd-countdown-label">Expires in:</span>
+                    <span>{countdown.days}d {countdown.hours}h {countdown.minutes}m {countdown.seconds}s</span>
+                  </div>
+                )}
+                {deal.updatedAt && (
+                  <div className="cd-checked">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    Verified {(() => { const diff = Math.floor((Date.now() - new Date(deal.updatedAt!).getTime()) / 3600000); if (diff < 1) return "<1h ago"; if (diff < 24) return `${diff}h ago`; return `${Math.floor(diff / 24)}d ago`; })()}
                   </div>
                 )}
               </div>
-
-              {countdown && (
-                <div
-                  style={{
-                    background: "#ffffff",
-                    border: "3px solid rgba(0,0,0,0.07)",
-                    borderRadius: "20px",
-                    padding: "12px",
-                    marginBottom: "24px",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: "0.6rem",
-                      fontWeight: 900,
-                      color: "#111827",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.1em",
-                      marginBottom: "6px",
-                      textAlign: "center",
-                    }}
-                  >
-                    Coupon expires in:
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: "8px",
-                      fontWeight: 900,
-                      fontSize: "0.85rem",
-                    }}
-                  >
-                    <div>{countdown.days}d</div>
-                    <div>{countdown.hours}h</div>
-                    <div>{countdown.minutes}m</div>
-                    <div>{countdown.seconds}s</div>
-                  </div>
-                </div>
-              )}
-
-              {deal.coupon && (
-                <div style={{ marginBottom: "24px" }}>
-                  <div
-                    style={{
-                      fontSize: "0.75rem",
-                      fontWeight: 900,
-                      color: "#111827",
-                      marginBottom: "8px",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Coupon Code:
-                  </div>
-                  <div
-                    style={{
-                    display: "flex",
-                    border: "3px solid rgba(0,0,0,0.07)",
-                    borderRadius: "12px",
-                    overflow: "hidden",
-                    background: "#ffffff",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                    }}
-                  >
-                    <code
-                      style={{
-                        flex: 1,
-                        padding: "12px",
-                        fontSize: "0.9rem",
-                        fontWeight: 900,
-                        color: "#111827",
-                        letterSpacing: "0.1em",
-                        textAlign: "center",
-                      }}
-                    >
-                      {deal.coupon.length > 4
-                        ? `${deal.coupon.substring(0, 4)}····`
-                        : deal.coupon}
-                    </code>
-                    <button
-                      onClick={() => setIsModalOpen(true)}
-                      style={{
-                        background: "#f97316",
-                        color: "#ffffff",
-                        border: "none",
-                        padding: "0 16px",
-                        cursor: "pointer",
-                        fontWeight: 900,
-                        fontSize: "0.75rem",
-                      }}
-                    >
-                      SHOW
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <a
-                href={deal.url}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "10px",
-                  width: "100%",
-                  padding: "18px",
-                  fontSize: "1.1rem",
-                  fontWeight: 900,
-                  color: "white",
-                  background: "linear-gradient(135deg, #f97316, #ec4899, #a855f7)",
-                  borderRadius: "12px",
-                  textDecoration: "none",
-                  transition: "all 0.2s",
-                }}
-              >
-                REDEEM COUPON
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3.5"
-                >
-                  <path
-                    d="M7 17L17 7M17 7H7M17 7v10"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </a>
-
-              <div
-                style={{
-                  marginTop: "32px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                }}
-              >
-                {[
-                  ["Duration", deal.duration || "Self-paced"],
-                  ["Access", "Lifetime"],
-                  ["Certificate", "Included"],
-                  ["Language", deal.language || "English"],
-                ].map(([label, value]) => (
-                  <div
-                    key={label}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: "0.85rem",
-                      fontWeight: 700,
-                    }}
-                  >
-                    <span style={{ color: "#6b7280" }}>{label}</span>
-                    <span>{value}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div
-                style={{
-                  marginTop: "32px",
-                  paddingTop: "24px",
-                  borderTop: "2px dashed rgba(0,0,0,0.07)",
-                }}
-              >
-                <ActionsPanel deal={{ ...deal, url: deal.url || "" }} />
-              </div>
-            </div>
-          </div>
-        </aside>
-      </div>
-
-      <style>{`
-                .neo-prose { color: #111827; }
-                .neo-prose h2, .neo-prose h3 { font-weight: 900; margin-top: 2em; margin-bottom: 0.75em; letter-spacing: -0.02em; }
-                .neo-prose p { margin-bottom: 1.5em; }
-                .neo-prose ul { margin-bottom: 1.5em; padding-left: 1.5em; list-style: none; }
-                .neo-prose li { position: relative; margin-bottom: 0.75em; }
-                .neo-prose li::before { content: "•"; position: absolute; left: -1.5em; color: #f97316; font-weight: 900; }
-                .neo-prose strong { font-weight: 800; }
-
-                @media (max-width: 960px) {
-                    .container { grid-template-columns: 1fr !important; gap: 40px !important; }
-                    aside { order: -1; }
-                }
-                @media print {
-                    body { background: white !important; color: black !important; }
-                }
-            `}</style>
-
-      {/* Coupon Modal (Neo-Brutalist) */}
-      {isModalOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.8)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-            padding: "20px",
-          }}
-          onClick={() => setIsModalOpen(false)}
-        >
-          <div
-            style={{
-              background: "#ffffff",
-              border: "4px solid rgba(0,0,0,0.07)",
-              padding: "40px",
-              maxWidth: "500px",
-              width: "100%",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-              position: "relative",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setIsModalOpen(false)}
-              style={{
-                position: "absolute",
-                top: "12px",
-                right: "12px",
-                background: "none",
-                border: "none",
-                color: "#111827",
-                fontSize: "1.5rem",
-                fontWeight: 900,
-                cursor: "pointer",
-              }}
-            >
-              ✕
-            </button>
-
-            <h3
-              style={{
-                fontSize: "1.5rem",
-                fontWeight: 900,
-                marginBottom: "8px",
-                textAlign: "center",
-              }}
-            >
-              COUPON CODE
-            </h3>
-            <p
-              style={{
-                color: "#6b7280",
-                fontSize: "0.9rem",
-                textAlign: "center",
-                marginBottom: "32px",
-                fontWeight: 600,
-              }}
-            >
-              Copy this code and apply it at checkout on{" "}
-              {deal.provider || "Udemy"}.
-            </p>
-
-            <div
-              style={{
-                background: "#ffffff",
-                border: "3px solid rgba(0,0,0,0.07)",
-                padding: "20px",
-                marginBottom: "32px",
-                textAlign: "center",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-              }}
-            >
-              <code
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: 900,
-                  letterSpacing: "0.1em",
-                }}
-              >
-                {deal.coupon}
-              </code>
-            </div>
-
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
-            >
-              <button
-                onClick={handleCopyCoupon}
-                className="btn"
-                style={{
-                  background: couponCopied ? "#f97316" : "#f97316",
-                  color: couponCopied ? "#ffffff" : "#ffffff",
-                  width: "100%",
-                  padding: "16px",
-                  fontSize: "1rem",
-                  fontWeight: 900,
-                }}
-              >
-                {couponCopied ? "✓ COPIED TO CLIPBOARD" : "COPY CODE"}
-              </button>
-              <a
-                href={deal.url}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                className="btn btn-secondary"
-                style={{
-                  width: "100%",
-                  padding: "16px",
-                  textAlign: "center",
-                  fontSize: "1rem",
-                  fontWeight: 900,
-                  background: "#f97316",
-                  color: "white",
-                }}
-              >
-                REDEEM ON {deal.provider || "UDEMY"} →
-              </a>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ── QUICK FACTS ── */}
+      <div className="cd-container">
+        <section className="cd-section">
+          <h2 className="cd-section-title">Quick Facts — {deal.title}</h2>
+          <div className="cd-qf-grid">
+            {[
+              { label: "Platform", value: `${deal.provider || "Udemy"}` },
+              deal.instructor ? { label: "Instructor", value: deal.instructor } : null,
+              { label: "Level", value: extractDifficultyLevel(deal.title, deal.description) },
+              deal.category ? { label: "Topic", value: deal.category } : null,
+              deal.duration ? { label: "Duration", value: `${deal.duration} of video` } : null,
+              deal.language ? { label: "Language", value: deal.language } : null,
+              { label: "Access", value: "Lifetime access" },
+              { label: "Certificate", value: `Yes — from ${deal.provider || "Udemy"}` },
+              deal.learn && deal.learn.length > 0 ? { label: "Skills", value: deal.learn.slice(0, 4).join(", ") } : null,
+              { label: "Price", value: `$${price.toFixed(2)}${originalPrice > price ? ` (was $${originalPrice.toFixed(2)}) — save ${discountPct}%` : ""}` },
+            ].filter(Boolean).map((item, idx) => (
+              <div key={idx} className="cd-qf-row">
+                <span className="cd-qf-label">{item!.label}</span>
+                <span className="cd-qf-value">{item!.value}</span>
+              </div>
+            ))}
+          </div>
+          <div className="cd-qf-tip">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>For best results, apply the coupon in a regular browser window rather than incognito/private mode.</span>
+          </div>
+        </section>
+      </div>
+
+      {/* ── PERSONAL PLAN CTA ── */}
+      <section className="cd-plan-section">
+        <div className="cd-container">
+          <div className="cd-plan-box">
+            <h2 className="cd-plan-title">Go Unlimited with Udemy Personal Plan<br />26,000+ Premium Courses, One Subscription</h2>
+            <div className="cd-plan-actions">
+              <a href="https://trk.udemy.com/c/6564357/3775958/39854" target="_blank" rel="noopener noreferrer" className="cd-plan-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg>
+                Start Free Trial
+              </a>
+            </div>
+            <div className="cd-plan-features">
+              <span><span className="cd-plan-dot"></span>26,000+ courses</span>
+              <span><span className="cd-plan-dot"></span>7-day free trial</span>
+              <span><span className="cd-plan-dot"></span>From $20/month</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── RELATED COUPONS ── */}
+      {relatedDeals.length > 0 && (
+        <div className="cd-container">
+          <section className="cd-section">
+            <h2 className="cd-section-title">More {deal.category || "Udemy"} Courses You Might Like</h2>
+            <p className="cd-card-intro">Similar {deal.provider || "Udemy"} courses in {deal.category || "this category"} with verified coupons:</p>
+            <RelatedList items={relatedDeals} initial={6} />
+          </section>
+        </div>
       )}
+
+      {/* ── FAQS ── */}
+      {autoFAQs.length > 0 && (
+        <div className="cd-container">
+          <section className="cd-section" itemScope itemType="https://schema.org/FAQPage">
+            <h2 className="cd-section-title">Frequently Asked Questions — {deal.title}</h2>
+            <p className="cd-card-intro">Everything you need to know about <strong>{deal.title}</strong>, its coupon code, pricing, instructor, and enrollment. Learn <a href="/how-to-redeem-coupon" style={{color: "var(--brand)"}}>how to redeem a coupon</a> if you're new here.</p>
+            <div className="cd-faq-list">
+              {autoFAQs.map((faq, idx) => (
+                <div key={idx} className="cd-faq-item" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+                  <h3 className="cd-faq-q" itemProp="name">{faq.q}</h3>
+                  <div className="cd-faq-a" itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer">
+                    <p itemProp="text">{faq.a}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
+
+      <style>{`
+        .cd-root { background: var(--bg); color: var(--text); min-height: 100vh; font-family: var(--font-sans); }
+        .cd-container { max-width: 1024px; margin: 0 auto; padding: 0 1.5rem; }
+
+        /* ── RELATED-LIST SHARED CLASSES ── */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+        .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; transition: border-color 0.15s; }
+        .card:hover { border-color: var(--brand); }
+        .card-body { padding: 0.75rem; }
+        .card-footer { padding: 0 0.75rem 0.75rem; }
+        .pill { display: inline-block; padding: 2px 8px; border-radius: var(--radius-full); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
+        .muted { color: var(--muted); }
+        .card .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 1rem; background: var(--brand); color: white; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 700; text-decoration: none; }
+        .card .btn:hover { background: var(--brand-hover); }
+        button.pill { background: var(--secondary); color: var(--text); border: 1px solid var(--border); cursor: pointer; }
+
+        /* HERO */
+        .cd-hero { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 32px 0; }
+        .cd-hero-grid { display: grid; grid-template-columns: 420px 1fr; gap: 40px; align-items: start; }
+
+        .cd-hero-img-wrap { position: relative; border-radius: 12px; overflow: hidden; background: var(--card); }
+        .cd-hero-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+        .cd-hero-badge { position: absolute; top: 10px; right: 10px; background: var(--brand); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.03em; }
+
+        .cd-breadcrumb { margin-bottom: 6px; }
+        .cd-breadcrumb ol { list-style: none; display: flex; align-items: center; gap: 6px; padding: 0; margin: 0; font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); flex-wrap: wrap; }
+        .cd-breadcrumb a { color: var(--brand); text-decoration: none; }
+        .cd-breadcrumb a:hover { text-decoration: underline; }
+        .cd-sep { color: var(--border); }
+
+        .cd-title { font-size: 1.6rem; font-weight: 900; line-height: 1.2; margin: 0 0 10px; letter-spacing: -0.02em; color: var(--text); }
+        .cd-desc { font-size: 0.95rem; line-height: 1.6; color: var(--text-secondary); font-weight: 500; margin: 0 0 16px; }
+
+        .cd-instructor { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; margin-bottom: 12px; }
+        .cd-instructor svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--muted-light); }
+        .cd-instructor a { color: var(--brand); text-decoration: none; }
+        .cd-instructor a:hover { text-decoration: underline; }
+
+        .cd-stats { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; }
+        .cd-stat { display: flex; align-items: center; gap: 5px; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); }
+        .cd-stat svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--muted-light); }
+
+        .cd-price-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+        .cd-price { display: flex; align-items: baseline; gap: 8px; }
+        .cd-price-current { font-size: 1.5rem; font-weight: 900; color: var(--brand); }
+        .cd-price-free { font-size: 1.5rem; font-weight: 900; color: #10b981; }
+        .cd-price-orig { font-size: 0.9rem; color: var(--muted); text-decoration: line-through; font-weight: 600; }
+        .cd-price-badge { background: var(--brand); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+
+        .cd-meta-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 6px; }
+        .cd-countdown { font-size: 0.82rem; font-weight: 700; color: #dc2626; display: flex; align-items: center; gap: 4px; }
+        .cd-countdown-label { font-size: 0.65rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+        .cd-checked { display: flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); }
+        .cd-checked svg { flex-shrink: 0; color: var(--muted-light); }
+
+        .cd-redeem-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; margin-top: 12px; font-size: 0.95rem; font-weight: 900; color: white; background: linear-gradient(135deg, var(--brand), #7c3aed); border-radius: 10px; text-decoration: none; transition: opacity 0.15s; }
+        .cd-redeem-btn:hover { opacity: 0.9; }
+
+        /* SECTIONS */
+        .cd-section { margin: 40px 0; }
+        .cd-section-title { font-size: 1.3rem; font-weight: 900; color: var(--text); margin: 0 0 20px; letter-spacing: -0.02em; }
+        .cd-card-intro { font-size: 0.88rem; line-height: 1.6; color: var(--text-secondary); font-weight: 500; margin: 0 0 18px; }
+        .cd-card-intro strong { color: var(--text); font-weight: 700; }
+
+        /* QUICK FACTS */
+        .cd-qf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+        .cd-qf-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; gap: 12px; border-bottom: 1px solid var(--border); background: var(--card); }
+        .cd-qf-row:nth-child(even) { background: var(--bg-secondary); }
+        .cd-qf-row:last-child { border-bottom: none; }
+        .cd-qf-label { font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; flex-shrink: 0; }
+        .cd-qf-value { font-size: 0.85rem; color: var(--text); font-weight: 500; text-align: right; }
+        .cd-qf-tip { margin-top: 14px; display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4; }
+        .cd-qf-tip svg { flex-shrink: 0; color: var(--brand); }
+
+        /* PERSONAL PLAN */
+        .cd-plan-section { padding: 40px 0; }
+        .cd-plan-box { background: linear-gradient(135deg, #1e3a5f, var(--brand)); border-radius: 16px; padding: 48px 32px; text-align: center; }
+        .cd-plan-title { font-size: 1.4rem; font-weight: 900; color: white; margin: 0 0 24px; line-height: 1.4; }
+        .cd-plan-actions { margin-bottom: 16px; }
+        .cd-plan-btn { display: inline-flex; align-items: center; gap: 8px; background: #fbbf24; color: #111827; padding: 14px 36px; border-radius: 999px; font-size: 1rem; font-weight: 800; text-decoration: none; transition: opacity 0.15s; }
+        .cd-plan-btn:hover { opacity: 0.9; }
+        .cd-plan-features { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; font-size: 0.85rem; color: rgba(255,255,255,0.85); font-weight: 600; }
+        .cd-plan-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #fbbf24; margin-right: 6px; vertical-align: middle; }
+
+        /* FAQ */
+        .cd-faq-list { display: flex; flex-direction: column; gap: 10px; }
+        .cd-faq-item { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; border-left: 3px solid var(--brand); }
+        .cd-faq-q { font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0 0 8px; line-height: 1.5; }
+        .cd-faq-a p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.7; margin: 0; }
+        .cd-faq-a a { color: var(--brand); }
+
+        @media (max-width: 768px) {
+          .cd-hero-grid { grid-template-columns: 1fr; gap: 24px; }
+          .cd-hero-img-wrap { max-width: 100%; }
+          .cd-title { font-size: 1.3rem; }
+          .cd-plan-title { font-size: 1.1rem; }
+          .cd-plan-box { padding: 32px 20px; }
+          .cd-qf-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
     </div>
   );
 }

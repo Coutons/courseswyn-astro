@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { getDealById, readDeals } from "../../lib/store";
+import { slugifyCategory } from "../../lib/utils";
 import DealPage from "../../components/DealPage";
 import type { Deal } from "../../types/deal.d.ts";
 
@@ -81,7 +82,7 @@ const relatedDeals = allDeals
     // Fallback: match by category
     return d.category === deal.category;
   })
-  .slice(0, 4);
+  .slice(0, 6);
 
 // Calculate discount percentage
 const discountPercentage = deal.originalPrice && deal.price && deal.originalPrice > deal.price
@@ -106,7 +107,7 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
                     "name": deal.title,
                     "description": deal.seoDescription || deal.description || `${deal.title} - Learn from expert instructors with verified coupons`,
                     "url": `https://courseswyn.com/coupon/${deal.slug}`,
-                    "image": deal.seoOgImage || deal.image || `https://courseswyn.com/logo.png`,
+                    "image": deal.seoOgImage || deal.image || `https://courseswyn.com/logo.svg`,
                     "provider": {
                         "@type": "Organization",
                         "name": deal.provider || "Udemy",
@@ -192,7 +193,7 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
                             "@type": "ListItem",
                             "position": 3,
                             "name": deal.category,
-                            "item": `https://courseswyn.com/categories/${deal.category.toLowerCase().replace(/\s+/g, '-')}`
+                            "item": `https://courseswyn.com/categories/${slugifyCategory(deal.category)}`
                         } : null,
                         {
                             "@type": "ListItem",
@@ -234,7 +235,7 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
                         "url": "https://courseswyn.com",
                         "logo": {
                             "@type": "ImageObject",
-                            "url": "https://courseswyn.com/logo.png"
+                            "url": "https://courseswyn.com/logo.svg"
                         },
                         "sameAs": [
                             "https://www.facebook.com/courseswyn",
@@ -247,7 +248,7 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
                     "@id": "https://courseswyn.com#organization",
                     "name": "CoursesWyn",
                     "url": "https://courseswyn.com",
-                    "logo": "https://courseswyn.com/logo.png",
+                    "logo": "https://courseswyn.com/logo.svg",
                     "description": "CoursesWyn provides verified Udemy coupons and discount codes for premium online courses. We help learners worldwide access quality education at affordable prices.",
                     "foundingDate": "2024",
                     "sameAs": [

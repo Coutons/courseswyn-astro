@@ -1,27 +1,112 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { getDeals, getAvailableDates } from '../../lib/store.js';
+import { getDeals } from '../../lib/store.js';
 import { formatDateWIB } from '../../lib/date';
 
-const dates = await getAvailableDates();
-const latestDate = dates[0]?.date;
-const latestDeals = await getDeals({ date: latestDate, sortBy: 'rating' });
-const latestCount = latestDeals.length;
+const allDeals = await getDeals();
+const now = new Date();
+const activeDeals = allDeals.filter(d => !d.expiresAt || new Date(d.expiresAt) > now);
+
+function timeLeft(expiresAt: string): string {
+  const diff = new Date(expiresAt).getTime() - now.getTime();
+  if (diff <= 0) return 'Expired';
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(hours / 24);
+  if (days > 0) return `${days}d left`;
+  if (hours > 0) return `${hours}h left`;
+  return '&lt;1h left';
+}
+
+const paidDeals = activeDeals.filter(d => d.price > 0 || d.price == null).slice(0, 48);
+const freeDeals = activeDeals.filter(d => d.price === 0);
+const totalCoupons = allDeals.length;
+const totalActive = activeDeals.length;
+const totalFree = freeDeals.length;
+
+const dateFull = formatDateWIB(now, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+const latestUpdate = allDeals.reduce((latest, d) => {
+  const t = new Date(d.updatedAt || d.createdAt || 0).getTime();
+  return t > latest ? t : latest;
+}, 0);
+const diffMs = now.getTime() - latestUpdate;
+const diffMin = Math.floor(diffMs / 60000);
+let lastVerified;
+if (diffMin < 1) lastVerified = 'Just now';
+else if (diffMin < 60) lastVerified = `${diffMin}m ago`;
+else {
+  const diffHr = Math.floor(diffMin / 60);
+  lastVerified = diffHr < 24 ? `${diffHr}h ago` : `${Math.floor(diffHr / 24)}d ago`;
+}
+
+const almostGone = allDeals
+  .filter(d => d.expiresAt)
+  .filter(d => {
+    const diff = new Date(d.expiresAt!).getTime() - now.getTime();
+    return diff > 0 && diff < 7 * 24 * 3600000;
+  })
+  .sort((a, b) => new Date(a.expiresAt!).getTime() - new Date(b.expiresAt!).getTime())
+  .slice(0, 8);
+
+const popularDeals = allDeals
+  .filter(d => (d.rating ?? 0) >= 4.5)
+  .slice(0, 8);
+
+function mapCard(d: typeof allDeals[0]) {
+  const students = d.students ? d.students.toLocaleString() : null;
+  const instructor = d.instructor || null;
+  const expiry = d.expiresAt ? timeLeft(d.expiresAt) : null;
+  let discount: string;
+  if (d.price === 0) {
+    discount = 'FREE';
+  } else if (d.originalPrice && d.originalPrice > 0 && d.price != null) {
+    const pct = Math.round((1 - d.price / d.originalPrice) * 100);
+    discount = `${pct}% OFF`;
+  } else {
+    discount = null as any;
+  }
+  return {
+    slug: d.slug || d.id,
+    image: d.image,
+    title: d.title,
+    students,
+    instructor: typeof instructor === 'string' ? instructor.split(',')[0].trim() : null,
+    expiry,
+    discount
+  };
+}
+
+const goneCards = almostGone.map(mapCard);
+const paidCards = paidDeals.map(mapCard);
+const popularCards = popularDeals.map(mapCard);
+
+const paidCount = paidDeals.length;
 
 const siteUrl = "https://courseswyn.com";
 const pageUrl = `${siteUrl}/udemy-coupons-today/`;
+const monthYear = formatDateWIB(now, { month: 'long', year: 'numeric' });
+const pageTitle = `100% Off Udemy Coupons Today - ${monthYear} | CoursesWyn`;
+const metaDescription = `${totalActive} verified 100% off Udemy coupons for ${dateFull}. ${totalFree} new free courses added today in Development, Design, Business & more. Updated in real time.`;
 
-const pageTitle = "Udemy Coupons Today - Daily Verified Discount Codes | CoursesWyn";
-const metaDescription = "Browse daily updated Udemy coupons. Get 100% off deals and verified free courses updated every single day. Professional development, design, and business courses.";
+const topicCounts: Record<string, number> = {};
+for (const d of allDeals) {
+  topicCounts[d.category || 'Other'] = (topicCounts[d.category || 'Other'] || 0) + 1;
+}
+const trendingTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).slice(0, 12);
 
-function formatDateLabel(dateStr: string) {
-  const dateObj = new Date(`${dateStr}T00:00:00.000Z`);
-  return formatDateWIB(dateObj, { year: 'numeric', month: 'long', day: 'numeric' });
+function slugify(s: string) {
+  return s.toLowerCase().replace(/\s+&\s+/g, '-and-').replace(/['\s]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
 }
 
-function slugifyCat(cat: string) {
-  return cat.toLowerCase().replace(/\s+&\s+/g, '-and-').replace(/\s+/g, '-');
-}
+const faqs = [
+  { q: "Are these Udemy coupons really free?", a: "Yes. Every coupon listed gives 100% off the course price. We verify each code before publishing. No credit card or subscription required — click through to Udemy and enroll for free." },
+  { q: "How long do these Udemy coupons last?", a: "Udemy coupons typically expire within a few days or run out of redemptions. We recommend enrolling as soon as you find a course you want. If a code has expired, check our main deals page for the latest listings." },
+  { q: "How do I redeem a Udemy coupon?", a: "Click the course card to open its deal page on CoursesWyn, then click the coupon or 'Get deal' button. You'll be taken to Udemy with the discount applied. Complete enrollment there — no payment required for 100% off coupons." },
+  { q: "What categories are available today?", a: `This page lists coupons across multiple categories including ${trendingTopics.slice(0, 3).map(([t]) => t).join(', ')} and more. Courses are grouped so you can quickly find deals in your area of interest.` },
+  { q: "Do I get a certificate with free Udemy courses?", a: "Yes. Courses enrolled via our coupons include lifetime access, downloadable resources, and an official Udemy completion certificate when you finish the course." },
+  { q: "How often are new coupons added?", a: "New coupons are added throughout the day as instructors publish them. We check Udemy in near real time and update this list automatically, so checking back every few hours will show fresh deals." },
+  { q: "Why did Udemy change its coupon policy?", a: `In 2025 Udemy updated its free coupon policy to improve course quality. Most coupons are now limited to 10-100 redemptions. Read more on <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's instructor blog</a>.` },
+];
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -32,171 +117,293 @@ const jsonLd = {
       "url": pageUrl,
       "name": pageTitle,
       "description": metaDescription,
-      "breadcrumb": { "@id": `${pageUrl}#breadcrumb` }
+      "dateModified": new Date(latestUpdate).toISOString(),
+      "breadcrumb": { "@id": `${pageUrl}#breadcrumb` },
     },
     {
       "@type": "BreadcrumbList",
       "@id": `${pageUrl}#breadcrumb`,
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
-        { "@type": "ListItem", "position": 2, "name": "Udemy Coupons Today", "item": pageUrl }
-      ]
-    }
-  ]
+        { "@type": "ListItem", "position": 2, "name": "Today's Coupons", "item": pageUrl },
+      ],
+    },
+    {
+      "@type": "ItemList",
+      "name": "Today's 100% Off Udemy Coupons",
+      "description": metaDescription,
+      "numberOfItems": totalActive,
+      "itemListElement": allDeals.slice(0, 20).map((d, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "url": `${siteUrl}/coupon/${d.slug || d.id}`,
+        "name": d.title,
+      })),
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": faqs.map(f => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": { "@type": "Answer", "text": f.a },
+      })),
+    },
+  ],
 };
 ---
 
-<Layout title={pageTitle} description={metaDescription} canonical={pageUrl}>
+<Layout title={pageTitle} description={metaDescription} canonical={pageUrl} hideBreadcrumbs={true}>
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
-  <main class="archive-root">
-    <div class="container">
-      <header class="archive-header">
-        <h1 class="archive-title">Udemy Coupons Today</h1>
-        <p class="archive-desc">
-          We track and verify 100% off Udemy coupons every single day.
-          Browse our daily updates below to find premium courses for free.
-        </p>
+  <main class="daily-root">
+    <div class="daily-container">
+
+      <nav class="daily-breadcrumb" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="/">Home</a></li>
+          <li aria-hidden="true">/</li>
+          <li>Today's Coupons</li>
+        </ol>
+      </nav>
+
+      <header class="daily-header">
+        <div class="daily-header-text">
+          <h1 class="daily-title">Today's 100% Off Udemy Coupons</h1>
+          <p class="daily-subtitle">{dateFull} &mdash; every coupon below was added in the last 24 hours and is re-verified in near real time. Coupons usually expire within a day or run out of redemptions, so the freshest ones are listed first.</p>
+        </div>
+        <div class="daily-stats">
+          <div class="stat-item">
+            <span class="stat-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
+              Coupons added (24h)
+            </span>
+            <span class="stat-value">{totalCoupons}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+              Still active now
+            </span>
+            <span class="stat-value">{totalActive}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M7.5 7a1 1 0 0 1 0-5A4.8 8 0 0 1 12 7a4.8 8 0 0 1 4.5-5 1 1 0 0 1 0 5"/><rect x="3" y="7" width="18" height="4" rx="1"/></svg>
+              New free courses (24h)
+            </span>
+            <span class="stat-value">{totalFree}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              Last verification
+            </span>
+            <span class="stat-value">{lastVerified}</span>
+          </div>
+        </div>
       </header>
 
-      {latestDate && (
-        <section class="latest-section">
-          <div class="latest-banner">
-            <div class="latest-banner-body">
-              <span class="latest-badge">New Update</span>
-              <h2 class="latest-heading">Latest Update: {formatDateLabel(latestDate)}</h2>
-              <p class="latest-sub">
-                {latestCount} verified free Udemy coupons added today.
-                Hand-picked and tested — grab them before they expire.
-              </p>
-              <div class="latest-meta">
-                <span>{latestCount} Free Courses</span>
-                <span>100% Off</span>
-                <span>Verified</span>
-              </div>
-              <a href={`/udemy-coupons-today/${latestDate}/`} class="latest-btn">
-                Browse All {formatDateLabel(latestDate)} Deals →
+      {goneCards.length > 0 && (
+        <section class="daily-section">
+          <h2 class="section-title">
+            <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Almost gone
+          </h2>
+          <p class="section-desc">These coupons expire soon &mdash; enroll now before they run out.</p>
+          <div class="card-grid card-grid-4">
+            {goneCards.map(deal => (
+              <a href={`/coupon/${deal.slug}`} class="deal-card">
+                <div class="deal-img">
+                  <img src={deal.image} alt={deal.title} loading="lazy" decoding="async" onerror="this.style.display='none'" />
+                  <div class="deal-badges">
+                    {deal.discount && <span class="badge-off">{deal.discount}</span>}
+                  </div>
+                  {deal.expiry && <div class="deal-badges-right"><span class="badge-expiry"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{deal.expiry}</span></div>}
+                </div>
+                <div class="deal-body">
+                  <h3 class="deal-title">{deal.title}</h3>
+                  <p class="deal-instructor">{deal.instructor}</p>
+                  <p class="deal-students">{deal.students} enrolled</p>
+                </div>
               </a>
-            </div>
+            ))}
           </div>
         </section>
       )}
 
-      <section class="history-section">
-        <h2>Daily Coupon Archives</h2>
-        <p class="history-desc">Browse verified coupons from previous days. Most coupons remain valid for 2-3 days.</p>
+      <section class="daily-section">
+        <h2 class="section-title">
+          <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Latest coupons
+        </h2>
+        <p class="section-desc">The most recent {paidCount} verified 100% off deals.</p>
+        <div class="card-grid card-grid-4">
+          {paidCards.map(deal => (
+            <a href={`/coupon/${deal.slug}`} class="deal-card">
+              <div class="deal-img">
+                <img src={deal.image} alt={deal.title} loading="lazy" decoding="async" onerror="this.style.display='none'" />
+                <div class="deal-badges">
+                  {deal.discount && <span class="badge-off">{deal.discount}</span>}
+                </div>
+                {deal.expiry && <div class="deal-badges-right"><span class="badge-expiry"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{deal.expiry}</span></div>}
+              </div>
+              <div class="deal-body">
+                <h3 class="deal-title">{deal.title}</h3>
+                {deal.instructor && <p class="deal-instructor">{deal.instructor}</p>}
+              </div>
+            </a>
+          ))}
+        </div>
+        <p class="browse-all">Showing the {paidCount} most recent of {totalActive} active coupons &mdash; <a href="/udemy-coupon-code">browse them all</a>.</p>
+      </section>
 
-        <div class="date-grid">
-          {dates.map((item, index) => (
-            <div class={`date-card ${index === 0 ? 'date-card-new' : ''}`}>
-              <div class="date-image">
-                {item.image ? (
-                  <img src={item.image} alt={`Udemy Coupons for ${item.date}`} loading="lazy" />
-                ) : (
-                  <div class="date-placeholder">📅</div>
-                )}
-                <div class="date-badge">{item.date}</div>
-                {index === 0 && <span class="new-tag">New Update</span>}
-              </div>
-              <div class="date-body">
-                <h3 class="date-title">Udemy Coupons Today: {formatDateLabel(item.date)}</h3>
-                <p class="date-desc">
-                  Browse verified 100% off Udemy courses for {formatDateLabel(item.date)}. Verified and ready to redeem.
-                </p>
-                <a href={`/udemy-coupons-today/${item.date}/`} class="date-btn">
-                  View Coupons →
-                </a>
-              </div>
-            </div>
+      {popularCards.length > 0 && (
+        <section class="daily-section">
+          <h2 class="section-title">
+            <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Popular deals
+          </h2>
+          <p class="section-desc">Top-rated courses with the highest student reviews.</p>
+          <div class="card-grid card-grid-4">
+            {popularCards.map(deal => (
+              <a href={`/coupon/${deal.slug}`} class="deal-card">
+                <div class="deal-img">
+                  <img src={deal.image} alt={deal.title} loading="lazy" decoding="async" onerror="this.style.display='none'" />
+                  <div class="deal-badges">
+                    {deal.discount && <span class="badge-off">{deal.discount}</span>}
+                  </div>
+                  {deal.expiry && <div class="deal-badges-right"><span class="badge-expiry"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{deal.expiry}</span></div>}
+                </div>
+                <div class="deal-body">
+                  <h3 class="deal-title">{deal.title}</h3>
+                  <p class="deal-instructor">{deal.instructor}</p>
+                  <p class="deal-students">{deal.students} enrolled</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section class="daily-section">
+        <h2 class="section-title">
+          <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Trending topics
+        </h2>
+        <p class="section-desc">Most popular categories among today's coupons.</p>
+        <div class="topic-list">
+          {trendingTopics.map(([topic, count]) => (
+            <a href={`/categories/${slugify(topic)}/`} class="topic-tag">
+              <span>{topic}</span>
+              <span class="topic-count">{count}</span>
+            </a>
           ))}
         </div>
       </section>
 
-      <section class="info-section">
-        <div class="info-card">
-          <h3>How Our Daily Updates Work</h3>
-          <p>
-            Every day, our team scours instructor networks and official Udemy channels to find the latest 100% off coupons.
-            These coupons are official promotions used by instructors to build their student base.
-            We verify each one manually before adding it to our daily archive.
-          </p>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-icon">🕒</span>
-              <h4>Updated 24/7</h4>
-              <p>We add new courses as soon as they become available.</p>
-            </div>
-            <div class="info-item">
-              <span class="info-icon">✅</span>
-              <h4>100% Verified</h4>
-              <p>All coupons are tested to ensure they provide a full discount.</p>
-            </div>
-            <div class="info-item">
-              <span class="info-icon">🎓</span>
-              <h4>Full Access</h4>
-              <p>Get lifetime access and certificates of completion for free.</p>
-            </div>
-          </div>
-        </div>
+      <section class="seo-section">
+        <h2>How CoursesWyn verifies Udemy coupons</h2>
+        <p>Since <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's free coupon policy update</a>, most coupons are limited to about 10 to 100 redemptions or expire within days, which is why so many coupon sites list codes that no longer work. CoursesWyn checks every coupon against Udemy in near real time. When a coupon runs out, it disappears from this list automatically.</p>
+        <p>New coupons are added throughout the day. Browse <a href="/udemy-coupon-code">all verified coupons</a> or explore <a href="/udemy-coupons-today">today's latest deals</a>.</p>
       </section>
+
+      <section class="daily-faq">
+        <h2 class="section-title">
+          <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Frequently asked questions
+        </h2>
+        {faqs.map(faq => (
+          <details class="faq-item">
+            <summary>{faq.q}</summary>
+            <p>{faq.a}</p>
+          </details>
+        ))}
+      </section>
+
     </div>
   </main>
 </Layout>
 
 <style>
-  .archive-root { background: var(--bg); padding: 4rem 0; }
-  .container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+  .daily-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+  .daily-container { max-width: 960px; margin: 0 auto; }
 
-  .archive-header { text-align: center; margin-bottom: 4rem; }
-  .archive-title { font-size: 3rem; font-weight: 900; color: var(--text); letter-spacing: -0.05em; margin-bottom: 1rem; }
-  .archive-desc { font-size: 1.25rem; color: var(--muted); max-width: 700px; margin: 0 auto; line-height: 1.6; }
+  .daily-header { display: grid; grid-template-columns: 1fr 260px; gap: 2rem; margin-bottom: 2rem; align-items: start; }
+  .daily-header-text { padding-top: 0.25rem; }
+  .daily-title { font-size: 2rem; font-weight: 900; color: var(--text); margin: 0 0 0.75rem; letter-spacing: -0.03em; }
+  .daily-subtitle { font-size: 0.92rem; color: var(--muted); line-height: 1.65; }
 
-  .latest-section { margin-bottom: 5rem; }
-  .latest-banner { background: linear-gradient(135deg, var(--brand) 0%, #ea580c 100%); border-radius: 24px; overflow: hidden; position: relative; }
-  .latest-banner::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 80% 20%, rgba(255,255,255,0.15) 0%, transparent 60%); }
-  .latest-banner-body { position: relative; padding: 3rem; text-align: center; }
-  .latest-badge { display: inline-block; background: rgba(255,255,255,0.2); color: white; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 14px; border-radius: 99px; margin-bottom: 1rem; backdrop-filter: blur(4px); }
-  .latest-heading { font-size: 2rem; font-weight: 900; color: white; margin: 0 0 0.75rem; letter-spacing: -0.02em; }
-  .latest-sub { color: rgba(255,255,255,0.85); font-size: 1.05rem; line-height: 1.6; max-width: 600px; margin: 0 auto 1.5rem; }
-  .latest-meta { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 2rem; }
-  .latest-meta span { color: rgba(255,255,255,0.9); font-size: 0.85rem; font-weight: 700; background: rgba(255,255,255,0.1); padding: 4px 14px; border-radius: 99px; backdrop-filter: blur(4px); }
-  .latest-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: white; color: var(--brand); text-decoration: none; font-weight: 800; font-size: 1rem; padding: 1rem 2rem; border-radius: 16px; transition: all 0.3s; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
-  .latest-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+  .daily-breadcrumb { display: flex; justify-content: center; margin-bottom: 1rem; }
+  .daily-breadcrumb ol { list-style: none; display: flex; align-items: center; gap: 0.5rem; padding: 0; margin: 0; font-size: 0.8rem; color: var(--muted); }
+  .daily-breadcrumb li:not(:last-child)::after { content: '/'; margin-left: 0.5rem; color: var(--border); }
+  .daily-breadcrumb a { color: var(--brand); text-decoration: none; }
+  .daily-breadcrumb a:hover { text-decoration: underline; }
 
-  .history-section { margin-bottom: 5rem; }
-  .history-section h2 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
-  .history-desc { color: var(--muted); margin-bottom: 2rem; font-size: 1.125rem; }
+  .daily-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  .stat-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.35rem; min-height: 74px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); padding: 0.75rem 1rem; text-align: center; }
+  .stat-label { display: flex; align-items: center; justify-content: center; gap: 0.35rem; font-size: 0.7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+  .stat-label svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .stat-value { font-size: 1.1rem; font-weight: 700; color: var(--text); }
 
-  .date-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 2.5rem; }
-  .date-card { background: var(--card); border: 1px solid var(--border); border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-  .date-card:hover { border-color: var(--brand); transform: translateY(-12px); box-shadow: 0 25px 50px -12px var(--brand-soft); }
-  .date-card-new { border: 2.5px solid var(--brand); }
-  .date-image { height: 210px; width: 100%; position: relative; background: var(--border); overflow: hidden; }
-  .date-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
-  .date-card:hover .date-image img { transform: scale(1.1); }
-  .date-badge { position: absolute; bottom: 12px; right: 12px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); color: white; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(255, 255, 255, 0.2); }
-  .date-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 4rem; background: var(--bg); }
-  .date-body { padding: 2rem; display: flex; flex-direction: column; flex: 1; text-align: center; }
-  .date-title { font-size: 1.5rem; font-weight: 900; color: var(--text); margin: 0 0 1rem; line-height: 1.2; letter-spacing: -0.02em; }
-  .date-desc { font-size: 0.9375rem; color: var(--muted); line-height: 1.5; margin: 0 0 1.5rem; flex: 1; }
-  .date-btn { display: block; text-align: center; background: var(--brand); color: var(--bg); text-decoration: none; font-weight: 800; font-size: 1rem; padding: 1rem; border-radius: 16px; transition: all 0.3s; box-shadow: 0 4px 12px var(--brand-soft); }
-  .date-btn:hover { filter: brightness(1.1); transform: scale(1.02); }
-  .new-tag { position: absolute; top: 12px; left: 12px; background: #ef4444; color: #fff; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; padding: 4px 12px; border-radius: 8px; z-index: 10; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
+  .daily-section { margin-bottom: 2.5rem; }
+  .section-title { font-size: 1.2rem; font-weight: 800; color: var(--text); margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.65rem; }
+  .section-icon { color: var(--brand); flex-shrink: 0; }
+  .section-desc { font-size: 0.85rem; color: var(--muted); margin: 0 0 1rem; }
 
-  .info-section { margin-top: 6rem; }
-  .info-card { background: var(--bg-secondary); color: var(--text); padding: 3rem; border-radius: 32px; text-align: center; }
-  .info-card h3 { font-size: 2rem; font-weight: 800; margin-bottom: 1rem; }
-  .info-card p { font-size: 1.125rem; color: var(--muted); max-width: 800px; margin: 0 auto 3rem; line-height: 1.6; }
-  .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; }
-  .info-item { display: flex; flex-direction: column; align-items: center; }
-  .info-icon { font-size: 2rem; margin-bottom: 1rem; }
-  .info-item h4 { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem; }
-  .info-item p { font-size: 0.875rem; color: var(--muted); margin: 0; }
+  .card-grid { display: grid; gap: 0.85rem; }
+  .card-grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+  .deal-card { display: block; background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; text-decoration: none; transition: all 0.2s; }
+  .deal-card:hover { border-color: var(--brand); transform: translateY(-2px); }
+  .deal-img { position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden; background: var(--border); }
+  .deal-img img { width: 100%; height: 100%; object-fit: cover; }
+  .deal-badges { position: absolute; top: 6px; left: 6px; display: flex; gap: 3px; }
+  .deal-badges-right { position: absolute; top: 6px; right: 6px; display: flex; gap: 3px; }
+  .badge-off { background: linear-gradient(135deg, var(--brand), #1d4ed8); color: white; font-size: 0.65rem; font-weight: 800; padding: 2px 7px; border-radius: 3px; }
+  .badge-expiry { background: rgba(220,38,38,0.85); backdrop-filter: blur(4px); color: white; font-size: 0.6rem; font-weight: 700; padding: 2px 7px; border-radius: 3px; display: inline-flex; align-items: center; gap: 3px; }
+  .deal-body { padding: 0.65rem; }
+  .deal-title { font-size: 0.82rem; font-weight: 600; color: var(--text); margin: 0 0 0.15rem; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .deal-card:hover .deal-title { color: var(--brand); }
+  .deal-instructor { font-size: 0.7rem; color: var(--muted); margin: 0 0 0.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .deal-students { font-size: 0.7rem; color: var(--muted); margin: 0; }
+
+  .topic-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .topic-tag { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 100px; border: 1px solid var(--border); font-size: 0.85rem; font-weight: 600; color: var(--text); text-decoration: none; transition: all 0.2s; background: var(--card); }
+  .topic-tag:hover { border-color: var(--brand); color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, var(--card)); }
+  .topic-count { font-size: 0.7rem; font-weight: 700; color: white; background: var(--brand); padding: 1px 7px; border-radius: 100px; min-width: 20px; text-align: center; line-height: 1.5; }
+
+  .seo-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+  .seo-section h2 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0 0 0.75rem; }
+  .seo-section p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.75rem; }
+  .seo-section p:last-child { margin-bottom: 0; }
+  .seo-section a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  .seo-section a:hover { text-decoration: underline; }
+
+  .browse-all { margin-top: 1rem; font-size: 0.85rem; color: var(--muted); text-align: center; }
+  .browse-all a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  .browse-all a:hover { text-decoration: underline; }
+
+  .daily-faq { margin-bottom: 2rem; }
+  .daily-faq .faq-item {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 0.85rem 1rem; margin-bottom: 0.5rem;
+  }
+  .daily-faq .faq-item summary {
+    font-size: 0.9rem; font-weight: 600; color: var(--text); cursor: pointer;
+  }
+  .daily-faq .faq-item p {
+    font-size: 0.85rem; color: var(--muted); line-height: 1.5; margin: 0.5rem 0 0;
+  }
+  .daily-faq .faq-item a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  .daily-faq .faq-item a:hover { text-decoration: underline; }
 
   @media (max-width: 768px) {
-    .archive-title { font-size: 2.25rem; }
-    .archive-desc { font-size: 1.125rem; }
-    .latest-section { padding: 1.5rem; }
-    .info-card { padding: 2rem 1.5rem; }
+    .daily-title { font-size: 1.5rem; }
+    .daily-container { max-width: 100%; }
+    .daily-header { grid-template-columns: 1fr; gap: 1rem; }
+    .daily-stats { max-width: 280px; }
+    .card-grid-4 { grid-template-columns: repeat(2, 1fr); gap: 0.65rem; }
+    .stat-item { min-width: 100px; padding: 0.75rem 1rem; }
+    .stat-value { font-size: 1.25rem; }
   }
 </style>

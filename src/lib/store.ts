@@ -20,11 +20,15 @@ function resolveDealsFilePath(): string {
 const DEALS_FILE = resolveDealsFilePath();
 const DEALS_DIR = path.dirname(DEALS_FILE);
 
+let cachedDeals: Deal[] | null = null;
+
 export async function readDealsFromFile(): Promise<Deal[]> {
+  if (cachedDeals) return cachedDeals;
   try {
     const buf = await fs.readFile(DEALS_FILE, "utf-8");
     const data = JSON.parse(buf) as Deal[];
     if (Array.isArray(data)) {
+      cachedDeals = data;
       return data;
     }
   } catch (error) {
@@ -36,6 +40,7 @@ export async function readDealsFromFile(): Promise<Deal[]> {
 }
 
 async function writeDealsToFile(all: Deal[]): Promise<void> {
+  cachedDeals = null;
   await fs.mkdir(DEALS_DIR, { recursive: true });
   await fs.writeFile(DEALS_FILE, JSON.stringify(all, null, 2), "utf-8");
 }

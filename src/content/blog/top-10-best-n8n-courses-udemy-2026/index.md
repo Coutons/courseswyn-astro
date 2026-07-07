@@ -462,7 +462,7 @@ For AI agent workflows, complex automations, and high-volume execution, n8n has 
         "name": "CoursesWyn",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://courseswyn.com/logo.png"
+          "url": "https://courseswyn.com/logo.svg"
         }
       }
     },

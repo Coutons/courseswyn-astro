@@ -5,9 +5,6 @@ import type { Deal } from '../types/deal.d';
 import { parseInstructors, createInstructorSlug } from '../lib/instructors';
 import { formatDateWIB } from '../lib/date';
 
-// ─────────────────────────────────────────────
-// TYPES
-// ─────────────────────────────────────────────
 interface Instructor {
   name: string;
   courses: Deal[];
@@ -20,21 +17,17 @@ interface Instructor {
   totalCoupons: number;
 }
 
-// ─────────────────────────────────────────────
-// DATA AGGREGATION
-// ─────────────────────────────────────────────
 const deals: Deal[] = await readDeals();
 const instructorMap = new Map<string, Instructor>();
 
 deals.forEach((deal: Deal) => {
   if (!deal.instructor) return;
-
   const instructorNames = parseInstructors(deal.instructor);
-
   instructorNames.forEach((instructorName) => {
-    if (!instructorMap.has(instructorName)) {
-      instructorMap.set(instructorName, {
-        name: instructorName,
+    const clean = instructorName.replace(/[^\x20-\x7E]/g, '').trim() || instructorName.trim();
+    if (!instructorMap.has(clean)) {
+      instructorMap.set(clean, {
+        name: clean,
         courses: [],
         totalStudents: 0,
         avgRating: 0,
@@ -45,19 +38,15 @@ deals.forEach((deal: Deal) => {
         totalCoupons: 0,
       });
     }
-
-    const inst = instructorMap.get(instructorName)!;
+    const inst = instructorMap.get(clean)!;
     inst.courses.push(deal);
-    inst.totalCoupons += 1;   // Hitung setiap coupon
-
+    inst.totalCoupons += 1;
     if (deal.students) inst.totalStudents += deal.students;
-
     if (deal.rating) {
       const count = inst.courses.length;
       inst.avgRating = (inst.avgRating * (count - 1) + deal.rating) / count;
       inst.totalReviews += deal.students || 0;
     }
-
     if (deal.category && !inst.categories.includes(deal.category)) {
       inst.categories.push(deal.category);
     }
@@ -78,9 +67,6 @@ const instructors = Array.from(instructorMap.values())
   }))
   .sort((a, b) => b.totalStudents - a.totalStudents);
 
-// ─────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────
 function getMaxDiscount(courses: Deal[]): number {
   return Math.max(
     0,
@@ -110,9 +96,6 @@ function getTopDeals(courses: Deal[]): Deal[] {
     .slice(0, 2);
 }
 
-// ─────────────────────────────────────────────
-// STATS & SEO
-// ─────────────────────────────────────────────
 const totalCoupons = deals.length;
 const totalFree = instructors.reduce((s, i) => s + (hasFree(i.courses) ? 1 : 0), 0);
 
@@ -122,71 +105,96 @@ const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric',
 const siteUrl = 'https://courseswyn.com';
 const canonicalUrl = `${siteUrl}/instructors`;
 const title = `Top Udemy Instructors with Free Coupons & Promo Codes ${currentMonth} ${currentYear} | CoursesWyn`;
-const description = `Discover ${instructors.length} top Udemy instructors offering ${totalCoupons}+ verified free coupons and promo codes. Updated daily in ${currentMonth} ${currentYear}.`;
+const description = `Discover ${instructors.length} top Udemy instructors offering ${totalCoupons.toLocaleString()}+ verified free coupons and promo codes. Updated daily in ${currentMonth} ${currentYear}.`;
 ---
 
 <Layout title={title} description={description} canonical={canonicalUrl}>
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
     "@graph": [
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
-          { "@type": "ListItem", "position": 2, "name": "Instructors", "item": canonicalUrl }
-        ]
-      },
-      {
-        "@type": "CollectionPage",
-        "url": canonicalUrl,
-        "name": title,
-        "description": description,
-        "mainEntity": {
-          "@type": "ItemList",
-          "numberOfItems": instructors.length
-        }
-      }
+      { "@type": "BreadcrumbList", "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
+        { "@type": "ListItem", "position": 2, "name": "Instructors", "item": canonicalUrl }
+      ]},
+      { "@type": "CollectionPage", "url": canonicalUrl, "name": title, "description": description, "mainEntity": { "@type": "ItemList", "numberOfItems": instructors.length }}
     ]
   })} />
 
-  <main style="background: #fafafa;">
+  <style>
+    .hero-gradient-text {
+      background: linear-gradient(135deg, var(--brand), #60a5fa, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .inst-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+    }
+    .inst-card:hover {
+      border-color: var(--brand);
+      transform: translateY(-2px);
+    }
+    .faq-grid { display: grid; gap: 0.75rem; }
+    .faq-item { background: transparent; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .faq-item summary { padding: 1.25rem; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1rem; color: var(--text); list-style: none; }
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item[open] summary { border-bottom: 1px solid var(--border); }
+    .faq-item .fi { transition: transform 0.3s; flex-shrink: 0; }
+    .faq-item[open] .fi { transform: rotate(180deg); }
+    .faq-answer { padding: 0 1.25rem 1.25rem; color: var(--muted); line-height: 1.7; font-size: 0.9rem; }
+  </style>
 
-    {/* ── HERO ── */}
-    <section style="background: linear-gradient(135deg, #eef2ff, #faf5ff, #fdf2f8); padding: 6rem 0 5rem; position: relative; overflow: hidden;">
-      <div aria-hidden="true" style="position:absolute;top:-20%;right:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(249,115,22,0.1) 0%,rgba(236,72,153,0.06) 40%,transparent 70%);border-radius:50%;pointer-events:none;"></div>
-      <div aria-hidden="true" style="position:absolute;bottom:-15%;left:-5%;width:500px;height:500px;background:radial-gradient(circle,rgba(99,102,241,0.06) 0%,transparent 70%);border-radius:50%;pointer-events:none;"></div>
-      <div class="container" style="position:relative;z-index:1;">
-        <div style="display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1.25rem;border-radius:100px;background:linear-gradient(135deg,rgba(249,115,22,0.12),rgba(236,72,153,0.12));border:2px solid rgba(249,115,22,0.35);font-size:.85rem;font-weight:700;color:#c2410c;margin-bottom:1.5rem;">
-          Updated {currentMonth} {currentYear}
-        </div>
-        <h1 style="font-size:clamp(2.5rem,5vw,3.5rem);font-weight:900;line-height:1.1;color:#111827;margin:1.5rem 0 1rem;letter-spacing:-0.03em;">
-          Instructor <span style="background:linear-gradient(135deg,#ea580c,#db2777,#9333ea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Promo Codes.</span>
-        </h1>
-        <p style="font-size:1.125rem;color:#6b7280;max-width:640px;line-height:1.7;font-weight:500;margin:0 0 2.5rem;">
-          Exclusive discount codes from <strong style="color:#111827;">{instructors.length} expert instructors</strong>.
-          Browse <strong style="color:#111827;">{totalCoupons.toLocaleString()} active coupons</strong> with up to <strong style="color:#111827;">100% off</strong>.
-        </p>
-        <div style="display:flex;gap:2rem;flex-wrap:wrap;padding-top:1.5rem;border-top:2px solid rgba(0,0,0,0.08);">
-          {[
-            { v: `${instructors.length}`, l: "Instructors" },
-            { v: `${totalCoupons.toLocaleString()}+`, l: "Coupons" },
-            { v: "100%", l: "Max Discount" }
-          ].map(s => (
-            <div style="display:flex;flex-direction:column;">
-              <span style="font-size:1.75rem;font-weight:900;color:#111827;">{s.v}</span>
-              <span style="color:#6b7280;font-size:.875rem;font-weight:600;">{s.l}</span>
-            </div>
-          ))}
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-content anim-up">
+          <h1>
+            <span style="display:block">Top</span>
+            <span class="hero-gradient-text" style="display:block;font-size:clamp(2.5rem,6vw,4.5rem)">Instructors</span>
+            <span style="display:block">with Verified Coupons</span>
+          </h1>
+          <p>Exclusive discount codes from <strong>{instructors.length} expert instructors</strong>. Browse <strong>{totalCoupons.toLocaleString()} active coupons</strong> with up to <strong>100% off</strong>.</p>
         </div>
       </div>
     </section>
 
-    {/* ── GRID ── */}
-    <section style="background:white;padding:5rem 0;">
+    <section style="padding-bottom:2rem">
       <div class="container">
-        <div style="display:inline-block;font-size:1rem;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:#ea580c;margin-bottom:.75rem;">Top Instructors</div>
-        <h2 style="font-size:2.5rem;font-weight:900;color:#111827;margin:0 0 3rem;letter-spacing:-0.02em;">Expert Instructors</h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:1.5rem;">
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              {instructors.length}
+            </div>
+            <div class="stat-label">Instructors</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              {totalCoupons.toLocaleString()}+
+            </div>
+            <div class="stat-label">Coupons</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              {totalFree} Free
+            </div>
+            <div class="stat-label">Offer Free Deals</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <span class="section-title">Expert Instructors</span>
+        <h2 class="section-heading" style="margin:0 0 2.5rem;">Top Instructors with Verified Coupons</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.25rem;">
           {instructors.map((instructor) => {
             const maxDisc = getMaxDiscount(instructor.courses);
             const free = hasFree(instructor.courses);
@@ -194,41 +202,37 @@ const description = `Discover ${instructors.length} top Udemy instructors offeri
             const instructorSlug = createInstructorSlug(instructor.name);
 
             return (
-              <article class="inst-card" style="background:white;border:3px solid rgba(0,0,0,0.07);border-radius:20px;padding:1.5rem;transition:all 0.3s ease;">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;">
-                  <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#f97316,#ea580c);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1.5rem;flex-shrink:0;">{getInitials(instructor.name)}</div>
-                  {free && <span style="background:rgba(249,115,22,0.1);color:#ea580c;padding:4px 12px;border-radius:20px;font-size:0.7rem;font-weight:800;text-transform:uppercase;border:1px solid rgba(249,115,22,0.25);">FREE DEALS</span>}
+              <article class="inst-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+                  <div style="width:48px;height:48px;border-radius:10px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1.25rem;flex-shrink:0;">{getInitials(instructor.name)}</div>
+                  {free && <span style="background:var(--brand-soft);color:var(--brand);padding:2px 10px;border-radius:999px;font-size:0.65rem;font-weight:800;border:1px solid var(--brand-soft);">FREE</span>}
                 </div>
-
-                <h3 style="font-size:1.3rem;font-weight:900;margin:0 0 4px;color:#111827;">{instructor.name}</h3>
-                <p style="font-size:0.85rem;color:#6b7280;font-weight:600;margin:0 0 1.5rem;">{instructor.provider} · {instructor.totalCoupons} Coupons</p>
-
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.5rem;">
+                <h3 style="font-size:1.1rem;font-weight:800;margin:0 0 2px;color:var(--text);">{instructor.name}</h3>
+                <p style="font-size:0.8rem;color:var(--muted);font-weight:600;margin:0 0 1rem;">{instructor.provider} &middot; {instructor.totalCoupons} Coupon{instructor.totalCoupons === 1 ? '' : 's'}</p>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem;">
                   {[
                     { l: "Students", v: instructor.totalStudents > 1000 ? (instructor.totalStudents/1000).toFixed(1) + 'k' : instructor.totalStudents },
                     { l: "Rating", v: instructor.avgRating + "★" },
                     { l: "Max Off", v: maxDisc + "%" }
                   ].map(s => (
-                    <div style="background:#f9fafb;padding:12px 8px;border-radius:12px;text-align:center;">
-                      <div style="font-size:0.95rem;font-weight:900;color:#111827;">{s.v}</div>
-                      <div style="font-size:0.65rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">{s.l}</div>
+                    <div style="background:var(--bg-secondary);padding:10px 8px;border-radius:10px;text-align:center;">
+                      <div style="font-size:0.9rem;font-weight:800;color:var(--text);">{s.v}</div>
+                      <div style="font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;">{s.l}</div>
                     </div>
                   ))}
                 </div>
-
                 {topDeals.length > 0 && (
-                  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:1.5rem;">
+                  <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:1rem;">
                     {topDeals.map(deal => (
-                      <a href={`/coupon/${deal.slug || deal.id}`} style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#f9fafb;border:1px solid rgba(0,0,0,0.07);border-radius:12px;text-decoration:none;color:#111827;font-size:0.85rem;font-weight:700;">
+                      <a href={`/coupon/${deal.slug || deal.id}`} style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-size:0.82rem;font-weight:600;">
                         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{deal.title}</span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                       </a>
                     ))}
                   </div>
                 )}
-
-                <a href={`/instructor/${instructorSlug}`} style="width:100%;display:block;text-align:center;padding:14px;font-size:0.9rem;background:#111827;color:#fff;text-decoration:none;border-radius:12px;font-weight:700;transition:all 0.3s ease;">
-                  View All {instructor.totalCoupons} Coupons
+                <a href={`/instructor/${instructorSlug}`} class="btn btn-primary" style="width:100%;text-align:center;display:block;padding:12px;border-radius:10px;font-size:0.85rem;">
+                  View All {instructor.totalCoupons} Coupon{instructor.totalCoupons === 1 ? '' : 's'}
                 </a>
               </article>
             );
@@ -237,34 +241,26 @@ const description = `Discover ${instructors.length} top Udemy instructors offeri
       </div>
     </section>
 
-    {/* ── FAQ ── */}
-    <section style="background:#fafafa;padding:5rem 0;">
+    <section class="section" style="padding-top:0;">
       <div class="container" style="max-width:800px;">
-        <div style="display:inline-block;font-size:1rem;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:#ea580c;margin-bottom:.75rem;">FAQ</div>
-        <h2 style="font-size:2.5rem;font-weight:900;color:#111827;margin:0 0 3rem;letter-spacing:-0.02em;">Common Questions</h2>
-        <div style="display:flex;flex-direction:column;gap:16px;">
+        <span class="section-title">FAQ</span>
+        <h2 class="section-heading" style="margin:0 0 2rem;">Common Questions</h2>
+        <div style="display:flex;flex-direction:column;gap:12px;">
           {[
             { q: 'Who are the top Udemy instructors with free coupons?', a: `CoursesWyn features ${instructors.length} verified Udemy instructors who regularly share free and discounted coupons.` },
-            { q: 'How do I get a free course from a Udemy instructor?', a: 'Click on any instructor card to see their latest verified deals. All coupons are checked daily.' }
+            { q: 'How do I get a free course from a Udemy instructor?', a: 'Click on any instructor card to see their latest verified deals. All coupons are checked daily.' },
+            { q: 'Are the instructor coupons verified?', a: 'Yes. Every coupon is manually verified before listing. Expired coupons are removed within hours.' }
           ].map(faq => (
-            <details style="background:white;border:3px solid rgba(0,0,0,0.07);border-radius:20px;overflow:hidden;" class="faq-item">
-              <summary style="padding:1.5rem;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:1.05rem;color:#111827;list-style:none;">
+            <details class="faq-item">
+              <summary>
                 {faq.q}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="3" class="fi" style="transition:transform 0.3s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="3" class="fi"><polyline points="6 9 12 15 18 9"/></svg>
               </summary>
-              <div style="padding:0 1.5rem 1.5rem;color:#6b7280;font-size:1rem;line-height:1.7;">{faq.a}</div>
+              <div class="faq-answer">{faq.a}</div>
             </details>
           ))}
         </div>
       </div>
     </section>
   </main>
-
-  <style>
-    .container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
-    .inst-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 16px 32px -8px rgba(0,0,0,0.12); border-color: rgba(249,115,22,0.3) !important; }
-    .faq-item[open] summary { border-bottom: 1px solid rgba(0,0,0,0.07); }
-    .faq-item[open] .fi { transform: rotate(180deg); }
-    .faq-item summary::-webkit-details-marker { display: none; }
-  </style>
 </Layout>

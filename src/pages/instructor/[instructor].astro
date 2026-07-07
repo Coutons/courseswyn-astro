@@ -32,7 +32,6 @@ export async function getStaticPaths() {
 const { instructorName: instructorNameProp, allDeals: propAllDeals } = Astro.props as { instructorName?: string; allDeals?: Deal[] };
 const slugParam = Astro.params.instructor ?? '';
 
-// Use allDeals from props, or read if in dev mode
 const deals: Deal[] = propAllDeals || await readDeals();
 
 function dealMatchesInstructorSlug(deal: Deal, targetSlug: string): boolean {
@@ -103,6 +102,26 @@ const provider = instructorCourses[0]?.provider || 'Udemy';
 const maxDisc = getMaxDiscount(instructorCourses);
 const title = `${instructorName} — Udemy Coupons & Promo Codes ${currentMonth} ${currentYear} | CoursesWyn`;
 const description = `Verified ${instructorCourses.length} Udemy coupon${instructorCourses.length === 1 ? '' : 's'} from ${instructorName}. ${provider} deals updated daily — up to ${maxDisc}% off${hasFree(instructorCourses) ? ', including free courses' : ''}.`;
+const cleanName = instructorName.replace(/[^\x20-\x7E]/g, '').trim();
+
+const faqItems = [
+  {
+    q: `How many courses does ${instructorName} have on CoursesWyn?`,
+    a: `${instructorName} currently has ${instructorCourses.length} verified coupon${instructorCourses.length === 1 ? '' : 's'} on CoursesWyn across ${provider}.`,
+  },
+  {
+    q: `Are ${instructorName}'s coupons verified?`,
+    a: `Yes. Every coupon from ${instructorName} is manually verified before listing. Expired or invalid deals are removed within hours.`,
+  },
+  {
+    q: `How do I get ${instructorName}'s courses for free?`,
+    a: `Browse ${instructorName}'s deals on CoursesWyn and click any coupon that interests you. ${hasFree(instructorCourses) ? 'Free courses are clearly marked — just enroll directly on Udemy.' : 'Many deals offer deep discounts. Click through to see the current offer on Udemy.'}`,
+  },
+  {
+    q: `What is the maximum discount for ${instructorName}'s courses?`,
+    a: `The biggest discount available across ${instructorName}'s courses is up to ${maxDisc}% off${hasFree(instructorCourses) ? ', with some courses completely free' : ''}.`,
+  },
+];
 ---
 
 <Layout title={title} description={description} canonical={canonicalUrl}>
@@ -116,7 +135,7 @@ const description = `Verified ${instructorCourses.length} Udemy coupon${instruct
           itemListElement: [
             { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
             { '@type': 'ListItem', position: 2, name: 'Instructors', item: `${siteUrl}/instructors` },
-            { '@type': 'ListItem', position: 3, name: instructorName, item: canonicalUrl },
+            { '@type': 'ListItem', position: 3, name: cleanName, item: canonicalUrl },
           ],
         },
         {
@@ -129,98 +148,150 @@ const description = `Verified ${instructorCourses.length} Udemy coupon${instruct
             numberOfItems: instructorCourses.length,
           },
         },
+        {
+          '@type': 'FAQPage',
+          mainEntity: faqItems.map((f) => ({
+            '@type': 'Question',
+            name: f.q,
+            acceptedAnswer: { '@type': 'Answer', text: f.a },
+          })),
+        },
       ],
     })}
   />
 
-  <main style="background: var(--bg); color: var(--text);">
-    <section style="padding: 100px 0 60px; border-bottom: 2px solid var(--border); background: var(--card);">
-      <div class="inst-container">
-        <nav style="font-size: 0.85rem; font-weight: 600; color: var(--muted); margin-bottom: 24px;">
-          <a href="/" style="color: var(--accent); text-decoration: none;">Home</a>
-          <span aria-hidden="true"> / </span>
-          <a href="/instructors" style="color: var(--accent); text-decoration: none;">Instructors</a>
-          <span aria-hidden="true"> / </span>
-          <span style="color: var(--text);">{instructorName}</span>
-        </nav>
+  <style>
+    .hero-gradient-text {
+      background: linear-gradient(135deg, var(--brand), #60a5fa, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .faq-grid { display: grid; gap: 0.75rem; }
+    .faq-item { background: transparent; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .faq-item summary { padding: 1.25rem; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1rem; color: var(--text); list-style: none; }
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item[open] summary { border-bottom: 1px solid var(--border); }
+    .faq-item .fi { transition: transform 0.3s; flex-shrink: 0; }
+    .faq-item[open] .fi { transform: rotate(180deg); }
+    .faq-answer { padding: 0 1.25rem 1.25rem; color: var(--muted); line-height: 1.7; font-size: 0.9rem; }
+  </style>
 
-        <div
-          style="display: inline-block; background: var(--accent); color: white; padding: 4px 14px; border: 2px solid var(--border); box-shadow: 3px 3px 0 var(--border); border-radius: 4px; font-size: 0.75rem; font-weight: 800; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em;"
-        >
-          {provider} · {currentMonth} {currentYear}
-        </div>
-
-        <div style="display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap;">
-          <div
-            style="width: 80px; height: 80px; min-width: 80px; background: var(--accent); border: 2px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 1.75rem; box-shadow: 4px 4px 0 var(--border);"
-          >
-            {getInitials(instructorName)}
-          </div>
-          <div style="flex: 1; min-width: 220px;">
-            <h1
-              style="font-size: clamp(2rem, 6vw, 3.25rem); font-weight: 900; line-height: 1.05; letter-spacing: -0.04em; margin: 0 0 12px;"
-            >
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-content anim-up">
+          <h1>
+            <span style="display:block;font-size:1rem;font-weight:700;color:var(--brand);margin-bottom:0.5rem;">
+              {provider} &middot; {instructorCourses.length} Coupon{instructorCourses.length === 1 ? '' : 's'}
+            </span>
+            <span class="hero-gradient-text" style="display:block;font-size:clamp(2rem,5vw,3.5rem)">
               {instructorName}
-            </h1>
-            <p
-              style="font-size: 1.05rem; color: var(--muted); line-height: 1.6; font-weight: 500; margin: 0 0 24px; max-width: 720px;"
-            >
-              {instructorCourses.length} active coupon{instructorCourses.length === 1 ? '' : 's'} with verified Udemy discounts.
-            </p>
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-              <div
-                style="background: var(--card); border: 2px solid var(--border); padding: 10px 18px; border-radius: 4px; box-shadow: 3px 3px 0 var(--border);"
-              >
-                <span style="font-size: 1.25rem; font-weight: 900; color: var(--accent);">{instructorCourses.length}</span>
-                <span style="display: block; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--muted);">Coupons</span>
-              </div>
-              <div
-                style="background: var(--card); border: 2px solid var(--border); padding: 10px 18px; border-radius: 4px; box-shadow: 3px 3px 0 var(--border);"
-              >
-                <span style="font-size: 1.25rem; font-weight: 900; color: var(--accent);">{totalStudents.toLocaleString()}</span>
-                <span style="display: block; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--muted);">Students (sum)</span>
-              </div>
-              <div
-                style="background: var(--card); border: 2px solid var(--border); padding: 10px 18px; border-radius: 4px; box-shadow: 3px 3px 0 var(--border);"
-              >
-                <span style="font-size: 1.25rem; font-weight: 900; color: var(--accent);">{avgRating}</span>
-                <span style="display: block; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--muted);">Avg rating</span>
-              </div>
-              <div
-                style="background: var(--card); border: 2px solid var(--border); padding: 10px 18px; border-radius: 4px; box-shadow: 3px 3px 0 var(--border);"
-              >
-                <span style="font-size: 1.25rem; font-weight: 900; color: var(--accent);">Up to {maxDisc}%</span>
-                <span style="display: block; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--muted);">Max off</span>
-              </div>
-              {hasFree(instructorCourses) && (
-                <div
-                  style="background: var(--brand); color: var(--bg); border: 2px solid var(--border); padding: 10px 18px; border-radius: 4px; box-shadow: 3px 3px 0 var(--border); align-self: center; font-size: 0.75rem; font-weight: 900; text-transform: uppercase;"
-                >
-                  Free deals
-                </div>
-              )}
+            </span>
+          </h1>
+          <p>{description}</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding-bottom:2rem;margin-top:-1rem">
+      <div class="container">
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              {avgRating}
             </div>
+            <div class="stat-label">Avg Rating</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              {totalStudents.toLocaleString()}
+            </div>
+            <div class="stat-label">Students</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              Up to {maxDisc}%
+            </div>
+            <div class="stat-label">Max Discount</div>
           </div>
         </div>
       </div>
     </section>
 
-    <section style="padding: 64px 0 80px;">
-      <div class="inst-container">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 28px;">
+    <section class="section" style="padding-top:1rem;">
+      <div class="container">
+        <div class="adv-grid">
+          <div>
+            <span class="section-title">Why {instructorName}</span>
+            <h2 class="section-heading" style="max-width:450px">Learn from a trusted instructor.</h2>
+          </div>
+          <p style="color:var(--text-secondary);font-size:1rem;line-height:1.7;margin:0">
+            {instructorName} offers <strong>{instructorCourses.length} verified coupon{instructorCourses.length === 1 ? '' : 's'}</strong> on CoursesWyn. Browse top-rated courses with discounts up to <strong>{maxDisc}% off</strong>{hasFree(instructorCourses) ? ', including free courses' : ''}.
+          </p>
+        </div>
+        <div class="adv-cards">
+          <div class="adv-card">
+            <div class="adv-icon" style="color:var(--brand)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <h3>Verified Coupons</h3>
+            <p>Every coupon from {instructorName} is manually checked before listing. No expired or fake deals.</p>
+          </div>
+          <div class="adv-card">
+            <div class="adv-icon" style="color:#059669">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+            <h3>Top-Rated Courses</h3>
+            <p>{avgRating !== '—' ? `${instructorName}'s courses average ${avgRating} stars` : `${instructorName}'s courses are available at great discounts`}.</p>
+          </div>
+          <div class="adv-card">
+            <div class="adv-icon" style="color:var(--brand)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            </div>
+            <h3>Save up to {maxDisc}%</h3>
+            <p>Get the best deals on {instructorName}'s {provider} courses with discounts up to {maxDisc}% off.</p>
+          </div>
+          <div class="adv-card">
+            <div class="adv-icon" style="color:#7c3aed">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <h3>Updated Daily</h3>
+            <p>New coupons added regularly. Deals refresh daily so you never miss a discount from {instructorName}.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0;">
+      <div class="container">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.25rem;">
           {instructorCourses.map((deal) => (
             <DealCard deal={deal} />
           ))}
         </div>
       </div>
     </section>
-  </main>
 
-  <style>
-    .inst-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-  </style>
+    <section class="section" style="padding-top:0;">
+      <div class="container" style="max-width:800px;">
+        <span class="section-title">FAQ</span>
+        <h2 class="section-heading" style="margin:0 0 2rem;">Common Questions</h2>
+        <div class="faq-grid">
+          {faqItems.map((faq) => (
+            <details class="faq-item">
+              <summary>
+                {faq.q}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="3" class="fi"><polyline points="6 9 12 15 18 9"/></svg>
+              </summary>
+              <div class="faq-answer">{faq.a}</div>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </main>
 </Layout>

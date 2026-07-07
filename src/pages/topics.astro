@@ -1,7 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { readDeals } from '../lib/store';
-import { toISODateWIB } from '../lib/date';
 
 const allDeals = await readDeals();
 
@@ -12,7 +11,6 @@ allDeals.forEach(deal => {
   if (deal.subcategory) deal.subcategory = decodeHtml(deal.subcategory);
 });
 
-// Build topic data with real counts
 const topicCounts: Record<string, number> = {};
 allDeals.forEach(deal => {
   if (deal.subcategory) {
@@ -29,9 +27,7 @@ const topicsData = (Object.entries(topicCounts) as [string, number][])
 
 const totalTopics = topicsData.length;
 const totalCourses = allDeals.length;
-const maxCoursesInTopic = Math.max(...topicsData.map(t => t.count));
 
-// SEO settings - optimized
 const currentDate = new Date();
 const currentYear = Number(currentDate.toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
 
@@ -39,7 +35,6 @@ const title = `${totalTopics}+ Udemy Course Topics with Free 100% Off Coupons [$
 const description = `Browse ${totalTopics}+ specialized Udemy course topics with verified free coupons. Find 100% off deals on Python, AI, data science, web development, cloud certification & more. ${totalCourses}+ courses with daily verified discount codes. No payment required for free coupons.`;
 const canonicalUrl = "https://courseswyn.com/topics";
 
-// Enhanced topic descriptions
 function getTopicDescription(topic: string): string {
   const t = topic.toLowerCase();
   if (t.includes('python')) return "Courses covering Python programming for data science, automation, web development with Flask/Django, and machine learning. Suitable for beginners and experienced developers.";
@@ -48,284 +43,198 @@ function getTopicDescription(topic: string): string {
   if (t.includes('react')) return "Courses on React.js including hooks, context API, Redux, Next.js, and building production-ready single-page applications.";
   if (t.includes('data science')) return "Data science courses covering statistics, pandas, NumPy, data visualization, Jupyter, and end-to-end ML project workflows.";
   if (t.includes('machine learning') || t.includes('ml')) return "Machine learning courses from regression and classification to neural networks, model evaluation, and deploying ML models to production.";
-  if (t.includes('ai') || t.includes('artificial intelligence')) return "Artificial intelligence courses covering generative AI, large language models, AI ethics, and applied AI for real-world business problems.";
-  if (t.includes('deep learning')) return "Deep learning courses on neural network architectures, CNNs, RNNs, transformers, and frameworks like TensorFlow and PyTorch.";
-  if (t.includes('sql') || t.includes('database')) return "Database and SQL courses covering relational databases, query optimization, PostgreSQL, MySQL, and NoSQL with MongoDB.";
-  if (t.includes('cyber') || t.includes('security')) return "Cybersecurity courses on ethical hacking, penetration testing, network security, OWASP, and preparation for certifications like CompTIA Security+.";
-  if (t.includes('cloud') || t.includes('aws') || t.includes('azure')) return "Cloud computing courses on AWS, Azure, and Google Cloud covering architecture, deployment, serverless, and cloud certification prep.";
-  if (t.includes('devops') || t.includes('docker') || t.includes('kubernetes')) return "DevOps courses covering CI/CD pipelines, Docker containerization, Kubernetes orchestration, infrastructure as code, and monitoring.";
-  if (t.includes('mobile') || t.includes('android') || t.includes('ios') || t.includes('flutter')) return "Mobile app development courses for iOS, Android, React Native, and Flutter - from beginner setup to App Store deployment.";
-  if (t.includes('design') || t.includes('ui') || t.includes('ux')) return "UI/UX and graphic design courses covering Figma, Adobe XD, user research, prototyping, and design systems.";
-  if (t.includes('excel') || t.includes('spreadsheet')) return "Microsoft Excel and spreadsheet courses covering formulas, pivot tables, data analysis, VBA macros, and Power BI integration.";
-  if (t.includes('project management') || t.includes('pmp') || t.includes('agile') || t.includes('scrum')) return "Project management courses covering Agile, Scrum, Kanban, PMP certification prep, and tools like Jira and Asana.";
-  if (t.includes('marketing') || t.includes('seo') || t.includes('social media')) return "Digital marketing courses on SEO, Google Ads, social media strategy, content marketing, email marketing, and analytics.";
-  if (t.includes('photoshop') || t.includes('illustrator') || t.includes('adobe')) return "Adobe Creative Suite courses covering Photoshop, Illustrator, Premiere Pro, and After Effects for design and video professionals.";
-  if (t.includes('java')) return "Java programming courses covering core Java, Spring Boot, JPA, REST APIs, and enterprise application development.";
-  if (t.includes('c#') || t.includes('dotnet') || t.includes('.net')) return "C# and .NET courses covering ASP.NET Core, Blazor, Entity Framework, and building scalable Windows and web applications.";
-  if (t.includes('php') || t.includes('laravel')) return "PHP and Laravel courses covering server-side development, MVC architecture, REST APIs, and building production web apps.";
-  if (t.includes('blockchain') || t.includes('web3') || t.includes('solidity')) return "Blockchain and Web3 courses covering smart contract development with Solidity, Ethereum, DeFi, and NFT project deployment.";
-  if (t.includes('photogra')) return "Photography courses covering camera fundamentals, lighting, composition, photo editing, and building a professional portfolio.";
-  if (t.includes('video') || t.includes('film') || t.includes('editing')) return "Video production and editing courses covering DaVinci Resolve, Premiere Pro, storytelling, color grading, and YouTube production.";
-  if (t.includes('music') || t.includes('audio')) return "Music production and audio engineering courses covering DAWs like Ableton and FL Studio, mixing, mastering, and music theory.";
-  if (t.includes('finance') || t.includes('accounting') || t.includes('investing')) return "Finance and accounting courses covering financial modeling, investing, budgeting, QuickBooks, CFA prep, and cryptocurrency markets.";
-  if (t.includes('english') || t.includes('language') || t.includes('writing')) return "Language and writing courses covering business English, copywriting, technical writing, and communication skills for professionals.";
-  if (t.includes('personal develop') || t.includes('productivity') || t.includes('leadership')) return "Personal development courses on productivity, leadership, time management, public speaking, and building high-performance habits.";
-  return `Udemy courses on ${topic} covering foundational to advanced skills with practical projects and expert instruction.`;
+  if (t.includes('ai') || t.includes('artificial intelligence')) return "AI courses covering deep learning, NLP, computer vision, transformers, GPT, and building intelligent applications with modern frameworks.";
+  if (t.includes('chatgpt') || t.includes('gpt')) return "ChatGPT and GPT courses covering prompt engineering, building AI agents, OpenAI API integration, and creating AI-powered applications.";
+  if (t.includes('cloud')) return "Cloud computing courses covering AWS, Azure, Google Cloud, DevOps, Docker, Kubernetes, and cloud architecture best practices.";
+  if (t.includes('cyber') || t.includes('security')) return "Cybersecurity courses covering ethical hacking, penetration testing, network security, cryptography, and SOC operations.";
+  if (t.includes('docker') || t.includes('kubernetes')) return "Containerization and orchestration courses covering Docker, Kubernetes, microservices, and production deployment strategies.";
+  if (t.includes('sql') || t.includes('database')) return "Database courses covering SQL, NoSQL, MySQL, PostgreSQL, MongoDB, database design, and data modeling for real-world applications.";
+  if (t.includes('blockchain') || t.includes('web3')) return "Blockchain and Web3 courses covering solidity, smart contracts, dApps, cryptocurrency, NFTs, and decentralized finance.";
+  if (t.includes('design') || t.includes('ui') || t.includes('ux')) return "Design courses covering UI/UX design, Figma, Adobe XD, wireframing, prototyping, and user research methodologies.";
+  if (t.includes('devops')) return "DevOps courses covering CI/CD pipelines, infrastructure as code, monitoring, automation, and site reliability engineering.";
+  return `Browse verified Udemy coupons and 100% off deals for ${topic} courses. Find premium ${topic} training with daily updated discount codes.`;
 }
 
-// Structured data
+const faqs = [
+  { q: "What are Udemy course topics on CoursesWyn?", a: "CoursesWyn organizes Udemy courses into specialized topic pages — such as Python, Web Development, Data Science, AI, and Cybersecurity. Each topic page lists verified 100% off coupon deals for courses in that subject area, updated daily." },
+  { q: "How do I find free Udemy courses by topic?", a: "Browse the topic categories above and click on any subject that interests you. You'll see all available courses in that topic with verified discount codes. Click 'Redeem Coupon' to get the course for free or at a heavily discounted price." },
+  { q: "Are these Udemy coupons actually free?", a: "Many courses offer 100% off coupons making them completely free. Others provide discounts of 80-95% off. Each listing clearly shows the final price after coupon — many are $0.00 (free). All coupons are tested daily by our team." },
+  { q: "Which Udemy topics have the most free courses?", a: "Programming topics like Python, JavaScript, and Web Development typically have the most free courses. AI and Machine Learning topics are also growing rapidly with many 100% off deals. Check the course count on each topic card above." },
+  { q: "How often are new topics and deals added?", a: "New deals are added every single day. We recommend bookmarking your favorite topic pages and checking back regularly. Popular topics like Python and AI can have new free courses multiple times per week." },
+  { q: "Do free Udemy courses include certificates?", a: "Yes! All courses accessed through our free coupons include full Udemy benefits — completion certificates, lifetime access, all video content, and downloadable resources. The certificate is identical to paid enrollments." }
+];
+
 const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
-    {
-      "@type": "CollectionPage",
-      "@id": canonicalUrl,
-      "url": canonicalUrl,
-      "name": title,
-      "description": description,
-      "inLanguage": "en-US",
-      "dateModified": toISODateWIB(),
-      "isPartOf": { "@id": "https://courseswyn.com" },
-      "breadcrumb": {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" },
-          { "@type": "ListItem", "position": 2, "name": "Course Topics", "item": canonicalUrl }
-        ]
-      },
-      "mainEntity": {
-        "@type": "ItemList",
-        "name": "Udemy Course Topics",
-        "numberOfItems": totalTopics,
-        "itemListElement": topicsData.slice(0, 30).map((t, i) => ({
-          "@type": "ListItem",
-          "position": i + 1,
-          "item": {
-            "@type": "Thing",
-            "name": `${t.name} Courses on Udemy`,
-            "description": getTopicDescription(t.name),
-            "url": `https://courseswyn.com/topics/${t.slug}`
-          }
-        }))
-      }
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "What are Udemy course topics on CoursesWyn?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "CoursesWyn organizes Udemy courses into specialized topic pages - such as Python, Web Development, Data Science, and Cybersecurity. Each topic page lists verified coupon deals for courses in that subject area, updated daily."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How do I find free or discounted Udemy courses by topic?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Click any topic on this page to browse verified Udemy coupon deals for that subject. Each listing shows the discount percentage, original price, and a direct enrollment link. Click \"Redeem Coupon\" to apply the discount automatically."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Are the Udemy coupons on CoursesWyn actually free?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Many coupons listed on CoursesWyn offer 100% off, making the course completely free. Others provide significant discounts (80-95% off). Each listing shows the current price after coupon so you know exactly what to expect before clicking."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How often are new Udemy topic deals added?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "New deals are added every day. Udemy coupons expire quickly, so we recommend checking back frequently or bookmarking the topic page most relevant to your learning goals."
-          }
-        }
-      ]
-    }
+    { "@type": "BreadcrumbList", "itemListElement": [{ "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" }, { "@type": "ListItem", "position": 2, "name": "Course Topics", "item": canonicalUrl }] },
+    { "@type": "CollectionPage", "@id": canonicalUrl, "url": canonicalUrl, "name": title, "description": description, "isPartOf": { "@id": "https://courseswyn.com" }, "mainEntity": { "@type": "ItemList", "name": "Udemy Course Topics", "numberOfItems": totalTopics, "itemListElement": topicsData.map((t, i) => ({ "@type": "ListItem", "position": i + 1, "item": { "@type": "ItemList", "name": `${t.name} Courses`, "description": getTopicDescription(t.name), "url": `https://courseswyn.com/topics/${t.slug}`, "numberOfItems": t.count } })) } },
+    { "@type": "FAQPage", "mainEntity": faqs.map(f => ({ "@type": "Question", "name": f.q, "acceptedAnswer": { "@type": "Answer", "text": f.a } })) }
   ]
 };
-
-// Topic card accent colors
-const accentColors = [
-  "#4a90e2", "#e91e63", "#00bcd4", "#4caf50",
-  "#ff9800", "#9c27b0", "#607d8b", "#3f51b5",
-  "#f44336", "#009688", "#795548", "#ff5722"
-];
 ---
 
 <Layout title={title} description={description}>
   <link rel="canonical" href={canonicalUrl} slot="head" />
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-  <main style="background: #fafafa;">
-
-    {/* ── HERO ── */}
-    <section style="background: linear-gradient(135deg, #eef2ff, #faf5ff, #fdf2f8); padding: 6rem 0 5rem; position: relative; overflow: hidden;">
-      <div aria-hidden="true" style="position:absolute;top:-20%;right:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(249,115,22,0.1) 0%,rgba(236,72,153,0.06) 40%,transparent 70%);border-radius:50%;pointer-events:none;"></div>
-      <div aria-hidden="true" style="position:absolute;bottom:-15%;left:-5%;width:500px;height:500px;background:radial-gradient(circle,rgba(99,102,241,0.06) 0%,transparent 70%);border-radius:50%;pointer-events:none;"></div>
-      <div class="container" style="position:relative;z-index:1;">
-        <h1 style="font-size:clamp(2.5rem,5vw,3.5rem);font-weight:900;line-height:1.1;color:#111827;margin:0 0 1rem;letter-spacing:-0.03em;">
-          {totalTopics}+ Udemy Course Topics with <span style="background:linear-gradient(135deg,#ea580c,#db2777,#9333ea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Free 100% Off Coupons</span>
-        </h1>
-        <p style="font-size:1.125rem;color:#6b7280;max-width:640px;line-height:1.7;font-weight:500;margin:0 0 2.5rem;">
-          Browse {totalTopics} specialized learning categories with {totalCourses}+ verified Udemy courses. Find 100% off coupon codes for Python, AI, data science, web development, cloud certification & more.
-        </p>
-        <div style="display:flex;gap:2rem;flex-wrap:wrap;padding-top:1.5rem;border-top:2px solid rgba(0,0,0,0.08);">
-          {[
-            { v: `${totalTopics}`, l: "Topics" },
-            { v: `${totalCourses}+`, l: "Courses" },
-            { v: "Daily", l: "Updates" }
-          ].map(s => (
-            <div style="display:flex;flex-direction:column;">
-              <span style="font-size:1.75rem;font-weight:900;color:#111827;">{s.v}</span>
-              <span style="color:#6b7280;font-size:.875rem;font-weight:600;">{s.l}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    {/* ── SEARCH & FILTERS ── */}
-    <section style="background:white;padding:2rem 0;border-bottom:1px solid rgba(0,0,0,0.07);">
-      <div class="container">
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;">
-          <div style="flex:1;min-width:280px;position:relative;">
-            <input type="text" id="search-input" placeholder="Search topics..." style="width:100%;padding:12px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;font-weight:600;font-size:0.95rem;outline:none;color:#111827;" />
-          </div>
-          <select id="sort-options" style="padding:0 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;font-weight:600;color:#111827;cursor:pointer;outline:none;">
-            <option value="name">Name A-Z</option>
-            <option value="courses">Most Courses</option>
-          </select>
-        </div>
-        <div id="result-count" style="margin-top:16px;font-weight:700;color:#6b7280;font-size:0.85rem;">Showing {totalTopics} topics</div>
-      </div>
-    </section>
-
-    {/* ── GRID ── */}
-    <section style="background:white;padding:4rem 0;">
-      <div class="container">
-        <div id="topics-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;">
-          {topicsData.map((t, i) => (
-            <a href={`/topics/${t.slug}`} class="topic-card" style="display:block;background:white;border:3px solid rgba(0,0,0,0.07);border-radius:20px;padding:1.5rem;text-decoration:none;color:inherit;transition:all 0.3s ease;">
-              <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">
-                <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#f97316,#ea580c);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1.25rem;flex-shrink:0;">{t.name.charAt(0).toUpperCase()}</div>
-                <div>
-                  <h3 style="font-size:1.1rem;font-weight:900;margin:0;color:#111827;">{t.name}</h3>
-                  <div style="font-size:0.8rem;font-weight:700;color:#f97316;">{t.count} Courses</div>
-                </div>
-              </div>
-              <p style="margin:0;color:#6b7280;font-size:0.9rem;line-height:1.6;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{getTopicDescription(t.name)}</p>
-            </a>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    {/* ── FAQ ── */}
-    <section style="background:#fafafa;padding:5rem 0;">
-      <div class="container" style="max-width:800px;">
-        <div style="display:inline-block;font-size:1rem;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:#ea580c;margin-bottom:.75rem;">FAQ</div>
-        <h2 style="font-size:2.5rem;font-weight:900;color:#111827;margin:0 0 1rem;letter-spacing:-0.02em;">Frequently Asked Questions</h2>
-        <p style="color:#6b7280;font-size:1.125rem;line-height:1.7;max-width:550px;margin:0 0 3rem;font-weight:600;">Everything you need to know about finding free Udemy courses by topic</p>
-        <div style="display:flex;flex-direction:column;gap:16px;">
-          {[
-            { q: "What are Udemy course topics on CoursesWyn?", a: "CoursesWyn organizes Udemy courses into specialized topic pages — such as Python, Web Development, Data Science, AI, and Cybersecurity. Each topic page lists verified 100% off coupon deals for courses in that subject area, updated daily." },
-            { q: "How do I find free Udemy courses by topic?", a: "Browse the topic categories above and click on any subject that interests you. You'll see all available courses in that topic with verified discount codes. Click 'Redeem Coupon' to get the course for free or at a heavily discounted price." },
-            { q: "Are these Udemy coupons actually free?", a: "Many courses offer 100% off coupons making them completely free. Others provide discounts of 80-95% off. Each listing clearly shows the final price after coupon — many are $0.00 (free). All coupons are tested daily by our team." },
-            { q: "Which Udemy topics have the most free courses?", a: "Programming topics like Python, JavaScript, and Web Development typically have the most free courses. AI and Machine Learning topics are also growing rapidly with many 100% off deals. Check the course count on each topic card above." },
-            { q: "How often are new topics and deals added?", a: "New deals are added every single day. We recommend bookmarking your favorite topic pages and checking back regularly. Popular topics like Python and AI can have new free courses multiple times per week." },
-            { q: "Do free Udemy courses include certificates?", a: "Yes! All courses accessed through our free coupons include full Udemy benefits — completion certificates, lifetime access, all video content, and downloadable resources. The certificate is identical to paid enrollments." }
-          ].map((faq, i) => (
-            <details style="background:white;border:3px solid rgba(0,0,0,0.07);border-radius:20px;overflow:hidden;" class="faq-item">
-              <summary style="padding:1.5rem;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:1.05rem;color:#111827;list-style:none;">
-                {faq.q}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="3" class="fi" style="transition:transform 0.3s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
-              </summary>
-              <div style="padding:0 1.5rem 1.5rem;color:#6b7280;font-size:1rem;line-height:1.7;">{faq.a}</div>
-            </details>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    {/* ── RELATED RESOURCES ── */}
-    <section style="background:white;padding:5rem 0;">
-      <div class="container">
-        <div style="display:inline-block;font-size:1rem;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:#ea580c;margin-bottom:.75rem;">Resources</div>
-        <h2 style="font-size:2.5rem;font-weight:900;color:#111827;margin:0 0 3rem;letter-spacing:-0.02em;">Explore More Learning Resources</h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;">
-          {[
-            { title: "Udemy Coupons Guide", desc: "Learn how to find and redeem 100% off coupons", link: "/udemy-coupons-guide" },
-            { title: "Latest AI Courses", desc: "ChatGPT, AI agents, machine learning deals", link: "/blog/best-chatgpt-courses-udemy-2026" },
-            { title: "Programming Deals", desc: "Python, JavaScript, React free courses", link: "/udemy-coupon-code" },
-            { title: "Cloud Certification", desc: "AWS, Azure, Google Cloud coupons", link: "/blog/best-aws-certification-courses-2026" },
-            { title: "Career Roadmaps", desc: "Step-by-step learning paths for jobs", link: "/blog/ai-engineer-roadmap-2026" },
-            { title: "All Free Deals", desc: "Browse all 100% off Udemy coupons", link: "/udemy-coupon-code" }
-          ].map(resource => (
-            <a href={resource.link} style="text-decoration:none;color:inherit;">
-              <div class="topic-card" style="background:white;border:3px solid rgba(0,0,0,0.07);border-radius:20px;padding:1.5rem;transition:all 0.3s ease;height:100%;">
-                <h3 style="font-size:1.1rem;font-weight:900;margin:0 0 8px;color:#111827;">{resource.title}</h3>
-                <p style="margin:0;color:#6b7280;font-size:0.9rem;font-weight:500;line-height:1.5;">{resource.desc}</p>
-              </div>
-            </a>
-          ))}
-        </div>
-      </div>
-    </section>
-
-  </main>
-
   <style>
-    .container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
-    .topic-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 16px 32px -8px rgba(0,0,0,0.12); border-color: rgba(249,115,22,0.3) !important; }
-    .faq-item[open] summary { border-bottom: 1px solid rgba(0,0,0,0.07); }
-    .faq-item[open] .fi { transform: rotate(180deg); }
-    .faq-item summary::-webkit-details-marker { display: none; }
-  </style>
-
-  <script define:vars={{ topicsData }}>
-    const searchInput = document.getElementById('search-input');
-    const categoryFilter = document.getElementById('category-filter');
-    const sortOptions = document.getElementById('sort-options');
-    const grid = document.getElementById('topics-grid');
-    const count = document.getElementById('result-count');
-
-    function filter() {
-      const q = searchInput.value.toLowerCase();
-      const cat = categoryFilter.value;
-      const sort = sortOptions.value;
-
-      let filtered = topicsData.filter(t => t.name.toLowerCase().includes(q));
-      
-      if (sort === 'courses') filtered.sort((a,b) => b.count - a.count);
-      else filtered.sort((a,b) => a.name.localeCompare(b.name));
-
-      grid.innerHTML = filtered.map(t => `
-        <a href="/topics/${t.slug}" class="neo-topic-card">
-          <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
-            <div style="background: var(--bg-secondary); color: var(--text); width: 56px; height: 56px; border-radius: 4px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.5rem; box-shadow: 3px 3px 0 var(--border);">
-              ${t.name.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <h3 style="font-size: 1.15rem; font-weight: 900; margin: 0;">${t.name}</h3>
-              <div style="font-size: 0.85rem; font-weight: 800; color: var(--text); text-transform: uppercase;">${t.count} Courses</div>
-            </div>
-          </div>
-          <p style="margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.6; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-            Explore verified Udemy coupons for ${t.name} and related subjects.
-          </p>
-        </a>
-      `).join('');
-      
-      count.textContent = `Showing ${filtered.length} topics`;
+    .hero-gradient-text {
+      background: linear-gradient(135deg, var(--brand), #60a5fa, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    searchInput.addEventListener('input', filter);
-    categoryFilter.addEventListener('change', filter);
-    sortOptions.addEventListener('change', filter);
-  </script>
+    .search-input { width:100%; padding:12px 16px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); font-weight:600; font-size:0.95rem; outline:none; color:var(--text); }
+    .search-input:focus { border-color:var(--brand); }
+    .sort-select { padding:0 16px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); font-weight:600; color:var(--text); cursor:pointer; outline:none; }
+    .sort-select:focus { border-color:var(--brand); }
+    .t-faq-list { display:flex; flex-direction:column; gap:10px; }
+    .t-faq-item { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; border-left:3px solid var(--brand); }
+    .t-faq-q { font-size:0.9rem; font-weight:700; color:var(--text); margin:0 0 8px; line-height:1.5; }
+    .t-faq-a p { font-size:0.85rem; color:var(--text-secondary); line-height:1.7; margin:0; }
+  </style>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content anim-up">
+        <h1>
+          <span style="display:block">{totalTopics}+ Course Topics</span>
+          <span class="hero-gradient-text" style="display:block;font-size:clamp(2.5rem,6vw,4.5rem)">Free 100% Off Coupons</span>
+          <span style="display:block">by Subject</span>
+        </h1>
+        <p>Browse {totalTopics} specialized learning categories with {totalCourses}+ verified Udemy courses — updated daily.</p>
+        <div class="hero-cta">
+          <a href="/udemy-coupon-code" class="btn btn-primary btn-lg" style="border-radius:999px;padding:1rem 2.5rem">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Browse Coupons
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section style="padding-bottom:2rem">
+    <div class="container">
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="stat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span class="stat-value">{totalTopics}</span>
+          </div>
+          <div class="stat-label">Topics</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+            <span class="stat-value">{totalCourses.toLocaleString()}</span>
+          </div>
+          <div class="stat-label">Active Courses</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+            <span class="stat-value">Daily</span>
+          </div>
+          <div class="stat-label">Updates</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEARCH & FILTERS -->
+  <section class="section" style="padding-top:0;">
+    <div class="container">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;">
+        <div style="flex:1;min-width:280px;position:relative;">
+          <input type="text" id="search-input" placeholder="Search topics..." class="search-input" />
+        </div>
+        <select id="sort-options" class="sort-select">
+          <option value="name">Name A-Z</option>
+          <option value="courses">Most Courses</option>
+        </select>
+      </div>
+      <div id="result-count" style="margin-top:16px;font-weight:700;color:var(--text-secondary);font-size:0.85rem;">Showing {totalTopics} topics</div>
+    </div>
+  </section>
+
+  <!-- GRID -->
+  <section class="section">
+    <div class="container">
+      <div id="topics-grid" class="adv-cards">
+        {topicsData.map((t) => (
+          <a href={`/topics/${t.slug}`} class="adv-card" style="text-decoration:none;cursor:pointer;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+              <div style="width:40px;height:40px;border-radius:8px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:1rem;flex-shrink:0;">{t.name.charAt(0).toUpperCase()}</div>
+              <div>
+                <h3 style="margin:0;font-size:1rem;font-weight:700;color:var(--text);line-height:1.2;">{t.name}</h3>
+                <p style="margin:2px 0 0;font-size:0.82rem;color:var(--brand);font-weight:600;">{t.count} courses</p>
+              </div>
+            </div>
+            <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.55;margin:0;">{getTopicDescription(t.name)}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" style="background:var(--bg-secondary);padding:4rem 0;">
+    <div class="container">
+      <div class="faq-header">
+        <div>
+          <span class="section-title">FAQ</span>
+          <h2 class="section-heading">Frequently Asked Questions</h2>
+        </div>
+        <p style="color:var(--text-secondary);font-size:1rem;line-height:1.6;margin:0;">Everything you need to know about finding free Udemy courses by topic.</p>
+      </div>
+      <div class="t-faq-list">
+        {faqs.map((faq) => (
+          <div class="t-faq-item">
+            <h3 class="t-faq-q">{faq.q}</h3>
+            <div class="t-faq-a"><p>{faq.a}</p></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
 </Layout>
+
+<script define:vars={{ topicsData }}>
+  const searchInput = document.getElementById('search-input');
+  const sortOptions = document.getElementById('sort-options');
+  const grid = document.getElementById('topics-grid');
+  const count = document.getElementById('result-count');
+
+  function filter() {
+    const q = searchInput.value.toLowerCase();
+    const sort = sortOptions.value;
+
+    let filtered = topicsData.filter(t => t.name.toLowerCase().includes(q));
+
+    if (sort === 'courses') filtered.sort((a,b) => b.count - a.count);
+    else filtered.sort((a,b) => a.name.localeCompare(b.name));
+
+    grid.innerHTML = filtered.map(function(t) {
+      return '<a href="/topics/' + t.slug + '" class="adv-card" style="text-decoration:none;cursor:pointer;">' +
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">' +
+        '<div style="width:40px;height:40px;border-radius:8px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:1rem;flex-shrink:0;">' + t.name.charAt(0).toUpperCase() + '</div>' +
+        '<div>' +
+        '<h3 style="margin:0;font-size:1rem;font-weight:700;color:var(--text);line-height:1.2;">' + t.name + '</h3>' +
+        '<p style="margin:2px 0 0;font-size:0.82rem;color:var(--brand);font-weight:600;">' + t.count + ' courses</p>' +
+        '</div>' +
+        '</div>' +
+        '<p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.55;margin:0;">Explore verified Udemy coupons for ' + t.name + ' and related subjects.</p>' +
+        '</a>';
+    }).join('');
+
+    count.textContent = `Showing ${filtered.length} topics`;
+  }
+
+  searchInput.addEventListener('input', filter);
+  sortOptions.addEventListener('change', filter);
+</script>
