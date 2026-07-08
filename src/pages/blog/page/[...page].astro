@@ -1,5 +1,6 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
+import { Image } from 'astro:assets';
 import { getCollection } from "astro:content";
 import { formatDateWIB, toISODateWIB } from "../../../lib/date";
 
@@ -30,8 +31,12 @@ function formatDate(post: any) {
 
 function resolveImage(imagePath: any): string {
   if (!imagePath) return '/assets/images/og-default.svg';
-  if (typeof imagePath === 'string') return imagePath;
   if (imagePath?.src) return imagePath.src;
+  if (typeof imagePath === 'string') {
+    if (imagePath.startsWith('http') || imagePath.startsWith('/')) return imagePath;
+    const filename = imagePath.split('/').pop();
+    return filename ? `/assets/images/${filename}` : '/assets/images/og-default.svg';
+  }
   return '/assets/images/og-default.svg';
 }
 
@@ -163,7 +168,7 @@ const structuredData = {
             {posts.map((post: any) => (
               <a href={`/blog/${post.id}`} class="cc-card">
                 <div class="cc-card-img">
-                  <img src={resolveImage(post.data.image)} alt={post.data.title} loading="lazy" />
+                  <Image src={resolveImage(post.data.image)} alt={post.data.title} width={400} height={160} loading="lazy" inferSize={false} />
                   {post.data.tags && post.data.tags[0] && (
                     <span class="cc-badge-tag">{post.data.tags[0]}</span>
                   )}

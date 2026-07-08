@@ -101,20 +101,32 @@ import Layout from "../layouts/Layout.astro";
     }
   }
 
+  function esc(str: string): string {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
   function renderCard(deal: Deal) {
     const price = deal.price ?? 9.99;
     const isFree = price === 0;
-    return `<a href="/coupon/${deal.slug || deal.id}" class="s-card">
+    const slug = esc(deal.slug || deal.id);
+    const title = esc(deal.title);
+    const image = esc(deal.image || '/assets/images/og-default.svg');
+    const instructor = deal.instructor ? esc(deal.instructor) : '';
+    const desc = deal.description ? esc(deal.description.slice(0, 120)) : '';
+    const rating = deal.rating;
+    return `<a href="/coupon/${slug}" class="s-card">
       <div class="s-img-wrap">
-        <img src="${deal.image || '/assets/images/og-default.svg'}" alt="${deal.title}" loading="lazy" />
+        <img src="${image}" alt="${title}" loading="lazy" />
         ${isFree ? '<div class="s-badge s-badge-free">FREE</div>' : ''}
       </div>
       <div class="s-body">
-        <h3 class="s-title">${deal.title}</h3>
-        ${deal.instructor ? '<div class="s-instructor">' + deal.instructor + '</div>' : ''}
-        ${deal.description ? '<p class="s-desc">' + deal.description.slice(0, 120) + '</p>' : ''}
+        <h3 class="s-title">${title}</h3>
+        ${instructor ? '<div class="s-instructor">' + instructor + '</div>' : ''}
+        ${desc ? '<p class="s-desc">' + desc + '</p>' : ''}
         <div class="s-meta">
-          ${deal.rating ? '<span class="s-rating">★ ' + deal.rating.toFixed(1) + '</span>' : '<span></span>'}
+          ${rating ? '<span class="s-rating">★ ' + rating.toFixed(1) + '</span>' : '<span></span>'}
           <span style="font-size:0.8rem;font-weight:700;color:var(--brand);">${isFree ? 'FREE' : '$' + price.toFixed(2)}</span>
         </div>
         <span class="s-btn">View Deal</span>

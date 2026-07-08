@@ -1,6 +1,7 @@
 ---
 export const prerender = true;
 import Layout from "../../layouts/Layout.astro";
+import { Image } from 'astro:assets';
 import { readDeals } from "../../lib/store";
 import { slugifyCategory } from "../../lib/utils";
 
@@ -263,10 +264,10 @@ for (let p = 1; p <= totalPages; p++) {
           <p class="cc-deals-desc">{currentItems.length} deals on this page</p>
         </div>
         <div class="cc-grid">
-          {paidCards.map((deal: any) => (
+          {paidCards.map((deal: any, i: number) => (
             <a href={`/coupon/${deal.slug}`} class="cc-card">
               <div class="cc-card-img">
-                <img src={deal.image} alt={deal.title} loading="lazy" decoding="async" onerror="this.style.display='none'" />
+                <Image src={deal.image} alt={deal.title} width={400} height={225} loading={i < 3 ? 'eager' : 'lazy'} inferSize={false} />
                 {deal.discount && <span class="cc-badge-off">{deal.discount}</span>}
                 {deal.language && <span class="cc-badge-lang">{deal.language}</span>}
                 {deal.expiry && <span class="cc-badge-expiry">{deal.expiry}</span>}

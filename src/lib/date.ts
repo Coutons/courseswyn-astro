@@ -34,11 +34,4 @@ export function currentYearWIB(): number {
   );
 }
 
-export function currentMonthWIB(): string {
-  return new Intl.DateTimeFormat('en-US', { timeZone: TZ, month: 'long' }).format(new Date());
-}
 
-export function getWIBDate(date: Date | string): Date {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d;
-}

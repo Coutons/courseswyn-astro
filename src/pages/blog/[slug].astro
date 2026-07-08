@@ -1,5 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import { Image } from 'astro:assets';
 import { getCollection, render, type CollectionEntry } from "astro:content";
 import AuthorBox from "../../components/AuthorBox.astro";
 import ReadingProgress from "../../components/blog/ReadingProgress.astro";
@@ -62,7 +63,17 @@ const title = data.title;
 const description = data.description;
 const canonical = `https://courseswyn.com/blog/${post.id}/`;
 
-const ogImage = data.image && typeof data.image === 'object' && 'src' in data.image ? data.image.src : data.image;
+function resolveImage(img: any): string {
+  if (!img) return '';
+  if (img?.src) return img.src;
+  if (typeof img === 'string') {
+    if (img.startsWith('http') || img.startsWith('/')) return img;
+    const filename = img.split('/').pop();
+    return filename ? `/assets/images/${filename}` : '';
+  }
+  return '';
+}
+const ogImage = resolveImage(data.image);
 
 const authorName = data.author || "Andrew Derek";
 const authorBio = (data as any).authorBio || "Andrew Derek is a lead course analyst and digital education expert with 8+ years of experience evaluating online learning platforms. He has personally reviewed over 500 Udemy courses across programming, AI, data science, and cloud computing — helping students save money with verified 100% off coupon codes while finding high-quality instruction that delivers real career outcomes.";
@@ -187,9 +198,12 @@ if (articleFaqs && Array.isArray(articleFaqs) && articleFaqs.length > 0) {
 
       {data.image && (
         <figure class="cc-article-hero">
-          <img
-            src={typeof data.image === 'string' ? data.image : data.image && typeof data.image === 'object' && 'src' in data.image ? data.image.src : ''}
+          <Image
+            src={resolveImage(data.image)}
             alt={title}
+            width={900}
+            height={475}
+            inferSize={false}
           />
         </figure>
       )}

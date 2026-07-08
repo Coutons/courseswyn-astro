@@ -1,5 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import { Image } from 'astro:assets';
 import { getCollection } from "astro:content";
 import { formatDateWIB, toISODateWIB } from "../../lib/date";
 
@@ -155,10 +156,13 @@ const structuredData = {
           {featuredPost && (
             <a href={`/blog/${featuredPost.id}`} class="cc-card cc-card-featured">
               <div class="cc-card-img">
-                <img
+                <Image
                   src={resolveImage(typeof featuredPost.data.image === 'string' ? featuredPost.data.image : (featuredPost.data.image as any)?.src) || '/assets/images/og-default.svg'}
                   alt={featuredPost.data.title}
-                  loading="eager"
+                  width={800}
+                  height={350}
+                  loading="lazy"
+                  inferSize={false}
                 />
                 <span class="cc-badge-featured">Featured</span>
                 <span class="cc-badge-tag">{featuredPost.data.tags?.[0] || 'Guide'}</span>
@@ -178,10 +182,13 @@ const structuredData = {
           {otherPosts.map((post: any) => (
             <a href={`/blog/${post.id}`} class="cc-card">
               <div class="cc-card-img">
-                <img
+                <Image
                   src={resolveImage(typeof post.data.image === 'string' ? post.data.image : (post.data.image as any)?.src) || '/assets/images/og-default.svg'}
                   alt={post.data.title}
+                  width={400}
+                  height={160}
                   loading="lazy"
+                  inferSize={false}
                 />
                 <span class="cc-badge-tag">{post.data.tags?.[0] || 'Guide'}</span>
               </div>

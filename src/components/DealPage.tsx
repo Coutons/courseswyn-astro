@@ -174,14 +174,6 @@ export default function DealPage({
     ],
   };
 
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.type = "application/ld+json";
-    script.textContent = JSON.stringify(enhancedStructuredData);
-    document.head.appendChild(script);
-    return () => { document.head.removeChild(script); };
-  }, []);
-
   return (
     <div className="cd-root">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(enhancedStructuredData, null, 0) }} />
