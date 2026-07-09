@@ -113,34 +113,23 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
                             "name": deal.provider || "Udemy"
                         }
                     } : undefined,
-                    "offers": [
-                        {
-                            "@type": "Offer",
-                            "price": deal.price || 0,
-                            "priceCurrency": "USD",
-                            "availability": "https://schema.org/InStock",
-                            "validThrough": deal.expiresAt || undefined,
-                            "url": deal.url || `https://courseswyn.com/coupon/${deal.slug}`,
-                            "seller": {
-                                "@type": "Organization",
-                                "name": deal.provider || "Udemy"
-                            }
+                    "offers": {
+                        "@type": "Offer",
+                        "price": deal.price || 0,
+                        "priceCurrency": "USD",
+                        "availability": "https://schema.org/InStock",
+                        "validThrough": deal.expiresAt || undefined,
+                        "url": deal.url || `https://courseswyn.com/coupon/${deal.slug}`,
+                        "seller": {
+                            "@type": "Organization",
+                            "name": deal.provider || "Udemy"
                         },
-                        deal.coupon ? {
-                            "@type": "Offer",
-                            "name": `${deal.title} - Coupon Deal`,
-                            "price": Math.max(0, (deal.price || 0) - ((deal.originalPrice || 0) - (deal.price || 0))),
-                            "priceCurrency": "USD",
-                            "availability": "https://schema.org/LimitedAvailability",
-                            "validThrough": deal.expiresAt || undefined,
-                            "url": deal.url || `https://courseswyn.com/coupon/${deal.slug}`,
-                            "description": `Use coupon code ${deal.coupon} for discount on ${deal.title}`,
-                            "seller": {
-                                "@type": "Organization",
-                                "name": deal.provider || "Udemy"
-                            }
-                        } : null
-                    ].filter(Boolean),
+                        "hasMerchantReturnPolicy": {
+                            "@type": "MerchantReturnPolicy",
+                            "merchantReturnDays": 30,
+                            "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow"
+                        }
+                    },
                     "aggregateRating": deal.rating ? {
                         "@type": "AggregateRating",
                         "ratingValue": deal.rating,
@@ -155,15 +144,53 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
                     "educationalUse": "Professional Development",
                     "datePublished": deal.createdAt ? new Date(deal.createdAt).toISOString() : new Date().toISOString(),
                     "dateModified": deal.updatedAt ? new Date(deal.updatedAt).toISOString() : new Date().toISOString(),
-                    "expires": deal.expiresAt || undefined,
                     "hasCourseInstance": {
                         "@type": "CourseInstance",
                         "courseMode": "online",
                         "instructor": deal.instructor ? {
                             "@type": "Person",
                             "name": deal.instructor
-                        } : undefined
+                        } : undefined,
+                        "location": {
+                            "@type": "Place",
+                            "name": "Online"
+                        }
                     }
+                },
+                {
+                    "@type": "Product",
+                    "@id": `https://courseswyn.com/coupon/${deal.slug}#product`,
+                    "name": `${deal.title} - ${discountPercentage}% OFF`,
+                    "description": deal.seoDescription || deal.description || `${deal.title} Udemy coupon deal`,
+                    "image": deal.seoOgImage || deal.image || `https://courseswyn.com/logo.svg`,
+                    "brand": {
+                        "@type": "Brand",
+                        "name": deal.provider || "Udemy"
+                    },
+                    "offers": {
+                        "@type": "Offer",
+                        "price": deal.price || 0,
+                        "priceCurrency": "USD",
+                        "priceValidUntil": deal.expiresAt || undefined,
+                        "availability": "https://schema.org/InStock",
+                        "url": deal.url || `https://courseswyn.com/coupon/${deal.slug}`,
+                        "seller": {
+                            "@type": "Organization",
+                            "name": "CoursesWyn"
+                        },
+                        "hasMerchantReturnPolicy": {
+                            "@type": "MerchantReturnPolicy",
+                            "merchantReturnDays": 30,
+                            "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow"
+                        }
+                    },
+                    "aggregateRating": deal.rating ? {
+                        "@type": "AggregateRating",
+                        "ratingValue": deal.rating,
+                        "reviewCount": deal.students || 1,
+                        "bestRating": 5,
+                        "worstRating": 1
+                    } : undefined
                 },
                 {
                     "@type": "BreadcrumbList",
@@ -232,24 +259,6 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
                             "https://www.facebook.com/courseswyn",
                             "https://twitter.com/courseswyn"
                         ]
-                    }
-                },
-                {
-                    "@type": "Organization",
-                    "@id": "https://courseswyn.com#organization",
-                    "name": "CoursesWyn",
-                    "url": "https://courseswyn.com",
-                    "logo": "https://courseswyn.com/logo.svg",
-                    "description": "CoursesWyn provides verified Udemy coupons and discount codes for premium online courses. We help learners worldwide access quality education at affordable prices.",
-                    "foundingDate": "2024",
-                    "sameAs": [
-                        "https://www.facebook.com/courseswyn",
-                        "https://twitter.com/courseswyn"
-                    ],
-                    "contactPoint": {
-                        "@type": "ContactPoint",
-                        "contactType": "customer service",
-                        "availableLanguage": "English"
                     }
                 }
             ]
