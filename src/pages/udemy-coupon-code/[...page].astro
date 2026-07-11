@@ -3,6 +3,7 @@ export const prerender = true;
 import Layout from "../../layouts/Layout.astro";
 import { Image } from 'astro:assets';
 import { readDeals } from "../../lib/store";
+import { toISODateWIB } from "../../lib/date";
 import { slugifyCategory } from "../../lib/utils";
 
 export async function getStaticPaths({ paginate }: { paginate: any }) {
@@ -23,8 +24,38 @@ const endIndex = page.end + 1;
 const activeDeals = allDeals.filter((d: any) => !d.expiresAt || new Date(d.expiresAt) > now);
 const totalCoupons = allDeals.length;
 const totalActive = activeDeals.length;
-const freeDeals = allDeals.filter((d: any) => d.price === 0);
-const totalFree = freeDeals.length;
+
+const todayStr = toISODateWIB(now);
+const todayAdded = allDeals.filter((d: any) => {
+  const dt = d.updatedAt || d.createdAt || '';
+  return dt.startsWith(todayStr);
+}).length;
+
+const decodeHtml = (str: string) =>
+  str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+
+const topicCounts: Record<string, number> = {};
+for (const d of allDeals) {
+  const sub = d.subcategory ? decodeHtml(d.subcategory) : '';
+  if (sub) {
+    topicCounts[sub] = (topicCounts[sub] || 0) + 1;
+  }
+}
+const totalTopics = Object.keys(topicCounts).length;
+
+const latestUpdate = allDeals.reduce((latest: number, d: any) => {
+  const t = new Date(d.updatedAt || d.createdAt || 0).getTime();
+  return t > latest ? t : latest;
+}, 0);
+const diffMs = now.getTime() - latestUpdate;
+const diffMin = Math.floor(diffMs / 60000);
+let lastVerified;
+if (diffMin < 1) lastVerified = 'Just now';
+else if (diffMin < 60) lastVerified = `${diffMin}m ago`;
+else {
+  const diffHr = Math.floor(diffMin / 60);
+  lastVerified = diffHr < 24 ? `${diffHr}h ago` : `${Math.floor(diffHr / 24)}d ago`;
+}
 
 let totalSavings = 0;
 for (const d of allDeals) {
@@ -51,7 +82,7 @@ const currentYear = currentDate.getFullYear();
 
 const pageTitle = "Udemy Coupon Code - Verified Discount | CoursesWyn";
 
-const pageDescription = `${totalActive} verified Udemy coupons & ${totalFree} free courses. Over $${savingsFormatted} in total savings. Updated daily.`;
+const pageDescription = `${totalActive} verified Udemy coupons & ${todayAdded} added today. Over $${savingsFormatted} in total savings. Updated daily.`;
 
 function timeLeft(expiresAt: string): string {
   const diff = new Date(expiresAt).getTime() - now.getTime();
@@ -104,11 +135,7 @@ const catsSet = new Set<string>();
 allDeals.forEach((d: any) => { if (d.category) catsSet.add(d.category); });
 const categories = Array.from(catsSet).sort();
 
-const topicCounts: Record<string, number> = {};
-for (const d of allDeals) {
-  topicCounts[d.category || 'Other'] = (topicCounts[d.category || 'Other'] || 0) + 1;
-}
-const trendingTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).slice(0, 12);
+
 
 const faqs = [
   { q: "Are these Udemy coupon codes legitimate and safe?", a: "Yes! All Udemy coupons listed on CoursesWyn are 100% legitimate. We source codes directly from Udemy's official affiliate program and verified course instructors. Each coupon is manually tested by our team before listing." },
@@ -226,18 +253,23 @@ for (let p = 1; p <= totalPages; p++) {
         <p class="cc-subtitle">Browse verified Udemy coupons &mdash; saving students over <strong>${savingsFormatted}</strong> in total</p>
         <div class="cc-stats-bar">
           <div class="cc-stat">
+            <span class="cc-stat-value">{todayAdded}</span>
+            <span class="cc-stat-label">Coupons added today</span>
+          </div>
+          <div class="cc-stat-divider"></div>
+          <div class="cc-stat">
             <span class="cc-stat-value">{totalCoupons}</span>
-            <span class="cc-stat-label">Total Coupons</span>
+            <span class="cc-stat-label">Total coupons</span>
           </div>
           <div class="cc-stat-divider"></div>
           <div class="cc-stat">
-            <span class="cc-stat-value">{totalActive}</span>
-            <span class="cc-stat-label">Still Active</span>
+            <span class="cc-stat-value">{totalTopics}</span>
+            <span class="cc-stat-label">Topics</span>
           </div>
           <div class="cc-stat-divider"></div>
           <div class="cc-stat">
-            <span class="cc-stat-value">{totalFree}+</span>
-            <span class="cc-stat-label">100% Free</span>
+            <span class="cc-stat-value">{lastVerified}</span>
+            <span class="cc-stat-label">Verified</span>
           </div>
         </div>
       </header>
