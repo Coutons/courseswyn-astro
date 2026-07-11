@@ -2,7 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import { Image } from 'astro:assets';
 import { getDeals } from '../../lib/store.js';
-import { formatDateWIB } from '../../lib/date';
+import { formatDateWIB, toISODateWIB } from '../../lib/date';
 
 const allDeals = await getDeals();
 const now = new Date();
@@ -18,11 +18,29 @@ function timeLeft(expiresAt: string): string {
   return '&lt;1h left';
 }
 
+const todayStr = toISODateWIB(now);
+const todayAdded = allDeals.filter(d => {
+  const dt = d.updatedAt || d.createdAt || '';
+  return dt.startsWith(todayStr);
+}).length;
+
 const paidDeals = activeDeals.filter(d => d.price > 0 || d.price == null).slice(0, 48);
 const freeDeals = activeDeals.filter(d => d.price === 0);
-const totalCoupons = allDeals.length;
 const totalActive = activeDeals.length;
-const totalFree = freeDeals.length;
+const totalCoupons = allDeals.length;
+
+const decodeHtml = (str: string) =>
+  str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+
+const topicCounts: Record<string, number> = {};
+for (const d of allDeals) {
+  const sub = d.subcategory ? decodeHtml(d.subcategory) : '';
+  if (sub) {
+    topicCounts[sub] = (topicCounts[sub] || 0) + 1;
+  }
+}
+const totalTopics = Object.keys(topicCounts).length;
+const trendingTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).slice(0, 12);
 
 const dateFull = formatDateWIB(now, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -87,13 +105,7 @@ const siteUrl = "https://courseswyn.com";
 const pageUrl = `${siteUrl}/udemy-coupons-today/`;
 const monthYear = formatDateWIB(now, { month: 'long', year: 'numeric' });
 const pageTitle = `100% Off Udemy Coupons Today - ${monthYear} | CoursesWyn`;
-const metaDescription = `${totalActive} verified 100% off Udemy coupons for ${dateFull}. ${totalFree} new free courses added today in Development, Design, Business & more. Updated in real time.`;
-
-const topicCounts: Record<string, number> = {};
-for (const d of allDeals) {
-  topicCounts[d.category || 'Other'] = (topicCounts[d.category || 'Other'] || 0) + 1;
-}
-const trendingTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).slice(0, 12);
+const metaDescription = `${totalActive} verified 100% off Udemy coupons for ${dateFull}. ${totalCoupons} total coupons across ${totalTopics} topics. Updated in real time.`;
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/\s+&\s+/g, '-and-').replace(/['\s]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
@@ -175,24 +187,24 @@ const jsonLd = {
         <div class="daily-stats">
           <div class="stat-item">
             <span class="stat-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M7.5 7a1 1 0 0 1 0-5A4.8 8 0 0 1 12 7a4.8 8 0 0 1 4.5-5 1 1 0 0 1 0 5"/><rect x="3" y="7" width="18" height="4" rx="1"/></svg>
+              Coupons added today
+            </span>
+            <span class="stat-value">{todayAdded}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
-              Coupons added (24h)
+              Total coupons
             </span>
             <span class="stat-value">{totalCoupons}</span>
           </div>
           <div class="stat-item">
             <span class="stat-label">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-              Still active now
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 7v14"/><path d="M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M7.5 7a1 1 0 0 1 0-5A4.8 8 0 0 1 12 7a4.8 8 0 0 1 4.5-5 1 1 0 0 1 0 5"/><rect x="3" y="7" width="18" height="4" rx="1"/></svg>
+              Total topics
             </span>
-            <span class="stat-value">{totalActive}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M7.5 7a1 1 0 0 1 0-5A4.8 8 0 0 1 12 7a4.8 8 0 0 1 4.5-5 1 1 0 0 1 0 5"/><rect x="3" y="7" width="18" height="4" rx="1"/></svg>
-              New free courses (24h)
-            </span>
-            <span class="stat-value">{totalFree}</span>
+            <span class="stat-value">{totalTopics}</span>
           </div>
           <div class="stat-item">
             <span class="stat-label">
