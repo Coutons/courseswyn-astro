@@ -2,7 +2,7 @@
 title: "Reviews: Udemy AI Engineer Agentic Track: The Complete Agent & MCP Course"
 description: 'AI Engineer Agentic Track: The Complete Agent & MCP Course review 2026: Is this Udemy course worth it? Pros, cons, curriculum breakdown, alternatives, and best Agentic AI courses on Udemy 2026 for aspiring AI engineers.'
 pubDate: 2026-01-19T13:00:00.000Z
-lastUpdated: 2026-01-19
+updatedAt: 2026-01-19T00:00:00.000Z
 tags:
   - AI
   - Agentic AI

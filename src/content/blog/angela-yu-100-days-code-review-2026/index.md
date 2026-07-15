@@ -2,7 +2,7 @@
 title: "Angela Yu's 100 Days of Code™ Python Bootcamp Review: Worth It in 2026?"
 description: 'Angela Yu 100 Days of Code Python bootcamp review 2026: Is this Udemy course worth it? Pros, cons, curriculum breakdown, alternatives, and best Python courses on Udemy 2026 for aspiring developers.'
 pubDate: 2026-01-19T12:00:00.000Z
-lastUpdated: 2026-01-19
+updatedAt: 2026-01-19T00:00:00.000Z
 tags:
   - Python
   - Bootcamp
@@ -262,4 +262,4 @@ Modern approach with AI tools integration, including Cursor and GitHub Copilot. 
 
 - [Top 10 Python AI Courses on Udemy 2026: From Basics to Agentic Apps](/blog/top-10-python-courses-on-udemy/)
 - [Top 10 Generative AI Bootcamps Courses on Udemy 2026](/blog/top-10-generative-ai-bootcamps-udemy-2026/)
-- [Best Web Development Bootcamps on Udemy 2026](/blog/best-web-development-bootcamps-on-udemy-2025/)
+- [Best Web Development Bootcamps on Udemy 2026](/blog/best-web-development-bootcamps-on-udemy-2026/)

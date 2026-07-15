@@ -3,6 +3,7 @@
 title: "Model Context Protocol (MCP) Explained: The Backbone of Agentic AI Systems (2026)"
 description: A deep technical guide to the Model Context Protocol (MCP) in Agentic AI. Learn how MCP enables secure tool access, memory, interoperability, and scalable agent architectures in 2026.
 pubDate: 2026-01-31T00:00:00.000Z
+updatedAt: 2026-01-31T00:00:00.000Z
 tags:
 - Model Context Protocol
 - MCP

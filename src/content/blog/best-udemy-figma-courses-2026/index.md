@@ -2,6 +2,7 @@
 title: Best Udemy Figma Courses for No-Code Web Design and UI/UX in 2026
 description: 'Discover the best Udemy Figma courses for no-code web design and UI/UX in 2026. Master responsive prototypes, AI integrations, and freelancing skills with hands-on projects from Figma designs to interactive deployments.'
 pubDate: 2025-12-12T10:00:00.000Z
+updatedAt: 2025-12-12T10:00:00.000Z
 tags:
   - Figma
   - Webflow

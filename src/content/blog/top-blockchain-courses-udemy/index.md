@@ -2,6 +2,7 @@
 title: Top 8 Blockchain Courses on Udemy for Beginners 2026
 description: 'Discover the 8 best blockchain courses on Udemy for beginners in 2026. Master Ethereum, Solidity, crypto fundamentals, and build your first dApps with hands-on projects.'
 pubDate: 2025-12-11T10:00:00.000Z
+updatedAt: 2025-12-11T10:00:00.000Z
 tags:
   - Blockchain
   - Ethereum

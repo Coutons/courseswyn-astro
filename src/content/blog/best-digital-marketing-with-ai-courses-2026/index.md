@@ -2,6 +2,7 @@
 title: Best Udemy Digital Marketing with AI Courses for Beginners 2026 [Updated]
 description: 'Explore the top Udemy digital marketing with AI courses for beginners in 2026. Master SEO, social media, ads, automation, and ChatGPT with comprehensive, affordable training—no prior experience needed.'
 pubDate: 2026-01-22T10:00:00.000Z
+updatedAt: 2026-01-22T10:00:00.000Z
 tags:
   - Digital Marketing
   - AI Marketing

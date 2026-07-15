@@ -57,7 +57,7 @@ The case for local LLMs isn't just about saving money on API calls — though th
 
 **Model quality has arrived.** A year ago, the argument against local models was quality. That argument is largely gone in 2026. Llama 3.1 70B and Gemma 2 27B are competitive with GPT-3.5 on most tasks, and surprisingly close to GPT-4 on code generation and document analysis. The gap exists but is narrower than most people expect.
 
-If you want a deeper technical comparison of Ollama against other local inference frameworks, the <a href="https://blog.alphabravo.io/ollama-vs-vllm-the-definitive-guide-to-local-llm-frameworks-in-2025/" target="_blank" rel="nofollow noopener">Ollama vs. vLLM guide from Alpha Bravo</a> is one of the most thorough available.
+If you want a deeper technical comparison of Ollama against other local inference frameworks, the <a href="https://blog.alphabravo.io/ollama-vs-vllm-the-definitive-guide-to-local-llm-frameworks-in-2026/" target="_blank" rel="nofollow noopener">Ollama vs. vLLM guide from Alpha Bravo</a> is one of the most thorough available.
 
 ---
 
@@ -349,7 +349,7 @@ If you're exploring the broader landscape of AI tools and courses beyond just lo
 - [**Best Agentic AI & MCP Courses Udemy 2026**](/blog/top-10-best-mcp-courses-udemy-2026/) — covers Model Context Protocol, Claude integration, and building AI agents with LangGraph and CrewAI
 - [**Best AI Video Creation Courses Udemy 2026**](/blog/best-udemy-ai-video-courses-2026-monetize-tiktok-youtube-fast/) — for creators who want to use AI-generated video for content monetization
 - [**Best LangChain Courses Udemy 2026**](/blog/top-10-best-langchain-courses-udemy/) — deeper coverage of LangChain specifically, including alternatives like LlamaIndex and Haystack
-- [**Best Machine Learning Courses for Beginners 2026**](/blog/top-ai-and-machine-learning-courses-on-udemy-2025/) — foundational ML theory for those who want to understand how models like Llama actually work before running them
+- [**Best Machine Learning Courses for Beginners 2026**](/blog/top-ai-and-machine-learning-courses-on-udemy-2026/) — foundational ML theory for those who want to understand how models like Llama actually work before running them
 
 ---
 

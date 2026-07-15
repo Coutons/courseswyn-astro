@@ -3,6 +3,7 @@
 title: What Is Agentic AI? Architecture, MCP, and Real-World Use Cases (2026)
 description: Learn what Agentic AI really is in 2026. This in-depth technical guide explains agentic architecture, planning loops, memory systems, MCP, single-agent vs multi-agent design, real-world use cases, risks, and governance.
 pubDate: 2026-01-31T00:00:00.000Z
+updatedAt: 2026-01-31T00:00:00.000Z
 tags:
 - Agentic AI
 - AI Agents

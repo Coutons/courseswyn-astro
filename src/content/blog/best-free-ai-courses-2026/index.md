@@ -365,7 +365,7 @@ AI evolves rapidly. Supplement your courses with:
 
 ## The AI Skills Gap: Why Now Is the Time to Act
 
-The landscape of work is transforming faster than ever. According to recent reports, 85 million jobs may be displaced by automation by 2025, but 97 million new roles could emerge that are better adapted to the new division of labor between humans and machines.
+The landscape of work is transforming faster than ever. According to recent reports, automation is reshaping the workforce, with 85 million jobs potentially displaced and 97 million new roles emerging that are better adapted to the new division of labor between humans and machines.
 
 The dividing line? **AI literacy and skills.**
 

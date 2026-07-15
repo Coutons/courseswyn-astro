@@ -2,7 +2,7 @@
 title: "Review: Udemy's AI Governance Professional (AIGP) Certification Masterclass Course"
 description: "An in-depth editorial review of Udemy's AI Governance Professional (AIGP) Certification Masterclass, covering instructor credibility, curriculum depth, AI governance relevance, and certification value for professionals."
 pubDate: 2026-01-28
-lastUpdated: 2026-01-28
+updatedAt: 2026-01-28T00:00:00.000Z
 author: Andrew Derek
 tags:
   - Artificial Intelligence Governance Professional (AIGP)
@@ -162,7 +162,7 @@ Yes. Even without pursuing certification, the course provides a comprehensive fr
 * Link to related Udemy reviews covering:
 
   * [AI Engineer Roadmap 2026](/blog/ai-engineer-roadmap-2026)
-  * [Top AI and Machine Learning Courses on Udemy Updated 2026](/blog/top-ai-and-machine-learning-courses-on-udemy-2025)
+  * [Top AI and Machine Learning Courses on Udemy Updated 2026](/blog/top-ai-and-machine-learning-courses-on-udemy-2026)
 
 
 <script type="application/ld+json">

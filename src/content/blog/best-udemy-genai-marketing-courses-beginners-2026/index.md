@@ -2,6 +2,7 @@
 title: Best Udemy GenAI Marketing Courses for Beginners in 2026
 description: 'Discover the best Udemy GenAI marketing courses for beginners in 2026. Master prompt engineering, content creation, & automation to boost your career.'
 pubDate: 2025-12-14T10:00:00.000Z
+updatedAt: 2025-12-14T10:00:00.000Z
 tags:
   - GenAI
   - Marketing

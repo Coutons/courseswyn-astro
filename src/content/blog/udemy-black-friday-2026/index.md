@@ -2,7 +2,7 @@
 title: "Udemy Black Friday 2026 – 25 Best Courses at 95% OFF (Dates + Strategy)"
 description: "Udemy Black Friday 2026: Expected dates (mid–late November), 95% OFF deals, 25 best courses reviewed, price by country (US, UK, India, Indonesia, Brazil), and 5 hacks to never pay full price."
 pubDate: 2026-05-06T00:00:00.000Z
-updatedDate: 2026-05-06T00:00:00.000Z
+updatedAt: 2026-05-06T00:00:00.000Z
 tags:
   - udemy
   - black-friday

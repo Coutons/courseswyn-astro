@@ -2,6 +2,7 @@
 title: Top 8 Blender Courses on Udemy 2026
 description: 'Top 8 Blender courses on Udemy 2026 — deep 480+ word reviews, exact Blender 4.5+ features, real student earnings, comparison table, and which course fits your 2026 goal.'
 pubDate: 2025-11-29T09:40:39.683Z
+updatedAt: 2025-11-29T09:40:39.683Z
 tags:
   - Blender
   - 3D Modeling
