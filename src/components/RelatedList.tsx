@@ -36,11 +36,12 @@ export default function RelatedList({ items, initial = 4, step = 4 }: { items: I
                     width="300"
                     height="200"
                     loading="lazy"
+                    decoding="async"
                     style={{ width: "100%", height: "140px", borderRadius: 8, border: "1px solid var(--border)", objectFit: "cover" }} 
                   />
                   <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
                     {isNew(r.updatedAt) && (
-                      <span className="pill" style={{ background: "#3b82f6", color: "#fff", fontWeight: 800 }}>New</span>
+                      <span className="pill" style={{ background: "#6B1D1A", color: "#f5f0e8", fontWeight: 800 }}>New</span>
                     )}
                     {isBestSeller(r.price, r.originalPrice, r.students) && (
                       <span className="pill" style={{ background: "#10b981", color: "#fff", fontWeight: 800 }}>Best Seller</span>

@@ -26,7 +26,7 @@ interface Deal {
   requirements?: string[];
 }
 
-const { deal } = Astro.props;
+const { deal, loading = "lazy" } = Astro.props;
 
 function formatStudents(n: number) {
   if (!n) return "";
@@ -75,7 +75,7 @@ const durationLabel = duration ? duration.replace(/^(\d+)\s*hours?.*$/i, "$1h") 
 
 <div class="deal-card" style={{
   background: "var(--card)",
-  border: "1px solid var(--border)",
+  border: "1px solid rgba(212,167,55,0.08)",
   borderRadius: "var(--radius)",
   overflow: "hidden",
   transition: "all 0.3s ease",
@@ -94,7 +94,7 @@ const durationLabel = duration ? duration.replace(/^(\d+)\s*hours?.*$/i, "$1h") 
     {deal.image ? (
       <Image src={deal.image} alt={title} width={400} height={225}
         style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        loading="lazy" inferSize={false} />
+        loading={loading} inferSize={false} />
     ) : (
       <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--muted-light)" stroke-width="1.5" opacity="0.4">
@@ -106,10 +106,10 @@ const durationLabel = duration ? duration.replace(/^(\d+)\s*hours?.*$/i, "$1h") 
     {discountPct !== null && (
       <div style={{
         position: "absolute", top: "12px", left: "12px",
-        background: "linear-gradient(135deg, #dc2626, #e11d48)",
-        color: "white", padding: "4px 12px", borderRadius: "8px",
+        background: "linear-gradient(135deg, #B8860B, #D4AF37, #E8C547, #D4AF37)",
+        color: "#1a1814", padding: "4px 12px", borderRadius: "8px",
         fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.02em",
-        boxShadow: "0 2px 8px rgba(220,38,38,0.3)"
+        boxShadow: "0 2px 8px rgba(212,167,55,0.3)"
       }}>
         {isFree ? "FREE" : `-${discountPct}%`}
       </div>
@@ -117,10 +117,11 @@ const durationLabel = duration ? duration.replace(/^(\d+)\s*hours?.*$/i, "$1h") 
 
     <div style={{
       position: "absolute", top: "12px", right: "12px",
-      background: "rgba(0,0,0,0.6)", color: "white",
+      background: "rgba(15,14,12,0.7)", color: "var(--brand)",
       padding: "4px 10px", borderRadius: "8px",
       fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.04em",
-      backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: "4px"
+      backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: "4px",
+      border: "1px solid rgba(212,167,55,0.2)"
     }}>
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       VERIFIED
@@ -131,7 +132,7 @@ const durationLabel = duration ? duration.replace(/^(\d+)\s*hours?.*$/i, "$1h") 
 
     <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem" }}>
       {r && (
-        <div style={{ display: "flex", alignItems: "center", gap: "3px", color: "#f59e0b", fontWeight: 700 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "3px", color: "var(--brand)", fontWeight: 700 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
           {r.toFixed(1)}
         </div>
@@ -150,8 +151,7 @@ const durationLabel = duration ? duration.replace(/^(\d+)\s*hours?.*$/i, "$1h") 
 
     {description && (
       <p style={{
-        fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.5, fontWeight: 400, margin: 0,
-        display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden"
+        fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.5, fontWeight: 400, margin: 0
       }}>
         {description}
       </p>
@@ -208,11 +208,11 @@ const durationLabel = duration ? duration.replace(/^(\d+)\s*hours?.*$/i, "$1h") 
           style={{
             display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "5px",
             padding: "8px 18px", borderRadius: "10px",
-            background: "var(--brand)", color: "white",
+            background: "linear-gradient(135deg, #B8860B 0%, #D4AF37 25%, #E8C547 50%, #D4AF37 75%, #B8860B 100%)", color: "#1a1814",
             fontSize: "0.78rem", fontWeight: 700, textDecoration: "none",
-            whiteSpace: "nowrap", transition: "all 0.2s"
+            whiteSpace: "nowrap", transition: "all 0.3s"
           }}
-          onmouseover="this.style.opacity='0.85';this.style.transform='scale(1.03)'" onmouseout="this.style.opacity='1';this.style.transform='scale(1)'">
+          onmouseover="this.style.background='linear-gradient(135deg, #C5A028 0%, #D4AF37 25%, #E8C547 50%, #D4AF37 75%, #C5A028 100%)';this.style.boxShadow='0 0 20px 4px rgba(212,167,55,0.4)';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='linear-gradient(135deg, #B8860B 0%, #D4AF37 25%, #E8C547 50%, #D4AF37 75%, #B8860B 100%)';this.style.boxShadow='none';this.style.transform='none'">
           {isFree ? "GET FREE" : "REDEEM"}
         </a>
       </div>
@@ -221,16 +221,36 @@ const durationLabel = duration ? duration.replace(/^(\d+)\s*hours?.*$/i, "$1h") 
 </div>
 
 <style>
+  .deal-card {
+    position: relative;
+  }
+  .deal-card::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #B8860B, #D4AF37, #E8C547, #D4AF37, #B8860B);
+    opacity: 0.15;
+    transition: opacity 0.4s ease;
+    z-index: 2;
+    border-radius: 0.75rem 0.75rem 0 0;
+    pointer-events: none;
+  }
   .deal-card:hover {
     transform: translateY(-4px) scale(1.01);
-    box-shadow: 0 16px 32px -8px rgba(0,0,0,0.4);
-    border-color: var(--brand) !important;
+    box-shadow: 0 16px 40px -8px rgba(212,167,55,0.15);
+    border-color: rgba(212,167,55,0.3) !important;
+  }
+  .deal-card:hover::before {
+    opacity: 1;
   }
   .deal-card:hover img {
-    transform: scale(1.05);
-    transition: transform 0.5s ease;
+    transform: scale(1.06);
+    transition: transform 0.6s ease;
   }
   .deal-card img {
-    transition: transform 0.5s ease;
+    transition: transform 0.6s ease;
   }
 </style>

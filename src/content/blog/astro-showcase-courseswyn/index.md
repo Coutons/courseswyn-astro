@@ -263,7 +263,7 @@ If you're building something similar — a coupon aggregator, a documentation si
         "name": "CoursesWyn",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://courseswyn.com/assets/images/courseswyn-logo.png"
+          "url": "https://courseswyn.com/logo.svg"
         }
       },
       "mentions": {

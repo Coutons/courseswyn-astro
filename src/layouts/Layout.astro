@@ -18,9 +18,15 @@ interface Props {
 const allDeals = await readDeals();
 const activeCouponCount = "679990";
 
+const siteUrl = import.meta.env.SITE || "https://courseswyn.com";
+const currentYear = currentYearWIB();
+const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const currentMonth = months[new Date().getMonth()];
+const currentMonthYear = `${currentMonth} ${currentYear}`;
+
 const {
-  title = "CoursesWyn - Free Udemy Courses and Verified Coupons Daily",
-  description = "Find the latest 100% off Udemy coupons. Browse 1,200+ free courses in AI, coding, design & more. Updated daily. No signup needed — start learning for free today.",
+  title = "Free Udemy Courses 100% OFF Coupons & Promo Codes [" + currentMonthYear + "] | CoursesWyn",
+  description = "Find the latest 100% off Udemy coupons. Browse free courses in AI, coding, design & more. Updated daily. Free to browse — start learning for free today.",
   image,
   type = "website",
   canonical,
@@ -29,10 +35,7 @@ const {
   hideBreadcrumbs = false,
 } = Astro.props;
 
-const siteUrl = import.meta.env.SITE || "https://courseswyn.com";
 const canonicalURL = canonical || new URL(Astro.url.pathname, siteUrl).href;
-
-const currentYear = currentYearWIB();
 const absoluteImageUrl = image ? (image.startsWith('http') ? image : new URL(image, siteUrl).href) : new URL('/assets/images/og-default.svg', siteUrl).href;
 
 const currentPath = Astro.url.pathname;
@@ -42,13 +45,14 @@ const currentPath = Astro.url.pathname;
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="google-site-verification" content="440e92a0ff41e1b5" />
 
-        <meta name="theme-color" content="#3b82f6" />
-    <meta name="msapplication-TileColor" content="#3b82f6" />
+        <meta name="theme-color" content="#D4AF37" />
+    <meta name="msapplication-TileColor" content="#D4AF37" />
     <meta name="referrer" content="no-referrer-when-downgrade" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://f.convertkit.com https://cdn.ampproject.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' https: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://ipapi.co; frame-src 'none'; object-src 'none'; base-uri 'self'" />
     <meta name="format-detection" content="telephone=no" />
@@ -70,8 +74,6 @@ const currentPath = Astro.url.pathname;
     )}
 
     <link rel="alternate" type="application/rss+xml" title="CoursesWyn Blog RSS Feed" href={`${siteUrl}/rss.xml`} />
-
-    <title>{title}</title>
 
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
     {pubDate && <meta property="article:published_time" content={pubDate.toISOString()} />}
@@ -169,14 +171,169 @@ const currentPath = Astro.url.pathname;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
       }
 
-      .nav-link:hover {
-        background: rgba(59, 130, 246, 0.1) !important;
-        transform: translateY(-1px);
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        flex-shrink: 0;
+      }
+      .brand-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #B8860B 0%, #D4AF37 40%, #E8C547 60%, #D4AF37 100%);
+        color: #1a1814;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 0 16px rgba(212,167,55,0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+        position: relative;
+      }
+      .brand-icon::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.12);
+        pointer-events: none;
+      }
+      .brand-text {
+        display: flex;
+        flex-direction: column;
+      }
+      .brand-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #f5f0e8;
+        line-height: 1.2;
+      }
+      .brand-tagline {
+        font-size: 0.62rem;
+        color: #8a7e6a;
+        font-weight: 500;
+        letter-spacing: 0.03em;
+        line-height: 1.2;
+        text-transform: uppercase;
       }
 
-      .nav-link:active {
-        transform: translateY(0);
+      .nav-links {
+        display: flex;
+        gap: 2px;
+        align-items: center;
+        flex: 1;
+        justify-content: center;
       }
+      .nav-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #f5f0e8;
+        text-decoration: none;
+        border: 1px solid rgba(212,167,55,0.15);
+        background: rgba(212,167,55,0.04);
+        transition: all 0.25s ease;
+        white-space: nowrap;
+        position: relative;
+      }
+      .nav-item::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #B8860B, #D4AF37, #E8C547);
+        border-radius: 1px;
+        transition: all 0.3s ease;
+      }
+      .nav-item:hover {
+        background: rgba(212, 167, 55, 0.12);
+        border-color: rgba(212, 167, 55, 0.3);
+      }
+      .nav-item:hover::after {
+        width: 60%;
+      }
+      .nav-item.active {
+        background: rgba(212, 167, 55, 0.18);
+        border-color: rgba(212, 167, 55, 0.4);
+      }
+      .nav-item.active::after {
+        width: 60%;
+      }
+
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+      }
+      .search-form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(212,167,55,0.05);
+        border: 1px solid rgba(212, 167, 55, 0.25);
+        border-radius: 10px;
+        padding: 7px 14px;
+        width: 190px;
+        transition: all 0.3s ease;
+        cursor: text;
+        backdrop-filter: blur(4px);
+        position: relative;
+      }
+      .search-form:hover {
+        border-color: rgba(212, 167, 55, 0.4);
+        background: rgba(212, 167, 55, 0.08);
+      }
+      .search-form:focus-within {
+        border-color: rgba(212, 167, 55, 0.6);
+        background: rgba(212, 167, 55, 0.12);
+        box-shadow: 0 0 28px -6px rgba(212,167,55,0.3);
+      }
+      .nav-count {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #8a7e6a;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .nav-count::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #D4AF37;
+        display: inline-block;
+        animation: pulse 2s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+      }
+
+      .ft { border-top: 1px solid rgba(212,167,55,0.08); padding: 60px 0 32px; margin-top: auto; }
+      .ft-inner { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+      .ft-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
+      @media (max-width: 768px) { .ft-grid { grid-template-columns: 1fr 1fr; gap: 30px; } }
+      @media (max-width: 480px) { .ft-grid { grid-template-columns: 1fr; } }
+      .ft-heading { font-size: 0.78rem; font-weight: 700; margin-bottom: 18px; text-transform: uppercase; letter-spacing: 0.08em; background: linear-gradient(135deg, #D4AF37, #E8C547); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+      .ft-link { color: #8a7e6a; text-decoration: none; font-size: 0.85rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+      .ft-link:hover { color: #D4AF37; }
+      .ft-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+      .ft-text { font-size: 0.88rem; line-height: 1.7; margin: 0 0 20px; max-width: 320px; }
+      .ft-bottom { padding-top: 28px; text-align: center; font-size: 0.8rem; color: #6b6050; position: relative; }
+      .ft-bottom::before { content: ''; display: block; width: 80px; height: 1px; background: linear-gradient(90deg, transparent, #D4AF37, #E8C547, #D4AF37, transparent); margin: 0 auto 24px; border-radius: 1px; }
+      .ft-logo-sm { display: inline-flex; align-items: center; gap: 8px; }
+      .ft-brand-icon { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #B8860B, #D4AF37, #E8C547); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
     </style>
     <slot name="head" />
   </head>
@@ -197,93 +354,75 @@ const currentPath = Astro.url.pathname;
           height: "70px"
         }}
       >
-        <a href="/" class="logo" style={{ flexShrink: 0, textDecoration: "none" }}>
-          <span style={{ fontSize: "1.15rem", fontWeight: 700, letterSpacing: "0.03em", color: "#f1f5f9" }}>CoursesWyn</span>
+        <a href="/" class="brand" aria-label="CoursesWyn Home">
+          <span class="brand-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 44 44" fill="none">
+              <defs>
+                <mask id="cw-mask">
+                  <rect width="44" height="44" fill="white"/>
+                  <path d="M28 16H18a3 3 0 0 0-3 3v6a3 3 0 0 0 3 3h10" stroke="black" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </mask>
+              </defs>
+              <path d="M22 3L40 13v18L22 41 4 31V13L22 3Z" fill="#1a1814" mask="url(#cw-mask)"/>
+              <path d="M22 3L4 13 22 23 40 13 22 3Z" fill="rgba(255,255,248,0.06)" mask="url(#cw-mask)"/>
+              <path d="M4 13v18l7-5 11-14Z" fill="rgba(0,0,0,0.12)" mask="url(#cw-mask)"/>
+              <path d="M40 13v18l-7-5L22 13Z" fill="rgba(0,0,0,0.04)" mask="url(#cw-mask)"/>
+              <path d="M11 31l-7-5 7-5 11 10Z" fill="rgba(0,0,0,0.08)" mask="url(#cw-mask)"/>
+              <path d="M33 31l7-5-7-5-11 10Z" fill="rgba(0,0,0,0.02)" mask="url(#cw-mask)"/>
+              <circle cx="28" cy="9" r="1.2" fill="#E8C547" opacity="0.8"/>
+              <circle cx="35" cy="15" r="0.6" fill="#E8C547" opacity="0.5"/>
+              <circle cx="17" cy="36" r="0.5" fill="#E8C547" opacity="0.3"/>
+            </svg>
+          </span>
+          <div class="brand-text">
+            <span class="brand-name">CoursesWyn</span>
+            <span class="brand-tagline">Verified Free Courses Daily</span>
+          </div>
         </a>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, gap: "10px" }}>
-          <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-            <a href="/udemy-coupons-today" itemprop="url" style={{
-              display: "inline-flex", alignItems: "center", gap: "5px",
-              padding: "6px 12px", borderRadius: "8px",
-              fontSize: "0.82rem", fontWeight: 600,
-              color: "#f1f5f9",
-              textDecoration: "none",
-              background: currentPath === '/udemy-coupons-today' ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.05)',
-              border: currentPath === '/udemy-coupons-today' ? '1px solid rgba(59,130,246,0.4)' : '1px solid rgba(255,255,255,0.1)',
-              transition: "all 0.2s ease",
-              whiteSpace: "nowrap"
-            }}
-            onmouseover="this.style.background='rgba(59,130,246,0.15)';this.style.borderColor='rgba(59,130,246,0.4)'" onmouseout="this.style.background=this.style.borderColor=''"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6l4-4z"/><path d="M2 6h20"/><path d="M16 2v4H8V2"/><rect x="8" y="10" width="8" height="6"/></svg>
-              <span itemprop="name">Today's Coupons</span>
-            </a>
-            <a href="/udemy-coupon-code" itemprop="url" style={{
-              display: "inline-flex", alignItems: "center", gap: "5px",
-              padding: "6px 12px", borderRadius: "8px",
-              fontSize: "0.82rem", fontWeight: 600,
-              color: "#f1f5f9",
-              textDecoration: "none",
-              background: currentPath === '/udemy-coupon-code' ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.05)',
-              border: currentPath === '/udemy-coupon-code' ? '1px solid rgba(59,130,246,0.4)' : '1px solid rgba(255,255,255,0.1)',
-              transition: "all 0.2s ease",
-              whiteSpace: "nowrap"
-            }}
-            onmouseover="this.style.background='rgba(59,130,246,0.15)';this.style.borderColor='rgba(59,130,246,0.4)'" onmouseout="this.style.background=this.style.borderColor=''"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              <span itemprop="name">Coupon Codes</span>
-            </a>
-            <a href="/topics" itemprop="url" style={{
-              display: "inline-flex", alignItems: "center", gap: "5px",
-              padding: "6px 12px", borderRadius: "8px",
-              fontSize: "0.82rem", fontWeight: 600,
-              color: "#f1f5f9",
-              textDecoration: "none",
-              background: (currentPath === '/topics' || currentPath.startsWith('/topics/')) ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.05)',
-              border: (currentPath === '/topics' || currentPath.startsWith('/topics/')) ? '1px solid rgba(59,130,246,0.4)' : '1px solid rgba(255,255,255,0.1)',
-              transition: "all 0.2s ease",
-              whiteSpace: "nowrap"
-            }}
-            onmouseover="this.style.background='rgba(59,130,246,0.15)';this.style.borderColor='rgba(59,130,246,0.4)'" onmouseout="this.style.background=this.style.borderColor=''"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-              <span itemprop="name">Topics</span>
-            </a>
-            <a href="/blog" itemprop="url" style={{
-              display: "inline-flex", alignItems: "center", gap: "5px",
-              padding: "6px 12px", borderRadius: "8px",
-              fontSize: "0.82rem", fontWeight: 600,
-              color: "#f1f5f9",
-              textDecoration: "none",
-              background: (currentPath === '/blog' || currentPath.startsWith('/blog/')) ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.05)',
-              border: (currentPath === '/blog' || currentPath.startsWith('/blog/')) ? '1px solid rgba(59,130,246,0.4)' : '1px solid rgba(255,255,255,0.1)',
-              transition: "all 0.2s ease",
-              whiteSpace: "nowrap"
-            }}
-            onmouseover="this.style.background='rgba(59,130,246,0.15)';this.style.borderColor='rgba(59,130,246,0.4)'" onmouseout="this.style.background=this.style.borderColor=''"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              <span itemprop="name">Blog</span>
-            </a>
-          </div>
-          <form action="/search" method="get" style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: "8px",
-            padding: "6px 12px",
-            width: "200px",
-            transition: "all 0.2s ease",
-            cursor: "text"
-          }}
-          onmouseover="this.style.borderColor='rgba(59,130,246,0.4)';this.style.background='rgba(59,130,246,0.15)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.05)'"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style={{ color: "rgba(241,245,249,0.7)", flexShrink: 0 }}>
-              <path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>
+        <div class="nav-links">
+          <a href="/udemy-coupons-today" itemprop="url"
+            class:list={['nav-item', { active: currentPath === '/udemy-coupons-today' }]}
+            aria-current={currentPath === '/udemy-coupons-today' ? 'page' : undefined}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6l4-4z"/><path d="M2 6h20"/><path d="M16 2v4H8V2"/><rect x="8" y="10" width="8" height="6"/></svg>
+            <span itemprop="name">Today's Coupons</span>
+          </a>
+          <a href="/udemy-coupon-code" itemprop="url"
+            class:list={['nav-item', { active: currentPath === '/udemy-coupon-code' }]}
+            aria-current={currentPath === '/udemy-coupon-code' ? 'page' : undefined}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span itemprop="name">Coupon Codes</span>
+          </a>
+          <a href="/popular" itemprop="url"
+            class:list={['nav-item', { active: currentPath === '/popular' }]}
+            aria-current={currentPath === '/popular' ? 'page' : undefined}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+            <span itemprop="name">Popular Courses</span>
+          </a>
+          <a href="/categories" itemprop="url"
+            class:list={['nav-item', { active: currentPath === '/categories' || currentPath.startsWith('/categories/') }]}
+            aria-current={currentPath === '/categories' || currentPath.startsWith('/categories/') ? 'page' : undefined}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            <span itemprop="name">Categories</span>
+          </a>
+          <a href="/topics" itemprop="url"
+            class:list={['nav-item', { active: currentPath === '/topics' || currentPath.startsWith('/topics/') }]}
+            aria-current={currentPath === '/topics' || currentPath.startsWith('/topics/') ? 'page' : undefined}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <span itemprop="name">Topics</span>
+          </a>
+          <a href="/blog" itemprop="url"
+            class:list={['nav-item', { active: currentPath === '/blog' || currentPath.startsWith('/blog/') }]}
+            aria-current={currentPath === '/blog' || currentPath.startsWith('/blog/') ? 'page' : undefined}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span itemprop="name">Blog</span>
+          </a>
+        </div>
+
+        <div class="nav-right">
+          <form action="/search" method="get" class="search-form" role="search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
             <input
               type="text"
@@ -291,7 +430,7 @@ const currentPath = Astro.url.pathname;
               placeholder="Search courses..."
               style={{
                 background: 'transparent',
-                color: '#f1f5f9',
+                color: '#f5f0e8',
                 border: 'none',
                 fontSize: '0.82rem',
                 width: '100%',
@@ -300,9 +439,8 @@ const currentPath = Astro.url.pathname;
               }}
             />
           </form>
+          <span class="nav-count">{activeCouponCount}</span>
         </div>
-
-        <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#64748b" }}>{activeCouponCount}</span>
       </nav>
     </header>
 
@@ -454,64 +592,55 @@ const currentPath = Astro.url.pathname;
       <slot />
     </main>
 
-    <footer
-      role="contentinfo"
-      itemscope
-      itemtype="https://schema.org/WPFooter"
-      style={{
-        background: "#0f172a",
-        borderTop: "1px solid #334155",
-        padding: "60px 0 32px",
-        marginTop: "auto"
-      }}
-    >
-      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 1.5rem" }}>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 1fr 1fr 1fr",
-          gap: "40px",
-          marginBottom: "48px"
-        }}>
+    <footer role="contentinfo" itemscope itemtype="https://schema.org/WPFooter" class="ft">
+      <div class="ft-inner">
+        <div class="ft-grid">
           <div>
-            <h4 style={{ color: "#f1f5f9", fontSize: "0.9rem", fontWeight: 700, marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.05em" }}>About</h4>
-            <p style={{ color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.6, marginBottom: "20px", maxWidth: "320px" }}>
-              Free Udemy courses with 100% off coupons & verified promo codes updated daily. Save thousands on premium online learning.
-            </p>
+            <div class="ft-logo-sm" style="margin-bottom:14px">
+              <span class="ft-brand-icon">
+                <svg width="16" height="16" viewBox="0 0 44 44" fill="none">
+                  <path d="M22 4L38 12v18L22 40 6 30V12L22 4Z" fill="#1a1814"/>
+                  <path d="M27.5 17H18.5a2.5 2.5 0 0 0-2.5 2.5v5a2.5 2.5 0 0 0 2.5 2.5h9" stroke="#D4AF37" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+              </span>
+              <span style="font-size:1rem;font-weight:700;color:#f5f0e8">CoursesWyn</span>
+            </div>
+            <p class="ft-text" style="color:#a09888">Free Udemy courses with 100% off coupons & verified promo codes updated daily. Save thousands on premium online learning.</p>
           </div>
 
           <div>
-            <h4 style={{ color: "#f1f5f9", fontSize: "0.9rem", fontWeight: 700, marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Company</h4>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: "10px" }}><a href="/about" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">About Us</a></li>
-              <li style={{ marginBottom: "10px" }}><a href="/contact" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Contact Us</a></li>
-              <li style={{ marginBottom: "10px" }}><a href="/privacy" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Privacy Policy</a></li>
-              <li style={{ marginBottom: "10px" }}><a href="/terms" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Terms of Service</a></li>
-              <li style={{ marginBottom: "10px" }}><a href="/affiliate-disclosure" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Affiliate Disclosure</a></li>
-              <li style={{ marginBottom: "10px" }}><a href="/how-to-redeem-coupon" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">How to Redeem Coupon</a></li>
+            <h4 class="ft-heading">Company</h4>
+            <ul class="ft-list">
+              <li><a href="/about" class="ft-link">About Us</a></li>
+              <li><a href="/contact" class="ft-link">Contact Us</a></li>
+              <li><a href="/privacy" class="ft-link">Privacy Policy</a></li>
+              <li><a href="/terms" class="ft-link">Terms of Service</a></li>
+              <li><a href="/affiliate-disclosure" class="ft-link">Affiliate Disclosure</a></li>
+              <li><a href="/how-to-redeem-coupon" class="ft-link">How to Redeem Coupon</a></li>
             </ul>
           </div>
 
           <div>
-              <h4 style={{ color: "#f1f5f9", fontSize: "0.9rem", fontWeight: 700, marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Free Coupons</h4>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: "10px" }}><a href="/udemy-coupons-today" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Free Udemy Coupons Today</a></li>
-              <li style={{ marginBottom: "10px" }}><a href="/udemy-coupon-code" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">100% Off Udemy Coupon Codes</a></li>
-              <li style={{ marginBottom: "10px" }}><a href="/udemy-coupons-guide" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Udemy Coupon Guide</a></li>
-              <li style={{ marginBottom: "10px" }}><a href="/popular" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Popular Free Courses</a></li>
-              <li style={{ marginBottom: "10px" }}><a href="/categories" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Course Categories</a></li>
-              <li style={{ marginBottom: "10px" }}><a href="/topics" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Course Topics</a></li>
-              <li style={{ marginBottom: "10px" }}><a href="/blog" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Coupons Blog</a></li>
+            <h4 class="ft-heading">Free Coupons</h4>
+            <ul class="ft-list">
+              <li><a href="/udemy-coupons-today" class="ft-link">Free Udemy Coupons Today</a></li>
+              <li><a href="/udemy-coupon-code" class="ft-link">100% Off Udemy Coupon Codes</a></li>
+              <li><a href="/udemy-coupons-guide" class="ft-link">Udemy Coupon Guide</a></li>
+              <li><a href="/popular" class="ft-link">Popular Free Courses</a></li>
+              <li><a href="/categories" class="ft-link">Course Categories</a></li>
+              <li><a href="/topics" class="ft-link">Course Topics</a></li>
+              <li><a href="/blog" class="ft-link">Coupons Blog</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 style={{ color: "#f1f5f9", fontSize: "0.9rem", fontWeight: 700, marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Follow Us</h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <a href="https://www.facebook.com/CoursesWyn" target="_blank" rel="noopener noreferrer" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "8px", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">
+            <h4 class="ft-heading">Follow Us</h4>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <a href="https://www.facebook.com/CoursesWyn" target="_blank" rel="noopener noreferrer" class="ft-link" style="font-size:0.85rem;display:flex;align-items:center;gap:8px">
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                 Facebook
               </a>
-              <a href="https://x.com/CoursesWyn" target="_blank" rel="noopener noreferrer" style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "8px", transition: "color 0.2s" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">
+              <a href="https://x.com/CoursesWyn" target="_blank" rel="noopener noreferrer" class="ft-link" style="font-size:0.85rem;display:flex;align-items:center;gap:8px">
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                 Twitter
               </a>
@@ -519,14 +648,13 @@ const currentPath = Astro.url.pathname;
           </div>
         </div>
 
-        <div style={{
-          borderTop: "1px solid #334155",
-          paddingTop: "24px",
-          textAlign: "center",
-          fontSize: "0.85rem",
-          color: "#64748b"
-        }}>
-          &copy; {currentYearWIB()} <a href="/" style={{ color: "#64748b", textDecoration: "none" }} onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#64748b'">CoursesWyn</a> — Free Udemy Coupons, 100% Off Promo Codes & Verified Deals. All rights reserved.
+        <div class="ft-bottom">
+          <span style="color:var(--brand);font-weight:600">&copy;</span>
+          <span style="color:#8a7e6a">{currentYearWIB()}</span>
+          <a href="/" style="color:var(--brand);text-decoration:none;font-weight:600;transition:color 0.2s" onmouseover="this.style.color='#E8C547'" onmouseout="this.style.color='var(--brand)'"> CoursesWyn</a>
+          <span style="color:#5c5242;margin:0 4px">&mdash;</span>
+          <span style="color:#6b6050">Free Udemy Coupons, 100% Off Promo Codes &amp; Verified Deals.</span>
+          <span style="color:#5c5242;display:block;margin-top:4px;font-size:0.72rem">All rights reserved.</span>
         </div>
       </div>
     </footer>
@@ -540,14 +668,14 @@ const currentPath = Astro.url.pathname;
         width: "40px",
         height: "40px",
         borderRadius: "50%",
-        background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+        background: "linear-gradient(135deg, #D4AF37, #C5A028)",
         color: "white",
         border: "none",
         cursor: "pointer",
         display: "none",
         alignItems: "center",
         justifyContent: "center",
-        boxShadow: "0 4px 12px rgba(59,130,246,0.3)",
+        boxShadow: "0 4px 12px rgba(212, 167, 55, 0.3)",
         transition: "all 0.3s ease",
         zIndex: 1000
       }}

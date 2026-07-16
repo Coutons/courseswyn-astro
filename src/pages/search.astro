@@ -3,22 +3,45 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout title="Search Udemy Courses — Verified Promo Codes & Vouchers | CoursesWyn">
-  <style>
+  <style is:global>
     @keyframes spin { to { transform: rotate(360deg); } }
-    .s-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; transition:border-color 0.15s; display:flex; flex-direction:column; text-decoration:none; color:inherit; }
-    .s-card:hover { border-color:var(--brand); }
-    .s-img-wrap { position:relative; aspect-ratio:16/9; overflow:hidden; background:var(--bg-secondary); }
-    .s-img-wrap img { width:100%; height:100%; object-fit:cover; }
-    .s-badge { position:absolute; top:10px; left:10px; padding:3px 10px; border-radius:6px; font-size:0.7rem; font-weight:800; }
-    .s-badge-free { background:var(--brand); color:white; }
-    .s-body { padding:16px; flex:1; display:flex; flex-direction:column; }
-    .s-title { font-size:0.95rem; font-weight:700; color:var(--text); margin:0 0 6px; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-    .s-instructor { font-size:0.75rem; color:var(--text-secondary); font-weight:500; margin-bottom:6px; }
-    .s-desc { font-size:0.82rem; color:var(--text-secondary); line-height:1.5; margin-bottom:14px; flex:1; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-    .s-meta { display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid var(--border); }
-    .s-rating { font-size:0.82rem; font-weight:700; color:#f59e0b; }
-    .s-btn { display:block; margin-top:12px; padding:10px; background:var(--brand); color:white; text-align:center; border-radius:var(--radius-sm); font-weight:700; font-size:0.82rem; text-decoration:none; transition:opacity 0.15s; }
-    .s-btn:hover { opacity:0.9; }
+    .s-card { display:flex; flex-direction:column; background:var(--card); border:1px solid rgba(212,167,55,0.08); border-top:1px solid transparent; border-radius:16px; overflow:hidden; position:relative; transition:all 0.4s ease; }
+    .s-card::before { content:''; position:absolute; top:-1px; left:0; right:0; height:2px; background:linear-gradient(90deg,#B8860B,#D4AF37,#E8C547,#D4AF37,#B8860B); opacity:0.15; transition:opacity 0.4s ease; z-index:1; border-radius:16px 16px 0 0; pointer-events:none; }
+    .s-card:hover { border-color:rgba(212,167,55,0.3); transform:translateY(-4px); box-shadow:0 16px 40px -8px rgba(212,167,55,0.15); }
+    .s-card:hover::before { opacity:1; }
+    .s-card:hover .s-img-wrap img { transform:scale(1.06); }
+    .s-img-wrap { position:relative; height:180px; overflow:hidden; background:var(--bg-secondary); display:block; }
+    .s-img-wrap img { width:100%; height:100%; object-fit:cover; transition:transform 0.6s ease; }
+    .s-badge-updated { position:absolute; top:0.75rem; right:0.75rem; background:rgba(0,0,0,0.75); backdrop-filter:blur(4px); color:white; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.7rem; font-weight:600; }
+    .s-badge-discount { position:absolute; top:0.75rem; left:0.75rem; background:#ef4444; color:white; padding:0.25rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:700; }
+    .s-badge-free { position:absolute; top:0.75rem; left:0.75rem; background:linear-gradient(135deg,#B8860B,#D4AF37,#E8C547,#D4AF37); color:#1a1814; padding:0.25rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:700; box-shadow:0 2px 8px rgba(212,167,55,0.3); }
+    .s-body { padding:1.25rem; flex:1; display:flex; flex-direction:column; gap:10px; }
+    .s-title { font-size:1.05rem; font-weight:700; color:var(--text); margin:0; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .s-title a { color:inherit; text-decoration:none; }
+    .s-title a:hover { color:var(--brand); }
+    .s-instructor { display:flex; align-items:center; gap:6px; font-size:0.85rem; color:var(--text); font-weight:500; margin:0; }
+    .s-instructor svg { width:14px; height:14px; fill:var(--muted); flex-shrink:0; }
+    .s-instructor a { color:var(--text); text-decoration:none; }
+    .s-instructor a:hover { color:var(--brand); }
+    .s-desc { font-size:0.85rem; color:var(--muted); margin:0; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .s-row { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+    .s-rating { display:flex; align-items:center; gap:4px; font-size:0.85rem; min-height:20px; flex-wrap:wrap; }
+    .s-rating svg { width:14px; height:14px; fill:var(--brand); flex-shrink:0; }
+    .s-rating-val { font-weight:600; color:var(--muted); }
+    .s-students { font-weight:600; color:var(--muted); font-size:0.85rem; white-space:nowrap; }
+    .s-cat { display:inline-flex; align-items:center; gap:4px; font-size:0.8rem; font-weight:600; color:var(--brand); text-decoration:none; padding:0.2rem 0.5rem; border-radius:4px; background:rgba(212,167,55,0.06); transition:all 0.3s ease; white-space:nowrap; }
+    .s-cat:hover { opacity:0.85; }
+    .s-cat svg { width:12px; height:12px; fill:currentColor; }
+    .s-price-row { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+    .s-price { font-size:1.1rem; font-weight:700; color:var(--brand); white-space:nowrap; }
+    .s-price del { font-size:0.85rem; font-weight:500; color:var(--muted); margin-left:8px; text-decoration:line-through; }
+    .s-pct-badge { background:#ef4444; color:white; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:700; white-space:nowrap; }
+    .s-verified { background:linear-gradient(135deg,hsl(142,76%,36%),hsl(142,76%,45%)); color:white; padding:0.125rem 0.5rem; border-radius:12px; font-size:0.7rem; font-weight:700; display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
+    .s-verified svg { width:10px; height:10px; fill:currentColor; }
+    .s-duration { display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--muted); font-weight:500; }
+    .s-duration svg { width:14px; height:14px; fill:var(--muted); flex-shrink:0; }
+    .s-btn { display:block; width:100%; padding:0.75rem 1.5rem; border-radius:8px; background:linear-gradient(135deg,#B8860B 0%,#D4AF37 25%,#E8C547 50%,#D4AF37 75%,#B8860B 100%); color:#1a1814; font-size:0.9rem; font-weight:700; text-align:center; text-decoration:none; transition:all 0.3s; }
+    .s-btn:hover { transform:translateY(-1px); box-shadow:0 0 16px 2px rgba(212,167,55,0.3); }
     .s-spinner { width:48px; height:48px; border:4px solid var(--border); border-top-color:var(--brand); border-radius:50%; margin:0 auto 1.5rem; animation:spin 0.8s linear infinite; }
   </style>
 
@@ -42,7 +65,7 @@ import Layout from "../layouts/Layout.astro";
           <p style="color:var(--text-secondary);font-weight:600;">Searching courses...</p>
         </div>
 
-        <div id="search-results" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;"></div>
+        <div id="search-results" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.5rem;"></div>
 
         <div id="no-results" style="display:none;text-align:center;padding:4rem 2rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);">
           <h2 style="font-size:1.5rem;font-weight:900;color:var(--text);margin:0 0 0.5rem;">No Courses Found</h2>
@@ -66,12 +89,6 @@ import Layout from "../layouts/Layout.astro";
 </Layout>
 
 <style is:global>
-  .hero-gradient-text {
-    background: linear-gradient(135deg, var(--brand), #60a5fa, #3b82f6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
 </style>
 
 <script>
@@ -88,7 +105,7 @@ import Layout from "../layouts/Layout.astro";
 
   async function loadDeals() {
     try {
-      const deals = await fetch("/api/deals.json").then(r => r.json());
+      const deals = await fetch("/api/deals").then(r => r.json());
       const seen = new Set<string>();
       allDeals = deals.filter((d: Deal) => {
         const key = d.id || d.slug || "";
@@ -107,31 +124,74 @@ import Layout from "../layouts/Layout.astro";
     return div.innerHTML;
   }
 
-  function renderCard(deal: Deal) {
+  function slugify(s: string): string {
+    return s.toLowerCase().replace(/\s+&\s+/g, '-and-').replace(/['\s]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  function updatedAgo(dateStr: string | undefined): string | null {
+    if (!dateStr) return null;
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const hrs = Math.floor(diff / 3600000);
+    if (hrs < 1) return 'Updated just now';
+    if (hrs < 24) return 'Updated ' + hrs + 'h ago';
+    const days = Math.floor(hrs / 24);
+    if (days < 30) return 'Updated ' + days + 'd ago';
+    return 'Updated ' + Math.floor(days / 30) + 'mo ago';
+  }
+
+  function durationLabel(d: string | undefined): string {
+    if (!d) return '';
+    return d.replace(/^(\d+)\s*hours?.*$/i, '$1h');
+  }
+
+  function renderCard(deal: any) {
     const price = deal.price ?? 9.99;
+    const op = deal.originalPrice && deal.originalPrice > 0 ? deal.originalPrice : null;
     const isFree = price === 0;
+    const hasDiscount = op && op > price;
+    const discountPct = hasDiscount ? Math.round(100 - (price / op) * 100) : (isFree ? 100 : null);
     const slug = esc(deal.slug || deal.id);
     const title = esc(deal.title);
     const image = esc(deal.image || '/assets/images/og-default.svg');
-    const instructor = deal.instructor ? esc(deal.instructor) : '';
-    const desc = deal.description ? esc(deal.description.slice(0, 120)) : '';
+    const instructor = deal.instructor ? esc(deal.instructor.split(',')[0].trim()) : '';
+    const instructorSlug = instructor ? slugify(instructor) : '';
+    const desc = deal.description ? esc(deal.description.replace(/<[^>]*>/g,'').slice(0, 120)) : '';
     const rating = deal.rating;
-    return `<a href="/coupon/${slug}" class="s-card">
-      <div class="s-img-wrap">
-        <img src="${image}" alt="${title}" loading="lazy" />
-        ${isFree ? '<div class="s-badge s-badge-free">FREE</div>' : ''}
-      </div>
+    const updatedText = updatedAgo(deal.updatedAt);
+    const dur = durationLabel(deal.duration);
+    const category = deal.category ? esc(deal.category) : '';
+    const catSlug = category ? slugify(category) : '';
+    const students = deal.students && deal.students > 0 ? (deal.students >= 1000 ? (deal.students/1000).toFixed(1).replace(/\.0$/,'') + 'K' : String(deal.students)) : '';
+    return `<div class="s-card">
+      <a href="/coupon/${slug}" class="s-img-wrap">
+        <img src="${image}" alt="${title}" width="400" height="225" loading="lazy" decoding="async" />
+        ${updatedText ? '<div class="s-badge-updated">' + updatedText + '</div>' : ''}
+        ${isFree ? '<div class="s-badge-free">FREE</div>' : ''}
+        ${!isFree && discountPct !== null ? '<div class="s-badge-discount">' + discountPct + '% OFF</div>' : ''}
+      </a>
       <div class="s-body">
-        <h3 class="s-title">${title}</h3>
-        ${instructor ? '<div class="s-instructor">' + instructor + '</div>' : ''}
+        <h3 class="s-title"><a href="/coupon/${slug}">${title}</a></h3>
+        ${instructor ? '<div class="s-instructor"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="var(--muted)"/></svg><a href="/instructor/' + instructorSlug + '">By ' + instructor + '</a></div>' : ''}
         ${desc ? '<p class="s-desc">' + desc + '</p>' : ''}
-        <div class="s-meta">
-          ${rating ? '<span class="s-rating">★ ' + rating.toFixed(1) + '</span>' : '<span></span>'}
-          <span style="font-size:0.8rem;font-weight:700;color:var(--brand);">${isFree ? 'FREE' : '$' + price.toFixed(2)}</span>
+        <div class="s-row">
+          <div class="s-rating">
+            ${rating ? '<svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="var(--brand)"/></svg><span class="s-rating-val">' + rating.toFixed(1) + '</span>' : ''}
+            ${students ? '<span class="s-students">(' + students + '+ students)</span>' : ''}
+          </div>
+          ${catSlug ? '<a href="/categories/' + catSlug + '" class="s-cat"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v3h2V6h4V4zM10 19v-2H4v-3H2v3c0 1.11.89 2 2 2h6zM20 4h-6v2h4v3h2V6c0-1.11-.89-2-2-2zM20 16h-2v3h-4v2h6c1.11 0 2-.89 2-2v-3z"/></svg>' + category + '</a>' : ''}
         </div>
-        <span class="s-btn">View Deal</span>
+        <div class="s-price-row">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="s-price">${isFree ? 'FREE' : '$' + price.toFixed(2)}</span>
+            ${hasDiscount && op ? '<del>$' + op.toFixed(2) + '</del>' : ''}
+            ${!isFree && hasDiscount ? '<span class="s-pct-badge">' + discountPct + '% OFF</span>' : ''}
+          </div>
+          <span class="s-verified"><svg width="10" height="10" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>VERIFIED</span>
+        </div>
+        ${dur ? '<div class="s-duration"><svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Course Duration: ' + dur + '</div>' : ''}
+        <a href="/coupon/${slug}" class="s-btn">${isFree ? 'Get Free' : 'Get Coupon'}</a>
       </div>
-    </a>`;
+    </div>`;
   }
 
   function render() {

@@ -1,6 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { Image } from 'astro:assets';
+import DealCard from '../../components/DealCard.astro';
 import { getDeals } from '../../lib/store.js';
 import { formatDateWIB, toISODateWIB } from '../../lib/date';
 
@@ -8,20 +8,11 @@ const allDeals = await getDeals();
 const now = new Date();
 const activeDeals = allDeals.filter(d => !d.expiresAt || new Date(d.expiresAt) > now);
 
-function timeLeft(expiresAt: string): string {
-  const diff = new Date(expiresAt).getTime() - now.getTime();
-  if (diff <= 0) return 'Expired';
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(hours / 24);
-  if (days > 0) return `${days}d left`;
-  if (hours > 0) return `${hours}h left`;
-  return '&lt;1h left';
-}
-
 const todayStr = toISODateWIB(now);
 const todayAdded = allDeals.filter(d => {
-  const dt = d.updatedAt || d.createdAt || '';
-  return dt.startsWith(todayStr);
+  const raw = d.updatedAt || d.createdAt || '';
+  if (!raw) return false;
+  return toISODateWIB(new Date(raw)) === todayStr;
 }).length;
 
 const paidDeals = activeDeals.filter(d => d.price > 0 || d.price == null).slice(0, 48);
@@ -65,39 +56,13 @@ const almostGone = allDeals
     return diff > 0 && diff < 7 * 24 * 3600000;
   })
   .sort((a, b) => new Date(a.expiresAt!).getTime() - new Date(b.expiresAt!).getTime())
-  .slice(0, 4);
+  .slice(0, 3);
 
 const popularDeals = allDeals
   .filter(d => (d.rating ?? 0) >= 4.5)
   .slice(0, 8);
 
-function mapCard(d: typeof allDeals[0]) {
-  const students = d.students ? d.students.toLocaleString() : null;
-  const instructor = d.instructor || null;
-  const expiry = d.expiresAt ? timeLeft(d.expiresAt) : null;
-  let discount: string;
-  if (d.price === 0) {
-    discount = 'FREE';
-  } else if (d.originalPrice && d.originalPrice > 0 && d.price != null) {
-    const pct = Math.round((1 - d.price / d.originalPrice) * 100);
-    discount = `${pct}% OFF`;
-  } else {
-    discount = null as any;
-  }
-  return {
-    slug: d.slug || d.id,
-    image: d.image,
-    title: d.title,
-    students,
-    instructor: typeof instructor === 'string' ? instructor.split(',')[0].trim() : null,
-    expiry,
-    discount
-  };
-}
 
-const goneCards = almostGone.map(mapCard);
-const paidCards = paidDeals.map(mapCard);
-const popularCards = popularDeals.map(mapCard);
 
 const paidCount = paidDeals.length;
 
@@ -216,29 +181,16 @@ const jsonLd = {
         </div>
       </header>
 
-      {goneCards.length > 0 && (
+      {almostGone.length > 0 && (
         <section class="daily-section">
           <h2 class="section-title">
             <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Almost gone
           </h2>
           <p class="section-desc">These coupons expire soon &mdash; enroll now before they run out.</p>
-          <div class="card-grid card-grid-4">
-            {goneCards.map(deal => (
-              <a href={`/coupon/${deal.slug}`} class="deal-card">
-                <div class="deal-img">
-                  <Image src={deal.image} alt={deal.title} width={400} height={225} loading="eager" inferSize={false} />
-                  <div class="deal-badges">
-                    {deal.discount && <span class="badge-off">{deal.discount}</span>}
-                  </div>
-                  {deal.expiry && <div class="deal-badges-right"><span class="badge-expiry"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{deal.expiry}</span></div>}
-                </div>
-                <div class="deal-body">
-                  <h3 class="deal-title">{deal.title}</h3>
-                  <p class="deal-instructor">{deal.instructor}</p>
-                  <p class="deal-students">{deal.students} enrolled</p>
-                </div>
-              </a>
+          <div class="deal-card-grid">
+            {almostGone.map((deal: any, i: number) => (
+              <DealCard deal={deal} loading={i < 3 ? 'eager' : 'lazy'} />
             ))}
           </div>
         </section>
@@ -250,49 +202,24 @@ const jsonLd = {
           Latest coupons
         </h2>
         <p class="section-desc">The most recent {paidCount} verified 100% off deals.</p>
-        <div class="card-grid card-grid-4">
-          {paidCards.map(deal => (
-            <a href={`/coupon/${deal.slug}`} class="deal-card">
-              <div class="deal-img">
-                <Image src={deal.image} alt={deal.title} width={400} height={225} loading="lazy" inferSize={false} />
-                <div class="deal-badges">
-                  {deal.discount && <span class="badge-off">{deal.discount}</span>}
-                </div>
-                {deal.expiry && <div class="deal-badges-right"><span class="badge-expiry"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{deal.expiry}</span></div>}
-              </div>
-              <div class="deal-body">
-                <h3 class="deal-title">{deal.title}</h3>
-                {deal.instructor && <p class="deal-instructor">{deal.instructor}</p>}
-              </div>
-            </a>
-          ))}
-        </div>
+          <div class="deal-card-grid">
+            {paidDeals.map((deal: any, i: number) => (
+              <DealCard deal={deal} loading={i < 3 ? 'eager' : 'lazy'} />
+            ))}
+          </div>
         <p class="browse-all">Showing the {paidCount} most recent of {totalActive} active coupons &mdash; <a href="/udemy-coupon-code">browse them all</a>.</p>
       </section>
 
-      {popularCards.length > 0 && (
+      {popularDeals.length > 0 && (
         <section class="daily-section">
           <h2 class="section-title">
             <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             Popular deals
           </h2>
           <p class="section-desc">Top-rated courses with the highest student reviews.</p>
-          <div class="card-grid card-grid-4">
-            {popularCards.map(deal => (
-              <a href={`/coupon/${deal.slug}`} class="deal-card">
-                <div class="deal-img">
-                  <Image src={deal.image} alt={deal.title} width={400} height={225} loading="lazy" inferSize={false} />
-                  <div class="deal-badges">
-                    {deal.discount && <span class="badge-off">{deal.discount}</span>}
-                  </div>
-                  {deal.expiry && <div class="deal-badges-right"><span class="badge-expiry"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{deal.expiry}</span></div>}
-                </div>
-                <div class="deal-body">
-                  <h3 class="deal-title">{deal.title}</h3>
-                  <p class="deal-instructor">{deal.instructor}</p>
-                  <p class="deal-students">{deal.students} enrolled</p>
-                </div>
-              </a>
+          <div class="deal-card-grid">
+            {popularDeals.map((deal: any, i: number) => (
+              <DealCard deal={deal} loading={i < 3 ? 'eager' : 'lazy'} />
             ))}
           </div>
         </section>
@@ -339,7 +266,7 @@ const jsonLd = {
 
 <style>
   .daily-root { background: var(--bg); padding: 2rem 1rem 4rem; }
-  .daily-container { max-width: 960px; margin: 0 auto; }
+  .daily-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
 
   .daily-header { display: grid; grid-template-columns: 1fr 260px; gap: 2rem; margin-bottom: 2rem; align-items: start; }
   .daily-header-text { padding-top: 0.25rem; }
@@ -363,22 +290,7 @@ const jsonLd = {
   .section-icon { color: var(--brand); flex-shrink: 0; }
   .section-desc { font-size: 0.85rem; color: var(--muted); margin: 0 0 1rem; }
 
-  .card-grid { display: grid; gap: 0.85rem; }
-  .card-grid-4 { grid-template-columns: repeat(4, 1fr); }
-
-  .deal-card { display: block; background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; text-decoration: none; transition: all 0.2s; }
-  .deal-card:hover { border-color: var(--brand); transform: translateY(-2px); }
-  .deal-img { position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden; background: var(--border); }
-  .deal-img img { width: 100%; height: 100%; object-fit: cover; }
-  .deal-badges { position: absolute; top: 6px; left: 6px; display: flex; gap: 3px; }
-  .deal-badges-right { position: absolute; top: 6px; right: 6px; display: flex; gap: 3px; }
-  .badge-off { background: linear-gradient(135deg, var(--brand), #1d4ed8); color: white; font-size: 0.65rem; font-weight: 800; padding: 2px 7px; border-radius: 3px; }
-  .badge-expiry { background: rgba(220,38,38,0.85); backdrop-filter: blur(4px); color: white; font-size: 0.6rem; font-weight: 700; padding: 2px 7px; border-radius: 3px; display: inline-flex; align-items: center; gap: 3px; }
-  .deal-body { padding: 0.65rem; }
-  .deal-title { font-size: 0.82rem; font-weight: 600; color: var(--text); margin: 0 0 0.15rem; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .deal-card:hover .deal-title { color: var(--brand); }
-  .deal-instructor { font-size: 0.7rem; color: var(--muted); margin: 0 0 0.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .deal-students { font-size: 0.7rem; color: var(--muted); margin: 0; }
+  .deal-card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
 
   .topic-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
   .topic-tag { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 100px; border: 1px solid var(--border); font-size: 0.85rem; font-weight: 600; color: var(--text); text-decoration: none; transition: all 0.2s; background: var(--card); }
@@ -415,8 +327,11 @@ const jsonLd = {
     .daily-container { max-width: 100%; }
     .daily-header { grid-template-columns: 1fr; gap: 1rem; }
     .daily-stats { max-width: 280px; }
-    .card-grid-4 { grid-template-columns: repeat(2, 1fr); gap: 0.65rem; }
+    .deal-card-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
     .stat-item { min-width: 100px; padding: 0.75rem 1rem; }
     .stat-value { font-size: 1.25rem; }
+  }
+  @media (max-width: 480px) {
+    .deal-card-grid { grid-template-columns: 1fr; gap: 0.85rem; }
   }
 </style>
