@@ -1,7 +1,7 @@
 # CoursesWyn — Verified Udemy Coupons & Expert Course Reviews
 
 > **1,300+ Udemy coupons verified daily** — 100% OFF promo codes, expert reviews & savings guides. 68+ in-depth course audits across AI, Web Dev, Cloud & more.
-> Built with Astro 7 + React 19 + Tailwind CSS. Featured in the Official Astro Showcase.
+> Built with Astro 7.1 + React 19 + Tailwind CSS. Featured in the Official Astro Showcase.
 
 <p align="center">
   <a href="https://courseswyn.com"><img src="https://img.shields.io/badge/CoursesWyn.com-Verified_Udemy_Coupons-FF5D01?style=for-the-badge&logo=udemy&logoColor=white" alt="Live Site"></a>
@@ -149,7 +149,7 @@ Browse all instructors at [courseswyn.com/instructors](https://courseswyn.com/in
 | Update Frequency | Daily (4-hour expiry purge) |
 | Learners Served | 150K+ worldwide |
 | Lighthouse Score | 95+ (All Categories) |
-| Tech Stack | Astro 7, React 19, Tailwind CSS |
+| Tech Stack | Astro 7.1, React 19, Tailwind CSS |
 
 ---
 
@@ -181,7 +181,7 @@ Open [http://localhost:4321](http://localhost:4321) in your browser.
 
 | Technology | Purpose |
 |---|---|
-| **Astro 7** | Islands Architecture — static-first with dynamic islands |
+| **Astro 7.1** | Islands Architecture — static-first with dynamic islands |
 | **React 19** | Interactive UI components (deal cards, search, comparison tables) |
 | **Tailwind CSS** | Neo-Brutalist design system |
 | **MDX + Content Layer** | Blog with schema-validated frontmatter |

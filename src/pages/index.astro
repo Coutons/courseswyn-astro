@@ -31,26 +31,34 @@ allDeals.forEach(deal => {
     bucket.subs.set(sName, (bucket.subs.get(sName) || 0) + 1);
   }
 });
-const CATEGORY_DESCRIPTIONS: Record<string, string> = {
-  "development": "Web, mobile, and software engineering courses.",
-  "it-and-software": "IT fundamentals, cloud, and security certifications.",
-  "business": "Entrepreneurship, management, and strategy courses.",
-  "design": "Graphic design, UI/UX, and digital art courses.",
-  "marketing": "SEO, social media, and growth marketing courses.",
-  "data-science": "Machine learning, Python, and AI fundamentals.",
-  "personal-development": "Productivity, leadership, and career skills.",
-  "photography-and-video": "Photo, video, and post-production courses.",
-  "music": "Music theory, production, and instrument courses.",
-  "teaching-and-academics": "Academic subjects, test prep, languages.",
-  "office-productivity": "Microsoft Office, Google Workspace, PM tools.",
-  "finance-and-accounting": "Accounting, investing, and crypto courses.",
-  "programming-languages": "Python, JavaScript, Java, Rust, and more.",
-};
+function getCategoryDescription(cat: string) {
+  const c = cat.toLowerCase();
+  if (c === "development") return "Master programming, web development, and software engineering";
+  if (c === "programming") return "Learn coding languages, algorithms, and software development fundamentals";
+  if (c.includes("it") || c === "it-and-software") return "Learn IT infrastructure, cybersecurity, and software tools";
+  if (c.includes("business")) return "Build business skills in management, finance, and entrepreneurship";
+  if (c.includes("finance")) return "Master financial analysis, investment strategies, and accounting principles";
+  if (c.includes("marketing")) return "Master digital marketing, SEO, and social media strategies";
+  if (c.includes("data") || c.includes("analytics")) return "Learn data science, analytics, and machine learning techniques";
+  if (c.includes("teaching")) return "Advance your academic knowledge with specialised educational courses";
+  if (c.includes("design")) return "Explore graphic design, UI/UX, and creative tools";
+  if (c.includes("photography")) return "Master photography techniques and digital image processing";
+  if (c.includes("music")) return "Learn music production, composition, and audio engineering";
+  if (c.includes("personal")) return "Develop personal growth and soft skills for career success";
+  if (c.includes("office")) return "Boost productivity with Microsoft Office, Google Workspace, and collaboration tools";
+  if (c.includes("programming")) return "Learn coding languages, algorithms, and software development fundamentals";
+  return "Explore premium courses with exclusive coupons and deals";
+}
 const topCategories = Array.from(categoryMap.values())
-  .sort((a, b) => b.count - a.count).slice(0, 9)
-  .map(c => ({ ...c, slug: slugifyCategory(c.name), description: CATEGORY_DESCRIPTIONS[slugifyCategory(c.name)] ?? `Browse ${c.name} courses with verified Udemy coupons.` }));
+  .filter(c => c.name.toLowerCase() !== "programming")
+  .sort((a, b) => b.count - a.count).slice(0, 8)
+  .map(c => ({ ...c, slug: slugifyCategory(c.name), description: getCategoryDescription(c.name) }));
 const totalStudents = allDeals.reduce((sum, d) => sum + (d.students ?? 0), 0);
 const uniqueInstructors = [...new Set(allDeals.filter(d => d.instructor).map(d => d.instructor))].length;
+const dealsWithPrice = allDeals.filter(d => d.originalPrice && d.price && d.originalPrice > d.price);
+const avgDiscount = dealsWithPrice.length > 0
+  ? Math.round(dealsWithPrice.reduce((sum, d) => sum + (1 - (d.price ?? 0) / (d.originalPrice ?? 1)) * 100, 0) / dealsWithPrice.length)
+  : 0;
 const monthName = formatStringWIB(new Date(), { month: 'long', year: 'numeric' });
 const pageTitle = `Free Udemy Courses 100% OFF Coupons & Promo Codes [${monthName}] | CoursesWyn`;
 const pageDescription = `Get ${allDeals.length.toLocaleString()}+ verified Udemy coupon codes 100% OFF. Free access to top-rated courses in AI, Python, data science, cloud, and web development. Expert-reviewed & manually verified daily. Start learning for free at CoursesWyn.`;
@@ -638,7 +646,16 @@ const jsonLd = {
           <span style="display:block">Coupons &amp; Promo Codes Updated Daily</span>
         </h1>
         <p>Access premium courses in AI, Python, web development and data science — all <strong>100% OFF</strong> with manually verified coupon codes updated daily.</p>
-        <p style="font-size:0.82rem;color:var(--text-secondary);margin-top:0.5rem">Trusted by {Math.round(totalStudents / 1000)}K+ learners &middot; {uniqueInstructors} expert instructors &middot; {allDeals.length.toLocaleString()} active deals</p>
+        <div style="display:flex;justify-content:center;margin:1.25rem 0 1.5rem">
+          <form action="/search" method="GET" role="search" aria-label="Search free Udemy courses" style="position:relative;width:100%;max-width:700px">
+            <div style="display:flex;align-items:center;border-radius:9999px;border:2px solid var(--border);padding:0.25rem 0.25rem 0.25rem 1.25rem;box-shadow:0 8px 32px rgba(0,0,0,0.15);height:56px;background:var(--card)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="search" name="q" placeholder="Search courses &mdash; Python, React, Excel, AWS..." style="flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:0.95rem;height:100%;font-weight:500;padding:0 0.75rem" autocomplete="off" aria-label="Search free Udemy courses" />
+              <button type="submit" class="btn btn-primary" style="border-radius:9999px;padding:0.6rem 1.5rem;font-size:0.9rem">Search</button>
+            </div>
+          </form>
+        </div>
+        <p style="font-size:0.82rem;color:var(--text-secondary);margin-top:0.5rem">{allDeals.length.toLocaleString()} active coupons &middot; avg {avgDiscount}% OFF &middot; {uniqueInstructors} expert instructors</p>
         <div class="hero-cta">
           <a href="/udemy-coupon-code" class="btn btn-primary btn-lg" style="border-radius:999px;padding:1rem 2.5rem">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
@@ -680,10 +697,10 @@ const jsonLd = {
         </div>
         <div class="stat-box">
           <div class="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            <span class="stat-value">{Math.round(totalStudents / 1000)}K+</span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            <span class="stat-value">{avgDiscount}%</span>
           </div>
-          <div class="stat-label">Total Students</div>
+          <div class="stat-label">Avg Discount</div>
         </div>
       </div>
     </div>
@@ -944,6 +961,9 @@ const jsonLd = {
             )}
           </a>
         ))}
+      </div>
+      <div style="text-align:center;margin-top:2rem">
+        <a href="/categories" class="btn btn-ghost" style="border-radius:999px;padding:0.75rem 2rem">View All Course Categories</a>
       </div>
     </div>
   </section>
