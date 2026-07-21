@@ -108,7 +108,7 @@ const faqs = [
 const totalCategories = list.length;
 const totalCourses = deals.length;
 
-const pageTitle = `Online Course Categories — Browse ${totalCategories} Subjects | CoursesWyn`;
+const pageTitle = `${totalCategories}+ Udemy Course Categories — Free Coupons by Subject | CoursesWyn`;
 const pageDescription = `Explore ${totalCategories} course categories with verified Udemy coupon codes. Python, web development, data science, AI, design, business & more — updated daily.`;
 
 const structuredData = {
@@ -174,68 +174,95 @@ const structuredData = {
 };
 ---
 
-<Layout title={pageTitle} description={pageDescription}>
+<Layout title={pageTitle} description={pageDescription} hideBreadcrumbs={true}>
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
   <style>
+    .cc-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+    .cc-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+    .cc-breadcrumb { display: flex; justify-content: center; margin-bottom: 1rem; }
+    .cc-breadcrumb ol { list-style: none; display: flex; align-items: center; gap: 0.5rem; padding: 0; margin: 0; font-size: 0.8rem; color: var(--muted); }
+    .cc-breadcrumb li:not(:last-child)::after { content: '/'; margin-left: 0.5rem; color: var(--border); }
+    .cc-breadcrumb a { color: var(--brand); text-decoration: none; }
+    .cc-breadcrumb a:hover { text-decoration: underline; }
+    .cc-header { text-align: center; margin-bottom: 2rem; }
+    .cc-header-icon { display: block; margin: 0 auto 0.75rem; color: var(--brand); }
+    .cc-title { font-size: 1.8rem; font-weight: 900; color: var(--text); margin: 0 0 0.5rem; letter-spacing: -0.03em; }
+    .cc-subtitle { font-size: 0.92rem; color: var(--muted); max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.65; }
+    .cc-subtitle strong { color: var(--brand); font-weight: 700; }
+    .cc-stats-bar { display: inline-flex; align-items: center; gap: 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1.5rem; }
+    .cc-stat { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+    .cc-stat-value { font-size: 1.15rem; font-weight: 800; color: var(--text); }
+    .cc-stat-label { font-size: 0.68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    .cc-stat-divider { width: 1px; height: 32px; background: var(--border); }
+    .cc-section-title { font-size: 1.2rem; font-weight: 800; color: var(--text); margin: 0 0 1rem; display: flex; align-items: center; gap: 0.65rem; }
+    .cc-section-title svg { color: var(--brand); flex-shrink: 0; }
+    .cc-seo-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+    .cc-seo-section h2 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0 0 0.75rem; }
+    .cc-seo-section p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.75rem; }
+    .cc-seo-section p:last-child { margin-bottom: 0; }
+    .cc-seo-section a { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .cc-seo-section a:hover { text-decoration: underline; }
+    .tp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2.5rem; }
+    .tp-item { display: block; text-decoration: none; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; border-left: 3px solid var(--brand); transition: all 0.2s; color: var(--text); }
+    .tp-item:hover { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 4%, transparent); padding-left: 1.25rem; }
+    .tp-item:hover .tp-name { color: var(--brand); }
+    .tp-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .tp-icon { width: 44px; height: 44px; border-radius: 10px; background: linear-gradient(135deg, var(--brand), #C5A028); display: flex; align-items: center; justify-content: center; color: #1a1814; flex-shrink: 0; }
+    .tp-name { font-size: 1rem; font-weight: 700; color: var(--text); margin: 0 0 2px; line-height: 1.3; transition: color 0.2s; }
+    .tp-count { font-size: 0.75rem; font-weight: 600; color: var(--brand); text-transform: uppercase; letter-spacing: 0.03em; }
+    .tp-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.55; margin: 0 0 10px; }
+    .tp-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+    .tp-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-secondary); font-weight: 500; }
+    .tp-tag-more { font-size: 0.7rem; color: var(--muted); padding: 2px 4px; }
+    @media (max-width: 640px) { .tp-grid { grid-template-columns: 1fr; } }
+    .cc-faq .cc-faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.5rem; }
+    .cc-faq-q { font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0 0 0.35rem; }
+    .cc-faq-a { font-size: 0.85rem; color: var(--muted); line-height: 1.5; margin: 0; }
+    .cc-cta { text-align: center; padding: 2rem 0; border-top: 1px solid var(--border); }
+    .cc-cta p { color: var(--muted); font-size: 0.92rem; margin: 0 0 1rem; }
+    @media (max-width: 768px) { .cc-title { font-size: 1.4rem; } .cc-stats-bar { gap: 1rem; padding: 0.6rem 1rem; } }
   </style>
 
-  <!-- HERO -->
-  <section class="hero">
-    <div class="container">
-      <div class="hero-content anim-up">
-        <h1>
-          <span style="display:block">{totalCategories}+ Course Categories</span>
-          <span class="hero-gradient-text" style="display:block;font-size:clamp(2.5rem,6vw,4.5rem)">Free Udemy Coupons</span>
-          <span style="display:block">by Topic</span>
-        </h1>
-        <p>Browse {totalCategories} learning categories with {totalCourses}+ verified Udemy coupon codes — updated daily.</p>
-        <div class="hero-cta">
-          <a href="/udemy-coupon-code" class="btn btn-primary btn-lg" style="border-radius:999px;padding:1rem 2.5rem">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            Browse Coupons
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
+  <main class="cc-root">
+    <div class="cc-container">
 
-  <!-- STATS -->
-  <section style="padding-bottom:2rem">
-    <div class="container">
-      <div class="stat-grid">
-        <div class="stat-box">
-          <div class="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-            <span class="stat-value">{totalCategories}</span>
+      <nav class="cc-breadcrumb" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="/">Home</a></li>
+          <li>Course Categories</li>
+        </ol>
+      </nav>
+
+      <header class="cc-header">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="cc-header-icon">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <h1 class="cc-title">{totalCategories}+ Udemy Course Categories</h1>
+        <p class="cc-subtitle">Browse <strong>{totalCategories} learning categories</strong> with {totalCourses}+ verified Udemy coupon codes — updated daily</p>
+        <div class="cc-stats-bar">
+          <div class="cc-stat">
+            <span class="cc-stat-value">{totalCategories}</span>
+            <span class="cc-stat-label">Categories</span>
           </div>
-          <div class="stat-label">Categories</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
-            <span class="stat-value">{totalCourses.toLocaleString()}</span>
+          <div class="cc-stat-divider"></div>
+          <div class="cc-stat">
+            <span class="cc-stat-value">{totalCourses.toLocaleString()}</span>
+            <span class="cc-stat-label">Active Coupons</span>
           </div>
-          <div class="stat-label">Active Coupons</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-            <span class="stat-value">100%</span>
+          <div class="cc-stat-divider"></div>
+          <div class="cc-stat">
+            <span class="cc-stat-value">100%</span>
+            <span class="cc-stat-label">Verified</span>
           </div>
-          <div class="stat-label">Verified Coupons</div>
         </div>
-      </div>
-    </div>
-  </section>
+      </header>
 
   <!-- CATEGORIES GRID -->
-  <section class="section">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-title">Categories</span>
-        <h2 class="section-heading">Browse All {totalCategories} Categories</h2>
-      </div>
+  <section class="cc-section">
+    <h2 class="cc-section-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Browse {totalCategories} Udemy Course Categories
+    </h2>
 
       {list.length === 0 ? (
         <div style="text-align:center;padding:3rem;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);">
@@ -243,93 +270,56 @@ const structuredData = {
           <p style="color:var(--text-secondary);margin-bottom:1.5rem;">We loaded {deals.length} deals but couldn't group them into categories.</p>
         </div>
       ) : (
-        <div class="adv-cards">
+        <div class="tp-grid">
           {list.map((c) => (
-            <a href={`/categories/${c.slug}`} title={`Browse ${c.count} ${c.name} courses with Udemy coupons`} class="adv-card" style="text-decoration:none;cursor:pointer;">
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-                <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--brand),#C5A028);display:flex;align-items:center;justify-content:center;color:#1a1814;flex-shrink:0;" set:html={CATEGORY_ICONS[c.slug] || `<span style="font-weight:800;font-size:1rem;">${c.name.charAt(0).toUpperCase()}</span>`}></div>
+            <a href={`/categories/${c.slug}`} title={`Browse ${c.count} ${c.name} courses with Udemy coupons`} class="tp-item">
+              <div class="tp-row">
+                <div class="tp-icon" set:html={CATEGORY_ICONS[c.slug] || `<span style="font-weight:800;font-size:1rem;">${c.name.charAt(0).toUpperCase()}</span>`}></div>
                 <div>
-                  <h3 style="margin:0;font-size:1rem;font-weight:700;color:var(--text);line-height:1.2;">{c.name}</h3>
-                  <p style="margin:2px 0 0;font-size:0.82rem;color:var(--brand);font-weight:600;">{c.count} coupons</p>
+                  <h3 class="tp-name">{c.name}</h3>
+                  <span class="tp-count">{c.count} coupons</span>
                 </div>
               </div>
-              <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.55;margin:0 0 12px;">{c.description}</p>
+              <p class="tp-desc">{c.description}</p>
               {c.subs.size > 0 && (
-                <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <div class="tp-tags">
                   {Array.from(c.subs.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([sub]) => (
-                    <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.7rem;background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-secondary);font-weight:500;">{sub}</span>
+                    <span class="tp-tag">{sub}</span>
                   ))}
-                  {c.subs.size > 3 && <span style="font-size:0.7rem;color:var(--muted);padding:2px 4px;">+{c.subs.size - 3}</span>}
+                  {c.subs.size > 3 && <span class="tp-tag-more">+{c.subs.size - 3}</span>}
                 </div>
               )}
             </a>
           ))}
         </div>
       )}
-    </div>
   </section>
 
-  <!-- ABOUT -->
-  <section class="section" style="background:var(--bg-secondary);padding:4rem 0;">
-    <div class="container">
-      <div class="section-header" style="margin-bottom:2rem;">
-        <span class="section-title">About</span>
-        <h2 class="section-heading">About Course Categories</h2>
-      </div>
-      <div class="adv-grid">
-        {[
-          { title: "What Are Course Categories?", desc: `CoursesWyn organizes Udemy courses into ${totalCategories} distinct categories based on subject matter. Each category contains courses with verified coupons, making it easy to find discounted courses in your specific area of interest.` },
-          { title: "How to Browse Categories", desc: "Simply click on any category card to view all available courses with coupons in that topic. Each category page shows course count, subcategories for filtering, and detailed descriptions." },
-          { title: "Subcategory Filtering", desc: "Each category includes subcategories for more precise filtering. For example, the Development category includes Web Development, Mobile Development, Game Development, and more." },
-          { title: "Verified Coupons Only", desc: "Every course listed in our categories has a verified, working coupon. Our team manually checks each coupon daily to ensure it provides the advertised discount." },
-          { title: "Popular Categories", desc: `The most popular categories on CoursesWyn are ${list.slice(0, 3).map(c => c.name).join(", ")}. These categories reflect the most in-demand skills in today's job market.` }
-        ].map(item => (
-          <div class="adv-card">
-            <h3>{item.title}</h3>
-            <p>{item.desc}</p>
-          </div>
-        ))}
-      </div>
-    </div>
+  <section class="cc-seo-section">
+    <h2>About Course Categories on CoursesWyn</h2>
+    <p>CoursesWyn organizes <strong>{totalCourses}+ verified Udemy coupon deals</strong> into <strong>{totalCategories} distinct categories</strong> — from <a href="/categories/development">Development</a> and <a href="/categories/data-science">Data Science</a> to <a href="/categories/design">Design</a>, <a href="/categories/marketing">Marketing</a>, <a href="/categories/it-and-software">IT & Software</a>, and more. Each category groups courses by subject matter, making it easy to find discounted courses in your specific area of interest. The most popular categories on CoursesWyn are {list.slice(0, 3).map(c => c.name).join(", ")} — reflecting the most in-demand skills in today's job market.</p>
+    <p>Each category page includes a <strong>course count, subcategory filters for narrowing results, and detailed descriptions</strong> of what you'll learn. For example, within Development you can filter by Web Development, Mobile Development, or Game Development. Within Data Science, you'll find subcategories for Python, Machine Learning, Deep Learning, and Data Analytics. Subcategory filtering helps you zero in on exactly the right course without scrolling through hundreds of listings.</p>
+    <p>Browse <a href="/udemy-coupon-code">all verified coupons</a>, explore <a href="/topics">specialized learning topics</a>, or check our <a href="/popular">popular courses page</a> for the highest-rated deals. Every coupon listed is tested daily — if a coupon expires, it's removed from our listings automatically so you never waste time on dead links.</p>
   </section>
 
-  <!-- FAQ -->
-  <section class="section">
-    <div class="container">
-      <div class="faq-header">
-        <div>
-          <span class="section-title">FAQ</span>
-          <h2 class="section-heading">Frequently Asked Questions</h2>
-        </div>
-        <p style="color:var(--text-secondary);font-size:1rem;line-height:1.6;margin:0">Get answers to common questions about browsing course categories and finding coupons by topic on CoursesWyn.</p>
+  <section class="cc-section cc-faq">
+    <h2 class="cc-section-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Frequently asked questions
+    </h2>
+    {faqs.map((faq) => (
+      <div class="cc-faq-item">
+        <h3 class="cc-faq-q">{faq.q}</h3>
+        <p class="cc-faq-a">{faq.a}</p>
       </div>
-      <div class="faq-grid">
-        {faqs.map((faq) => (
-          <div class="faq-item">
-            <div class="faq-question">
-              <span>{faq.q}</span>
-            </div>
-            <div class="faq-answer"><p>{faq.a}</p></div>
-          </div>
-        ))}
-      </div>
-    </div>
+    ))}
   </section>
 
-  <!-- CTA -->
-  <section class="cta-section">
-    <div class="container">
-      <div class="cta-box">
-        <h2>Can't Find What You're Looking For?</h2>
-        <p style="color:var(--text-secondary);font-size:1.05rem;line-height:1.6;margin:0 0 2rem">Browse our full collection of <strong style="color:var(--text);">{totalCourses}+ Udemy deals</strong> or reach out to suggest a new category.</p>
-        <div class="cta-actions">
-          <a href="/udemy-coupon-code" class="btn btn-primary btn-lg" style="border-radius:999px;padding:1rem 2.5rem">
-            Browse All Coupons
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </a>
-          <a href="/contact" class="btn btn-ghost btn-lg" style="border-radius:999px;padding:1rem 2.5rem">Request a Category</a>
-        </div>
-      </div>
+  <div class="cc-cta">
+    <p>Can't find what you're looking for? Browse our full collection of <strong>{totalCourses}+ Udemy deals</strong>.</p>
+    <a href="/udemy-coupon-code" class="btn btn-primary btn-lg" style="border-radius:999px;padding:0.9rem 2.2rem;">Browse All Coupons</a>
+  </div>
+
     </div>
-  </section>
+  </main>
 </Layout>

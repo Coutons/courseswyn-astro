@@ -138,7 +138,7 @@ const structuredData = {
 };
 ---
 
-<Layout title={pageTitle} description={pageDescription}>
+<Layout title={pageTitle} description={pageDescription} hideBreadcrumbs={true}>
   <link rel="canonical" href={canonicalUrl} slot="head" />
   <meta property="og:title" content={pageTitle} slot="head" />
   <meta property="og:description" content={pageDescription} slot="head" />
@@ -149,55 +149,118 @@ const structuredData = {
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
   <style>
-    .cat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; text-align: center; text-decoration: none; color: inherit; transition: all 0.3s ease; display: block; }
-    .cat-card:hover { transform: translateY(-4px); border-color: var(--brand); }
-    .faq-grid { display: grid; gap: 0.75rem; }
-    .faq-item { background: transparent; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-    .faq-item summary { padding: 1.25rem; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1rem; color: var(--text); list-style: none; }
-    .faq-item summary::-webkit-details-marker { display: none; }
-    .faq-item[open] summary { border-bottom: 1px solid var(--border); }
-    .faq-item .fi { transition: transform 0.3s; flex-shrink: 0; }
-    .faq-item[open] .fi { transform: rotate(180deg); }
-    .faq-answer { padding: 0 1.25rem 1.25rem; color: var(--muted); line-height: 1.7; font-size: 0.9rem; }
+    .cc-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+    .cc-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+
+    .cc-breadcrumb { display: flex; justify-content: center; margin-bottom: 1rem; }
+    .cc-breadcrumb ol { list-style: none; display: flex; align-items: center; gap: 0.5rem; padding: 0; margin: 0; font-size: 0.8rem; color: var(--muted); }
+    .cc-breadcrumb li:not(:last-child)::after { content: '/'; margin-left: 0.5rem; color: var(--border); }
+    .cc-breadcrumb a { color: var(--brand); text-decoration: none; }
+    .cc-breadcrumb a:hover { text-decoration: underline; }
+
+    .cc-header { text-align: center; margin-bottom: 2rem; }
+    .cc-header-icon { display: block; margin: 0 auto 0.75rem; color: var(--brand); }
+    .cc-title { font-size: 1.8rem; font-weight: 900; color: var(--text); margin: 0 0 0.5rem; letter-spacing: -0.03em; }
+    .cc-subtitle { font-size: 0.92rem; color: var(--muted); max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.65; }
+    .cc-subtitle strong { color: var(--brand); font-weight: 700; }
+
+    .cc-stats-bar { display: inline-flex; align-items: center; gap: 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1.5rem; }
+    .cc-stat { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+    .cc-stat-value { font-size: 1.15rem; font-weight: 800; color: var(--text); }
+    .cc-stat-label { font-size: 0.68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    .cc-stat-divider { width: 1px; height: 32px; background: var(--border); }
+
+    .cc-filter-bar { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1.5rem; }
+    .cc-filter-bar-title { font-size: 0.75rem; font-weight: 800; color: var(--text); margin: 0 0 0.5rem; display: flex; align-items: center; gap: 0.35rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .cc-filter-bar-title svg { color: var(--brand); width: 13px; height: 13px; }
+    .cc-filter-links { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .cc-filter-chip { font-size: 0.78rem; font-weight: 600; color: var(--muted); text-decoration: none; padding: 3px 10px; border-radius: 100px; border: 1px solid var(--border); transition: all 0.2s; background: var(--bg); }
+    .cc-filter-chip:hover { border-color: var(--brand); color: var(--brand); }
+
+    .cc-deals-section { margin-bottom: 2rem; }
+    .cc-deals-header { margin-bottom: 1rem; }
+    .cc-deals-title { font-size: 1.1rem; font-weight: 800; color: var(--text); margin: 0 0 0.15rem; display: flex; align-items: center; gap: 0.5rem; }
+    .cc-deals-title svg { color: var(--brand); flex-shrink: 0; }
+    .cc-deals-desc { font-size: 0.85rem; color: var(--muted); margin: 0; }
+
+    .cc-section { margin-bottom: 2.5rem; }
+    .cc-section-title { font-size: 1.2rem; font-weight: 800; color: var(--text); margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.65rem; }
+    .cc-section-title svg { color: var(--brand); flex-shrink: 0; }
+
+    .cc-seo-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+    .cc-seo-section h2 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0 0 0.75rem; }
+    .cc-seo-section p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.75rem; }
+    .cc-seo-section p:last-child { margin-bottom: 0; }
+    .cc-seo-section a { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .cc-seo-section a:hover { text-decoration: underline; }
+
+    .cc-faq .cc-faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.5rem; }
+    .cc-faq-q { font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0 0 0.35rem; }
+    .cc-faq-a { font-size: 0.85rem; color: var(--muted); line-height: 1.5; margin: 0; }
+
+    @media (max-width: 768px) {
+      .cc-title { font-size: 1.4rem; }
+      .cc-stats-bar { gap: 1rem; padding: 0.6rem 1rem; }
+    }
   </style>
 
-  <main>
-    {/* ── HERO ── */}
-    <section class="hero">
-      <div class="container">
-        <div class="hero-content anim-up">
-          <h1>
-            <span style="display:block">Popular{selectedLanguage ? ` ${selectedLanguage}` : ''}</span>
-            <span class="hero-gradient-text" style="display:block;font-size:clamp(2.5rem,6vw,4.5rem)">Courses</span>
-            <span style="display:block">Top-Rated Udemy Coupons</span>
-          </h1>
-          <p>Discover <strong>{totalPopular}+ trending online courses</strong> with exceptional student ratings. Popular Udemy courses with verified free coupons.</p>
-          <div style="display:flex;gap:2rem;flex-wrap:wrap;padding-top:1.5rem;border-top:2px solid var(--border);">
-            {[
-              { v: `${totalPopular}+`, l: "Popular" },
-              { v: `${avgRating}★`, l: "Avg Rating" },
-              { v: "100%", l: "Free Codes" }
-            ].map(s => (
-              <div style="display:flex;flex-direction:column;">
-                <span style="font-size:1.75rem;font-weight:900;color:var(--text);">{s.v}</span>
-                <span style="color:var(--text-secondary);font-size:.875rem;font-weight:600;">{s.l}</span>
-              </div>
-            ))}
+  <main class="cc-root">
+    <div class="cc-container">
+
+      <nav class="cc-breadcrumb" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="/">Home</a></li>
+          <li>Popular Courses{selectedLanguage ? ` (${selectedLanguage})` : ''}</li>
+        </ol>
+      </nav>
+
+      <header class="cc-header">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="cc-header-icon">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+        <h1 class="cc-title">Popular Udemy Courses{selectedLanguage ? ` (${selectedLanguage})` : ''}</h1>
+        <p class="cc-subtitle">Discover <strong>{totalPopular}+ trending online courses</strong> with exceptional student ratings &amp; verified free coupons</p>
+        <div class="cc-stats-bar">
+          <div class="cc-stat">
+            <span class="cc-stat-value">{totalPopular}+</span>
+            <span class="cc-stat-label">Popular</span>
+          </div>
+          <div class="cc-stat-divider"></div>
+          <div class="cc-stat">
+            <span class="cc-stat-value">{avgRating}★</span>
+            <span class="cc-stat-label">Avg Rating</span>
+          </div>
+          <div class="cc-stat-divider"></div>
+          <div class="cc-stat">
+            <span class="cc-stat-value">100%</span>
+            <span class="cc-stat-label">Free Codes</span>
           </div>
         </div>
-      </div>
-    </section>
+      </header>
 
-    {/* ── COURSES GRID ── */}
-    <section class="section">
-      <div class="container">
-        <span class="section-title">Top Rated</span>
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;">
-          <h2 class="section-heading" style="margin:0;">Top Rated Courses with Verified Coupons</h2>
-          <span style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.1em;">Sorted by Popularity</span>
+      <div class="cc-filter-bar">
+        <h3 class="cc-filter-bar-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="4" x2="20" y2="4"/><line x1="8" y1="10" x2="20" y2="10"/><line x1="12" y1="16" x2="20" y2="16"/><circle cx="6" cy="4" r="1.5" fill="currentColor"/><circle cx="10" cy="10" r="1.5" fill="currentColor"/><circle cx="14" cy="16" r="1.5" fill="currentColor"/></svg>
+          Categories
+        </h3>
+        <div class="cc-filter-links">
+          {categories.map(cat => (
+            <a href={`/categories/${slugifyCategory(cat.name)}`} class="cc-filter-chip">{cat.name}</a>
+          ))}
+        </div>
+      </div>
+
+      {/* ── COURSES GRID ── */}
+      <section class="cc-deals-section">
+        <div class="cc-deals-header">
+          <h2 class="cc-deals-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><path d="M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            Popular Udemy Courses with Verified Coupons
+          </h2>
+          <p class="cc-deals-desc">Sorted by popularity — {popularCourses.length} courses</p>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.25rem;margin-bottom:3rem;">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:3rem;">
           {popularCourses.length > 0 ? (
             popularCourses.map(course => (
               <DealCard deal={course} />
@@ -216,60 +279,46 @@ const structuredData = {
             Browse All {totalDeals.toLocaleString()}+ Deals
           </a>
         </div>
-      </div>
-    </section>
+      </section>
 
-    {/* ── CATEGORIES ── */}
-    <section class="section" style="padding-top:0;">
-      <div class="container">
-        <span class="section-title">Categories</span>
-        <h2 class="section-heading" style="margin:0 0 2.5rem;">Browse Categories</h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;">
-          {categories.map(cat => (
-            <a href={`/categories/${slugifyCategory(cat.name)}`} class="cat-card">
-              <div style="font-weight:900;font-size:1rem;color:var(--text);margin-bottom:4px;">{cat.name}</div>
-              <div style="font-size:0.75rem;font-weight:800;color:var(--brand);text-transform:uppercase;">{cat.count} Courses</div>
-            </a>
-          ))}
-        </div>
-      </div>
-    </section>
+      <section class="cc-seo-section">
+        <h2>How CoursesWyn selects popular courses</h2>
+        <p>Our Popular page features the highest-rated <strong>Udemy courses with 4.5-5.0★ ratings</strong> — courses that students consistently praise through positive reviews and high enrollment numbers. All {totalPopular}+ featured courses include <strong>verified free coupon codes</strong> that are tested and confirmed working by our editorial team. Popular categories on this page include <a href="/categories/development">Development</a>, <a href="/categories/data-science">Data Science</a>, <a href="/categories/ai-and-machine-learning">AI & Machine Learning</a>, and <a href="/categories/it-and-software">IT & Software</a>.</p>
+        <p>Courses are ranked using a proprietary scoring system that weighs <strong>student ratings, total enrollment, review quality, and recent engagement metrics</strong>. This means you're always seeing courses that are not only top-rated but currently trending among learners worldwide. Each course card displays the exact rating, student count, instructor name, and course duration — so you can make an informed decision before clicking through.</p>
+        <p>Since <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's free coupon policy update</a>, most coupons are limited to a set number of redemptions or expire within days. Our system checks every coupon against Udemy in near real time — expired deals disappear automatically. Browse <a href="/udemy-coupon-code">all verified coupons</a>, explore <a href="/categories">course categories</a>, or check <a href="/udemy-coupons-today">today's latest deals</a> for freshly added discounts.</p>
+      </section>
 
-    {/* ── FAQ ── */}
-    <section class="section" style="padding-top:0;">
-      <div class="container" style="max-width:800px;">
-        <span class="section-title">FAQ</span>
-        <h2 class="section-heading" style="margin:0 0 2rem;">Common Questions</h2>
-        <div class="faq-grid">
-          {[
-            {
-              q: "What are popular online courses on CoursesWyn?",
-              a: "CoursesWyn's Popular page showcases trending online courses with 4.5-5.0★ student ratings. These are the most sought-after Udemy courses — where students consistently give high scores and enroll in high numbers."
-            },
-            {
-              q: "Are popular online courses free on CoursesWyn?",
-              a: "Yes. CoursesWyn lists verified coupon codes for all featured courses. Many have 100% off coupons making them completely free. Click any course card to see the current coupon and discounted price before enrolling."
-            },
-            {
-              q: "How are popular online courses ranked?",
-              a: "Popular courses are ranked by a combination of student rating (4.5-5.0★), enrollment numbers, and recent engagement. This ensures you discover courses that are both high-quality and currently trending among learners."
-            },
-            {
-              q: "Do popular online courses include a completion certificate?",
-              a: "Yes. All Udemy courses listed on CoursesWyn include a certificate of completion you can share on LinkedIn or add to your resume — regardless of whether you enrolled using a free coupon."
-            }
-          ].map(faq => (
-            <details class="faq-item">
-              <summary>
-                {faq.q}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="3" class="fi"><polyline points="6 9 12 15 18 9"/></svg>
-              </summary>
-              <div class="faq-answer">{faq.a}</div>
-            </details>
-          ))}
-        </div>
-      </div>
-    </section>
+      <section class="cc-section cc-faq">
+        <h2 class="cc-section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Frequently asked questions
+        </h2>
+        {[
+          {
+            q: "What are popular online courses on CoursesWyn?",
+            a: "CoursesWyn's Popular page showcases trending online courses with 4.5-5.0★ student ratings. These are the most sought-after Udemy courses — where students consistently give high scores and enroll in high numbers."
+          },
+          {
+            q: "Are popular online courses free on CoursesWyn?",
+            a: "Yes. CoursesWyn lists verified coupon codes for all featured courses. Many have 100% off coupons making them completely free. Click any course card to see the current coupon and discounted price before enrolling."
+          },
+          {
+            q: "How are popular online courses ranked?",
+            a: "Popular courses are ranked by a combination of student rating (4.5-5.0★), enrollment numbers, and recent engagement. This ensures you discover courses that are both high-quality and currently trending among learners."
+          },
+          {
+            q: "Do popular online courses include a completion certificate?",
+            a: "Yes. All Udemy courses listed on CoursesWyn include a certificate of completion you can share on LinkedIn or add to your resume — regardless of whether you enrolled using a free coupon."
+          }
+        ].map(faq => (
+          <div class="cc-faq-item">
+            <h3 class="cc-faq-q">{faq.q}</h3>
+            <p class="cc-faq-a">{faq.a}</p>
+          </div>
+        ))}
+      </section>
+
+    </div>
   </main>
 
   <script define:vars={{ totalPopular }}>
