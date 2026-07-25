@@ -1,171 +1,323 @@
 ---
 import { Image } from 'astro:assets';
 
-interface Deal {
-  id?: string;
-  slug?: string;
-  title: string;
-  description?: string;
-  image?: string;
-  rating?: number;
-  students?: number;
-  price?: number;
-  originalPrice?: number;
-  category?: string;
-  subcategory?: string;
-  duration?: string;
-  url?: string;
-  provider?: string;
-  updatedAt?: string;
-  instructor?: string;
-  coupon?: string;
-  expiresAt?: string;
-  createdAt?: string;
-  language?: string;
-  learn?: string[];
-  requirements?: string[];
+const { deal, loading = 'lazy' } = Astro.props;
+
+function formatDuration(duration: string) {
+  if (!duration) return "";
+  return duration
+    .replace(/(\d+)h/g, '$1 hours')
+    .replace(/(\d+)m/g, '$1 minutes')
+    .replace(/\s+/g, ' ');
 }
 
-const { deal, loading = "lazy" } = Astro.props;
-
-function formatStudents(n: number) {
-  if (!n) return "";
-  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
-  return String(n);
+function formatRelativeTime(dateString: string) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffHours < 1) return "Updated recently";
+  else if (diffHours < 24) return `Updated ${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+  else return `Updated ${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
 }
 
-function timeAgo(dateStr: string | undefined): string | null {
-  if (!dateStr) return null;
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 30) return `${days}d ago`;
-  return `${Math.floor(days / 30)}mo ago`;
-}
-
-function expiresIn(dateStr: string | undefined): string | null {
-  if (!dateStr) return null;
-  const diff = new Date(dateStr).getTime() - Date.now();
-  if (diff <= 0) return null;
-  const hrs = Math.floor(diff / 3600000);
-  if (hrs < 1) return `${Math.floor(diff / 60000)}m left`;
-  if (hrs < 24) return `${hrs}h left`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d left`;
-}
-
+const p = typeof deal.price === "number" && isFinite(deal.price) && deal.price > 0 ? deal.price : 0;
+const opRaw = typeof deal.originalPrice === "number" && isFinite(deal.originalPrice) ? deal.originalPrice : 119.99;
+const op = opRaw > p ? opRaw : 119.99;
 const r = typeof deal.rating === "number" && isFinite(deal.rating) ? deal.rating : null;
-const s = (typeof deal.students === "number" && isFinite(deal.students) && deal.students > 0) ? deal.students : null;
-const p = (typeof deal.price === "number" && isFinite(deal.price)) ? deal.price : 9.99;
-const op = (typeof deal.originalPrice === "number" && isFinite(deal.originalPrice) && deal.originalPrice > 0) ? deal.originalPrice : 199.99;
 const hasDiscount = op > p && p > 0;
-const isFree = p === 0;
-const discountPct = hasDiscount ? Math.round(100 - (p / op) * 100) : (isFree ? 100 : null);
+const discountPct = hasDiscount ? Math.round(100 - (p / op) * 100) : null;
 const title = String(deal.title || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;|&#8217;/g, "'").replace(/&ndash;|&#8211;/g, " & ").replace(/\s{2,}/g, " ").trim();
-const description = String(deal.description || "").replace(/<[^>]*>/g, "").slice(0, 120);
-const instructor = deal.instructor || "Udemy Instructor";
-const duration = deal.duration || "";
-const durationLabel = duration ? duration.replace(/^(\d+)\s*hours?.*$/i, "$1h") : "";
+const students = typeof deal.students === "number" && isFinite(deal.students) ? deal.students : null;
+const catSlug = (deal.category || "").toLowerCase().replace(/ & /g, "-and-").replace(/ /g, "-").replace(/&/g, "and");
 ---
 
-<div class="deal-card">
-  <div class="dc-img">
+<div style={{
+  background: "var(--card)",
+  borderRadius: "16px",
+  border: "1px solid var(--border)",
+  overflow: "hidden",
+  transition: "all 0.3s ease",
+  position: "relative"
+}}>
+  <div style={{
+    height: "180px",
+    background: `linear-gradient(135deg, var(--brand-soft) 0%, rgba(255,90,44,0.05) 100%)`,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative"
+  }}>
     {deal.image ? (
-      <Image src={deal.image} alt={title} width={200} height={150}
-        loading={loading} inferSize={false} />
+      <Image 
+        src={deal.image}
+        alt={title}
+        width={400}
+        height={225}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover"
+        }}
+        loading="lazy"
+        inferSize={false}
+      />
     ) : (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted-light)" stroke-width="1.5" opacity="0.4">
-        <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round"/>
+      <svg width="60" height="60" viewBox="0 0 24 24" fill="var(--muted)" opacity="0.5">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
       </svg>
     )}
-    {discountPct !== null && (
-      <span class="dc-badge">{isFree ? "FREE" : `-${discountPct}%`}</span>
+
+    <div style={{
+      position: "absolute",
+      top: "1rem",
+      right: "1rem",
+      background: "rgba(0, 0, 0, 0.8)",
+      color: "white",
+      padding: "0.25rem 0.5rem",
+      borderRadius: "4px",
+      fontSize: "0.7rem",
+      fontWeight: 600,
+      backdropFilter: "blur(4px)"
+    }}>
+      {deal.updatedAt ? formatRelativeTime(deal.updatedAt) : "Updated recently"}
+    </div>
+
+    {p === 0 && (
+      <div style={{
+        position: "absolute",
+        top: "1rem",
+        left: "1rem",
+        background: "var(--brand)",
+        color: "var(--bg)",
+        padding: "0.25rem 0.75rem",
+        borderRadius: "999px",
+        fontSize: "0.75rem",
+        fontWeight: 700,
+        zIndex: 10
+      }}>
+        FREE
+      </div>
     )}
   </div>
 
-  <div class="dc-body">
-    <div class="dc-meta">
-      {r && (
-        <span class="dc-rating">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          {r.toFixed(1)}
-        </span>
-      )}
-      {s && <span class="dc-students">{formatStudents(s)} students</span>}
-      <span class="dc-verified">
-        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div style={{ padding: "1.5rem" }}>
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      gap: "0.5rem",
+      marginBottom: "0.5rem"
+    }}>
+      <a href={`/categories/${catSlug}`} style={{
+        fontSize: "0.75rem",
+        fontWeight: 700,
+        color: "var(--brand)",
+        textTransform: "uppercase",
+        letterSpacing: "0.05em",
+        textDecoration: "none"
+      }}>{deal.category || "Udemy"}</a>
+      <span style={{
+        marginLeft: "auto",
+        fontSize: "0.7rem",
+        fontWeight: 500,
+        color: "var(--muted)",
+        display: "flex",
+        alignItems: "center",
+        gap: "0.25rem"
+      }}>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="#4ade80">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
         Verified
       </span>
     </div>
 
-    <h3 class="dc-title">
-      <a href={`/coupon/${deal.slug}`}>{title}</a>
+    <h3 style={{
+      fontSize: "1.1rem",
+      fontWeight: 700,
+      color: "var(--text)",
+      marginBottom: "0.5rem",
+      lineHeight: 1.4,
+      display: "-webkit-box",
+      WebkitLineClamp: 2,
+      WebkitBoxOrient: "vertical",
+      overflow: "hidden"
+    }}>
+      <a href={`/coupon/${deal.slug}`} style={{
+        color: "inherit",
+        textDecoration: "none"
+      }}>
+        {title}
+      </a>
     </h3>
 
-    {description && <p class="dc-desc">{description}</p>}
-
-    <div class="dc-row">
-      <div class="dc-instructor">
-        <span class="dc-initials">{instructor.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
-        <span class="dc-instructor-name">{instructor}</span>
+    {deal.instructor && (
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.5rem",
+        marginBottom: "0.75rem"
+      }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--muted)">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+        <span style={{
+          color: "var(--text)",
+          fontSize: "0.85rem",
+          fontWeight: 600
+        }}>
+          By {deal.instructor}
+        </span>
       </div>
-      {durationLabel && <span class="dc-duration">{durationLabel}</span>}
-    </div>
+    )}
 
-    <div class="dc-row dc-row-subtle">
-      {timeAgo(deal.updatedAt) && <span>✓ Verified {timeAgo(deal.updatedAt)}</span>}
-      {expiresIn(deal.expiresAt) && <span class="dc-expires">{expiresIn(deal.expiresAt)}</span>}
-    </div>
+    <p style={{
+      color: "var(--muted)",
+      fontSize: "0.9rem",
+      marginBottom: "1rem",
+      lineHeight: 1.5,
+      display: "-webkit-box",
+      WebkitLineClamp: 3,
+      WebkitBoxOrient: "vertical",
+      overflow: "hidden"
+    }}>
+      {deal.description || "Master this in-demand skill with comprehensive training from industry experts."}
+    </p>
 
-    <div class="dc-footer">
-      <div class="dc-price">
-        <span class="dc-price-current">{isFree ? "FREE" : `$${p.toFixed(2)}`}</span>
-        {hasDiscount && <span class="dc-price-old">${op.toFixed(2)}</span>}
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: "1rem"
+    }}>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.5rem"
+      }}>
+        {r && (
+          <>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--brand)">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <span style={{
+              color: "var(--muted)",
+              fontSize: "0.85rem",
+              fontWeight: 600
+            }}>
+              {r.toFixed(1)} ({students ? `${students}+ students` : 'popular course'})
+            </span>
+          </>
+        )}
       </div>
-      <a href={deal.url || `/coupon/${deal.slug}`}
-        target={deal.url ? "_blank" : "_self"}
-        rel={deal.url ? "noopener noreferrer" : undefined}
-        class="dc-btn">
-        {isFree ? "GET FREE" : "REDEEM"}
-      </a>
+
+      {deal.subcategory && (
+        <a href={`/topics/${deal.subcategory.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')}`} style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.25rem",
+          color: "var(--brand)",
+          textDecoration: "none",
+          fontSize: "0.8rem",
+          fontWeight: 600,
+          padding: "0.25rem 0.5rem",
+          borderRadius: "4px",
+          background: "var(--card-hover)",
+          transition: "all 0.3s ease"
+        }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+          </svg>
+          {deal.subcategory}
+        </a>
+      )}
     </div>
+
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: "1rem"
+    }}>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.5rem"
+      }}>
+        <span style={{
+          fontSize: "1.2rem",
+          fontWeight: 700,
+          color: "var(--brand)"
+        }}>
+          {p === 0 ? "FREE" : `$${p.toFixed(2)}`}
+        </span>
+        {hasDiscount && (
+          <>
+            <span style={{
+              textDecoration: "line-through",
+              color: "var(--muted)",
+              fontSize: "0.9rem"
+            }}>
+              ${op.toFixed(2)}
+            </span>
+            <span style={{
+              background: "var(--destructive)",
+              color: "white",
+              padding: "0.25rem 0.5rem",
+              borderRadius: "4px",
+              fontSize: "0.75rem",
+              fontWeight: 700
+            }}>
+              {discountPct}% OFF
+            </span>
+          </>
+        )}
+      </div>
+    </div>
+
+    {deal.duration && (
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.35rem",
+        marginBottom: "1rem"
+      }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span style={{
+          color: "var(--muted)",
+          fontSize: "0.8rem",
+          fontWeight: 500
+        }}>
+          {formatDuration(deal.duration)}
+        </span>
+      </div>
+    )}
+
+    <a
+      href={deal.url || `/coupon/${deal.slug}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        display: "block",
+        width: "100%",
+        padding: "0.75rem 1.5rem",
+        background: "var(--brand)",
+        color: "var(--bg)",
+        textDecoration: "none",
+        borderRadius: "8px",
+        textAlign: "center",
+        fontWeight: 600,
+        fontSize: "0.9rem",
+        transition: "all 0.3s ease",
+        border: "none",
+        cursor: "pointer"
+      }}
+    >
+      {p === 0 ? "Enroll for Free" : "Get Coupon"}
+    </a>
   </div>
 </div>
-
-<style>
-  .deal-card { display: flex; background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; overflow: hidden; transition: all 0.2s; }
-  .deal-card:hover { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 4%, transparent); }
-  .dc-img { width: 140px; min-height: 105px; flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center; background: var(--bg-secondary); overflow: hidden; }
-  .dc-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s; }
-  .deal-card:hover .dc-img img { transform: scale(1.06); }
-  .dc-badge { position: absolute; top: 8px; left: 8px; background: linear-gradient(135deg, #B8860B, #D4AF37, #E8C547, #D4AF37); color: #1a1814; padding: 3px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.02em; box-shadow: 0 2px 8px rgba(212,167,55,0.3); }
-  .dc-body { flex: 1; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-  .dc-meta { display: flex; align-items: center; gap: 10px; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); }
-  .dc-rating { display: flex; align-items: center; gap: 3px; color: var(--brand); font-weight: 700; }
-  .dc-rating svg { width: 12px; height: 12px; }
-  .dc-students { color: var(--muted); }
-  .dc-verified { display: flex; align-items: center; gap: 3px; color: var(--brand); margin-left: auto; font-weight: 700; text-transform: uppercase; font-size: 0.6rem; letter-spacing: 0.04em; }
-  .dc-title { font-size: 0.95rem; font-weight: 700; margin: 0; line-height: 1.3; }
-  .dc-title a { color: var(--text); text-decoration: none; transition: color 0.2s; }
-  .deal-card:hover .dc-title a { color: var(--brand); }
-  .dc-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.4; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .dc-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.72rem; color: var(--text-secondary); font-weight: 500; }
-  .dc-instructor { display: flex; align-items: center; gap: 5px; overflow: hidden; }
-  .dc-initials { width: 18px; height: 18px; border-radius: 5px; background: var(--brand); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.45rem; font-weight: 700; flex-shrink: 0; }
-  .dc-instructor-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; }
-  .dc-duration { color: var(--muted-light); font-weight: 600; flex-shrink: 0; }
-  .dc-row-subtle { font-size: 0.65rem; color: var(--muted-light); font-weight: 600; }
-  .dc-expires { color: #ef4444; }
-  .dc-footer { margin-top: auto; padding-top: 8px; display: flex; align-items: center; justify-content: space-between; }
-  .dc-price { display: flex; align-items: baseline; gap: 6px; }
-  .dc-price-current { font-size: 1.05rem; font-weight: 800; color: var(--brand); }
-  .dc-price-old { text-decoration: line-through; color: var(--muted-light); font-size: 0.75rem; font-weight: 500; }
-  .dc-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 8px; background: linear-gradient(135deg, #B8860B 0%, #D4AF37 25%, #E8C547 50%, #D4AF37 75%, #B8860B 100%); color: #1a1814; font-size: 0.72rem; font-weight: 700; text-decoration: none; white-space: nowrap; transition: all 0.3s; }
-  .dc-btn:hover { background: linear-gradient(135deg, #C5A028 0%, #D4AF37 25%, #E8C547 50%, #D4AF37 75%, #C5A028 100%) !important; box-shadow: 0 0 16px 3px rgba(212,167,55,0.3); transform: translateY(-1px); }
-  @media (max-width: 480px) { .dc-img { width: 100px; min-height: 75px; } .dc-body { padding: 8px 10px; } .dc-title { font-size: 0.85rem; } .dc-price-current { font-size: 0.9rem; } .dc-btn { padding: 5px 10px; font-size: 0.65rem; } }
-</style>

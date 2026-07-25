@@ -445,7 +445,7 @@ export default function DealPage({
                 <span className="cd-rating-big">{deal.rating.toFixed(1)}</span>
                 <div className="cd-rating-stars">
                   {[1,2,3,4,5].map(s => (
-                    <svg key={s} width="20" height="20" viewBox="0 0 24 24" fill={s <= Math.round(deal.rating || 0) ? '#D4AF37' : '#2a2824'} stroke="#D4AF37" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg key={s} width="20" height="20" viewBox="0 0 24 24" fill={s <= Math.round(deal.rating || 0) ? '#ff5a2c' : '#2a2824'} stroke="#ff5a2c" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                   ))}
                 </div>
                 <span className="cd-rating-count">{deal.students.toLocaleString()} Verified Ratings</span>
@@ -570,8 +570,8 @@ export default function DealPage({
         .card-footer { padding: 0 0.75rem 0.75rem; }
         .pill { display: inline-block; padding: 2px 8px; border-radius: var(--radius-full); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
         .muted { color: var(--muted); }
-.card .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 1rem; background: linear-gradient(135deg, #B8860B 0%, #D4AF37 25%, #E8C547 50%, #D4AF37 75%, #B8860B 100%); color: #1a1814; border: none; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 700; text-decoration: none; transition: all 0.3s; }
-.card .btn:hover { box-shadow: 0 0 16px 2px rgba(212,167,55,0.3); }
+.card .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 1rem; background: linear-gradient(135deg, #d94420 0%, #ff5a2c 25%, #ff8159 50%, #ff5a2c 75%, #d94420 100%); color: #1a1814; border: none; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 700; text-decoration: none; transition: all 0.3s; }
+.card .btn:hover { box-shadow: 0 0 16px 2px rgba(255,90,44,0.3); }
         button.pill { background: var(--secondary); color: var(--text); border: 1px solid var(--border); cursor: pointer; }
 
         /* HERO */
@@ -613,10 +613,10 @@ export default function DealPage({
         .cd-checked { display: flex; align-items: center; gap: 4px; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); }
         .cd-checked svg { flex-shrink: 0; color: var(--muted-light); }
 
-        .cd-redeem-btn { position: relative; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 18px; margin-top: 16px; font-size: 1.05rem; font-weight: 900; letter-spacing: 0.06em; color: #1a1814; background: linear-gradient(135deg, #B8860B 0%, #D4AF37 25%, #E8C547 50%, #D4AF37 75%, #B8860B 100%); border-radius: 12px; text-decoration: none; transition: all 0.4s; overflow: hidden; border: 1px solid rgba(255,215,0,0.25); box-shadow: 0 4px 20px rgba(212,167,55,0.25), inset 0 1px 0 rgba(255,255,255,0.35); text-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+        .cd-redeem-btn { position: relative; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 18px; margin-top: 16px; font-size: 1.05rem; font-weight: 900; letter-spacing: 0.06em; color: #1a1814; background: linear-gradient(135deg, #d94420 0%, #ff5a2c 25%, #ff8159 50%, #ff5a2c 75%, #d94420 100%); border-radius: 12px; text-decoration: none; transition: all 0.4s; overflow: hidden; border: 1px solid rgba(255,90,44,0.25); box-shadow: 0 4px 20px rgba(255,90,44,0.25), inset 0 1px 0 rgba(255,255,255,0.35); text-shadow: 0 1px 2px rgba(0,0,0,0.08); }
         .cd-redeem-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.2) 48%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0.2) 52%, transparent 70%); transform: translateX(-100%) skewX(-15deg); transition: transform 0.7s; pointer-events: none; }
         .cd-redeem-btn:hover::before { transform: translateX(100%) skewX(-15deg); }
-        .cd-redeem-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(212,167,55,0.45), inset 0 1px 0 rgba(255,255,255,0.35); border-color: rgba(255,215,0,0.5); }
+        .cd-redeem-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(255,90,44,0.45), inset 0 1px 0 rgba(255,255,255,0.35); border-color: rgba(255,90,44,0.5); }
 
 
         /* SECTIONS */
@@ -643,23 +643,23 @@ export default function DealPage({
         .cd-plan-box { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 16px; padding: 48px 32px; text-align: center; }
         .cd-plan-title { font-size: 1.4rem; font-weight: 900; color: var(--text); margin: 0 0 24px; line-height: 1.4; }
         .cd-plan-actions { margin-bottom: 16px; }
-.cd-plan-btn { position: relative; display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #B8860B 0%, #D4AF37 25%, #E8C547 50%, #D4AF37 75%, #B8860B 100%); color: #1a1814; padding: 16px 42px; border-radius: 999px; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.05em; text-decoration: none; transition: all 0.4s; border: 1px solid rgba(255,215,0,0.25); box-shadow: 0 4px 20px rgba(212,167,55,0.2), inset 0 1px 0 rgba(255,255,255,0.35); text-shadow: 0 1px 2px rgba(0,0,0,0.08); overflow: hidden; }
+.cd-plan-btn { position: relative; display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #d94420 0%, #ff5a2c 25%, #ff8159 50%, #ff5a2c 75%, #d94420 100%); color: #1a1814; padding: 16px 42px; border-radius: 999px; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.05em; text-decoration: none; transition: all 0.4s; border: 1px solid rgba(255,90,44,0.25); box-shadow: 0 4px 20px rgba(255,90,44,0.2), inset 0 1px 0 rgba(255,255,255,0.35); text-shadow: 0 1px 2px rgba(0,0,0,0.08); overflow: hidden; }
 .cd-plan-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.2) 48%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0.2) 52%, transparent 70%); transform: translateX(-100%) skewX(-15deg); transition: transform 0.7s; pointer-events: none; border-radius: inherit; }
 .cd-plan-btn:hover::before { transform: translateX(100%) skewX(-15deg); }
-.cd-plan-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 35px rgba(212,167,55,0.4), inset 0 1px 0 rgba(255,255,255,0.35); border-color: rgba(255,215,0,0.5); }
+.cd-plan-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 35px rgba(255,90,44,0.4), inset 0 1px 0 rgba(255,255,255,0.35); border-color: rgba(255,90,44,0.5); }
 .cd-plan-features { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; font-size: 0.9rem; color: var(--text-secondary); font-weight: 600; }
 .cd-plan-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--brand); margin-right: 6px; vertical-align: middle; }
 
         /* WHAT YOU'LL LEARN */
         .cd-learn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .cd-learn-item { display: flex; align-items: flex-start; gap: 12px; padding: 16px 18px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; font-size: 0.92rem; line-height: 1.55; color: var(--text); transition: all 0.2s; }
-        .cd-learn-item:hover { border-color: var(--brand); box-shadow: 0 2px 12px rgba(212, 167, 55,0.08); }
-        .cd-learn-check { flex-shrink: 0; margin-top: 3px; color: var(--brand); width: 20px; height: 20px; background: rgba(212, 167, 55,0.1); border-radius: 50%; padding: 2px; }
+        .cd-learn-item:hover { border-color: var(--brand); box-shadow: 0 2px 12px rgba(255, 90, 44,0.08); }
+        .cd-learn-check { flex-shrink: 0; margin-top: 3px; color: var(--brand); width: 20px; height: 20px; background: rgba(255, 90, 44,0.1); border-radius: 50%; padding: 2px; }
 
         /* PREREQUISITES */
         .cd-req-list { display: flex; flex-direction: column; gap: 10px; padding: 0; margin: 0; list-style: none; }
         .cd-req-item { padding: 14px 18px 14px 38px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; font-size: 0.92rem; line-height: 1.55; color: var(--text-secondary); position: relative; transition: all 0.2s; }
-        .cd-req-item:hover { border-color: var(--brand); box-shadow: 0 2px 12px rgba(212, 167, 55,0.08); }
+        .cd-req-item:hover { border-color: var(--brand); box-shadow: 0 2px 12px rgba(255, 90, 44,0.08); }
         .cd-req-item::before { content: "!"; position: absolute; left: 14px; top: 14px; width: 18px; height: 18px; background: var(--brand-soft); color: var(--brand); border-radius: 50%; font-weight: 800; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
 
         /* COURSE DESCRIPTION */
@@ -713,7 +713,7 @@ export default function DealPage({
         .cd-rating-row { display: flex; align-items: center; gap: 10px; }
         .cd-rating-label { font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); width: 50px; flex-shrink: 0; }
         .cd-rating-track { flex: 1; height: 10px; background: var(--bg-secondary); border-radius: 5px; overflow: hidden; }
-        .cd-rating-fill { height: 100%; background: linear-gradient(90deg, #D4AF37, #E8C547); border-radius: 5px; transition: width 0.3s; }
+        .cd-rating-fill { height: 100%; background: linear-gradient(90deg, #ff5a2c, #ff8159); border-radius: 5px; transition: width 0.3s; }
         .cd-rating-pct { font-size: 0.8rem; font-weight: 600; color: var(--muted); width: 35px; text-align: right; }
 
         /* INSTRUCTOR PROFILE */
@@ -722,7 +722,7 @@ export default function DealPage({
         .cd-instructor-info { flex: 1; }
         .cd-instructor-name { font-size: 1.15rem; font-weight: 800; color: var(--text); margin: 0 0 4px; }
         .cd-instructor-role { font-size: 0.82rem; color: var(--muted); font-weight: 500; }
-        .cd-instructor-tag { display: inline-block; margin-left: 8px; padding: 2px 10px; background: rgba(212, 167, 55,0.1); color: var(--brand); border-radius: 12px; font-size: 0.72rem; font-weight: 700; }
+        .cd-instructor-tag { display: inline-block; margin-left: 8px; padding: 2px 10px; background: rgba(255, 90, 44,0.1); color: var(--brand); border-radius: 12px; font-size: 0.72rem; font-weight: 700; }
         .cd-instructor-stats { display: flex; gap: 16px; margin: 10px 0; flex-wrap: wrap; }
         .cd-instructor-stats span { font-size: 0.82rem; color: var(--text-secondary); }
         .cd-instructor-stats strong { color: var(--text); }
@@ -736,10 +736,10 @@ export default function DealPage({
         .cd-sticky-orig { font-size: 0.85rem; color: var(--muted); text-decoration: line-through; font-weight: 600; }
         .cd-sticky-badge { background: var(--brand); color: white; padding: 2px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; }
         .cd-sticky-exp { font-size: 0.78rem; color: #dc2626; font-weight: 700; }
-.cd-sticky-btn { position: relative; display: inline-flex; align-items: center; gap: 10px; padding: 14px 32px; background: linear-gradient(135deg, #B8860B 0%, #D4AF37 25%, #E8C547 50%, #D4AF37 75%, #B8860B 100%); color: #1a1814; border-radius: 10px; font-size: 0.95rem; font-weight: 900; letter-spacing: 0.06em; text-decoration: none; transition: all 0.4s; flex-shrink: 0; overflow: hidden; border: 1px solid rgba(255,215,0,0.25); box-shadow: 0 4px 20px rgba(212,167,55,0.2), inset 0 1px 0 rgba(255,255,255,0.35); text-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+.cd-sticky-btn { position: relative; display: inline-flex; align-items: center; gap: 10px; padding: 14px 32px; background: linear-gradient(135deg, #d94420 0%, #ff5a2c 25%, #ff8159 50%, #ff5a2c 75%, #d94420 100%); color: #1a1814; border-radius: 10px; font-size: 0.95rem; font-weight: 900; letter-spacing: 0.06em; text-decoration: none; transition: all 0.4s; flex-shrink: 0; overflow: hidden; border: 1px solid rgba(255,90,44,0.25); box-shadow: 0 4px 20px rgba(255,90,44,0.2), inset 0 1px 0 rgba(255,255,255,0.35); text-shadow: 0 1px 2px rgba(0,0,0,0.08); }
 .cd-sticky-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.2) 48%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0.2) 52%, transparent 70%); transform: translateX(-100%) skewX(-15deg); transition: transform 0.7s; pointer-events: none; }
 .cd-sticky-btn:hover::before { transform: translateX(100%) skewX(-15deg); }
-.cd-sticky-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(212,167,55,0.4), inset 0 1px 0 rgba(255,255,255,0.35); border-color: rgba(255,215,0,0.5); }
+.cd-sticky-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(255,90,44,0.4), inset 0 1px 0 rgba(255,255,255,0.35); border-color: rgba(255,90,44,0.5); }
 
 
         /* SECTION TABS */

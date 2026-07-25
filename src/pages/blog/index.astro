@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import { Image } from 'astro:assets';
 import { getCollection } from "astro:content";
 import { formatDateWIB, toISODateWIB } from "../../lib/date";
+import { getAvailableDates } from "../../lib/store";
 
 const siteUrl = "https://courseswyn.com";
 
@@ -22,6 +23,7 @@ const posts = allPosts.sort((a: any, b: any) => {
 });
 
 const recentPosts = posts.slice(0, 9);
+const availableDates = await getAvailableDates();
 
 const currentDate = new Date();
 const currentYear = Number(currentDate.toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
@@ -119,6 +121,27 @@ const structuredData = {
           </div>
         </div>
       </header>
+
+      <div class="cc-section cc-daily-updates">
+        <h2 class="cc-section-title" style="margin-bottom: 0.75rem;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Daily Coupon Updates
+        </h2>
+        <p class="cc-section-desc" style="margin-bottom: 0.75rem;">New 100% off Udemy coupons added each day. Click a date to see all deals from that day.</p>
+        <div class="cc-daily-list">
+          {availableDates.slice(0, 14).map(d => {
+            const dObj = new Date(d + 'T00:00:00.000Z');
+            const label = dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const isToday = d === new Date().toISOString().substring(0, 10);
+            return (
+              <a href={`/blog/top-udemy-coupons/${d}/`} class="cc-daily-chip" class:list={{ 'cc-daily-today': isToday }}>
+                {isToday && <span class="cc-daily-dot"></span>}
+                {label}
+              </a>
+            );
+          })}
+        </div>
+      </div>
 
       <div class="cc-section cc-guide-topics">
         <div class="cc-topic-list">
@@ -285,6 +308,12 @@ const structuredData = {
   .cc-section-title { font-size: 1.1rem; font-weight: 800; color: var(--text); margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.65rem; }
   .cc-section-title svg { color: var(--brand); flex-shrink: 0; }
 
+  .cc-daily-updates { margin-bottom: 1.5rem; }
+  .cc-daily-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .cc-daily-chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 100px; border: 1px solid var(--border); font-size: 0.8rem; font-weight: 600; color: var(--text); text-decoration: none; transition: all 0.2s; background: var(--card); }
+  .cc-daily-chip:hover { border-color: var(--brand); color: var(--brand); }
+  .cc-daily-today { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); }
+  .cc-daily-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brand); animation: pulse 2s ease-in-out infinite; }
   .cc-guide-topics { margin-bottom: 1.5rem; }
   .cc-topic-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
   .cc-topic-tag { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 100px; border: 1px solid var(--border); font-size: 0.85rem; font-weight: 600; color: var(--text); text-decoration: none; transition: all 0.2s; background: var(--card); }

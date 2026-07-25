@@ -56,6 +56,16 @@ export async function getDealById(idOrSlug: string): Promise<Deal | null> {
   return all.find((deal) => deal.id === key || deal.slug === key) ?? null;
 }
 
+export async function getAvailableDates(): Promise<string[]> {
+  const deals = await readDealsFromFile();
+  const dateSet = new Set<string>();
+  for (const d of deals) {
+    const t = d.updatedAt ?? d.createdAt ?? d.expiresAt;
+    if (t) dateSet.add(toISODateWIB(new Date(t)));
+  }
+  return Array.from(dateSet).sort().reverse();
+}
+
 export async function getDeals(options: {
   date?: string;
   limit?: number;
