@@ -5,39 +5,15 @@ import { getCollection, render, type CollectionEntry } from "astro:content";
 import AuthorBox from "../../components/AuthorBox.astro";
 import ReadingProgress from "../../components/blog/ReadingProgress.astro";
 import { formatDateWIB } from "../../lib/date";
+import fs from 'fs';
+import path from 'path';
 
 export async function getStaticPaths() {
-  const fs = await import('fs');
-  const path = await import('path');
-  const blogDir = path.join(process.cwd(), 'src/content/blog');
-
-  function getBlogFolders(dir: string, basePath = ''): string[] {
-    const folders: string[] = [];
-    const items = fs.readdirSync(dir, { withFileTypes: true });
-
-    for (const item of items) {
-      if (item.isDirectory()) {
-        const folderPath = path.join(dir, item.name);
-        const indexPath = path.join(folderPath, 'index.md');
-        const indexPathMdx = path.join(folderPath, 'index.mdx');
-
-        if (fs.existsSync(indexPath) || fs.existsSync(indexPathMdx)) {
-          const folderSlug = basePath ? `${basePath}/${item.name}` : item.name;
-          folders.push(folderSlug);
-        } else {
-          folders.push(...getBlogFolders(folderPath, basePath ? `${basePath}/${item.name}` : item.name));
-        }
-      }
-    }
-
-    return folders;
-  }
-
-  const blogFolders = getBlogFolders(blogDir);
-
-  return blogFolders.map((folder) => ({
-    params: { slug: folder },
-  }));
+  const allPosts = await getCollection("blog");
+  return allPosts.map((p: any) => {
+    const slug = p.id.replace(/\/index$/, '');
+    return { params: { slug } };
+  });
 }
 
 const { slug } = Astro.params;
@@ -74,10 +50,41 @@ function resolveImage(img: any): string {
   return '';
 }
 const ogImage = resolveImage(data.image);
+const heroImageUrl = ogImage || '';
+
+// Parse FAQ from MDX content for schema
+const faqMatches: { q: string; a: string }[] = [];
+const mdxPath = path.join(process.cwd(), 'src/content/blog', post.id, 'index.mdx');
+const mdPath = path.join(process.cwd(), 'src/content/blog', post.id, 'index.md');
+try {
+  const raw = fs.readFileSync(fs.existsSync(mdxPath) ? mdxPath : mdPath, 'utf-8');
+  const faqSection = raw.split('## Frequently Asked Questions')[1]?.split('## ')[0];
+  if (faqSection) {
+    const re = /### (.+?)\n\n([\s\S]*?)(?=\n### |$)/g;
+    let m;
+    while ((m = re.exec(faqSection)) !== null) {
+      faqMatches.push({ q: m[1].trim(), a: m[2].trim().replace(/\n/g, ' ') });
+    }
+  }
+} catch (_) {}
 
 const authorName = data.author || "Andrew Derek";
-const authorBio = (data as any).authorBio || "Andrew Derek is a lead course analyst and digital education expert with 8+ years of experience evaluating online learning platforms. He has personally reviewed over 500 Udemy courses across programming, AI, data science, and cloud computing — helping students save money with verified 100% off coupon codes while finding high-quality instruction that delivers real career outcomes.";
+const authorBio = (data as any).authorBio || "Andrew Derek is a lead course analyst and digital education expert with 8+ years of experience evaluating online learning platforms. He has personally reviewed over 500 Udemy courses across programming, AI, data science, and cloud computing — helping students save money with verified coupon codes while finding high-quality instruction that delivers real career outcomes.";
 const authorInitials = authorName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+
+const postTags = (data as any).tags || [];
+const relatedPosts = allPosts
+  .filter((p: any) => {
+    if (p.id === post.id) return false;
+    const pTags = (p.data as any).tags || [];
+    return pTags.some((t: string) => postTags.includes(t));
+  })
+  .sort((a: any, b: any) => {
+    const aMatch = ((a.data as any).tags || []).filter((t: string) => postTags.includes(t)).length;
+    const bMatch = ((b.data as any).tags || []).filter((t: string) => postTags.includes(t)).length;
+    return bMatch - aMatch;
+  })
+  .slice(0, 3);
 
 const articleSchema = {
   "@context": "https://schema.org",
@@ -130,8 +137,15 @@ const articleSchema = {
 
 let structuredData: any = articleSchema;
 
-const articleFaqs = (data as any).faqs;
-if (articleFaqs && Array.isArray(articleFaqs) && articleFaqs.length > 0) {
+const faqSchema = (faqMatches.length > 0 ? faqMatches : (data as any).faqs || [])
+  .slice(0, 8)
+  .map((faq: { q: string; a: string }) => ({
+    "@type": "Question",
+    "name": faq.q,
+    "acceptedAnswer": { "@type": "Answer", "text": faq.a }
+  }));
+
+if (faqSchema.length > 0) {
   structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -139,11 +153,7 @@ if (articleFaqs && Array.isArray(articleFaqs) && articleFaqs.length > 0) {
       {
         "@type": "FAQPage",
         "@id": `${canonical}#faq`,
-        "mainEntity": articleFaqs.slice(0, 8).map((faq: { q: string; a: string }) => ({
-          "@type": "Question",
-          "name": faq.q,
-          "acceptedAnswer": { "@type": "Answer", "text": faq.a }
-        }))
+        "mainEntity": faqSchema
       }
     ]
   };
@@ -159,6 +169,9 @@ if (articleFaqs && Array.isArray(articleFaqs) && articleFaqs.length > 0) {
   pubDate={data.pubDate}
   updatedDate={data.updatedAt || data.pubDate}
 >
+  {heroImageUrl && (
+    <link rel="preload" as="image" href={heroImageUrl} />
+  )}
   <ReadingProgress />
 
   <article class="cc-root cc-article">
@@ -186,12 +199,15 @@ if (articleFaqs && Array.isArray(articleFaqs) && articleFaqs.length > 0) {
       <div class="cc-article-meta">
         <div class="cc-article-author">
           <div class="cc-avatar">{authorInitials}</div>
-          <div>
-            <p class="cc-author-name">{authorName}</p>
-            <p class="cc-author-detail">
-              {formatDateWIB(data.updatedAt || data.pubDate, { month: 'long', day: 'numeric', year: 'numeric' })}
-              {' · '}{readingTime} min read
-            </p>
+          <div class="cc-meta-text">
+            <span class="cc-meta-label">Author:</span>
+            <span class="cc-author-name">{authorName}</span>
+            <span class="cc-meta-sep">,</span>
+            <span class="cc-meta-label">Last Update:</span>
+            <span class="cc-meta-date">{formatDateWIB(data.updatedAt || data.pubDate, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+            <span class="cc-meta-sep">,</span>
+            <span class="cc-meta-label">Reading Time:</span>
+            <span class="cc-meta-read">{readingTime} min read</span>
           </div>
         </div>
       </div>
@@ -204,41 +220,86 @@ if (articleFaqs && Array.isArray(articleFaqs) && articleFaqs.length > 0) {
             width={900}
             height={475}
             inferSize={false}
+            loading="eager"
+            decoding="auto"
           />
         </figure>
       )}
 
-      <div class="cc-article-content">
+      <div class="cc-article-content" id="article-content">
         <Content />
       </div>
 
-      <footer class="cc-article-footer">
-        <h2 class="cc-about-author-heading">About the Author</h2>
-        <AuthorBox name={authorName} bio={authorBio} image="/images/author.jpg" />
-
-        <div class="cc-cta-box">
-          <h3>Start Learning for Free</h3>
-          <p>Browse <a href="/udemy-coupon-code">all verified Udemy coupons</a> or check <a href="/udemy-coupons-today">today's latest deals</a>.</p>
-          <div class="cc-cta-buttons">
-            <a href="/udemy-coupon-code" class="cc-cta-btn">Browse All Coupons</a>
-            <a href="/blog" class="cc-cta-btn cc-cta-btn-ghost">Back to Blog</a>
+      {relatedPosts.length > 0 && (
+        <div class="cc-related">
+          <div class="cc-footer-heading">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span>Related Articles</span>
           </div>
+          <div class="cc-related-grid">
+            {relatedPosts.map((rp: any) => (
+              <a href={`/blog/${rp.id}`} class="cc-related-card">
+                <h4>{(rp.data as any).title}</h4>
+                <p>{(rp.data as any).description}</p>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <footer class="cc-article-footer">
+        <div class="cc-footer-heading">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>About the Author</span>
+        </div>
+        <AuthorBox name={authorName} bio={authorBio} image="/images/author.jpg" readingTime={readingTime} updatedDate={formatDateWIB(data.updatedAt || data.pubDate, { month: 'long', day: 'numeric', year: 'numeric' })} />
+
+        <div class="cc-footer-cta">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <p>Browse <a href="/udemy-coupon-code">all verified Udemy coupons</a> or check <a href="/udemy-coupons-today">today's latest deals</a>.</p>
         </div>
       </footer>
 
     </div>
   </article>
 
+  {headings.length > 0 && (
+    <nav class="cc-toc" aria-label="Table of Contents">
+      <div class="cc-toc-label">On this page</div>
+        <ul>
+          {headings.filter((h: any) => h.depth >= 2 && h.depth <= 3).map((h: any) => (
+            <li class={h.depth === 2 ? 'cc-toc-h2' : 'cc-toc-h3'}>
+              <a href={`#${h.slug}`}>{h.text}</a>
+            </li>
+          ))}
+        </ul>
+      <div class="cc-toc-share">
+        <div class="cc-toc-share-label">Share</div>
+        <div class="cc-toc-share-icons">
+          <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(canonical)}`} target="_blank" rel="noopener noreferrer" aria-label="Share on X">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(canonical)}`} target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </a>
+          <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(canonical)}`} target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </a>
+        </div>
+      </div>
+    </nav>
+  )}
+
   <style is:global>
     .cc-root { background: var(--bg); }
-    .cc-article-container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+    .cc-article-container { max-width: 900px; margin-left: max(1rem, calc(50% - 520px)); padding: 2rem 1rem 4rem; }
 
     .cc-breadcrumb { margin-bottom: 1.5rem; }
-    .cc-breadcrumb ol { list-style: none; display: flex; align-items: center; gap: 0.5rem; padding: 0; margin: 0; font-size: 0.8rem; color: var(--muted); }
+    .cc-breadcrumb ol { list-style: none; display: flex; align-items: center; gap: 0.5rem; padding: 0; margin: 0; font-size: 0.8rem; color: var(--muted); flex-wrap: wrap; }
     .cc-breadcrumb li:not(:last-child)::after { content: '/'; margin-left: 0.5rem; color: var(--border); }
     .cc-breadcrumb a { color: var(--brand); text-decoration: none; }
     .cc-breadcrumb a:hover { text-decoration: underline; }
-    .cc-breadcrumb li:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 300px; }
+    .cc-breadcrumb li:last-child { color: var(--muted); }
 
     .cc-article-tags { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
     .cc-tag-chip { display: inline-block; font-size: 0.78rem; font-weight: 600; color: var(--muted); padding: 3px 12px; border-radius: 100px; border: 1px solid var(--border); background: var(--card); }
@@ -246,11 +307,13 @@ if (articleFaqs && Array.isArray(articleFaqs) && articleFaqs.length > 0) {
     .cc-article-title { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; line-height: 1.15; letter-spacing: -0.03em; margin: 0 0 1.25rem; color: var(--text); }
     .cc-article-desc { font-size: 1.1rem; color: var(--muted); line-height: 1.6; margin: 0 0 1.5rem; font-weight: 500; }
 
-    .cc-article-meta { display: flex; align-items: center; padding-top: 1.25rem; border-top: 1px solid var(--border); margin-bottom: 2rem; }
-    .cc-article-author { display: flex; align-items: center; gap: 12px; }
-    .cc-avatar { width: 40px; height: 40px; border-radius: 6px; background: var(--brand); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; font-size: 0.85rem; flex-shrink: 0; border: 1px solid var(--border); }
-    .cc-author-name { margin: 0; font-size: 0.9rem; font-weight: 700; color: var(--text); }
-    .cc-author-detail { margin: 2px 0 0; font-size: 0.82rem; color: var(--muted); font-weight: 500; }
+    .cc-article-meta { display: flex; align-items: center; padding: 1rem 0; margin-bottom: 2rem; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .cc-article-author { display: flex; align-items: center; gap: 10px; }
+    .cc-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--brand); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 0.8rem; flex-shrink: 0; }
+    .cc-meta-text { font-size: 0.82rem; color: var(--muted); display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .cc-meta-label { color: var(--muted); }
+    .cc-author-name { font-weight: 600; color: var(--text); }
+    .cc-meta-sep { color: var(--border); font-weight: 300; margin-right: 2px; }
 
     .cc-article-hero { margin-bottom: 2.5rem; }
     .cc-article-hero img { width: 100%; height: auto; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); }
@@ -269,6 +332,10 @@ if (articleFaqs && Array.isArray(articleFaqs) && articleFaqs.length > 0) {
     .cc-article-content blockquote p { margin-bottom: 0; color: var(--muted); }
     .cc-article-content code { background: var(--card); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; border: 1px solid var(--border); }
     .cc-article-content pre { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; overflow-x: auto; margin: 2rem 0; }
+    .cc-article-content .cc-faq { margin: 2rem 0; }
+    .cc-article-content .cc-faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.5rem; }
+    .cc-article-content .cc-faq-q { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0 0 0.35rem; }
+    .cc-article-content .cc-faq-a { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0; }
     .cc-article-content hr { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
     .cc-article-content table { width: 100%; border-collapse: collapse; margin: 2rem 0; font-size: 0.9rem; }
     .cc-article-content th { background: var(--card); padding: 0.75rem 1rem; text-align: left; font-weight: 700; border: 1px solid var(--border); }
@@ -276,23 +343,95 @@ if (articleFaqs && Array.isArray(articleFaqs) && articleFaqs.length > 0) {
     .cc-article-content tr:nth-child(even) { background: var(--card); }
 
     .cc-article-footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
-    .cc-about-author-heading { font-size: 1rem; font-weight: 700; color: var(--text); margin: 0 0 1rem; text-transform: uppercase; letter-spacing: 0.04em; }
-    .cc-cta-box { margin-top: 2.5rem; padding: 2rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; text-align: center; }
-    .cc-cta-box h3 { font-size: 1.35rem; font-weight: 900; margin: 0 0 0.75rem; color: var(--brand); }
-    .cc-cta-box p { font-size: 0.92rem; color: var(--muted); margin: 0 0 1.25rem; line-height: 1.6; }
-    .cc-cta-box p a { color: var(--brand); font-weight: 600; }
-    .cc-cta-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    .cc-cta-btn { display: inline-flex; align-items: center; padding: 12px 28px; background: var(--brand); color: #fff; border-radius: 8px; text-decoration: none; font-weight: 800; font-size: 0.92rem; border: 1px solid var(--border); transition: all 0.2s; }
-    .cc-cta-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-    .cc-cta-btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
-    .cc-cta-btn-ghost:hover { background: var(--card); }
+    .cc-footer-heading { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem; }
+    .cc-footer-heading svg { flex-shrink: 0; }
+    .cc-footer-cta { margin-top: 1.5rem; display: flex; align-items: center; gap: 8px; padding: 1rem 1.25rem; background: var(--card); border: 1px solid var(--border); border-radius: 10px; }
+    .cc-footer-cta svg { flex-shrink: 0; color: var(--muted); }
+    .cc-footer-cta p { font-size: 0.9rem; color: var(--muted); margin: 0; line-height: 1.5; }
+    .cc-footer-cta a { color: var(--brand); font-weight: 600; }
+
+    .cc-related { margin-top: 3rem; }
+    .cc-related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .cc-related-card { display: block; padding: 1.25rem; background: var(--card); border: 1px solid var(--border); border-radius: 10px; text-decoration: none; transition: all 0.2s; }
+    .cc-related-card:hover { border-color: var(--brand); }
+    .cc-related-card h4 { font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0 0 0.35rem; line-height: 1.3; }
+    .cc-related-card p { font-size: 0.78rem; color: var(--muted); margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
     @media (max-width: 768px) {
-      .cc-article-container { padding: 1.5rem 1rem 3rem; }
+      .cc-article-container { padding: 1.5rem 1rem 3rem; margin: 0 auto; }
       .cc-article-content h2 { font-size: 1.5rem; }
       .cc-article-content h3 { font-size: 1.2rem; }
       .cc-article-content p { font-size: 1rem; }
-      .cc-breadcrumb li:last-child { max-width: 150px; }
+      .cc-related-grid { grid-template-columns: 1fr; }
     }
+    @media (min-width: 769px) and (max-width: 1023px) {
+      .cc-article-container { margin: 0 auto; }
+    }
+
+    @media (min-width: 1024px) {
+      .cc-toc { position: fixed; top: 100px; left: calc(50% + 400px); width: 200px; max-height: calc(100vh - 140px); overflow-y: auto; }
+      .cc-toc-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.75rem; }
+      .cc-toc ul { list-style: none; padding: 0; margin: 0; }
+      .cc-toc li { margin-bottom: 0.4rem; }
+      .cc-toc-h3 { padding-left: 1rem; }
+      .cc-toc a { font-size: 0.78rem; color: var(--muted); text-decoration: none; line-height: 1.3; display: block; transition: color 0.2s; border-left: 2px solid transparent; padding-left: 8px; }
+      .cc-toc a:hover { color: var(--text); }
+      .cc-toc a.cc-toc-active { color: var(--brand); border-left-color: var(--brand); }
+      .cc-toc-share { margin-top: 1.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+      .cc-toc-share-label { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+      .cc-toc-share-icons { display: flex; gap: 6px; }
+      .cc-toc-share-icons a { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; color: var(--muted); border: 1px solid var(--border); transition: all 0.2s; }
+      .cc-toc-share-icons a:hover { color: var(--brand); border-color: var(--brand); background: var(--brand-soft); }
+    }
+    @media (max-width: 1023px) {
+      .cc-toc { display: none; }
+    }
+  </style>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const content = document.getElementById('article-content');
+      if (!content) return;
+
+      // Anchor links on h2 only
+      content.querySelectorAll('h2').forEach(h => {
+        if (!h.id) return;
+        const a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.className = 'cc-anchor';
+        a.setAttribute('aria-label', 'Link to this section');
+        a.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+        h.appendChild(a);
+      });
+
+      // Active TOC tracking
+      const tocLinks = document.querySelectorAll('.cc-toc a');
+      if (!tocLinks.length) return;
+
+      const headings = Array.from(tocLinks).map(a => {
+        const id = a.getAttribute('href')?.slice(1);
+        return id ? document.getElementById(id) : null;
+      }).filter(Boolean);
+
+      const observer = new IntersectionObserver((entries) => {
+        let activeId = '';
+        entries.forEach(entry => {
+          if (entry.isIntersecting) activeId = entry.target.id;
+        });
+        if (activeId) {
+          tocLinks.forEach(a => {
+            a.classList.toggle('cc-toc-active', a.getAttribute('href') === '#' + activeId);
+          });
+        }
+      }, { rootMargin: '-80px 0px -60% 0px' });
+
+      headings.forEach(h => { if (h) observer.observe(h); });
+    });
+  </script>
+
+  <style>
+    .cc-anchor { display: inline-flex; align-items: center; margin-left: 8px; opacity: 0; transition: opacity 0.2s; vertical-align: middle; color: var(--border); }
+    .cc-anchor:hover { color: var(--brand); }
+    h2:hover .cc-anchor { opacity: 1; }
   </style>
 </Layout>
