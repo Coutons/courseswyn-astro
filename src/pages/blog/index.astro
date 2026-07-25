@@ -3,7 +3,6 @@ import Layout from "../../layouts/Layout.astro";
 import { Image } from 'astro:assets';
 import { getCollection } from "astro:content";
 import { formatDateWIB, toISODateWIB } from "../../lib/date";
-import { getAvailableDates } from "../../lib/store";
 
 const siteUrl = "https://courseswyn.com";
 
@@ -22,14 +21,13 @@ const posts = allPosts.sort((a: any, b: any) => {
   return dateB.getTime() - dateA.getTime();
 });
 
-const recentPosts = posts.slice(0, 9);
-const availableDates = await getAvailableDates();
+const recentPosts = posts.slice(0, 10);
 
 const currentDate = new Date();
 const currentYear = Number(currentDate.toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
 
-const title = `Best Udemy Course Reviews & Free Coupon Guides ${currentYear} | CoursesWyn Blog`;
-const description = `Expert-reviewed guides to the best Udemy courses with verified 100% off coupon codes. Find free programming, AI, data science, cloud certification courses and step-by-step career roadmaps. Updated daily with working deals.`;
+const title = `Best Udemy Course Reviews & Coupon Guides ${currentYear} | CoursesWyn Blog`;
+const description = `Expert-reviewed guides to the best Udemy courses with verified coupon codes. Find programming, AI, data science, cloud certification courses and step-by-step career roadmaps. Updated daily with working deals.`;
 const canonical = `https://courseswyn.com/blog`;
 
 const allTags = [...new Set(posts.flatMap((p: any) => p.data.tags || []))];
@@ -76,7 +74,7 @@ const structuredData = {
 };
 ---
 
-<Layout title={title} description={description} canonical={canonical}>
+<Layout title={title} description={description} canonical={canonical} image="/assets/images/og-default.svg">
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
   <main class="cc-root">
@@ -95,11 +93,11 @@ const structuredData = {
           <path d="M8 7h8"/><path d="M8 11h6"/>
         </svg>
         <h1 class="cc-title">
-          Udemy Course Reviews & Free Coupon Guides
+          Udemy Course Reviews & Coupon Guides
         </h1>
         <p class="cc-subtitle">
           Our editorial team analyzes thousands of Udemy courses to identify the highest-quality learning resources.
-          Each guide includes verified 100% off coupon codes, curriculum breakdowns, and real career outcomes data.
+          Each guide includes verified coupon codes, curriculum breakdowns, and real career outcomes data.
         </p>
         <div class="cc-stats-bar">
           <div class="cc-stat">
@@ -122,26 +120,6 @@ const structuredData = {
         </div>
       </header>
 
-      <div class="cc-section cc-daily-updates">
-        <h2 class="cc-section-title" style="margin-bottom: 0.75rem;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Daily Coupon Updates
-        </h2>
-        <p class="cc-section-desc" style="margin-bottom: 0.75rem;">New 100% off Udemy coupons added each day. Click a date to see all deals from that day.</p>
-        <div class="cc-daily-list">
-          {availableDates.slice(0, 14).map(d => {
-            const dObj = new Date(d + 'T00:00:00.000Z');
-            const label = dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            const isToday = d === new Date().toISOString().substring(0, 10);
-            return (
-              <a href={`/blog/top-udemy-coupons/${d}/`} class="cc-daily-chip" class:list={{ 'cc-daily-today': isToday }}>
-                {isToday && <span class="cc-daily-dot"></span>}
-                {label}
-              </a>
-            );
-          })}
-        </div>
-      </div>
 
       <div class="cc-section cc-guide-topics">
         <div class="cc-topic-list">
@@ -159,7 +137,7 @@ const structuredData = {
             { name: "SQL & Databases", link: "/blog/best-sql-courses-2026" },
             { name: "Career Guides", link: "/blog/ai-engineer-roadmap-2026" },
             { name: "Platform Comparisons", link: "/blog/udemy-vs-coursera-vs-pluralsight" },
-            { name: "Free Courses Guide", link: "/udemy-coupons-guide" }
+            { name: "Coupon Guide", link: "/udemy-coupons-guide" }
           ].map(tag => (
             <a href={tag.link} class="cc-topic-tag">
               {tag.name}
@@ -204,12 +182,21 @@ const structuredData = {
             </a>
           ))}
         </div>
+
+        {posts.length > 10 && (
+          <nav class="cc-pagination">
+            <a href="/blog/page/2" class="cc-page-link cc-page-more">
+              View All Articles
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </nav>
+        )}
       </section>
 
       <section class="cc-seo-section">
         <h2>Why trust CoursesWyn's Udemy course reviews?</h2>
         <p>Every guide on this blog is built on <strong>real data and hands-on analysis</strong>. We examine each course's curriculum depth, instructor credibility, student review sentiment, and practical outcomes — not just star ratings. Our team of edtech researchers has reviewed 1,300+ Udemy courses across <a href="/categories">every major category</a> to bring you detailed, honest reviews.</p>
-        <p>All coupon codes listed in our reviews are <strong>verified, tested, and confirmed working</strong> before publication. Since Udemy's free coupon policy update, coupons expire quickly — we monitor every deal and remove expired ones daily. Browse <a href="/udemy-coupon-code">all active coupon codes</a> to start learning for free today.</p>
+        <p>All coupon codes listed in our reviews are <strong>verified, tested, and confirmed working</strong> before publication. Since Udemy's coupon policy update, coupons expire quickly — we monitor every deal and remove expired ones daily. Browse <a href="/udemy-coupon-code">all active coupon codes</a> to start learning today.</p>
       </section>
 
       <section class="cc-section cc-faq">
@@ -220,7 +207,7 @@ const structuredData = {
         {[
           {
             q: "Are the Udemy coupon codes on CoursesWyn free?",
-            a: "Yes. Every coupon code we list is a 100% off Udemy coupon that makes the course completely free. We verify each coupon manually before publishing and re-check periodically to ensure the codes are still valid."
+            a: "Yes. Every coupon code we list is manually verified before publishing and re-checked periodically to ensure the codes are still valid."
           },
           {
             q: "How often are the blog guides updated?",
@@ -242,16 +229,6 @@ const structuredData = {
         ))}
       </section>
 
-
-
-      {posts.length > 10 && (
-        <nav class="cc-pagination" style="border-top: 1px solid var(--border); margin-top: 2rem;">
-          <a href="/blog/page/2" class="cc-page-link cc-page-more">
-            View All Articles
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </a>
-        </nav>
-      )}
 
     </div>
   </main>
@@ -308,12 +285,6 @@ const structuredData = {
   .cc-section-title { font-size: 1.1rem; font-weight: 800; color: var(--text); margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.65rem; }
   .cc-section-title svg { color: var(--brand); flex-shrink: 0; }
 
-  .cc-daily-updates { margin-bottom: 1.5rem; }
-  .cc-daily-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  .cc-daily-chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 100px; border: 1px solid var(--border); font-size: 0.8rem; font-weight: 600; color: var(--text); text-decoration: none; transition: all 0.2s; background: var(--card); }
-  .cc-daily-chip:hover { border-color: var(--brand); color: var(--brand); }
-  .cc-daily-today { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); }
-  .cc-daily-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brand); animation: pulse 2s ease-in-out infinite; }
   .cc-guide-topics { margin-bottom: 1.5rem; }
   .cc-topic-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
   .cc-topic-tag { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 100px; border: 1px solid var(--border); font-size: 0.85rem; font-weight: 600; color: var(--text); text-decoration: none; transition: all 0.2s; background: var(--card); }
@@ -333,7 +304,7 @@ const structuredData = {
   .cc-faq-a a { color: var(--brand); text-decoration: none; font-weight: 600; }
   .cc-faq-a a:hover { text-decoration: underline; }
 
-  .cc-pagination { display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 1.5rem 0; }
+  .cc-pagination { display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 1.5rem 0 0; }
   .cc-page-link { font-size: 0.85rem; font-weight: 700; color: var(--brand); text-decoration: none; padding: 0.4rem 0.85rem; border-radius: 6px; border: 1px solid var(--border); transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
   .cc-page-link:hover { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, transparent); }
   .cc-page-more { border-color: var(--brand); background: var(--brand); color: white; }
