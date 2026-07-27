@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 
-import { createInstructorSlug } from '../lib/instructors';
+import { parseInstructors, createInstructorSlug } from '../lib/instructors';
 
 const { deal, loading = 'lazy' } = Astro.props;
 
@@ -33,6 +33,8 @@ const discountPct = hasDiscount ? Math.round(100 - (p / op) * 100) : null;
 const title = String(deal.title || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;|&#8217;/g, "'").replace(/&ndash;|&#8211;/g, " & ").replace(/\s{2,}/g, " ").trim();
 const students = typeof deal.students === "number" && isFinite(deal.students) ? deal.students : null;
 const catSlug = (deal.category || "").toLowerCase().replace(/ & /g, "-and-").replace(/ /g, "-").replace(/&/g, "and");
+const instructorNames = parseInstructors(deal.instructor);
+const instructorLinks = instructorNames.map(n => ({ name: n, slug: createInstructorSlug(n) }));
 ---
 
 <div style={{
@@ -62,7 +64,7 @@ const catSlug = (deal.category || "").toLowerCase().replace(/ & /g, "-and-").rep
           height: "100%",
           objectFit: "cover"
         }}
-        loading="lazy"
+        loading={loading}
         inferSize={false}
       />
     ) : (
@@ -164,14 +166,20 @@ const catSlug = (deal.category || "").toLowerCase().replace(/ & /g, "-and-").rep
         <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--muted)">
           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
         </svg>
-        <a href={`/instructor/${createInstructorSlug(deal.instructor)}`} style={{
-          color: "var(--text)",
-          fontSize: "0.85rem",
-          fontWeight: 600,
-          textDecoration: "none"
-        }}>
-          By {deal.instructor}
-        </a>
+        <span style="display:flex;flex-wrap:wrap;gap:0.25rem;align-items:center">
+          <span style="color:var(--muted);font-size:0.85rem">By </span>
+          {instructorLinks.map((inst, i) => (
+            <span>
+              {i > 0 && <span style="color:var(--muted);font-size:0.85rem">, </span>}
+              <a href={`/instructor/${inst.slug}`} style={{
+                color: "var(--text)",
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                textDecoration: "none"
+              }}>{inst.name}</a>
+            </span>
+          ))}
+        </span>
       </div>
     )}
 

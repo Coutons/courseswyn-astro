@@ -1,0 +1,151 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { readDeals } from '../lib/store';
+
+const allDeals = await readDeals();
+const totalCourses = allDeals.length;
+
+const faqs = [
+  {
+    q: "What is CoursesWyn?",
+    a: "CoursesWyn is an independent platform that tracks and verifies Udemy coupon codes and free courses. Every coupon is tested before being listed — if it doesn't work, it doesn't appear. We are not affiliated with Udemy."
+  },
+  {
+    q: "Are CoursesWyn coupon codes legal and safe?",
+    a: "Yes. Every coupon is manually verified and sourced directly from Udemy's affiliate program and instructor submissions. We never distribute cracked, pirated, or unauthorized content."
+  },
+  {
+    q: "How do I use a Udemy coupon code from CoursesWyn?",
+    a: "Click any deal card, follow the link to Udemy, and the coupon will be pre-applied at checkout. Verify the discounted price, then click 'Enroll Now'. No copy-paste needed."
+  },
+  {
+    q: "Do discounted Udemy courses include certificates?",
+    a: "Yes. When you enroll using our coupons, you receive the same certificate of completion as paying students — plus lifetime access to all course materials."
+  },
+  {
+    q: "Why did my coupon stop working?",
+    a: "Udemy coupons expire by time (usually 3-7 days) or by redemption limit (typically 1,000 students). Return to CoursesWyn daily for fresh deals. Our system removes expired codes automatically."
+  },
+  {
+    q: "Do I need a Udemy account to use CoursesWyn?",
+    a: "Yes. A free Udemy account is all you need to enroll in courses. CoursesWyn helps you find the coupon — enrollment happens on Udemy."
+  },
+  {
+    q: "How often are new deals added?",
+    a: "New coupons are added daily. We check for fresh deals every day and update our directory with the latest verified codes. Bookmark your favorite pages and check back regularly."
+  },
+  {
+    q: "How are coupons verified on CoursesWyn?",
+    a: "Every coupon is checked against Udemy's actual course data — current price, discount, and coupon status. If a coupon expires or reaches its redemption limit, it is removed in the next verification cycle."
+  },
+  {
+    q: "Is CoursesWyn affiliated with Udemy?",
+    a: "No. CoursesWyn is an independent platform that helps learners find verified discounts on Udemy courses. We have no official relationship with Udemy."
+  },
+  {
+    q: "Does CoursesWyn charge for using coupon codes?",
+    a: "No. CoursesWyn is completely free to use. No subscription, no signup, no hidden fees. We earn commissions through affiliate links when you enroll in a course, at no extra cost to you."
+  },
+  {
+    q: "How do I find courses in my language?",
+    a: "Browse by category or topic and use the language filters to narrow results. We list courses in English, Spanish, Portuguese, French, German, Japanese, Chinese, and more."
+  },
+  {
+    q: "How are courses organized on CoursesWyn?",
+    a: "Courses are organized by category (Development, IT & Software, Business, etc.) and topic (Python, Web Development, AI, etc.). Each topic page shows only courses with currently active coupons."
+  },
+  {
+    q: "Can I get a refund if a coupon doesn't work?",
+    a: "Coupons are provided as-is. If a code stops working after you've clicked through, check back later — we update daily with fresh deals. Udemy's 30-day refund policy applies to all paid enrollments."
+  },
+  {
+    q: "How do I contact CoursesWyn?",
+    a: "Visit our contact page to send us a message. We read every inquiry and respond as quickly as possible."
+  }
+];
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "@id": "https://courseswyn.com/faq#faqpage",
+  "name": "Frequently Asked Questions | CoursesWyn",
+  "mainEntity": faqs.map(f => ({
+    "@type": "Question",
+    "name": f.q,
+    "acceptedAnswer": { "@type": "Answer", "text": f.a }
+  }))
+};
+---
+
+<Layout
+  title="Frequently Asked Questions | CoursesWyn"
+  description="Find answers to common questions about Udemy coupon codes, how CoursesWyn works, verification, certificates, refunds, and more."
+  canonical="https://courseswyn.com/faq"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+
+  <main class="f-root">
+    <div class="f-wrap">
+
+      <div class="f-card">
+
+        <div class="f-hdr">
+          <h1 class="f-hdr-sr">Frequently Asked Questions</h1>
+          <div class="f-hdr-inner">
+            <div class="f-hdr-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+            </div>
+            <h3 class="f-hdr-title">Frequently Asked Questions</h3>
+          </div>
+          <p class="f-hdr-sub">Everything you need to know about CoursesWyn</p>
+        </div>
+
+        <div class="f-body">
+          <div class="f-accordion">
+            {faqs.map((faq, i) => (
+              <details class="f-item" name="faq">
+                <summary class="f-q">
+                  <span>{faq.q}</span>
+                  <svg class="f-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </summary>
+                <div class="f-a-wrap">
+                  <div class="f-a">{faq.a}</div>
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <style>
+    .f-root { padding: 2rem 0 3rem; }
+    .f-wrap { max-width: 56rem; margin: 0 auto; padding: 0 1rem; }
+
+    .f-card { border: 1px solid var(--border); border-radius: 12px; background: var(--bg); overflow: hidden; }
+
+    .f-hdr { text-align: center; padding: 2rem 1.5rem 1.5rem; border-bottom: 1px solid var(--border); }
+    .f-hdr-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+    .f-hdr-inner { display: flex; align-items: center; justify-content: center; gap: 0.75rem; }
+    .f-hdr-icon { display: flex; align-items: center; justify-content: center; width: 1.75rem; height: 1.75rem; color: var(--brand); flex-shrink: 0; }
+    .f-hdr-title { font-size: 1.5rem; font-weight: 600; color: var(--text); margin: 0; }
+    .f-hdr-sub { font-size: 0.95rem; color: var(--muted); margin: 0.5rem 0 0; }
+
+    .f-body { padding: 1.5rem; }
+    .f-accordion { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .f-item { border: 1px solid var(--border); border-radius: 8px; background: color-mix(in srgb, var(--card) 80%, transparent); overflow: hidden; transition: background 0.3s; }
+    .f-item[open] { background: var(--card); }
+
+    .f-q { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 1rem 1rem; cursor: pointer; list-style: none; font-size: 0.92rem; font-weight: 600; color: var(--text); user-select: none; }
+    .f-q::-webkit-details-marker { display: none; }
+    .f-chevron { flex-shrink: 0; width: 1.25rem; height: 1.25rem; color: var(--muted); transition: transform 0.2s; }
+    .f-item[open] .f-chevron { transform: rotate(180deg); }
+
+    .f-a-wrap { padding: 0 1rem 1rem; }
+    .f-a { font-size: 0.88rem; color: var(--muted); line-height: 1.65; }
+  </style>
+</Layout>

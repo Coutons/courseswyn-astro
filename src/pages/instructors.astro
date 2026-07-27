@@ -9,6 +9,7 @@ interface Instructor {
   courses: Deal[];
   totalStudents: number;
   avgRating: number;
+  avgDiscount: number;
   categories: string[];
   totalReviews: number;
   provider: string;
@@ -26,15 +27,9 @@ deals.forEach((deal: Deal) => {
     const clean = instructorName.replace(/[^\x20-\x7E]/g, '').trim() || instructorName.trim();
     if (!instructorMap.has(clean)) {
       instructorMap.set(clean, {
-        name: clean,
-        courses: [],
-        totalStudents: 0,
-        avgRating: 0,
-        categories: [],
-        totalReviews: 0,
-        provider: deal.provider || 'Udemy',
-        courseCount: 0,
-        totalCoupons: 0,
+        name: clean, courses: [], totalStudents: 0, avgRating: 0, avgDiscount: 0,
+        categories: [], totalReviews: 0, provider: deal.provider || 'Udemy',
+        courseCount: 0, totalCoupons: 0,
       });
     }
     const inst = instructorMap.get(clean)!;
@@ -42,9 +37,12 @@ deals.forEach((deal: Deal) => {
     inst.totalCoupons += 1;
     if (deal.students) inst.totalStudents += deal.students;
     if (deal.rating) {
-      const count = inst.courses.length;
-      inst.avgRating = (inst.avgRating * (count - 1) + deal.rating) / count;
+      inst.avgRating = (inst.avgRating * (inst.courses.length - 1) + deal.rating) / inst.courses.length;
       inst.totalReviews += deal.students || 0;
+    }
+    if (deal.originalPrice && deal.price < deal.originalPrice) {
+      const disc = Math.round(100 - (deal.price / deal.originalPrice) * 100);
+      inst.avgDiscount = (inst.avgDiscount * (inst.courses.length - 1) + disc) / inst.courses.length;
     }
     if (deal.category && !inst.categories.includes(deal.category)) {
       inst.categories.push(deal.category);
@@ -53,58 +51,33 @@ deals.forEach((deal: Deal) => {
 });
 
 const instructors = Array.from(instructorMap.values())
-  .map((inst) => ({
-    name: inst.name,
-    courses: inst.courses,
-    totalStudents: inst.totalStudents,
+  .map(inst => ({
+    ...inst,
     avgRating: Number(inst.avgRating.toFixed(1)),
-    categories: inst.categories,
-    totalReviews: inst.totalReviews,
-    provider: inst.provider,
     courseCount: inst.courses.length,
-    totalCoupons: inst.totalCoupons
   }))
-  .sort((a, b) => b.totalStudents - a.totalStudents);
+  .sort((a, b) => b.totalCoupons - a.totalCoupons);
 
-function getMaxDiscount(courses: Deal[]): number {
-  return Math.max(
-    0,
-    ...courses.map((c) => {
-      if (!c.originalPrice || !c.price || c.price >= c.originalPrice) return 0;
-      return Math.round(100 - (c.price / c.originalPrice) * 100);
-    })
-  );
-}
-
-function hasFree(courses: Deal[]): boolean {
-  return courses.some((c) => c.price === 0);
-}
+const topInstructors = instructors;
 
 function getInitials(name: string): string {
-  return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
-function getTopDeals(courses: Deal[]): Deal[] {
-  return courses
-    .filter((c) => c.originalPrice && c.price !== undefined && c.price < c.originalPrice)
-    .sort((a, b) => {
-      const da = Math.round(100 - ((a.price ?? 0) / (a.originalPrice ?? 1)) * 100);
-      const db = Math.round(100 - ((b.price ?? 0) / (b.originalPrice ?? 1)) * 100);
-      return db - da;
-    })
-    .slice(0, 2);
+function getAvatarColor(name: string): string {
+  const colors = ['#ff5a2c', '#d94420', '#ff8159', '#e67e22', '#f39c12', '#2ecc71', '#1abc9c', '#3498db', '#9b59b6', '#e74c3c'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
 }
 
 const totalCoupons = deals.length;
-const totalFree = instructors.reduce((s, i) => s + (hasFree(i.courses) ? 1 : 0), 0);
-
 const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', timeZone: 'Asia/Jakarta' });
 const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
-
 const siteUrl = 'https://courseswyn.com';
 const canonicalUrl = `${siteUrl}/instructors`;
-const title = `Top Udemy Instructors with Coupons & Promo Codes ${currentMonth} ${currentYear} | CoursesWyn`;
-const description = `Discover ${instructors.length} top Udemy instructors offering ${totalCoupons.toLocaleString()}+ verified coupon codes and promo codes. Updated daily in ${currentMonth} ${currentYear}.`;
+const title = `Top Instructors — Udemy Coupon Leaderboard ${currentMonth} ${currentYear} | CoursesWyn`;
+const description = `Top ${topInstructors.length} instructors ranked by verified coupon submissions. ${totalCoupons.toLocaleString()}+ active deals. Updated daily.`;
 ---
 
 <Layout title={title} description={description} canonical={canonicalUrl}>
@@ -113,147 +86,202 @@ const description = `Discover ${instructors.length} top Udemy instructors offeri
     "@graph": [
       { "@type": "BreadcrumbList", "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
-        { "@type": "ListItem", "position": 2, "name": "Instructors", "item": canonicalUrl }
+        { "@type": "ListItem", "position": 2, "name": "Top Instructors", "item": canonicalUrl }
       ]},
-      { "@type": "CollectionPage", "url": canonicalUrl, "name": title, "description": description, "mainEntity": { "@type": "ItemList", "numberOfItems": instructors.length }}
+      { "@type": "CollectionPage", "url": canonicalUrl, "name": title, "description": description,
+        "mainEntity": { "@type": "ItemList", "numberOfItems": topInstructors.length }}
     ]
   })} />
 
-  <style>
-    .inst-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.5rem;
-      transition: all 0.3s ease;
-    }
-    .inst-card:hover {
-      border-color: var(--brand);
-      transform: translateY(-2px);
-    }
-    .faq-grid { display: grid; gap: 0.75rem; }
-    .faq-item { background: transparent; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-    .faq-item summary { padding: 1.25rem; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1rem; color: var(--text); list-style: none; }
-    .faq-item summary::-webkit-details-marker { display: none; }
-    .faq-item[open] summary { border-bottom: 1px solid var(--border); }
-    .faq-item .fi { transition: transform 0.3s; flex-shrink: 0; }
-    .faq-item[open] .fi { transform: rotate(180deg); }
-    .faq-answer { padding: 0 1.25rem 1.25rem; color: var(--muted); line-height: 1.7; font-size: 0.9rem; }
-  </style>
+  <main class="cl-root">
+    <div class="cl-container">
 
-  <main>
-    <section class="hero">
-      <div class="container">
-        <div class="hero-content anim-up">
-          <h1>
-            <span style="display:block">Top</span>
-            <span class="hero-gradient-text" style="display:block;font-size:clamp(2.5rem,6vw,4.5rem)">Instructors</span>
-            <span style="display:block">with Verified Coupons</span>
-          </h1>
-          <p>Exclusive discount codes from <strong>{instructors.length} expert instructors</strong>. Browse <strong>{totalCoupons.toLocaleString()} active coupons</strong> with great discounts.</p>
-        </div>
-      </div>
-    </section>
-
-    <section style="padding-bottom:2rem">
-      <div class="container">
-        <div class="stat-grid">
-          <div class="stat-box">
-            <div class="stat-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-              {instructors.length}
+      <section class="cl-hero">
+        <div class="cl-hero-bg"></div>
+        <div class="cl-hero-inner">
+          <div class="cl-hero-head">
+            <div class="cl-hero-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 6 9 6 9z"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 18 9 18 9z"/><path d="M4 22h16"/><path d="M10 22V2h4v20"/><path d="M8 22h8"/></svg>
             </div>
-            <div class="stat-label">Instructors</div>
+            <h1 class="cl-hero-title">Top Instructors</h1>
           </div>
-          <div class="stat-box">
-            <div class="stat-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-              {totalCoupons.toLocaleString()}+
+          <p class="cl-hero-sub">Instructors ranked by verified coupon deals shared with the community</p>
+          <div class="cl-hero-stats">
+            <div class="cl-hero-stat">
+              <span class="cl-hero-stat-val">{totalCoupons.toLocaleString()}</span>
+              <span class="cl-hero-stat-lbl">Coupons Tracked</span>
             </div>
-            <div class="stat-label">Coupons</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              {totalFree} Free
+            <div class="cl-hero-stat">
+              <span class="cl-hero-stat-val">{topInstructors.length}</span>
+              <span class="cl-hero-stat-lbl">Instructors</span>
             </div>
-            <div class="stat-label">Offer Free Deals</div>
+            <div class="cl-hero-stat">
+              <span class="cl-hero-stat-val">{Math.round(deals.reduce((s,d) => s + (d.originalPrice ? Math.round(100 - (d.price/d.originalPrice)*100) : 0), 0) / deals.length)}%</span>
+              <span class="cl-hero-stat-lbl">Avg Discount</span>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="section">
-      <div class="container">
-        <span class="section-title">Expert Instructors</span>
-        <h2 class="section-heading" style="margin:0 0 2.5rem;">Top Instructors with Verified Coupons</h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.25rem;">
-          {instructors.map((instructor) => {
-            const maxDisc = getMaxDiscount(instructor.courses);
-            const free = hasFree(instructor.courses);
-            const topDeals = getTopDeals(instructor.courses);
-            const instructorSlug = createInstructorSlug(instructor.name);
+      <section class="cl-table-section">
+        <div class="cl-table-wrap">
+          <table class="cl-table">
+            <thead>
+              <tr>
+                <th class="cl-th-rank">#</th>
+                <th class="cl-th-name">Instructor</th>
+                <th class="cl-th-num">Coupons</th>
+                <th class="cl-th-num">Avg Disc</th>
+                <th class="cl-th-num">Students</th>
+                <th class="cl-th-num">Rating</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topInstructors.map((instructor, index) => {
+                const slug = createInstructorSlug(instructor.name);
+                const isTop3 = index < 3;
+                const medal = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : null;
 
-            return (
-              <article class="inst-card">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
-                  <div style="width:48px;height:48px;border-radius:10px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1.25rem;flex-shrink:0;">{getInitials(instructor.name)}</div>
-                  {free && <span style="background:var(--brand-soft);color:var(--brand);padding:2px 10px;border-radius:999px;font-size:0.65rem;font-weight:800;border:1px solid var(--brand-soft);">FREE</span>}
-                </div>
-                <h3 style="font-size:1.1rem;font-weight:800;margin:0 0 2px;color:var(--text);">{instructor.name}</h3>
-                <p style="font-size:0.8rem;color:var(--muted);font-weight:600;margin:0 0 1rem;">{instructor.provider} &middot; {instructor.totalCoupons} Coupon{instructor.totalCoupons === 1 ? '' : 's'}</p>
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem;">
-                  {[
-                    { l: "Students", v: instructor.totalStudents > 1000 ? (instructor.totalStudents/1000).toFixed(1) + 'k' : instructor.totalStudents },
-                    { l: "Rating", v: instructor.avgRating + "★" },
-                    { l: "Max Off", v: maxDisc + "%" }
-                  ].map(s => (
-                    <div style="background:var(--bg-secondary);padding:10px 8px;border-radius:10px;text-align:center;">
-                      <div style="font-size:0.9rem;font-weight:800;color:var(--text);">{s.v}</div>
-                      <div style="font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;">{s.l}</div>
-                    </div>
-                  ))}
-                </div>
-                {topDeals.length > 0 && (
-                  <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:1rem;">
-                    {topDeals.map(deal => (
-                      <a href={`/coupon/${deal.slug || deal.id}`} style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-size:0.82rem;font-weight:600;">
-                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{deal.title}</span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                      </a>
-                    ))}
-                  </div>
-                )}
-                <a href={`/instructor/${instructorSlug}`} class="btn btn-primary" style="width:100%;text-align:center;display:block;padding:12px;border-radius:10px;font-size:0.85rem;">
-                  View All {instructor.totalCoupons} Coupon{instructor.totalCoupons === 1 ? '' : 's'}
-                </a>
-              </article>
-            );
-          })}
+                return (
+                  <tr class:list={['cl-row', isTop3 && 'cl-row-top']}>
+                    <td class="cl-rank">
+                      {medal === 'gold' && <svg class="cl-medal" width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>}
+                      {medal === 'silver' && <svg class="cl-medal" width="18" height="18" viewBox="0 0 24 24" fill="#94a3b8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>}
+                      {medal === 'bronze' && <svg class="cl-medal" width="18" height="18" viewBox="0 0 24 24" fill="#cd7f32"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>}
+                      {!medal && <span class="cl-rank-num">{index + 1}</span>}
+                    </td>
+                    <td class="cl-name-cell">
+                      <div class="cl-avatar" style={`background:${getAvatarColor(instructor.name)}`}>
+                        {getInitials(instructor.name)}
+                      </div>
+                      <div class="cl-name-info">
+                        <a href={`/instructor/${slug}`} class="cl-name-link">{instructor.name}</a>
+                        <span class="cl-name-meta">{instructor.categories.slice(0, 2).join(', ') || instructor.provider}</span>
+                      </div>
+                    </td>
+                    <td class="cl-num">{instructor.totalCoupons}</td>
+                    <td class="cl-num">{Math.round(instructor.avgDiscount)}%</td>
+                    <td class="cl-num">{instructor.totalStudents > 1000 ? (instructor.totalStudents / 1000).toFixed(1) + 'k' : instructor.totalStudents}</td>
+                    <td class="cl-num">
+                      <span class="cl-rating">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--brand)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        {instructor.avgRating}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="section" style="padding-top:0;">
-      <div class="container" style="max-width:800px;">
-        <span class="section-title">FAQ</span>
-        <h2 class="section-heading" style="margin:0 0 2rem;">Common Questions</h2>
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          {[
-            { q: 'Who are the top Udemy instructors with coupons?', a: `CoursesWyn features ${instructors.length} verified Udemy instructors who share coupon codes and discounts.` },
-            { q: 'How do I get a discounted course from a Udemy instructor?', a: 'Click on any instructor card to see their latest verified deals. All coupons are checked daily.' },
-            { q: 'Are the instructor coupons verified?', a: 'Yes. Every coupon is manually verified before listing. Expired coupons are removed within hours.' }
-          ].map(faq => (
-            <details class="faq-item">
-              <summary>
-                {faq.q}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="3" class="fi"><polyline points="6 9 12 15 18 9"/></svg>
-              </summary>
-              <div class="faq-answer">{faq.a}</div>
-            </details>
-          ))}
+      <section class="cl-seo">
+        <h2 class="cl-seo-title">Top Udemy Instructors with Verified Coupon Codes</h2>
+        <p class="cl-seo-text">
+          Browse our directory of <strong>{topInstructors.length} instructors</strong> who offer verified Udemy coupon codes and discounts. Each instructor is ranked by their total number of active coupon deals — from industry veterans like <strong>{topInstructors[0]?.name}</strong> to rising experts across development, business, IT, design, and more. Every coupon on this page is verified before listing, so you get real discounts on real courses.
+        </p>
+        <p class="cl-seo-text">
+          Whether you are looking for deep discounts on premium courses or want to follow a specific instructor's work, this leaderboard helps you discover the most active educators in the Udemy ecosystem. The average discount across all listed instructors is <strong>{Math.round(deals.reduce((s,d) => s + (d.originalPrice ? Math.round(100 - (d.price/d.originalPrice)*100) : 0), 0) / deals.length)}%</strong>, with top instructors offering dozens of coupon deals each.
+        </p>
+        <p class="cl-seo-text">
+          All data is updated daily. Coupons that expire or reach their redemption limit are removed within hours, ensuring you only see deals that actually work. Click any instructor name to view all their available coupon codes and start learning today.
+        </p>
+      </section>
+
+      <section class="cl-cta">
+        <div class="cl-cta-box">
+          <h2 class="cl-cta-title">Share Your Coupons</h2>
+          <p class="cl-cta-desc">Help the learning community by submitting verified coupon deals.</p>
+          <div class="cl-cta-actions">
+            <a href="/contact" class="cl-cta-btn cl-cta-primary">Contact Us</a>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+    </div>
   </main>
+
+  <script>
+    // placeholder for future filtering
+  </script>
+
+  <style>
+    .cl-root { padding: 0 0 4rem; }
+    .cl-container { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem; }
+
+    .cl-hero { position: relative; text-align: center; padding: 3rem 0 2rem; overflow: hidden; }
+    .cl-hero-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(255,90,44,0.08) 0%, transparent 60%); pointer-events: none; }
+    .cl-hero-inner { position: relative; }
+    .cl-hero-head { display: flex; align-items: center; justify-content: center; gap: 0.75rem; }
+    .cl-hero-icon { width: 48px; height: 48px; flex-shrink: 0; background: linear-gradient(135deg, rgba(255,90,44,0.15), rgba(255,90,44,0.05)); border-radius: 14px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,90,44,0.2); color: var(--brand); }
+    .cl-hero-title { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; color: var(--text); margin: 0; letter-spacing: -0.02em; }
+    .cl-hero-sub { font-size: 0.92rem; color: var(--muted); margin: 0.5rem 0 0; }
+    .cl-hero-stats { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; }
+    .cl-hero-stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.5rem; text-align: center; min-width: 120px; }
+    .cl-hero-stat-val { display: block; font-size: 1.3rem; font-weight: 800; color: var(--brand); }
+    .cl-hero-stat-lbl { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 0.2rem; }
+
+    .cl-table-section { margin-top: 1rem; }
+    .cl-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+    .cl-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .cl-table thead { border-bottom: 1px solid var(--border); }
+    .cl-table th { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 0.75rem 0.75rem; white-space: nowrap; text-align: left; }
+    .cl-th-rank { width: 2.5rem; text-align: center !important; }
+    .cl-th-name { text-align: left; }
+    .cl-th-num { text-align: right; }
+    .cl-table td { padding: 0.7rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .cl-row:last-child td { border-bottom: none; }
+    .cl-row:hover { background: rgba(255,90,44,0.03); }
+    .cl-row-top td { border-bottom-color: rgba(255,90,44,0.15); }
+
+    .cl-rank { text-align: center; width: 2.5rem; }
+    .cl-rank-num { font-size: 0.82rem; font-weight: 700; color: var(--muted); }
+    .cl-medal { display: inline-block; vertical-align: middle; }
+
+    .cl-name-cell { display: flex; align-items: center; gap: 0.65rem; }
+    .cl-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; color: #fff; flex-shrink: 0; }
+    .cl-name-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+    .cl-name-link { color: var(--text); text-decoration: none; font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cl-name-link:hover { color: var(--brand); }
+    .cl-name-meta { font-size: 0.68rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .cl-num { text-align: right; font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .cl-num-bold { font-weight: 700; color: var(--text); }
+
+    .cl-rating { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.82rem; font-weight: 600; color: var(--text); }
+    .cl-rating svg { width: 12px; height: 12px; }
+
+    .cl-seo { margin-top: 3rem; padding: 2rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
+    .cl-seo-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0 0 1rem; }
+    .cl-seo-text { font-size: 0.88rem; line-height: 1.7; color: var(--muted); margin: 0 0 0.75rem; }
+    .cl-seo-text:last-child { margin-bottom: 0; }
+    .cl-seo-text strong { color: var(--text); font-weight: 600; }
+
+    .cl-cta { margin-top: 3rem; }
+    .cl-cta-box { background: var(--card); border: 2px solid var(--brand-soft); border-radius: 16px; padding: 2.5rem 2rem; text-align: center; position: relative; overflow: hidden; box-shadow: 0 0 40px -8px rgba(255,90,44,0.1); }
+    .cl-cta-box::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,90,44,0.05), transparent 50%); pointer-events: none; }
+    .cl-cta-title { font-size: clamp(1.3rem, 2.5vw, 1.6rem); font-weight: 800; color: var(--text); margin: 0; position: relative; }
+    .cl-cta-desc { font-size: 0.92rem; color: var(--muted); margin: 0.5rem 0 1.5rem; position: relative; }
+    .cl-cta-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; position: relative; }
+    .cl-cta-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.5rem; border-radius: 8px; font-size: 0.88rem; font-weight: 700; text-decoration: none; transition: all 0.2s; }
+    .cl-cta-primary { background: var(--brand); color: #fff; }
+    .cl-cta-primary:hover { background: var(--brand-hover); }
+    .cl-cta-secondary { border: 1px solid var(--border); color: var(--text); }
+    .cl-cta-secondary:hover { border-color: var(--brand); color: var(--brand); }
+
+    @media (max-width: 640px) {
+      .cl-hero-stats { flex-direction: column; align-items: center; }
+      .cl-hero-stat { min-width: 200px; }
+      .cl-table { font-size: 0.78rem; }
+      .cl-table th, .cl-table td { padding: 0.5rem 0.5rem; }
+      .cl-name-link { font-size: 0.82rem; }
+      .cl-avatar { width: 28px; height: 28px; font-size: 0.6rem; }
+    }
+    @media (max-width: 480px) {
+      .cl-th-rank { width: 1.8rem; }
+      .cl-table th:nth-child(4), .cl-table td:nth-child(4),
+      .cl-table th:nth-child(5), .cl-table td:nth-child(5) { display: none; }
+    }
+  </style>
 </Layout>

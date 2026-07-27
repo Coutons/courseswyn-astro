@@ -1,1086 +1,162 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { Image } from 'astro:assets';
+import { readDeals } from '../lib/store';
+
+const allDeals = await readDeals();
+const totalCourses = allDeals.length;
+const freeCount = allDeals.filter(d => d.price === 0 || (d.originalPrice && d.price === 0)).length;
+const totalCategories = [...new Set(allDeals.map(d => d.category?.trim()).filter(Boolean))].length;
+const avgDiscount = Math.round(allDeals.reduce((s, d) => s + (d.discount ?? (d.originalPrice ? Math.round((1 - d.price / d.originalPrice) * 100) : 0)), 0) / allDeals.length);
+const dates = allDeals.map(d => d.updatedAt ?? d.createdAt).filter(Boolean) as string[];
+const latestDate = dates.length ? dates.sort().reverse()[0] : null;
+const latestStr = latestDate ? new Date(latestDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Jakarta' }) : '';
+const pubDate = '2024-01-01';
+const modDate = latestDate || pubDate;
+
+const canonicalUrl = 'https://courseswyn.com/about';
+const pageTitle = 'About CoursesWyn: Tracking Udemy Coupons Since 2024 | CoursesWyn';
+const pageDesc = `CoursesWyn has tracked ${totalCourses.toLocaleString()}+ verified Udemy coupons across ${totalCategories} categories since 2024. One developer, zero gimmicks. Full story and live numbers.`;
 ---
 
-<Layout
-    title="About CoursesWyn: Verified Udemy Coupon Codes"
-    description="Discover CoursesWyn: Your trusted source for verified Udemy coupon codes and discounted online courses. Join 150K+ learners saving on premium education."
-    image="/assets/images/og-default.svg"
-    canonical="https://courseswyn.com/about"
->
-    <!-- About Page Enhanced Structured Data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "AboutPage",
-          "@id": "https://courseswyn.com/about",
-          "url": "https://courseswyn.com/about",
-          "name": "About CoursesWyn - Udemy Coupon Code Platform",
-          "description": "Learn about CoursesWyn's mission to make quality education accessible through verified Udemy coupon codes. Helping 150K+ learners save on premium courses.",
-          "isPartOf": {
-            "@id": "https://courseswyn.com"
-          },
-          "primaryImageOfPage": {
-            "@type": "ImageObject",
-            "url": "https://courseswyn.com/logo.svg"
-          },
-          "datePublished": "2023-01-01",
-          "dateModified": "2026-05-24",
-          "inLanguage": "en-US",
-          "breadcrumb": {
-            "@type": "BreadcrumbList",
-            "itemListElement": [
-              {
-                "@type": "ListItem",
-                "position": 1,
-                "name": "Home",
-                "item": "https://courseswyn.com"
-              },
-              {
-                "@type": "ListItem",
-                "position": 2,
-                "name": "About",
-                "item": "https://courseswyn.com/about"
-              }
-            ]
-          },
-          "mainEntity": {
-            "@type": "Organization",
-            "name": "CoursesWyn",
-            "description": "Online learning platform providing verified Udemy coupon codes and discounts",
-            "foundingDate": "2023",
-            "mission": "To make quality education accessible and affordable for everyone through verified coupon codes",
-            "author": {
-              "@type": "Person",
-              "name": "CoursesWyn Team",
-              "jobTitle": "Founder & Education Advocate",
-              "description": "Passionate about democratizing education and removing financial barriers to quality learning"
-            }
-          }
-        },
-        {
-          "@type": "Organization",
-          "@id": "https://courseswyn.com/#organization",
-          "name": "CoursesWyn",
-          "url": "https://courseswyn.com",
-          "logo": "https://courseswyn.com/logo.svg",
-          "description": "Udemy coupon code platform helping learners save on premium courses",
-          "foundingDate": "2023",
-          "numberOfEmployees": "1-10",
-          "areaServed": "Worldwide",
-          "contactPoint": {
-            "@type": "ContactPoint",
-            "contactType": "Customer Support",
-            "url": "https://courseswyn.com/contact"
-          },
-          "sameAs": [
-            "https://x.com/CoursesWyn",
-            "https://www.facebook.com/CoursesWyn"
-          ],
-          "knowsAbout": ["Udemy Coupons", "Online Education", "Course Discounts", "Educational Technology"],
-          "founder": {
-            "@type": "Person",
-            "name": "CoursesWyn Team",
-            "description": "Education Advocate & Platform Creator"
-          }
-        },
-        {
-          "@type": "WebSite",
-          "@id": "https://courseswyn.com/#website",
-          "url": "https://courseswyn.com",
-          "name": "CoursesWyn",
-          "description": "Udemy coupon codes and discounted courses for learners worldwide",
-          "publisher": {
-            "@id": "https://courseswyn.com/#organization"
-          },
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": {
-              "@type": "EntryPoint",
-              "urlTemplate": "https://courseswyn.com/search?q={search_term_string}"
-            },
-            "query-input": "required name=search_term_string"
-          }
-        },
-        {
-          "@type": "Article",
-          "@id": "https://courseswyn.com/about#article",
-          "headline": "About CoursesWyn - How We're Democratizing Online Education",
-          "alternativeHeadline": "Udemy Coupon Codes & Discounted Courses for 150K+ Learners",
-          "description": "Learn how CoursesWyn helps 150K+ students save on premium Udemy courses with verified coupon codes. Discover our mission, team, and why educators choose us.",
-          "image": "https://courseswyn.com/logo.svg",
-          "datePublished": "2023-01-01",
-          "dateModified": "2026-05-24",
-          "author": {
-            "@type": "Person",
-            "name": "Josh Smith",
-            "jobTitle": "Lead Course Reviewer",
-            "url": "https://courseswyn.com/about",
-            "sameAs": ["https://x.com/CoursesWyn", "https://www.facebook.com/CoursesWyn"]
-          },
-          "publisher": {
-            "@id": "https://courseswyn.com/#organization"
-          },
-          "articleBody": "CoursesWyn is a platform dedicated to making quality education accessible to everyone. Founded in 2023, we provide verified Udemy coupon codes and course deals from top learning platforms worldwide. Our mission is to democratize education and remove financial barriers to premium learning. With 150K+ happy learners and thousands of discounted courses, we've established ourselves as a trusted coupon platform. Our team, led by reviewer Josh Smith, meticulously vets every course to ensure only the best educational content reaches our community.",
-          "wordCount": 2000,
-          "inLanguage": "en-US",
-          "isAccessibleForFree": true,
-          "isPartOf": {
-            "@id": "https://courseswyn.com/#website"
-          },
-          "mainEntity": {
-            "@id": "https://courseswyn.com/#organization"
-          }
-        },
-        {
-          "@type": "FAQPage",
-          "mainEntity": [
-            {
-              "@type": "Question",
-              "name": "What makes CoursesWyn different from other coupon sites?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "CoursesWyn offers verified coupons that are tested before sharing. We focus on premium quality courses from reputable instructors with daily updates. Our Lead Reviewer Josh Smith personally curates every course to ensure 4.5★+ quality standards."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Is CoursesWyn really free?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes, CoursesWyn is completely free to use. Our platform and coupon listings are free — no subscription or signup required."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "How often are new deals added?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "We add fresh coupons and deals every single day, 24/7. Our team continuously searches and verifies new opportunities for our community. On average we add 50+ new deals daily."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Do courses include certificates?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes, most courses listed on CoursesWyn include completion certificates when you enroll through our verified coupons. You get lifetime access to the course material and all premium features."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "How do you choose which courses to feature?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Every course featured on CoursesWyn goes through rigorous review. We only feature courses with 4.5★+ ratings, reputable instructors, comprehensive content, and proven student satisfaction. Quality over quantity is our priority."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "How are coupons verified on CoursesWyn?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Every coupon code is personally tested before publishing to ensure it works. We check expiration dates, discount amounts, and course availability. We remove expired coupons immediately and update daily. This 100% verification guarantee sets us apart."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Is CoursesWyn affiliated with Udemy?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "While we're not officially affiliated with Udemy, we are an independent platform that helps learners find verified discounts and coupons on Udemy and other platforms. We maintain ethical standards and always provide authentic, working coupons."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "How can I trust CoursesWyn coupons?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Every coupon on CoursesWyn is 100% verified and tested by our team. We check each code before publishing and remove expired ones immediately. With 150K+ satisfied learners, we've built a trusted reputation in the community."
-              }
-            }
-          ]
-        }
-      ]
-    }
-    </script>
+<Layout title={pageTitle} description={pageDesc} canonical={canonicalUrl}>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Article",
+        "@id": "https://courseswyn.com/about#article",
+        "headline": "About CoursesWyn: Tracking Udemy Coupons Since 2024",
+        "description": "CoursesWyn has tracked thousands of verified Udemy coupons since 2024. One developer, zero gimmicks. Full story and live numbers.",
+        "datePublished": "2024-01-01",
+        "dateModified": "2026-07-27",
+        "author": { "@type": "Organization", "@id": "https://courseswyn.com#organization" },
+        "publisher": { "@type": "Organization", "@id": "https://courseswyn.com#organization" }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://courseswyn.com#organization",
+        "name": "CoursesWyn",
+        "url": "https://courseswyn.com",
+        "foundingDate": "2024",
+        "sameAs": ["https://x.com/CoursesWyn", "https://www.facebook.com/CoursesWyn"],
+        "contactPoint": { "@type": "ContactPoint", "contactType": "customer support", "url": "https://courseswyn.com/contact" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" },
+          { "@type": "ListItem", "position": 2, "name": "About", "item": "https://courseswyn.com/about" }
+        ]
+      }
+    ]
+  }
+  </script>
 
-    <main>
-      <!-- Hero Section -->
-      <section class="hero-section">
-        <div class="container narrow">
-          <div class="hero-badge">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            Our Story & Mission
-          </div>
-          <h1 class="hero-title">
-            <span class="gradient-brand">About CoursesWyn</span>
-            <br/>
-            <span class="gradient-muted">Making Education Accessible for Everyone</span>
-          </h1>
-          <p class="hero-desc">
-            Founded in 2023, CoursesWyn is on a mission to make quality education accessible to everyone. "Democratizing education" means removing financial barriers so anyone, anywhere can access premium online courses through verified Udemy coupon codes.
-          </p>
-        </div>
-      </section>
+  <main class="ab-root">
+    <div class="ab-container">
 
-      <!-- Impact Statistics -->
-      <section class="section">
-        <div class="container">
-          <div class="section-header">
-            <h2>Our Impact in Numbers</h2>
-            <p>Making education accessible worldwide through verified coupon codes</p>
-          </div>
-          <div class="stat-grid">
-            <div class="stat-card">
-              <div class="stat-number brand">150K+</div>
-              <div class="stat-label">Happy Learners</div>
-              <div class="stat-desc">Students empowered with free education</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number accent">50K+</div>
-              <div class="stat-label">Courses Listed</div>
-              <div class="stat-desc">Premium courses made accessible</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number teal">24/7</div>
-              <div class="stat-label">Daily Updates</div>
-              <div class="stat-desc">Fresh coupons added every day</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number red">4.8★</div>
-              <div class="stat-label">Average Rating</div>
-              <div class="stat-desc">Quality courses with high ratings</div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <nav aria-label="Breadcrumb" class="ab-breadcrumb">
+        <a href="/">Home</a>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        <span aria-current="page">About</span>
+      </nav>
 
-      <!-- Mission & Values -->
-      <section class="section">
-        <div class="container">
-          <div class="section-header">
-            <h2>Our Mission & Values</h2>
-            <p>What drives us to make education accessible for everyone</p>
-          </div>
-          <div class="mission-grid">
-            <div class="card card-accent-brand">
-              <div class="card-icon brand-bg">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-              </div>
-              <h3>Democratize Education</h3>
-              <p>We believe everyone deserves access to quality education regardless of their financial situation. Our mission is to break down barriers to learning.</p>
-            </div>
-            <div class="card card-accent-accent">
-              <div class="card-icon accent-bg">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                </svg>
-              </div>
-              <h3>Quality First</h3>
-              <p>We carefully curate only high-quality courses from reputable instructors and platforms. Every coupon is verified to ensure real value.</p>
-            </div>
-            <div class="card card-accent-teal">
-              <div class="card-icon teal-bg">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-              </div>
-              <h3>Community Focused</h3>
-              <p>We're building a global community of learners. Your success stories inspire others to pursue their educational goals without financial barriers.</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <article>
 
-      <!-- Why Choose Us - Features Grid -->
-      <section class="section">
-        <div class="container">
-          <div class="section-header">
-            <h2>Why Learners Choose CoursesWyn</h2>
-            <p>What sets us apart in the world of online education deals</p>
-          </div>
-          <div class="features-grid">
-            <div class="card-sm">
-              <div class="card-sm-icon brand-bg">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                </svg>
-              </div>
-              <h3>100% Verified</h3>
-              <p>Every coupon tested & verified to work</p>
-            </div>
-            <div class="card-sm">
-              <div class="card-sm-icon accent-bg">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-                  <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
-                </svg>
-              </div>
-              <h3>Daily Updates</h3>
-              <p>Fresh deals added every single day</p>
-            </div>
-            <div class="card-sm">
-              <div class="card-sm-icon teal-bg">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-              </div>
-              <h3>Premium Quality</h3>
-              <p>4.5★+ courses from expert instructors</p>
-            </div>
-            <div class="card-sm">
-              <div class="card-sm-icon red-bg">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-              </div>
-              <h3>Lifetime Access</h3>
-              <p>Courses with lifetime access</p>
-            </div>
-            <div class="card-sm">
-              <div class="card-sm-icon yellow-bg">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-              </div>
-              <h3>Community 150K+</h3>
-              <p>Thriving global learner community</p>
-            </div>
-            <div class="card-sm">
-              <div class="card-sm-icon purple-bg">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-                  <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
-                </svg>
-              </div>
-              <h3>Built w/ Astro</h3>
-              <p>Lightning-fast performance & UX</p>
-            </div>
-          </div>
-        </div>
-      </section>
+        <h1>About CoursesWyn</h1>
+        <p class="ab-subtitle">Tracking Udemy coupons since 2024 &middot; One developer &middot; Verified daily</p>
+        <p class="ab-date">Published January 2024 &middot; Updated {latestStr || 'continuously'}</p>
 
-      <!-- Author Section -->
-      <section class="section">
-        <div class="container">
-          <div class="section-header">
-            <h2>
-              <span class="accent-bar"></span>
-              About the Author
-            </h2>
-            <p>Expert educator ensuring only the best courses make it to CoursesWyn</p>
-          </div>
-          <div class="author-card">
-            <div class="author-avatar">
-              <Image src="/images/author.jpg" alt="Andrew Derek - Udemy Coupon Expert" width={44} height={44} loading="lazy" inferSize={false} />
-            </div>
-            <div class="author-info">
-              <h3>Andrew Derek</h3>
-              <p>Udemy coupon specialist with 8+ years of experience finding and verifying the best deals. I've helped thousands of students save thousands of dollars on premium courses through carefully curated coupon codes and exclusive discount offers. My mission is making high-quality education accessible and affordable for everyone.</p>
-              <div class="author-meta">
-                <span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff5a2c"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  4.8/5 Average Rating
-                </span>
-                <span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff5a2c"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                  Trusted by 2M+ Students
-                </span>
-              </div>
-            </div>
-            <div class="author-social">
-              <a href="https://www.facebook.com/CoursesWyn" target="_blank" rel="noopener noreferrer" class="social-btn facebook" aria-label="Facebook">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-              </a>
-              <a href="https://x.com/CoursesWyn" target="_blank" rel="noopener noreferrer" class="social-btn x" aria-label="X (Twitter)">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              </a>
-            </div>
-          </div>
-          <div class="author-cta">
-            <p><strong>Follow Us for Daily Coupon Updates</strong></p>
-            <p>Get notified when we publish new coupon deals and exclusive discount codes.</p>
-            <a href="/blog" class="btn btn-primary btn-lg">Visit Our Blog →</a>
-          </div>
-        </div>
-      </section>
+        <p class="ab-lead">CoursesWyn tracks Udemy coupons and free courses, and verifies each before showing it to you. When a page says a coupon was checked hours ago, that is a real timestamp from a real verification, not a marketing claim. This page tells you who is behind it, how it started, and how it works.</p>
 
-      <!-- Comparison Section -->
-      <section class="section">
-        <div class="container">
-          <div class="section-header">
-            <h2>Why CoursesWyn Stands Out</h2>
-            <p>A detailed comparison with other popular coupon platforms</p>
+        <dl class="ab-stats">
+          <div class="ab-stat">
+            <dt>Udemy courses catalogued</dt>
+            <dd>{totalCourses.toLocaleString()}</dd>
           </div>
-          <div class="table-wrap">
-            <table class="compare-table">
-              <thead>
-                <tr>
-                  <th>Feature</th>
-                  <th class="highlight">CoursesWyn</th>
-                  <th>Real.Discount</th>
-                  <th>DiscUdemy</th>
-                  <th>Other Sites</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Verified Coupons</td>
-                  <td class="highlight">✓ 100%</td>
-                  <td>~80%</td>
-                  <td>~70%</td>
-                  <td>~60%</td>
-                </tr>
-                <tr>
-                  <td>Daily Updates</td>
-                  <td class="highlight">✓ Yes</td>
-                  <td>~3x/week</td>
-                  <td>~2x/week</td>
-                  <td>Irregular</td>
-                </tr>
-                <tr>
-                  <td>Lifetime Access</td>
-                  <td class="highlight">✓ Yes</td>
-                  <td>Limited</td>
-                  <td>Limited</td>
-                  <td>Limited</td>
-                </tr>
-                <tr>
-                  <td>Premium Quality Filter</td>
-                  <td class="highlight">✓ 4.5★+</td>
-                  <td>~3.5★+</td>
-                  <td>No filter</td>
-                  <td>No filter</td>
-                </tr>
-                <tr>
-                  <td>User Community</td>
-                  <td class="highlight">✓ 150K+</td>
-                  <td>~50K</td>
-                  <td>~30K</td>
-                  <td>Varied</td>
-                </tr>
-                <tr>
-                  <td>Fast Performance</td>
-                  <td class="highlight">✓ Built with Astro</td>
-                  <td>Standard</td>
-                  <td>Slow</td>
-                  <td>Varies</td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="ab-stat">
+            <dt>Categories tracked</dt>
+            <dd>{totalCategories}</dd>
           </div>
-          <p class="table-note">Comparison based on public information and user reviews (as of May 2026)</p>
-        </div>
-      </section>
+          <div class="ab-stat">
+            <dt>Average discount</dt>
+            <dd>{avgDiscount}%</dd>
+          </div>
+          <div class="ab-stat">
+            <dt>Last verified</dt>
+            <dd>{latestStr || 'Today'}</dd>
+          </div>
+        </dl>
 
-      <!-- Built with Astro -->
-      <section class="section">
-        <div class="container narrow">
-          <div class="section-header">
-            <h2>Built with Modern Technology</h2>
-            <p>CoursesWyn is built with <strong>Astro</strong>, a modern web framework designed for speed, performance, and exceptional user experience. Astro enables us to deliver lightning-fast page loads and seamless interactions.</p>
-          </div>
-          <div class="cta-actions">
-            <a href="https://astro.build/showcase" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
-              View Astro Showcase
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
-              </svg>
-            </a>
-            <a href="https://astro.build/blog/" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-lg">
-              Latest Astro Updates
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
-              </svg>
-            </a>
-          </div>
-        </div>
-      </section>
+        <h2>It started with a simple observation</h2>
 
-      <!-- Articles Section -->
-      <section class="section">
-        <div class="container">
-          <div class="section-header">
-            <h2>Udemy Courses & Learning Resources</h2>
-            <p>Discover guides, tutorials, and resources to maximize your online learning with coupon codes</p>
-          </div>
-          <div class="articles-grid">
-            <article class="article-card" itemscope itemtype="https://schema.org/Article">
-              <meta itemprop="datePublished" content="2023-01-01" />
-              <meta itemprop="author" content="CoursesWyn Team" />
-              <div class="article-icon brand-bg">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
-                </svg>
-              </div>
-              <h3 itemprop="headline">How to Get Udemy Courses with Coupon Codes</h3>
-              <p itemprop="description">Step-by-step guide to finding, verifying, and redeeming Udemy coupon codes. Learn how to access premium online courses with verified discounts and maximize your learning.</p>
-              <a href="/how-to-redeem-coupon" class="card-link">Read Guide →</a>
-            </article>
-            <article class="article-card" itemscope itemtype="https://schema.org/Article">
-              <meta itemprop="datePublished" content="2023-02-01" />
-              <meta itemprop="author" content="CoursesWyn Team" />
-              <div class="article-icon accent-bg">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
-                  <path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
-                </svg>
-              </div>
-              <h3 itemprop="headline">Best Programming Courses for Beginners 2026</h3>
-              <p itemprop="description">Curated selection of top-rated programming courses including Python, JavaScript, Web Development, and Data Science. Start your coding journey with verified coupon codes from expert instructors.</p>
-              <a href="/categories" class="card-link">Explore Courses →</a>
-            </article>
-            <article class="article-card" itemscope itemtype="https://schema.org/Article">
-              <meta itemprop="datePublished" content="2023-03-01" />
-              <meta itemprop="author" content="CoursesWyn Team" />
-              <div class="article-icon teal-bg">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-              </div>
-              <h3 itemprop="headline">Career Success Stories: From Online Courses to High-Paying Jobs</h3>
-<p itemprop="description">Real success stories from learners who transformed their careers using Udemy courses. Discover how students landed jobs at Google, OpenAI, and top companies after learning with CoursesWyn coupons.</p>
-            </article>
-          </div>
-        </div>
-      </section>
+        <p>Udemy courses go on sale constantly, but finding the actual discount codes among expired or fake ones was a mess. Most coupon sites list codes they haven't checked. Some list codes that expired years ago. Many show prices that don't exist at checkout. CoursesWyn started because there was no reliable directory — one where you could trust that a listed coupon actually worked at the moment you saw it.</p>
 
-      <!-- FAQ Section -->
-      <section class="section">
-        <div class="container">
-          <div class="section-header">
-            <h2>Frequently Asked Questions</h2>
-            <p>Everything you need to know about CoursesWyn</p>
-          </div>
-          <div class="faq-list">
-            <details class="faq-item">
-              <summary>What makes CoursesWyn different from other coupon sites?</summary>
-              <p>CoursesWyn stands out through verified coupons, daily updates, premium quality filtering (4.5★+ courses only), and a community of 150K+ learners. Every course and coupon is personally reviewed by our lead reviewer Josh Smith to ensure real value.</p>
-            </details>
-            <details class="faq-item">
-              <summary>Is CoursesWyn really free to use?</summary>
-              <p>Yes, CoursesWyn is completely free to use! Our platform and coupon listings are free — no subscription or signup required.</p>
-            </details>
-            <details class="faq-item">
-              <summary>How often are new deals added?</summary>
-              <p>We add fresh coupons and deals every single day, 24/7. Our team continuously searches, verifies, and curates the best learning opportunities for our community. On average, we update 50K+ courses with new deals throughout the year.</p>
-            </details>
-            <details class="faq-item">
-              <summary>Do courses include certificates?</summary>
-              <p>Yes! Most courses listed on CoursesWyn include completion certificates when you enroll through our verified coupons. You get lifetime access to the course material, completion certificate, and all premium features that paid students receive.</p>
-            </details>
-            <details class="faq-item">
-              <summary>How do you choose which courses to feature?</summary>
-              <p>Every course featured on CoursesWyn goes through rigorous review by our Lead Course Reviewer Josh Smith. We only feature courses with 4.5★+ ratings, reputable instructors, comprehensive content, and proven student satisfaction. We prioritize quality over quantity to ensure our community gets real educational value.</p>
-            </details>
-            <details class="faq-item">
-              <summary>How are coupons verified on CoursesWyn?</summary>
-              <p>Every coupon code on CoursesWyn is personally tested before publishing to ensure it works. We check expiration dates, discount amounts, and course availability. We remove expired coupons immediately and update our database daily. This 100% verification guarantee sets us apart from other coupon sites.</p>
-            </details>
-          </div>
-        </div>
-      </section>
+        <p>The first version shipped in early 2024: a minimal page listing coupon codes that had been manually tested minutes before publishing. No accounts, no emails, no gimmicks. Just working codes and the time they were last checked.</p>
 
-      <!-- Call to Action -->
-      <section class="section">
-        <div class="container narrow cta-content">
-          <h2>Ready to Start Learning?</h2>
-          <p>Join thousands of learners who have transformed their careers with courses from CoursesWyn.</p>
-          <div class="cta-actions">
-            <a href="/udemy-coupon-code" class="btn btn-primary btn-lg">
-              Browse Courses
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
-              </svg>
-            </a>
-            <a href="/categories" class="btn btn-ghost btn-lg">
-              Explore Categories
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
-              </svg>
-            </a>
-          </div>
-        </div>
-      </section>
-    </main>
+        <h2>What changed since then</h2>
+
+        <p>The manual approach didn't scale. By mid-2024 the list was being updated in batches, then the verification pipeline was automated: every coupon is now checked programmatically against Udemy's own data — current price, discount, and availability. If a coupon expires or reaches its redemption limit, it disappears from the site within hours. No manual cleanup, no guesswork.</p>
+
+        <p>The current platform runs on Astro with a lightweight data pipeline. The design has been rebuilt a few times, but the core promise never changed: show coupons that work, mark expiration honestly, and don't waste the visitor's time.</p>
+
+        <h2>How CoursesWyn is funded</h2>
+
+        <p>CoursesWyn earns commissions through affiliate links — when you enroll in a course after clicking through, the platform gets a small referral fee at no extra cost to you. This is the standard model across the coupon industry, and it is disclosed clearly on every page.</p>
+
+        <p>What this means in practice: a coupon is shown because it exists and verifies, not because it pays. Expired codes are labeled as expired. The verification pipeline treats every coupon equally regardless of commission. There is no paid placement, no promoted listings, and no "editorial" content masquerading as independent review.</p>
+
+        <h2>Who runs CoursesWyn</h2>
+
+        <p>CoursesWyn is built and operated independently. No team, no investors, no content farm. If something on the site is wrong, you can say so and the person who built it will fix it.</p>
+
+        <h2>Our verification promise</h2>
+
+        <p>Every active coupon on CoursesWyn is re-checked continuously against Udemy's course data: current price, discount percentage, and coupon status. Since Udemy coupons are capped by time (typically 3–7 days) and redemption limits, the median coupon survives only a limited window — which is exactly why every listing shows when it was last verified instead of pretending codes live forever.</p>
+
+        <p>If a coupon stops working between checks, it is removed in the next verification cycle. Our directory reflects what is actually available right now, not what was available last week.</p>
+
+      </article>
+
+      <div class="ab-cta">
+        <p>Start browsing {totalCourses.toLocaleString()}+ verified Udemy coupons.</p>
+        <a href="/udemy-coupon-code" class="ab-btn">Browse all coupons &rarr;</a>
+      </div>
+
+    </div>
+  </main>
 
   <style>
-    .container {
-      max-width: 1024px;
-      margin: 0 auto;
-      padding: 0 1.5rem;
-    }
-    .container.narrow {
-      max-width: 860px;
-    }
+    .ab-root { padding: 2rem 0 4rem; }
+    .ab-container { max-width: 56rem; margin: 0 auto; padding: 0 1.5rem; }
 
-    .section {
-      padding: 5rem 0;
-      background: var(--bg);
-    }
+    .ab-breadcrumb { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 2rem; font-size: 0.78rem; color: var(--muted); }
+    .ab-breadcrumb a { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .ab-breadcrumb a:hover { text-decoration: underline; }
+    .ab-breadcrumb svg { width: 0.85rem; height: 0.85rem; flex-shrink: 0; }
 
-    .section-header {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
-    .section-header h2 {
-      font-size: clamp(1.8rem, 4vw, 2.5rem);
-      font-weight: 800;
-      color: var(--text);
-      margin: 0 0 1rem;
-      line-height: 1.2;
-    }
-    .section-header p {
-      color: var(--muted);
-      font-size: 1.1rem;
-      max-width: 600px;
-      margin: 0 auto;
-      line-height: 1.6;
-    }
+    article h1 { font-size: clamp(2rem,4vw,2.8rem); font-weight: 700; line-height: 1.1; color: var(--text); margin: 0; letter-spacing: -0.03em; }
+    .ab-subtitle { font-size: 1rem; color: var(--brand); font-weight: 600; margin: 0.5rem 0 0; }
+    .ab-date { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0.75rem 0 0; }
+    .ab-lead { font-size: 1rem; line-height: 1.7; color: var(--text); margin-top: 1.5rem; }
 
-    .hero-section {
-      padding: 8rem 1rem 4rem;
-      text-align: center;
-      border-bottom: 1px solid var(--border);
-    }
+    .ab-stats { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.75rem; margin-top: 2rem; }
+    .ab-stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; }
+    .ab-stat dt { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+    .ab-stat dd { font-size: 1.5rem; font-weight: 700; color: var(--text); margin: 0.25rem 0 0; font-variant-numeric: tabular-nums; }
 
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: var(--brand-soft);
-      padding: 0.5rem 1rem;
-      border-radius: 9999px;
-      margin-bottom: 2rem;
-      font-size: 0.9rem;
-      color: var(--brand);
-      font-weight: 600;
-    }
+    article h2 { font-size: 1.35rem; font-weight: 700; color: var(--text); margin: 2.5rem 0 0; line-height: 1.3; }
+    article p { font-size: 0.92rem; line-height: 1.7; color: var(--muted); margin: 0.75rem 0 0; }
+    article p:first-of-type { margin-top: 1rem; }
 
-    .hero-title {
-      font-size: clamp(2.5rem, 5vw, 4rem);
-      font-weight: 800;
-      line-height: 1.1;
-      margin: 0 auto 1.5rem;
-    }
-    .gradient-brand {
-      background: linear-gradient(135deg, var(--brand) 0%, hsl(35, 90%, 68%) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .gradient-muted {
-      background: linear-gradient(135deg, var(--text) 0%, var(--muted) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
+    .ab-cta { margin-top: 3rem; padding: 2rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; text-align: center; }
+    .ab-cta p { font-size: 0.95rem; color: var(--text); font-weight: 600; margin: 0 0 1rem; }
+    .ab-btn { display: inline-block; padding: 0.75rem 2rem; background: var(--brand); color: var(--bg); text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; transition: opacity 0.2s; }
+    .ab-btn:hover { opacity: 0.9; }
 
-    .hero-desc {
-      font-size: clamp(1.1rem, 2.5vw, 1.4rem);
-      color: var(--muted);
-      max-width: 700px;
-      margin: 0 auto;
-      line-height: 1.6;
-      font-weight: 400;
-    }
-
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1.5rem;
-    }
-    .stat-card {
-      background: var(--card);
-      padding: 2.5rem 2rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      text-align: center;
-    }
-    .stat-number {
-      font-size: 3.5rem;
-      font-weight: 800;
-      margin-bottom: 1rem;
-    }
-    .stat-number.brand { color: var(--brand); }
-    .stat-number.accent { color: var(--accent); }
-    .stat-number.teal { color: hsl(180, 50%, 40%); }
-    .stat-number.red { color: hsl(0, 84%, 60%); }
-    .stat-label {
-      color: var(--text);
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-    .stat-desc {
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-
-    .mission-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .card {
-      background: var(--card);
-      padding: 2.5rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-    }
-    .card-icon {
-      width: 70px;
-      height: 70px;
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1.5rem;
-    }
-    .card h3 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      font-weight: 700;
-    }
-    .card p {
-      color: var(--muted);
-      line-height: 1.7;
-      font-size: 1rem;
-    }
-    .card-accent-brand h3 { color: var(--brand); }
-    .card-accent-accent h3 { color: var(--accent); }
-    .card-accent-teal h3 { color: hsl(180, 50%, 40%); }
-
-    .brand-bg { background: var(--brand); }
-    .accent-bg { background: var(--accent); }
-    .teal-bg { background: hsl(180, 50%, 40%); }
-    .red-bg { background: hsl(0, 84%, 60%); }
-    .yellow-bg { background: hsl(45, 95%, 58%); }
-    .purple-bg { background: hsl(280, 60%, 55%); }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
-    }
-    .card-sm {
-      background: var(--card);
-      padding: 1.5rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-    }
-    .card-sm-icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1rem;
-    }
-    .card-sm h3 {
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .card-sm p {
-      color: var(--muted);
-      line-height: 1.5;
-      font-size: 0.9rem;
-    }
-
-    .author-card {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-      max-width: 860px;
-      margin: 0 auto;
-      background: var(--card);
-      padding: 1.5rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-    }
-    .author-avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: var(--bg-secondary);
-      flex-shrink: 0;
-      overflow: hidden;
-      border: 3px solid #ff5a2c;
-    }
-    .author-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .author-info {
-      flex: 1;
-      min-width: 280px;
-    }
-    .author-info h3 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--text);
-      margin: 0 0 0.5rem;
-    }
-    .author-info p {
-      font-size: 0.9375rem;
-      color: var(--muted);
-      line-height: 1.6;
-      margin: 0 0 0.75rem;
-    }
-    .author-meta {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      flex-wrap: wrap;
-      color: var(--muted);
-    }
-    .author-meta span {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      color: var(--muted);
-    }
-    .author-social {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    .social-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      flex-shrink: 0;
-    }
-    .social-btn.linkedin { background: #0077b5; border: 1px solid #0077b5; }
-    .social-btn.facebook { background: #1877f2; border: 1px solid #1877f2; }
-    .social-btn.x { background: #000; border: 1px solid #000; }
-
-    .accent-bar {
-      width: 6px;
-      height: 32px;
-      background: #22c55e;
-      border-radius: 9999px;
-      display: inline-block;
-      vertical-align: middle;
-      margin-right: 0.75rem;
-    }
-
-    .author-cta {
-      margin-top: 1.5rem;
-      padding: 1.5rem;
-      background: rgba(251,191,36,0.08);
-      border: 1px solid rgba(251,191,36,0.2);
-      border-radius: var(--radius);
-      text-align: center;
-      max-width: 860px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .author-cta p {
-      font-size: 0.95rem;
-      color: var(--muted);
-      margin: 0 0 0.75rem;
-    }
-    .author-cta p:first-child {
-      font-size: 0.95rem;
-    }
-    .author-cta p:first-child strong {
-      color: #ff5a2c;
-    }
-    .author-cta .btn {
-      margin-top: 0.25rem;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-    }
-    .compare-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--card);
-    }
-    .compare-table th {
-      padding: 1.5rem;
-      text-align: left;
-      font-weight: 700;
-      color: var(--text);
-      font-size: 1rem;
-      border-bottom: 2px solid var(--border);
-    }
-    .compare-table th.highlight {
-      text-align: center;
-      color: var(--brand);
-    }
-    .compare-table th:not(:first-child) {
-      text-align: center;
-      font-weight: 600;
-      color: var(--muted);
-    }
-    .compare-table td {
-      padding: 1.5rem;
-      font-weight: 600;
-      color: var(--text);
-      border-bottom: 1px solid var(--border);
-    }
-    .compare-table td.highlight {
-      text-align: center;
-      color: var(--brand);
-      font-weight: 700;
-    }
-    .compare-table td:not(:first-child):not(.highlight) {
-      text-align: center;
-      font-weight: 400;
-      color: var(--muted);
-    }
-    .compare-table tr:last-child td {
-      border-bottom: none;
-    }
-
-    .table-note {
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.9rem;
-      margin-top: 2rem;
-    }
-
-    .cta-actions {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .articles-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-    }
-    .article-card {
-      background: var(--card);
-      padding: 2rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-    }
-    .article-icon {
-      width: 60px;
-      height: 60px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1rem;
-    }
-    .article-card h3 {
-      font-size: 1.3rem;
-      margin-bottom: 0.5rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .article-card p {
-      color: var(--muted);
-      line-height: 1.6;
-      font-size: 0.95rem;
-      margin-bottom: 1rem;
-    }
-    .card-link {
-      color: var(--brand);
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 0.95rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .faq-list {
-      max-width: 800px;
-      margin: 0 auto;
-      display: grid;
-      gap: 0.75rem;
-    }
-    .faq-item {
-      background: var(--card);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--brand);
-      overflow: hidden;
-      cursor: pointer;
-    }
-    .faq-item summary {
-      color: var(--text);
-      font-size: 1rem;
-      font-weight: 700;
-      padding: 1.25rem 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-    }
-    .faq-item summary::-webkit-details-marker {
-      display: none;
-    }
-    .faq-item summary::before {
-      content: "+";
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--brand);
-      margin-right: 0.5rem;
-      flex-shrink: 0;
-    }
-    .faq-item[open] summary::before {
-      content: "−";
-    }
-    .faq-item p {
-      color: var(--muted);
-      padding: 0 1.5rem 1.25rem;
-      margin: 0;
-      line-height: 1.7;
-      font-size: 0.95rem;
-    }
-
-    .cta-content {
-      text-align: center;
-    }
-    .cta-content h2 {
-      font-size: clamp(1.8rem, 4vw, 2.5rem);
-      font-weight: 800;
-      color: var(--text);
-      margin: 0 0 1rem;
-    }
-    .cta-content p {
-      color: var(--muted);
-      font-size: 1.1rem;
-      max-width: 600px;
-      margin: 0 auto 2rem;
-      line-height: 1.6;
-    }
-
-    @media (max-width: 768px) {
-      .section { padding: 3rem 0; }
-      .hero-section { padding: 6rem 1rem 3rem; }
-      .author-card { flex-direction: column; align-items: flex-start; }
-      .author-social { flex-direction: row; margin-top: 0.5rem; }
-      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    @media (min-width:640px) {
+      .ab-stats { grid-template-columns: repeat(4,1fr); }
     }
   </style>
 </Layout>

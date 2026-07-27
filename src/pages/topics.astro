@@ -7,240 +7,263 @@ const allDeals = await readDeals();
 const normSub = (str: string) =>
   str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
 
-const topicCounts: Record<string, number> = {};
+const categoryOrder = [
+  "Development", "IT & Software", "Business", "Teaching & Academics",
+  "Personal Development", "Design", "Health & Fitness", "Marketing",
+  "Finance & Accounting", "Lifestyle", "Office Productivity", "Music",
+  "Photography & Video"
+];
+
+type CatGroup = { name: string; slug: string; total: number; topics: { name: string; slug: string; count: number }[] };
+
+const grouped: Record<string, { total: number; topics: Record<string, number> }> = {};
+
 allDeals.forEach(deal => {
+  const cat = deal.category?.trim() || "Other";
   const sub = deal.subcategory ? normSub(deal.subcategory) : '';
-  if (sub) {
-    topicCounts[sub] = (topicCounts[sub] || 0) + 1;
-  }
+  if (!grouped[cat]) grouped[cat] = { total: 0, topics: {} };
+  grouped[cat].total++;
+  if (sub) grouped[cat].topics[sub] = (grouped[cat].topics[sub] || 0) + 1;
 });
 
-const topicsData = (Object.entries(topicCounts) as [string, number][])
-  .sort((a, b) => b[1] - a[1])
-  .map(([topic, count]) => {
-    const slug = topic.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
-    return { name: topic, slug, count };
-  });
+const catGroups: CatGroup[] = categoryOrder
+  .filter(c => grouped[c])
+  .map(c => ({
+    name: c,
+    slug: c.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
+    total: grouped[c].total,
+    topics: Object.entries(grouped[c].topics)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+      .map(([name, count]) => ({
+        name,
+        slug: name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
+        count
+      }))
+  }));
 
-const totalTopics = topicsData.length;
+const totalTopics = catGroups.reduce((s, g) => s + g.topics.length, 0);
+const totalCategories = catGroups.length;
 const totalCourses = allDeals.length;
+const freeCount = allDeals.filter(d => d.price === 0 || (d.originalPrice && d.price === 0)).length;
+const avgDiscount = Math.round(allDeals.reduce((s, d) => s + (d.discount ?? (d.originalPrice ? Math.round((1 - d.price / d.originalPrice) * 100) : 0)), 0) / allDeals.length);
 
-const currentDate = new Date();
-const currentYear = Number(currentDate.toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
+const dates = allDeals.map(d => d.updatedAt ?? d.createdAt).filter(Boolean) as string[];
+const latestDate = dates.length ? dates.sort().reverse()[0] : null;
+const latestStr = latestDate ? new Date(latestDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Jakarta' }) : '';
 
-const title = `${totalTopics}+ Udemy Course Topics with Coupons & Deals [${currentYear}] | CoursesWyn`;
-const description = `Browse ${totalTopics}+ specialized Udemy course topics with verified coupon codes. Find deals on Python, AI, data science, web development, cloud certification & more. ${totalCourses}+ courses with daily verified discount codes.`;
+const currentYear = new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' });
+
+const title = `Browse ${totalTopics.toLocaleString()}+ Udemy Course Topics with Verified Coupons ${currentYear} | CoursesWyn`;
+const description = `Explore ${totalTopics.toLocaleString()} Udemy course topics across ${totalCategories} categories — each with verified coupon codes updated ${latestStr || 'daily'}. Find free & discounted deals on Python, AI, web dev, cloud & more.`;
 const canonicalUrl = "https://courseswyn.com/topics";
-
-function getTopicDescription(topic: string): string {
-  const t = topic.toLowerCase();
-  if (t.includes('python')) return "Courses covering Python programming for data science, automation, web development with Flask/Django, and machine learning. Suitable for beginners and experienced developers.";
-  if (t.includes('javascript') || t.includes('js')) return "Courses covering modern JavaScript including ES6+, async programming, Node.js, and popular frameworks like React, Vue, and Angular.";
-  if (t.includes('web develop')) return "Full-stack and front-end web development courses covering HTML, CSS, JavaScript, frameworks, REST APIs, and deployment.";
-  if (t.includes('react')) return "Courses on React.js including hooks, context API, Redux, Next.js, and building production-ready single-page applications.";
-  if (t.includes('data science')) return "Data science courses covering statistics, pandas, NumPy, data visualization, Jupyter, and end-to-end ML project workflows.";
-  if (t.includes('machine learning') || t.includes('ml')) return "Machine learning courses from regression and classification to neural networks, model evaluation, and deploying ML models to production.";
-  if (t.includes('ai') || t.includes('artificial intelligence')) return "AI courses covering deep learning, NLP, computer vision, transformers, GPT, and building intelligent applications with modern frameworks.";
-  if (t.includes('chatgpt') || t.includes('gpt')) return "ChatGPT and GPT courses covering prompt engineering, building AI agents, OpenAI API integration, and creating AI-powered applications.";
-  if (t.includes('cloud')) return "Cloud computing courses covering AWS, Azure, Google Cloud, DevOps, Docker, Kubernetes, and cloud architecture best practices.";
-  if (t.includes('cyber') || t.includes('security')) return "Cybersecurity courses covering ethical hacking, penetration testing, network security, cryptography, and SOC operations.";
-  if (t.includes('docker') || t.includes('kubernetes')) return "Containerization and orchestration courses covering Docker, Kubernetes, microservices, and production deployment strategies.";
-  if (t.includes('sql') || t.includes('database')) return "Database courses covering SQL, NoSQL, MySQL, PostgreSQL, MongoDB, database design, and data modeling for real-world applications.";
-  if (t.includes('blockchain') || t.includes('web3')) return "Blockchain and Web3 courses covering solidity, smart contracts, dApps, cryptocurrency, NFTs, and decentralized finance.";
-  if (t.includes('design') || t.includes('ui') || t.includes('ux')) return "Design courses covering UI/UX design, Figma, Adobe XD, wireframing, prototyping, and user research methodologies.";
-  if (t.includes('devops')) return "DevOps courses covering CI/CD pipelines, infrastructure as code, monitoring, automation, and site reliability engineering.";
-  return `Browse verified Udemy coupon deals for ${topic} courses. Find premium ${topic} training with daily updated discount codes.`;
-}
 
 const faqs = [
   { q: "What are Udemy course topics on CoursesWyn?", a: "CoursesWyn organizes Udemy courses into specialized topic pages — such as Python, Web Development, Data Science, AI, and Cybersecurity. Each topic page lists verified coupon deals for courses in that subject area, updated daily." },
-  { q: "How do I find Udemy courses by topic?", a: "Browse the topic categories above and click on any subject that interests you. You'll see all available courses in that topic with verified discount codes. Click any deal to see the current offer." },
+  { q: "How do I find Udemy courses by topic?", a: "Browse the topic categories above and click on any subject that interests you. You'll see all available courses in that topic with verified discount codes." },
   { q: "Are these Udemy coupons verified?", a: "Yes. Every coupon is tested daily by our team. Each listing clearly shows the final price after coupon and discount percentage." },
-  { q: "Which Udemy topics have the most deals?", a: "Programming topics like Python, JavaScript, and Web Development typically have the most deals. AI and Machine Learning topics are also growing rapidly. Check the course count on each topic card above." },
+  { q: "Which Udemy topics have the most deals?", a: "Programming topics like Python, JavaScript, and Web Development typically have the most deals. AI and Machine Learning topics are also growing rapidly." },
   { q: "How often are new topics and deals added?", a: "New deals are added every single day. We recommend bookmarking your favorite topic pages and checking back regularly." },
-  { q: "Do discounted Udemy courses include certificates?", a: "Yes! All courses accessed through our coupons include full Udemy benefits — completion certificates, lifetime access, all video content, and downloadable resources." }
+  { q: "Do discounted Udemy courses include certificates?", a: "Yes. All courses accessed through our coupons include full Udemy benefits — completion certificates, lifetime access, all video content, and downloadable resources." }
 ];
 
 const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
     { "@type": "BreadcrumbList", "itemListElement": [{ "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" }, { "@type": "ListItem", "position": 2, "name": "Course Topics", "item": canonicalUrl }] },
-    { "@type": "CollectionPage", "@id": canonicalUrl, "url": canonicalUrl, "name": title, "description": description, "isPartOf": { "@id": "https://courseswyn.com" }, "mainEntity": { "@type": "ItemList", "name": "Udemy Course Topics", "numberOfItems": totalTopics, "itemListElement": topicsData.map((t, i) => ({ "@type": "ListItem", "position": i + 1, "item": { "@type": "ItemList", "name": `${t.name} Courses`, "description": getTopicDescription(t.name), "url": `https://courseswyn.com/topics/${t.slug}`, "numberOfItems": t.count } })) } },
-    { "@type": "FAQPage", "mainEntity": faqs.map(f => ({ "@type": "Question", "name": f.q, "acceptedAnswer": { "@type": "Answer", "text": f.a } })) }
+    { "@type": "CollectionPage", "@id": canonicalUrl, "url": canonicalUrl, "name": title, "description": description, "isPartOf": { "@id": "https://courseswyn.com" }, ...(latestDate ? { "dateModified": latestDate, "datePublished": latestDate } : {}) },
+    { "@type": "FAQPage", "mainEntity": faqs.map(f => ({ "@type": "Question", "name": f.q, "acceptedAnswer": { "@type": "Answer", "text": f.a } })) },
+    { "@type": "WebSite", "@id": "https://courseswyn.com/#website", "url": "https://courseswyn.com", "name": "CoursesWyn", "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://courseswyn.com/search?q={search_term_string}" }, "query-input": "required name=search_term_string" } }
   ]
 };
 ---
 
-<Layout title={title} description={description} canonical={canonicalUrl} hideBreadcrumbs={true}>
+<Layout title={title} description={description} canonical={canonicalUrl}>
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
   <style>
-    .cc-root { background: var(--bg); padding: 2rem 1rem 4rem; }
-    .cc-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
-    .cc-breadcrumb { display: flex; justify-content: center; margin-bottom: 1rem; }
-    .cc-breadcrumb ol { list-style: none; display: flex; align-items: center; gap: 0.5rem; padding: 0; margin: 0; font-size: 0.8rem; color: var(--muted); }
-    .cc-breadcrumb li:not(:last-child)::after { content: '/'; margin-left: 0.5rem; color: var(--border); }
-    .cc-breadcrumb a { color: var(--brand); text-decoration: none; }
-    .cc-breadcrumb a:hover { text-decoration: underline; }
-    .cc-header { text-align: center; margin-bottom: 2rem; }
-    .cc-header-icon { display: block; margin: 0 auto 0.75rem; color: var(--brand); }
-    .cc-title { font-size: 1.8rem; font-weight: 900; color: var(--text); margin: 0 0 0.5rem; letter-spacing: -0.03em; }
-    .cc-subtitle { font-size: 0.92rem; color: var(--muted); max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.65; }
-    .cc-subtitle strong { color: var(--brand); font-weight: 700; }
-    .cc-stats-bar { display: inline-flex; align-items: center; gap: 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1.5rem; }
-    .cc-stat { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
-    .cc-stat-value { font-size: 1.15rem; font-weight: 800; color: var(--text); }
-    .cc-stat-label { font-size: 0.68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
-    .cc-stat-divider { width: 1px; height: 32px; background: var(--border); }
-    .cc-filter-bar { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1.5rem; }
-    .search-input { width:100%; padding:12px 16px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); font-weight:600; font-size:0.95rem; outline:none; color:var(--text); }
-    .search-input:focus { border-color:var(--brand); }
-    .sort-select { padding:0 16px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); font-weight:600; color:var(--text); cursor:pointer; outline:none; }
-    .sort-select:focus { border-color:var(--brand); }
-    .cc-section-title { font-size: 1.2rem; font-weight: 800; color: var(--text); margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.65rem; }
-    .cc-section-title svg { color: var(--brand); flex-shrink: 0; }
-    .cc-seo-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
-    .cc-seo-section h2 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0 0 0.75rem; }
-    .cc-seo-section p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.75rem; }
-    .cc-seo-section p:last-child { margin-bottom: 0; }
-    .cc-seo-section a { color: var(--brand); text-decoration: none; font-weight: 600; }
-    .cc-seo-section a:hover { text-decoration: underline; }
-    .tp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2.5rem; }
-    .tp-item { display: block; text-decoration: none; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; border-left: 3px solid var(--brand); transition: all 0.2s; color: var(--text); }
-    .tp-item:hover { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 4%, transparent); padding-left: 1.25rem; }
-    .tp-item:hover .tp-name { color: var(--brand); }
-    .tp-name { font-size: 1rem; font-weight: 700; color: var(--text); margin: 0 0 2px; line-height: 1.3; transition: color 0.2s; }
-    .tp-count { font-size: 0.75rem; font-weight: 600; color: var(--brand); text-transform: uppercase; letter-spacing: 0.03em; }
-    .tp-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; margin: 6px 0 0; }
-    @media (max-width: 640px) { .tp-grid { grid-template-columns: 1fr; } }
-    .cc-section { margin-bottom: 2.5rem; }
-    .cc-faq .cc-faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.5rem; }
-    .cc-faq-q { font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0 0 0.35rem; }
-    .cc-faq-a { font-size: 0.85rem; color: var(--muted); line-height: 1.5; margin: 0; }
-    @media (max-width: 768px) { .cc-title { font-size: 1.4rem; } .cc-stats-bar { gap: 1rem; padding: 0.6rem 1rem; } }
+    .tp-root { padding: 2rem 0 0; }
+    .tp-container { max-width: 112rem; margin: 0 auto; padding: 0 1rem; }
+
+    .tp-hero { padding: 2rem 0 2.5rem; }
+    @media (min-width:1024px) { .tp-hero-grid { display: grid; grid-template-columns: minmax(0,1.12fr) minmax(20rem,0.88fr); gap: 3rem; align-items: start; } }
+    .tp-hero-label { display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.13em; color: var(--brand); }
+    .tp-hero-label::before { content: ''; width: 2.5rem; height: 3px; background: var(--brand); flex-shrink: 0; }
+    .tp-hero h1 { font-size: clamp(2rem,5vw,3.5rem); font-weight: 500; line-height: 0.95; letter-spacing: -0.04em; max-width: 12ch; margin: 1.5rem 0 0; color: var(--text); }
+    .tp-hero-right p { font-size: 0.95rem; line-height: 1.7; color: var(--muted); margin: 0 0 0.5rem; max-width: 36rem; }
+    .tp-hero-right .tp-fresh { font-size: 0.75rem; color: var(--brand); font-weight: 600; margin: 0 0 1.5rem; }
+    .tp-hero-stats { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); border-width: 1px 0; max-width: 24rem; }
+    .tp-hero-stat { padding: 1rem; }
+    .tp-hero-stat:nth-child(odd) { border-right: 1px solid var(--border); }
+    .tp-hero-stat:nth-child(n+3) { border-top: 1px solid var(--border); }
+    .tp-hero-stat-lbl { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.16em; color: var(--muted); }
+    .tp-hero-stat-val { font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 0.25rem; color: var(--text); }
+
+    .tp-nav { border-top: 1px solid var(--border); padding: 0; }
+    .tp-nav-inner { max-width: 112rem; margin: 0 auto; padding: 0; }
+    .tp-nav-grid { display: grid; grid-template-columns: repeat(2,1fr); list-style: none; margin: 0; padding: 0; }
+    .tp-nav-item { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); }
+    .tp-nav-item:nth-child(2n) { border-right: none; }
+    @media (min-width:640px) { .tp-nav-grid { grid-template-columns: repeat(3,1fr); } .tp-nav-item:nth-child(2n) { border-right: 1px solid var(--border); } .tp-nav-item:nth-child(3n) { border-right: none; } }
+    @media (min-width:1024px) { .tp-nav-grid { grid-template-columns: repeat(4,1fr); } .tp-nav-item:nth-child(3n) { border-right: 1px solid var(--border); } .tp-nav-item:nth-child(4n) { border-right: none; } }
+    .tp-nav-link { display: flex; align-items: center; gap: 1rem; min-height: 4rem; padding: 1rem 1.25rem; text-decoration: none; color: var(--text); transition: background 0.15s; }
+    .tp-nav-link:hover { background: color-mix(in srgb, var(--brand) 5.5%, transparent); }
+    .tp-nav-num { font-size: 0.6rem; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0.16em; color: var(--brand); }
+    .tp-nav-name { font-size: 0.85rem; font-weight: 600; }
+    .tp-nav-arrow { margin-left: auto; font-size: 0.75rem; color: var(--muted); opacity: 0; transform: translateX(-0.25rem); transition: all 0.15s; }
+    .tp-nav-link:hover .tp-nav-arrow { opacity: 1; transform: translateX(0); color: var(--brand); }
+
+    .tp-cat-hdr-out { border-bottom: 1px solid var(--border); }
+    .tp-cat-hdr-inner { max-width: 112rem; margin: 0 auto; padding: 1.5rem 1rem; }
+    .tp-cat-hdr-inner h2 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.13em; color: var(--muted); margin: 0; }
+
+    .tp-cat { border-bottom: 1px solid var(--border); scroll-margin-top: 5rem; }
+    .tp-cat-inner { max-width: 112rem; margin: 0 auto; display: grid; }
+    @media (min-width:1024px) { .tp-cat-inner { grid-template-columns: minmax(17rem,0.64fr) minmax(0,1.36fr); } }
+    .tp-cat-side { display: flex; flex-direction: column; padding: 2rem 1.5rem; border-bottom: 1px solid var(--border); }
+    @media (min-width:1024px) { .tp-cat-side { border-bottom: none; border-right: 1px solid var(--border); min-height: 24rem; padding: 2.5rem 2.5rem; } }
+    .tp-cat-num { font-size: 0.7rem; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0.16em; color: var(--brand); }
+    .tp-cat-title { font-size: clamp(1.8rem,4vw,2.8rem); font-weight: 500; line-height: 0.92; letter-spacing: -0.04em; max-width: 11ch; margin-top: 1.25rem; color: var(--text); }
+    .tp-cat-meta { font-size: 0.85rem; color: var(--muted); margin-top: 1.25rem; }
+    .tp-cat-link { display: inline-flex; align-items: center; gap: 0.75rem; margin-top: 2rem; font-size: 0.85rem; font-weight: 600; color: var(--text); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--brand) 50%, transparent); padding-bottom: 0.25rem; transition: all 0.15s; }
+    @media (min-width:1024px) { .tp-cat-link { margin-top: auto; } }
+    .tp-cat-link:hover { color: var(--brand); border-color: var(--brand); }
+    .tp-cat-link-arrow { display: inline-block; transition: transform 0.15s; }
+    .tp-cat-link:hover .tp-cat-link-arrow { transform: translateX(0.25rem); }
+
+    .tp-grid { display: grid; grid-template-columns: repeat(2,1fr); list-style: none; margin: 0; padding: 0; }
+    .tp-grid-item { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); }
+    .tp-grid-item:nth-child(2n) { border-right: none; }
+    @media (min-width:640px) { .tp-grid { grid-template-columns: repeat(3,1fr); } .tp-grid-item:nth-child(2n) { border-right: 1px solid var(--border); } .tp-grid-item:nth-child(3n) { border-right: none; } }
+    .tp-grid-link { display: flex; align-items: flex-start; gap: 1rem; min-height: 6rem; padding: 1.25rem; text-decoration: none; color: var(--text); transition: background 0.15s; }
+    .tp-grid-link:hover { background: color-mix(in srgb, var(--brand) 5.5%, transparent); }
+    .tp-grid-num { font-size: 0.6rem; font-weight: 600; font-variant-numeric: tabular-nums; color: color-mix(in srgb, var(--muted) 70%, transparent); padding-top: 0.15rem; flex-shrink: 0; }
+    .tp-grid-body { min-width: 0; }
+    .tp-grid-name { font-size: 0.85rem; font-weight: 600; line-height: 1.3; display: block; transition: color 0.15s; }
+    .tp-grid-link:hover .tp-grid-name { color: var(--brand); }
+    .tp-grid-count { font-size: 0.7rem; font-variant-numeric: tabular-nums; color: var(--muted); margin-top: 0.35rem; display: block; }
+    .tp-grid-arrow { margin-left: auto; font-size: 0.75rem; color: var(--brand); opacity: 0; transform: translateX(-0.25rem); transition: all 0.15s; flex-shrink: 0; }
+    .tp-grid-link:hover .tp-grid-arrow { opacity: 1; transform: translateX(0); }
+
+    .tp-foot { background: var(--card); border-top: 1px solid var(--border); }
+    .tp-foot-inner { max-width: 112rem; margin: 0 auto; padding: 2rem 1rem; }
+    .tp-foot-seo p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; margin: 0 0 1.25rem; }
+    .tp-foot-seo a { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .tp-foot-seo a:hover { text-decoration: underline; }
+    .tp-foot-faq-hdr { font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0 0 0.75rem; }
+    .tp-foot-faq-item { padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+    .tp-foot-faq-item:first-of-type { border-top: 1px solid var(--border); }
+    .tp-foot-faq-item { padding: 0.75rem 0 0; }
+    .tp-foot-faq-item strong { display: block; font-size: 0.82rem; color: var(--text); margin-bottom: 0.15rem; }
+    .tp-foot-faq-item p { font-size: 0.8rem; color: var(--muted); line-height: 1.5; margin: 0; }
+    .tp-foot-faq-item:last-child { border-bottom: none; }
+
+
   </style>
 
-  <main class="cc-root">
-    <div class="cc-container">
+  <main class="tp-root">
+    <div class="tp-container">
 
-      <nav class="cc-breadcrumb" aria-label="Breadcrumb">
-        <ol>
-          <li><a href="/">Home</a></li>
-          <li>Course Topics</li>
-        </ol>
-      </nav>
-
-      <header class="cc-header">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="cc-header-icon">
-          <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <h1 class="cc-title">{totalTopics}+ Udemy Course Topics</h1>
-        <p class="cc-subtitle">Browse <strong>{totalTopics} specialized learning topics</strong> with {totalCourses}+ verified Udemy courses — updated daily</p>
-        <div class="cc-stats-bar">
-          <div class="cc-stat">
-            <span class="cc-stat-value">{totalTopics}</span>
-            <span class="cc-stat-label">Topics</span>
+      <div class="tp-hero">
+        <div class="tp-hero-grid">
+          <div class="tp-hero-left">
+            <p class="tp-hero-label">Course taxonomy</p>
+            <h1>Browse Udemy by what you want to learn.</h1>
           </div>
-          <div class="cc-stat-divider"></div>
-          <div class="cc-stat">
-            <span class="cc-stat-value">{totalCourses.toLocaleString()}</span>
-            <span class="cc-stat-label">Active Courses</span>
-          </div>
-          <div class="cc-stat-divider"></div>
-          <div class="cc-stat">
-            <span class="cc-stat-value">Daily</span>
-            <span class="cc-stat-label">Updates</span>
+          <div class="tp-hero-right">
+            <p>An independent taxonomy built from what courses actually teach, not their marketing tags. Open any topic to see its courses and their current coupon availability.</p>
+            {latestStr && <p class="tp-fresh">Updated {latestStr} &middot; {totalCourses.toLocaleString()} tracked coupons</p>}
+            <dl class="tp-hero-stats">
+              <div class="tp-hero-stat">
+                <dt class="tp-hero-stat-lbl">Curated topics</dt>
+                <dd class="tp-hero-stat-val">{totalTopics.toLocaleString()}</dd>
+              </div>
+              <div class="tp-hero-stat">
+                <dt class="tp-hero-stat-lbl">Learning areas</dt>
+                <dd class="tp-hero-stat-val">{totalCategories}</dd>
+              </div>
+              <div class="tp-hero-stat">
+                <dt class="tp-hero-stat-lbl">Free courses</dt>
+                <dd class="tp-hero-stat-val">{freeCount.toLocaleString()}</dd>
+              </div>
+              <div class="tp-hero-stat">
+                <dt class="tp-hero-stat-lbl">Avg discount</dt>
+                <dd class="tp-hero-stat-val">{avgDiscount}%</dd>
+              </div>
+            </dl>
           </div>
         </div>
-      </header>
-
-      <div class="cc-filter-bar">
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;">
-          <div style="flex:1;min-width:280px;position:relative;">
-            <input type="text" id="search-input" placeholder="Search topics..." class="search-input" />
-          </div>
-          <select id="sort-options" class="sort-select">
-            <option value="name">Name A-Z</option>
-            <option value="courses">Most Courses</option>
-          </select>
-        </div>
-        <div id="result-count" style="margin-top:12px;font-weight:700;color:var(--text-secondary);font-size:0.85rem;">Showing {totalTopics} topics</div>
       </div>
-
-      <section class="cc-section">
-        <h2 class="cc-section-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          Browse {totalTopics} Udemy Course Topics
-        </h2>
-      <div id="topics-grid" class="tp-grid">
-        {topicsData.map((t) => (
-          <a href={`/topics/${t.slug}`} class="tp-item">
-            <h3 class="tp-name">{t.name}</h3>
-            <span class="tp-count">{t.count} courses</span>
-            <p class="tp-desc">{getTopicDescription(t.name)}</p>
-          </a>
-        ))}
-      </div>
-      </section>
-
-      <section class="cc-seo-section">
-        <h2>About Udemy Course Topics on CoursesWyn</h2>
-        <p>CoursesWyn organizes <strong>{totalCourses}+ verified coupon deals</strong> across <strong>{totalTopics} specialized topic pages</strong> — from <a href="/topics/python">Python programming</a> and <a href="/topics/web-development">Web Development</a> to <a href="/topics/data-science">Data Science</a>, <a href="/topics/artificial-intelligence">Artificial Intelligence</a>, <a href="/topics/cybersecurity">Cybersecurity</a>, and <a href="/topics/react-js">React.js</a>. Each topic page lists verified coupon deals for courses in that subject area, making it easy to find training in your chosen specialty. You can use the search bar above to find any topic instantly — simply type "Python", "AI", "Cloud", or any subject you're interested in.</p>
-        <p>Topics are sorted by course count so the most active subjects appear first. You can also sort alphabetically using the dropdown. New deals are added every day, and popular topics like <a href="/topics/python">Python</a>, <a href="/topics/javascript">JavaScript</a>, and <a href="/topics/machine-learning">Machine Learning</a> can receive multiple fresh coupon codes per week. We recommend bookmarking your favorite topic pages and checking back regularly for new deals.</p>
-        <p>Browse <a href="/udemy-coupon-code">all verified coupons</a>, explore <a href="/categories">course categories</a>, or check <a href="/popular">popular courses</a> for the highest-rated deals. Our system verifies every coupon in real time — when a coupon reaches its redemption limit or expires, it vanishes from our listings automatically so you only see working deals.</p>
-      </section>
-
-      <section class="cc-section cc-faq">
-        <h2 class="cc-section-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Frequently asked questions
-        </h2>
-        {faqs.map((faq) => (
-          <div class="cc-faq-item">
-            <h3 class="cc-faq-q">{faq.q}</h3>
-            <p class="cc-faq-a">{faq.a}</p>
-          </div>
-        ))}
-      </section>
 
     </div>
+
+    <nav class="tp-nav" aria-label="Topic categories">
+      <div class="tp-nav-inner">
+        <ol class="tp-nav-grid">
+          {catGroups.map((g, i) => (
+            <li class="tp-nav-item">
+              <a href={`#cat-${g.slug}`} class="tp-nav-link">
+                <span class="tp-nav-num">{(i + 1).toString().padStart(2, '0')}</span>
+                <span class="tp-nav-name">{g.name}</span>
+                <span class="tp-nav-arrow">&#8594;</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </nav>
+
+    <div class="tp-cat-hdr-out">
+      <div class="tp-cat-hdr-inner">
+        <h2>All categories</h2>
+      </div>
+    </div>
+
+    {catGroups.map((g, i) => (
+      <section id={`cat-${g.slug}`} class="tp-cat" aria-labelledby={`cat-title-${g.slug}`}>
+        <div class="tp-cat-inner">
+          <div class="tp-cat-side">
+            <span class="tp-cat-num">{(i + 1).toString().padStart(2, '0')}</span>
+            <h2 id={`cat-title-${g.slug}`} class="tp-cat-title">{g.name}</h2>
+            <p class="tp-cat-meta">{g.total.toLocaleString()} tracked courses</p>
+            <a href={`/categories/${g.slug}`} class="tp-cat-link">
+              Browse all {g.topics.length} topics
+              <span class="tp-cat-link-arrow">&#8594;</span>
+            </a>
+          </div>
+          <ol class="tp-grid">
+            {g.topics.map((t, ti) => (
+              <li class="tp-grid-item">
+                <a href={`/topics/${t.slug}`} class="tp-grid-link">
+                  <span class="tp-grid-num">{(ti + 1).toString().padStart(2, '0')}</span>
+                  <span class="tp-grid-body">
+                    <span class="tp-grid-name">{t.name}</span>
+                    <span class="tp-grid-count">{t.count.toLocaleString()} courses</span>
+                  </span>
+                  <span class="tp-grid-arrow">&#8594;</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+    ))}
+
   </main>
+    <footer class="tp-foot">
+      <div class="tp-foot-inner">
+        <div class="tp-foot-seo">
+          <p>CoursesWyn tracks <strong>{totalCourses.toLocaleString()}+ verified coupon deals</strong> across <strong>{totalTopics.toLocaleString()} topic pages</strong> in <strong>{totalCategories} categories</strong> — updated {latestStr || 'daily'}. Browse <a href="/udemy-coupon-code">all Udemy coupons</a> or <a href="/categories">all categories</a>.</p>
+        </div>
+        <div class="tp-foot-faq">
+          <h3 class="tp-foot-faq-hdr">Frequently asked questions about Udemy course topics</h3>
+          {faqs.map(faq => (
+            <div class="tp-foot-faq-item">
+              <strong>{faq.q}</strong>
+              <p>{faq.a}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </footer>
 </Layout>
-
-<script define:vars={{ topicsData }}>
-  const searchInput = document.getElementById('search-input');
-  const sortOptions = document.getElementById('sort-options');
-  const grid = document.getElementById('topics-grid');
-  const count = document.getElementById('result-count');
-  const items = Array.from(grid.querySelectorAll('.tp-item'));
-
-  function filter() {
-    const q = searchInput.value.toLowerCase();
-    const sort = sortOptions.value;
-
-    let visible = 0;
-    items.forEach(function(item) {
-      const name = item.querySelector('.tp-name').textContent.toLowerCase();
-      const match = !q || name.includes(q);
-      item.style.display = match ? '' : 'none';
-      if (match) visible++;
-    });
-
-    if (sort === 'courses') {
-      items.sort(function(a,b) {
-        return parseInt(b.querySelector('.tp-count').textContent) - parseInt(a.querySelector('.tp-count').textContent);
-      });
-    } else {
-      items.sort(function(a,b) {
-        return a.querySelector('.tp-name').textContent.localeCompare(b.querySelector('.tp-name').textContent);
-      });
-    }
-    items.forEach(function(item) {
-      grid.appendChild(item);
-    });
-
-    count.textContent = `Showing ${visible} topics`;
-  }
-
-  searchInput.addEventListener('input', filter);
-  sortOptions.addEventListener('change', filter);
-</script>
