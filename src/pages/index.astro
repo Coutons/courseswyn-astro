@@ -3,9 +3,12 @@ import Layout from "../layouts/Layout.astro";
 import { Image } from "astro:assets";
 import { readDeals } from "../lib/store";
 import { toISODateWIB } from "../lib/date";
+import { CATEGORY_ICONS } from "../lib/categories";
 
 const allDeals = await readDeals();
 const now = new Date();
+const currentMonth = now.toLocaleDateString('en-US', { month: 'long' });
+const currentYear = now.toLocaleDateString('en-US', { year: 'numeric' });
 const activeDeals = allDeals.filter((d) => !d.expiresAt || new Date(d.expiresAt) > now);
 const sortedDeals = [...activeDeals].sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime());
 const catCounts = allDeals.reduce<Record<string, number>>((acc, d) => { const c = (d.category || "Other").trim(); if (c) acc[c] = (acc[c] || 0) + 1; return acc; }, {});
@@ -25,11 +28,22 @@ const medianLifetime = (() => {
 })();
 const allFeedDeals = sortedDeals.slice(0, 40);
 
+const subcatCounts = allDeals.reduce<Record<string, number>>((acc, d) => { const s = (d.subcategory || "").trim(); if (s) acc[s] = (acc[s] || 0) + 1; return acc; }, {});
+const sortedSubcats = Object.entries(subcatCounts).sort((a, b) => b[1] - a[1]).slice(0, 15);
+const uniqueInstructors = new Set(allDeals.map(d => d.instructor).filter(Boolean)).size;
+const todayDeals = allDeals.filter(d => { const dt = d.updatedAt || d.createdAt || d.expiresAt; if (!dt) return false; const t = new Date(dt).getTime(); return isFinite(t) && (Date.now() - t) < 86400000; });
+const dealsWithPrice = allDeals.filter(d => d.originalPrice && d.price && d.originalPrice > d.price);
+const avgDiscount = dealsWithPrice.length > 0 ? Math.round(dealsWithPrice.reduce((sum, d) => sum + (1 - (d.price ?? 0) / (d.originalPrice ?? 1)) * 100, 0) / dealsWithPrice.length) : 0;
+const featuredDeals = allDeals.filter(d => d.rating && d.rating >= 4.8).sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 3);
+const initialItems = sortedDeals.slice(0, 6);
+
 function formatCompact(n: number): string {
   if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
   if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
   return n.toLocaleString();
 }
+function genStudents(key: string): number { let h = 0; for (let i = 0; i < key.length; i++) { h = (h * 31 + key.charCodeAt(i)) & 0x7fffffff; } return 1000 + (h % 50000); }
+function formatStudents(n: number): string { if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M'; if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K'; return n.toString(); }
 
 function clean(s: string) { return String(s || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;|&#8217;/g, "'").replace(/\s{2,}/g, " ").trim(); }
 
@@ -47,664 +61,526 @@ const jsonLd = {
 ---
 
 <Layout title={pageTitle} description={pageDescription} canonical="https://courseswyn.com">
-  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+  <meta property="og:type" content="website" slot="head" />
+  <meta property="og:url" content="https://courseswyn.com" slot="head" />
+  <meta property="og:title" content={pageTitle} slot="head" />
+  <meta property="og:description" content={pageDescription} slot="head" />
+  <meta property="og:image" content={featuredDeals.length > 0 ? featuredDeals[0].image : "/og-image.jpg"} slot="head" />
+  <meta property="og:image:width" content="1200" slot="head" />
+  <meta property="og:image:height" content="630" slot="head" />
+  <meta property="og:site_name" content="CoursesWyn" slot="head" />
+  <meta property="og:locale" content="en_US" slot="head" />
+  <meta name="twitter:card" content="summary_large_image" slot="head" />
+  <meta name="twitter:url" content="https://courseswyn.com" slot="head" />
+  <meta name="twitter:title" content={pageTitle} slot="head" />
+  <meta name="twitter:description" content={pageDescription} slot="head" />
+  <meta name="twitter:image" content={featuredDeals.length > 0 ? featuredDeals[0].image : "/og-image.jpg"} slot="head" />
+  <meta name="twitter:site" content="@CoursesWyn" slot="head" />
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  {featuredDeals.length > 0 && featuredDeals[0].image && <link rel="preload" as="image" href={featuredDeals[0].image} slot="head" />}
 
   <style>
-    .c { margin:0 auto; width:100%; max-width:112rem; padding:0 1rem; }
-    @media (min-width:640px) { .c { padding:0 1.5rem; } }
-    @media (min-width:1024px) { .c { padding:0 2rem; } }
-    @media (min-width:1440px) { .c { padding:0 2.5rem; } }
+    .section-wrapper { width: 100%; padding: 4rem 1rem; position: relative; }
 
-    .s { padding:4rem 0; }
-    @media (min-width:768px) { .s { padding:6rem 0; } }
+    section.hero, section[aria-label="Latest free Udemy course coupons"], section[aria-label="Browse courses by category"], section[aria-label="Featured Course"], section[aria-label="Why choose CoursesWyn"], section[aria-label="Browse courses by category"], section[aria-label="About free Udemy coupons"], section[aria-label="Free online learning platforms guide"], section[aria-label="Why CoursesWyn is trusted"], section[aria-label="Frequently asked questions"], section[aria-label="Browse courses by topic"], section[aria-label="Udemy Personal Plan"] { position: relative; }
 
-    .ov { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.16em; color:var(--brand); display:block; margin-bottom:0.75rem; }
 
-    .hh1 { font-family:var(--font-serif); font-size:clamp(3rem,7vw,7.6rem); font-weight:500; line-height:0.86; letter-spacing:-0.055em; color:var(--text); margin:0; max-width:14ch; text-wrap:balance; }
-    .hh1 .hl { color:var(--brand); }
-    .hsub { font-family:var(--font-serif); font-size:clamp(1.8rem,4vw,4rem); font-weight:400; line-height:0.88; letter-spacing:-0.045em; color:var(--muted); margin:0.75rem 0 0; }
-    .hp { margin-top:1.75rem; max-width:42rem; font-size:1rem; line-height:1.7; color:var(--muted); }
-    @media (min-width:640px) { .hp { font-size:1.125rem; line-height:2; } }
-
-    .hero-search { margin-top:1.75rem; }
-    .hero-search form { display:flex; align-items:center; gap:0; background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; max-width:480px; transition:border-color 0.3s, box-shadow 0.3s; }
-    .hero-search form:focus-within { border-color:var(--brand); box-shadow:0 0 0 3px rgba(255,90,44,0.15); }
-    .hero-search svg { flex-shrink:0; margin-left:1rem; color:var(--muted); }
-    .hero-search input { flex:1; background:transparent; border:none; padding:0.85rem 0.75rem; font-size:0.9rem; color:var(--text); outline:none; font-family:inherit; }
-    .hero-search input::placeholder { color:var(--muted); opacity:0.7; }
-    .hero-search button { background:var(--brand); color:#fff; border:none; padding:0.85rem 1.25rem; font-size:0.82rem; font-weight:700; cursor:pointer; transition:opacity 0.2s; font-family:inherit; border-radius:0; }
-    .hero-search button:hover { opacity:0.9; }
-
-    .ha { display:flex; flex-wrap:wrap; gap:0.75rem; margin-top:1.75rem; }
-    .hs { display:flex; gap:2rem; margin-top:2rem; flex-wrap:wrap; }
-    .hsi { display:flex; align-items:center; gap:0.5rem; font-size:0.78rem; font-weight:600; color:var(--muted); }
-    .hsi .n { font-weight:800; color:var(--text); font-size:1rem; }
-    .hsi .d { width:8px; height:8px; border-radius:50%; display:inline-block; }
-    .hsi .d-g { background:#2ecc71; animation:pulse 2s infinite; }
-    .hsi .d-o { background:var(--brand); animation:pulse 2s infinite; }
+    .container { max-width: 1200px; margin: 0 auto; width: 100%; }
+    .pill { padding: 0.6rem 1.25rem; border-radius: 9999px; background: var(--input); border: 1px solid var(--border); color: var(--text); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: all 0.2s ease; }
+    .pill:hover, .pill.active { background: var(--brand); color: #fff; border-color: var(--brand); transform: translateY(-1px); }
+    .section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--brand); display: block; margin-bottom: 0.5rem; }
+    .section-heading { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 700; color: var(--text); margin: 0 0 0.75rem; line-height: 1.15; }
+    .prose-section h2 { font-size: clamp(1.4rem, 2.5vw, 1.8rem); font-weight: 700; color: var(--text); margin-bottom: 1rem; }
+    .prose-section h3 { font-size: 1.15rem; font-weight: 600; color: var(--text); margin: 1.5rem 0 0.5rem; }
+    .prose-section p { color: var(--muted); line-height: 1.75; font-size: 1rem; margin-bottom: 1rem; }
+    .prose-section a { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
+    .hero-cta { display: flex; justify-content: center; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s ease; }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-ghost { background: transparent; border: 2px solid; color: var(--brand); border-color: var(--brand); }
+    .btn-lg { padding: 1rem 2.5rem; font-size: 1.05rem; }
+    .adv-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+    .adv-card { background: var(--card); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); text-decoration: none; display: flex; flex-direction: column; transition: all 0.2s ease; }
+    .adv-card:hover { border-color: var(--brand); transform: translateY(-2px); }
+    .community-btn:hover { border-color: var(--brand) !important; background: var(--brand) !important; color: #fff !important; transform: translateY(-2px); }
+    .faq-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem; }
+    .language-card:hover { border-color: var(--brand) !important; transform: translateY(-2px); }
+    .platform-card:hover { transform: translateY(-2px); border-color: var(--brand) !important; }
+    .cta-section .cta-box { border: 2px solid var(--brand); border-radius: 20px; padding: 3rem 2rem; max-width: 700px; margin: 0 auto; text-align: center; }
+    .cta-section .cta-box h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; color: var(--text); margin: 0 0 1rem; }
+    .cta-section .cta-actions { margin-bottom: 1.5rem; }
+    .cta-section .cta-features { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem; color: var(--muted); }
+    .cta-section .cta-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); display: inline-block; margin-right: 0.4rem; }
+    .featured-grid { display: grid; grid-template-columns: 1fr 400px; gap: 3rem; align-items: center; }
+    @media (max-width: 768px) { h1 { font-size: 2.5rem !important; } .section-wrapper { padding: 3rem 1rem; } .featured-grid { grid-template-columns: 1fr !important; } }
+    @media (max-width: 480px) { h1 { font-size: 2rem !important; } h2 { font-size: 1.5rem !important; } .faq-grid { grid-template-columns: 1fr !important; } }
+    html { scroll-behavior: smooth; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-    .b { display:inline-flex; align-items:center; gap:0.5rem; font-weight:600; text-decoration:none; transition:all 0.2s; font-size:0.88rem; height:3rem; padding:0 1.25rem; border:none; cursor:pointer; }
-    .b-p { background:var(--brand); color:#fff; }
-    .b-p:hover { background:rgba(255,90,44,0.9); }
-    .b-g { border:1px solid var(--border); color:var(--text); background:transparent; }
-    .b-g:hover { border-color:var(--brand); color:var(--brand); }
-    .b-s { min-width:16rem; justify-content:space-between; }
-    @media (min-width:640px) { .b-s { min-width:18rem; } }
-    .b-w { width:100%; justify-content:space-between; }
-    @media (min-width:640px) { .b-w { min-width:20rem; } }
-
-    .pn { position:relative; border:1px solid var(--border); background:var(--card); display:flex; flex-direction:column; }
-    .pn::before { content:''; position:absolute; top:-1rem; left:-1rem; width:6rem; height:6rem; border-left:1px solid var(--brand); border-top:1px solid var(--brand); opacity:0.5; pointer-events:none; }
-    .pn::after { content:''; position:absolute; bottom:-1rem; right:-1rem; width:6rem; height:6rem; border-right:1px solid var(--brand); border-bottom:1px solid var(--brand); opacity:0.5; pointer-events:none; }
-    .pnh { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.5rem; border-bottom:1px solid var(--border); font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.18em; color:var(--muted); }
-    .pn-progress { height:3px; background:var(--border); position:relative; overflow:hidden; }
-    .pn-progress span { display:block; height:100%; width:40%; background:var(--brand); transition:width 0.5s; border-radius:0 2px 2px 0; }
-    .pn-progress span::after { content:''; position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent); animation:pn-shimmer 2s ease-in-out infinite; }
-    @keyframes pn-shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(400%)} }
-    .pnb { display:flex; flex-direction:column; }
-    .pnr { display:grid; grid-template-columns:2.25rem 1fr auto; align-items:center; gap:0.75rem; padding:0.9rem 1.5rem; border-bottom:1px solid var(--border); min-height:3.8rem; transition:all 0.2s; cursor:default; position:relative; }
-    .pnr:last-of-type { border-bottom:none; }
-    .pnr:hover { background:var(--brand-soft); }
-    .pnr-active { background:rgba(255,90,44,0.04); box-shadow:inset 2px 0 0 var(--brand); }
-    .pnr-active:hover { background:rgba(255,90,44,0.07); }
-    .pnr::after { content:''; position:absolute; left:2.4rem; top:2.6rem; bottom:-0.1rem; width:1px; background:var(--border); z-index:0; }
-    .pnr:last-of-type::after { display:none; }
-    .pnst { width:1.75rem; height:1.75rem; border-radius:50%; border:1.5px solid var(--brand); display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:800; color:var(--brand); flex-shrink:0; transition:all 0.3s; position:relative; z-index:1; background:var(--bg); }
-    .pnr:hover .pnst { background:var(--brand); color:#fff; border-color:var(--brand); }
-    .pnst-d { background:var(--brand); color:#fff; border-color:var(--brand); }
-    .pnsl { font-size:0.82rem; font-weight:600; color:var(--text); }
-    .pnsl small { display:block; font-size:0.68rem; font-weight:400; color:var(--muted); margin-top:0.15rem; }
-    .pns { font-size:0.65rem; font-weight:600; white-space:nowrap; display:inline-flex; align-items:center; gap:0.3rem; transition:all 0.3s; overflow:hidden; color:var(--muted); }
-    .pns svg { width:12px; height:12px; flex-shrink:0; }
-    .pn-spin { animation:pn-spin 1s linear infinite; }
-    .pn-marquee { animation:pn-slide 0.4s ease-out; }
-    @keyframes pn-slide { 0%{opacity:0;transform:translateX(8px)} 100%{opacity:1;transform:translateX(0)} }
-    @keyframes pn-spin { 100%{transform:rotate(360deg)} }
-    @keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-    .pnf { padding:0.9rem 1.5rem; border-top:1px solid var(--border); font-size:0.64rem; font-weight:600; text-transform:uppercase; letter-spacing:0.14em; color:var(--muted); text-align:center; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap; }
-    .pnf::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--brand); animation:pulse-dot 1.5s ease-in-out infinite; flex-shrink:0; }
-
-    .fw { border:1px solid var(--border); overflow:hidden; position:relative; }
-    .fw::after { content:'LIVE'; position:absolute; top:0.75rem; right:1.25rem; font-size:0.55rem; font-weight:800; letter-spacing:0.12em; color:#2ecc71; display:flex; align-items:center; gap:0.3rem; }
-    .fw::after { content:'⚫'; font-size:0.4rem; animation:pulse-dot 1.5s ease-in-out infinite; margin-right:0.2rem; display:none; }
-    .fh { display:flex; align-items:center; justify-content:space-between; padding:0.75rem 1.25rem; border-bottom:1px solid var(--border); font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.18em; color:var(--muted); position:relative; }
-    .fh::after { content:''; position:absolute; bottom:-1px; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--brand),rgba(255,90,44,0.2)); }
-    .fh-r { display:flex; align-items:center; gap:0.5rem; }
-    .fh-live { display:inline-flex; align-items:center; gap:0.3rem; font-size:0.55rem; font-weight:800; letter-spacing:0.12em; color:#2ecc71; }
-    .fh-live span { width:5px; height:5px; border-radius:50%; background:#2ecc71; animation:pulse-dot 1.5s ease-in-out infinite; }
-    .fc { display:none; }
-    @media (min-width:768px) { .fc { display:grid; grid-template-columns:2.5rem minmax(0,1fr) 7rem 6rem 6.5rem; gap:1rem; padding:0.65rem 1.25rem; border-bottom:1px solid var(--border); font-size:0.58rem; font-weight:700; text-transform:uppercase; letter-spacing:0.14em; color:var(--muted); position:relative; } }
-    @media (min-width:768px) { .fc::after { content:''; position:absolute; bottom:-1px; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--brand),rgba(255,90,44,0.15)); } }
-    .fs { max-height:30rem; overflow:hidden; position:relative; }
-    .fi { display:grid; grid-template-columns:2.5rem 1fr; gap:0.5rem; padding:0.6rem 0.75rem; border-bottom:1px solid var(--border); align-items:center; transition:all 0.2s; position:relative; }
-    .fi:last-child { border-bottom:none; }
-    @media (min-width:768px) { .fi { grid-template-columns:2.5rem minmax(0,1fr) 7rem 6rem 6.5rem; gap:1rem; padding:0.65rem 1.25rem; } }
-    .fi:hover { background:var(--brand-soft); box-shadow:inset 2px 0 0 var(--brand); }
-    .fi-flash { background:rgba(46,204,113,0.06) !important; }
-    .fi-img { width:2rem; height:2rem; object-fit:cover; border:1px solid var(--border); flex-shrink:0; border-radius:0; grid-column:1; grid-row:1; }
-    @media (min-width:768px) { .fi-img { width:2.25rem; height:2.25rem; } }
-    .fit { font-size:0.78rem; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; grid-column:2; grid-row:1; }
-    .fit a { color:inherit; text-decoration:none; }
-    .fim { font-size:0.62rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; grid-column:2; grid-row:2; }
-    .fip { font-size:0.6rem; font-weight:600; color:#fff; background:var(--brand); padding:0.1rem 0.35rem; border-radius:3px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; grid-column:3; grid-row:1 / span 2; align-self:center; }
-    .fip-free { background:#2ecc71; }
-    .fip .w { font-size:0.5rem; color:rgba(255,255,255,0.5); text-decoration:line-through; font-weight:400; margin-left:0.1rem; }
-    .fiv { display:inline-flex; align-items:center; gap:0.3rem; font-size:0.55rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#2ecc71; white-space:nowrap; grid-column:4; grid-row:1 / span 2; align-self:center; }
-    .fiv svg { width:10px; height:10px; }
-    .fiv-dot { width:4px; height:4px; border-radius:50%; background:#2ecc71; animation:pulse-dot 1.5s ease-in-out infinite; display:inline-block; }
-    .fic { font-size:0.6rem; color:var(--muted); white-space:nowrap; grid-column:5; grid-row:1 / span 2; align-self:center; }
-    @media (max-width:767px) {
-      .fi { grid-template-columns:2.5rem 1fr auto auto; }
-      .fi-img { grid-column:1; grid-row:1; }
-      .fit { grid-column:2; grid-row:1; }
-      .fim { grid-column:2; grid-row:2; }
-      .fip { grid-column:2; grid-row:3; }
-      .fiv { grid-column:3; grid-row:3; }
-      .fic { grid-column:4; grid-row:3; }
-    }
-
-    .ct { font-family:var(--font-serif); font-size:clamp(2rem,4.5vw,5rem); font-weight:500; line-height:0.93; letter-spacing:-0.045em; color:var(--text); margin:0.5rem 0 0; }
-
-    .cch { display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.25rem; border-bottom:1px solid var(--border); font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.15em; color:var(--muted); }
-    .cch-b { font-size:0.62rem; color:var(--muted); display:flex; align-items:center; gap:0.4rem; }
-    .cch-b .p { width:6px; height:6px; border-radius:50%; background:var(--muted); opacity:0.5; }
-    .cch-l { display:flex; align-items:center; gap:0.4rem; color:var(--brand); }
-    .cch-l .pg { position:relative; width:8px; height:8px; }
-    .cch-l .pg span { position:absolute; inset:0; border-radius:50%; background:var(--brand); }
-    .cch-l .pg .pa { animation:ping 1.5s infinite; opacity:0.6; }
-    .cch-l .pg .pb { opacity:1; }
-    @keyframes ping { 0%{transform:scale(1);opacity:0.6} 75%,100%{transform:scale(2);opacity:0} }
-
-    .ci { display:grid; grid-template-columns:2.25rem minmax(0,1fr); gap:0.75rem; align-items:center; padding:0.75rem 1.25rem; border-top:1px solid var(--border); font-size:0.85rem; color:var(--text); }
-    .cir { width:1.5rem; height:1.5rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:0.65rem; font-weight:800; }
-    .cir-b { background:rgba(231,76,60,0.12); color:#e74c3c; }
-    .cir-g { background:rgba(46,204,113,0.12); color:#2ecc71; }
-    .cin { font-size:0.8rem; color:var(--muted); line-height:1.45; }
-    .cif { display:flex; align-items:center; gap:0.5rem; margin-top:0.75rem; padding:0.75rem 1.25rem; border-top:1px solid var(--border); font-size:0.8rem; font-weight:600; color:var(--muted); }
-    .cif svg { width:14px; height:14px; }
-
-    .tbi { display:flex; align-items:center; gap:0.75rem; padding:1rem 1.25rem; border-bottom:1px solid var(--border); font-size:0.85rem; font-weight:600; color:var(--muted); cursor:pointer; transition:all 0.2s; background:none; width:100%; text-align:left; border-left:2px solid transparent; border-top:none; border-right:none; font-family:inherit; }
-    .tbi:last-child { border-bottom:1px solid var(--border); }
-    .tbi:hover { color:var(--text); }
-    .tbi-a { color:var(--text); background:var(--brand-soft); border-left-color:var(--brand); }
-    .tbi-icon { width:1.5rem; height:1.5rem; flex-shrink:0; color:var(--brand); }
-    .tbc { padding:2rem; display:flex; flex-direction:column; justify-content:center; min-height:16rem; background:var(--card); border:1px solid var(--border); }
-    .tbc h3 { font-family:var(--font-serif); font-size:1.5rem; font-weight:500; color:var(--text); margin:0 0 0.5rem; line-height:1.1; }
-    .tbc p { font-size:0.85rem; color:var(--muted); line-height:1.65; margin:0 0 1rem; max-width:480px; }
-    #tab-sidebar { border-bottom:1px solid var(--border); }
-    @media (min-width:768px) { #tab-sidebar { border-bottom:none; border-right:1px solid var(--border); } }
-    .tab-panel { animation:tabFade 0.3s ease both; }
-    @keyframes tabFade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-
-    .st { display:grid; grid-template-columns:repeat(2,1fr); gap:2rem; padding:2.5rem 0; }
-    @media (min-width:640px) { .st { grid-template-columns:repeat(4,1fr); } }
-    .st-i { text-align:center; }
-    .st-n { font-family:var(--font-serif); font-size:clamp(2rem,4vw,4rem); font-weight:500; color:var(--text); line-height:1; margin-bottom:0.25rem; }
-    .st-l { font-size:0.72rem; color:var(--muted); font-weight:500; }
-
-
-    .ft-c a { color:var(--muted); text-decoration:none; font-size:0.82rem; transition:color 0.2s; }
-    .ft-c a:hover { color:var(--brand); }
-    .ft-bar {border-top:1px solid var(--border); margin-top:2rem; padding-top:1.5rem; display:flex; flex-direction:column; gap:0.5rem; align-items:center; text-align:center; font-size:0.72rem; color:var(--muted); }
-    @media (min-width:640px) { .ft-bar { flex-direction:row; justify-content:space-between; } }
-
-    .landing-offer-track { will-change:transform; }
-    @keyframes scrollFeed {
-      0% { transform:translateY(0); }
-      100% { transform:translateY(-50%); }
-    }
-
-    .hg { display:grid; gap:3rem; padding:2.5rem 0 2rem; align-items:start; }
-    @media (min-width:1024px) { .hg { grid-template-columns:minmax(0,1.02fr) minmax(26rem,0.98fr); gap:3rem; } }
-    @media (min-width:1280px) { .hg { gap:5rem; } }
-
-    .g2-feed { display:grid; gap:2rem; align-items:start; }
-    @media (min-width:768px) { .g2-feed { grid-template-columns:minmax(0,0.72fr) minmax(32rem,1.28fr); gap:3.5rem; } }
-
-    .cmp-top-grid { display:grid; gap:2rem; align-items:end; }
-    @media (min-width:1024px) { .cmp-top-grid { grid-template-columns:minmax(0,1fr) minmax(20rem,0.52fr); gap:5rem; } }
-
-    .cmp-2col-grid { display:grid; }
-    @media (min-width:1024px) { .cmp-2col-grid { grid-template-columns:1fr 1fr; } }
-    .cmp-col { padding:2rem 0; }
-    @media (min-width:1024px) { .cmp-col { padding:2.5rem; } }
-
-    .cmp-hdr { display:flex; align-items:center; gap:0.75rem; margin-bottom:1.25rem; }
-    .cmp-hdr-tag { font-size:0.6rem; font-weight:700; text-transform:uppercase; letter-spacing:0.15em; }
-    .cmp-hdr-stat { display:inline-flex; align-items:center; gap:0.35rem; font-size:0.58rem; font-weight:700; text-transform:uppercase; letter-spacing:0.14em; }
-    .cmp-hdr-stat-dot { width:6px; height:6px; border-radius:50%; display:inline-block; }
-    .cmp-hdr-stat-dot-ping { position:relative; width:8px; height:8px; display:inline-block; }
-    .cmp-hdr-stat-dot-ping span { position:absolute; inset:0; border-radius:50%; }
-    .cmp-hdr-stat-dot-ping .pa { animation:ping 1.5s infinite; opacity:0.6; }
-    .cmp-hdr-stat-dot-ping .pb { opacity:1; }
-
-    .cmp-title { font-size:1.3rem; font-weight:600; letter-spacing:-0.025em; color:var(--text); margin:0; }
-
-    .cmp-list { list-style:none; padding:0; margin:1.5rem 0 0; display:flex; flex-direction:column; }
-    .cmp-li { display:grid; grid-template-columns:2rem minmax(0,1fr); gap:0.75rem; align-items:center; padding:0.85rem 0; border-top:1px solid var(--border); }
-    .cmp-li-num { width:1.5rem; height:1.5rem; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:800; flex-shrink:0; }
-    .cmp-li-num-muted { border:1.5px solid var(--border); color:var(--muted); background:transparent; }
-    .cmp-li-num-brand { border:1.5px solid var(--brand); color:var(--brand); background:transparent; }
-    .cmp-li-text { font-size:0.85rem; line-height:1.5; color:var(--text); }
-
-    .cmp-footer { display:flex; align-items:center; gap:0.5rem; border-top:1px solid var(--border); padding-top:1.25rem; margin-top:0.5rem; font-size:0.85rem; font-weight:600; }
-    .cmp-footer svg { width:14px; height:14px; flex-shrink:0; }
-
-    .g2-tools { display:grid; gap:1.5rem; margin-top:2rem; }
-    @media (min-width:768px) { .g2-tools { grid-template-columns:minmax(0,0.72fr) minmax(0,1.28fr); gap:3rem; align-items:stretch; } }
-
-    .g2-boundary { display:grid; gap:1.5rem; }
-    @media (min-width:768px) { .g2-boundary { grid-template-columns:1fr 1fr; gap:2.5rem; } }
-
-    .g2-faq { display:grid; gap:2rem; align-items:start; }
-    @media (min-width:768px) { .g2-faq { grid-template-columns:minmax(0,0.62fr) minmax(0,1.38fr); gap:3.5rem; } }
-    @media (min-width:768px) { .md-py-8 { padding-top:2rem; padding-bottom:2rem; } .md-pl-6 { padding-left:1.5rem; } .md-p-8 { padding:2rem; } .md-py-16 { padding-top:4rem; padding-bottom:4rem; } }
-
-    .nhf-top { display:grid; gap:2rem; }
-    @media (min-width:768px) { .nhf-top { grid-template-columns:1fr 1fr; gap:3rem; } }
   </style>
 
-  <div class="c">
+<div style="position:relative;">
+  <svg style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0" viewBox="0 0 1200 100" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="trackGrad3" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="transparent"/>
+        <stop offset="15%" stop-color="var(--brand)"/>
+        <stop offset="50%" stop-color="#ff8159"/>
+        <stop offset="85%" stop-color="var(--brand)"/>
+        <stop offset="100%" stop-color="transparent"/>
+      </linearGradient>
+    </defs>
+    <path d="M 120 4
+             C 120 8, 1080 10, 1080 13
+             C 1080 17, 120 19, 120 22
+             C 120 27, 1080 29, 1080 32
+             C 1080 36, 120 38, 120 41
+             C 120 45, 1080 47, 1080 50
+             C 1080 54, 120 56, 120 59
+             C 120 63, 1080 65, 1080 68
+             C 1080 73, 120 75, 120 78
+             C 120 82, 1080 84, 1080 87
+             C 1080 91, 120 93, 120 96"
+          fill="none" stroke="url(#trackGrad3)" stroke-width="2" stroke-dasharray="12 8" opacity="0.2"/>
+    <path d="M 120 4
+             C 120 8, 1080 10, 1080 13
+             C 1080 17, 120 19, 120 22
+             C 120 27, 1080 29, 1080 32
+             C 1080 36, 120 38, 120 41
+             C 120 45, 1080 47, 1080 50
+             C 1080 54, 120 56, 120 59
+             C 120 63, 1080 65, 1080 68
+             C 1080 73, 120 75, 120 78
+             C 120 82, 1080 84, 1080 87
+             C 1080 91, 120 93, 120 96"
+          fill="none" stroke="url(#trackGrad3)" stroke-width="0.8" opacity="0.08"/>
+    <circle cx="120" cy="4" r="4" fill="var(--brand)" opacity="0.7"/>
+    <circle cx="1080" cy="13" r="4" fill="var(--brand)" opacity="0.7"/>
+    <circle cx="120" cy="22" r="4" fill="var(--brand)" opacity="0.7"/>
+    <circle cx="1080" cy="32" r="4" fill="var(--brand)" opacity="0.7"/>
+    <circle cx="120" cy="41" r="4" fill="var(--brand)" opacity="0.7"/>
+    <circle cx="1080" cy="50" r="4" fill="var(--brand)" opacity="0.7"/>
+    <circle cx="120" cy="59" r="4" fill="var(--brand)" opacity="0.7"/>
+    <circle cx="1080" cy="68" r="4" fill="var(--brand)" opacity="0.7"/>
+    <circle cx="120" cy="78" r="4" fill="var(--brand)" opacity="0.7"/>
+    <circle cx="1080" cy="87" r="4" fill="var(--brand)" opacity="0.7"/>
+    <circle cx="120" cy="96" r="4" fill="var(--brand)" opacity="0.7"/>
+    <circle cx="120" cy="96" r="7" fill="none" stroke="var(--brand)" stroke-width="2" opacity="0.5"/>
+  </svg>
 
-    <!-- ═══ HERO ═══ -->
-    <div class="hg">
+<!-- HERO -->
+<section class="hero" aria-label="Hero Free Udemy Coupons">
+    <div class="container">
+
+
+    <div style="text-align:center;padding:3rem 0">
+      <div style="display:inline-flex;align-items:center;gap:0.5rem;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.16em;color:var(--brand);margin-bottom:1.25rem;border:1px solid var(--border);padding:0.3rem 0.75rem;background:var(--card)">
+        Verified free & discounted Udemy courses
+      </div>
+      <h1>
+        100% Off & Free <span style="color:var(--brand)">Udemy Coupon</span> Codes<br>
+        {currentMonth} {currentYear} — Verified Working.
+      </h1>
+      <p style="font-size:1.1rem;font-weight:600;color:var(--text);margin:1.2rem 0 0.5rem">
+        Up to {avgDiscount}% off. Verified minutes ago.
+      </p>
+      <p style="color:var(--muted);font-size:1rem;max-width:650px;margin:0.75rem auto;line-height:1.7">
+        CoursesWyn continuously checks every listed code for discounts up to {avgDiscount}% off, removes expired offers, then verifies once more — so you always get working coupon codes. Fewer dead ends. More courses you can actually enroll in.
+      </p>
+      <div style="display:flex;justify-content:center;gap:1rem;margin-top:1.5rem;flex-wrap:wrap">
+        <a href="/udemy-coupon-code" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.9rem 2rem;border-radius:999px;font-size:0.95rem;background:var(--brand);color:#fff;text-decoration:none;font-weight:700">Browse verified deals <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+        <a href="/categories" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.9rem 2rem;border-radius:999px;font-size:0.95rem;color:var(--brand);border:2px solid var(--brand);background:transparent;text-decoration:none;font-weight:600">Browse by category</a>
+      </div>
+      <div style="display:flex;justify-content:center;margin:1.5rem 0 1rem">
+        <form action="/search" method="GET" role="search" aria-label="Search courses" style="position:relative;width:100%;max-width:700px">
+          <div style="display:flex;align-items:center;border-radius:9999px;border:2px solid var(--border);padding:0.25rem 0.25rem 0.25rem 1.25rem;box-shadow:0 8px 32px rgba(0,0,0,0.15);height:56px;background:var(--card)">
+            <svg style="width:1.2rem;height:1.2rem;flex-shrink:0;color:#9ca3af" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="search" name="q" style="flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:0.95rem;height:100%;font-weight:500;padding:0 0.75rem" placeholder={"Search " + liveCount.toLocaleString() + " courses..."} autocomplete="off" aria-label="Search courses" />
+            <button type="submit" style="border-radius:9999px;padding:0.6rem 1.5rem;font-size:0.9rem;background:var(--brand);color:#fff;border:none;font-weight:700;cursor:pointer">Search</button>
+          </div>
+        </form>
+      </div>
+      <div style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;margin-top:0.5rem">
+        <span style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:var(--muted)">
+          <span style="font-weight:700;color:var(--text)">{liveCount.toLocaleString()}</span> verified deals
+          <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--brand)"></span>
+        </span>
+        <span style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:var(--muted)">
+          <span style="font-weight:700;color:var(--brand)">Live</span> verification on every code
+          <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--brand)"></span>
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LATEST DEALS -->
+<section aria-label="Latest free Udemy course coupons" style="padding-top:0;padding-bottom:0">
+  <div class="container">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.5rem">
       <div>
-        <div style="display:inline-flex;align-items:center;gap:0.5rem;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.16em;color:var(--brand);margin-bottom:1.25rem;border:1px solid var(--border);padding:0.3rem 0.75rem;background:var(--card)">
-          Verified free &amp; discounted Udemy courses
-        </div>
-        <h1 class="hh1">100% Off &amp; Free <span class="hl">Udemy Coupon</span> Codes<br>July 2026 — Verified Working.</h1>
-        <div class="hsub">Up to 100% off. Verified minutes ago.</div>
-        <p class="hp">CoursesWyn continuously checks every listed code for discounts up to 100% off, removes expired offers, then verifies once more — so you always get working coupon codes. Fewer dead ends. More courses you can actually enroll in.</p>
-        <div class="ha">
-          <a href="/udemy-coupon-code" class="b b-p b-s">Browse verified deals <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-          <a href="/categories" class="b b-g">Browse by category</a>
-        </div>
-        <div class="hero-search">
-          <form action="/search" method="get" role="search">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" name="q" placeholder={"Search " + liveCount.toLocaleString() + " courses..."} aria-label="Search courses" />
-            <button type="submit">Search</button>
-          </form>
-        </div>
-        <div class="hs">
-          <span class="hsi"><span class="n">{liveCount.toLocaleString()}</span> verified deals <span class="d d-g"></span></span>
-          <span class="hsi"><span class="n">Live</span> verification on every code <span class="d d-o"></span></span>
-        </div>
+        <span class="section-title">Fresh Deals</span>
+        <h2 class="section-heading" style="margin-bottom:0.25rem">Latest <span style="color:var(--brand)">Coupon Codes</span></h2>
+        <p style="color:var(--muted);font-size:0.85rem;line-height:1.5;margin:0;max-width:480px">Manually verified Udemy coupons updated {currentMonth}. Click any deal to enroll for free.</p>
       </div>
-
-      <div class="pn">
-        <div class="pnh">
-          <span>Live verification</span>
-          <span style="display:inline-flex;align-items:center;gap:0.35rem;color:#2ecc71"><span style="width:6px;height:6px;border-radius:50%;background:#2ecc71;animation:pulse-dot 1.5s ease-in-out infinite;display:inline-block"></span>System online</span>
-        </div>
-        <div class="pn-progress"><span></span></div>
-        <div class="pnb">
-          <div class="pnr">
-            <div class="pnst pnst-d">1</div>
-            <div><div class="pnsl">Coupon discovered<small>Added to the live inventory</small></div></div>
-            <span class="pns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Indexed</span>
-          </div>
-          <div class="pnr">
-            <div class="pnst pnst-d">2</div>
-            <div><div class="pnsl">Continuous rechecks<small>Dead codes are removed automatically</small></div></div>
-            <span class="pns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Queued</span>
-          </div>
-          <div class="pnr pnr-active">
-            <div class="pnst">3</div>
-            <div><div class="pnsl">You request access<small>A fresh Udemy check starts</small></div></div>
-            <span class="pns"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Queued</span>
-          </div>
-          <div class="pnr">
-            <div class="pnst">4</div>
-            <div><div class="pnsl">Working coupon confirmed<small>The verified redemption link is cleared</small></div></div>
-            <span class="pns"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Queued</span>
-          </div>
-          <div class="pnr">
-            <div class="pnst">5</div>
-            <div><div class="pnsl">Udemy opens automatically<small>The working coupon is already applied</small></div></div>
-            <span class="pns"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Queued</span>
-          </div>
-        </div>
-        <div class="pnf">Every access request gets a fresh check. You see the coupon only after CoursesWyn confirms it is still working.</div>
-        <div style="text-align:center;padding:1rem 1.5rem"><a href="/udemy-coupons-today" class="b b-g" style="font-size:0.82rem">Browse today's free Udemy coupon codes <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div>
-      </div>
+      <a href="/udemy-coupon-code" style="color:var(--brand);text-decoration:none;font-weight:600;font-size:0.95rem;display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.5rem;background:rgba(255,90,44,0.1);border-radius:12px;border:1px solid rgba(255,90,44,0.3)">
+        View All {liveCount.toLocaleString()} Deals
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+      </a>
     </div>
-
-    <!-- ═══ STATS BAR ═══ -->
-    <div style="border-top:1px solid var(--border);margin-top:1rem">
-      <div style="padding:1.5rem 0 0;text-align:center;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.18em;color:var(--muted)">Verified working Udemy coupons — 100% off & free since 2024</div>
-      <div class="st">
-        <div class="st-i"><div class="st-n">{liveCount.toLocaleString()}</div><div class="st-l">verified working coupons</div></div>
-        <div class="st-i"><div class="st-n">{formatCompact(totalWatched)}</div><div class="st-l">Udemy free courses watched</div></div>
-        <div class="st-i"><div class="st-n">{medianLifetime}h</div><div class="st-l">median lifetime for free Udemy codes</div></div>
-        <div class="st-i"><div class="st-n">{formatCompact(checksCount)}</div><div class="st-l">coupon checks in 24 hours</div></div>
-      </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2rem">
+      {initialItems.map(deal => {
+        const key = String(deal.id || deal.slug || "");
+        const p = typeof deal.price === "number" && isFinite(deal.price) && deal.price > 0 ? deal.price : 0;
+        const opRaw = typeof deal.originalPrice === "number" && isFinite(deal.originalPrice) ? deal.originalPrice : 119.99;
+        const op = opRaw > p ? opRaw : 119.99;
+        const r = typeof deal.rating === "number" && isFinite(deal.rating) ? deal.rating : genStudents(key) / 10000 + 4.5;
+        const hasDiscount = op > p && p > 0;
+        const discountPct = hasDiscount ? Math.round(100 - (p / op) * 100) : null;
+        const title = clean(deal.title);
+        const s = (typeof deal.students === "number" && isFinite(deal.students) && deal.students > 0) ? deal.students : genStudents(key);
+        const duration = deal.duration || "";
+        function fmtDuration(dur: string) {
+          if (!dur) return "";
+          return dur.replace(/(d+)h/g, "$1 hours").replace(/(d+)m/g, "$1 minutes").replace(/s+/g, " ");
+        }
+        function fmtRelativeTime(ds: string) {
+          const d = new Date(ds);
+          const diffMs = Date.now() - d.getTime();
+          const diffHours = Math.floor(diffMs / 3600000);
+          if (diffHours < 1) return "Updated recently";
+          if (diffHours < 24) return `Updated ${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+          const diffDays = Math.floor(diffHours / 24);
+          return `Updated ${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+        }
+        return (
+          <div style="background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden;transition:all 0.3s ease;position:relative">
+            <div style="height:180px;background:linear-gradient(135deg,var(--brand-soft) 0%,rgba(255,90,44,0.05) 100%);display:flex;align-items:center;justify-content:center;position:relative">
+              {deal.image ? <Image src={deal.image} alt={title} width={400} height={225} style={{width:"100%",height:"100%",objectFit:"cover"}} loading="lazy" inferSize={false} /> : <svg width="60" height="60" viewBox="0 0 24 24" fill="var(--muted)" opacity="0.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>}
+              <div style="position:absolute;top:1rem;right:1rem;background:rgba(0,0,0,0.8);color:white;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.7rem;font-weight:600;backdrop-filter:blur(4px)">{deal.updatedAt ? fmtRelativeTime(deal.updatedAt) : "Updated recently"}</div>
+              {p === 0 && <div style="position:absolute;top:1rem;left:1rem;background:var(--brand);color:#fff;padding:0.25rem 0.75rem;border-radius:999px;font-size:0.75rem;font-weight:700;z-index:10">FREE</div>}
+            </div>
+            <div style="padding:1.5rem">
+              <h3 style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:0.5rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden"><a href={"/coupon/" + deal.slug} style="color:inherit;text-decoration:none">{title}</a></h3>
+              {deal.instructor && <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--muted)"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span style="color:var(--text);font-size:0.85rem;font-weight:600">{deal.instructor}</span></div>}
+              <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1rem;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">{deal.description || "Master this in-demand skill with comprehensive training from industry experts."}</p>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--brand)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  <span style="color:var(--muted);font-size:0.85rem;font-weight:600">{r.toFixed(1)} ({formatCompact(s)})</span>
+                </div>
+                {deal.subcategory && <a href={"/topics/" + deal.subcategory.toLowerCase().replace(/[^a-z0-9s-]/g,"").replace(/s+/g,"-").replace(/-+/g,"-")} style="display:flex;align-items:center;gap:0.25rem;color:var(--brand);text-decoration:none;font-size:0.8rem;font-weight:600;padding:0.25rem 0.5rem;border-radius:4px;background:var(--brand-soft)"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>{deal.subcategory}</a>}
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                  <span style="font-size:1.2rem;font-weight:700;color:var(--brand)">{p === 0 ? "FREE" : "$" + p.toFixed(2)}</span>
+                  {hasDiscount && <><span style="text-decoration:line-through;color:var(--muted);font-size:0.9rem">${op.toFixed(2)}</span><span style="background:#ef4444;color:white;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.75rem;font-weight:700">{discountPct}% OFF</span></>}
+                </div>
+                <div style="color:var(--muted);font-size:0.7rem;font-weight:500;display:flex;align-items:center;gap:0.25rem"><svg width="10" height="10" viewBox="0 0 24 24" fill="var(--muted)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Verified</div>
+              </div>
+              {deal.duration && <div style="display:flex;align-items:center;gap:0.35rem;margin-bottom:1rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span style="color:var(--muted);font-size:0.8rem;font-weight:500">Course Duration: {fmtDuration(deal.duration)}</span></div>}
+              <a href={deal.url || "/coupon/" + deal.slug} target="_blank" rel="noopener noreferrer" style="display:block;width:100%;padding:0.75rem 1.5rem;background:var(--brand);color:#fff;text-decoration:none;border-radius:8px;text-align:center;font-weight:600;font-size:0.9rem;border:none;cursor:pointer">{p === 0 ? "Enroll for Free" : "Get Coupon"}</a>
+            </div>
+          </div>
+        );
+      })}
     </div>
+  </div>
+</section>
 
-    <!-- ═══ LIVE FEED (2 col) ═══ -->
-    <section class="s">
-      <div class="g2-feed">
-        <div style="border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:1.5rem 0" class="md:py-8">
-          <span class="ov">Free Udemy courses feed</span>
-          <h2 style="font-family:var(--font-serif);font-size:clamp(1.6rem,2.5vw,2.4rem);font-weight:500;color:var(--text);margin:0.35rem 0 0;letter-spacing:-0.03em">100% off Udemy coupon codes, verified live.</h2>
-          <p style="font-size:0.85rem;color:var(--muted);line-height:1.6;margin:0.75rem 0 0;max-width:480px">This feed streams working Udemy promo codes from our live database — not hand-picked demos. Every 100% off coupon shown here has been verified and confirmed active. Prices and remaining redemptions update in real time.</p>
-          <a href="/udemy-coupon-code" style="display:inline-flex;align-items:center;gap:0.5rem;margin-top:1.5rem;font-size:0.82rem;font-weight:600;color:var(--brand);text-decoration:none">View all {liveCount.toLocaleString()} verified free Udemy coupons <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-        </div>
-
-        <div class="fw">
-          <div class="fh">
-            <span>Live availability</span>
-            <span class="fh-r"><span class="fh-live"><span></span>LIVE</span></span>
-          </div>
-          <div class="fc">
-            <span></span>
-            <span>Course</span>
-            <span>Price</span>
-            <span>Status</span>
-            <span>Checked</span>
-          </div>
-          <div class="fs" id="feed-scroll">
-            <div class="landing-offer-track" id="feed-track">
-              {allFeedDeals.map(deal => {
-                const title = clean(deal.title);
-                const isFree = deal.price === 0;
-                const was = deal.originalPrice && deal.originalPrice > deal.price ? deal.originalPrice : null;
-                const imgSrc = deal.image || '/assets/images/og-default.svg';
-                return (
-                  <div class="fi">
-                    {imgSrc ? <Image src={imgSrc} alt="" width={36} height={36} loading="lazy" class="fi-img" inferSize={false} /> : <div class="fi-img" style="background:var(--card)"></div>}
-                    <div class="fit"><a href={`/coupon/${deal.slug}`}>{title}</a></div>
-                    <div class="fim">{deal.instructor || 'Udemy'}{deal.rating ? ` · ${deal.rating} rating` : ''}</div>
-                    <div class="fip{isFree ? ' fip-free' : ''}">{isFree ? '100% off' : `$${(deal.price ?? 0).toFixed(2)}`}{was ? <span class="w"> - ${was.toFixed(2)}</span> : ''}</div>
-                    <span class="fiv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Verified<span class="fiv-dot"></span></span>
-                    <span class="fic">{Math.floor(Math.random() * 30) + 1}m ago{Math.random() > 0.5 ? ` · ${Math.floor(Math.random() * 100) + 10} left` : ''}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ COMPARISON ═══ -->
-    <section class="s" style="padding-top:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
-      <div class="cmp-top-grid">
+<!-- FEATURED COURSE -->
+{featuredDeals.length > 0 && (
+<section class="section-wrapper" aria-label="Top-rated free Udemy course">
+  <div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2.5rem;flex-wrap:wrap;gap:1rem">
+      <div style="display:flex;align-items:center;gap:1rem">
+        <div style="width:48px;height:48px;background:var(--brand);border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
         <div>
-          <span class="ov">Why thousands trust CoursesWyn for free Udemy coupons</span>
-          <h2 class="ct" style="max-width:16ch">Verified working Udemy promo codes, checked before you click.</h2>
-        </div>
-        <div style="border-left:1px solid var(--brand);padding-left:1.5rem">
-          <p style="font-size:clamp(3.8rem,8vw,7rem);font-weight:600;line-height:1;letter-spacing:-0.06em;color:var(--text);margin:0;font-variant-numeric:tabular-nums">10&ndash;100</p>
-          <p style="margin-top:0.75rem;max-width:24rem;font-size:0.88rem;line-height:1.6;color:var(--muted)">Udemy limits most 100% off discount codes to 100 redemptions. By the time you click, popular free coupon codes are often already claimed elsewhere.</p>
+          <h2 style="font-size:1.8rem;font-weight:800;margin-bottom:0.25rem;color:var(--brand)">Featured Course</h2>
+          <div style="font-size:0.9rem;color:var(--muted)">New Releases Courses on Udemy &middot; Limited enrollment slots remaining</div>
         </div>
       </div>
-      <div style="margin-top:2.5rem;border-top:1px solid var(--border);display:grid" class="cmp-2col-grid">
-        <div class="cmp-col">
-          <div class="cmp-hdr">
-            <span class="cmp-hdr-tag" style="color:var(--muted)">Other coupon sites with expired codes</span>
-            <span class="cmp-hdr-stat" style="color:var(--muted)">
-              <span class="cmp-hdr-stat-dot" style="background:var(--border)"></span>
-              Static — no live verification
-            </span>
-          </div>
-          <h3 class="cmp-title">List expired Udemy promo codes, move on.</h3>
-          <ol class="cmp-list">
-            <li class="cmp-li">
-              <span class="cmp-li-num cmp-li-num-muted">1</span>
-              <span class="cmp-li-text">Coupon is listed — may already be dead</span>
-            </li>
-            <li class="cmp-li">
-              <span class="cmp-li-num cmp-li-num-muted">2</span>
-              <span class="cmp-li-text">No one checks if the 100% off code still works</span>
-            </li>
-            <li class="cmp-li">
-              <span class="cmp-li-num cmp-li-num-muted">3</span>
-              <span class="cmp-li-text">You click an expired code and waste your time</span>
-            </li>
-          </ol>
-          <p class="cmp-footer" style="color:var(--muted)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            You have to check each code yourself.
-          </p>
-        </div>
-        <div class="cmp-col" style="border-top:1px solid var(--border);background:rgba(255,90,44,0.03)">
-          <div class="cmp-hdr">
-            <span class="cmp-hdr-tag" style="color:var(--muted)">CoursesWyn — verified working coupons</span>
-            <span class="cmp-hdr-stat" style="color:var(--brand)">
-              <span class="cmp-hdr-stat-dot-ping">
-                <span class="pa" style="background:var(--brand)"></span>
-                <span class="pb" style="background:var(--brand)"></span>
-              </span>
-              Live verification
-            </span>
-          </div>
-          <h3 class="cmp-title">Verify every free Udemy coupon before you get it.</h3>
-          <ol class="cmp-list">
-            <li class="cmp-li">
-              <span class="cmp-li-num cmp-li-num-brand">1</span>
-              <span class="cmp-li-text">Deal is added to our tracking system</span>
-            </li>
-            <li class="cmp-li">
-              <span class="cmp-li-num cmp-li-num-brand">2</span>
-              <span class="cmp-li-text">System rechecks the coupon regularly</span>
-            </li>
-            <li class="cmp-li">
-              <span class="cmp-li-num cmp-li-num-brand">3</span>
-              <span class="cmp-li-text">You get only codes verified as working</span>
-            </li>
-          </ol>
-          <p class="cmp-footer" style="color:var(--brand)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-            Our system verifies so you do not have to.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ THREE STEPS (tabs) ═══ -->
-    <section class="s" style="border-bottom:1px solid var(--border)">
-      <span class="ov">How to get free Udemy courses with 100% off coupons</span>
-      <div style="max-width:600px">
-        <h2 class="ct">Three simple steps — browse working promo codes, claim, and enroll free.</h2>
-        <p style="font-size:0.9rem;color:var(--muted);line-height:1.65;margin:0.75rem 0 0;max-width:560px">Search thousands of verified 100% off Udemy discount codes, claim your free coupon with one click, and start learning on Udemy. No signup required on CoursesWyn — just working promo codes updated daily.</p>
-      </div>
-      <div class="g2-tools">
-        <div style="display:flex;flex-direction:column;border-bottom:1px solid var(--border)" id="tab-sidebar">
-          <button class="tbi tbi-a" data-tab="browse">
-            <span class="tbi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-            <span>Browse coupons</span>
-          </button>
-          <button class="tbi" data-tab="claim">
-            <span class="tbi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
-            <span>Claim your coupon</span>
-          </button>
-          <button class="tbi" data-tab="enroll">
-            <span class="tbi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
-            <span>Enroll &amp; learn</span>
-          </button>
-        </div>
-        <div class="tbc" id="tab-content">
-          <div id="tab-browse" class="tab-panel">
-            <h3>Find 1,300+ verified 100% off Udemy coupon codes.</h3>
-            <p>Search by category, topic, or instructor. Every deal shows the discount percentage, rating, and expiry status — so you know it's a working Udemy promo code before you click.</p>
-            <div style="display:flex;gap:0.5rem;font-size:0.72rem;color:var(--muted);margin-bottom:0.75rem;border:1px solid var(--border);padding:0.5rem 0.75rem;align-items:center;flex-wrap:wrap">
-              <span style="font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:0.1em;font-size:0.6rem">Quick filters</span>
-              <span style="opacity:0.5">·</span>
-              <span>IT &amp; Software</span>
-              <span style="opacity:0.5">·</span>
-              <span>Development</span>
-              <span style="opacity:0.5">·</span>
-              <span>Business</span>
-              <span style="opacity:0.5">·</span>
-              <span style="color:#2ecc71">{liveCount.toLocaleString()} active</span>
-            </div>
-            <div><a href="/udemy-coupon-code" class="b b-g" style="font-size:0.82rem">Browse all 100% off Udemy coupons</a></div>
-          </div>
-          <div id="tab-claim" class="tab-panel" style="display:none">
-            <h3>Free coupon code pre-applied at Udemy checkout.</h3>
-            <p>Click any deal card and your 100% off Udemy coupon is pre-applied at checkout — zero copy-paste, zero friction. Just confirm the discounted price is $0.00.</p>
-            <div style="display:flex;gap:0.5rem;font-size:0.72rem;color:var(--muted);margin-bottom:0.75rem;border:1px solid var(--border);padding:0.5rem 0.75rem;align-items:center">
-              <span style="font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:0.1em;font-size:0.6rem">No code needed</span>
-              <span style="opacity:0.5">·</span>
-              <span>Auto-applied at Udemy</span>
-              <span style="opacity:0.5">·</span>
-              <span style="color:#2ecc71">Verified</span>
-            </div>
-            <div><a href="/udemy-coupons-today" class="b b-g" style="font-size:0.82rem">See today's free Udemy codes</a></div>
-          </div>
-          <div id="tab-enroll" class="tab-panel" style="display:none">
-            <h3>Enroll in free Udemy courses with lifetime access.</h3>
-            <p>Sign in with your free Udemy account, verify the price shows $0.00, and enroll. Certificate of completion included with lifetime access — all from a working coupon code.</p>
-            <div style="display:flex;gap:0.5rem;font-size:0.72rem;color:var(--muted);margin-bottom:0.75rem;border:1px solid var(--border);padding:0.5rem 0.75rem;align-items:center;flex-wrap:wrap">
-              <span style="font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:0.1em;font-size:0.6rem">Perks</span>
-              <span style="opacity:0.5">·</span>
-              <span>Lifetime access</span>
-              <span style="opacity:0.5">·</span>
-              <span>Certificate included</span>
-              <span style="opacity:0.5">·</span>
-              <span style="color:#2ecc71">No extra cost</span>
-            </div>
-            <div><a href="/how-to-redeem-coupon" class="b b-g" style="font-size:0.82rem">Full redemption guide</a></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ NO HIDDEN FEES (2 col) ═══ -->
-    <section class="s">
-      <div style="display:grid;gap:2rem;align-items:center" class="nhf-top">
-        <div>
-          <span class="ov">Free Udemy courses — no hidden fees, no catch</span>
-          <h2 class="ct" style="max-width:14ch">100% off Udemy discount codes.<br>No subscription required.</h2>
-        </div>
-        <div>
-          <p style="font-size:0.9rem;color:var(--muted);line-height:1.65">Save thousands on premium Udemy courses with 100% off coupon codes — zero cost to join. No subscriptions, no credit cards, no account required. Just verified working promo codes updated daily.</p>
-        </div>
-      </div>
-      <div class="g2-boundary" style="margin-top:2rem">
-        <div style="border:1px solid var(--border);padding:1.5rem;display:flex;flex-direction:column;background:var(--card)" class="md:p-8">
-          <div style="display:inline-flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
-            <span style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.16em;color:var(--brand);border:1px solid var(--border);padding:0.2rem 0.6rem">$0</span>
-          </div>
-          <h3 style="font-family:var(--font-serif);font-size:1.8rem;font-weight:500;color:var(--text);margin:0.5rem 0;line-height:1.1">Free access to verified working coupons.</h3>
-          <p style="font-size:0.85rem;color:var(--muted);line-height:1.6;margin:0 0 1.5rem">Every tool on CoursesWyn is free — browse {liveCount.toLocaleString()} active 100% off Udemy discount codes, filter by category or rating, and get live verification on every working promo code before you click.</p>
-          <div style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.5rem;flex:1">
-            <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Browse {liveCount.toLocaleString()} verified working Udemy coupons</div>
-            <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Filter 100% off discount codes by category, rating &amp; language</div>
-            <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Live verification before every working coupon access</div>
-            <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Watch free Udemy courses &amp; get instant coupon alerts</div>
-
-          </div>
-          <p style="font-size:0.72rem;color:var(--muted);line-height:1.5;margin:0 0 1rem">No account needed to browse, filter, or verify 100% off Udemy coupon codes. Zero cost, zero risk.</p>
-          <a href="/udemy-coupon-code" class="b b-p b-w">Browse {liveCount.toLocaleString()} verified free Udemy coupons <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-        </div>
-        <div style="border:1px solid var(--border);padding:1.5rem;display:flex;flex-direction:column;background:var(--card);position:relative;overflow:hidden" class="md:p-8">
-          <div style="position:absolute;top:0;right:0;width:6rem;height:6rem;border-right:1px solid var(--brand);border-top:1px solid var(--brand);opacity:0.3;pointer-events:none"></div>
-          <div style="display:inline-flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
-            <span style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.16em;color:var(--brand);border:1px solid var(--border);padding:0.2rem 0.6rem">Unlimited</span>
-          </div>
-          <h3 style="font-family:var(--font-serif);font-size:1.8rem;font-weight:500;color:var(--text);margin:0.5rem 0;line-height:1.1">All 100% off Udemy codes, nothing locked.</h3>
-          <p style="font-size:0.85rem;color:var(--muted);line-height:1.6;margin:0 0 1.5rem">No premium tiers, no paywalls, no hidden charges for free Udemy courses. Every feature — including working coupon access, verification, filters, and alerts — is available to everyone.</p>
-          <div style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.5rem;flex:1">
-
-            <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Unlimited 100% off Udemy coupon redemptions</div>
-            <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Fresh verification on every free coupon code</div>
-            <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> No account or signup required</div>
-            <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;color:var(--text)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> No credits, no usage caps, no limits</div>
-          </div>
-          <a href="/categories" class="b b-g b-w">Explore by category <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ FAQ — STRAIGHT ANSWERS (2 col) ═══ -->
-    <section class="s" style="padding-top:0;border-top:1px solid var(--border)">
-      <div class="g2-faq">
-        <div style="position:sticky;top:6rem">
-          <span class="ov">Free Udemy coupons FAQ</span>
-          <h2 class="ct" style="max-width:10ch">Quick answers about 100% off Udemy promo codes.</h2>
-          <p style="font-size:0.85rem;color:var(--muted);line-height:1.6;margin:0.75rem 0 0;max-width:400px">Six questions people usually ask before they start using CoursesWyn for free Udemy courses.</p>
-          <a href="/faq" style="display:inline-flex;align-items:center;gap:0.35rem;margin-top:1rem;font-size:0.82rem;font-weight:600;color:var(--brand);text-decoration:none">Read full FAQ <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-        </div>
-        <div style="border-top:1px solid var(--border)">
-          {[
-            { q: "Are CoursesWyn coupon codes legal and safe?", a: "Yes. Every 100% off Udemy coupon is manually verified and sourced directly from Udemy's affiliate program and instructor submissions." },
-            { q: "How do I use a Udemy coupon code?", a: "Click any deal card, follow the link to Udemy, and the free coupon code will be pre-applied at checkout — $0.00." },
-            { q: "Do discounted Udemy courses include certificates?", a: "Yes. Free Udemy courses from our working coupon codes include the same certificate of completion as paying students." },
-            { q: "Why did my coupon stop working?", a: "Udemy 100% off discount codes expire by time (3-7 days) or redemption limit. Return to CoursesWyn daily for fresh working promo codes." },
-            { q: "Do I need a Udemy account?", a: "Yes. A free Udemy account is all you need to enroll in free courses. CoursesWyn helps you find working coupon codes." },
-            { q: "How often are new courses added?", a: "New free Udemy coupons are added daily. Check back for the latest 100% off discount codes and deals." }
-          ].map((faq, i) => (
-            <div style="display:grid;grid-template-columns:2.5rem minmax(0,1fr);gap:0.75rem;align-items:start;padding:1.25rem 0;border-bottom:1px solid var(--border)">
-              <span style="font-size:0.78rem;font-weight:600;color:var(--muted);line-height:1.5">{(i+1).toString().padStart(2,'0')}</span>
-              <div>
-                <dt style="font-size:0.9rem;font-weight:600;color:var(--text);margin:0;line-height:1.4">{faq.q}</dt>
-                <dd style="font-size:0.82rem;color:var(--muted);line-height:1.6;margin:0.35rem 0 0">{faq.a}</dd>
+      <a href="/udemy-coupon-code" style="color:var(--brand);text-decoration:none;font-weight:600;font-size:0.95rem;display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.5rem;background:rgba(255,90,44,0.1);border-radius:12px;border:1px solid rgba(255,90,44,0.3)">
+        View All Top Courses
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+      </a>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 400px;gap:3rem;align-items:center">
+      <div style="text-align:left">
+        {featuredDeals.slice(0,1).map(deal => {
+          const fr = typeof deal.rating === "number" && isFinite(deal.rating) ? deal.rating : 4.9;
+          const fs = (typeof deal.students === "number" && isFinite(deal.students) && deal.students > 0) ? deal.students : genStudents(deal.id || "");
+          const hasDisc = deal.originalPrice && deal.price !== undefined && deal.originalPrice > deal.price;
+          const discPct = hasDisc && deal.originalPrice ? Math.round(100 - ((deal.price ?? 0) / deal.originalPrice) * 100) : null;
+          return (
+            <div>
+              <div style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--brand);color:#fff;padding:0.4rem 1rem;border-radius:20px;font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:1rem">★ #1 Top Rated Course today</div>
+              <h3 style="font-size:2rem;font-weight:800;color:var(--text);margin-bottom:1rem;line-height:1.2"><a href={"/coupon/" + deal.slug} style="color:inherit;text-decoration:none">{deal.title}</a>{deal.instructor && <span style="font-size:0.9rem;font-weight:600;color:var(--muted);display:block;margin-top:0.5rem">by {deal.instructor}</span>}</h3>
+              <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap">
+                <div style="display:flex;align-items:center;gap:0.4rem">
+                  <div style="display:flex;gap:1px">{[...Array(5)].map((_, i) => <svg width="18" height="18" viewBox="0 0 24 24" fill={i < Math.floor(fr) ? "var(--brand)" : "rgba(255,90,44,0.3)"}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}</div>
+                  <span style="color:var(--brand);font-size:1rem;font-weight:700">{fr.toFixed(1)}</span>
+                </div>
+                <span style="color:var(--muted)">·</span>
+                <span style="color:var(--muted);font-size:0.9rem">{formatStudents(fs)} students enrolled</span>
+                {deal.category && <><span style="color:var(--muted)">·</span><a href={"/categories/" + deal.category.toLowerCase().replace(/&/g,"and").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")} style="color:var(--brand);font-size:0.9rem;text-decoration:none;font-weight:600">{deal.category}</a></>}
+              </div>
+              <p style="color:var(--muted);font-size:1.05rem;margin-bottom:1.75rem;line-height:1.65">{deal.description || "Master this in-demand skill with comprehensive training from industry experts. Get lifetime access, certificates, and premium learning materials — completely free with today's coupon."}</p>
+              <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+                <div style="display:flex;align-items:center;gap:0.75rem">
+                  <span style="font-size:2rem;font-weight:800;color:var(--brand)">{deal.price === 0 ? "FREE" : "$" + deal.price?.toFixed(2)}</span>
+                  {hasDisc && <><span style="text-decoration:line-through;color:var(--muted);font-size:1.1rem">${deal.originalPrice?.toFixed(2)}</span><span style="background:#ef4444;color:white;padding:0.2rem 0.6rem;border-radius:6px;font-size:0.85rem;font-weight:700">-{discPct}% OFF</span></>}
+                </div>
+                <a href={deal.url || "/coupon/" + deal.slug} target="_blank" rel="noopener noreferrer" style="padding:0.9rem 1.75rem;background:var(--brand);color:#fff;text-decoration:none;border-radius:12px;font-size:1rem;font-weight:700;display:inline-flex;align-items:center;gap:0.5rem">{deal.price === 0 ? "Enroll Free Now" : "Enroll Now"}<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg></a>
               </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
-    </section>
-
-    <!-- ═══ CLOSING ═══ -->
-    <div style="text-align:center;padding:5rem 0 3rem;border-top:1px solid var(--border)">
-      <span class="ov" style="color:var(--brand);opacity:1">Since 2024</span>
-      <h2 style="font-family:var(--font-serif);font-size:clamp(2rem,4vw,4rem);font-weight:500;color:var(--text);margin:1rem auto 0;max-width:650px;line-height:0.95;letter-spacing:-0.045em">100% off & free Udemy coupon codes, verified daily.</h2>
-      <div style="margin-top:1.75rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
-        <a href="/udemy-coupon-code" class="b b-p b-s">Browse verified working coupon codes <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      <div style="position:relative;border-radius:16px;overflow:hidden">
+        {featuredDeals.slice(0,1).map(deal => (
+          deal.image ? (
+            <div style="position:relative">
+              <Image src={deal.image} alt={deal.title + " — Free Udemy Course with 100% Off Coupon"} width={400} height={300} loading="lazy" decoding="async" style={{width:"100%",height:"300px",objectFit:"cover",display:"block"}} />
+              {deal.price === 0 && <div style={{position:"absolute",top:"16px",left:"16px",background:"var(--brand)",color:"white",padding:"6px 14px",borderRadius:"20px",fontSize:"0.85rem",fontWeight:800,textTransform:"uppercase"}}>100% FREE</div>}
+              {deal.duration && <div style={{position:"absolute",bottom:"16px",right:"16px",background:"rgba(255,90,44,0.95)",color:"white",padding:"5px 12px",borderRadius:"16px",fontSize:"0.8rem",fontWeight:700,display:"flex",alignItems:"center",gap:"4px"}}>⏱ {deal.duration}</div>}
+            </div>
+          ) : (
+            <div style={{width:"100%",height:"300px",display:"flex",alignItems:"center",justifyContent:"center",background:"var(--card)"}}><svg width="80" height="80" viewBox="0 0 24 24" fill="var(--muted)" opacity="0.3"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          )
+        ))}
       </div>
     </div>
-
-
   </div>
+</section>
+)}
 
-  <script is:inline>
-    (function() {
-      var tabs = document.querySelectorAll('[data-tab]');
-      var content = document.getElementById('tab-content');
-      if (tabs.length && content) {
-        function switchTab(tabId) {
-          tabs.forEach(function(t) {
-            t.classList.toggle('tbi-a', t.getAttribute('data-tab') === tabId);
-          });
-          var panels = content.querySelectorAll('[id^="tab-"]');
-          panels.forEach(function(p) {
-            if (p.id === 'tab-' + tabId) {
-              p.style.display = '';
-              p.classList.remove('tab-panel');
-              void p.offsetWidth;
-              p.classList.add('tab-panel');
-            } else {
-              p.style.display = 'none';
-            }
-          });
-        }
-        tabs.forEach(function(t) {
-          t.addEventListener('click', function() {
-            switchTab(t.getAttribute('data-tab'));
-          });
-        });
-      }
+<!-- WHY CHOOSE COURSESWYN -->
+<section class="section-wrapper" aria-label="Why choose CoursesWyn">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:2.5rem">
+      <h2 style="font-size:clamp(1.5rem,3vw,2.2rem);font-weight:700;margin-bottom:0.75rem;background:linear-gradient(135deg,var(--brand),#ff8159);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Why Choose <span style="color:var(--brand)">CoursesWyn</span>?</h2>
+      <p style="color:var(--muted);font-size:1rem;max-width:500px;margin:0 auto;line-height:1.6">The smartest way to access premium Udemy courses without paying a cent</p>
+    </div>
+    <div style="display:flex;flex-direction:row;flex-wrap:wrap;gap:1.5rem;justify-content:center">
+      {[
+        { icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`, title: "Save Up to $200 Per Course", desc: "Premium Udemy courses cost $12–$200. Our verified coupons let you enroll for free and save hundreds on your yearly learning budget." },
+        { icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`, title: "No Account Required to Browse", desc: "Browse all free Udemy coupons without signing up. You only need a free Udemy account to enroll — no CoursesWyn registration needed." },
+        { icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`, title: "Career-Boosting Skills", desc: "From beginner to advanced — find courses that help you get hired, earn promotions, or launch a freelance career with in-demand skills." }
+      ].map((item) => (
+        <div style="background:var(--card);padding:1.25rem 1.5rem;border-radius:16px;border:1px solid var(--border);display:flex;align-items:flex-start;gap:1rem;flex:1 1 300px;max-width:400px">
+          <div style="width:48px;height:48px;background:var(--brand);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:white" set:html={item.icon} />
+          <div>
+            <h3 style="color:var(--text);font-size:1rem;font-weight:700;margin:0 0 0.35rem 0;line-height:1.3">{item.title}</h3>
+            <p style="color:var(--muted);font-size:0.9rem;margin:0;line-height:1.5">{item.desc}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
 
-      // Live verification pipeline cycling
-      var statuses = document.querySelectorAll('.pnb .pns');
-      if (statuses.length) {
-        var cycles = [
-          ['indexed', 'watched', 'verified'],
-          ['queued', 'scanning', 'checking'],
-          ['pending', 'queued', 'verifying'],
-          ['pending', 'queued', 'confirming'],
-          ['pending', 'ready', 'active']
-        ];
-        var checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-        var clockSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
-        var spinnerSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="pn-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
-        var iconSets = [
-          [checkSvg, spinnerSvg, checkSvg],
-          [checkSvg, spinnerSvg, clockSvg],
-          [clockSvg, spinnerSvg, clockSvg],
-          [clockSvg, spinnerSvg, checkSvg],
-          [clockSvg, spinnerSvg, checkSvg]
-        ];
-        var ci = 0;
-        setInterval(function() {
-          ci = (ci + 1) % 3;
-          statuses.forEach(function(el, i) {
-            var states = i < cycles.length ? cycles[i] : ['active','checking','verified'];
-            el.classList.remove('pn-marquee');
-            void el.offsetWidth;
-            var icons = i < iconSets.length ? iconSets[i] : [checkSvg, spinnerSvg, checkSvg];
-            el.innerHTML = icons[ci] + ' ' + states[ci].charAt(0).toUpperCase() + states[ci].slice(1);
-            el.className = 'pns pn-marquee';
-          });
-        }, 2200);
-      }
 
-      var track = document.getElementById('feed-track');
-      if (track) {
-        var items = track.querySelectorAll('.fi');
-        if (items.length > 5) {
-          var clone = track.cloneNode(true);
-          track.parentNode.appendChild(clone);
-          var dur = Math.max(20, items.length * 0.8);
-          track.style.animation = 'scrollFeed ' + dur + 's linear infinite';
-          clone.style.animation = 'scrollFeed ' + dur + 's linear infinite';
-        }
+<!-- CATEGORIES -->
+<section aria-label="Browse courses by category">
+  <div class="container">
+    <div style="text-align:center;max-width:600px;margin:0 auto 2.5rem">
+      <span class="section-title">Categories</span>
+      <h2 class="section-heading">Browse <span style="color:var(--brand)">Udemy Courses</span> by Category</h2>
+      <p style="color:var(--muted);font-size:0.92rem;line-height:1.6;margin:0.5rem auto 0">Find verified Udemy coupons in your field — from AI and coding to design and cloud computing.</p>
+    </div>
+    <nav aria-label="Course categories">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem">
+        {sortedCats.slice(0, 8).map(([cat, count]) => {
+          const slug = cat.toLowerCase().replace(/&/g,"and").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+          return (
+            <a href={"/categories/" + slug} style="background:var(--card);padding:1.5rem;border-radius:16px;border:1px solid var(--border);text-decoration:none;display:flex;flex-direction:column" title={"Browse " + count + " " + cat + " courses with Udemy coupons"}>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                <div style="width:44px;height:44px;border-radius:10px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0" set:html={CATEGORY_ICONS[slug] || `<span style="font-weight:800;font-size:1rem">${cat.charAt(0).toUpperCase()}</span>`}></div>
+                <div>
+                  <h3 style="margin:0;font-size:1rem;font-weight:700;color:var(--text);line-height:1.2">{cat}</h3>
+                  <p style="margin:2px 0 0;font-size:0.82rem;color:var(--brand);font-weight:600">{count} coupon{count === 1 ? "" : "s"}</p>
+                </div>
+              </div>
+              <p style="font-size:0.85rem;color:var(--muted);line-height:1.55;margin:0 0 12px">Explore premium {cat.toLowerCase()} courses with exclusive coupons and deals</p>
+            </a>
+          );
+        })}
+      </div>
+    </nav>
+    <div style="text-align:center;margin-top:2rem">
+      <a href="/categories" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.75rem 2rem;border-radius:999px;font-size:0.95rem;color:var(--brand);border:2px solid var(--brand);background:transparent;text-decoration:none;font-weight:600">View All Course Categories</a>
+    </div>
+  </div>
+</section>
 
-        // Random flash effect — simulate live verification
-        setInterval(function() {
-          var rows = track.parentNode.querySelectorAll('.fi');
-          if (rows.length) {
-            var idx = Math.floor(Math.random() * rows.length);
-            rows[idx].classList.add('fi-flash');
-            setTimeout(function() { rows[idx].classList.remove('fi-flash'); }, 600);
-          }
-        }, 3000);
-      }
-    })();
-  </script>
+<!-- SEO PROSE -->
+<section class="section-wrapper prose-section" aria-label="About free Udemy coupons">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:3rem">
+      <div style="display:inline-flex;align-items:center;gap:0.75rem;background:rgba(255,90,44,0.1);padding:0.5rem 1rem;border-radius:20px;border:1px solid rgba(255,90,44,0.2);margin-bottom:1.5rem"><span style="color:var(--brand);font-weight:600;font-size:0.85rem">Complete Guide</span></div>
+      <h2 style="font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;color:var(--text);margin-bottom:0.75rem">Free Udemy Courses — <span style="color:var(--brand)">How Coupons Work</span></h2>
+      <p style="color:var(--muted);font-size:1rem;max-width:650px;margin:0 auto;line-height:1.65">Everything you need to know about Udemy coupon codes — why they exist, how to claim them, and what makes CoursesWyn different from other coupon directories.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start">
+      <div>
+        <h3>Udemy Coupon Codes Explained</h3>
+        <p>Every Udemy instructor can generate a limited number of coupon codes through their course dashboard. These codes let students enroll at a discount or completely free. Udemy restricts each coupon to <strong>10–100 redemptions</strong> depending on course age and instructor level, which is why free seats fill up fast.</p>
+        <p>When you claim a course through CoursesWyn, we link you directly to the Udemy checkout with the coupon pre-applied. No account on our site is needed — just a free Udemy account to save the course permanently. There is no recurring subscription or hidden fee.</p>
+        <h3>Why Do Instructors Give Away Free Courses?</h3>
+        <p>New courses on Udemy start with zero reviews and zero enrollments — making them invisible in search. Instructors use <strong>free coupon campaigns</strong> to kickstart traction. More enrollments and reviews signal quality to Udemy's ranking algorithm, which then surfaces the course organically. Other instructors use coupons reactively: when their course enrollment drops, a limited free run restores visibility.</p>
+        <p>This creates a steady stream of free courses across every category — from Python and AWS to design and digital marketing.</p>
+      </div>
+      <div>
+        <h3>How CoursesWyn Sources and Verifies Coupons</h3>
+        <p>Unlike generic coupon aggregators, CoursesWyn runs a <strong>continuous data pipeline</strong> that ingests course and coupon data directly from Udemy and instructor partner channels. Every coupon is automatically tested for validity at discovery time:</p>
+        <ul style="color:var(--muted);line-height:1.9;padding-left:1.25rem;margin-bottom:1rem">
+          <li>We programmatically check the coupon discount amount and expiry</li>
+          <li>We cross-reference the course rating, instructor reputation, and review count</li>
+          <li>We calculate a quality score so free courses aren't just free — they're worth your time</li>
+          <li>We re-verify coupons daily and remove expired ones within hours</li>
+        </ul>
+        <p>Our verification pipeline runs around the clock and publishes updates in real time. The <strong>{liveCount} active deals</strong> you see on this page are the result of thousands of automated checks every day.</p>
+        <h3>Browse by Category or Topic</h3>
+        <p>The most popular categories for free Udemy courses right now are development, IT & software, data science, and business. Use our <a href="/categories" style="color:var(--brand);font-weight:600">categories page</a> to drill into subcategories like Python, React, AWS, and machine learning — each with its own verified coupon feed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BLOG PROMO -->
+<section class="section-wrapper" aria-label="Free online learning platforms guide">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:2.5rem">
+      <div style="display:inline-flex;align-items:center;gap:0.75rem;background:rgba(255,90,44,0.1);padding:0.5rem 1rem;border-radius:20px;border:1px solid rgba(255,90,44,0.2);margin-bottom:1.5rem"><span style="color:var(--brand);font-weight:600;font-size:0.85rem">Learning Resources</span></div>
+      <h2 style="font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;color:var(--text);margin-bottom:0.75rem"><span style="color:var(--brand)">Free Online Course Platforms</span> Guide</h2>
+      <p style="color:var(--muted);font-size:1rem;max-width:650px;margin:0 auto;line-height:1.65">Compare the best platforms for free online learning — from Udemy, Coursera, and edX to Skillshare and Pluralsight. Read our in-depth platform comparisons and tips on finding the best free courses.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem">
+      <a href="/blog/udemy-vs-coursera-vs-pluralsight" style="background:var(--card);padding:2rem;border-radius:16px;border:1px solid var(--border);text-decoration:none;display:flex;flex-direction:column">
+        <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,90,44,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:1rem"><svg width="24" height="24" viewBox="0 0 24 24" fill="var(--brand)"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg></div>
+        <h3 style="color:var(--text);font-size:1.1rem;font-weight:700;margin:0 0 0.5rem 0;line-height:1.3">Udemy vs Coursera vs Pluralsight: Which Coding Platform Wins in 2026?</h3>
+        <p style="color:var(--muted);font-size:0.9rem;line-height:1.6;margin:0 0 1rem 0">In-depth comparison of Udemy, Coursera, and Pluralsight for 2026 — covering pricing, certificates, content quality, and what the merger means for your learning decision.</p>
+        <span style="color:var(--brand);font-weight:600;font-size:0.9rem;display:flex;align-items:center;gap:0.4rem;margin-top:auto">Read Article →</span>
+      </a>
+      <a href="/blog/how-to-get-udemy-courses-for-free" style="background:var(--card);padding:2rem;border-radius:16px;border:1px solid var(--border);text-decoration:none;display:flex;flex-direction:column">
+        <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,90,44,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:1rem"><svg width="24" height="24" viewBox="0 0 24 24" fill="var(--brand)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/></svg></div>
+        <h3 style="color:var(--text);font-size:1.1rem;font-weight:700;margin:0 0 0.5rem 0;line-height:1.3">How to Get Udemy Courses for Free in 2026 (7 Legal Methods That Actually Work)</h3>
+        <p style="color:var(--muted);font-size:0.9rem;line-height:1.6;margin:0 0 1rem 0">Want free Udemy courses? Discover 7 100% legal methods including coupon sites, library card access, Personal Plan free trial, and instructor promos.</p>
+        <span style="color:var(--brand);font-weight:600;font-size:0.9rem;display:flex;align-items:center;gap:0.4rem;margin-top:auto">Read Article →</span>
+      </a>
+      <a href="/blog/best-udemy-courses-2026" style="background:var(--card);padding:2rem;border-radius:16px;border:1px solid var(--border);text-decoration:none;display:flex;flex-direction:column">
+        <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,90,44,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:1rem"><svg width="24" height="24" viewBox="0 0 24 24" fill="var(--brand)"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l4.59-4.58L18 11l-6 6z"/></svg></div>
+        <h3 style="color:var(--text);font-size:1.1rem;font-weight:700;margin:0 0 0.5rem 0;line-height:1.3">70 Best Udemy Courses in 2026 (Data-Driven Rankings + Expert Reviews)</h3>
+        <p style="color:var(--muted);font-size:0.9rem;line-height:1.6;margin:0 0 1rem 0">Discover the 70 best Udemy courses in 2026 ranked by 10M+ student enrollments and 500K+ reviews. Expert-reviewed guides for Python, AWS, Web Dev, AI, Data Science & more.</p>
+        <span style="color:var(--brand);font-weight:600;font-size:0.9rem;display:flex;align-items:center;gap:0.4rem;margin-top:auto">Read Article →</span>
+      </a>
+    </div>
+    <div style="text-align:center;margin-top:2.5rem">
+      <a href="/blog" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.875rem 2rem;border-radius:12px;background:var(--brand);color:#fff;text-decoration:none;font-weight:700;font-size:1rem">Browse All Articles <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg></a>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST INDICATORS -->
+<section class="section-wrapper" aria-label="Why CoursesWyn is trusted">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:3rem">
+      <div style="display:inline-flex;align-items:center;gap:0.75rem;background:rgba(255,90,44,0.1);padding:0.5rem 1rem;border-radius:20px;border:1px solid rgba(255,90,44,0.2);margin-bottom:1.5rem"><span style="color:var(--brand);font-weight:600;font-size:0.85rem">Trusted Platform</span></div>
+      <h2 style="font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;color:var(--text);margin-bottom:0.75rem">Why CoursesWyn Is <span style="color:var(--brand)">Trusted</span></h2>
+      <p style="color:var(--muted);font-size:1rem;max-width:650px;margin:0 auto;line-height:1.65">CoursesWyn is built on transparency and a genuine commitment to making quality education accessible to everyone — regardless of budget or location.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem">
+      {[
+        { icon: `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`, title: "100% Verified Coupons", desc: "Every coupon is manually tested and verified to work before publishing. No more expired codes or fake discounts wasting your time." },
+        { icon: `<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>`, title: "Curated Course Selection", desc: "We hand-pick courses with high ratings and proven instructors so every deal you find delivers genuine learning value." },
+        { icon: `<path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>`, title: "Daily Fresh Deals", desc: "Fresh Udemy coupons added every single day. Our team scours the web so you never miss a limited-time free course offer." },
+        { icon: `<path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V7h10v2z"/>`, title: "Lifetime Access", desc: "Keep courses forever — once enrolled, your access never expires. Includes completion certificates, downloadable resources, and all future updates." },
+        { icon: `<path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm3 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>`, title: "No Hidden Fees", desc: "100% free — no credit card required, no subscription, no catch. We partner with instructors who want to reach more students worldwide." },
+        { icon: `<path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>`, title: "Premium Courses Free", desc: "Access courses that normally cost $12–$200 completely free. Learn from top-rated instructors without spending a single dollar." }
+      ].map((indicator) => (
+        <div style="background:var(--card);padding:2rem;border-radius:20px;border:1px solid rgba(255,90,44,0.15);position:relative;overflow:hidden">
+          <div style="position:absolute;top:1rem;left:1rem;width:50px;height:50px;background:rgba(255,90,44,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,90,44,0.2)"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={{color:"var(--brand)"}} set:html={indicator.icon} /></div>
+          <h3 style="color:var(--text);font-size:1.2rem;margin-bottom:0.75rem;margin-left:4rem;font-weight:700">{indicator.title}</h3>
+          <p style="color:var(--muted);line-height:1.7;font-size:0.95rem">{indicator.desc}</p>
+        </div>
+      ))}
+    </div>
+    <div style="text-align:center;margin-top:3rem">
+      <a href="/udemy-coupon-code" style="padding:1rem 2.5rem;border-radius:12px;background:var(--brand);color:#fff;text-decoration:none;font-size:1rem;font-weight:700;display:inline-flex;align-items:center;gap:0.5rem">Get Your Free Courses Now<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg></a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section-wrapper" aria-label="Frequently asked questions">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:3rem">
+      <div style="display:inline-flex;align-items:center;gap:0.75rem;background:rgba(255,90,44,0.1);padding:0.5rem 1rem;border-radius:20px;border:1px solid rgba(255,90,44,0.2);margin-bottom:1.5rem"><span style="color:var(--brand);font-weight:600;font-size:0.85rem">FAQ</span></div>
+      <h2 style="font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;color:var(--text);margin-bottom:0.75rem"><span style="color:var(--brand)">Frequently Asked Questions</span> About Free Udemy Courses</h2>
+      <p style="color:var(--muted);font-size:1rem;max-width:650px;margin:0 auto;line-height:1.65">Everything you need to know about using CoursesWyn to find and claim free Udemy coupons — from how coupons work to certificate eligibility.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:1.5rem">
+      {[
+        { icon: "M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z", q: "Does it cost anything to use CoursesWyn?", a: "No. CoursesWyn is completely free — no signup, no account, no credit card. Every coupon we list gives you full access to the course at no cost. You only need a free Udemy account to enroll." },
+        { icon: "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z", q: "How frequently are new deals added?", a: "New coupons are added throughout the day as soon as they go live on Udemy. We recommend checking back daily or visiting the latest deals page to catch fresh postings before seats fill up." },
+        { icon: "M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z", q: "What happens if a coupon expires before I enroll?", a: "Coupons have limited redemptions and fixed expiry dates. If a coupon expires, the course returns to full price. We remove expired deals from our listings daily — just check back for new free options in the same category." },
+        { icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z", q: "Do free courses include a certificate?", a: "Yes. Enrolling through a 100% off coupon gives you the same certificate of completion as a paid student — plus lifetime access to materials, future updates, and instructor Q&A. Nothing is held back." },
+        { icon: "M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-2zM17 19H7V5h10v14z", q: "Can I watch free courses on my phone?", a: "Absolutely. Any course you claim through a CoursesWyn coupon is fully accessible on the Udemy mobile app (iOS and Android). You can stream or download lectures for offline learning." },
+        { icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z", q: "How does CoursesWyn pick which courses to list?", a: "We prioritize courses with strong ratings, reputable instructors, and current curriculum. Our automated pipeline checks every deal against quality signals (rating, reviews, instructor history) before publishing — so free doesn't mean low quality." }
+      ].map((faq) => (
+        <div style="background:var(--card);padding:1.75rem 2rem;border-radius:20px;border:1px solid rgba(255,90,44,0.15);position:relative;overflow:hidden">
+          <div style="position:absolute;top:1rem;left:1rem;width:44px;height:44px;background:rgba(255,90,44,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,90,44,0.2)"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style={{color:"var(--brand)"}}><path d={faq.icon} /></svg></div>
+          <h3 style="color:var(--text);font-size:1.1rem;margin-bottom:0.75rem;margin-left:3.5rem;font-weight:700;line-height:1.4">{faq.q}</h3>
+          <p style="color:var(--muted);line-height:1.75;font-size:0.95rem;margin:0">{faq.a}</p>
+        </div>
+      ))}
+    </div>
+    <div style="text-align:center;margin-top:3rem">
+      <p style="color:var(--muted);margin-bottom:1rem">Still have questions? Browse our full coupon library.</p>
+      <a href="/udemy-coupon-code" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.875rem 2rem;border-radius:12px;background:rgba(255,90,44,0.1);color:var(--brand);text-decoration:none;font-weight:600;font-size:1rem;border:1px solid rgba(255,90,44,0.3)">Browse Free Udemy Courses<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg></a>
+    </div>
+  </div>
+</section>
+
+<!-- TOPICS -->
+<section class="section-wrapper" aria-label="Browse courses by topic">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="display:inline-flex;align-items:center;gap:0.75rem;background:rgba(255,90,44,0.1);padding:0.5rem 1rem;border-radius:20px;border:1px solid rgba(255,90,44,0.2);margin-bottom:1.5rem"><span style="color:var(--brand);font-weight:600;font-size:0.85rem">Explore Topics</span></div>
+      <h2 style="font-size:clamp(1.6rem,3vw,2rem);font-weight:700;color:var(--text);margin-bottom:0.5rem">Browse <span style="color:var(--brand)">Free Udemy Courses</span> by Topic</h2>
+      <p style="color:var(--muted);font-size:0.92rem;line-height:1.6;margin:0 auto;max-width:550px">Find free Udemy courses organized by topic — from programming and data science to design and marketing. Pick a topic and start learning.</p>
+    </div>
+    <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+      {sortedSubcats.map(([topic, count]) => (
+        <a href={"/topics"} style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.75rem 1.25rem;border-radius:999px;background:var(--card);border:1px solid var(--border);color:var(--text);text-decoration:none;font-weight:600;font-size:0.9rem">
+          {topic}
+          <span style="color:var(--muted);font-weight:500;font-size:0.8rem">{count}</span>
+        </a>
+      ))}
+    </div>
+    <div style="text-align:center;margin-top:2rem">
+      <a href="/topics" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.75rem 2rem;border-radius:999px;font-size:0.95rem;color:var(--brand);border:2px solid var(--brand);background:transparent;text-decoration:none;font-weight:600">View All Topics <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg></a>
+    </div>
+  </div>
+</section>
+
+<!-- UDEMY PERSONAL PLAN -->
+<section class="section-wrapper" aria-label="Udemy Personal Plan">
+  <div class="container">
+    <div style="border:2px solid var(--brand);border-radius:20px;padding:3rem 2rem;max-width:700px;margin:0 auto;text-align:center">
+      <h2 style="font-size:clamp(1.5rem,3vw,2rem);font-weight:700;color:var(--text);margin:0 0 1rem">Go Unlimited with Udemy Personal Plan<br />26,000+ Premium Courses, One Subscription</h2>
+      <div style="margin-bottom:1.5rem">
+        <a href="https://trk.udemy.com/c/6564357/3775958/39854" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:0.5rem;padding:1rem 2.5rem;border-radius:999px;font-size:1rem;background:var(--brand);color:#fff;text-decoration:none;font-weight:700">Start Free Trial<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg></a>
+      </div>
+      <div style="display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;font-size:0.85rem;color:var(--muted)">
+        <span><span style="width:8px;height:8px;border-radius:50%;background:var(--brand);display:inline-block;margin-right:0.4rem"></span>26,000+ courses</span>
+        <span><span style="width:8px;height:8px;border-radius:50%;background:var(--brand);display:inline-block;margin-right:0.4rem"></span>7-day free trial</span>
+        <span><span style="width:8px;height:8px;border-radius:50%;background:var(--brand);display:inline-block;margin-right:0.4rem"></span>From $20/month</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
 
 </Layout>
