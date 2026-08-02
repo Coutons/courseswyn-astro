@@ -21,7 +21,57 @@ const posts = allPosts.sort((a: any, b: any) => {
   return dateB.getTime() - dateA.getTime();
 });
 
-const recentPosts = posts.slice(0, 10);
+const recentPosts = posts.slice(0, 12);
+
+const TOPIC_MAP: Record<string, string> = {
+  "Agentic AI": "ai-agents-agentic-ai",
+  "AI Agents": "ai-agents-agentic-ai",
+  "CrewAI": "ai-agents-agentic-ai",
+  "MCP": "ai-agents-agentic-ai",
+  "Model Context Protocol": "ai-agents-agentic-ai",
+  "Generative AI": "generative-ai-genai",
+  "GenAI": "generative-ai-genai",
+  "AI": "artificial-intelligence-ai",
+  "Artificial Intelligence": "artificial-intelligence-ai",
+  "AI Engineering": "artificial-intelligence-ai",
+  "AI Courses": "artificial-intelligence-ai",
+  "ChatGPT": "chatgpt",
+  "ChatGPT Training": "chatgpt",
+  "Prompt Engineering": "prompt-engineering",
+  "Web Development": "web-development",
+  "Web Design": "web-design",
+  "Claude Code": "claude-code",
+  "Claude": "claude-ai",
+  "Python": "python",
+  "Data Science": "data-science",
+  "Data Analysis": "data-analysis",
+  "n8n": "n8n",
+  "Cybersecurity": "cybersecurity",
+  "Kubernetes": "kubernetes",
+  "GitHub Copilot": "github-copilot",
+  "Digital Marketing": "digital-marketing",
+  "Graphic Design": "graphic-design",
+  "Project Management": "project-management",
+  "AWS": "amazon-aws",
+  "Best AWS Courses": "amazon-aws",
+  "AWS Certification": "amazon-aws",
+  "Cloud Computing": "amazon-aws",
+  "React": "web-development",
+  "Next.js": "web-development",
+  "UI/UX": "web-design",
+};
+
+const tagCounts: Record<string, number> = {};
+posts.forEach((post: any) => {
+  (post.data.tags || []).forEach((t: string) => {
+    if (TOPIC_MAP[t]) tagCounts[t] = (tagCounts[t] || 0) + 1;
+  });
+});
+
+const topicChips = Object.entries(tagCounts)
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 12)
+  .map(([name, count]) => ({ name, slug: TOPIC_MAP[name], count }));
 
 const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
 
@@ -52,7 +102,7 @@ const structuredData = {
       "mainEntity": {
         "@type": "ItemList",
         "numberOfItems": posts.length,
-        "itemListElement": posts.slice(0, 10).map((post: any, i: number) => ({
+        "itemListElement": posts.slice(0, 12).map((post: any, i: number) => ({
           "@type": "ListItem",
           "position": i + 1,
           "item": {
@@ -71,155 +121,237 @@ const structuredData = {
 };
 ---
 
-<Layout title={title} description={description} canonical={canonical} image="/assets/images/og-default.svg">
+<Layout title={title} description={description} canonical={canonical} image="/assets/images/og-default.svg" hideBreadcrumbs={true}>
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-  <main class="b-root">
-    <div class="b-wrap">
+  <div class="bl-root">
+    <div class="bl-container">
 
-      <div class="b-card">
-
-        <div class="b-hdr">
-          <div class="b-hdr-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8"/><path d="M8 11h6"/></svg>
+      {/* Hero */}
+      <section class="bl-hero">
+        <div class="bl-hero-inner">
+          <div class="bl-hero-left">
+            <p class="bl-hero-label">Original research</p>
+            <h1>Course reviews, <span class="bl-grad">ranked by real data.</span></h1>
+            <p class="bl-claim">Guides built from our coupon verification pipeline — every review links to a course we've actually checked against Udemy, with the working discount code at hand.</p>
+            <div class="bl-hero-stats">
+              <div class="bl-stat">
+                <span class="bl-stat-lbl">Articles</span>
+                <span class="bl-stat-val">{posts.length}</span>
+              </div>
+              <div class="bl-stat">
+                <span class="bl-stat-lbl">Courses reviewed</span>
+                <span class="bl-stat-val">1,300+</span>
+              </div>
+              <div class="bl-stat">
+                <span class="bl-stat-lbl">Updated</span>
+                <span class="bl-stat-val">{currentYear}</span>
+              </div>
+            </div>
           </div>
-          <h1 class="b-hdr-title">Blog: Course Reviews & Research</h1>
-          <p class="b-hdr-sub">Original guides, data, and reviews from our coupon verification pipeline. {posts.length} articles.</p>
+          <div class="bl-hero-right">
+            <p>Every guide is written from <strong class="bl-em">real student ratings, review counts, and curriculum analysis</strong> — then filtered to courses where our verified coupon is still working. Coupons expire fast on Udemy, so we re-check deals in near real time.</p>
+            <p class="bl-fresh">Latest update {formatDateWIB(posts[0]?.data?.updatedAt || posts[0]?.data?.pubDate, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+            <a href="/udemy-coupon-code" class="bl-hero-link">Browse live coupon codes &#8594;</a>
+          </div>
         </div>
+      </section>
 
-        <ul class="b-list">
+      {/* Topic chips */}
+      {topicChips.length > 0 && (
+        <section class="bl-topics">
+          <div class="bl-topics-inner">
+            <span class="bl-topics-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><line x1="7" x2="7.01" y1="7" y2="7"/></svg>
+              Browse reviews by topic
+            </span>
+            <div class="bl-topics-chips">
+              {topicChips.map(chip => (
+                <a href={`/topics/${chip.slug}`} class="bl-chip">
+                  {chip.name}
+                  <span class="bl-chip-count">{chip.count}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Articles grid */}
+      <section class="bl-posts" aria-label="Latest articles">
+        <div class="bl-posts-head">
+          <h2>Latest Reviews & Guides</h2>
+          <p>Ranked by real student data and re-checked as coupon codes change.</p>
+        </div>
+        <div class="bl-grid">
           {recentPosts.map((post: any) => (
-            <li class="b-li">
-              <a href={`/blog/${post.id}`} class="b-card-link">
-                <div class="b-img-wrap">
-                  <Image
-                    src={resolveImage(typeof post.data.image === 'string' ? post.data.image : (post.data.image as any)?.src) || '/assets/images/og-default.svg'}
-                    alt={post.data.title}
-                    width={300}
-                    height={200}
-                    loading="lazy"
-                    inferSize={false}
-                    class="b-img"
-                  />
+            <a href={`/blog/${post.id}`} class="bl-card">
+              <div class="bl-card-media">
+                <Image
+                  src={resolveImage(typeof post.data.image === 'string' ? post.data.image : (post.data.image as any)?.src) || '/assets/images/og-default.svg'}
+                  alt={post.data.title}
+                  width={480}
+                  height={270}
+                  loading="lazy"
+                  inferSize={false}
+                  class="bl-card-img"
+                />
+                {post.data.tags?.[0] && <span class="bl-badge">{post.data.tags[0]}</span>}
+              </div>
+              <div class="bl-card-body">
+                <h3 class="bl-card-title">{post.data.title}</h3>
+                <p class="bl-card-excerpt">{post.data.description}</p>
+                <div class="bl-card-footer">
+                  <time class="bl-card-date" datetime={toISODateWIB(post.data.updatedAt || post.data.pubDate)}>
+                    {formatDateWIB(post.data.updatedAt || post.data.pubDate, { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </time>
+                  <span class="bl-card-action">Read review &#8594;</span>
                 </div>
-                <div class="b-body">
-                  <h2 class="b-title">{post.data.title}</h2>
-                  <p class="b-excerpt">{post.data.description}</p>
-                  <div class="b-meta">
-                    <span class="b-tag">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                      {post.data.tags?.[0] || 'Guide'}
-                    </span>
-                    <time class="b-date" datetime={toISODateWIB(post.data.updatedAt || post.data.pubDate)}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
-                      {formatDateWIB(post.data.updatedAt || post.data.pubDate, { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </time>
-                  </div>
-                </div>
-              </a>
-            </li>
+              </div>
+            </a>
           ))}
-        </ul>
-
-        {posts.length > 10 && (
-          <div class="b-more-wrap">
-            <a href="/blog/page/2" class="b-more">View All Articles &rarr;</a>
+        </div>
+        {posts.length > 12 && (
+          <div class="bl-more-wrap">
+            <a href="/blog/page/2" class="bl-more">Browse all {posts.length} articles <span class="bl-more-arrow">&#8594;</span></a>
           </div>
         )}
+      </section>
 
-      </div>
-
-      <section class="b-seo">
+      {/* SEO block */}
+      <section class="bl-seo">
         <h2>Why trust CoursesWyn's Udemy course reviews?</h2>
         <p>Every guide on this blog is built on <strong>real data and hands-on analysis</strong>. We examine each course's curriculum depth, instructor credibility, student review sentiment, and practical outcomes — not just star ratings. Our team of edtech researchers has reviewed 1,300+ Udemy courses across <a href="/categories">every major category</a> to bring you detailed, honest reviews.</p>
         <p>All coupon codes listed in our reviews are <strong>verified, tested, and confirmed working</strong> before publication. Since Udemy's coupon policy update, coupons expire quickly — we monitor every deal and remove expired ones daily. Browse <a href="/udemy-coupon-code">all active coupon codes</a> to start learning today.</p>
       </section>
 
-      <section class="b-faq">
-        <h2>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Frequently asked questions
-        </h2>
-        {[
-          {
-            q: "Are the Udemy coupon codes on CoursesWyn free?",
-            a: "Yes. Every coupon code we list is manually verified before publishing and re-checked periodically to ensure the codes are still valid."
-          },
-          {
-            q: "How often are the blog guides updated?",
-            a: "Our editorial team reviews and updates every guide at least once per quarter. Courses that change significantly, receive major curriculum updates, or have expiring coupons are refreshed immediately. Each article displays its last updated date at the top."
-          },
-          {
-            q: "Do you review every course on Udemy?",
-            a: "No. We selectively review courses that meet our quality bar — high student ratings, reputable instructors, and current curriculum. Out of 200,000+ Udemy courses, we've reviewed approximately 1,300 that represent the best learning value in each subject area."
-          },
-          {
-            q: "Can I request a course review?",
-            a: "Absolutely. If there's a Udemy course you'd like us to analyze and find a coupon for, use the search bar on our site or browse our <a href='/categories'>category pages</a>. We add new reviews every week based on learner demand and trending topics."
-          }
-        ].map(faq => (
-          <div class="b-faq-item">
-            <h3 class="b-faq-q">{faq.q}</h3>
-            <p class="b-faq-a">{faq.a}</p>
-          </div>
-        ))}
+      {/* FAQ */}
+      <section class="bl-faq">
+        <h2>Frequently Asked Questions About Our Course Reviews</h2>
+        <div class="bl-faq-list">
+          {[
+            {
+              q: "Are the Udemy coupon codes on CoursesWyn verified?",
+              a: "Yes. Every coupon code we list is manually verified before publishing and re-checked periodically to confirm the codes still work."
+            },
+            {
+              q: "How often are the blog guides updated?",
+              a: "Our editorial team reviews and updates every guide at least once per quarter. Courses that change significantly, receive major curriculum updates, or have expiring coupons are refreshed immediately. Each article displays its last updated date at the top."
+            },
+            {
+              q: "Do you review every course on Udemy?",
+              a: "No. We selectively review courses that meet our quality bar — high student ratings, reputable instructors, and current curriculum. Out of 200,000+ Udemy courses, we've reviewed approximately 1,300 that represent the best learning value in each subject area."
+            },
+            {
+              q: "Can I request a course review?",
+              a: "Absolutely. If there's a Udemy course you'd like us to analyze and find a coupon for, use the search bar on our site or browse our <a href='/categories'>category pages</a>. We add new reviews every week based on learner demand and trending topics."
+            }
+          ].map((faq) => (
+            <details class="bl-faq-item">
+              <summary>
+                {faq.q}
+                <span class="bl-faq-plus">+</span>
+              </summary>
+              <div class="bl-faq-a">{faq.a}</div>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* Explore more */}
+      <section class="bl-back">
+        <h3>Find Discounted Courses Right Now</h3>
+        <p>Skip the reviews and jump straight to working coupon codes across every topic.</p>
+        <a href="/topics" class="bl-back-btn">Browse All Topics &#8594;</a>
       </section>
 
     </div>
-  </main>
+  </div>
 
-  <style>
-    .b-root { padding: 2rem 0 4rem; }
-    .b-wrap { max-width: 56rem; margin: 0 auto; padding: 0 1rem; }
+<style>
+  .bl-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+  .bl-container { max-width: 1200px; margin: 0 auto; }
 
-    .b-card { border: 1px solid var(--border); border-radius: 16px; background: var(--bg); overflow: hidden; }
+  .bl-hero { padding: 2rem 0 3rem; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
+  @media (min-width: 900px) { .bl-hero-inner { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr); gap: 3rem; align-items: start; } }
+  .bl-hero-label { display: flex; align-items: center; gap: 0.6rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--brand); margin: 0 0 1rem; }
+  .bl-hero-label::before { content: ''; width: 2rem; height: 3px; background: var(--brand); flex-shrink: 0; }
+  .bl-hero h1 { font-size: clamp(2.2rem, 4.5vw, 3.5rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; color: var(--text); margin: 0 0 1.25rem; }
+  .bl-grad { background: linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .bl-claim { font-size: 1rem; color: var(--muted); line-height: 1.7; margin: 0 0 1.75rem; max-width: 42rem; }
+  .bl-hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-width: 1px 0; max-width: 26rem; }
+  .bl-stat { padding: 1rem 1.25rem 1rem 0; }
+  .bl-stat + .bl-stat { border-left: 1px solid var(--border); padding-left: 1.25rem; }
+  .bl-stat-lbl { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 0.25rem; }
+  .bl-stat-val { font-size: 1.4rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+  .bl-hero-right p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.75rem; }
+  .bl-em { color: var(--text); font-weight: 700; }
+  .bl-fresh { font-size: 0.78rem; color: var(--muted); font-weight: 600; margin-bottom: 1.25rem !important; display: flex; align-items: center; gap: 0.4rem; }
+  .bl-fresh::before { content: ''; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
+  .bl-hero-link { color: var(--brand); font-weight: 700; text-decoration: none; font-size: 0.88rem; }
+  .bl-hero-link:hover { text-decoration: underline; }
 
-    .b-hdr { text-align: center; padding: 2rem 1.5rem 1.5rem; border-bottom: 1px solid var(--border); }
-    .b-hdr-icon { display: flex; align-items: center; justify-content: center; width: 1.75rem; height: 1.75rem; margin: 0 auto 0.75rem; color: var(--brand); }
-    .b-hdr-title { font-size: 1.4rem; font-weight: 700; color: var(--text); margin: 0; }
-    .b-hdr-sub { font-size: 0.88rem; color: var(--muted); margin: 0.5rem 0 0; }
+  .bl-topics { margin-bottom: 2.5rem; }
+  .bl-topics-inner { display: flex; flex-direction: column; gap: 0.85rem; }
+  .bl-topics-label { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.14em; color: var(--brand); }
+  .bl-topics-label svg { width: 0.9rem; height: 0.9rem; }
+  .bl-topics-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .bl-chip { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.5rem 0.95rem; background: var(--card); border: 1px solid var(--border); border-radius: 100px; font-size: 0.82rem; font-weight: 700; color: var(--text); text-decoration: none; transition: all 0.15s; }
+  .bl-chip:hover { border-color: var(--brand); color: var(--brand); }
+  .bl-chip-count { font-size: 0.68rem; font-weight: 800; color: var(--muted); background: var(--bg-secondary); border-radius: 100px; padding: 0.12rem 0.5rem; transition: color 0.15s; }
+  .bl-chip:hover .bl-chip-count { color: var(--brand); }
 
-    .b-list { list-style: none; margin: 0; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
-    .b-li { margin: 0; padding: 0; }
+  .bl-posts { margin-bottom: 2.5rem; }
+  .bl-posts-head { margin-bottom: 1.5rem; }
+  .bl-posts-head h2 { font-size: clamp(1.4rem, 2.5vw, 1.75rem); font-weight: 800; color: var(--text); margin: 0 0 0.4rem; }
+  .bl-posts-head p { font-size: 0.88rem; color: var(--muted); margin: 0; }
+  .bl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+  @media (max-width: 900px) { .bl-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .bl-grid { grid-template-columns: 1fr; } }
 
-    .b-card-link { display: grid; overflow: hidden; border-radius: 12px; border: 1px solid var(--border); background: var(--card); text-decoration: none; color: var(--text); transition: all 0.3s; }
-    .b-card-link:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--brand) 20%, var(--border)); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
-    @media (min-width:768px) { .b-card-link { grid-template-columns: minmax(0,2fr) minmax(0,3fr); } }
+  .bl-card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; text-decoration: none; transition: all 0.2s; }
+  .bl-card:hover { border-color: var(--brand); transform: translateY(-2px); box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.4); }
+  .bl-card-media { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--border); }
+  .bl-card-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s; }
+  .bl-card:hover .bl-card-img { transform: scale(1.04); }
+  .bl-badge { position: absolute; top: 0.65rem; left: 0.65rem; background: rgba(0, 0, 0, 0.7); color: #fff; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.28rem 0.65rem; border-radius: 100px; backdrop-filter: blur(4px); }
+  .bl-card-body { display: flex; flex-direction: column; flex: 1; padding: 1rem 1.1rem 1.15rem; }
+  .bl-card-title { font-size: 0.92rem; font-weight: 700; color: var(--text); line-height: 1.35; margin: 0 0 0.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5em; }
+  .bl-card:hover .bl-card-title { color: var(--brand); }
+  .bl-card-excerpt { font-size: 0.82rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.85rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .bl-card-footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding-top: 0.6rem; border-top: 1px solid var(--border); }
+  .bl-card-date { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+  .bl-card-action { font-size: 0.78rem; font-weight: 800; color: var(--brand); white-space: nowrap; }
 
-    .b-img-wrap { position: relative; aspect-ratio: 16/9; overflow: hidden; background: var(--border); }
-    @media (min-width:768px) { .b-img-wrap { aspect-ratio: auto; height: 100%; min-height: 16rem; } }
-    .b-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
-    .b-card-link:hover .b-img { transform: scale(1.025); }
+  .bl-more-wrap { text-align: center; margin-top: 2rem; }
+  .bl-more { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.75rem; background: var(--brand); color: var(--bg); border-radius: 10px; font-size: 0.9rem; font-weight: 800; text-decoration: none; transition: opacity 0.2s; }
+  .bl-more:hover { opacity: 0.9; }
+  .bl-more-arrow { transition: transform 0.2s; }
+  .bl-more:hover .bl-more-arrow { transform: translateX(3px); }
 
-    .b-body { display: flex; flex-direction: column; padding: 1.25rem; min-width: 0; }
-    .b-title { font-size: 1.15rem; font-weight: 600; line-height: 1.3; color: var(--text); margin: 0; transition: color 0.2s; }
-    .b-card-link:hover .b-title { color: var(--brand); }
-    .b-excerpt { font-size: 0.85rem; color: var(--muted); line-height: 1.55; margin: 0.5rem 0 0; }
-    .b-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-top: auto; padding-top: 1rem; }
-    .b-tag { display: inline-flex; align-items: center; gap: 0.35rem; height: 2rem; padding: 0 0.75rem; border-radius: 9999px; border: 1px solid var(--border); background: var(--bg); font-size: 0.72rem; font-weight: 600; color: var(--text); white-space: nowrap; }
-    .b-tag svg { width: 0.85rem; height: 0.85rem; color: var(--muted); flex-shrink: 0; }
-    .b-date { display: inline-flex; align-items: center; gap: 0.35rem; height: 2rem; padding: 0 0.75rem; border-radius: 9999px; border: 1px solid var(--border); background: var(--bg); font-size: 0.72rem; font-weight: 600; color: var(--text); white-space: nowrap; }
-    .b-date svg { width: 0.85rem; height: 0.85rem; color: var(--muted); flex-shrink: 0; }
+  .bl-seo { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem 1.5rem; margin-bottom: 2rem; }
+  .bl-seo h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 0.85rem; }
+  .bl-seo p { font-size: 0.92rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.75rem; }
+  .bl-seo p:last-child { margin-bottom: 0; }
+  .bl-seo strong { color: var(--text); font-weight: 700; }
+  .bl-seo a { color: var(--brand); text-decoration: none; font-weight: 700; }
+  .bl-seo a:hover { text-decoration: underline; }
 
-    .b-more-wrap { text-align: center; padding: 1.5rem 1rem 2rem; border-top: 1px solid var(--border); }
-    .b-more { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.5rem; background: var(--brand); color: var(--bg); border-radius: 8px; font-size: 0.85rem; font-weight: 700; text-decoration: none; transition: opacity 0.2s; }
-    .b-more:hover { opacity: 0.9; }
+  .bl-faq { margin-bottom: 2.5rem; }
+  .bl-faq h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 1rem; }
+  .bl-faq-list { display: flex; flex-direction: column; gap: 0.65rem; }
+  .bl-faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .bl-faq-item summary { padding: 1rem 1.25rem; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.98rem; color: var(--text); list-style: none; gap: 0.75rem; }
+  .bl-faq-item summary::-webkit-details-marker { display: none; }
+  .bl-faq-plus { color: var(--brand); font-size: 1.2rem; flex-shrink: 0; transition: transform 0.2s; }
+  .bl-faq-item[open] summary .bl-faq-plus { transform: rotate(45deg); }
+  .bl-faq-a { padding: 0 1.25rem 1.1rem; color: var(--muted); font-weight: 500; line-height: 1.65; font-size: 0.9rem; }
+  .bl-faq-a a { color: var(--brand); text-decoration: none; font-weight: 700; }
 
-    .b-seo { padding: 2rem 1.5rem; border-top: 1px solid var(--border); }
-    .b-seo h2 { font-size: 1rem; font-weight: 700; color: var(--text); margin: 0 0 0.75rem; }
-    .b-seo p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.5rem; }
-    .b-seo p:last-child { margin-bottom: 0; }
-    .b-seo a { color: var(--brand); text-decoration: none; font-weight: 600; }
-    .b-seo a:hover { text-decoration: underline; }
-
-    .b-faq { padding: 1.5rem; border-top: 1px solid var(--border); }
-    .b-faq > h2 { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
-    .b-faq > h2 svg { color: var(--brand); flex-shrink: 0; }
-    .b-faq-item { border-bottom: 1px solid var(--border); padding: 1rem 0; }
-    .b-faq-item:first-of-type { border-top: 1px solid var(--border); }
-    .b-faq-q { font-size: 0.85rem; font-weight: 700; color: var(--text); margin: 0 0 0.25rem; }
-    .b-faq-a { font-size: 0.82rem; color: var(--muted); line-height: 1.55; margin: 0; }
-    .b-faq-a a { color: var(--brand); text-decoration: none; font-weight: 600; }
-    .b-faq-a a:hover { text-decoration: underline; }
-  </style>
+  .bl-back { text-align: center; padding: 2rem 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 16px; }
+  .bl-back h3 { color: var(--text); margin: 0 0 0.4rem; font-size: 1.3rem; }
+  .bl-back p { color: var(--muted); margin: 0 0 1.25rem; font-size: 0.9rem; }
+  .bl-back-btn { display: inline-block; padding: 0.8rem 2rem; background: var(--brand); color: var(--bg); text-decoration: none; border-radius: 10px; font-weight: 800; }
+  .bl-back-btn:hover { opacity: 0.9; }
+</style>
 </Layout>

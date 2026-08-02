@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { Image } from 'astro:assets';
 import { readDeals } from '../../lib/store';
 import DealCard from '../../components/DealCard.astro';
 import { toISODateWIB } from '../../lib/date';
@@ -125,14 +126,64 @@ const avgDiscount = topicDeals.length > 0
 const freeCourses = topicDeals.filter(deal => deal.price === 0 || deal.price === null).length;
 
 // SEO description - optimized
-const topicDescription = `${topicDeals.length}+ verified Udemy ${topicName} courses with coupon codes. Find ${topicName.toLowerCase()} courses for beginners to advanced learners. Save up to ${avgDiscount}% with daily verified deals. Learn from expert instructors with lifetime access and certificates. Updated ${currentDate}.`;
+const topicDescription = `Looking for the best ${topicName} courses on Udemy? We ranked ${topicDeals.length}+ verified ${topicName} courses by student rating and coupon availability — save up to ${avgDiscount}% with working codes updated daily. Updated ${currentDate}.`;
 
 // Get all topics for sidebar
 const topics = [...new Set(allDeals.map(deal => deal.subcategory).filter(sub => sub != null))];
 
+// Featured image: top-rated course in this topic (like real.discount's per-topic featured image)
+const featuredDeal = [...topicDeals].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))[0];
+const featuredImage = featuredDeal?.image ?? null;
+
+// Other topics for "Discover More"
+const GRADIENT_COLORS = [
+  { c1: '#0d9488', c2: '#115e59' },
+  { c1: '#059669', c2: '#047857' },
+  { c1: '#0891b2', c2: '#0e7490' },
+  { c1: '#3b82f6', c2: '#1d4ed8' },
+  { c1: '#6d28d9', c2: '#5b21b6' },
+  { c1: '#b45309', c2: '#92400e' },
+  { c1: '#7e22ce', c2: '#6b21a8' },
+  { c1: '#0f766e', c2: '#134e4a' }
+];
+
+// Rotate the topic list per-page so Discover More differs on every topic page
+const hashFor = (s: string) => ((s.split('').reduce((h, ch) => h * 31 + ch.charCodeAt(0), 7) % 100000) + 100000) % 100000;
+const rotateOffset = hashFor(topicSlug);
+
+const otherTopics = topics
+  .filter(sub => sub != null && typeof sub === 'string')
+  .map((sub) => {
+    const subDeals = allDeals.filter(deal => deal.subcategory === sub);
+    const hashRaw = [...sub].reduce((h, ch) => h * 31 + ch.charCodeAt(0), 7);
+    const hash = ((hashRaw % 100000) + 100000) % 100000;
+    const grad = GRADIENT_COLORS[hash % GRADIENT_COLORS.length];
+    return {
+      name: sub.replace(/\b\w/g, (l: string) => l.toUpperCase()),
+      slug: sub.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
+      count: subDeals.length,
+      c1: grad.c1,
+      c2: grad.c2,
+      s1x: 24 + (hash % 56),
+      s1y: 16 + (hash >> 3) % 34,
+      s1r: 26 + (hash >> 4) % 26,
+      s2x: 200 + (hash >> 2) % 96,
+      s2y: 10 + (hash >> 6) % 30,
+      s2r: 22 + (hash >> 5) % 22,
+      s3x: 280 - (hash >> 7) % 60,
+      s3y: 130 + (hash >> 8) % 40,
+      s3r: 12 + (hash >> 9) % 14
+    };
+  })
+  .filter(t => t.slug !== topicSlug)
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .sort((a, b) => ((hashFor(a.slug) - rotateOffset + 100000) % 100000) - ((hashFor(b.slug) - rotateOffset + 100000) % 100000))
+  .slice(0, 8)
+  .map(t => ({ name: t.name, slug: t.slug, count: t.count, c1: t.c1, c2: t.c2, s1x: t.s1x, s1y: t.s1y, s1r: t.s1r, s2x: t.s2x, s2y: t.s2y, s2r: t.s2r, s3x: t.s3x, s3y: t.s3y, s3r: t.s3r }));
+
 ---
 
-<Layout title={`${topicName} Courses — Verified Udemy Coupons & Promo Codes | CoursesWyn`} description={topicDescription}>
+<Layout title={`Best ${topicName} Courses on Udemy for ${currentYear} — Ranked & Verified | CoursesWyn`} description={topicDescription} hideBreadcrumbs={true}>
   <!-- Structured Data -->
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
@@ -141,7 +192,7 @@ const topics = [...new Set(allDeals.map(deal => deal.subcategory).filter(sub => 
         "@type": "CollectionPage",
         "@id": `https://courseswyn.com/topics/${topicSlug}`,
         "url": `https://courseswyn.com/topics/${topicSlug}`,
-        "name": `${topicName} Courses - Udemy Coupon Deals`,
+        "name": `Best ${topicName} Courses on Udemy for ${currentYear}`,
         "description": topicDescription,
         "inLanguage": "en-US",
         "dateModified": currentDate,
@@ -155,7 +206,7 @@ const topics = [...new Set(allDeals.map(deal => deal.subcategory).filter(sub => 
         },
         "mainEntity": {
           "@type": "ItemList",
-          "name": `${topicName} Courses`,
+          "name": `Best ${topicName} Courses`,
           "numberOfItems": topicDeals.length,
           "itemListElement": topicDeals.slice(0, 10).map((deal, i) => ({
             "@type": "ListItem",
@@ -172,299 +223,310 @@ const topics = [...new Set(allDeals.map(deal => deal.subcategory).filter(sub => 
     ]
   })} />
 
-  <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "2rem 1rem" }}>
-    {/* Breadcrumb */}
-    <nav aria-label="Breadcrumb" style={{ marginBottom: "2rem" }}>
-      <ol style={{ display: "flex", listStyle: "none", padding: 0, margin: 0, gap: "10px", fontSize: "0.85rem", fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }} itemscope itemtype="https://schema.org/BreadcrumbList">
-        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-          <a href="/" style={{ color: "inherit", textDecoration: "none" }} itemprop="item">
-            <span itemprop="name">Home</span>
-          </a>
-          <meta itemprop="position" content="1" />
-        </li>
-        <li style={{ color: "var(--border)" }}>/</li>
-        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-          <a href="/topics" style={{ color: "inherit", textDecoration: "none" }} itemprop="item">
-            <span itemprop="name">Topics</span>
-          </a>
-          <meta itemprop="position" content="2" />
-        </li>
-        <li style={{ color: "var(--border)" }}>/</li>
-        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" style={{ color: "var(--text)" }}>
-          <span itemprop="name">{topicName}</span>
-          <meta itemprop="position" content="3" />
-        </li>
-      </ol>
-    </nav>
+  <div class="tp2-root">
+    <div class="tp2-container">
 
-    {/* Page Header */}
-    <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-      <div style={{ display: "inline-block", background: "var(--accent)", color: "white", padding: "6px 16px", border: "2px solid var(--border)", boxShadow: "3px 3px 0 var(--border)", borderRadius: "4px", fontWeight: 900, fontSize: "0.75rem", textTransform: "uppercase", marginBottom: "1.5rem" }}>
-        {topicDeals.length}+ Verified Courses · Updated {currentYear}
-      </div>
-      <h1 style={{
-        fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
-        fontWeight: "900",
-        marginBottom: "1rem",
-        color: "var(--text)",
-        lineHeight: 1.15,
-        letterSpacing: "-0.03em"
-      }}>
-        {topicDeals.length}+ {topicName} Courses with <span style={{ background: "var(--accent)", color: "white", padding: "0 8px", display: "inline-block" }}>Coupon Codes</span>
-      </h1>
-      <p style={{
-        fontSize: "1.05rem",
-        color: "var(--muted)",
-        maxWidth: "700px",
-        margin: "0 auto",
-        lineHeight: "1.6",
-        fontWeight: 500
-      }}>
-        Find verified {topicName.toLowerCase()} courses with coupon codes. Save up to {avgDiscount}% on beginner to advanced {topicName.toLowerCase()} training.
-      </p>
-      <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center", marginTop: "1.5rem" }}>
-        {[
-          { v: `${topicDeals.length}+`, l: "Courses" },
-          { v: `${avgDiscount}%`, l: "Avg Discount" },
-          { v: `${avgDiscount}%`, l: "Avg Savings" }
-        ].map(s => (
-          <div style="background: var(--card); border: 2px solid var(--border); padding: 12px 24px; border-radius: 4px; box-shadow: 4px 4px 0 var(--border); display: flex; flex-direction: column; align-items: center;">
-            <span style="font-size: 1.5rem; font-weight: 900; color: var(--accent);">{s.v}</span>
-            <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--muted);">{s.l}</span>
-          </div>
-        ))}
-      </div>
-      <a href="/udemy-coupon-code" style={{
-        color: "var(--accent)",
-        textDecoration: "none",
-        fontWeight: "800",
-        display: "inline-block",
-        marginTop: "1.5rem",
-        textTransform: "uppercase",
-        fontSize: "0.85rem",
-        letterSpacing: "0.05em"
-      }}>
-        ← Browse All Free Deals
-      </a>
-    </div>
+      <nav aria-label="Breadcrumb" class="tp2-breadcrumb" itemscope itemtype="https://schema.org/BreadcrumbList">
+        <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
+            <meta itemprop="position" content="1" />
+          </li>
+          <li class="tp2-sep">/</li>
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a href="/topics" itemprop="item"><span itemprop="name">Topics</span></a>
+            <meta itemprop="position" content="2" />
+          </li>
+          <li class="tp2-sep">/</li>
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" class="tp2-crumb-current">
+            <span itemprop="name">{topicName}</span>
+            <meta itemprop="position" content="3" />
+          </li>
+        </ol>
+      </nav>
 
-    {/* SEO Description Block */}
-    <div style={{ marginBottom: "3rem", padding: "2rem", background: "var(--card)", border: "2px solid var(--border)", borderRadius: "8px", boxShadow: "4px 4px 0 var(--border)" }}>
-      <h2 style={{ fontSize: "1.4rem", fontWeight: 900, marginBottom: "1rem", color: "var(--text)" }}>
-        What Are {topicName} Courses on Udemy?
-      </h2>
-      <p style={{ color: "var(--muted)", lineHeight: 1.7, marginBottom: "1rem", fontWeight: 500 }}>
-        <strong style="color:var(--text)">{topicName}</strong> courses on Udemy cover everything from fundamentals to advanced techniques. 
-        Whether you're a complete beginner or experienced professional, you'll find expert-led training with hands-on projects.
-      </p>
-      <p style={{ color: "var(--muted)", lineHeight: 1.7, margin: 0, fontWeight: 500 }}>
-        Using our verified coupon codes, you can access premium {topicName.toLowerCase()} courses at a <strong style="color:var(--text)">great discount</strong>. 
-        Each course includes lifetime access, certificate of completion, and all learning materials. 
-        Browse our curated list below — all coupons tested daily.
-      </p>
-    </div>
-
-    {/* Deals Grid */}
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(2, 1fr)",
-      gap: "1rem",
-      marginBottom: "3rem"
-    }}>
-      {currentItems.length > 0 ? (
-        currentItems.map((deal) => (
-          <DealCard deal={deal} />
-        ))
-      ) : (
-        <div style={{
-          gridColumn: "1 / -1",
-          textAlign: "center",
-          padding: "3rem",
-          background: "var(--card)",
-          borderRadius: "20px",
-          border: "1px solid var(--border)"
-        }}>
-          <h3 style={{ color: "var(--text)", marginBottom: "1rem", fontSize: "1.5rem" }}>
-            No courses found in {topicName}
-          </h3>
-          <p style={{ color: "var(--muted)", marginBottom: "1.5rem", lineHeight: "1.6" }}>
-            We couldn't find any courses in this topic. Try browsing our other topics or check back later for new courses.
-          </p>
-          <a href="/udemy-coupon-code" style={{
-            padding: "12px 24px",
-            background: "var(--accent)",
-            border: "2px solid var(--border)",
-            boxShadow: "4px 4px 0 var(--border)",
-            borderRadius: "4px",
-            color: "white",
-            textDecoration: "none",
-            fontWeight: "900",
-            display: "inline-block",
-            textTransform: "uppercase"
-          }}>
-            Browse All Courses
-          </a>
-        </div>
-      )}
-    </div>
-
-    {/* FAQ Section */}
-    <section style={{ marginTop: "3rem", padding: "3rem 2rem", background: "var(--card)", borderRadius: "12px", border: "2px solid var(--border)" }}>
-      <h2 style={{ color: "var(--text)", marginBottom: "1.5rem", fontSize: "1.75rem", fontWeight: 900, textAlign: "center" }}>
-        Frequently Asked Questions About {topicName} Courses
-      </h2>
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        {[
-          { q: `Are there discounted ${topicName} courses on Udemy?`, a: `Yes! We have ${topicDeals.length}+ ${topicName} courses available with coupon codes. These include beginner to advanced courses from top instructors. All you need is a free Udemy account to enroll.` },
-          { q: `How do I use a ${topicName} coupon code?`, a: `Simply browse the courses above and click any deal. You'll be redirected to Udemy with the discount pre-applied. Complete enrollment to get lifetime access.` },
-          { q: `Do discounted ${topicName} courses include certificates?`, a: `Yes! All Udemy courses accessed through our coupons include a certificate of completion. This certificate is identical to paid enrollments.` },
-          { q: `How often are new ${topicName} courses added?`, a: `New ${topicName} courses and deals are added daily. We recommend bookmarking this page and checking back regularly.` },
-          { q: `Are these ${topicName} coupon codes legitimate?`, a: `Absolutely! All coupons are verified and sourced directly from Udemy or authorized instructors. We test every coupon before listing. These are official promotional codes, not hacks or exploits.` },
-          { q: `What skill level are these ${topicName} courses for?`, a: `We curate ${topicName} courses for all levels — complete beginners, intermediate learners, and advanced professionals. Each course listing shows the skill level, so you can find the perfect match for your experience.` }
-        ].map((faq, i) => (
-          <details style="background: var(--card); border: 2px solid var(--border); border-radius: 8px; box-shadow: 3px 3px 0 var(--border);" class="faq-item">
-            <summary style="padding: 20px 24px; font-weight: 800; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.05rem; list-style: none;">
-              {faq.q}
-              <span style="color: var(--accent); font-size: 1.3rem;">+</span>
-            </summary>
-            <div style="padding: 0 24px 20px; color: var(--muted); font-weight: 500; line-height: 1.6;">
-              {faq.a}
+      {/* Hero */}
+      <section class="tp2-hero">
+        <div class="tp2-hero-inner">
+          <div class="tp2-hero-left">
+            <p class="tp2-hero-label">Best of {currentYear} &middot; Ranked &amp; Verified</p>
+            <h1>Best <span class="tp2-grad">{topicName}</span> Courses on Udemy for {currentYear}</h1>
+            <p class="tp2-claim">We ranked the top {topicName} courses by student rating and coupon availability — every code tested against Udemy before listing.</p>
+            <div class="tp2-hero-stats">
+              <div class="tp2-stat">
+                <span class="tp2-stat-lbl">Courses</span>
+                <span class="tp2-stat-val">{topicDeals.length}+</span>
+              </div>
+              <div class="tp2-stat">
+                <span class="tp2-stat-lbl">Avg discount</span>
+                <span class="tp2-stat-val">{avgDiscount}%</span>
+              </div>
+              <div class="tp2-stat">
+                <span class="tp2-stat-lbl">Updated</span>
+                <span class="tp2-stat-val">{currentYear}</span>
+              </div>
             </div>
-          </details>
-        ))}
-      </div>
-    </section>
+          </div>
+          <div class="tp2-hero-right">
+            {featuredImage && (
+              <div class="tp2-featured">
+                <Image
+                  src={featuredImage}
+                  alt={`Best ${topicName} courses on Udemy`}
+                  width={750}
+                  height={422}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  inferSize={false}
+                  loading="eager"
+                />
+                <span class="tp2-featured-badge">Top rated</span>
+              </div>
+            )}
+            <p>Ranked by real student ratings and review counts from Udemy, filtered to only courses with <strong class="tp2-em">working verified coupon codes</strong>. New {topicName.toLowerCase()} deals are added every day and checked in near real time — expired coupons disappear automatically.</p>
+            <a href="/udemy-coupons-today" class="tp2-hero-link">See today's newest deals &#8594;</a>
+          </div>
+        </div>
+      </section>
 
-    {/* Related Searches */}
-    <div style={{ marginTop: "3rem", padding: "2rem", background: "var(--card)", borderRadius: "12px", border: "2px solid var(--border)", boxShadow: "4px 4px 0 var(--border)" }}>
-      <h2 style={{ color: "var(--text)", marginBottom: "1rem", fontSize: "1.5rem", fontWeight: 900 }}>
-        Popular Searches for {topicName}
-      </h2>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
-        {relatedSearches.slice(0, 12).map((search) => (
-          <span style={{ 
-            display: "inline-flex",
-            padding: "8px 16px",
-            background: "var(--card)",
-            border: "2px solid var(--border)",
-            borderRadius: "6px",
-            fontSize: "0.9rem",
-            fontWeight: 700,
-            color: "var(--text)"
-          }}>
-            {search}
-          </span>
-        ))}
-      </div>
-    </div>
+      {/* Related searches (plain text, above the cards, like real.discount) */}
+      <section class="tp2-related">
+        <h2>Related Searches</h2>
+        <p class="tp2-related-text">{relatedSearches.join(', ')}</p>
+      </section>
 
-    {/* Back to Topics */}
-    <div style={{ marginTop: "3rem", textAlign: "center", padding: "2rem", background: "var(--card)", borderRadius: "12px", border: "2px solid var(--border)" }}>
-      <h3 style={{ color: "var(--text)", marginBottom: "1rem", fontSize: "1.3rem", fontWeight: 900 }}>
-        Explore More Course Topics
-      </h3>
-      <p style={{ color: "var(--muted)", marginBottom: "1.5rem", lineHeight: 1.6 }}>
-        Discover courses in other categories. We have 50+ specialized topics with verified coupon codes.
-      </p>
-      <a href="/topics" style={{
-        display: "inline-block",
-        padding: "14px 28px",
-        background: "var(--accent)",
-        color: "white",
-        border: "2px solid var(--border)",
-        boxShadow: "4px 4px 0 var(--border)",
-        borderRadius: "6px",
-        textDecoration: "none",
-        fontWeight: 900,
-        textTransform: "uppercase",
-        letterSpacing: "0.05em"
-      }}>
-        Browse All Topics →
-      </a>
-    </div>
-
-    {/* Pagination */}
-    {totalPages > 1 && (
-      <div style={{ textAlign: "center", marginTop: "3rem", padding: "2rem" }}>
-        <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", marginBottom: "1rem" }}>
-          {/* Previous Button */}
-          {currentPage > 1 && (
-            <a
-              href={`/topics/${topicSlug}?page=${currentPage - 1}`}
-              style={{
-                padding: "8px 12px",
-                background: "var(--card)",
-                border: "1px solid var(--border)",
-                borderRadius: "6px",
-                color: "var(--text)",
-                textDecoration: "none",
-                fontSize: "14px",
-                fontWeight: "600"
-              }}
-            >
-              ←
-            </a>
-          )}
-
-          {/* Page Numbers */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1)
-            .filter(pageNum =>
-              pageNum === 1 ||
-              pageNum === totalPages ||
-              (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-            )
-            .map((pageNum) => (
-              <a
-                href={`/topics/${topicSlug}?page=${pageNum}`}
-                style={{
-                  padding: "8px 12px",
-                  background: pageNum === currentPage
-                    ? "var(--brand)"
-                    : "var(--card)",
-                  border: pageNum === currentPage
-                    ? "2px solid var(--brand)"
-                    : "1px solid var(--border)",
-                  borderRadius: "6px",
-                  color: pageNum === currentPage ? "white" : "var(--text)",
-                  textDecoration: "none",
-                  fontSize: "14px",
-                  fontWeight: pageNum === currentPage ? "bold" : "600"
-                }}
-              >
-                {pageNum}
-              </a>
-            ))}
-
-          {/* Next Button */}
-          {currentPage < totalPages && (
-            <a
-              href={`/topics/${topicSlug}?page=${currentPage + 1}`}
-              style={{
-                padding: "8px 12px",
-                background: "var(--card)",
-                border: "1px solid var(--border)",
-                borderRadius: "6px",
-                color: "var(--text)",
-                textDecoration: "none",
-                fontSize: "14px",
-                fontWeight: "600"
-              }}
-            >
-              →
-            </a>
+      {/* Deals list */}
+      <section class="tp2-deals" aria-label={`Best ${topicName} courses on Udemy`}>
+        <div class="tp2-deals-head">
+          <h2>Discover {topicName} Courses on Udemy Today</h2>
+          <p>Looking for the best {topicName} courses available today? You've come to the right place. Our curated collection of top {topicName} courses spans multiple languages including English, Arabic, Dutch and more, giving you access to high-quality educational content at unbeatable prices. Whether you're looking to learn {topicName} from scratch, advance your {topicName} skills, or explore new {topicName} techniques, these courses with verified coupon codes provide an excellent starting point.</p>
+        </div>
+        <div class="tp2-deals-list">
+          {currentItems.length > 0 ? (
+            currentItems.map((deal) => (
+              <DealCard deal={deal} />
+            ))
+          ) : (
+            <div class="tp2-empty">
+              <h3>No courses found in {topicName}</h3>
+              <p>We couldn't find any courses in this topic right now. Try browsing our other topics or check back later for fresh deals.</p>
+              <a href="/udemy-coupon-code" class="tp2-empty-btn">Browse All Courses</a>
+            </div>
           )}
         </div>
+      </section>
 
-        <div style={{ color: "var(--muted)", fontSize: "14px", marginTop: "10px" }}>
-          Showing {startIndex + 1}-{Math.min(endIndex, topicDeals.length)} of {topicDeals.length} courses
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <nav class="tp2-pagination" aria-label="Pagination">
+          <div class="tp2-pg-btns">
+            {currentPage > 1 && (
+              <a href={`/topics/${topicSlug}?page=${currentPage - 1}`} class="tp2-pg-btn">&#8592;</a>
+            )}
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(pageNum =>
+                pageNum === 1 ||
+                pageNum === totalPages ||
+                (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+              )
+              .map((pageNum) => (
+                <a
+                  href={`/topics/${topicSlug}?page=${pageNum}`}
+                  class:list={["tp2-pg-btn", { "tp2-pg-active": pageNum === currentPage }]}
+                >
+                  {pageNum}
+                </a>
+              ))}
+            {currentPage < totalPages && (
+              <a href={`/topics/${topicSlug}?page=${currentPage + 1}`} class="tp2-pg-btn">&#8594;</a>
+            )}
+          </div>
+          <div class="tp2-pg-info">
+            Showing {startIndex + 1}-{Math.min(endIndex, topicDeals.length)} of {topicDeals.length} courses
+          </div>
+        </nav>
+      )}
+
+      {/* SEO block */}
+      <section class="tp2-seo">
+        <h2>Why These Are the Best {topicName} Courses on Udemy</h2>
+        <p>Every {topicName.toLowerCase()} course below is ranked using real student ratings and review volume from Udemy, then filtered to keep only listings where our <strong>verified coupon code is currently working</strong>. We re-check each deal in near real time, so the discount you see is the price you pay.</p>
+        <p>Whether you're a complete beginner or an experienced professional, you'll find top-rated {topicName.toLowerCase()} training with hands-on projects, lifetime access, and a certificate of completion included with every enrollment.</p>
+
+        <h3>Why Choose Online {topicName} Courses?</h3>
+        <p>Online courses have become increasingly popular among learners worldwide. They offer flexibility, allowing you to learn at your own pace and on your own schedule. Many of these courses come from reputable platforms and feature experienced instructors who share their expertise. Best of all, verified coupon codes let you enroll at a fraction of the regular price, making them perfect for beginners and lifelong learners alike.</p>
+
+        <h3>How to Get Started with {topicName} Courses</h3>
+        <p>Getting started is simple. Browse through our comprehensive list of {topicName.toLowerCase()} courses updated on {currentDate}. Each course listing includes important details like duration, language, and instructor information. Simply click on any course that interests you to access the learning materials. Most courses are self-paced, meaning you can start whenever you're ready and complete them at your convenience.</p>
+
+        <h3>Popular {topicName} Course Categories</h3>
+        <p>Our collection covers diverse {topicName.toLowerCase()} topics to suit various learning interests. From beginner fundamentals to advanced techniques, you'll find courses that match your learning goals. Each category features carefully selected courses that provide value and practical knowledge, helping you build skills that matter in today's competitive job market.</p>
+
+        <h3>Discounted Courses vs Paid Courses</h3>
+        <p>While paid courses often include certificates and additional resources, discounted courses offer excellent value for those looking to learn without overpaying. Many of these courses provide the same high-quality content as their full-price counterparts, making them an ideal choice for budget-conscious learners. With our verified coupon codes you can learn valuable skills without any financial barrier.</p>
+
+        <h3>Maximize Your Learning Experience</h3>
+        <p>To get the most out of these online courses, we recommend setting aside dedicated time for learning, taking notes, and practicing what you learn. Many courses include practical exercises and projects that help reinforce your understanding. Don't forget to check back regularly, as we update our collection daily with new {topicName.toLowerCase()} deals across various subjects.</p>
+
+        <p>Ready to start learning? Explore our collection of {topicName.toLowerCase()} courses available today and begin your educational journey. With {topicDeals.length}+ courses to choose from, you're sure to find something that matches your interests and learning goals. Remember, the best part about verified coupon codes is that you can try multiple subjects at huge discounts, allowing you to discover new passions and expand your knowledge base.</p>
+      </section>
+
+      {/* Discover More = related topics */}
+      <section class="tp2-related">
+        <h2>Discover More Courses in Related Topics</h2>
+        <div class="tp2-more-grid">
+          {otherTopics.map((t) => (
+            <a href={`/topics/${t.slug}`} class="tp2-more-card">
+              <div class="tp2-more-media">
+                <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" role="img" aria-label={t.name} class="tp2-more-svg">
+                  <defs>
+                    <linearGradient id={`g-${t.slug}`} x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color={t.c1} />
+                      <stop offset="100%" stop-color={t.c2} />
+                    </linearGradient>
+                  </defs>
+                  <rect width="320" height="180" fill={`url(#g-${t.slug})`} />
+                  <circle cx={t.s1x} cy={t.s1y} r={t.s1r} fill="rgba(255,255,255,0.14)" />
+                  <circle cx={t.s2x} cy={t.s2y} r={t.s2r} fill="rgba(255,255,255,0.10)" />
+                  <circle cx={t.s3x} cy={t.s3y} r={t.s3r} fill="rgba(255,255,255,0.18)" />
+                  <text x="16" y="112" fill="rgba(255,255,255,0.95)" font-size="30" font-weight="800" font-family="inherit">{t.name}</text>
+                  <text x="16" y="148" fill="rgba(255,255,255,0.8)" font-size="16" font-weight="600" font-family="inherit">{t.count} courses</text>
+                </svg>
+              </div>
+              <div class="tp2-more-body">
+                <span class="tp2-more-name">Best {t.name} Courses on Udemy for {currentYear}</span>
+                <span class="tp2-more-count">{t.count} courses &#8594;</span>
+              </div>
+            </a>
+          ))}
         </div>
-      </div>
-    )}
+      </section>
+
+      {/* FAQ */}
+      <section class="tp2-faq">
+        <h2>Frequently Asked Questions About Best {topicName} Courses</h2>
+        <div class="tp2-faq-list">
+          {[
+            { q: `What are the best ${topicName} courses on Udemy right now?`, a: `We rank the top ${topicName} courses by student rating and review count, keeping only those with a working verified coupon code. The current ranking above is updated daily — every code is checked against Udemy before it stays listed.` },
+            { q: `How do I use a ${topicName} coupon code?`, a: `Simply browse the ranked courses above and click any deal. You'll be redirected to Udemy with the discount pre-applied. Complete enrollment to get lifetime access.` },
+            { q: `Do discounted ${topicName} courses include certificates?`, a: `Yes! All Udemy courses accessed through our coupons include a certificate of completion — identical to paid enrollments.` },
+            { q: `How often are new ${topicName} courses added?`, a: `New ${topicName} courses and deals are added daily. We recommend bookmarking this page and checking back regularly.` },
+            { q: `Are these ${topicName} coupon codes legitimate?`, a: `Absolutely! All coupons are verified and sourced directly from Udemy or authorized instructors. We test every coupon before listing — these are official promotional codes, not hacks or exploits.` },
+            { q: `What skill level are these ${topicName} courses for?`, a: `We curate ${topicName} courses for all levels — complete beginners, intermediate learners, and advanced professionals. Each course listing shows the skill level so you can find the perfect match.` }
+          ].map((faq) => (
+            <details class="tp2-faq-item">
+              <summary>
+                {faq.q}
+                <span class="tp2-faq-plus">+</span>
+              </summary>
+              <div class="tp2-faq-a">{faq.a}</div>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* Back to topics */}
+      <section class="tp2-back">
+        <h3>Explore More Course Topics</h3>
+        <p>Discover courses in other categories — all with verified coupon codes.</p>
+        <a href="/topics" class="tp2-back-btn">Browse All Topics &#8594;</a>
+      </section>
+
+    </div>
   </div>
 
 <style>
-  .faq-item[open] { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--border); }
-  .faq-item summary::-webkit-details-marker { display: none; }
+  .tp2-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+  .tp2-container { max-width: 1200px; margin: 0 auto; }
+
+  .tp2-breadcrumb { margin-bottom: 1.5rem; }
+  .tp2-breadcrumb ol { display: flex; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; gap: 0.5rem; font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+  .tp2-breadcrumb a { color: inherit; text-decoration: none; }
+  .tp2-breadcrumb a:hover { color: var(--brand); }
+  .tp2-sep { color: var(--border); }
+  .tp2-crumb-current { color: var(--text); }
+
+  .tp2-hero { padding: 2rem 0 3rem; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
+  @media (min-width: 900px) { .tp2-hero-inner { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr); gap: 3rem; align-items: start; } }
+  .tp2-hero-label { display: flex; align-items: center; gap: 0.6rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--brand); margin: 0 0 1rem; }
+  .tp2-hero-label::before { content: ''; width: 2rem; height: 3px; background: var(--brand); flex-shrink: 0; }
+  .tp2-hero h1 { font-size: clamp(2.2rem, 4.5vw, 3.5rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; color: var(--text); margin: 0 0 1.25rem; }
+  .tp2-grad { background: linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .tp2-claim { font-size: 1rem; color: var(--muted); line-height: 1.7; margin: 0 0 1.75rem; max-width: 42rem; }
+  .tp2-hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-width: 1px 0; max-width: 26rem; }
+  .tp2-stat { padding: 1rem 1.25rem 1rem 0; }
+  .tp2-stat + .tp2-stat { border-left: 1px solid var(--border); padding-left: 1.25rem; }
+  .tp2-stat-lbl { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 0.25rem; }
+  .tp2-stat-val { font-size: 1.4rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+  .tp2-hero-right p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin: 0 0 1.25rem; }
+  .tp2-em { color: var(--text); font-weight: 700; }
+  .tp2-hero-link { color: var(--brand); font-weight: 700; text-decoration: none; font-size: 0.88rem; }
+  .tp2-hero-link:hover { text-decoration: underline; }
+
+  .tp2-featured { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 9; margin-bottom: 1.25rem; border: 1px solid var(--border); box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.5); }
+  .tp2-featured img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tp2-featured-badge { position: absolute; top: 0.75rem; left: 0.75rem; background: rgba(0, 0, 0, 0.7); color: #fff; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; padding: 0.3rem 0.7rem; border-radius: 100px; backdrop-filter: blur(4px); }
+
+  .tp2-deals { margin-bottom: 2.5rem; }
+  .tp2-deals-head { margin-bottom: 1.5rem; }
+  .tp2-deals-head h2 { font-size: clamp(1.4rem, 2.5vw, 1.75rem); font-weight: 800; color: var(--text); margin: 0 0 0.4rem; }
+  .tp2-deals-head p { font-size: 0.88rem; color: var(--muted); margin: 0; }
+  .tp2-deals-list { display: flex; flex-direction: column; gap: 1rem; }
+
+  .tp2-empty { text-align: center; padding: 3rem 2rem; background: var(--card); border: 1px solid var(--border); border-radius: 16px; }
+  .tp2-empty h3 { color: var(--text); margin-bottom: 0.75rem; font-size: 1.4rem; }
+  .tp2-empty p { color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; max-width: 34rem; margin-left: auto; margin-right: auto; }
+  .tp2-empty-btn { display: inline-block; padding: 0.75rem 1.75rem; background: var(--brand); color: #fff; text-decoration: none; border-radius: 10px; font-weight: 700; }
+  .tp2-empty-btn:hover { filter: brightness(1.08); }
+
+  .tp2-pagination { text-align: center; margin: 2.5rem 0; }
+  .tp2-pg-btns { display: flex; justify-content: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+  .tp2-pg-btn { min-width: 40px; padding: 0.5rem 0.75rem; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); text-decoration: none; font-size: 0.9rem; font-weight: 700; text-align: center; transition: all 0.15s; }
+  .tp2-pg-btn:hover { border-color: var(--brand); color: var(--brand); }
+  .tp2-pg-active { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .tp2-pg-active:hover { color: #fff; }
+  .tp2-pg-info { color: var(--muted); font-size: 0.85rem; }
+
+  .tp2-seo { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem 1.5rem; margin-bottom: 2rem; }
+  .tp2-seo h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 0.85rem; }
+  .tp2-seo h3 { font-size: 1.05rem; font-weight: 800; color: var(--text); margin: 1.4rem 0 0.5rem; }
+  .tp2-seo p { font-size: 0.92rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.75rem; }
+  .tp2-seo p:last-child { margin-bottom: 0; }
+  .tp2-seo strong { color: var(--text); font-weight: 700; }
+
+  .tp2-related { margin-bottom: 2.5rem; }
+  .tp2-related h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 1rem; }
+  .tp2-related-text { font-size: 0.92rem; color: var(--muted); line-height: 1.9; margin: 0; }
+  .tp2-related-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .tp2-chip { display: inline-flex; padding: 0.5rem 0.9rem; background: var(--card); border: 1px solid var(--border); border-radius: 100px; font-size: 0.82rem; font-weight: 700; color: var(--text); }
+  .tp2-chip-link { text-decoration: none; transition: all 0.15s; }
+  .tp2-chip-link:hover { border-color: var(--brand); color: var(--brand); }
+
+  .tp2-more-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  @media (max-width: 900px) { .tp2-more-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .tp2-more-grid { grid-template-columns: 1fr; } }
+  .tp2-more-card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; text-decoration: none; transition: all 0.2s; }
+  .tp2-more-card:hover { border-color: var(--brand); transform: translateY(-2px); box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.4); }
+  .tp2-more-media { position: relative; aspect-ratio: 16 / 9; overflow: hidden; }
+  .tp2-more-svg { width: 100%; height: 100%; display: block; }
+  .tp2-more-body { display: flex; flex-direction: column; gap: 0.4rem; padding: 1rem 1.1rem 1.15rem; }
+  .tp2-more-name { font-weight: 800; font-size: 0.9rem; color: var(--text); line-height: 1.35; }
+  .tp2-more-count { font-size: 0.78rem; color: var(--brand); font-weight: 700; }
+
+  .tp2-faq { margin-bottom: 2.5rem; }
+  .tp2-faq h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 1rem; }
+  .tp2-faq-list { display: flex; flex-direction: column; gap: 0.65rem; }
+  .tp2-faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .tp2-faq-item summary { padding: 1rem 1.25rem; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.98rem; color: var(--text); list-style: none; gap: 0.75rem; }
+  .tp2-faq-item summary::-webkit-details-marker { display: none; }
+  .tp2-faq-plus { color: var(--brand); font-size: 1.2rem; flex-shrink: 0; transition: transform 0.2s; }
+  .tp2-faq-item[open] summary .tp2-faq-plus { transform: rotate(45deg); }
+  .tp2-faq-a { padding: 0 1.25rem 1.1rem; color: var(--muted); font-weight: 500; line-height: 1.65; font-size: 0.9rem; }
+
+  .tp2-back { text-align: center; padding: 2rem 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 16px; }
+  .tp2-back h3 { color: var(--text); margin: 0 0 0.4rem; font-size: 1.3rem; }
+  .tp2-back p { color: var(--muted); margin: 0 0 1.25rem; font-size: 0.9rem; }
+  .tp2-back-btn { display: inline-block; padding: 0.8rem 2rem; background: var(--brand); color: #fff; text-decoration: none; border-radius: 10px; font-weight: 800; }
+  .tp2-back-btn:hover { filter: brightness(1.08); }
 </style>
 
 </Layout>

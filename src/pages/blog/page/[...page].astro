@@ -12,11 +12,15 @@ export async function getStaticPaths({ paginate }: { paginate: any }) {
     return dateB.getTime() - dateA.getTime();
   });
 
-  return paginate(sortedPosts, { pageSize: 9 });
+  return paginate(sortedPosts, { pageSize: 12 });
 }
 
 const { page } = Astro.props as { page: any };
 const posts: any[] = page?.data ?? [];
+
+if (page.currentPage === 1) {
+  return Astro.redirect('/blog');
+}
 
 function formatDate(post: any) {
   const isUpdated = !!post.data.updatedAt;
@@ -45,38 +49,8 @@ const description = "Browse all Udemy Courses guides, tutorials, comparisons, an
 const canonical = `https://courseswyn.com/blog/page/${page.currentPage}`;
 const siteUrl = "https://courseswyn.com";
 
-function getPageNumbers(current: number, total: number): (number | '...')[] {
-  const pages: (number | '...')[] = [];
-  if (total <= 7) {
-    for (let i = 1; i <= total; i++) pages.push(i);
-  } else {
-    pages.push(1);
-    if (current > 3) pages.push('...');
-    const start = Math.max(2, current - 1);
-    const end = Math.min(total - 1, current + 1);
-    for (let i = start; i <= end; i++) pages.push(i);
-    if (current < total - 2) pages.push('...');
-    pages.push(total);
-  }
-  return pages;
-}
-
-const currentPosts = posts.slice(0, 9);
+const currentPosts = posts.slice(0, 12);
 const firstPostDate = currentPosts[0]?.data?.updatedAt || currentPosts[0]?.data?.pubDate;
-
-const pageItems: ({ type: 'page'; value: number } | { type: 'ellipsis'; id: string })[] = [];
-const windowSize = 2;
-let lastAdded = 0;
-for (let p = 1; p <= page.lastPage; p++) {
-  const inWindow = p >= page.currentPage - windowSize && p <= page.currentPage + windowSize;
-  if (p === 1 || p === page.lastPage || inWindow) {
-    if (lastAdded > 0 && p - lastAdded > 1) {
-      pageItems.push({ type: 'ellipsis', id: `gap-${p}` });
-    }
-    pageItems.push({ type: 'page', value: p });
-    lastAdded = p;
-  }
-}
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -104,7 +78,7 @@ const structuredData = {
         "numberOfItems": currentPosts.length,
         "itemListElement": currentPosts.map((post: any, i: number) => ({
           "@type": "ListItem",
-          "position": i + 1 + (page.currentPage - 1) * 8,
+          "position": i + 1 + (page.currentPage - 1) * 12,
           "item": {
             "@type": "BlogPosting",
             "headline": post.data.title,
@@ -119,168 +93,225 @@ const structuredData = {
     }
   ]
 };
+
+const pageItems: ({ type: 'page'; value: number } | { type: 'ellipsis'; id: string })[] = [];
+const windowSize = 2;
+let lastAdded = 0;
+for (let p = 1; p <= page.lastPage; p++) {
+  const inWindow = p >= page.currentPage - windowSize && p <= page.currentPage + windowSize;
+  if (p === 1 || p === page.lastPage || inWindow) {
+    if (lastAdded > 0 && p - lastAdded > 1) {
+      pageItems.push({ type: 'ellipsis', id: `gap-${p}` });
+    }
+    pageItems.push({ type: 'page', value: p });
+    lastAdded = p;
+  }
+}
 ---
 
-<Layout title={title} description={description} canonical={canonical}>
+<Layout title={title} description={description} canonical={canonical} hideBreadcrumbs={true}>
   <Fragment slot="head">
-    {page.url.prev && <link rel="prev" href={page.url.prev} />}
+    {page.url.prev && <link rel="prev" href={page.currentPage === 2 ? '/blog' : page.url.prev} />}
     {page.url.next && <link rel="next" href={page.url.next} />}
-    {page.currentPage > 1 && <meta name="robots" content="noindex, follow" />}
+    <meta name="robots" content="noindex, follow" />
   </Fragment>
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-  <main class="cc-root">
-    <div class="cc-container">
+  <div class="bl-root">
+    <div class="bl-container">
 
-      <nav class="cc-breadcrumb" aria-label="Breadcrumb">
-        <ol>
-          <li><a href="/">Home</a></li>
-          <li><a href="/blog">Blog</a></li>
-          <li>Page {page.currentPage}</li>
-        </ol>
-      </nav>
-
-      <header class="cc-header">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="cc-header-icon">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          <path d="M8 7h8"/><path d="M8 11h6"/>
-        </svg>
-        <h1 class="cc-title">
-          More Articles
-          <span class="cc-page-label">Page {page.currentPage}</span>
-        </h1>
-        <p class="cc-subtitle">
-          Browse all {page.total} expert guides and reviews. Showing {posts.length} articles on this page.
-        </p>
-      </header>
-
-      {posts.length > 0 ? (
-        <section class="cc-deals-section">
-          <div class="cc-deals-header">
-            <h2 class="cc-deals-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              Guides & Reviews
-            </h2>
-            <p class="cc-deals-desc">Page {page.currentPage} of {page.lastPage}</p>
-          </div>
-
-          <div class="cc-grid">
-            {posts.map((post: any) => (
-              <a href={`/blog/${post.id}`} class="cc-card">
-                <div class="cc-card-img">
-                  <Image src={resolveImage(post.data.image)} alt={post.data.title} width={400} height={160} loading="lazy" inferSize={false} />
-                  {post.data.tags && post.data.tags[0] && (
-                    <span class="cc-badge-tag">{post.data.tags[0]}</span>
-                  )}
-                </div>
-                <div class="cc-card-body">
-                  <h3 class="cc-card-title">{post.data.title}</h3>
-                  <p class="cc-card-excerpt">{post.data.description}</p>
-                  <div class="cc-card-footer">
-                    <span class="cc-card-date">{formatDate(post)}</span>
-                    <span class="cc-card-action">Read Review →</span>
-                  </div>
-                </div>
-              </a>
-            ))}
-          </div>
-
-          <nav class="cc-pagination" aria-label="Pagination">
-            {page.url.prev ? (
-              <a href={page.url.prev} class="cc-page-link cc-page-prev">← Prev</a>
-            ) : (
-              <span class="cc-page-link cc-page-disabled">← Prev</span>
-            )}
-            <div class="cc-page-numbers">
-              {pageItems.map((item: any) => {
-                if (item.type === 'ellipsis') {
-                  return <span class="cc-page-ellipsis">...</span>;
-                }
-                const isActive = item.value === page.currentPage;
-                const href = item.value === 1 ? '/blog' : `/blog/page/${item.value}`;
-                return isActive
-                  ? <span class="cc-page-num cc-page-active">{item.value}</span>
-                  : <a href={href} class="cc-page-num">{item.value}</a>;
-              })}
+      {/* Hero */}
+      <section class="bl-hero">
+        <div class="bl-hero-inner">
+          <div class="bl-hero-left">
+            <p class="bl-hero-label">Original research</p>
+            <h1>Course reviews, <span class="bl-grad">ranked by real data.</span></h1>
+            <p class="bl-claim">Page {page.currentPage} of {page.lastPage} — {page.total} expert guides and reviews built from our coupon verification pipeline.</p>
+            <div class="bl-hero-stats">
+              <div class="bl-stat">
+                <span class="bl-stat-lbl">Page</span>
+                <span class="bl-stat-val">{page.currentPage}</span>
+              </div>
+              <div class="bl-stat">
+                <span class="bl-stat-lbl">Total pages</span>
+                <span class="bl-stat-val">{page.lastPage}</span>
+              </div>
+              <div class="bl-stat">
+                <span class="bl-stat-lbl">Articles</span>
+                <span class="bl-stat-val">{page.total}</span>
+              </div>
             </div>
-            {page.url.next ? (
-              <a href={page.url.next} class="cc-page-link cc-page-next">Next →</a>
-            ) : (
-              <span class="cc-page-link cc-page-disabled">Next →</span>
-            )}
-          </nav>
-        </section>
-      ) : (
-        <div class="cc-empty">
-          <p>No articles found.</p>
-          <a href="/blog" class="cc-page-link cc-page-more">Back to Blog</a>
+          </div>
+          <div class="bl-hero-right">
+            <p>Every guide is written from <strong class="bl-em">real student ratings, review counts, and curriculum analysis</strong> — then filtered to courses where our verified coupon is still working. Coupons expire fast on Udemy, so we re-check deals in near real time.</p>
+            <p class="bl-fresh">Showing articles {page.start + 1}–{page.start + currentPosts.length} of {page.total}</p>
+            <a href="/udemy-coupon-code" class="bl-hero-link">Browse live coupon codes &#8594;</a>
+          </div>
         </div>
-      )}
+      </section>
+
+      {/* Articles grid */}
+      <section class="bl-posts" aria-label="Articles">
+        <div class="bl-posts-head">
+          <h2>More Reviews & Guides</h2>
+          <p>Page {page.currentPage} of {page.lastPage}</p>
+        </div>
+        {posts.length > 0 ? (
+          <>
+            <div class="bl-grid">
+              {posts.map((post: any) => (
+                <a href={`/blog/${post.id}`} class="bl-card">
+                  <div class="bl-card-media">
+                    <Image
+                      src={resolveImage(post.data.image)}
+                      alt={post.data.title}
+                      width={480}
+                      height={270}
+                      loading="lazy"
+                      inferSize={false}
+                      class="bl-card-img"
+                    />
+                    {post.data.tags?.[0] && <span class="bl-badge">{post.data.tags[0]}</span>}
+                  </div>
+                  <div class="bl-card-body">
+                    <h3 class="bl-card-title">{post.data.title}</h3>
+                    <p class="bl-card-excerpt">{post.data.description}</p>
+                    <div class="bl-card-footer">
+                      <time class="bl-card-date" datetime={toISODateWIB(post.data.updatedAt || post.data.pubDate)}>
+                        {formatDate(post)}
+                      </time>
+                      <span class="bl-card-action">Read review &#8594;</span>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+
+            <div class="bl-pag-wrap">
+              <nav class="bl-pagination" aria-label="Pagination">
+                {page.url.prev ? (
+                  <a href={page.currentPage === 2 ? '/blog' : page.url.prev} class="bl-pg-link">← Prev</a>
+                ) : (
+                  <span class="bl-pg-link bl-pg-disabled">← Prev</span>
+                )}
+                <div class="bl-pg-numbers">
+                  {pageItems.map((item: any) => {
+                    if (item.type === 'ellipsis') {
+                      return <span class="bl-pg-ellipsis">...</span>;
+                    }
+                    const isActive = item.value === page.currentPage;
+                    const href = item.value === 1 ? '/blog' : `/blog/page/${item.value}`;
+                    return isActive
+                      ? <span class="bl-pg-num bl-pg-active">{item.value}</span>
+                      : <a href={href} class="bl-pg-num">{item.value}</a>;
+                  })}
+                </div>
+                {page.url.next ? (
+                  <a href={page.url.next} class="bl-pg-link">Next →</a>
+                ) : (
+                  <span class="bl-pg-link bl-pg-disabled">Next →</span>
+                )}
+              </nav>
+            </div>
+          </>
+        ) : (
+          <div class="bl-empty">
+            <p>No articles found.</p>
+            <a href="/blog" class="bl-more">Back to Blog</a>
+          </div>
+        )}
+      </section>
+
+      {/* SEO block */}
+      <section class="bl-seo">
+        <h2>Why trust CoursesWyn's Udemy course reviews?</h2>
+        <p>Every guide on this blog is built on <strong>real data and hands-on analysis</strong>. We examine each course's curriculum depth, instructor credibility, student review sentiment, and practical outcomes — not just star ratings. Our team of edtech researchers has reviewed 1,300+ Udemy courses across <a href="/categories">every major category</a> to bring you detailed, honest reviews.</p>
+        <p>All coupon codes listed in our reviews are <strong>verified, tested, and confirmed working</strong> before publication. Since Udemy's coupon policy update, coupons expire quickly — we monitor every deal and remove expired ones daily. Browse <a href="/udemy-coupon-code">all active coupon codes</a> to start learning today.</p>
+      </section>
+
+      {/* Explore more */}
+      <section class="bl-back">
+        <h3>Find Discounted Courses Right Now</h3>
+        <p>Skip the reviews and jump straight to working coupon codes across every topic.</p>
+        <a href="/topics" class="bl-back-btn">Browse All Topics &#8594;</a>
+      </section>
 
     </div>
-  </main>
-</Layout>
+  </div>
 
 <style>
-  .cc-root { background: var(--bg); padding: 2rem 1rem 4rem; }
-  .cc-container { max-width: 1024px; margin: 0 auto; }
+  .bl-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+  .bl-container { max-width: 1200px; margin: 0 auto; }
 
-  .cc-breadcrumb { display: flex; justify-content: center; margin-bottom: 1rem; }
-  .cc-breadcrumb ol { list-style: none; display: flex; align-items: center; gap: 0.5rem; padding: 0; margin: 0; font-size: 0.8rem; color: var(--muted); }
-  .cc-breadcrumb li:not(:last-child)::after { content: '/'; margin-left: 0.5rem; color: var(--border); }
-  .cc-breadcrumb a { color: var(--brand); text-decoration: none; }
-  .cc-breadcrumb a:hover { text-decoration: underline; }
+  .bl-hero { padding: 2rem 0 3rem; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
+  @media (min-width: 900px) { .bl-hero-inner { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr); gap: 3rem; align-items: start; } }
+  .bl-hero-label { display: flex; align-items: center; gap: 0.6rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--brand); margin: 0 0 1rem; }
+  .bl-hero-label::before { content: ''; width: 2rem; height: 3px; background: var(--brand); flex-shrink: 0; }
+  .bl-hero h1 { font-size: clamp(2.2rem, 4.5vw, 3.5rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; color: var(--text); margin: 0 0 1.25rem; }
+  .bl-grad { background: linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .bl-claim { font-size: 1rem; color: var(--muted); line-height: 1.7; margin: 0 0 1.75rem; max-width: 42rem; }
+  .bl-hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-width: 1px 0; max-width: 26rem; }
+  .bl-stat { padding: 1rem 1.25rem 1rem 0; }
+  .bl-stat + .bl-stat { border-left: 1px solid var(--border); padding-left: 1.25rem; }
+  .bl-stat-lbl { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 0.25rem; }
+  .bl-stat-val { font-size: 1.4rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+  .bl-hero-right p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.75rem; }
+  .bl-em { color: var(--text); font-weight: 700; }
+  .bl-fresh { font-size: 0.78rem; color: var(--muted); font-weight: 600; margin-bottom: 1.25rem !important; display: flex; align-items: center; gap: 0.4rem; }
+  .bl-fresh::before { content: ''; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
+  .bl-hero-link { color: var(--brand); font-weight: 700; text-decoration: none; font-size: 0.88rem; }
+  .bl-hero-link:hover { text-decoration: underline; }
 
-  .cc-header { text-align: center; margin-bottom: 2rem; }
-  .cc-header-icon { display: block; margin: 0 auto 0.75rem; color: var(--brand); }
-  .cc-title { font-size: 1.8rem; font-weight: 900; color: var(--text); margin: 0 0 0.5rem; letter-spacing: -0.03em; display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
-  .cc-page-label { font-size: 1.1rem; font-weight: 700; color: var(--muted); letter-spacing: normal; }
-  .cc-subtitle { font-size: 0.92rem; color: var(--muted); max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.65; }
+  .bl-posts { margin-bottom: 2.5rem; }
+  .bl-posts-head { margin-bottom: 1.5rem; }
+  .bl-posts-head h2 { font-size: clamp(1.4rem, 2.5vw, 1.75rem); font-weight: 800; color: var(--text); margin: 0 0 0.4rem; }
+  .bl-posts-head p { font-size: 0.88rem; color: var(--muted); margin: 0; }
+  .bl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+  @media (max-width: 900px) { .bl-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .bl-grid { grid-template-columns: 1fr; } }
 
-  .cc-deals-section { margin-bottom: 2rem; }
-  .cc-deals-header { margin-bottom: 1rem; }
-  .cc-deals-title { font-size: 1.1rem; font-weight: 800; color: var(--text); margin: 0 0 0.15rem; display: flex; align-items: center; gap: 0.5rem; }
-  .cc-deals-title svg { color: var(--brand); flex-shrink: 0; }
-  .cc-deals-desc { font-size: 0.85rem; color: var(--muted); margin: 0; }
+  .bl-card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; text-decoration: none; transition: all 0.2s; }
+  .bl-card:hover { border-color: var(--brand); transform: translateY(-2px); box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.4); }
+  .bl-card-media { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--border); }
+  .bl-card-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s; }
+  .bl-card:hover .bl-card-img { transform: scale(1.04); }
+  .bl-badge { position: absolute; top: 0.65rem; left: 0.65rem; background: rgba(0, 0, 0, 0.7); color: #fff; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.28rem 0.65rem; border-radius: 100px; backdrop-filter: blur(4px); }
+  .bl-card-body { display: flex; flex-direction: column; flex: 1; padding: 1rem 1.1rem 1.15rem; }
+  .bl-card-title { font-size: 0.92rem; font-weight: 700; color: var(--text); line-height: 1.35; margin: 0 0 0.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5em; }
+  .bl-card:hover .bl-card-title { color: var(--brand); }
+  .bl-card-excerpt { font-size: 0.82rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.85rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .bl-card-footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding-top: 0.6rem; border-top: 1px solid var(--border); }
+  .bl-card-date { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+  .bl-card-action { font-size: 0.78rem; font-weight: 800; color: var(--brand); white-space: nowrap; }
 
-  .cc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; }
+  .bl-pag-wrap { display: flex; justify-content: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .bl-pagination { display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap; }
+  .bl-pg-link { font-size: 0.85rem; font-weight: 800; color: var(--brand); text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--card); transition: all 0.15s; }
+  .bl-pg-link:hover { border-color: var(--brand); background: var(--brand-soft); }
+  .bl-pg-disabled { color: var(--muted); opacity: 0.4; pointer-events: none; }
+  .bl-pg-numbers { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+  .bl-pg-num { font-size: 0.85rem; font-weight: 800; color: var(--text); text-decoration: none; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border); background: var(--card); transition: all 0.15s; }
+  .bl-pg-num:hover { border-color: var(--brand); color: var(--brand); }
+  .bl-pg-active { background: var(--brand); border-color: var(--brand); color: var(--bg); }
+  .bl-pg-active:hover { color: var(--bg); }
+  .bl-pg-ellipsis { font-size: 0.85rem; color: var(--muted); width: 38px; text-align: center; }
 
-  .cc-card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; text-decoration: none; transition: all 0.2s; }
-  .cc-card:hover { border-color: var(--brand); transform: translateY(-2px); }
-  .cc-card:hover .cc-card-title { color: var(--brand); }
+  .bl-empty { text-align: center; padding: 3rem 1rem; }
+  .bl-empty p { color: var(--muted); font-size: 1rem; margin-bottom: 1.25rem; }
+  .bl-empty .bl-more { background: var(--brand); color: var(--bg); border: none; padding: 0.75rem 1.75rem; border-radius: 10px; font-size: 0.9rem; font-weight: 800; text-decoration: none; }
 
-  .cc-card-img { position: relative; width: 100%; aspect-ratio: 5/2; overflow: hidden; background: var(--border); }
-  .cc-card-img img { width: 100%; height: 100%; object-fit: cover; }
-  .cc-badge-tag { position: absolute; bottom: 6px; left: 6px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); color: white; font-size: 0.6rem; font-weight: 600; padding: 2px 7px; border-radius: 3px; }
+  .bl-seo { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem 1.5rem; margin-bottom: 2rem; }
+  .bl-seo h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 0.85rem; }
+  .bl-seo p { font-size: 0.92rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.75rem; }
+  .bl-seo p:last-child { margin-bottom: 0; }
+  .bl-seo strong { color: var(--text); font-weight: 700; }
+  .bl-seo a { color: var(--brand); text-decoration: none; font-weight: 700; }
+  .bl-seo a:hover { text-decoration: underline; }
 
-  .cc-card-body { padding: 1rem; display: flex; flex-direction: column; gap: 0.4rem; flex: 1; }
-  .cc-card-title { font-size: 1rem; font-weight: 700; color: var(--text); margin: 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .cc-card-excerpt { font-size: 0.85rem; color: var(--muted); margin: 0; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .cc-card-footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; padding-top: 0.5rem; border-top: 1px solid var(--border); }
-  .cc-card-date { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
-  .cc-card-action { font-size: 0.78rem; font-weight: 700; color: var(--brand); }
-
-  .cc-pagination { display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 1.5rem 0; border-top: 1px solid var(--border); }
-  .cc-page-link { font-size: 0.85rem; font-weight: 700; color: var(--brand); text-decoration: none; padding: 0.4rem 0.85rem; border-radius: 6px; border: 1px solid var(--border); transition: all 0.2s; }
-  .cc-page-link:hover { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, transparent); }
-  .cc-page-disabled { color: var(--muted); opacity: 0.4; pointer-events: none; }
-  .cc-page-numbers { display: flex; align-items: center; gap: 4px; }
-  .cc-page-num { font-size: 0.85rem; font-weight: 700; color: var(--text); text-decoration: none; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid var(--border); transition: all 0.2s; }
-  .cc-page-num:hover { border-color: var(--brand); color: var(--brand); }
-  .cc-page-active { background: var(--brand); color: white; border-color: var(--brand); }
-  .cc-page-active:hover { color: white; }
-  .cc-page-ellipsis { font-size: 0.85rem; color: var(--muted); width: 34px; text-align: center; }
-  .cc-page-more { border-color: var(--brand); background: var(--brand); color: white; }
-  .cc-page-more:hover { border-color: var(--brand); background: var(--brand); opacity: 0.9; }
-
-  .cc-empty { text-align: center; padding: 3rem 0; }
-  .cc-empty p { color: var(--muted); font-size: 1rem; margin-bottom: 1rem; }
-
-  @media (max-width: 768px) {
-    .cc-grid { grid-template-columns: repeat(2, 1fr); gap: 0.65rem; }
-    .cc-title { font-size: 1.4rem; }
-  }
-  @media (max-width: 480px) {
-    .cc-grid { grid-template-columns: 1fr; }
-  }
+  .bl-back { text-align: center; padding: 2rem 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 16px; }
+  .bl-back h3 { color: var(--text); margin: 0 0 0.4rem; font-size: 1.3rem; }
+  .bl-back p { color: var(--muted); margin: 0 0 1.25rem; font-size: 0.9rem; }
+  .bl-back-btn { display: inline-block; padding: 0.8rem 2rem; background: var(--brand); color: var(--bg); text-decoration: none; border-radius: 10px; font-weight: 800; }
+  .bl-back-btn:hover { opacity: 0.9; }
 </style>
+</Layout>

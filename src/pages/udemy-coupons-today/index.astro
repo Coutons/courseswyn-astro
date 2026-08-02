@@ -58,29 +58,44 @@ const almostGone = allDeals
   .sort((a, b) => new Date(a.expiresAt!).getTime() - new Date(b.expiresAt!).getTime())
   .slice(0, 3);
 
+const expiringCount = allDeals
+  .filter(d => d.expiresAt)
+  .filter(d => {
+    const diff = new Date(d.expiresAt!).getTime() - now.getTime();
+    return diff > 0 && diff < 7 * 24 * 3600000;
+  }).length;
+
 const popularDeals = allDeals
   .filter(d => (d.rating ?? 0) >= 4.5)
   .slice(0, 8);
 
-
+const discountPcts = allDeals
+  .filter(d => d.price && d.originalPrice && d.originalPrice > d.price)
+  .map(d => Math.round(100 - (d.price / d.originalPrice) * 100));
+const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 95;
 
 const paidCount = paidDeals.length;
 
 const siteUrl = "https://courseswyn.com";
 const pageUrl = `${siteUrl}/udemy-coupons-today/`;
-const monthYear = formatDateWIB(now, { month: 'long', year: 'numeric' });
-const pageTitle = `Today's Udemy Coupon Codes - ${monthYear} | CoursesWyn`;
-const metaDescription = `${totalActive} verified Udemy coupon codes and deals for ${dateFull}. ${totalCoupons} total coupons across ${totalTopics} topics. Updated in real time.`;
+const pageTitle = `${todayAdded} Fresh Udemy Coupons Today (${dateFull}) | CoursesWyn`;
+const metaDescription = `Fresh Udemy coupon codes added today - ${todayAdded} new deals verified in the last 24 hours. Save up to ${maxDiscountPct}% on premium courses.`;
+
+const shareUrl = encodeURIComponent(pageUrl);
+const shareText = encodeURIComponent(`🔥 ${todayAdded} verified Udemy coupons added today — save up to ${maxDiscountPct}%! Checked by CoursesWyn: `);
+const whatsappUrl = `https://wa.me/?text=${shareText}${shareUrl}`;
+const xUrl = `https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`;
+const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`;
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/\s+&\s+/g, '-and-').replace(/['\s]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
 }
 
 const faqs = [
+  { q: "What's the difference between Today's Coupons and the full coupon page?", a: "Today's Coupons highlights only deals added or updated in the last 24 hours — the freshest, most likely to still work. Our full coupon code page lists every verified deal, sorted by newest first, with category filters and pagination." },
   { q: "Are these Udemy coupons verified?", a: "Yes. Every coupon listed is manually verified before publishing. We check each code to ensure it still works and shows the correct discount." },
   { q: "How long do these Udemy coupons last?", a: "Udemy coupons typically expire within a few days or run out of redemptions. We recommend enrolling as soon as you find a course you want. If a code has expired, check our main deals page for the latest listings." },
   { q: "How do I redeem a Udemy coupon?", a: "Click the course card to open its deal page on CoursesWyn, then click the coupon or 'Get deal' button. You'll be taken to Udemy with the discount pre-applied. Complete enrollment there." },
-  { q: "What categories are available today?", a: `This page lists coupons across multiple categories including ${trendingTopics.slice(0, 3).map(([t]) => t).join(', ')} and more. Courses are grouped so you can quickly find deals in your area of interest.` },
   { q: "Do I get a certificate with discounted Udemy courses?", a: "Yes. Courses enrolled via our coupons include lifetime access, downloadable resources, and an official Udemy completion certificate when you finish the course." },
   { q: "How often are new coupons added?", a: "New coupons are added throughout the day as instructors publish them. We check Udemy in near real time and update this list automatically, so checking back every few hours will show fresh deals." },
   { q: "Why did Udemy change its coupon policy?", a: `In 2025 Udemy updated its coupon policy to improve course quality. Most coupons are now limited to 10-100 redemptions. Read more on <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's instructor blog</a>.` },
@@ -142,82 +157,110 @@ const jsonLd = {
   <main class="daily-root">
     <div class="daily-container">
 
-      <nav class="daily-breadcrumb" aria-label="Breadcrumb">
-        <ol>
-          <li><a href="/">Home</a></li>
-          <li aria-hidden="true">/</li>
-          <li>Today's Coupons</li>
-        </ol>
-      </nav>
-
-      <header class="daily-header">
-        <div class="daily-header-text">
-          <h1 class="daily-title">Today's Udemy Coupon Codes</h1>
-          <p class="daily-subtitle">{dateFull} &mdash; every coupon below was added in the last 24 hours and is re-verified in near real time. Coupons usually expire within a day or run out of redemptions, so the freshest ones are listed first.</p>
-        </div>
-        <div class="daily-stats">
-          <div class="stat-item">
-            <span class="stat-label">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M7.5 7a1 1 0 0 1 0-5A4.8 8 0 0 1 12 7a4.8 8 0 0 1 4.5-5 1 1 0 0 1 0 5"/><rect x="3" y="7" width="18" height="4" rx="1"/></svg>
-              Coupons added today
-            </span>
-            <span class="stat-value">{todayAdded}</span>
+      <header class="daily-hero">
+        <div class="daily-hero-inner">
+          <div class="daily-hero-main">
+            <p class="daily-live">
+              <span class="daily-live-dot"></span>
+              Live &middot; updated {lastVerified}
+            </p>
+            <h1>Today's Fresh <span class="daily-grad">Udemy Coupons</span></h1>
+            <p class="daily-claim">{todayAdded} hand-picked deals added in the last 24 hours &mdash; every code re-verified before it's listed.</p>
+            <p class="daily-date">{dateFull}</p>
+            <div class="daily-hero-btns">
+              <a class="daily-btn contained" href="#latest">Browse today's deals</a>
+              <a class="daily-btn outlined" href="/udemy-coupon-code">Browse all coupon codes</a>
+            </div>
           </div>
-          <div class="stat-item">
-            <span class="stat-label">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
-              Total coupons
-            </span>
-            <span class="stat-value">{totalCoupons}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 7v14"/><path d="M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M7.5 7a1 1 0 0 1 0-5A4.8 8 0 0 1 12 7a4.8 8 0 0 1 4.5-5 1 1 0 0 1 0 5"/><rect x="3" y="7" width="18" height="4" rx="1"/></svg>
-              Total topics
-            </span>
-            <span class="stat-value">{totalTopics}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-              Last verification
-            </span>
-            <span class="stat-value">{lastVerified}</span>
+          <div class="daily-stats-bar">
+            <div class="stat-item">
+              <span class="stat-label">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M7.5 7a1 1 0 0 1 0-5A4.8 8 0 0 1 12 7a4.8 8 0 0 1 4.5-5 1 1 0 0 1 0 5"/><rect x="3" y="7" width="18" height="4" rx="1"/></svg>
+                Added today
+              </span>
+              <span class="stat-value">{todayAdded}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
+                Save up to
+              </span>
+              <span class="stat-value">{maxDiscountPct}%</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                Topics
+              </span>
+              <span class="stat-value">{totalTopics}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                Total coupons
+              </span>
+              <span class="stat-value">{totalCoupons}</span>
+            </div>
           </div>
         </div>
       </header>
 
+      <div class="daily-urgency" role="note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span><strong>Coupons expire fast</strong> &mdash; {todayAdded} added today{expiringCount > 0 ? `, ${expiringCount} expiring within 7 days` : ''}. Enroll before they run out.</span>
+        <a href="/how-to-redeem-coupon">How to redeem &rarr;</a>
+      </div>
+
+      <div class="daily-share" role="region" aria-label="Share today's coupons">
+        <span class="daily-share-label">Share today's deals:</span>
+        <a class="daily-share-link" href={whatsappUrl} target="_blank" rel="noopener" aria-label="Share on WhatsApp">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+          WhatsApp
+        </a>
+        <a class="daily-share-link" href={xUrl} target="_blank" rel="noopener" aria-label="Share on X">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          X
+        </a>
+        <a class="daily-share-link" href={facebookUrl} target="_blank" rel="noopener" aria-label="Share on Facebook">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          Facebook
+        </a>
+        <button class="daily-share-copy" data-copy-url={pageUrl} type="button" aria-label="Copy link">Copy link</button>
+      </div>
+
       {almostGone.length > 0 && (
-        <section class="daily-section">
+        <section class="daily-section daily-expiring">
           <h2 class="section-title">
             <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Almost gone
+            <span class="section-count">expires soon</span>
           </h2>
-          <p class="section-desc">These coupons expire soon &mdash; enroll now before they run out.</p>
+          <p class="section-desc">These coupons expire within 7 days &mdash; enroll now before they run out.</p>
           <div class="deal-card-grid">
             {almostGone.slice(0, 3).map((deal: any, i: number) => (
-              <DealCard deal={deal} loading={i < 3 ? 'eager' : 'lazy'} />
+              <DealCard deal={deal} variant="grid" loading={i < 3 ? 'eager' : 'lazy'} />
             ))}
           </div>
         </section>
       )}
 
-      <section class="daily-section">
+      <section class="daily-section daily-latest" id="latest">
         <h2 class="section-title">
           <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           Latest coupons
+          <span class="section-count">{paidCount} deals</span>
         </h2>
-        <p class="section-desc">The most recent {paidCount} verified deals.</p>
+        <p class="section-desc">The most recent verified deals, freshest first.</p>
           <div class="deal-card-grid">
             {paidDeals.map((deal: any) => (
-              <DealCard deal={deal} loading="lazy" />
+              <DealCard deal={deal} variant="grid" loading="lazy" />
             ))}
           </div>
         <p class="browse-all">Showing the {paidCount} most recent of {totalActive} active coupons &mdash; <a href="/udemy-coupon-code">browse them all</a>.</p>
       </section>
 
       {popularDeals.length > 0 && (
-        <section class="daily-section">
+        <section class="daily-section daily-popular">
           <h2 class="section-title">
             <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             Popular deals
@@ -225,7 +268,7 @@ const jsonLd = {
           <p class="section-desc">Top-rated courses with the highest student reviews.</p>
           <div class="deal-card-grid">
             {popularDeals.map((deal: any) => (
-              <DealCard deal={deal} loading="lazy" />
+              <DealCard deal={deal} variant="grid" loading="lazy" />
             ))}
           </div>
         </section>
@@ -248,9 +291,9 @@ const jsonLd = {
       </section>
 
       <section class="seo-section">
-        <h2>How CoursesWyn verifies Udemy coupons</h2>
-        <p>Since <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's coupon policy update</a>, most coupons are limited to about 10 to 100 redemptions or expire within days, which is why so many coupon sites list codes that no longer work. CoursesWyn checks every coupon against Udemy in near real time. When a coupon runs out, it disappears from this list automatically.</p>
-        <p>New coupons are added throughout the day. Browse <a href="/udemy-coupon-code">all verified coupons</a> or explore <a href="/udemy-coupons-today">today's latest deals</a>.</p>
+        <h2>Why are today's coupons different from our full list?</h2>
+        <p>Since <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's coupon policy update</a>, most coupons are limited to about 10 to 100 redemptions or expire within days, which is why so many coupon sites list codes that no longer work. This page only shows deals added or re-verified in the last 24 hours &mdash; the freshest, most reliable codes available right now.</p>
+        <p>CoursesWyn checks every coupon against Udemy in near real time. When a coupon runs out, it disappears from this list automatically. For the complete archive with category filters, browse <a href="/udemy-coupon-code">all verified coupons</a>.</p>
       </section>
 
       <section class="daily-faq">
@@ -272,31 +315,66 @@ const jsonLd = {
 
 <style>
   .daily-root { background: var(--bg); padding: 2rem 1rem 4rem; }
-  .daily-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+  .daily-container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
 
-  .daily-header { display: grid; grid-template-columns: 1fr 260px; gap: 2rem; margin-bottom: 2rem; align-items: start; }
-  .daily-header-text { padding-top: 0.25rem; }
-  .daily-title { font-size: 2rem; font-weight: 900; color: var(--text); margin: 0 0 0.75rem; letter-spacing: -0.03em; }
-  .daily-subtitle { font-size: 0.92rem; color: var(--muted); line-height: 1.65; }
+  .daily-hero { padding: 1rem 0 2.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+  .daily-hero-inner { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(20rem, 0.9fr); gap: 3rem; align-items: center; }
+  @media (max-width: 900px) { .daily-hero-inner { grid-template-columns: 1fr; gap: 1.75rem; } }
 
-  .daily-breadcrumb { display: flex; justify-content: center; margin-bottom: 1rem; }
-  .daily-breadcrumb ol { list-style: none; display: flex; align-items: center; gap: 0.5rem; padding: 0; margin: 0; font-size: 0.8rem; color: var(--muted); }
-  .daily-breadcrumb li:not(:last-child)::after { content: '/'; margin-left: 0.5rem; color: var(--border); }
-  .daily-breadcrumb a { color: var(--brand); text-decoration: none; }
-  .daily-breadcrumb a:hover { text-decoration: underline; }
+  .daily-live { display: inline-flex; align-items: center; gap: 0.55rem; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--brand); background: var(--brand-soft); border: 1px solid rgba(0, 167, 111, 0.3); border-radius: 100px; padding: 0.4rem 0.9rem; margin: 0 0 1.25rem; }
+  .daily-live-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--brand); animation: daily-pulse 1.6s ease-in-out infinite; }
+  @keyframes daily-pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 167, 111, 0.5); } 50% { opacity: 0.75; box-shadow: 0 0 0 6px rgba(0, 167, 111, 0); } }
 
-  .daily-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
-  .stat-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.35rem; min-height: 74px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); padding: 0.75rem 1rem; text-align: center; }
-  .stat-label { display: flex; align-items: center; justify-content: center; gap: 0.35rem; font-size: 0.7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
-  .stat-label svg { width: 14px; height: 14px; flex-shrink: 0; }
-  .stat-value { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+  .daily-hero h1 { font-size: clamp(2.2rem, 4.5vw, 3.5rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; color: var(--text); margin: 0 0 1.25rem; }
+  .daily-grad { background: linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+  .daily-claim { font-size: 1.05rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.5rem; max-width: 40rem; }
+  .daily-date { font-size: 0.85rem; color: var(--muted); font-weight: 600; margin: 0 0 1.5rem; }
+
+  .daily-hero-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .daily-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.8rem 1.6rem; border-radius: 100px; font-size: 0.9rem; font-weight: 700; text-decoration: none; transition: all 0.2s; }
+  .daily-btn.contained { background: var(--brand); color: #fff; }
+  .daily-btn.contained:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .daily-btn.outlined { border: 1px solid var(--border); color: var(--text); background: var(--card); }
+  .daily-btn.outlined:hover { border-color: var(--brand); color: var(--brand); }
+
+  .daily-stats-bar { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  .stat-item { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 0.3rem; min-height: 74px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); padding: 0.85rem 1rem; }
+  .stat-label { display: flex; align-items: center; gap: 0.35rem; font-size: 0.68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+  .stat-label svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--brand); }
+  .stat-value { font-size: 1.3rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+
+  .daily-urgency { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 12px; padding: 0.85rem 1.1rem; margin-bottom: 1.5rem; }
+  .daily-urgency svg { color: #f59e0b; flex-shrink: 0; }
+  .daily-urgency span { font-size: 0.85rem; color: var(--text); line-height: 1.5; flex: 1; }
+  .daily-urgency strong { color: #f59e0b; font-weight: 700; }
+  .daily-urgency a { font-size: 0.82rem; font-weight: 700; color: var(--brand); text-decoration: none; white-space: nowrap; }
+  .daily-urgency a:hover { text-decoration: underline; }
+
+  .daily-share { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
+  .daily-share-label { font-size: 0.82rem; font-weight: 700; color: var(--muted); margin-right: 0.25rem; }
+  .daily-share-link { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.85rem; border-radius: 100px; border: 1px solid var(--border); background: var(--card); font-size: 0.78rem; font-weight: 700; color: var(--text); text-decoration: none; transition: all 0.15s; }
+  .daily-share-link svg { flex-shrink: 0; color: var(--muted); }
+  .daily-share-link:hover { border-color: var(--brand); color: var(--brand); }
+  .daily-share-link:hover svg { color: var(--brand); }
+  .daily-share-copy { display: inline-flex; align-items: center; padding: 0.45rem 0.85rem; border-radius: 100px; border: 1px solid var(--brand); background: transparent; font-size: 0.78rem; font-weight: 700; color: var(--brand); cursor: pointer; transition: all 0.15s; }
+  .daily-share-copy:hover { background: var(--brand-soft); }
+  .daily-share-copy.copied { background: var(--brand); color: #fff; }
 
   .daily-section { margin-bottom: 2.5rem; }
   .section-title { font-size: 1.2rem; font-weight: 800; color: var(--text); margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.65rem; }
   .section-icon { color: var(--brand); flex-shrink: 0; }
+  .section-count { font-size: 0.7rem; font-weight: 800; color: var(--muted); background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 100px; padding: 0.2rem 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
   .section-desc { font-size: 0.85rem; color: var(--muted); margin: 0 0 1rem; }
 
+  .daily-expiring .section-icon { color: #f59e0b; }
+  .daily-expiring .section-count { color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.08); }
+  .daily-popular .section-icon { color: #f59e0b; }
+  .daily-popular .section-count { color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.08); }
+
   .deal-card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  @media (max-width: 1024px) { .deal-card-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px) { .deal-card-grid { grid-template-columns: 1fr; } }
 
   .topic-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
   .topic-tag { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 100px; border: 1px solid var(--border); font-size: 0.85rem; font-weight: 600; color: var(--text); text-decoration: none; transition: all 0.2s; background: var(--card); }
@@ -329,15 +407,33 @@ const jsonLd = {
   .daily-faq .faq-item a:hover { text-decoration: underline; }
 
   @media (max-width: 768px) {
-    .daily-title { font-size: 1.5rem; }
     .daily-container { max-width: 100%; }
-    .daily-header { grid-template-columns: 1fr; gap: 1rem; }
-    .daily-stats { max-width: 280px; }
-    .deal-card-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-    .stat-item { min-width: 100px; padding: 0.75rem 1rem; }
-    .stat-value { font-size: 1.25rem; }
+    .daily-hero { padding: 0.5rem 0 2rem; }
+    .daily-hero h1 { font-size: 2rem; }
+    .daily-claim { font-size: 0.95rem; }
+    .daily-stats-bar { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+    .stat-item { min-height: 64px; padding: 0.7rem 0.85rem; }
+    .stat-value { font-size: 1.15rem; }
   }
   @media (max-width: 480px) {
-    .deal-card-grid { grid-template-columns: 1fr; gap: 0.85rem; }
+    .deal-card-grid { gap: 0.85rem; }
   }
 </style>
+
+<script>
+  document.querySelectorAll('.daily-share-copy').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const url = btn.getAttribute('data-copy-url') || window.location.href;
+      try {
+        await navigator.clipboard.writeText(url);
+        btn.classList.add('copied');
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.classList.remove('copied'); btn.textContent = original; }, 1800);
+      } catch {
+        btn.textContent = 'Press Ctrl+C';
+        setTimeout(() => { btn.textContent = 'Copy link'; }, 1800);
+      }
+    });
+  });
+</script>

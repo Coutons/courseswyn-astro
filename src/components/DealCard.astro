@@ -1,334 +1,237 @@
 ---
 import { Image } from 'astro:assets';
 
-import { parseInstructors, createInstructorSlug } from '../lib/instructors';
-
-const { deal, loading = 'lazy' } = Astro.props;
+const { deal, loading = 'lazy', variant = 'row' } = Astro.props;
 
 function formatDuration(duration: string) {
   if (!duration) return "";
-  return duration
-    .replace(/(\d+)h/g, '$1 hours')
-    .replace(/(\d+)m/g, '$1 minutes')
-    .replace(/\s+/g, ' ');
+  const h = duration.match(/(\d+)\s*h/);
+  const m = duration.match(/(\d+)\s*m/);
+  if (h && m) return `${h[1]}h ${m[1]}m`;
+  if (h) return `${h[1]}h`;
+  if (m) return `${m[1]}m`;
+  return duration.trim();
 }
 
 function formatRelativeTime(dateString: string) {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  if (diffMinutes < 1) return "about just now";
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 1) return `about ${diffMinutes} minutes ago`;
   const diffDays = Math.floor(diffHours / 24);
-  if (diffHours < 1) return "Updated recently";
-  else if (diffHours < 24) return `Updated ${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-  else return `Updated ${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+  if (diffDays < 1) return `about ${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+  else return `about ${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
 }
 
 const p = typeof deal.price === "number" && isFinite(deal.price) && deal.price > 0 ? deal.price : 0;
 const opRaw = typeof deal.originalPrice === "number" && isFinite(deal.originalPrice) ? deal.originalPrice : 119.99;
 const op = opRaw > p ? opRaw : 119.99;
+const hasDiscount = op > p;
 const r = typeof deal.rating === "number" && isFinite(deal.rating) ? deal.rating : null;
-const hasDiscount = op > p && p > 0;
-const discountPct = hasDiscount ? Math.round(100 - (p / op) * 100) : null;
 const title = String(deal.title || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;|&#8217;/g, "'").replace(/&ndash;|&#8211;/g, " & ").replace(/\s{2,}/g, " ").trim();
-const students = typeof deal.students === "number" && isFinite(deal.students) ? deal.students : null;
-const catSlug = (deal.category || "").toLowerCase().replace(/ & /g, "-and-").replace(/ /g, "-").replace(/&/g, "and");
-const instructorNames = parseInstructors(deal.instructor);
-const instructorLinks = instructorNames.map(n => ({ name: n, slug: createInstructorSlug(n) }));
+const students = typeof deal.students === "number" && isFinite(deal.students) && deal.students > 0 ? deal.students : null;
+const provider = (deal.provider || "Udemy").trim();
+const category = (deal.category || "").trim();
+const subcategory = (deal.subcategory || "").trim();
+const duration = formatDuration(deal.duration || "");
+const language = (deal.language || "").trim();
+const catSlug = (category || "udemy").toLowerCase().replace(/ & /g, "-and-").replace(/ /g, "-").replace(/&/g, "and");
+const catPath = subcategory && subcategory !== category ? `${category} › ${subcategory}` : category;
+const timeText = deal.updatedAt ? formatRelativeTime(deal.updatedAt) : "";
+const dealUrl = deal.url || `/coupon/${deal.slug}`;
+
+function formatCount(n: number) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return String(n);
+}
 ---
 
-<div style={{
-  background: "var(--card)",
-  borderRadius: "16px",
-  border: "1px solid var(--border)",
-  overflow: "hidden",
-  transition: "all 0.3s ease",
-  position: "relative"
-}}>
-  <div style={{
-    height: "180px",
-    background: `linear-gradient(135deg, var(--brand-soft) 0%, rgba(255,90,44,0.05) 100%)`,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative"
-  }}>
+<div class:list={["dc-card", variant === "grid" && "dc-card-grid"]}>
+  <a class="dc-stretched" href={dealUrl} aria-label={title}></a>
+
+  <div class="dc-media">
     {deal.image ? (
-      <Image 
+      <Image
         src={deal.image}
         alt={title}
-        width={400}
-        height={225}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover"
-        }}
+        width={750}
+        height={422}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
         loading={loading}
         inferSize={false}
       />
     ) : (
-      <svg width="60" height="60" viewBox="0 0 24 24" fill="var(--muted)" opacity="0.5">
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-      </svg>
+      <div class="dc-img-fallback"><svg width="40" height="40" viewBox="0 0 24 24" fill="var(--muted)" opacity="0.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
     )}
-
-    <div style={{
-      position: "absolute",
-      top: "1rem",
-      right: "1rem",
-      background: "rgba(0, 0, 0, 0.8)",
-      color: "white",
-      padding: "0.25rem 0.5rem",
-      borderRadius: "4px",
-      fontSize: "0.7rem",
-      fontWeight: 600,
-      backdropFilter: "blur(4px)"
-    }}>
-      {deal.updatedAt ? formatRelativeTime(deal.updatedAt) : "Updated recently"}
-    </div>
-
-    {p === 0 && (
-      <div style={{
-        position: "absolute",
-        top: "1rem",
-        left: "1rem",
-        background: "var(--brand)",
-        color: "var(--bg)",
-        padding: "0.25rem 0.75rem",
-        borderRadius: "999px",
-        fontSize: "0.75rem",
-        fontWeight: 700,
-        zIndex: 10
-      }}>
-        FREE
-      </div>
-    )}
+    {timeText && <span class="dc-time">{timeText}</span>}
   </div>
 
-  <div style={{ padding: "1.5rem" }}>
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "0.5rem",
-      marginBottom: "0.5rem"
-    }}>
-      <a href={`/categories/${catSlug}`} style={{
-        fontSize: "0.75rem",
-        fontWeight: 700,
-        color: "var(--brand)",
-        textTransform: "uppercase",
-        letterSpacing: "0.05em",
-        textDecoration: "none"
-      }}>{deal.category || "Udemy"}</a>
-      <span style={{
-        marginLeft: "auto",
-        fontSize: "0.7rem",
-        fontWeight: 500,
-        color: "var(--muted)",
-        display: "flex",
-        alignItems: "center",
-        gap: "0.25rem"
-      }}>
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="#4ade80">
-          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-        </svg>
-        Verified
+  <div class="dc-body">
+    <div class="dc-title-row">
+      <h3 class="dc-title">{title}</h3>
+      <span class="dc-provider">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6l4-4z"/><path d="M2 6h20"/><path d="M16 2v4H8V2"/></svg>
+        {provider}
       </span>
     </div>
 
-    <h3 style={{
-      fontSize: "1.1rem",
-      fontWeight: 700,
-      color: "var(--text)",
-      marginBottom: "0.5rem",
-      lineHeight: 1.4,
-      display: "-webkit-box",
-      WebkitLineClamp: 2,
-      WebkitBoxOrient: "vertical",
-      overflow: "hidden"
-    }}>
-      <a href={`/coupon/${deal.slug}`} style={{
-        color: "inherit",
-        textDecoration: "none"
-      }}>
-        {title}
-      </a>
-    </h3>
-
-    {deal.instructor && (
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.5rem",
-        marginBottom: "0.75rem"
-      }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--muted)">
-          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-        </svg>
-        <span style="display:flex;flex-wrap:wrap;gap:0.25rem;align-items:center">
-          <span style="color:var(--muted);font-size:0.85rem">By </span>
-          {instructorLinks.map((inst, i) => (
-            <span>
-              {i > 0 && <span style="color:var(--muted);font-size:0.85rem">, </span>}
-              <a href={`/instructor/${inst.slug}`} style={{
-                color: "var(--text)",
-                fontSize: "0.85rem",
-                fontWeight: 600,
-                textDecoration: "none"
-              }}>{inst.name}</a>
-            </span>
-          ))}
+    <div class="dc-meta">
+      <span class="dc-meta-item dc-meta-provider" title={provider}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        {provider}
+      </span>
+      {r && (
+        <span class="dc-meta-item dc-meta-rating">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          {r.toFixed(1)}
         </span>
-      </div>
-    )}
-
-    <p style={{
-      color: "var(--muted)",
-      fontSize: "0.9rem",
-      marginBottom: "1rem",
-      lineHeight: 1.5,
-      display: "-webkit-box",
-      WebkitLineClamp: 3,
-      WebkitBoxOrient: "vertical",
-      overflow: "hidden"
-    }}>
-      {deal.description || "Master this in-demand skill with comprehensive training from industry experts."}
-    </p>
-
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: "1rem"
-    }}>
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.5rem"
-      }}>
-        {r && (
-          <>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--brand)">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            <span style={{
-              color: "var(--muted)",
-              fontSize: "0.85rem",
-              fontWeight: 600
-            }}>
-              {r.toFixed(1)} ({students ? `${students}+ students` : 'popular course'})
-            </span>
-          </>
-        )}
-      </div>
-
-      {deal.subcategory && (
-        <a href={`/topics/${deal.subcategory.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')}`} style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "0.25rem",
-          color: "var(--brand)",
-          textDecoration: "none",
-          fontSize: "0.8rem",
-          fontWeight: 600,
-          padding: "0.25rem 0.5rem",
-          borderRadius: "4px",
-          background: "var(--card-hover)",
-          transition: "all 0.3s ease"
-        }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
-          </svg>
-          {deal.subcategory}
-        </a>
+      )}
+      {category && (
+        <span class="dc-meta-cat">
+          <a href={`/categories/${catSlug}`}>{catPath}</a>
+        </span>
+      )}
+      {duration && (
+        <span class="dc-meta-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          {duration}
+        </span>
+      )}
+      {students && (
+        <span class="dc-meta-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          {formatCount(students)}
+        </span>
+      )}
+      {language && (
+        <span class="dc-meta-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          {language}
+        </span>
       )}
     </div>
 
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: "1rem"
-    }}>
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.5rem"
-      }}>
-        <span style={{
-          fontSize: "1.2rem",
-          fontWeight: 700,
-          color: "var(--brand)"
-        }}>
-          {p === 0 ? "FREE" : `$${p.toFixed(2)}`}
-        </span>
-        {hasDiscount && (
-          <>
-            <span style={{
-              textDecoration: "line-through",
-              color: "var(--muted)",
-              fontSize: "0.9rem"
-            }}>
-              ${op.toFixed(2)}
-            </span>
-            <span style={{
-              background: "var(--destructive)",
-              color: "white",
-              padding: "0.25rem 0.5rem",
-              borderRadius: "4px",
-              fontSize: "0.75rem",
-              fontWeight: 700
-            }}>
-              {discountPct}% OFF
-            </span>
-          </>
-        )}
-      </div>
+    <div class="dc-price">
+      {hasDiscount && <span class="dc-price-old">${op.toFixed(2)}</span>}
+      <span class="dc-price-new">{p === 0 ? "$0" : `$${p.toFixed(2)}`}</span>
     </div>
-
-    {deal.duration && (
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.35rem",
-        marginBottom: "1rem"
-      }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
-        </svg>
-        <span style={{
-          color: "var(--muted)",
-          fontSize: "0.8rem",
-          fontWeight: 500
-        }}>
-          {formatDuration(deal.duration)}
-        </span>
-      </div>
-    )}
-
-    <a
-      href={deal.url || `/coupon/${deal.slug}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      style={{
-        display: "block",
-        width: "100%",
-        padding: "0.75rem 1.5rem",
-        background: "var(--brand)",
-        color: "var(--bg)",
-        textDecoration: "none",
-        borderRadius: "8px",
-        textAlign: "center",
-        fontWeight: 600,
-        fontSize: "0.9rem",
-        transition: "all 0.3s ease",
-        border: "none",
-        cursor: "pointer"
-      }}
-    >
-      {p === 0 ? "Enroll for Free" : "Get Coupon"}
-    </a>
   </div>
 </div>
+
+<style>
+  .dc-card {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+    width: 100%;
+  }
+  .dc-card:hover { border-color: var(--brand); box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.25); transform: translateY(-2px); }
+
+  .dc-stretched { position: absolute; inset: 0; z-index: 2; text-decoration: none; }
+
+  .dc-media {
+    position: relative;
+    width: 260px;
+    min-width: 260px;
+    aspect-ratio: 16 / 9;
+    align-self: center;
+    margin: 1rem 0 1rem 1rem;
+    background: linear-gradient(135deg, var(--brand-soft) 0%, rgba(0, 167, 111, 0.05) 100%);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .dc-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .dc-img-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+
+  .dc-time {
+    position: absolute;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    background: rgba(0, 0, 0, 0.78);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    backdrop-filter: blur(4px);
+    z-index: 1;
+  }
+
+  .dc-body { flex: 1; padding: 1rem 1.25rem; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+
+  .dc-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.6rem; }
+
+  .dc-provider {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    border-radius: 6px;
+    padding: 0.22rem 0.55rem;
+    margin-top: 0.05rem;
+  }
+  .dc-provider svg { flex-shrink: 0; }
+
+  .dc-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .dc-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.85rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .dc-meta-item { display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
+  .dc-meta-item svg { flex-shrink: 0; }
+  .dc-meta-rating { color: #f59e0b; font-weight: 700; }
+  .dc-meta-cat { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dc-meta-cat a { color: var(--muted); text-decoration: none; position: relative; z-index: 3; }
+  .dc-meta-cat a:hover { color: var(--brand); text-decoration: underline; }
+
+  .dc-price { display: flex; align-items: baseline; gap: 0.5rem; }
+  .dc-price-old { font-size: 0.88rem; color: var(--muted); text-decoration: line-through; }
+  .dc-price-new { font-size: 1.2rem; font-weight: 800; color: var(--brand); }
+
+  .dc-card-grid { flex-direction: column; }
+  .dc-card-grid .dc-media { width: 100%; min-width: 0; aspect-ratio: 16 / 9; align-self: auto; margin: 0; border-radius: 0; }
+  .dc-card-grid .dc-body { padding: 1rem 1.1rem 1.1rem; justify-content: flex-start; }
+  .dc-card-grid .dc-title-row { margin-bottom: 0.5rem; }
+  .dc-card-grid .dc-title { font-size: 0.92rem; }
+  .dc-card-grid .dc-meta { margin-bottom: 0.6rem; }
+  .dc-card-grid .dc-price-new { font-size: 1.05rem; }
+
+  @media (max-width: 640px) {
+    .dc-card { flex-direction: column; }
+    .dc-media { width: 100%; min-width: 0; aspect-ratio: 16 / 9; margin: 0; border-radius: 0; }
+    .dc-body { padding: 0.9rem 1rem; }
+  }
+</style>

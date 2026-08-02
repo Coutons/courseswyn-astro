@@ -516,7 +516,7 @@ export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, rela
                                 </div>
 
                                 <div style={{ marginTop: "1rem", padding: "0.75rem 1rem", background: "rgba(255, 90, 44, 0.05)", border: "1px solid rgba(255, 90, 44, 0.12)", borderRadius: "8px", fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-                                    <strong style={{ color: "var(--brand)" }}>New to redeeming coupons?</strong>{" "}
+                                    <strong style={{ color: "var(--text)" }}>New to redeeming coupons?</strong>{" "}
                                     Visit our <a href="/how-to-redeem-coupon" style={{ color: "var(--brand)", textDecoration: "underline" }}>step-by-step guide</a> for detailed instructions on how to apply coupon codes.
                                     <span style={{ display: "block", marginTop: "4px", color: "var(--muted)", fontSize: "0.78rem" }}>
                                         Coupon last verified {deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "recently"}. 

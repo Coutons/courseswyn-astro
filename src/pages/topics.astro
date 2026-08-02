@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { readDeals } from '../lib/store';
+import { toISODateWIB } from '../lib/date';
 
 const allDeals = await readDeals();
 
@@ -14,7 +15,41 @@ const categoryOrder = [
   "Photography & Video"
 ];
 
-type CatGroup = { name: string; slug: string; total: number; topics: { name: string; slug: string; count: number }[] };
+const GRADIENT_COLORS = [
+  { c1: '#0d9488', c2: '#115e59' },
+  { c1: '#059669', c2: '#047857' },
+  { c1: '#0891b2', c2: '#0e7490' },
+  { c1: '#3b82f6', c2: '#1d4ed8' },
+  { c1: '#6d28d9', c2: '#5b21b6' },
+  { c1: '#b45309', c2: '#92400e' },
+  { c1: '#7e22ce', c2: '#6b21a8' },
+  { c1: '#0f766e', c2: '#134e4a' }
+];
+
+const hashFor = (s: string) => ((s.split('').reduce((h, ch) => h * 31 + ch.charCodeAt(0), 7) % 100000) + 100000) % 100000;
+
+type TopicCard = { name: string; slug: string; count: number; c1: string; c2: string; s1x: number; s1y: number; s1r: number; s2x: number; s2y: number; s2r: number; s3x: number; s3y: number; s3r: number };
+
+const buildCard = (name: string, count: number): TopicCard => {
+  const hash = hashFor(name);
+  const grad = GRADIENT_COLORS[hash % GRADIENT_COLORS.length];
+  return {
+    name,
+    slug: name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
+    count,
+    c1: grad.c1,
+    c2: grad.c2,
+    s1x: 24 + (hash % 56),
+    s1y: 16 + (hash >> 3) % 34,
+    s1r: 26 + (hash >> 4) % 26,
+    s2x: 200 + (hash >> 2) % 96,
+    s2y: 10 + (hash >> 6) % 30,
+    s2r: 22 + (hash >> 5) % 22,
+    s3x: 280 - (hash >> 7) % 60,
+    s3y: 130 + (hash >> 8) % 40,
+    s3r: 12 + (hash >> 9) % 14
+  };
+};
 
 const grouped: Record<string, { total: number; topics: Record<string, number> }> = {};
 
@@ -26,7 +61,7 @@ allDeals.forEach(deal => {
   if (sub) grouped[cat].topics[sub] = (grouped[cat].topics[sub] || 0) + 1;
 });
 
-const catGroups: CatGroup[] = categoryOrder
+const catGroups = categoryOrder
   .filter(c => grouped[c])
   .map(c => ({
     name: c,
@@ -35,17 +70,12 @@ const catGroups: CatGroup[] = categoryOrder
     topics: Object.entries(grouped[c].topics)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 12)
-      .map(([name, count]) => ({
-        name,
-        slug: name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
-        count
-      }))
+      .map(([name, count]) => buildCard(name, count))
   }));
 
 const totalTopics = catGroups.reduce((s, g) => s + g.topics.length, 0);
 const totalCategories = catGroups.length;
 const totalCourses = allDeals.length;
-const freeCount = allDeals.filter(d => d.price === 0 || (d.originalPrice && d.price === 0)).length;
 const avgDiscount = Math.round(allDeals.reduce((s, d) => s + (d.discount ?? (d.originalPrice ? Math.round((1 - d.price / d.originalPrice) * 100) : 0)), 0) / allDeals.length);
 
 const dates = allDeals.map(d => d.updatedAt ?? d.createdAt).filter(Boolean) as string[];
@@ -53,9 +83,10 @@ const latestDate = dates.length ? dates.sort().reverse()[0] : null;
 const latestStr = latestDate ? new Date(latestDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Jakarta' }) : '';
 
 const currentYear = new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' });
+const currentDate = toISODateWIB();
 
 const title = `Browse ${totalTopics.toLocaleString()}+ Udemy Course Topics with Verified Coupons ${currentYear} | CoursesWyn`;
-const description = `Explore ${totalTopics.toLocaleString()} Udemy course topics across ${totalCategories} categories — each with verified coupon codes updated ${latestStr || 'daily'}. Find free & discounted deals on Python, AI, web dev, cloud & more.`;
+const description = `Explore ${totalTopics.toLocaleString()} Udemy course topics across ${totalCategories} categories — each with verified coupon codes updated ${latestStr || 'daily'}. Find discounted deals on Python, AI, web dev, cloud & more.`;
 const canonicalUrl = "https://courseswyn.com/topics";
 
 const faqs = [
@@ -78,192 +109,190 @@ const structuredData = {
 };
 ---
 
-<Layout title={title} description={description} canonical={canonicalUrl}>
+<Layout title={title} description={description} canonical={canonicalUrl} hideBreadcrumbs={true}>
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-  <style>
-    .tp-root { padding: 2rem 0 0; }
-    .tp-container { max-width: 112rem; margin: 0 auto; padding: 0 1rem; }
+  <div class="tp3-root">
 
-    .tp-hero { padding: 2rem 0 2.5rem; }
-    @media (min-width:1024px) { .tp-hero-grid { display: grid; grid-template-columns: minmax(0,1.12fr) minmax(20rem,0.88fr); gap: 3rem; align-items: start; } }
-    .tp-hero-label { display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.13em; color: var(--brand); }
-    .tp-hero-label::before { content: ''; width: 2.5rem; height: 3px; background: var(--brand); flex-shrink: 0; }
-    .tp-hero h1 { font-size: clamp(2rem,5vw,3.5rem); font-weight: 500; line-height: 0.95; letter-spacing: -0.04em; max-width: 12ch; margin: 1.5rem 0 0; color: var(--text); }
-    .tp-hero-right p { font-size: 0.95rem; line-height: 1.7; color: var(--muted); margin: 0 0 0.5rem; max-width: 36rem; }
-    .tp-hero-right .tp-fresh { font-size: 0.75rem; color: var(--brand); font-weight: 600; margin: 0 0 1.5rem; }
-    .tp-hero-stats { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); border-width: 1px 0; max-width: 24rem; }
-    .tp-hero-stat { padding: 1rem; }
-    .tp-hero-stat:nth-child(odd) { border-right: 1px solid var(--border); }
-    .tp-hero-stat:nth-child(n+3) { border-top: 1px solid var(--border); }
-    .tp-hero-stat-lbl { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.16em; color: var(--muted); }
-    .tp-hero-stat-val { font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 0.25rem; color: var(--text); }
+    <div class="tp3-container">
 
-    .tp-nav { border-top: 1px solid var(--border); padding: 0; }
-    .tp-nav-inner { max-width: 112rem; margin: 0 auto; padding: 0; }
-    .tp-nav-grid { display: grid; grid-template-columns: repeat(2,1fr); list-style: none; margin: 0; padding: 0; }
-    .tp-nav-item { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); }
-    .tp-nav-item:nth-child(2n) { border-right: none; }
-    @media (min-width:640px) { .tp-nav-grid { grid-template-columns: repeat(3,1fr); } .tp-nav-item:nth-child(2n) { border-right: 1px solid var(--border); } .tp-nav-item:nth-child(3n) { border-right: none; } }
-    @media (min-width:1024px) { .tp-nav-grid { grid-template-columns: repeat(4,1fr); } .tp-nav-item:nth-child(3n) { border-right: 1px solid var(--border); } .tp-nav-item:nth-child(4n) { border-right: none; } }
-    .tp-nav-link { display: flex; align-items: center; gap: 1rem; min-height: 4rem; padding: 1rem 1.25rem; text-decoration: none; color: var(--text); transition: background 0.15s; }
-    .tp-nav-link:hover { background: color-mix(in srgb, var(--brand) 5.5%, transparent); }
-    .tp-nav-num { font-size: 0.6rem; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0.16em; color: var(--brand); }
-    .tp-nav-name { font-size: 0.85rem; font-weight: 600; }
-    .tp-nav-arrow { margin-left: auto; font-size: 0.75rem; color: var(--muted); opacity: 0; transform: translateX(-0.25rem); transition: all 0.15s; }
-    .tp-nav-link:hover .tp-nav-arrow { opacity: 1; transform: translateX(0); color: var(--brand); }
-
-    .tp-cat-hdr-out { border-bottom: 1px solid var(--border); }
-    .tp-cat-hdr-inner { max-width: 112rem; margin: 0 auto; padding: 1.5rem 1rem; }
-    .tp-cat-hdr-inner h2 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.13em; color: var(--muted); margin: 0; }
-
-    .tp-cat { border-bottom: 1px solid var(--border); scroll-margin-top: 5rem; }
-    .tp-cat-inner { max-width: 112rem; margin: 0 auto; display: grid; }
-    @media (min-width:1024px) { .tp-cat-inner { grid-template-columns: minmax(17rem,0.64fr) minmax(0,1.36fr); } }
-    .tp-cat-side { display: flex; flex-direction: column; padding: 2rem 1.5rem; border-bottom: 1px solid var(--border); }
-    @media (min-width:1024px) { .tp-cat-side { border-bottom: none; border-right: 1px solid var(--border); min-height: 24rem; padding: 2.5rem 2.5rem; } }
-    .tp-cat-num { font-size: 0.7rem; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0.16em; color: var(--brand); }
-    .tp-cat-title { font-size: clamp(1.8rem,4vw,2.8rem); font-weight: 500; line-height: 0.92; letter-spacing: -0.04em; max-width: 11ch; margin-top: 1.25rem; color: var(--text); }
-    .tp-cat-meta { font-size: 0.85rem; color: var(--muted); margin-top: 1.25rem; }
-    .tp-cat-link { display: inline-flex; align-items: center; gap: 0.75rem; margin-top: 2rem; font-size: 0.85rem; font-weight: 600; color: var(--text); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--brand) 50%, transparent); padding-bottom: 0.25rem; transition: all 0.15s; }
-    @media (min-width:1024px) { .tp-cat-link { margin-top: auto; } }
-    .tp-cat-link:hover { color: var(--brand); border-color: var(--brand); }
-    .tp-cat-link-arrow { display: inline-block; transition: transform 0.15s; }
-    .tp-cat-link:hover .tp-cat-link-arrow { transform: translateX(0.25rem); }
-
-    .tp-grid { display: grid; grid-template-columns: repeat(2,1fr); list-style: none; margin: 0; padding: 0; }
-    .tp-grid-item { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); }
-    .tp-grid-item:nth-child(2n) { border-right: none; }
-    @media (min-width:640px) { .tp-grid { grid-template-columns: repeat(3,1fr); } .tp-grid-item:nth-child(2n) { border-right: 1px solid var(--border); } .tp-grid-item:nth-child(3n) { border-right: none; } }
-    .tp-grid-link { display: flex; align-items: flex-start; gap: 1rem; min-height: 6rem; padding: 1.25rem; text-decoration: none; color: var(--text); transition: background 0.15s; }
-    .tp-grid-link:hover { background: color-mix(in srgb, var(--brand) 5.5%, transparent); }
-    .tp-grid-num { font-size: 0.6rem; font-weight: 600; font-variant-numeric: tabular-nums; color: color-mix(in srgb, var(--muted) 70%, transparent); padding-top: 0.15rem; flex-shrink: 0; }
-    .tp-grid-body { min-width: 0; }
-    .tp-grid-name { font-size: 0.85rem; font-weight: 600; line-height: 1.3; display: block; transition: color 0.15s; }
-    .tp-grid-link:hover .tp-grid-name { color: var(--brand); }
-    .tp-grid-count { font-size: 0.7rem; font-variant-numeric: tabular-nums; color: var(--muted); margin-top: 0.35rem; display: block; }
-    .tp-grid-arrow { margin-left: auto; font-size: 0.75rem; color: var(--brand); opacity: 0; transform: translateX(-0.25rem); transition: all 0.15s; flex-shrink: 0; }
-    .tp-grid-link:hover .tp-grid-arrow { opacity: 1; transform: translateX(0); }
-
-    .tp-foot { background: var(--card); border-top: 1px solid var(--border); }
-    .tp-foot-inner { max-width: 112rem; margin: 0 auto; padding: 2rem 1rem; }
-    .tp-foot-seo p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; margin: 0 0 1.25rem; }
-    .tp-foot-seo a { color: var(--brand); text-decoration: none; font-weight: 600; }
-    .tp-foot-seo a:hover { text-decoration: underline; }
-    .tp-foot-faq-hdr { font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0 0 0.75rem; }
-    .tp-foot-faq-item { padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
-    .tp-foot-faq-item:first-of-type { border-top: 1px solid var(--border); }
-    .tp-foot-faq-item { padding: 0.75rem 0 0; }
-    .tp-foot-faq-item strong { display: block; font-size: 0.82rem; color: var(--text); margin-bottom: 0.15rem; }
-    .tp-foot-faq-item p { font-size: 0.8rem; color: var(--muted); line-height: 1.5; margin: 0; }
-    .tp-foot-faq-item:last-child { border-bottom: none; }
-
-
-  </style>
-
-  <main class="tp-root">
-    <div class="tp-container">
-
-      <div class="tp-hero">
-        <div class="tp-hero-grid">
-          <div class="tp-hero-left">
-            <p class="tp-hero-label">Course taxonomy</p>
-            <h1>Browse Udemy by what you want to learn.</h1>
+      {/* Hero */}
+      <section class="tp3-hero">
+        <div class="tp3-hero-inner">
+          <div class="tp3-hero-left">
+            <p class="tp3-hero-label">Course taxonomy</p>
+            <h1>Browse Udemy by <span class="tp3-grad">what you want to learn.</span></h1>
+            <p class="tp3-claim">An independent taxonomy built from what courses actually teach, not their marketing tags. Open any topic to see its courses and their current coupon availability.</p>
+            <div class="tp3-hero-stats">
+              <div class="tp3-stat">
+                <span class="tp3-stat-lbl">Curated topics</span>
+                <span class="tp3-stat-val">{totalTopics.toLocaleString()}</span>
+              </div>
+              <div class="tp3-stat">
+                <span class="tp3-stat-lbl">Learning areas</span>
+                <span class="tp3-stat-val">{totalCategories}</span>
+              </div>
+              <div class="tp3-stat">
+                <span class="tp3-stat-lbl">Avg discount</span>
+                <span class="tp3-stat-val">{avgDiscount}%</span>
+              </div>
+            </div>
           </div>
-          <div class="tp-hero-right">
-            <p>An independent taxonomy built from what courses actually teach, not their marketing tags. Open any topic to see its courses and their current coupon availability.</p>
-            {latestStr && <p class="tp-fresh">Updated {latestStr} &middot; {totalCourses.toLocaleString()} tracked coupons</p>}
-            <dl class="tp-hero-stats">
-              <div class="tp-hero-stat">
-                <dt class="tp-hero-stat-lbl">Curated topics</dt>
-                <dd class="tp-hero-stat-val">{totalTopics.toLocaleString()}</dd>
-              </div>
-              <div class="tp-hero-stat">
-                <dt class="tp-hero-stat-lbl">Learning areas</dt>
-                <dd class="tp-hero-stat-val">{totalCategories}</dd>
-              </div>
-              <div class="tp-hero-stat">
-                <dt class="tp-hero-stat-lbl">Free courses</dt>
-                <dd class="tp-hero-stat-val">{freeCount.toLocaleString()}</dd>
-              </div>
-              <div class="tp-hero-stat">
-                <dt class="tp-hero-stat-lbl">Avg discount</dt>
-                <dd class="tp-hero-stat-val">{avgDiscount}%</dd>
-              </div>
-            </dl>
+          <div class="tp3-hero-right">
+            <p>Every topic page is ranked by real student ratings and review counts from Udemy, filtered to only courses with <strong class="tp3-em">working verified coupon codes</strong>. New deals are added every day and checked in near real time — expired coupons disappear automatically.</p>
+            <p class="tp3-fresh">Updated {latestStr || 'daily'} &middot; {totalCourses.toLocaleString()} tracked coupons</p>
+            <a href="/udemy-coupons-today" class="tp3-hero-link">See today's newest deals &#8594;</a>
           </div>
         </div>
-      </div>
+      </section>
 
-    </div>
-
-    <nav class="tp-nav" aria-label="Topic categories">
-      <div class="tp-nav-inner">
-        <ol class="tp-nav-grid">
+      {/* Category nav */}
+      <nav class="tp3-nav" aria-label="Topic categories">
+        <ol class="tp3-nav-list">
           {catGroups.map((g, i) => (
-            <li class="tp-nav-item">
-              <a href={`#cat-${g.slug}`} class="tp-nav-link">
-                <span class="tp-nav-num">{(i + 1).toString().padStart(2, '0')}</span>
-                <span class="tp-nav-name">{g.name}</span>
-                <span class="tp-nav-arrow">&#8594;</span>
+            <li class="tp3-nav-item">
+              <a href={`#cat-${g.slug}`} class="tp3-nav-link">
+                <span class="tp3-nav-num">{(i + 1).toString().padStart(2, '0')}</span>
+                <span class="tp3-nav-name">{g.name}</span>
+                <span class="tp3-nav-arrow">&#8594;</span>
               </a>
             </li>
           ))}
         </ol>
-      </div>
-    </nav>
+      </nav>
 
-    <div class="tp-cat-hdr-out">
-      <div class="tp-cat-hdr-inner">
-        <h2>All categories</h2>
-      </div>
-    </div>
-
-    {catGroups.map((g, i) => (
-      <section id={`cat-${g.slug}`} class="tp-cat" aria-labelledby={`cat-title-${g.slug}`}>
-        <div class="tp-cat-inner">
-          <div class="tp-cat-side">
-            <span class="tp-cat-num">{(i + 1).toString().padStart(2, '0')}</span>
-            <h2 id={`cat-title-${g.slug}`} class="tp-cat-title">{g.name}</h2>
-            <p class="tp-cat-meta">{g.total.toLocaleString()} tracked courses</p>
-            <a href={`/categories/${g.slug}`} class="tp-cat-link">
-              Browse all {g.topics.length} topics
-              <span class="tp-cat-link-arrow">&#8594;</span>
-            </a>
+      {/* Category sections */}
+      {catGroups.map((g, i) => (
+        <section id={`cat-${g.slug}`} class="tp3-cat" aria-labelledby={`cat-title-${g.slug}`}>
+          <div class="tp3-cat-head">
+            <span class="tp3-cat-num">{(i + 1).toString().padStart(2, '0')}</span>
+            <h2 id={`cat-title-${g.slug}`} class="tp3-cat-title">{g.name}</h2>
+            <p class="tp3-cat-meta">{g.total.toLocaleString()} tracked courses</p>
+            <a href={`/categories/${g.slug}`} class="tp3-cat-link">Browse all {g.topics.length} topics <span class="tp3-cat-link-arrow">&#8594;</span></a>
           </div>
-          <ol class="tp-grid">
-            {g.topics.map((t, ti) => (
-              <li class="tp-grid-item">
-                <a href={`/topics/${t.slug}`} class="tp-grid-link">
-                  <span class="tp-grid-num">{(ti + 1).toString().padStart(2, '0')}</span>
-                  <span class="tp-grid-body">
-                    <span class="tp-grid-name">{t.name}</span>
-                    <span class="tp-grid-count">{t.count.toLocaleString()} courses</span>
-                  </span>
-                  <span class="tp-grid-arrow">&#8594;</span>
-                </a>
-              </li>
+          <div class="tp3-cat-cards">
+            {g.topics.map((t) => (
+              <a href={`/topics/${t.slug}`} class="tp3-card">
+                <div class="tp3-card-media">
+                  <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" role="img" aria-label={t.name} class="tp3-card-svg">
+                    <defs>
+                      <linearGradient id={`lg-${g.slug}-${t.slug}`} x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color={t.c1} />
+                        <stop offset="100%" stop-color={t.c2} />
+                      </linearGradient>
+                    </defs>
+                    <rect width="320" height="180" fill={`url(#lg-${g.slug}-${t.slug})`} />
+                    <circle cx={t.s1x} cy={t.s1y} r={t.s1r} fill="rgba(255,255,255,0.14)" />
+                    <circle cx={t.s2x} cy={t.s2y} r={t.s2r} fill="rgba(255,255,255,0.10)" />
+                    <circle cx={t.s3x} cy={t.s3y} r={t.s3r} fill="rgba(255,255,255,0.18)" />
+                    <text x="16" y="112" fill="rgba(255,255,255,0.95)" font-size="30" font-weight="800" font-family="inherit">{t.name}</text>
+                    <text x="16" y="148" fill="rgba(255,255,255,0.8)" font-size="16" font-weight="600" font-family="inherit">{t.count} courses</text>
+                  </svg>
+                </div>
+                <div class="tp3-card-body">
+                  <span class="tp3-card-name">Best {t.name} Courses on Udemy for {currentYear}</span>
+                  <span class="tp3-card-count">{t.count} courses &#8594;</span>
+                </div>
+              </a>
             ))}
-          </ol>
-        </div>
-      </section>
-    ))}
+          </div>
+        </section>
+      ))}
 
-  </main>
-    <footer class="tp-foot">
-      <div class="tp-foot-inner">
-        <div class="tp-foot-seo">
-          <p>CoursesWyn tracks <strong>{totalCourses.toLocaleString()}+ verified coupon deals</strong> across <strong>{totalTopics.toLocaleString()} topic pages</strong> in <strong>{totalCategories} categories</strong> — updated {latestStr || 'daily'}. Browse <a href="/udemy-coupon-code">all Udemy coupons</a> or <a href="/categories">all categories</a>.</p>
-        </div>
-        <div class="tp-foot-faq">
-          <h3 class="tp-foot-faq-hdr">Frequently asked questions about Udemy course topics</h3>
-          {faqs.map(faq => (
-            <div class="tp-foot-faq-item">
-              <strong>{faq.q}</strong>
-              <p>{faq.a}</p>
-            </div>
+      {/* SEO block */}
+      <section class="tp3-seo">
+        <h2>How CoursesWyn Topic Pages Work</h2>
+        <p>Each topic page below is built from the same verified data pipeline as the rest of the site: courses are ranked using real student ratings and review volume from Udemy, then filtered to keep only listings where our <strong>verified coupon code is currently working</strong>. We re-check every deal in near real time, so the discount you see is the price you pay.</p>
+        <p>Whether you're a complete beginner or an experienced professional, you'll find top-rated training across {totalCategories} learning areas with hands-on projects, lifetime access, and a certificate of completion included with every enrollment. New {currentYear} deals are added daily, so check back often.</p>
+      </section>
+
+      {/* FAQ */}
+      <section class="tp3-faq">
+        <h2>Frequently Asked Questions About Udemy Course Topics</h2>
+        <div class="tp3-faq-list">
+          {faqs.map((faq) => (
+            <details class="tp3-faq-item">
+              <summary>
+                {faq.q}
+                <span class="tp3-faq-plus">+</span>
+              </summary>
+              <div class="tp3-faq-a">{faq.a}</div>
+            </details>
           ))}
         </div>
-      </div>
-    </footer>
+      </section>
+
+    </div>
+  </div>
+
+<style>
+  .tp3-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+  .tp3-container { max-width: 1200px; margin: 0 auto; }
+
+  .tp3-hero { padding: 2rem 0 3rem; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
+  @media (min-width: 900px) { .tp3-hero-inner { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr); gap: 3rem; align-items: start; } }
+  .tp3-hero-label { display: flex; align-items: center; gap: 0.6rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--brand); margin: 0 0 1rem; }
+  .tp3-hero-label::before { content: ''; width: 2rem; height: 3px; background: var(--brand); flex-shrink: 0; }
+  .tp3-hero h1 { font-size: clamp(2.2rem, 4.5vw, 3.5rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; color: var(--text); margin: 0 0 1.25rem; }
+  .tp3-grad { background: linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .tp3-claim { font-size: 1rem; color: var(--muted); line-height: 1.7; margin: 0 0 1.75rem; max-width: 42rem; }
+  .tp3-hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-width: 1px 0; max-width: 26rem; }
+  .tp3-stat { padding: 1rem 1.25rem 1rem 0; }
+  .tp3-stat + .tp3-stat { border-left: 1px solid var(--border); padding-left: 1.25rem; }
+  .tp3-stat-lbl { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 0.25rem; }
+  .tp3-stat-val { font-size: 1.4rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+  .tp3-hero-right p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.75rem; }
+  .tp3-em { color: var(--text); font-weight: 700; }
+  .tp3-fresh { font-size: 0.78rem; color: var(--muted); font-weight: 600; margin-bottom: 1.25rem !important; display: flex; align-items: center; gap: 0.4rem; }
+  .tp3-fresh::before { content: ''; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
+  .tp3-hero-link { color: var(--brand); font-weight: 700; text-decoration: none; font-size: 0.88rem; }
+  .tp3-hero-link:hover { text-decoration: underline; }
+
+  .tp3-nav { margin-bottom: 3rem; }
+  .tp3-nav-list { display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; margin: 0; padding: 0; }
+  .tp3-nav-link { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.6rem 1rem; background: var(--card); border: 1px solid var(--border); border-radius: 100px; text-decoration: none; transition: all 0.15s; }
+  .tp3-nav-link:hover { border-color: var(--brand); }
+  .tp3-nav-num { font-size: 0.6rem; font-weight: 800; color: var(--brand); font-variant-numeric: tabular-nums; }
+  .tp3-nav-name { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+  .tp3-nav-arrow { font-size: 0.7rem; color: var(--muted); opacity: 0; transform: translateX(-0.25rem); transition: all 0.15s; }
+  .tp3-nav-link:hover .tp3-nav-arrow { opacity: 1; transform: translateX(0); color: var(--brand); }
+
+  .tp3-cat { margin-bottom: 3rem; scroll-margin-top: 2rem; }
+  .tp3-cat-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .tp3-cat-num { font-size: 0.7rem; font-weight: 800; color: var(--brand); font-variant-numeric: tabular-nums; border: 1px solid var(--brand); border-radius: 100px; padding: 0.25rem 0.6rem; }
+  .tp3-cat-title { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin: 0; }
+  .tp3-cat-meta { font-size: 0.85rem; color: var(--muted); margin: 0; }
+  .tp3-cat-link { margin-left: auto; font-size: 0.85rem; font-weight: 700; color: var(--brand); text-decoration: none; }
+  .tp3-cat-link:hover { text-decoration: underline; }
+  .tp3-cat-link-arrow { display: inline-block; transition: transform 0.15s; }
+  .tp3-cat-link:hover .tp3-cat-link-arrow { transform: translateX(0.25rem); }
+
+  .tp3-cat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  @media (max-width: 1000px) { .tp3-cat-cards { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .tp3-cat-cards { grid-template-columns: 1fr; } }
+  .tp3-card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; text-decoration: none; transition: all 0.2s; }
+  .tp3-card:hover { border-color: var(--brand); transform: translateY(-2px); box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.4); }
+  .tp3-card-media { position: relative; aspect-ratio: 16 / 9; overflow: hidden; }
+  .tp3-card-svg { width: 100%; height: 100%; display: block; }
+  .tp3-card-body { display: flex; flex-direction: column; gap: 0.4rem; padding: 1rem 1.1rem 1.15rem; }
+  .tp3-card-name { font-weight: 800; font-size: 0.9rem; color: var(--text); line-height: 1.35; }
+  .tp3-card-count { font-size: 0.78rem; color: var(--brand); font-weight: 700; }
+
+  .tp3-seo { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem 1.5rem; margin-bottom: 2.5rem; }
+  .tp3-seo h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 0.85rem; }
+  .tp3-seo p { font-size: 0.92rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.75rem; }
+  .tp3-seo p:last-child { margin-bottom: 0; }
+  .tp3-seo strong { color: var(--text); font-weight: 700; }
+
+  .tp3-faq { margin-bottom: 2.5rem; }
+  .tp3-faq h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 1rem; }
+  .tp3-faq-list { display: flex; flex-direction: column; gap: 0.65rem; }
+  .tp3-faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .tp3-faq-item summary { padding: 1rem 1.25rem; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.98rem; color: var(--text); list-style: none; gap: 0.75rem; }
+  .tp3-faq-item summary::-webkit-details-marker { display: none; }
+  .tp3-faq-plus { color: var(--brand); font-size: 1.2rem; flex-shrink: 0; transition: transform 0.2s; }
+  .tp3-faq-item[open] summary .tp3-faq-plus { transform: rotate(45deg); }
+  .tp3-faq-a { padding: 0 1.25rem 1.1rem; color: var(--muted); font-weight: 500; line-height: 1.65; font-size: 0.9rem; }
+</style>
+
 </Layout>
