@@ -1,4 +1,4 @@
----
+﻿---
 import Layout from "../layouts/Layout.astro";
 import { Image } from "astro:assets";
 import { readDeals } from "../lib/store";
@@ -56,7 +56,9 @@ const featuredDeals = featuredPool.slice(0, 6);
 const courseOfDay = allDeals.filter(d => d.rating && d.rating >= 4.6).sort((a, b) => (b.rating || 0) - (a.rating || 0))[0] || sortedDeals[0];
 const heroCardCourse = featuredPool[1] || courseOfDay;
 const redeemCardCourse = featuredPool[2] || courseOfDay;
-const discountPcts = allDeals.filter(d => d.price && d.originalPrice && d.originalPrice > d.price).map(d => Math.round(100 - (d.price / d.originalPrice) * 100));
+const discountPcts = allDeals
+  .filter((d): d is typeof d & { price: number; originalPrice: number } => typeof d.price === "number" && typeof d.originalPrice === "number" && d.originalPrice > d.price)
+  .map((d) => Math.round(100 - (d.price / d.originalPrice) * 100));
 const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 95;
 const liveCount = allDeals.length;
 
@@ -91,7 +93,7 @@ const jsonLd = {
         "@type": "ListItem", "position": i + 1, "item": {
           "@type": "Course", "name": clean(d.title), "url": "https://courseswyn.com/coupon/" + d.slug,
           "description": clean(d.description), "provider": { "@type": "Organization", "name": d.provider || "Udemy", "sameAs": "https://www.udemy.com" },
-          "aggregateRating": { "@type": "AggregateRating", "ratingValue": (d.rating && d.rating > 0 ? d.rating : 4.5).toFixed(1), "bestRating": 5, "reviewCount": Math.max(100, Math.round(d.students * 0.05) || 500) },
+          "aggregateRating": { "@type": "AggregateRating", "ratingValue": (d.rating && d.rating > 0 ? d.rating : 4.5).toFixed(1), "bestRating": 5, "reviewCount": typeof d.students === "number" && isFinite(d.students) ? Math.max(100, Math.round(d.students * 0.05)) : 500 },
           "offers": { "@type": "Offer", "price": d.price && d.price > 0 ? d.price : (d.originalPrice || 0), "priceCurrency": "USD", "availability": "https://schema.org/InStock", "url": "https://courseswyn.com/coupon/" + d.slug }
         }
       }))
@@ -682,52 +684,71 @@ const typewriterJson = JSON.stringify(typewriterWords);
 
 <script>
   (function () {
-    var input = document.querySelector('#rd2Search input[data-typewriter]');
+    const input = document.querySelector<HTMLInputElement>('#rd2Search input[data-typewriter]');
     if (!input) return;
-    var words;
-    try { words = JSON.parse(input.getAttribute('data-typewriter')); } catch (e) { return; }
-    if (!words || !words.length) return;
-    var wordIndex = 0, charIndex = 0, deleting = false;
+
+    const inputEl = input;
+    const raw = inputEl.getAttribute('data-typewriter');
+    if (!raw) return;
+
+    let words: string[] = [];
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.every((item): item is string => typeof item === 'string')) {
+        words = parsed;
+      }
+    } catch (e) {
+      return;
+    }
+
+    if (!words.length) return;
+
+    let wordIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+
     function tick() {
-      var word = words[wordIndex];
+      const word = words[wordIndex];
+      if (!word) return;
       if (!deleting) {
         charIndex++;
-        input.setAttribute('placeholder', word.substring(0, charIndex));
+        inputEl.setAttribute('placeholder', word.substring(0, charIndex));
         if (charIndex === word.length) { deleting = true; setTimeout(tick, 1500); return; }
         setTimeout(tick, 25);
       } else {
         charIndex--;
-        input.setAttribute('placeholder', word.substring(0, charIndex));
+        inputEl.setAttribute('placeholder', word.substring(0, charIndex));
         if (charIndex === 0) { deleting = false; wordIndex = (wordIndex + 1) % words.length; }
         setTimeout(tick, 18);
       }
     }
+
     setTimeout(tick, 400);
   })();
 
   (function () {
-    var btn = document.getElementById('rd2LoadMore');
+    const btn = document.getElementById('rd2LoadMore') as HTMLButtonElement | null;
     if (!btn) return;
-    var grid = document.getElementById('rd2Featured');
+    const grid = document.getElementById('rd2Featured');
     if (!grid) return;
-    var hidden = Array.prototype.filter.call(grid.querySelectorAll('.rd2-card'), function (c) { return c.classList.contains('rd2-hidden'); });
+    const hidden = Array.prototype.filter.call(grid.querySelectorAll('.rd2-card'), function (c: Element) { return c.classList.contains('rd2-hidden'); });
     btn.addEventListener('click', function () {
-      for (var i = 0; i < 6 && hidden.length; i++) {
-        hidden.shift().classList.remove('rd2-hidden');
+      for (let i = 0; i < 6 && hidden.length; i++) {
+        hidden.shift()?.classList.remove('rd2-hidden');
       }
       if (!hidden.length) btn.style.display = 'none';
     });
   })();
 
   (function () {
-    var btn = document.getElementById('rd2TopicLoadMore');
+    const btn = document.getElementById('rd2TopicLoadMore') as HTMLButtonElement | null;
     if (!btn) return;
-    var grid = document.getElementById('rd2Topics');
+    const grid = document.getElementById('rd2Topics');
     if (!grid) return;
-    var hidden = Array.prototype.filter.call(grid.querySelectorAll('.rd2-topic'), function (c) { return c.classList.contains('rd2-topic-hidden'); });
+    const hidden = Array.prototype.filter.call(grid.querySelectorAll('.rd2-topic'), function (c: Element) { return c.classList.contains('rd2-topic-hidden'); });
     btn.addEventListener('click', function () {
-      for (var i = 0; i < 3 && hidden.length; i++) {
-        hidden.shift().classList.remove('rd2-topic-hidden');
+      for (let i = 0; i < 3 && hidden.length; i++) {
+        hidden.shift()?.classList.remove('rd2-topic-hidden');
       }
       if (!hidden.length) btn.style.display = 'none';
     });

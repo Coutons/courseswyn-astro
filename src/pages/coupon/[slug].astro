@@ -67,6 +67,11 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
   ? Math.round(((deal.originalPrice - deal.price) / deal.originalPrice) * 100)
   : 0;
 
+const normalizedTitle = deal.title?.trim() || "Premium Course";
+const discountLabel = discountPercentage > 0 ? `${discountPercentage}% OFF` : "Discount";
+const seoTitle = `${normalizedTitle} - ${discountLabel} Udemy Coupon`;
+const seoDescription = (deal.seoDescription || `${normalizedTitle} is available with a verified coupon and ${discountPercentage > 0 ? `up to ${discountPercentage}% off` : "a discount"}. Explore the course overview, learning objectives, and what you can expect to learn before enrolling.`).trim();
+
 const siteUrl = "https://courseswyn.com";
 const dealUrl = `${siteUrl}/coupon/${deal.slug || deal.id}`;
 const orgName = "CoursesWyn";
@@ -77,8 +82,8 @@ const avgRating = totalDeals > 0
 ---
 
 <Layout
-    title={`${deal.title} - ${discountPercentage}% OFF Udemy Coupon`}
-    description={(deal.seoDescription || deal.description)?.slice(0, 155) + ((deal.seoDescription || deal.description)?.length > 155 ? '...' : '')}
+    title={seoTitle}
+    description={seoDescription}
     image={deal.seoOgImage || deal.image}
     canonical={dealUrl}
 >
@@ -186,8 +191,8 @@ const avgRating = totalDeals > 0
                 {
                     "@type": "Product",
                     "@id": `${dealUrl}#product`,
-                    "name": `${deal.title} - ${discountPercentage}% OFF`,
-                    "description": deal.seoDescription || deal.description || `${deal.title} Udemy coupon deal`,
+                    "name": seoTitle,
+                    "description": seoDescription,
                     "image": deal.seoOgImage || deal.image || `${siteUrl}/logo.svg`,
                     "brand": {
                         "@type": "Brand",
@@ -242,8 +247,8 @@ const avgRating = totalDeals > 0
                     "@type": "WebPage",
                     "@id": `${dealUrl}#webpage`,
                     "url": dealUrl,
-                    "name": `${deal.title} - Udemy Coupon & Discount Code`,
-                    "description": `Get ${deal.title} with ${discountPercentage > 0 ? discountPercentage + '% off' : 'a discount'} using verified coupon code. ${deal.students ? deal.students.toLocaleString() + ' students enrolled.' : ''} Limited time offer.`,
+                    "name": seoTitle,
+                    "description": `${seoDescription} ${deal.students ? `${deal.students.toLocaleString()} students enrolled.` : ''} Limited time offer.`,
                     "inLanguage": "en-US",
                     "isPartOf": { "@id": `${siteUrl}/#website` },
                     "datePublished": deal.createdAt ? new Date(deal.createdAt).toISOString() : new Date().toISOString(),
