@@ -4,8 +4,10 @@ import { Image } from "astro:assets";
 import { readDeals } from "../lib/store";
 import { toISODateWIB } from "../lib/date";
 import { CATEGORY_ICONS } from "../lib/categories";
+import { getCollection } from "astro:content";
 
 const allDeals = await readDeals();
+const blogPosts = await getCollection("blog");
 const now = new Date();
 const currentMonth = now.toLocaleDateString('en-US', { month: 'long' });
 const currentYear = now.toLocaleDateString('en-US', { year: 'numeric' });
@@ -68,6 +70,7 @@ function genStudents(key: string): number { let h = 0; for (let i = 0; i < key.l
 function catSlug(c: string) { return c.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
 function topicSlug(s: string) { return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
 function fmtDur(dur: string) { if (!dur) return ""; return dur.replace(/(\d+)h/g, "$1h").replace(/(\d+)m/g, "$1m").replace(/\s+/g, " "); }
+function resolveImage(imagePath: string | undefined): string | null { if (!imagePath) return null; if (imagePath.startsWith('http')) return imagePath; const filename = imagePath.split('/').pop(); return `/assets/images/${filename}`; }
 
 const faqs = [
   { q: "Does it cost anything to use CoursesWyn?", a: "No. CoursesWyn is completely free to use — no signup, no account, no credit card. Every coupon we list gets you the course at a heavily discounted price, often up to " + maxDiscountPct + "% off. You only need a free Udemy account to enroll." },
@@ -594,44 +597,49 @@ const typewriterJson = JSON.stringify(typewriterWords);
   </section>
   )}
 
-  <!-- TOPICS -->
-  <section class="rd2-section" aria-label="Browse courses by topic" style="padding-top:0">
+  <!-- BLOG -->
+  <section class="rd2-section" aria-label="Best and top Udemy courses reviews and ranked guides" style="padding-top:0">
     <div class="rd2-container">
       <div class="rd2-head">
-        <h2>Popular Topics</h2>
-        <p>Explore coupon codes on trending topics</p>
+        <h2>Best &amp; Top Udemy Courses — Reviews &amp; Ranked Guides</h2>
+        <p>In-depth Udemy course reviews, head-to-head comparisons, and ranked guides to help you choose the right course for your goals</p>
       </div>
-      <div class="rd2-topicgrid" id="rd2Topics">
-        {topicCards.map((t, i) => (
-          <a class:list={["rd2-topic", { "rd2-topic-hidden": i >= 3 }]} href={"/topics/" + t.slug}>
-            <div class="rd2-topic-media">
-              <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" role="img" aria-label={t.name} class="rd2-topic-svg">
-                <defs>
-                  <linearGradient id={"rtg-" + t.slug} x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color={t.c1} />
-                    <stop offset="100%" stop-color={t.c2} />
-                  </linearGradient>
-                </defs>
-                <rect width="320" height="180" fill={"url(#rtg-" + t.slug + ")"} />
-                <circle cx={t.s1x} cy={t.s1y} r={t.s1r} fill="rgba(255,255,255,0.14)" />
-                <circle cx={t.s2x} cy={t.s2y} r={t.s2r} fill="rgba(255,255,255,0.10)" />
-                <circle cx={t.s3x} cy={t.s3y} r={t.s3r} fill="rgba(255,255,255,0.18)" />
-                <text x="16" y="112" fill="rgba(255,255,255,0.95)" font-size="30" font-weight="800" font-family="inherit">{t.name}</text>
-                <text x="16" y="148" fill="rgba(255,255,255,0.8)" font-size="16" font-weight="600" font-family="inherit">{t.count} courses</text>
-              </svg>
-            </div>
-            <div class="rd2-topic-body">
-              <span class="rd2-topic-name">Best {t.name} Courses on Udemy for {currentYear}</span>
-              <span class="rd2-topic-count">{t.count} courses &#8594;</span>
-            </div>
-          </a>
-        ))}
+      <div class="rd2-grid">
+        {blogPosts
+          .filter((p) => p.data.image && p.data.title && p.data.description)
+          .sort((a, b) => {
+            const dateA = new Date(a.data.updatedAt || a.data.pubDate || 0).getTime();
+            const dateB = new Date(b.data.updatedAt || b.data.pubDate || 0).getTime();
+            return dateB - dateA;
+          })
+          .slice(0, 6)
+          .map((post, i) => {
+            const title = post.data.title || "Untitled Article";
+            const desc = post.data.description || "";
+            const img = post.data.image || "";
+            const id = post.id || "";
+            const pubDate = post.data.updatedAt || post.data.pubDate ? new Date(post.data.updatedAt || post.data.pubDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+            return (
+              <article class="rd2-card">
+                <a class="rd2-card-media" href={"/blog/" + id}>
+                  {img ? <Image src={resolveImage(img) || '/assets/images/og-default.svg'} alt={title} loading="lazy" decoding="async" width={640} height={360} inferSize={false} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}} /> : (
+                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#1b202a"><svg width="42" height="42" viewBox="0 0 24 24" fill="#00a76f" opacity="0.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+                  )}
+                </a>
+                <div class="rd2-card-body">
+                  <h3 class="rd2-card-title"><a href={"/blog/" + id} style="color:inherit;text-decoration:none">{title}</a></h3>
+                  <p style="color:var(--rd-muted);font-size:0.85rem;line-height:1.6;margin:0 0 0.75rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{desc}</p>
+                  <div class="rd2-card-meta">
+                    {pubDate && <span>{pubDate}</span>}
+                    <span>→ Read Article</span>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
       </div>
       <div class="rd2-loadmore-wrap">
-        <button type="button" class="rd2-btn loadmore" id="rd2TopicLoadMore">
-          Load More
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></svg>
-        </button>
+        <a class="rd2-btn outlined" href="/blog">View All Articles <span class="bl-more-arrow">&#8594;</span></a>
       </div>
     </div>
   </section>
@@ -753,6 +761,6 @@ const typewriterJson = JSON.stringify(typewriterWords);
       if (!hidden.length) btn.style.display = 'none';
     });
   })();
-</script>
+ </script>
 
 </Layout>
