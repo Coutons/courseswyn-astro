@@ -1,12 +1,10 @@
 ---
 export const prerender = true;
 import Layout from "../../layouts/Layout.astro";
-import DealCard from "../../components/DealCard.astro";
-import { Image } from "astro:assets";
+import LedgerRow from "../../components/LedgerRow.astro";
 import { readDeals } from "../../lib/store";
 import { toISODateWIB } from "../../lib/date";
 import { slugifyCategory } from "../../lib/utils";
-import { CATEGORY_ICONS } from "../../lib/categories";
 
 export async function getStaticPaths({ paginate }: { paginate: any }) {
   const allDeals = await readDeals();
@@ -21,16 +19,15 @@ const currentItems = page.data;
 const currentPage = page.currentPage;
 const totalPages = page.lastPage;
 const startIndex = page.start;
-const endIndex = page.end + 1;
 
 const activeDeals = allDeals.filter((d: any) => !d.expiresAt || new Date(d.expiresAt) > now);
-const totalCoupons = allDeals.length;
 const totalActive = activeDeals.length;
 
 const todayStr = toISODateWIB(now);
 const todayAdded = allDeals.filter((d: any) => {
-  const dt = d.updatedAt || d.createdAt || '';
-  return dt.startsWith(todayStr);
+  const raw = d.updatedAt || d.createdAt || '';
+  if (!raw) return false;
+  return toISODateWIB(new Date(raw)) === todayStr;
 }).length;
 
 const decodeHtml = (str: string) =>
@@ -44,14 +41,6 @@ for (const d of allDeals) {
   }
 }
 const totalTopics = Object.keys(topicCounts).length;
-
-let totalSavings = 0;
-for (const d of allDeals) {
-  if (d.originalPrice && d.price != null && d.originalPrice > 0) {
-    totalSavings += (d.originalPrice - d.price);
-  }
-}
-const savingsFormatted = Math.round(totalSavings).toLocaleString();
 
 const selectedLanguage = Astro.url.searchParams.get('language');
 
@@ -74,10 +63,18 @@ const discountPcts = allDeals
 const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 95;
 
 const pageTitle = currentPage === 1
-  ? `Verified Udemy Coupon Codes - Get Premium Courses for Less (${maxDiscountPct}% Off) ${currentMonth} ${currentYear} | CoursesWyn`
-  : `Verified Udemy Coupon Codes - Get Premium Courses for Less (${maxDiscountPct}% Off) ${currentMonth} ${currentYear} - Page ${currentPage} of ${totalPages} | CoursesWyn`;
+  ? `All Verified Udemy Coupon Codes - Live Catalog (${maxDiscountPct}% Off) ${currentMonth} ${currentYear} | CoursesWyn`
+  : `All Verified Udemy Coupon Codes - Live Catalog (${maxDiscountPct}% Off) ${currentMonth} ${currentYear} - Page ${currentPage} of ${totalPages} | CoursesWyn`;
 
-const pageDescription = `Get premium Udemy courses for less. ${totalActive} verified coupon codes & ${todayAdded} added today — save up to ${maxDiscountPct}% on top courses. Updated daily.`;
+const pageDescription = currentPage === 1
+  ? `Get premium Udemy courses for less. ${totalActive} verified coupon codes & ${todayAdded} added today - save up to ${maxDiscountPct}% on top courses. Updated daily.`
+  : `Page ${currentPage} of ${totalPages}: ${currentItems.length} more verified Udemy coupon codes - save up to ${maxDiscountPct}% on premium courses. Updated daily.`;
+
+const pageKeywords = [
+  "udemy coupon code", "udemy coupon codes", "free udemy coupon", "udemy discount",
+  "udemy free course", "udemy promo code", "udemy deals", "udemy sale",
+  "coupon code", "udemy courses", "verified udemy coupons"
+].join(", ");
 
 const currentDeals = currentItems.filter((d: any) => d.price > 0 || d.price == null);
 
@@ -123,37 +120,42 @@ const jsonLd: any = {
       ]
     },
     {
-      "@type": "CollectionPage",
+      "@type": ["WebPage", "CollectionPage"],
       "@id": currentUrl,
       "url": currentUrl,
       "name": pageTitle,
       "description": pageDescription,
-      "isPartOf": { "@id": siteUrl },
+      "keywords": pageKeywords,
+      "isPartOf": { "@id": `${siteUrl}#website` },
       "breadcrumb": { "@id": `${currentUrl}#breadcrumb` },
+      "datePublished": currentDate.toISOString().split('T')[0],
       "dateModified": currentDate.toISOString().split('T')[0],
       "inLanguage": "en-US",
-      "mainEntity": {
-        "@type": "ItemList",
-        "name": `Verified Udemy Coupons — ${currentMonth} ${currentYear}`,
-        "numberOfItems": allDeals.length,
-        "itemListElement": currentItems.slice(0, 20).map((d: any, i: number) => ({
-          "@type": "ListItem",
-          "position": startIndex + i + 1,
-          "item": {
-            "@type": "Course",
-            "name": d.title,
-            "url": `${siteUrl}/coupon/${d.slug}`,
-            "image": d.image,
-            "provider": { "@type": "Organization", "name": "Udemy", "url": "https://www.udemy.com" },
-            "offers": {
-              "@type": "Offer",
-              "price": String(d.price ?? "0"),
-              "priceCurrency": "USD",
-              "availability": "https://schema.org/InStock",
-            },
+      "mainEntity": { "@id": `${currentUrl}#itemlist` },
+    },
+    {
+      "@type": "ItemList",
+      "@id": `${currentUrl}#itemlist`,
+      "name": `Verified Udemy Coupons — ${currentMonth} ${currentYear}`,
+      "numberOfItems": totalActive,
+      "itemListElement": currentItems.slice(0, 20).map((d: any, i: number) => ({
+        "@type": "ListItem",
+        "position": startIndex + i + 1,
+        "url": `${siteUrl}/coupon/${d.slug}`,
+        "item": {
+          "@type": "Course",
+          "name": d.title,
+          "url": `${siteUrl}/coupon/${d.slug}`,
+          "image": d.image,
+          "provider": { "@type": "Organization", "name": "Udemy", "url": "https://www.udemy.com" },
+          "offers": {
+            "@type": "Offer",
+            "price": String(d.price ?? "0"),
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
           },
-        })),
-      },
+        },
+      })),
     },
     ...(currentPage === 1 ? [{
       "@type": "FAQPage",
@@ -191,7 +193,15 @@ for (let p = 1; p <= totalPages; p++) {
   <Fragment slot="head">
     {prevUrl && <link rel="prev" href={prevUrl} />}
     {nextUrl && <link rel="next" href={nextUrl} />}
-    {currentPage > 1 && <meta name="robots" content="noindex, follow" />}
+    {currentPage > 1 && <>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="googlebot" content="noindex, follow" />
+      <meta name="bingbot" content="noindex, follow" />
+    </>}
+    <meta name="keywords" content={pageKeywords} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   </Fragment>
 
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
@@ -200,73 +210,61 @@ for (let p = 1; p <= totalPages; p++) {
     <div class="cc-container">
 
       <header class="cc-header">
-        <h1 class="cc-title">
-          <span>Verified Udemy Coupon Codes</span>
-          {currentPage > 1 && <span class="cc-page-label">Page {currentPage}</span>}
-        </h1>
-        <h2 class="cc-hero-claim">Get Premium Courses for Less Today!</h2>
-        <p class="cc-subtitle">Discover thousands of premium Udemy courses for less with verified coupon codes — save up to <strong>{maxDiscountPct}%</strong> on programming, design, business and more. New deals added daily, every code checked against Udemy before we list it.</p>
-        <form action="/search" method="GET" role="search" aria-label="Search courses" class="cc-hero-search">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="search" name="q" placeholder="Search for discounted Udemy courses..." autocomplete="off" aria-label="Search courses" />
-          <kbd>? + K</kbd>
-        </form>
-        <div class="cc-hero-btns">
-          <a class="cc-hero-btn contained" href="#latest">Browse All Coupons</a>
-          <a class="cc-hero-btn outlined" href="/categories">Browse by Category</a>
-        </div>
-        <div class="cc-stats-bar">
-          <div class="cc-stat">
-            <span class="cc-stat-value">{todayAdded}</span>
-            <span class="cc-stat-label">Coupons added today</span>
+        <div class="cc-register">
+          <div class="cc-register-top">
+            <span class="cc-eyebrow"><span class="cc-blip"></span> {totalActive.toLocaleString()} coupons verified live right now</span>
+            <span class="cc-folio">Page {currentPage} / {totalPages}</span>
           </div>
-          <div class="cc-stat-divider"></div>
-          <div class="cc-stat">
-            <span class="cc-stat-value">{totalCoupons}</span>
-            <span class="cc-stat-label">Total coupons</span>
+          <h1 class="cc-title">All Verified <span class="cc-accent">Udemy Coupon Codes</span>{currentPage > 1 && <span class="cc-page-label">Page {currentPage}</span>}</h1>
+          <p class="cc-subtitle">Every code below is checked against Udemy before listing — save up to <strong>{maxDiscountPct}%</strong> on programming, design, business and more. New deals added daily.</p>
+          <div class="cc-toolbar">
+            <form action="/search" method="GET" role="search" aria-label="Search courses" class="cc-hero-search">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="search" name="q" placeholder="Search for discounted Udemy courses..." autocomplete="off" aria-label="Search courses" />
+              <kbd>? + K</kbd>
+            </form>
+            <a class="cc-hero-btn" href="#latest">Browse All Coupons</a>
+            <a class="cc-hero-btn ghost" href="/categories">Browse by Category</a>
           </div>
-          <div class="cc-stat-divider"></div>
-          <div class="cc-stat">
-            <span class="cc-stat-value">{totalTopics}</span>
-            <span class="cc-stat-label">Topics</span>
-          </div>
-          <div class="cc-stat-divider"></div>
-          <div class="cc-stat">
-            <span class="cc-stat-value">${savingsFormatted}</span>
-            <span class="cc-stat-label">Total savings</span>
+          <div class="cc-ledger">
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Verified coupons</div><div class="cc-ledger-value">{totalActive.toLocaleString()}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Added today</div><div class="cc-ledger-value">{todayAdded}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Topics</div><div class="cc-ledger-value">{totalTopics}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Save up to</div><div class="cc-ledger-value">{maxDiscountPct}%</div></div>
           </div>
         </div>
       </header>
 
       {currentPage === 1 && (
       <section class="cc-featured" aria-label="Featured Udemy coupons">
-        <div class="cc-deals-header">
-          <h2 class="cc-section-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-            Featured Udemy Coupons
-          </h2>
-          <p class="cc-deals-desc">Handpicked top-rated courses with verified coupon codes — regularly updated with fresh deals.</p>
+        <div class="cc-sec-head">
+          <h2 class="cc-sec-title">Highest rated this week <span class="cc-tag">Verified coupons</span></h2>
+          <p class="cc-sec-desc">Top-rated courses with verified coupon codes — refreshed automatically as new deals appear.</p>
         </div>
-        <div class="cc-deals-grid">
-          {featuredDeals.map((deal: any) => (
-            <DealCard deal={deal} loading="lazy" />
-          ))}
+        <div class="cc-ledger-wrap">
+          <table class="cc-ledger-table">
+            <thead><tr><th>Course</th><th>Price</th><th class="cc-col-hide">Status</th><th>Checked</th></tr></thead>
+            <tbody>
+              {featuredDeals.map((deal: any) => <LedgerRow deal={deal} />)}
+            </tbody>
+          </table>
         </div>
       </section>
       )}
 
       <section class="cc-deals-section" id="latest">
-        <div class="cc-deals-header">
-          <h2 class="cc-section-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-            Latest Udemy Coupons
-          </h2>
-          <p class="cc-deals-desc">{currentItems.length} coupons on this page — fresh deals added daily</p>
+        <div class="cc-sec-head">
+          <h2 class="cc-sec-title">Live coupon feed <span class="cc-tag">Streaming from the verification database</span></h2>
+          <p class="cc-sec-desc">{currentItems.length} coupons on this page — every code checked against Udemy before listing</p>
         </div>
-        <div class="cc-deals-grid">
-          {currentDeals.map((deal: any, i: number) => (
-            <DealCard deal={deal} loading={i < 3 ? 'eager' : 'lazy'} />
-          ))}
+        <div class="cc-ledger-wrap">
+          <table class="cc-ledger-table">
+            <thead><tr><th>Course</th><th>Price</th><th class="cc-col-hide">Status</th><th>Checked</th></tr></thead>
+            <tbody>
+              {currentDeals.map((deal: any) => <LedgerRow deal={deal} />)}
+            </tbody>
+          </table>
+          <div class="cc-deal-more"><span class="cc-deal-count">{currentItems.length} coupons on this page — verified before listing</span><a href="/udemy-coupons-today">See today's new coupons →</a></div>
         </div>
 
           {totalPages > 1 && (
@@ -312,18 +310,19 @@ for (let p = 1; p <= totalPages; p++) {
               <h2 class="cc-section-title">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 Popular Categories
+                <span class="cc-tag">{sortedCats.length} categories</span>
               </h2>
               <p class="cc-deals-desc">Find verified coupon codes in your field — from AI and coding to design and cloud computing.</p>
             </div>
             <nav class="cc-cat-grid" aria-label="Course categories">
-              {sortedCats.slice(0, 12).map(([cat]) => {
+              {sortedCats.slice(0, 12).map(([cat, count]) => {
                 const slug = slugifyCategory(cat);
                 const subCount = (subcatsByCat[cat] || new Set()).size;
                 return (
                   <a href={`/categories/${slug}`} class="cc-cat" title={`Browse ${cat} courses with Udemy coupons`}>
-                    <span class="cc-cat-icon" set:html={CATEGORY_ICONS[slug] || CATEGORY_ICONS["development"]}></span>
-                    <span class="cc-cat-name">{cat}</span>
-                    <span class="cc-cat-count">{subCount} Subcategor{subCount === 1 ? "y" : "ies"}</span>
+                    <div class="cc-cat-num">{count}</div>
+                    <div class="cc-cat-label">{cat}</div>
+                    <div class="cc-cat-count">{subCount} Subcategor{subCount === 1 ? "y" : "ies"}</div>
                   </a>
                 );
               })}
@@ -331,6 +330,7 @@ for (let p = 1; p <= totalPages; p++) {
           </section>
           )}
 
+          {currentPage === 1 && (
           <section class="cc-section cc-faq">
             <h2 class="cc-section-title">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -345,82 +345,12 @@ for (let p = 1; p <= totalPages; p++) {
               ))}
             </div>
           </section>
+          )}
 
-          <section class="cc-section cc-about" aria-label="About">
-            <h2 class="cc-section-title">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              About CoursesWyn
-            </h2>
-            <div class="cc-about-grid">
-              <div class="cc-about-card">
-                <div class="cc-about-media">
-                  <Image src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&auto=format&fit=crop" alt="Online Learning" loading="lazy" width={1200} height={800} />
-                </div>
-                <h4 class="cc-about-title">Your Gateway to Learning</h4>
-                <p class="cc-about-body">CoursesWyn is your trusted source for the best online course deals and verified coupon codes. We curate high-quality educational content from top platforms like Udemy, making learning accessible and affordable for everyone.</p>
-              </div>
-
-              <div class="cc-about-card">
-                <div class="cc-about-features">
-                  <div class="cc-about-feature">
-                    <span class="cc-about-ico">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="m13 21l2-1l2 1v-7h-4m4-5V7l-2 1l-2-1v2l-2 1l2 1v2l2-1l2 1v-2l2-1m1-7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7v-2H4V5h16v10h-1v2h1a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2m-9 5H5V6h6m-2 5H5V9h4m2 5H5v-2h6Z"/></svg>
-                    </span>
-                    <div>
-                      <h6>100% Valid Coupons</h6>
-                      <p>All our coupons are verified and updated regularly</p>
-                    </div>
-                  </div>
-                  <div class="cc-about-feature">
-                    <span class="cc-about-ico">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M15 4a8 8 0 0 1 8 8a8 8 0 0 1-8 8a8 8 0 0 1-8-8a8 8 0 0 1 8-8m0 2a6 6 0 0 0-6 6a6 6 0 0 0 6 6a6 6 0 0 0 6-6a6 6 0 0 0-6-6m-1 2h1.5v3.78l2.33 2.33l-1.06 1.06L14 12.4zM2 18a1 1 0 0 1-1-1a1 1 0 0 1 1-1h3.83c.31.71.71 1.38 1.17 2zm1-5a1 1 0 0 1-1-1a1 1 0 0 1 1-1h2.05L5 12l.05 1zm1-5a1 1 0 0 1-1-1a1 1 0 0 1 1-1h3c-.46.62-.86 1.29-1.17 2z"/></svg>
-                    </span>
-                    <div>
-                      <h6>Daily Updates</h6>
-                      <p>New courses and deals added every 24 hours</p>
-                    </div>
-                  </div>
-                  <div class="cc-about-feature">
-                    <span class="cc-about-ico">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L1 9l11 6l9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17z"/></svg>
-                    </span>
-                    <div>
-                      <h6>Quality Education</h6>
-                      <p>Courses from expert instructors worldwide</p>
-                    </div>
-                  </div>
-                  <div class="cc-about-feature">
-                    <span class="cc-about-ico">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    </span>
-                    <div>
-                      <h6>Verified Coupons</h6>
-                      <p>Every code tested against Udemy before publishing</p>
-                    </div>
-                  </div>
-                </div>
-                <p class="cc-about-join">Join thousands of learners who trust CoursesWyn to advance their careers and pursue their passions through online education.</p>
-                <p class="cc-about-stats">
-                  <span>🌟 {todayAdded}+ coupons added today</span>
-                  <span>📚 {totalCoupons}+ verified coupon codes</span>
-                  <span>🎓 {totalTopics} topics and categories</span>
-                  <span>💰 Save up to {maxDiscountPct}% on courses</span>
-                </p>
-              </div>
-            </div>
-
-            <div class="cc-keywords" aria-label="Related keywords">
-              <span>Udemy Coupons</span>
-              <span>Free Online Courses</span>
-              <span>Course Deals</span>
-              <span>Online Learning</span>
-              <span>Education Discounts</span>
-              <span>Skill Development</span>
-              <span>Professional Certificates</span>
-              <span>E-Learning Platform</span>
-              <span>Career Development</span>
-              <span>Digital Skills</span>
-            </div>
+          <section class="cc-cta">
+            <p class="cc-cta-eyebrow">Catalog complete</p>
+            <p class="cc-cta-text">Every coupon on this page was checked against Udemy before listing. Check back tomorrow — fresh verified codes are added daily.</p>
+            <a class="cc-hero-btn" href="/udemy-coupons-today">See today's new coupons →</a>
           </section>
 
     </div>
@@ -431,122 +361,112 @@ for (let p = 1; p <= totalPages; p++) {
   .cc-root { background: var(--bg); padding: 2rem 1rem 4rem; }
   .cc-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
 
-  .cc-breadcrumb { display: none; }
+  /* ===== REGISTER / LEDGER HEADER ===== */
+  .cc-register { position: relative; background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(18, 32, 58, 0.35); }
+  .cc-register-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; font-weight: 600; color: #1F7A4D; background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.25); border-radius: 999px; padding: 6px 13px; }
+  .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #1F7A4D; animation: ccBlip 1.6s infinite; }
+  @keyframes ccBlip { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  .cc-folio { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #5B564C; border: 1px dashed #B9B29B; border-radius: 6px; padding: 5px 10px; letter-spacing: .05em; white-space: nowrap; }
+  .cc-title { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 700; color: #12203A; line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 12px; }
+  .cc-title .cc-accent { color: #C13B2E; }
+  .cc-page-label { display: inline-flex; align-items: center; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; font-weight: 600; color: #1F7A4D; background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.25); border-radius: 999px; padding: 4px 10px; margin-left: 0.6rem; vertical-align: middle; }
+  .cc-subtitle { color: #5B564C; font-size: 0.95rem; line-height: 1.7; margin: 0 0 20px; max-width: 640px; }
+  .cc-subtitle strong { color: #12203A; font-weight: 700; }
 
-  .cc-header { text-align: center; margin-bottom: 2rem; }
-  .cc-header-icon { display: block; margin: 0 auto 0.75rem; color: var(--brand); }
-  .cc-title { font-size: clamp(2.5rem, 4.5vw, 4rem); font-weight: 800; color: var(--text); margin: 0 0 0.75rem; letter-spacing: -0.02em; line-height: 1.25; }
-  .cc-title > span:first-child { background: linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-  .cc-page-label { font-size: 1.1rem; font-weight: 700; color: var(--muted); letter-spacing: normal; margin-left: 0.5rem; }
-  .cc-hero-claim { font-size: clamp(1.4rem, 2.5vw, 1.75rem); font-weight: 800; color: var(--text); margin: -0.25rem 0 0.75rem; line-height: 1.3; letter-spacing: -0.01em; }
-  .cc-hero-claim span { background: linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-  .cc-subtitle { font-size: 0.95rem; color: var(--muted); max-width: 640px; margin: 0 auto 1.25rem; line-height: 1.65; }
-  .cc-subtitle strong { color: var(--text); font-weight: 700; }
+  .cc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .cc-hero-search { display: flex; align-items: center; gap: 10px; flex: 1 1 300px; max-width: 460px; min-width: 240px; background: #fff; border: 1px solid #D8D0BC; border-radius: 10px; padding: 0 14px; height: 48px; box-shadow: 0 8px 24px -18px rgba(18, 32, 58, 0.4); transition: border-color 0.2s, box-shadow 0.2s; }
+  .cc-hero-search:focus-within { border-color: #1F7A4D; box-shadow: 0 8px 28px -14px rgba(31, 122, 77, 0.4); }
+  .cc-hero-search svg { color: #5B564C; flex-shrink: 0; }
+  .cc-hero-search input { flex: 1; border: none; outline: none; background: transparent; color: #12203A; font-size: 0.93rem; padding: 0; min-width: 0; }
+  .cc-hero-search kbd { font-size: 0.7rem; color: #5B564C; background: transparent; border: 1px solid #D8D0BC; border-radius: 5px; padding: 2px 7px; white-space: nowrap; }
+  .cc-hero-btn { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-size: 0.9rem; font-weight: 600; text-decoration: none; padding: 12px 20px; border-radius: 9px; background: #12203A; color: #fff; box-shadow: 0 10px 24px rgba(18, 32, 58, 0.35); transition: background 0.2s, transform 0.2s; white-space: nowrap; }
+  .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
+  .cc-hero-btn.ghost { background: transparent; color: #1B2E52; border: 1px solid #1B2E52; box-shadow: none; }
+  .cc-hero-btn.ghost:hover { background: #1B2E52; color: #fff; }
 
-  .cc-hero-search { display: flex; align-items: center; gap: 0.5rem; max-width: 560px; margin: 0 auto 1.25rem; background: var(--card); border: 1px solid var(--border); border-radius: 100px; padding: 0.4rem 0.4rem 0.4rem 1rem; transition: border-color 0.2s; }
-  .cc-hero-search:focus-within { border-color: var(--brand); }
-  .cc-hero-search svg { color: var(--muted); flex-shrink: 0; }
-  .cc-hero-search input { flex: 1; border: none; outline: none; background: transparent; color: var(--text); font-size: 0.9rem; padding: 0.35rem 0; min-width: 0; }
-  .cc-hero-search kbd { font-size: 0.7rem; color: var(--muted); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.15rem 0.5rem; }
+  .cc-ledger { display: flex; margin-top: 24px; border-top: 1px dashed #B9B29B; padding-top: 20px; flex-wrap: wrap; }
+  .cc-ledger-cell { flex: 1 1 150px; padding: 2px 18px; border-left: 1px solid #D8D0BC; }
+  .cc-ledger-cell:first-child { border-left: none; padding-left: 2px; }
+  .cc-ledger-label { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: #5B564C; margin-bottom: 4px; }
+  .cc-ledger-value { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-weight: 700; font-size: 22px; color: #12203A; }
 
-  .cc-hero-btns { display: flex; justify-content: center; gap: 0.75rem; margin-bottom: 1.75rem; flex-wrap: wrap; }
-  .cc-hero-btn { font-size: 0.9rem; font-weight: 700; text-decoration: none; padding: 0.65rem 1.5rem; border-radius: 100px; transition: all 0.2s; }
-  .cc-hero-btn.contained { background: var(--brand); color: #fff; }
-  .cc-hero-btn.contained:hover { filter: brightness(1.08); }
-  .cc-hero-btn.outlined { border: 1px solid var(--border); color: var(--text); }
-  .cc-hero-btn.outlined:hover { border-color: var(--brand); color: var(--brand); }
+  /* ===== SECTION HEADS ===== */
+  .cc-sec-head { margin-bottom: 0.9rem; }
+  .cc-sec-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; letter-spacing: -0.01em; }
+  .cc-sec-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+  .cc-sec-desc { font-size: 0.85rem; color: #6E6A5E; margin: 0; }
 
-  .cc-featured { margin-bottom: 2rem; }
+  /* ===== LEDGER TABLE (matches homepage deal table) ===== */
+  .cc-featured { margin-top: 3.25rem; }
+  .cc-deals-section { margin-top: 3.25rem; }
+  .cc-ledger-wrap { background: #fff; border: 1px solid #D8D0BC; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.16); margin-top: 16px; }
+  table.cc-ledger-table { width: 100%; border-collapse: collapse; }
+  .cc-ledger-table thead th { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #5B564C; text-align: left; padding: 12px 14px; border-bottom: 1px solid #D8D0BC; background: #EDE7D6; white-space: nowrap; }
+  .cc-deal-more { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px; background: #EDE7D6; border-top: 1px solid #D8D0BC; }
+  .cc-deal-more a { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 12.5px; font-weight: 600; color: #1F7A4D; text-decoration: none; }
+  .cc-deal-more a:hover { text-decoration: underline; }
+  .cc-deal-count { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11.5px; color: #5B564C; }
 
-  .cc-category { margin-bottom: 2.5rem; }
-  .cc-cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-  @media (max-width: 1024px) { .cc-cat-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 640px) { .cc-cat-grid { grid-template-columns: 1fr; } }
-  .cc-cat { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.4rem 1rem; text-align: center; text-decoration: none; height: 100%; transition: all 0.25s; }
-  .cc-cat:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--brand) 50%, var(--border)); background: color-mix(in srgb, var(--brand) 5%, var(--card)); }
-  .cc-cat-icon { width: 46px; height: 46px; color: var(--brand); display: flex; align-items: center; justify-content: center; margin-bottom: 6px; }
-  .cc-cat-icon svg { width: 22px; height: 22px; }
-  .cc-cat-name { font-size: 0.95rem; font-weight: 700; color: var(--text); line-height: 1.3; }
-  .cc-cat-count { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
-
-  .cc-stats-bar { display: inline-flex; align-items: center; gap: 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1.5rem; }
-  .cc-stat { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
-  .cc-stat-value { font-size: 1.15rem; font-weight: 800; color: var(--text); }
-  .cc-stat-label { font-size: 0.68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
-  .cc-stat-divider { width: 1px; height: 32px; background: var(--border); }
-
-  .cc-deals-section { margin-bottom: 2rem; }
-  .cc-deals-header { margin-bottom: 1rem; }
-  .cc-deals-desc { font-size: 0.85rem; color: var(--muted); margin: 0; }
-
-  .cc-deals-grid { display: flex; flex-direction: column; gap: 1rem; }
-
-  .cc-pagination { display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 1.5rem 0; border-top: 1px solid var(--border); }
-  .cc-page-link { font-size: 0.85rem; font-weight: 700; color: var(--brand); text-decoration: none; padding: 0.4rem 0.85rem; border-radius: 6px; border: 1px solid var(--border); transition: all 0.2s; }
-  .cc-page-link:hover { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, transparent); }
-  .cc-page-disabled { color: var(--muted); opacity: 0.4; pointer-events: none; }
+  /* ===== FOLIO PAGINATION ===== */
+  .cc-pagination { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 1.1rem 0 0; margin-top: 1rem; border-top: 1px dashed #B9B29B; }
+  .cc-page-link { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.8rem; font-weight: 600; color: #12203A; text-decoration: none; padding: 0.4rem 0.85rem; border: 1px solid #D8D0BC; border-radius: 6px; background: #fff; transition: all 0.2s; white-space: nowrap; }
+  .cc-page-link:hover { border-color: #1F7A4D; color: #1F7A4D; }
+  .cc-page-disabled { color: #B9B29B; opacity: 0.6; pointer-events: none; border-style: dashed; }
   .cc-page-numbers { display: flex; align-items: center; gap: 4px; }
-  .cc-page-num { font-size: 0.85rem; font-weight: 700; color: var(--text); text-decoration: none; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid var(--border); transition: all 0.2s; }
-  .cc-page-num:hover { border-color: var(--brand); color: var(--brand); }
-  .cc-page-active { background: var(--brand); color: white; border-color: var(--brand); }
-  .cc-page-active:hover { color: white; }
-  .cc-page-ellipsis { font-size: 0.85rem; color: var(--muted); width: 34px; text-align: center; }
+  .cc-page-num { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.8rem; font-weight: 600; color: #12203A; text-decoration: none; min-width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #D8D0BC; background: #fff; transition: all 0.2s; }
+  .cc-page-num:hover { border-color: #1F7A4D; color: #1F7A4D; }
+  .cc-page-active { background: #12203A; color: #fff; border-color: #12203A; }
+  .cc-page-active:hover { color: #fff; }
+  .cc-page-ellipsis { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.8rem; color: #5B564C; min-width: 28px; text-align: center; }
 
-  .cc-section { margin-bottom: 2.5rem; }
-  .cc-section-title { font-size: 1.25rem; font-weight: 800; color: var(--text); margin: 0 0 0.3rem; display: flex; align-items: center; gap: 0.65rem; letter-spacing: -0.01em; }
-  .cc-section-title svg { color: var(--brand); flex-shrink: 0; }
-  .cc-section-desc { font-size: 0.85rem; color: var(--muted); margin: 0 0 1rem; }
+  /* ===== CATEGORY LEDGER BOXES ===== */
+  .cc-category { margin: 3.25rem 0 0; }
+  .cc-deals-header { margin-bottom: 0.9rem; }
+  .cc-deals-desc { font-size: 0.85rem; color: #6E6A5E; margin: 0; }
+  .cc-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+  .cc-cat { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 12px; padding: 16px; text-align: left; text-decoration: none; display: block; transition: all 0.2s; }
+  .cc-cat:hover { transform: translateY(-2px); border-color: #B8901F; box-shadow: 0 10px 28px -16px rgba(18, 32, 58, 0.35); }
+  .cc-cat-num { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-weight: 700; font-size: 20px; color: #12203A; }
+  .cc-cat-label { font-size: 12px; color: #5B564C; margin-top: 3px; font-weight: 600; }
+  .cc-cat-count { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10.5px; color: #1F7A4D; margin-top: 6px; font-weight: 500; }
 
-  .cc-topic-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  .cc-topic-tag { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 100px; border: 1px solid var(--border); font-size: 0.85rem; font-weight: 600; color: var(--text); text-decoration: none; transition: all 0.2s; background: var(--card); }
-  .cc-topic-tag:hover { border-color: var(--brand); color: var(--brand); background: color-mix(in srgb, var(--brand) 6%, var(--card)); }
-  .cc-topic-count { font-size: 0.7rem; font-weight: 700; color: white; background: var(--brand); padding: 1px 7px; border-radius: 100px; min-width: 20px; text-align: center; line-height: 1.5; }
+  /* ===== GENERIC SECTION HEADS (seo/faq/about) ===== */
+  .cc-section { margin-top: 3.25rem; }
+  .cc-section-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.3rem; display: flex; align-items: center; gap: 0.6rem; letter-spacing: -0.01em; flex-wrap: wrap; }
+  .cc-section-title svg { color: #1F7A4D; flex-shrink: 0; }
+  .cc-section-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
 
-  .cc-seo-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+  .cc-seo-section { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 14px; padding: 1.5rem; margin: 3.25rem 0 0; }
   .cc-seo-section .cc-section-title { font-size: 1.15rem; margin-bottom: 0.75rem; }
-  .cc-seo-section p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.75rem; }
+  .cc-seo-section p { font-size: 0.9rem; color: #5B564C; line-height: 1.6; margin: 0 0 0.75rem; }
   .cc-seo-section p:last-child { margin-bottom: 0; }
-  .cc-seo-section a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  .cc-seo-section a { color: #1F7A4D; text-decoration: none; font-weight: 600; }
   .cc-seo-section a:hover { text-decoration: underline; }
 
   .cc-faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
   @media (max-width: 768px) { .cc-faq-grid { grid-template-columns: 1fr; } }
-  .cc-faq-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-    padding: 1.1rem 1.15rem;
-  }
-  .cc-faq-card:hover { border-color: color-mix(in srgb, var(--brand) 40%, var(--border)); }
-  .cc-faq-q {
-    font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0 0 0.4rem; line-height: 1.4;
-  }
-  .cc-faq-a {
-    font-size: 0.85rem; color: var(--muted); line-height: 1.55; margin: 0;
-  }
-  .cc-faq-a a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  .cc-faq-card { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 12px; padding: 1.1rem 1.15rem; }
+  .cc-faq-card:hover { border-color: #B9B29B; }
+  .cc-faq-q { font-size: 0.95rem; font-weight: 700; color: #12203A; margin: 0 0 0.4rem; line-height: 1.4; }
+  .cc-faq-a { font-size: 0.85rem; color: #5B564C; line-height: 1.55; margin: 0; }
+  .cc-faq-a a { color: #1F7A4D; text-decoration: none; font-weight: 600; }
   .cc-faq-a a:hover { text-decoration: underline; }
 
-  .cc-about { }
-  .cc-about-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.25rem; margin-bottom: 1.5rem; }
-  @media (max-width: 768px) { .cc-about-grid { grid-template-columns: 1fr; } }
-  .cc-about-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; }
-  .cc-about-media { border-radius: 12px; overflow: hidden; margin-bottom: 1.25rem; aspect-ratio: 16 / 9; }
-  .cc-about-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .cc-about-title { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 0.6rem; line-height: 1.3; }
-  .cc-about-body { font-size: 0.9rem; color: var(--muted); line-height: 1.65; margin: 0; }
-  .cc-about-features { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem; }
-  @media (max-width: 480px) { .cc-about-features { grid-template-columns: 1fr; } }
-  .cc-about-feature { display: flex; gap: 0.7rem; align-items: flex-start; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 0.8rem 0.85rem; }
-  .cc-about-ico { width: 38px; height: 38px; flex-shrink: 0; border-radius: 8px; background: color-mix(in srgb, var(--brand) 10%, transparent); color: var(--brand); display: flex; align-items: center; justify-content: center; }
-  .cc-about-ico svg { width: 22px; height: 22px; }
-  .cc-about-feature h6 { font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0 0 0.15rem; line-height: 1.3; }
-  .cc-about-feature p { font-size: 0.78rem; color: var(--muted); line-height: 1.45; margin: 0; }
-  .cc-about-join { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 1rem; }
-  .cc-about-stats { display: flex; flex-direction: column; gap: 0.35rem; margin: 0; font-size: 0.88rem; color: var(--text); font-weight: 600; line-height: 1.5; }
-  .cc-about-stats span { display: flex; align-items: center; gap: 0.4rem; }
-  .cc-keywords { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  .cc-keywords span { font-size: 0.8rem; font-weight: 600; color: var(--muted); padding: 6px 14px; border-radius: 100px; border: 1px solid var(--border); background: var(--bg); }
+  .cc-cta { background: #F5F1E6; border: 1px solid #D8D0BC; color: #12203A; border-radius: 16px; padding: 30px 32px; text-align: center; margin: 3.25rem 0 0; }
+  .cc-cta-eyebrow { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: #1F7A4D; margin: 0 0 8px; }
+  .cc-cta-text { font-size: 0.95rem; line-height: 1.6; margin: 0 auto 18px; max-width: 480px; color: #5B564C; }
+  .cc-cta .cc-hero-btn { background: #12203A; color: #fff; box-shadow: 0 12px 28px -12px rgba(18, 32, 58, 0.5); }
+  .cc-cta .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
 
-  @media (max-width: 1024px) { .cc-deals-grid { gap: 0.85rem; } }
-  @media (max-width: 768px) { .cc-title { font-size: 2rem; } .cc-hero-claim { font-size: 1.25rem; } .cc-stats-bar { gap: 1rem; padding: 0.6rem 1rem; } .cc-hero-search { margin-left: 0.5rem; margin-right: 0.5rem; } }
-  @media (max-width: 480px) { .cc-title { font-size: 1.75rem; } .cc-hero-btn { padding: 0.6rem 1.1rem; font-size: 0.85rem; } }
+  @media (max-width: 768px) {
+    .cc-title { font-size: 1.9rem; }
+    .cc-register { padding: 26px 20px 22px; }
+    .cc-ledger-cell { border-left: none; padding: 8px 0; }
+    .cc-pagination { flex-wrap: wrap; justify-content: center; }
+  }
+  @media (max-width: 480px) {
+    .cc-title { font-size: 1.7rem; }
+    .cc-hero-btn { padding: 11px 16px; font-size: 0.85rem; }
+  }
 </style>

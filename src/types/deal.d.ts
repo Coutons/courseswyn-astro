@@ -1,9 +1,7 @@
 export interface Deal {
-  id: string;
-  slug?: string;
+  slug: string;
   title: string;
   description: string;
-  content?: string;
   price: number;
   originalPrice?: number;
   discount?: number;
@@ -17,11 +15,13 @@ export interface Deal {
   students?: number;
   instructor?: string;
   duration?: string;
+  contentNotes?: string;
   level?: string;
   language?: string;
   learn?: string[];
   requirements?: string[];
   skills?: string[];
+  tags?: string[];
   seoTitle?: string;
   seoDescription?: string;
   seoOgImage?: string;
@@ -29,4 +29,5 @@ export interface Deal {
   createdAt?: string;
   updatedAt?: string;
   faqs?: { q: string; a: string }[];
+  priceHistory?: { price: number; checkedAt: string }[];
 }

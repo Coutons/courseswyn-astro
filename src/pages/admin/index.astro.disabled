@@ -1,0 +1,407 @@
+---
+import AdminShell from "../../components/admin/AdminShell.astro";
+import { readDeals } from "../../lib/store";
+import { isDealExpired } from "../../lib/dealStats";
+
+const allDeals = await readDeals();
+const now = Date.now();
+
+const rows = allDeals.map((d) => ({
+  slug: d.slug,
+  title: d.title,
+  image: d.image ?? "",
+  category: d.category,
+  subcategory: d.subcategory ?? "",
+  price: d.price,
+  originalPrice: d.originalPrice ?? 0,
+  instructor: d.instructor ?? "",
+  updatedAt: d.updatedAt ?? d.createdAt ?? "",
+  expiresAt: d.expiresAt ?? "",
+  expired: isDealExpired(d, new Date(now)),
+}));
+
+const staleDays = (iso: string) => {
+  const t = new Date(iso).getTime();
+  if (!iso || isNaN(t)) return 0;
+  return Math.floor(Math.max(0, now - t) / 86400000);
+};
+
+const activeCount = rows.filter((r) => !r.expired).length;
+const expiredCount = rows.length - activeCount;
+const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7).length;
+---
+
+<AdminShell title="Coupons" desc="Manage Udemy coupon listings" badge={`${rows.length} deals`}>
+  <div slot="actions">
+    <a class="adm-btn adm-btn-primary" href="/admin/coupons/create">+ New Coupon</a>
+  </div>
+
+  <div class="adm-stats">
+    <div class="adm-stat">
+      <div class="adm-stat-ic ic-blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      </div>
+      <div class="adm-stat-body"><div class="adm-stat-num">{rows.length.toLocaleString()}</div><div class="adm-stat-lbl">Total Coupons</div></div>
+    </div>
+    <div class="adm-stat">
+      <div class="adm-stat-ic ic-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div class="adm-stat-body"><div class="adm-stat-num">{activeCount.toLocaleString()}</div><div class="adm-stat-lbl">Active</div></div>
+    </div>
+    <div class="adm-stat">
+      <div class="adm-stat-ic ic-red">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="adm-stat-body"><div class="adm-stat-num">{expiredCount.toLocaleString()}</div><div class="adm-stat-lbl">Expired</div></div>
+    </div>
+    <div class="adm-stat">
+      <div class="adm-stat-ic ic-amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div class="adm-stat-body"><div class="adm-stat-num">{staleCount}</div><div class="adm-stat-lbl">Stale (7+ days)</div></div>
+    </div>
+  </div>
+
+  <details class="adm-card adm-details">
+    <summary><b>⚡ Bulk import</b> — paste one line per coupon: <code>Title | URL | Category</code></summary>
+    <div class="adm-grid">
+      <textarea class="adm-textarea" id="bulkInput" rows="6" placeholder={"React Crash Course | https://trk.udemy.com/.../?couponCode=WYN2026 | Development\nPython for Beginners | https://trk.udemy.com/.../?couponCode=WYN2026 | Development"}></textarea>
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <button class="adm-btn adm-btn-primary" type="button" id="bulkImport">Import</button>
+        <span class="adm-hint" style="margin:0;">Provider defaults to Udemy, price to $0, category to Development when omitted.</span>
+        <span id="bulkStatus" style="color:#6e7686;font-size:.85rem;"></span>
+      </div>
+    </div>
+  </details>
+
+  <details class="adm-card adm-details">
+    <summary><b>📅 Bulk set expiry</b> — select rows below, pick a date, apply</summary>
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+      <input class="adm-input" id="bulkExpiryDate" type="datetime-local" style="max-width:260px;" />
+      <button class="adm-btn adm-btn-primary" type="button" id="bulkExpiry">Apply to selected (<span id="selCount">0</span>)</button>
+      <span id="expiryStatus" style="color:#6e7686;font-size:.85rem;"></span>
+    </div>
+  </details>
+
+  <div class="adm-card">
+    <div class="adm-toolbar">
+      <input class="adm-input" id="searchBox" type="search" placeholder="Search title, category, instructor…" />
+      <select class="adm-select" id="catFilter" style="max-width:220px;">
+        <option value="">All categories</option>
+        {[...new Set(allDeals.map((d) => d.category).filter(Boolean))].sort().map((cat) => (
+          <option value={cat}>{cat}</option>
+        ))}
+      </select>
+      <select class="adm-select" id="statusFilter" style="max-width:180px;">
+        <option value="">All status</option>
+        <option value="active">Active ({activeCount})</option>
+        <option value="expired">Expired ({expiredCount})</option>
+      </select>
+      <span class="adm-count" id="countLabel"></span>
+    </div>
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead>
+          <tr>
+            <th style="width:32px;"><input type="checkbox" id="selAll" aria-label="Select all" /></th>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th>Updated</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          {rows.map((r) => (
+            <tr data-row
+                data-search={[r.title, r.category, r.subcategory, r.instructor, r.slug].join(" ").toLowerCase()}
+                data-status={r.expired ? "expired" : "active"}
+                data-id={r.slug}
+                data-stale={staleDays(r.updatedAt)}>
+              <td><input type="checkbox" class="row-check" data-id={r.slug} aria-label={`Select ${r.title}`} /></td>
+              <td>
+                <div class="adm-course">
+                  {r.image ? (
+                    <img class="adm-thumb" src={r.image} alt="" loading="lazy" />
+                  ) : (
+                    <div class="adm-thumb" style="display:grid;place-items:center;color:#b6bec9;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    </div>
+                  )}
+                  <div style="min-width:0;">
+                    <a class="adm-link" href={`/coupon/${r.slug}`} target="_blank">{r.title}</a>
+                    <div class="adm-chip">{r.slug}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                {r.category}
+                {r.subcategory && <div class="adm-sub">{r.subcategory}</div>}
+              </td>
+              <td class="adm-price">
+                ${r.price.toFixed(2)}
+                {r.originalPrice > r.price && <s>${r.originalPrice.toFixed(2)}</s>}
+              </td>
+              <td>
+                <span class={"adm-chip " + (r.expired ? "adm-chip-exp" : "adm-chip-ok")}>{r.expired ? "Expired" : "Active"}</span>
+                {!r.expired && staleDays(r.updatedAt) >= 7 && (
+                  <div class="adm-stale">stale {staleDays(r.updatedAt)}d</div>
+                )}
+              </td>
+              <td class="adm-muted">{new Date(r.updatedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</td>
+              <td>
+                <div class="adm-actions" style="justify-content:flex-end;">
+                  <a class="adm-btn adm-btn-ghost adm-btn-sm" href={`/admin/coupons/edit/${r.slug}`}>Edit</a>
+                  <button class="adm-btn adm-btn-danger adm-btn-sm" type="button" data-delete data-id={r.slug}>Delete</button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div class="adm-pagination" id="pager"></div>
+  </div>
+</AdminShell>
+
+<style is:global>
+  .adm-toolbar{display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem;}
+  .adm-toolbar .adm-input{max-width:380px;}
+  .adm-count{color:#5a6472;font-size:.85rem;margin-left:auto;white-space:nowrap;}
+  .adm-link{color:#161a20;text-decoration:none;font-weight:700;display:block;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .adm-link:hover{color:#00a76f;}
+  .adm-link+.adm-chip{margin-top:.3rem;display:inline-block;}
+  .adm-sub{font-size:.78rem;color:#6e7686;margin-top:.15rem;}
+  .adm-muted{color:#6e7686;font-size:.82rem;white-space:nowrap;}
+  .adm-chip-ok{color:#0f7a52;background:rgba(0,167,111,.1);border-color:rgba(0,167,111,.35);}
+  .adm-chip-exp{color:#c53030;background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.35);}
+  .adm-stale{font-size:.72rem;color:#9a6b0f;margin-top:.25rem;}
+  .adm-details summary{cursor:pointer;color:#161a20;font-weight:700;font-size:.95rem;padding:.25rem 0;}
+  .adm-details summary b{color:#00a76f;}
+  .adm-details summary code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;color:#6e7686;}
+  .adm-details[open] summary{margin-bottom:1rem;}
+  .adm-pagination{display:flex;align-items:center;justify-content:center;gap:.4rem;flex-wrap:wrap;margin-top:1rem;}
+  .adm-pg-btn{padding:.45rem .85rem;border-radius:.5rem;border:1px solid #e2e6ec;background:#fff;color:#5a6472;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit;transition:all .15s;}
+  .adm-pg-btn:hover:not(:disabled){border-color:#00a76f;color:#00a76f;}
+  .adm-pg-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .adm-pg-btn.current{background:#00a76f;border-color:#00a76f;color:#fff;}
+  .adm-pg-info{color:#5a6472;font-size:.85rem;margin-right:.5rem;}
+  @media (max-width:1150px){
+    .adm-table th:nth-child(6),.adm-table td:nth-child(6){display:none;}
+  }
+  @media (max-width:950px){
+    .adm-table th:nth-child(3),.adm-table td:nth-child(3){display:none;}
+    .adm-link{max-width:220px;}
+  }
+  @media (max-width:720px){
+    .adm-link{max-width:140px;}
+    .adm-stat-num{font-size:1.25rem;}
+  }
+</style>
+
+<script>
+  const searchBox = document.getElementById("searchBox") as HTMLInputElement;
+  const catFilter = document.getElementById("catFilter") as HTMLSelectElement;
+  const statusFilter = document.getElementById("statusFilter") as HTMLSelectElement;
+  const countLabel = document.getElementById("countLabel") as HTMLElement;
+  const selAll = document.getElementById("selAll") as HTMLInputElement;
+  const selCount = document.getElementById("selCount") as HTMLElement;
+  const rows = Array.from(document.querySelectorAll<HTMLElement>("[data-row]"));
+  const rowChecks = Array.from(document.querySelectorAll<HTMLInputElement>(".row-check"));
+  const pager = document.getElementById("pager") as HTMLElement;
+  const PAGE_SIZE = 50;
+  let currentPage = 1;
+  let matched: HTMLElement[] = [];
+
+  function applyFilters() {
+    const q = searchBox.value.trim().toLowerCase();
+    const cat = catFilter.value;
+    const status = statusFilter.value;
+    matched = rows.filter((row) => {
+      const text = row.dataset.search || "";
+      const rowCat = row.children[1]?.textContent?.trim() || "";
+      const matchQ = !q || text.includes(q);
+      const matchCat = !cat || rowCat.startsWith(cat);
+      const matchStatus = !status || row.dataset.status === status;
+      return matchQ && matchCat && matchStatus;
+    });
+    const totalPages = Math.max(1, Math.ceil(matched.length / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    renderPage();
+    countLabel.textContent = `${matched.length} / ${rows.length} shown`;
+    renderPager(totalPages);
+    updateSel();
+  }
+
+  function renderPage() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    rows.forEach((row) => {
+      row.style.display = "none";
+    });
+    matched.slice(start, end).forEach((row) => {
+      row.style.display = "";
+    });
+  }
+
+  function makePgBtn(label: string, page: number, opts: { disabled?: boolean; current?: boolean } = {}) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "adm-pg-btn" + (opts.current ? " current" : "");
+    b.textContent = label;
+    b.disabled = !!opts.disabled;
+    if (!opts.disabled && !opts.current) b.addEventListener("click", () => {
+      currentPage = page;
+      applyFilters();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    return b;
+  }
+
+  function makePgEllipsis() {
+    const s = document.createElement("span");
+    s.className = "adm-pg-info";
+    s.textContent = "…";
+    return s;
+  }
+
+  function renderPager(totalPages: number) {
+    pager.innerHTML = "";
+    if (totalPages <= 1) return;
+
+    const info = document.createElement("span");
+    info.className = "adm-pg-info";
+    info.textContent = `Page ${currentPage} of ${totalPages}`;
+    pager.appendChild(info);
+
+    pager.appendChild(makePgBtn("‹ Prev", currentPage - 1, { disabled: currentPage === 1 }));
+
+    const windowSize = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(windowSize / 2));
+    let endPage = Math.min(totalPages, startPage + windowSize - 1);
+    startPage = Math.max(1, endPage - windowSize + 1);
+
+    if (startPage > 1) {
+      pager.appendChild(makePgBtn("1", 1, { current: currentPage === 1 }));
+      if (startPage > 2) pager.appendChild(makePgEllipsis());
+    }
+    for (let p = startPage; p <= endPage; p++) {
+      pager.appendChild(makePgBtn(String(p), p, { current: p === currentPage }));
+    }
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) pager.appendChild(makePgEllipsis());
+      pager.appendChild(makePgBtn(String(totalPages), totalPages, { current: currentPage === totalPages }));
+    }
+
+    pager.appendChild(makePgBtn("Next ›", currentPage + 1, { disabled: currentPage === totalPages }));
+  }
+
+  function updateSel() {
+    const checked = rowChecks.filter((c) => c.checked && c.closest("tr")?.style.display !== "none").length;
+    selCount.textContent = String(checked);
+    const visible = rows.filter((r) => r.style.display !== "none").length;
+    selAll.checked = visible > 0 && rowChecks.filter((c) => c.closest("tr")?.style.display !== "none").every((c) => c.checked);
+  }
+
+  searchBox.addEventListener("input", applyFilters);
+  catFilter.addEventListener("change", applyFilters);
+  statusFilter.addEventListener("change", applyFilters);
+  selAll.addEventListener("change", () => {
+    rowChecks.forEach((c) => {
+      const tr = c.closest("tr");
+      if (tr && tr.style.display !== "none") c.checked = selAll.checked;
+    });
+    updateSel();
+  });
+  rowChecks.forEach((c) => c.addEventListener("change", updateSel));
+  applyFilters();
+
+  document.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const idOrSlug = btn.dataset.id || "";
+      const title = btn.closest("tr")?.querySelector(".adm-link")?.textContent || idOrSlug;
+      if (!confirm(`Delete coupon "${title}"?\n\nThis cannot be undone.`)) return;
+
+      btn.disabled = true;
+      btn.textContent = "…";
+      try {
+        const res = await fetch(`/api/deals?id=${encodeURIComponent(idOrSlug)}`, { method: "DELETE" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Delete failed");
+        btn.closest("tr")?.remove();
+        applyFilters();
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = "Delete";
+        alert(`Error: ${(err as Error).message}`);
+      }
+    });
+  });
+
+  const bulkInput = document.getElementById("bulkInput") as HTMLTextAreaElement;
+  const bulkImport = document.getElementById("bulkImport") as HTMLButtonElement;
+  const bulkStatus = document.getElementById("bulkStatus") as HTMLElement;
+  bulkImport.addEventListener("click", async () => {
+    const lines = bulkInput.value.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (!lines.length) return alert("Paste at least one line first.");
+    const items = lines.map((line) => {
+      const parts = line.split("|").map((p) => p.trim());
+      return {
+        title: parts[0] || "",
+        url: parts[1] || "",
+        category: parts[2] || "Development",
+        provider: "Udemy",
+        price: 0,
+      };
+    });
+    const bad = items.filter((i) => !i.title || !i.url).length;
+    if (bad) return alert(`${bad} line(s) missing title or URL. Format: Title | URL | Category`);
+    bulkImport.disabled = true;
+    bulkStatus.textContent = "Importing…";
+    try {
+      const res = await fetch("/api/deals/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(items),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Import failed");
+      const failed = data.errors?.length || 0;
+      bulkStatus.textContent = `Imported ${data.created} coupon(s)${failed ? `, ${failed} failed` : ""}`;
+      setTimeout(() => location.reload(), 700);
+    } catch (err) {
+      bulkStatus.textContent = "";
+      alert(`Error: ${(err as Error).message}`);
+      bulkImport.disabled = false;
+    }
+  });
+
+  const bulkExpiryDate = document.getElementById("bulkExpiryDate") as HTMLInputElement;
+  const bulkExpiry = document.getElementById("bulkExpiry") as HTMLButtonElement;
+  const expiryStatus = document.getElementById("expiryStatus") as HTMLElement;
+  bulkExpiry.addEventListener("click", async () => {
+    const ids = rowChecks.filter((c) => c.checked).map((c) => c.dataset.id || "").filter(Boolean);
+    if (!ids.length) return alert("Select at least one coupon (checkboxes in the table).");
+    if (!bulkExpiryDate.value) return alert("Pick an expiry date first.");
+    const expiresAt = `${bulkExpiryDate.value}:00+07:00`;
+    bulkExpiry.disabled = true;
+    expiryStatus.textContent = "Applying…";
+    try {
+      const res = await fetch("/api/deals", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, expiresAt }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Request failed");
+      expiryStatus.textContent = `Updated ${data.updated} coupon(s). Reloading…`;
+      setTimeout(() => location.reload(), 700);
+    } catch (err) {
+      expiryStatus.textContent = "";
+      alert(`Error: ${(err as Error).message}`);
+      bulkExpiry.disabled = false;
+    }
+  });
+</script>

@@ -1,0 +1,141 @@
+---
+import { Image } from 'astro:assets';
+
+const { deal, eager = false, priority = false } = Astro.props;
+
+function formatCompactAgo(dateString: string) {
+  const t = new Date(dateString).getTime();
+  if (isNaN(t)) return "";
+  const m = Math.floor(Math.max(0, Date.now() - t) / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function formatCount(n: number) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(n);
+}
+
+const p = typeof deal.price === "number" && isFinite(deal.price) && deal.price > 0 ? deal.price : 0;
+const opRaw = typeof deal.originalPrice === "number" && isFinite(deal.originalPrice) ? deal.originalPrice : 119.99;
+const op = opRaw > p ? opRaw : 119.99;
+const hasDiscount = op > p;
+const r = typeof deal.rating === "number" && isFinite(deal.rating) ? deal.rating : null;
+const title = String(deal.title || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;|&#8217;/g, "'").replace(/&ndash;|&#8211;/g, " & ").replace(/\s{2,}/g, " ").trim();
+const students = typeof deal.students === "number" && isFinite(deal.students) && deal.students > 0 ? deal.students : null;
+const provider = (deal.provider || "Udemy").trim();
+const checkedText = deal.updatedAt ? formatCompactAgo(deal.updatedAt) : "";
+const dealUrl = `/coupon/${deal.slug}`;
+---
+
+<tr>
+  <td>
+    <div class="lt-course">
+      <span class="lt-thumb">
+        {deal.image ? (
+          <Image src={deal.image} alt={title} width={104} height={76} loading={eager ? "eager" : "lazy"} fetchpriority={priority ? "high" : undefined} decoding={priority ? "sync" : "async"} inferSize={false} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        ) : (
+          <span class="lt-thumb-fallback"></span>
+        )}
+      </span>
+      <div>
+        <a class="lt-title" href={dealUrl}>{title}</a>
+        <div class="lt-meta">
+          {provider}
+          {r && <span class="lt-rating">· ⭐ {r.toFixed(1)}</span>}
+          {students && <span>· {formatCount(students)} students</span>}
+        </div>
+      </div>
+    </div>
+  </td>
+  <td><span class="lt-price">${p.toFixed(2)}{hasDiscount && <s>${op.toFixed(2)}</s>}</span></td>
+  <td class="cc-col-hide"><span class="lt-status">Working</span></td>
+  <td class="lt-checked">{checkedText || "—"}</td>
+</tr>
+
+<style>
+  td { padding: 12px 14px; border-bottom: 1px dotted #D8D0BC; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #EDE7D6; }
+  @media (max-width: 700px) { .cc-col-hide { display: none; } }
+
+  .lt-course { display: flex; align-items: center; gap: 12px; }
+
+  .lt-thumb {
+    width: 52px;
+    min-width: 52px;
+    height: 38px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex: 0 0 auto;
+    background-color: #1B2E52;
+  }
+  .lt-thumb-fallback {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-image: repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.07) 0px, rgba(255, 255, 255, 0.07) 2px, transparent 2px, transparent 8px);
+  }
+
+  .lt-title {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #12203A;
+    line-height: 1.3;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 560px;
+  }
+  .lt-title:hover { color: #1F7A4D; }
+
+  .lt-meta {
+    font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
+    font-size: 10.5px;
+    color: #5B564C;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 560px;
+  }
+  .lt-rating { color: #B8901F; }
+
+  .lt-price {
+    font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
+    font-size: 12.5px;
+    color: #C13B2E;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .lt-price s {
+    color: #5B564C;
+    text-decoration: line-through;
+    font-weight: 400;
+    margin-left: 4px;
+  }
+
+  .lt-status {
+    font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: #1F7A4D;
+    background: #E4F1E9;
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .lt-checked {
+    font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
+    font-size: 11px;
+    color: #5B564C;
+    white-space: nowrap;
+  }
+</style>

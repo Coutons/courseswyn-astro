@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import { readDeals } from '../lib/store';
 import type { Deal } from '../types/deal.d';
 import { parseInstructors, createInstructorSlug } from '../lib/instructors';
+import { getInstructorImage } from '../lib/instructorProfiles';
 
 interface Instructor {
   name: string;
@@ -59,6 +60,12 @@ const instructors = Array.from(instructorMap.values())
   .sort((a, b) => b.totalCoupons - a.totalCoupons);
 
 const topInstructors = instructors;
+
+const instructorImages = new Map<string, string>();
+for (const ins of instructors) {
+  const img = await getInstructorImage(createInstructorSlug(ins.name));
+  if (img) instructorImages.set(createInstructorSlug(ins.name), img);
+}
 
 function getInitials(name: string): string {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -141,6 +148,7 @@ const description = `Top ${topInstructors.length} instructors ranked by verified
                 const slug = createInstructorSlug(instructor.name);
                 const isTop3 = index < 3;
                 const medal = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : null;
+                const instructorImg = instructorImages.get(slug);
 
                 return (
                   <tr class:list={['cl-row', isTop3 && 'cl-row-top']}>
@@ -151,9 +159,13 @@ const description = `Top ${topInstructors.length} instructors ranked by verified
                       {!medal && <span class="cl-rank-num">{index + 1}</span>}
                     </td>
                     <td class="cl-name-cell">
-                      <div class="cl-avatar" style={`background:${getAvatarColor(instructor.name)}`}>
-                        {getInitials(instructor.name)}
-                      </div>
+                      {instructorImg ? (
+                        <div class="cl-avatar cl-avatar-img"><img src={instructorImg} alt={instructor.name} loading="lazy" /></div>
+                      ) : (
+                        <div class="cl-avatar" style={`background:${getAvatarColor(instructor.name)}`}>
+                          {getInitials(instructor.name)}
+                        </div>
+                      )}
                       <div class="cl-name-info">
                         <a href={`/instructor/${slug}`} class="cl-name-link">{instructor.name}</a>
                         <span class="cl-name-meta">{instructor.categories.slice(0, 2).join(', ') || instructor.provider}</span>
@@ -240,7 +252,8 @@ const description = `Top ${topInstructors.length} instructors ranked by verified
     .cl-medal { display: inline-block; vertical-align: middle; }
 
     .cl-name-cell { display: flex; align-items: center; gap: 0.65rem; }
-    .cl-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; color: #fff; flex-shrink: 0; }
+    .cl-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; color: #fff; flex-shrink: 0; overflow: hidden; }
+    .cl-avatar-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .cl-name-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
     .cl-name-link { color: var(--text); text-decoration: none; font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .cl-name-link:hover { color: var(--brand); }

@@ -79,6 +79,35 @@ const title = `Best Udemy Course Reviews & Coupon Guides ${currentYear} | Course
 const description = `Expert-reviewed guides to the best Udemy courses with verified coupon codes. Find programming, AI, data science, cloud certification courses and step-by-step career roadmaps. Updated daily with working deals.`;
 const canonical = `https://courseswyn.com/blog`;
 
+const pageKeywords = [
+  "udemy course reviews",
+  "best udemy courses",
+  "udemy coupon guides",
+  "udemy course comparison",
+  "best online courses",
+  "udemy course coupon code",
+  "udemy review"
+].join(", ");
+
+const faqs = [
+  {
+    q: "Are the Udemy coupon codes on CoursesWyn verified?",
+    a: "Yes. Every coupon code we list is manually verified before publishing and re-checked periodically to confirm the codes still work."
+  },
+  {
+    q: "How often are the blog guides updated?",
+    a: "Our editorial team reviews and updates every guide at least once per quarter. Courses that change significantly, receive major curriculum updates, or have expiring coupons are refreshed immediately. Each article displays its last updated date at the top."
+  },
+  {
+    q: "Do you review every course on Udemy?",
+    a: "No. We selectively review courses that meet our quality bar — high student ratings, reputable instructors, and current curriculum. Out of 200,000+ Udemy courses, we've reviewed approximately 1,300 that represent the best learning value in each subject area."
+  },
+  {
+    q: "Can I request a course review?",
+    a: "Absolutely. If there's a Udemy course you'd like us to analyze and find a coupon for, use the search bar on our site or browse our <a href='/categories'>category pages</a>. We add new reviews every week based on learner demand and trending topics."
+  }
+];
+
 const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
@@ -91,98 +120,108 @@ const structuredData = {
       ]
     },
     {
-      "@type": "CollectionPage",
+      "@type": ["WebPage", "CollectionPage"],
       "@id": canonical,
       "url": canonical,
       "name": title,
       "description": description,
+      "keywords": pageKeywords,
       "isPartOf": { "@id": `${siteUrl}/#website` },
       "inLanguage": "en-US",
       "dateModified": toISODateWIB(posts[0]?.data?.updatedAt || posts[0]?.data?.pubDate || new Date()),
-      "mainEntity": {
-        "@type": "ItemList",
-        "numberOfItems": posts.length,
-        "itemListElement": posts.slice(0, 12).map((post: any, i: number) => ({
-          "@type": "ListItem",
-          "position": i + 1,
-          "item": {
-            "@type": "BlogPosting",
-            "headline": post.data.title,
-            "description": post.data.description,
-            "url": `${siteUrl}/blog/${post.id}/`,
-            "datePublished": post.data.pubDate.toISOString(),
-            "dateModified": (post.data.updatedAt || post.data.pubDate).toISOString(),
-            "author": { "@type": "Person", "name": "Andrew Derek" }
-          }
-        }))
-      }
+      "mainEntity": { "@id": `${canonical}#itemlist` }
+    },
+    {
+      "@type": "ItemList",
+      "@id": `${canonical}#itemlist`,
+      "name": "Latest Reviews & Guides",
+      "numberOfItems": posts.length,
+      "itemListElement": posts.slice(0, 12).map((post: any, i: number) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "url": `${siteUrl}/blog/${post.id}/`,
+        "item": {
+          "@type": "BlogPosting",
+          "headline": post.data.title,
+          "description": post.data.description,
+          "url": `${siteUrl}/blog/${post.id}/`,
+          "datePublished": post.data.pubDate.toISOString(),
+          "dateModified": (post.data.updatedAt || post.data.pubDate).toISOString(),
+          "author": { "@type": "Person", "name": "Andrew Derek" }
+        }
+      }))
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": faqs.map(f => ({
+        "@type": "Question",
+        "name": f.q.replace(/<[^>]*>/g, ''),
+        "acceptedAnswer": { "@type": "Answer", "text": f.a }
+      }))
     }
   ]
 };
 ---
 
 <Layout title={title} description={description} canonical={canonical} image="/assets/images/og-default.svg" hideBreadcrumbs={true}>
+  <Fragment slot="head">
+    <meta name="keywords" content={pageKeywords} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  </Fragment>
+
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-  <div class="bl-root">
-    <div class="bl-container">
+  <main class="cc-root">
+    <div class="cc-container">
 
-      {/* Hero */}
-      <section class="bl-hero">
-        <div class="bl-hero-inner">
-          <div class="bl-hero-left">
-            <p class="bl-hero-label">Original research</p>
-            <h1>Course reviews, <span class="bl-grad">ranked by real data.</span></h1>
-            <p class="bl-claim">Guides built from our coupon verification pipeline — every review links to a course we've actually checked against Udemy, with the working discount code at hand.</p>
-            <div class="bl-hero-stats">
-              <div class="bl-stat">
-                <span class="bl-stat-lbl">Articles</span>
-                <span class="bl-stat-val">{posts.length}</span>
-              </div>
-              <div class="bl-stat">
-                <span class="bl-stat-lbl">Courses reviewed</span>
-                <span class="bl-stat-val">1,300+</span>
-              </div>
-              <div class="bl-stat">
-                <span class="bl-stat-lbl">Updated</span>
-                <span class="bl-stat-val">{currentYear}</span>
-              </div>
-            </div>
+      <header class="cc-header">
+        <div class="cc-register">
+          <div class="cc-register-top">
+            <span class="cc-eyebrow"><span class="cc-blip"></span> Original research</span>
+            <span class="cc-folio">{posts.length} articles &middot; updated {currentYear}</span>
           </div>
-          <div class="bl-hero-right">
-            <p>Every guide is written from <strong class="bl-em">real student ratings, review counts, and curriculum analysis</strong> — then filtered to courses where our verified coupon is still working. Coupons expire fast on Udemy, so we re-check deals in near real time.</p>
-            <p class="bl-fresh">Latest update {formatDateWIB(posts[0]?.data?.updatedAt || posts[0]?.data?.pubDate, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-            <a href="/udemy-coupon-code" class="bl-hero-link">Browse live coupon codes &#8594;</a>
+          <h1 class="cc-title">Udemy Course <span class="cc-accent">Reviews &amp; Guides</span></h1>
+          <p class="cc-subtitle">Guides built from our coupon verification pipeline — every review links to a course we've actually checked against Udemy, with the working discount code at hand.</p>
+          <div class="cc-toolbar">
+            <a class="cc-hero-btn" href="#latest">Latest reviews &amp; guides</a>
+            <a class="cc-hero-btn ghost" href="/categories">Browse by category</a>
+            <a class="cc-hero-btn ghost" href="/udemy-coupons-today">Today's new deals</a>
+          </div>
+          <div class="cc-ledger">
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Articles</div><div class="cc-ledger-value">{posts.length}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Courses reviewed</div><div class="cc-ledger-value">1,300+</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Topics covered</div><div class="cc-ledger-value">{topicChips.length}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Updated</div><div class="cc-ledger-value">{currentYear}</div></div>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* Topic chips */}
       {topicChips.length > 0 && (
-        <section class="bl-topics">
-          <div class="bl-topics-inner">
-            <span class="bl-topics-label">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><line x1="7" x2="7.01" y1="7" y2="7"/></svg>
-              Browse reviews by topic
-            </span>
-            <div class="bl-topics-chips">
-              {topicChips.map(chip => (
-                <a href={`/topics/${chip.slug}`} class="bl-chip">
-                  {chip.name}
-                  <span class="bl-chip-count">{chip.count}</span>
-                </a>
-              ))}
-            </div>
+        <section class="cc-section cc-chips-section" aria-label="Browse reviews by topic">
+          <div class="cc-sec-head">
+            <h2 class="cc-sec-title">Browse reviews by topic <span class="cc-tag">{topicChips.length} topics</span></h2>
+            <p class="cc-sec-desc">Jump to the topic archive behind each tag — every link runs a live deal search.</p>
           </div>
+          <nav class="cc-chip-nav" aria-label="Topics">
+            {topicChips.map(chip => (
+              <a href={`/topics/${chip.slug}`} class="cc-chip">
+                <span class="cc-chip-arrow">→</span>
+                <span class="cc-chip-name">{chip.name}</span>
+                <span class="cc-chip-num">{chip.count}</span>
+              </a>
+            ))}
+          </nav>
         </section>
       )}
 
-      {/* Articles grid */}
-      <section class="bl-posts" aria-label="Latest articles">
-        <div class="bl-posts-head">
-          <h2>Latest Reviews & Guides</h2>
-          <p>Ranked by real student data and re-checked as coupon codes change.</p>
+      <section class="cc-posts" id="latest" aria-label="Latest articles">
+        <div class="cc-sec-head">
+          <h2 class="cc-sec-title">Latest Reviews &amp; Guides <span class="cc-tag">Ranked by real data</span></h2>
+          <p class="cc-sec-desc">Ranked by real student data and re-checked as coupon codes change.</p>
         </div>
+
         <div class="bl-grid">
           {recentPosts.map((post: any) => (
             <a href={`/blog/${post.id}`} class="bl-card">
@@ -205,153 +244,157 @@ const structuredData = {
                   <time class="bl-card-date" datetime={toISODateWIB(post.data.updatedAt || post.data.pubDate)}>
                     {formatDateWIB(post.data.updatedAt || post.data.pubDate, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </time>
-                  <span class="bl-card-action">Read review &#8594;</span>
+                  <span class="bl-card-action">Read review →</span>
                 </div>
               </div>
             </a>
           ))}
         </div>
+
         {posts.length > 12 && (
-          <div class="bl-more-wrap">
-            <a href="/blog/page/2" class="bl-more">Browse all {posts.length} articles <span class="bl-more-arrow">&#8594;</span></a>
+          <div class="cc-more-wrap">
+            <a href="/blog/page/2" class="cc-hero-btn">Browse all {posts.length} articles →</a>
           </div>
         )}
       </section>
 
-      {/* SEO block */}
-      <section class="bl-seo">
-        <h2>Why trust CoursesWyn's Udemy course reviews?</h2>
+      <section class="cc-seo-section">
+        <h2 class="cc-section-title">Why trust CoursesWyn's Udemy course reviews?</h2>
         <p>Every guide on this blog is built on <strong>real data and hands-on analysis</strong>. We examine each course's curriculum depth, instructor credibility, student review sentiment, and practical outcomes — not just star ratings. Our team of edtech researchers has reviewed 1,300+ Udemy courses across <a href="/categories">every major category</a> to bring you detailed, honest reviews.</p>
         <p>All coupon codes listed in our reviews are <strong>verified, tested, and confirmed working</strong> before publication. Since Udemy's coupon policy update, coupons expire quickly — we monitor every deal and remove expired ones daily. Browse <a href="/udemy-coupon-code">all active coupon codes</a> to start learning today.</p>
       </section>
 
-      {/* FAQ */}
-      <section class="bl-faq">
-        <h2>Frequently Asked Questions About Our Course Reviews</h2>
-        <div class="bl-faq-list">
-          {[
-            {
-              q: "Are the Udemy coupon codes on CoursesWyn verified?",
-              a: "Yes. Every coupon code we list is manually verified before publishing and re-checked periodically to confirm the codes still work."
-            },
-            {
-              q: "How often are the blog guides updated?",
-              a: "Our editorial team reviews and updates every guide at least once per quarter. Courses that change significantly, receive major curriculum updates, or have expiring coupons are refreshed immediately. Each article displays its last updated date at the top."
-            },
-            {
-              q: "Do you review every course on Udemy?",
-              a: "No. We selectively review courses that meet our quality bar — high student ratings, reputable instructors, and current curriculum. Out of 200,000+ Udemy courses, we've reviewed approximately 1,300 that represent the best learning value in each subject area."
-            },
-            {
-              q: "Can I request a course review?",
-              a: "Absolutely. If there's a Udemy course you'd like us to analyze and find a coupon for, use the search bar on our site or browse our <a href='/categories'>category pages</a>. We add new reviews every week based on learner demand and trending topics."
-            }
-          ].map((faq) => (
-            <details class="bl-faq-item">
-              <summary>
-                {faq.q}
-                <span class="bl-faq-plus">+</span>
-              </summary>
-              <div class="bl-faq-a">{faq.a}</div>
-            </details>
+      <section class="cc-section cc-faq" aria-labelledby="faq-title">
+        <h2 id="faq-title" class="cc-section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Frequently asked questions about our course reviews
+          <span class="cc-tag">{faqs.length} questions</span>
+        </h2>
+        <div class="cc-faq-grid">
+          {faqs.map((faq) => (
+            <div class="cc-faq-card">
+              <h6 class="cc-faq-q">{faq.q}</h6>
+              <p class="cc-faq-a" set:html={faq.a} />
+            </div>
           ))}
         </div>
       </section>
 
-      {/* Explore more */}
-      <section class="bl-back">
-        <h3>Find Discounted Courses Right Now</h3>
-        <p>Skip the reviews and jump straight to working coupon codes across every topic.</p>
-        <a href="/topics" class="bl-back-btn">Browse All Topics &#8594;</a>
+      <section class="cc-cta">
+        <p class="cc-cta-eyebrow">Skip the reviews</p>
+        <p class="cc-cta-text">Find discounted courses right now — jump straight to working coupon codes across every topic.</p>
+        <a class="cc-hero-btn" href="/topics">Browse All Topics →</a>
       </section>
 
     </div>
-  </div>
+  </main>
+</Layout>
 
 <style>
-  .bl-root { background: var(--bg); padding: 2rem 1rem 4rem; }
-  .bl-container { max-width: 1200px; margin: 0 auto; }
+  .cc-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+  .cc-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
 
-  .bl-hero { padding: 2rem 0 3rem; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
-  @media (min-width: 900px) { .bl-hero-inner { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr); gap: 3rem; align-items: start; } }
-  .bl-hero-label { display: flex; align-items: center; gap: 0.6rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--brand); margin: 0 0 1rem; }
-  .bl-hero-label::before { content: ''; width: 2rem; height: 3px; background: var(--brand); flex-shrink: 0; }
-  .bl-hero h1 { font-size: clamp(2.2rem, 4.5vw, 3.5rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; color: var(--text); margin: 0 0 1.25rem; }
-  .bl-grad { background: linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-  .bl-claim { font-size: 1rem; color: var(--muted); line-height: 1.7; margin: 0 0 1.75rem; max-width: 42rem; }
-  .bl-hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-width: 1px 0; max-width: 26rem; }
-  .bl-stat { padding: 1rem 1.25rem 1rem 0; }
-  .bl-stat + .bl-stat { border-left: 1px solid var(--border); padding-left: 1.25rem; }
-  .bl-stat-lbl { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 0.25rem; }
-  .bl-stat-val { font-size: 1.4rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
-  .bl-hero-right p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.75rem; }
-  .bl-em { color: var(--text); font-weight: 700; }
-  .bl-fresh { font-size: 0.78rem; color: var(--muted); font-weight: 600; margin-bottom: 1.25rem !important; display: flex; align-items: center; gap: 0.4rem; }
-  .bl-fresh::before { content: ''; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
-  .bl-hero-link { color: var(--brand); font-weight: 700; text-decoration: none; font-size: 0.88rem; }
-  .bl-hero-link:hover { text-decoration: underline; }
+  /* ===== REGISTER / LEDGER HEADER ===== */
+  .cc-register { position: relative; background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(18, 32, 58, 0.35); }
+  .cc-register-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; font-weight: 600; color: #1F7A4D; background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.25); border-radius: 999px; padding: 6px 13px; }
+  .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #1F7A4D; animation: ccBlip 1.6s infinite; }
+  @keyframes ccBlip { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  .cc-folio { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #5B564C; border: 1px dashed #B9B29B; border-radius: 6px; padding: 5px 10px; letter-spacing: .05em; white-space: nowrap; }
+  .cc-title { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 700; color: #12203A; line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 12px; }
+  .cc-title .cc-accent { color: #C13B2E; }
+  .cc-subtitle { color: #5B564C; font-size: 0.95rem; line-height: 1.7; margin: 0 0 20px; max-width: 640px; }
+  .cc-subtitle strong { color: #12203A; font-weight: 700; }
 
-  .bl-topics { margin-bottom: 2.5rem; }
-  .bl-topics-inner { display: flex; flex-direction: column; gap: 0.85rem; }
-  .bl-topics-label { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.14em; color: var(--brand); }
-  .bl-topics-label svg { width: 0.9rem; height: 0.9rem; }
-  .bl-topics-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  .bl-chip { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.5rem 0.95rem; background: var(--card); border: 1px solid var(--border); border-radius: 100px; font-size: 0.82rem; font-weight: 700; color: var(--text); text-decoration: none; transition: all 0.15s; }
-  .bl-chip:hover { border-color: var(--brand); color: var(--brand); }
-  .bl-chip-count { font-size: 0.68rem; font-weight: 800; color: var(--muted); background: var(--bg-secondary); border-radius: 100px; padding: 0.12rem 0.5rem; transition: color 0.15s; }
-  .bl-chip:hover .bl-chip-count { color: var(--brand); }
+  .cc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .cc-hero-btn { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-size: 0.9rem; font-weight: 600; text-decoration: none; padding: 12px 20px; border-radius: 9px; background: #12203A; color: #fff; box-shadow: 0 10px 24px rgba(18, 32, 58, 0.35); transition: background 0.2s, transform 0.2s; white-space: nowrap; }
+  .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
+  .cc-hero-btn.ghost { background: transparent; color: #1B2E52; border: 1px solid #1B2E52; box-shadow: none; }
+  .cc-hero-btn.ghost:hover { background: #1B2E52; color: #fff; }
 
-  .bl-posts { margin-bottom: 2.5rem; }
-  .bl-posts-head { margin-bottom: 1.5rem; }
-  .bl-posts-head h2 { font-size: clamp(1.4rem, 2.5vw, 1.75rem); font-weight: 800; color: var(--text); margin: 0 0 0.4rem; }
-  .bl-posts-head p { font-size: 0.88rem; color: var(--muted); margin: 0; }
-  .bl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+  .cc-ledger { display: flex; margin-top: 24px; border-top: 1px dashed #B9B29B; padding-top: 20px; flex-wrap: wrap; }
+  .cc-ledger-cell { flex: 1 1 150px; padding: 2px 18px; border-left: 1px solid #D8D0BC; }
+  .cc-ledger-cell:first-child { border-left: none; padding-left: 2px; }
+  .cc-ledger-label { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: #5B564C; margin-bottom: 4px; }
+  .cc-ledger-value { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-weight: 700; font-size: 22px; color: #12203A; }
+
+  /* ===== SECTION HEADS ===== */
+  .cc-section { margin-top: 3.25rem; }
+  .cc-sec-head { margin-bottom: 0.9rem; }
+  .cc-sec-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; letter-spacing: -0.01em; }
+  .cc-sec-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+  .cc-sec-desc { font-size: 0.85rem; color: #6E6A5E; margin: 0; }
+
+  /* ===== CHIP NAV ===== */
+  .cc-chip-nav { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cc-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: #fff; border: 1px solid #D8D0BC; border-radius: 999px; text-decoration: none; transition: all 0.15s; }
+  .cc-chip:hover { border-color: #1F7A4D; }
+  .cc-chip-name { font-size: 12.5px; font-weight: 600; color: #12203A; }
+  .cc-chip-num { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 600; color: #5B564C; background: #EDE7D6; border-radius: 999px; padding: 2px 8px; }
+  .cc-chip-arrow { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #5B564C; transition: transform 0.15s; }
+  .cc-chip:hover .cc-chip-arrow { color: #1F7A4D; transform: translateX(3px); }
+
+  /* ===== POST CARDS ===== */
+  .cc-posts { margin-top: 3.25rem; scroll-margin-top: 1.5rem; }
+  .bl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 16px; }
   @media (max-width: 900px) { .bl-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 560px) { .bl-grid { grid-template-columns: 1fr; } }
 
-  .bl-card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; text-decoration: none; transition: all 0.2s; }
-  .bl-card:hover { border-color: var(--brand); transform: translateY(-2px); box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.4); }
-  .bl-card-media { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--border); }
+  .bl-card { display: flex; flex-direction: column; background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 12px; overflow: hidden; text-decoration: none; transition: all 0.2s; }
+  .bl-card:hover { transform: translateY(-2px); border-color: #B8901F; box-shadow: 0 10px 28px -16px rgba(18, 32, 58, 0.35); }
+  .bl-card-media { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #1B2E52; }
   .bl-card-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s; }
   .bl-card:hover .bl-card-img { transform: scale(1.04); }
-  .bl-badge { position: absolute; top: 0.65rem; left: 0.65rem; background: rgba(0, 0, 0, 0.7); color: #fff; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.28rem 0.65rem; border-radius: 100px; backdrop-filter: blur(4px); }
-  .bl-card-body { display: flex; flex-direction: column; flex: 1; padding: 1rem 1.1rem 1.15rem; }
-  .bl-card-title { font-size: 0.92rem; font-weight: 700; color: var(--text); line-height: 1.35; margin: 0 0 0.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5em; }
-  .bl-card:hover .bl-card-title { color: var(--brand); }
-  .bl-card-excerpt { font-size: 0.82rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.85rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .bl-card-footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding-top: 0.6rem; border-top: 1px solid var(--border); }
-  .bl-card-date { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
-  .bl-card-action { font-size: 0.78rem; font-weight: 800; color: var(--brand); white-space: nowrap; }
+  .bl-badge { position: absolute; top: 0.65rem; left: 0.65rem; background: #12203A; color: #fff; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.28rem 0.65rem; border-radius: 100px; }
+  .bl-card-body { display: flex; flex-direction: column; flex: 1; padding: 14px 16px 16px; }
+  .bl-card-title { font-size: 0.92rem; font-weight: 700; color: #12203A; line-height: 1.35; margin: 0 0 0.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5em; }
+  .bl-card:hover .bl-card-title { color: #C13B2E; }
+  .bl-card-excerpt { font-size: 0.82rem; color: #5B564C; line-height: 1.6; margin: 0 0 0.85rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .bl-card-footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding-top: 0.6rem; border-top: 1px dashed #D8D0BC; }
+  .bl-card-date { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.72rem; color: #5B564C; font-weight: 500; }
+  .bl-card-action { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.75rem; font-weight: 600; color: #1F7A4D; white-space: nowrap; }
 
-  .bl-more-wrap { text-align: center; margin-top: 2rem; }
-  .bl-more { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.75rem; background: var(--brand); color: var(--bg); border-radius: 10px; font-size: 0.9rem; font-weight: 800; text-decoration: none; transition: opacity 0.2s; }
-  .bl-more:hover { opacity: 0.9; }
-  .bl-more-arrow { transition: transform 0.2s; }
-  .bl-more:hover .bl-more-arrow { transform: translateX(3px); }
+  .cc-more-wrap { display: flex; justify-content: center; margin-top: 2rem; }
+  .cc-more-wrap .cc-hero-btn { background: #12203A; color: #fff; }
+  .cc-more-wrap .cc-hero-btn:hover { background: #1B2E52; }
 
-  .bl-seo { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem 1.5rem; margin-bottom: 2rem; }
-  .bl-seo h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 0.85rem; }
-  .bl-seo p { font-size: 0.92rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.75rem; }
-  .bl-seo p:last-child { margin-bottom: 0; }
-  .bl-seo strong { color: var(--text); font-weight: 700; }
-  .bl-seo a { color: var(--brand); text-decoration: none; font-weight: 700; }
-  .bl-seo a:hover { text-decoration: underline; }
+  /* ===== GENERIC SECTION HEADS (seo/faq) ===== */
+  .cc-section-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.3rem; display: flex; align-items: center; gap: 0.6rem; letter-spacing: -0.01em; flex-wrap: wrap; }
+  .cc-section-title svg { color: #1F7A4D; flex-shrink: 0; }
+  .cc-section-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
 
-  .bl-faq { margin-bottom: 2.5rem; }
-  .bl-faq h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 1rem; }
-  .bl-faq-list { display: flex; flex-direction: column; gap: 0.65rem; }
-  .bl-faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .bl-faq-item summary { padding: 1rem 1.25rem; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.98rem; color: var(--text); list-style: none; gap: 0.75rem; }
-  .bl-faq-item summary::-webkit-details-marker { display: none; }
-  .bl-faq-plus { color: var(--brand); font-size: 1.2rem; flex-shrink: 0; transition: transform 0.2s; }
-  .bl-faq-item[open] summary .bl-faq-plus { transform: rotate(45deg); }
-  .bl-faq-a { padding: 0 1.25rem 1.1rem; color: var(--muted); font-weight: 500; line-height: 1.65; font-size: 0.9rem; }
-  .bl-faq-a a { color: var(--brand); text-decoration: none; font-weight: 700; }
+  .cc-seo-section { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 14px; padding: 1.5rem; margin: 3.25rem 0 0; }
+  .cc-seo-section .cc-section-title { font-size: 1.15rem; margin-bottom: 0.75rem; }
+  .cc-seo-section p { font-size: 0.9rem; color: #5B564C; line-height: 1.6; margin: 0 0 0.75rem; }
+  .cc-seo-section p:last-child { margin-bottom: 0; }
+  .cc-seo-section strong { color: #12203A; font-weight: 700; }
+  .cc-seo-section a { color: #1F7A4D; text-decoration: none; font-weight: 600; }
+  .cc-seo-section a:hover { text-decoration: underline; }
 
-  .bl-back { text-align: center; padding: 2rem 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 16px; }
-  .bl-back h3 { color: var(--text); margin: 0 0 0.4rem; font-size: 1.3rem; }
-  .bl-back p { color: var(--muted); margin: 0 0 1.25rem; font-size: 0.9rem; }
-  .bl-back-btn { display: inline-block; padding: 0.8rem 2rem; background: var(--brand); color: var(--bg); text-decoration: none; border-radius: 10px; font-weight: 800; }
-  .bl-back-btn:hover { opacity: 0.9; }
+  .cc-faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  @media (max-width: 768px) { .cc-faq-grid { grid-template-columns: 1fr; } }
+  .cc-faq-card { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 12px; padding: 1.1rem 1.15rem; }
+  .cc-faq-card:hover { border-color: #B9B29B; }
+  .cc-faq-q { font-size: 0.95rem; font-weight: 700; color: #12203A; margin: 0 0 0.4rem; line-height: 1.4; }
+  .cc-faq-a { font-size: 0.85rem; color: #5B564C; line-height: 1.55; margin: 0; }
+  .cc-faq-a a { color: #1F7A4D; text-decoration: none; font-weight: 600; }
+  .cc-faq-a a:hover { text-decoration: underline; }
+
+  .cc-cta { background: #F5F1E6; border: 1px solid #D8D0BC; color: #12203A; border-radius: 16px; padding: 30px 32px; text-align: center; margin: 3.25rem 0 0; }
+  .cc-cta-eyebrow { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: #1F7A4D; margin: 0 0 8px; }
+  .cc-cta-text { font-size: 0.95rem; line-height: 1.6; margin: 0 auto 18px; max-width: 480px; color: #5B564C; }
+  .cc-cta .cc-hero-btn { background: #12203A; color: #fff; box-shadow: 0 12px 28px -12px rgba(18, 32, 58, 0.5); }
+  .cc-cta .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
+
+  @media (max-width: 768px) {
+    .cc-title { font-size: 1.9rem; }
+    .cc-register { padding: 26px 20px 22px; }
+    .cc-ledger-cell { border-left: none; padding: 8px 0; }
+  }
+  @media (max-width: 480px) {
+    .cc-title { font-size: 1.7rem; }
+    .cc-hero-btn { padding: 11px 16px; font-size: 0.85rem; }
+  }
 </style>
+
 </Layout>

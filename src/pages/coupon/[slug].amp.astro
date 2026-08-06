@@ -10,16 +10,8 @@ export async function getStaticPaths() {
   const generated = new Set();
 
   for (const deal of allDeals) {
-    // Skip deals whose id or slug already end with .amp (they'll be handled by the normal [slug].astro page)
-    if (!deal.id.endsWith('.amp') && !generated.has(deal.id)) {
-      generated.add(deal.id);
-      paths.push({
-        params: { slug: deal.id },
-        props: { deal }
-      });
-    }
-
-    if (deal.slug && deal.slug !== deal.id && !deal.slug.endsWith('.amp') && !generated.has(deal.slug)) {
+    // Skip deals whose slug already ends with .amp (they'll be handled by the normal [slug].astro page)
+    if (!deal.slug.endsWith('.amp') && !generated.has(deal.slug)) {
       generated.add(deal.slug);
       paths.push({
         params: { slug: deal.slug },
@@ -36,7 +28,7 @@ if (!deal) {
   // SSR / Dev mode fallback
   const { slug } = Astro.params;
   const allDeals = await readDeals();
-  deal = allDeals.find((d) => d.id === slug || d.slug === slug);
+  deal = allDeals.find((d) => d.slug === slug);
 }
 
 if (!deal) {
@@ -46,6 +38,8 @@ if (!deal) {
 const discountPercentage = deal.originalPrice && deal.price && deal.originalPrice > deal.price
   ? Math.round(((deal.originalPrice - deal.price) / deal.originalPrice) * 100)
   : 0;
+
+const metaDescription = (deal.seoDescription || `${deal.title} is available with a verified coupon and ${discountPercentage > 0 ? `up to ${discountPercentage}% off` : "a discount"}${deal.students ? `, taken by ${deal.students.toLocaleString("en-US")} students` : ""}${deal.duration ? `, covering about ${deal.duration} of video content` : ""}. ${deal.category ? `This ${deal.category} course walks you through real-world skills` : "Explore the course overview"} and learning objectives before you enroll.`).trim();
 ---
 
 <!doctype html>
@@ -58,7 +52,7 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
   <script async custom-element="amp-sidebar" src="https://cdn.ampproject.org/v0/amp-sidebar-0.1.js"></script>
 
   <title>{deal.title} | {discountPercentage}% Off Udemy Coupon - CoursesWyn</title>
-  <meta name="description" content={deal.seoDescription || deal.description}>
+  <meta name="description" content={metaDescription}>
   <link rel="canonical" href={`https://courseswyn.com/coupon/${deal.slug}`}>
   <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
 
@@ -74,8 +68,8 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
       font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       margin: 0;
       padding: 0;
-      background: #161a20;
-      color: #f5f0e8;
+      background: #f4f6f8;
+      color: #161a20;
       line-height: 1.6;
     }
 
@@ -86,23 +80,23 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
     }
 
     .header {
-      background: #1f2330;
+      background: #ffffff;
       padding: 2rem 0;
       text-align: center;
-      border-bottom: 1px solid #2d3748;
+      border-bottom: 1px solid #e2e6ec;
     }
 
     h1 {
       font-size: 2rem;
       font-weight: 800;
       margin-bottom: 1rem;
-      color: #fff;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      color: #161a20;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.08);
     }
 
     .price-section {
-      background: #1f2330;
-      border: 1px solid #2d3748;
+      background: #ffffff;
+      border: 1px solid #e2e6ec;
       border-radius: 8px;
       padding: 1.5rem;
       margin: 2rem 0;
@@ -112,19 +106,19 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
     .price {
       font-size: 2rem;
       font-weight: 800;
-      color: #fff;
+      color: #161a20;
       margin-bottom: 0.5rem;
     }
 
     .discount {
-      color: #ef4444;
+      color: #d14343;
       font-weight: 700;
       font-size: 1.1rem;
     }
 
     .cta-button {
       display: inline-block;
-      background: #a855f7;
+      background: #00a76f;
       color: #fff;
       padding: 1rem 2rem;
       border-radius: 8px;
@@ -141,14 +135,14 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
     .related {
       margin-top: 3rem;
       padding-top: 2rem;
-      border-top: 1px solid #1f2330;
+      border-top: 1px solid #e2e6ec;
     }
 
     .related h2 {
       font-size: 1.5rem;
       font-weight: 700;
       margin-bottom: 1rem;
-      color: #fff;
+      color: #161a20;
     }
 
     .amp-img {
@@ -189,7 +183,7 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
 
     <div class="content">
       <h2>About This Course</h2>
-      <div>{(deal.content || deal.description || '').replace(/<[^>]*>/g, '')}</div>
+      <div>{(deal.description || '').replace(/<[^>]*>/g, '')}</div>
 
       {deal.learn && deal.learn.length > 0 && (
         <div>

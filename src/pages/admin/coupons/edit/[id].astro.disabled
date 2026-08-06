@@ -1,0 +1,22 @@
+---
+import AdminShell from "../../../../components/admin/AdminShell.astro";
+import CouponForm from "../../../../components/admin/CouponForm.astro";
+import { getDealBySlug } from "../../../../lib/store";
+
+const idOrSlug = Astro.params.id ?? "";
+const deal = await getDealBySlug(idOrSlug);
+---
+
+{deal ? (
+  <AdminShell title="Edit Coupon" badge={deal.slug} parent="Coupons" parentHref="/admin">
+    <CouponForm deal={deal} />
+  </AdminShell>
+) : (
+  <AdminShell title="Coupon Not Found" badge="404" parent="Coupons" parentHref="/admin">
+    <div class="adm-card adm-empty">
+      <p style="font-size:1.05rem;color:#161a20;margin-bottom:.4rem;">No coupon found for <strong style="color:#00a76f;">"{idOrSlug}"</strong>.</p>
+      <p style="margin:0 0 1.25rem;color:#6e7686;">It may have been deleted, or the slug is wrong.</p>
+      <a class="adm-btn adm-btn-primary" href="/admin">Back to Coupons</a>
+    </div>
+  </AdminShell>
+)}

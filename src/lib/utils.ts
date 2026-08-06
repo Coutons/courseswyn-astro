@@ -18,6 +18,21 @@ export function slugifyCategory(name: string) {
   return v;
 }
 
+export function slugifyTitle(title: string): string {
+  let v = String(title).toLowerCase();
+  v = v.replace(/&amp;/gi, "&");
+  v = v.replace(/&/g, " and ");
+  v = v.replace(/[^\w\s-]/g, "");
+  v = v.trim();
+  v = v.replace(/\s+/g, "-");
+  v = v.replace(/-+/g, "-");
+  return v.replace(/^-|-$/g, "");
+}
+
+export function slugifyTopic(name: string): string {
+  return String(name).toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
+}
+
 export function extractDifficultyLevel(title?: string, description?: string): "Beginner" | "Intermediate" | "Advanced" | "All Levels" {
   const text = `${title || ""} ${description || ""}`.toLowerCase();
 

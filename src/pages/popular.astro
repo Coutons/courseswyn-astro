@@ -1,7 +1,7 @@
 ---
 export const prerender = true;
 import Layout from "../layouts/Layout.astro";
-import DealCard from "../components/DealCard.astro";
+import LedgerRow from "../components/LedgerRow.astro";
 import { readDeals } from "../lib/store";
 import { normName, slugifyCategory } from "../lib/utils";
 import { toISODateWIB } from "../lib/date";
@@ -48,18 +48,48 @@ const canonicalUrl = selectedLanguage
   ? `https://courseswyn.com/popular?language=${encodeURIComponent(selectedLanguage)}`
   : "https://courseswyn.com/popular";
 
+const pageKeywords = [
+  "popular udemy courses",
+  "top rated online courses",
+  "best rated udemy courses",
+  "trending online classes",
+  "popular online courses with certificates",
+  "highly rated udemy courses",
+  "udemy coupon code"
+].join(", ");
+
+const faqs = [
+  {
+    q: "What are popular online courses on CoursesWyn?",
+    a: "CoursesWyn's Popular page showcases trending online courses with 4.5-5.0★ student ratings. These are the most sought-after Udemy courses — where students consistently give high scores and enroll in high numbers."
+  },
+  {
+    q: "Are popular online courses discounted on CoursesWyn?",
+    a: "CoursesWyn lists verified coupon codes for all featured courses. Click any course card to see the current coupon and discounted price before enrolling."
+  },
+  {
+    q: "How are popular online courses ranked?",
+    a: "Popular courses are ranked by a combination of student rating (4.5-5.0★), enrollment numbers, and recent engagement. This ensures you discover courses that are both high-quality and currently trending among learners."
+  },
+  {
+    q: "Do popular online courses include a completion certificate?",
+    a: "Yes. All Udemy courses listed on CoursesWyn include a certificate of completion you can share on LinkedIn or add to your resume."
+  }
+];
+
 const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "CollectionPage",
+      "@type": ["WebPage", "CollectionPage"],
       "@id": canonicalUrl,
       "url": canonicalUrl,
       "name": pageTitle,
       "description": pageDescription,
+      "keywords": pageKeywords,
       "inLanguage": "en-US",
       "dateModified": toISODateWIB(),
-      "isPartOf": { "@id": "https://courseswyn.com" },
+      "isPartOf": { "@id": "https://courseswyn.com/#website" },
       "breadcrumb": {
         "@type": "BreadcrumbList",
         "itemListElement": [
@@ -67,316 +97,266 @@ const structuredData = {
           { "@type": "ListItem", "position": 2, "name": "Popular Courses", "item": canonicalUrl }
         ]
       },
-      "mainEntity": {
-        "@type": "ItemList",
-        "name": "Popular Online Courses",
-        "numberOfItems": totalPopular,
-        "itemListElement": popularCourses.slice(0, 10).map((course, index) => ({
-          "@type": "ListItem",
-          "position": index + 1,
-          "item": {
-            "@type": "Course",
-            "name": course.title,
-            "description": course.description || `Popular Udemy course with ${course.rating}★ rating`,
-            "url": `https://courseswyn.com/coupon/${course.slug || course.id}`,
-            "provider": {
-              "@type": "Organization",
-              "name": course.provider || "Udemy",
-              "sameAs": "https://www.udemy.com"
-            },
-            ...(course.rating ? {
-              "aggregateRating": {
-                "@type": "AggregateRating",
-                "ratingValue": course.rating.toFixed(1),
-                "bestRating": "5",
-                "worstRating": "1",
-                "ratingCount": Math.max(10, course.students ?? 100)
-              }
-            } : {})
-          }
-        }))
-      }
+      "mainEntity": { "@id": `${canonicalUrl}#itemlist` }
+    },
+    {
+      "@type": "ItemList",
+      "@id": `${canonicalUrl}#itemlist`,
+      "name": "Popular Online Courses",
+      "numberOfItems": totalPopular,
+      "itemListElement": popularCourses.slice(0, 20).map((course, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+          "url": `https://courseswyn.com/coupon/${course.slug}`,
+        "item": {
+          "@type": "Course",
+          "name": course.title,
+          "description": course.description || `Popular Udemy course with ${course.rating}★ rating`,
+        "url": `https://courseswyn.com/coupon/${course.slug}`,
+          "provider": {
+            "@type": "Organization",
+            "name": course.provider || "Udemy",
+            "sameAs": "https://www.udemy.com"
+          },
+          "offers": {
+            "@type": "Offer",
+            "price": String(course.price ?? "0"),
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock"
+          },
+          ...(course.rating ? {
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": course.rating.toFixed(1),
+              "bestRating": "5",
+              "worstRating": "1",
+              "ratingCount": Math.max(10, course.students ?? 100)
+            }
+          } : {})
+        }
+      }))
     },
     {
       "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "What are popular online courses on CoursesWyn?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "CoursesWyn's Popular page showcases trending online courses with 4.5-5.0★ student ratings. These are the most sought-after Udemy courses — where students consistently give high scores and enroll in high numbers."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Are top-rated Udemy courses discounted on CoursesWyn?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "CoursesWyn lists verified coupon codes for all featured courses. Click any course to see the current coupon and discounted price."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How are popular online courses ranked?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Popular courses are ranked by a combination of student rating (4.5-5.0★), enrollment numbers, and recent engagement. This ensures you discover courses that are both high-quality and currently trending among learners."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Do popular online courses include a completion certificate?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. All Udemy courses listed on CoursesWyn include a certificate of completion you can share on LinkedIn or add to your resume."
-          }
-        }
-      ]
+      "mainEntity": faqs.map(f => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": { "@type": "Answer", "text": f.a }
+      }))
     }
   ]
 };
 ---
 
 <Layout title={pageTitle} description={pageDescription} canonical={canonicalUrl} hideBreadcrumbs={true}>
-  <meta property="og:title" content={pageTitle} slot="head" />
-  <meta property="og:description" content={pageDescription} slot="head" />
-  <meta property="og:url" content={canonicalUrl} slot="head" />
-  <meta property="og:type" content="website" slot="head" />
-  <meta name="twitter:card" content="summary_large_image" slot="head" />
-  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" slot="head" />
+  <Fragment slot="head">
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="keywords" content={pageKeywords} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  </Fragment>
+
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
-
-  <style>
-    .cc-root { background: var(--bg); padding: 2rem 1rem 4rem; }
-    .cc-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
-
-    .cc-breadcrumb { display: flex; justify-content: center; margin-bottom: 1rem; }
-    .cc-breadcrumb ol { list-style: none; display: flex; align-items: center; gap: 0.5rem; padding: 0; margin: 0; font-size: 0.8rem; color: var(--muted); }
-    .cc-breadcrumb li:not(:last-child)::after { content: '/'; margin-left: 0.5rem; color: var(--border); }
-    .cc-breadcrumb a { color: var(--brand); text-decoration: none; }
-    .cc-breadcrumb a:hover { text-decoration: underline; }
-
-    .cc-header { text-align: center; margin-bottom: 2rem; }
-    .cc-header-icon { display: block; margin: 0 auto 0.75rem; color: var(--brand); }
-    .cc-title { font-size: clamp(2.5rem, 4.5vw, 4rem); font-weight: 800; color: var(--text); margin: 0 0 0.5rem; letter-spacing: -0.02em; line-height: 1.25; }
-    .cc-subtitle { font-size: 0.92rem; color: var(--muted); max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.65; }
-    .cc-subtitle strong { color: var(--text); font-weight: 700; }
-
-    .cc-stats-bar { display: inline-flex; align-items: center; gap: 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1.5rem; }
-    .cc-stat { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
-    .cc-stat-value { font-size: 1.15rem; font-weight: 800; color: var(--text); }
-    .cc-stat-label { font-size: 0.68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
-    .cc-stat-divider { width: 1px; height: 32px; background: var(--border); }
-
-    .cc-filter-bar { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1.5rem; }
-    .cc-filter-bar-title { font-size: 0.75rem; font-weight: 800; color: var(--text); margin: 0 0 0.5rem; display: flex; align-items: center; gap: 0.35rem; text-transform: uppercase; letter-spacing: 0.04em; }
-    .cc-filter-bar-title svg { color: var(--brand); width: 13px; height: 13px; }
-    .cc-filter-links { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-    .cc-filter-chip { font-size: 0.78rem; font-weight: 600; color: var(--muted); text-decoration: none; padding: 3px 10px; border-radius: 100px; border: 1px solid var(--border); transition: all 0.2s; background: var(--bg); }
-    .cc-filter-chip:hover { border-color: var(--brand); color: var(--brand); }
-
-    .cc-deals-section { margin-bottom: 2rem; }
-    .cc-deals-header { margin-bottom: 1rem; }
-    .cc-deals-title { font-size: 1.1rem; font-weight: 800; color: var(--text); margin: 0 0 0.15rem; display: flex; align-items: center; gap: 0.5rem; }
-    .cc-deals-title svg { color: var(--brand); flex-shrink: 0; }
-    .cc-deals-desc { font-size: 0.85rem; color: var(--muted); margin: 0; }
-
-    .cc-section { margin-bottom: 2.5rem; }
-    .cc-section-title { font-size: 1.2rem; font-weight: 800; color: var(--text); margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.65rem; }
-    .cc-section-title svg { color: var(--brand); flex-shrink: 0; }
-
-    .cc-seo-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
-    .cc-seo-section h2 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0 0 0.75rem; }
-    .cc-seo-section p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.75rem; }
-    .cc-seo-section p:last-child { margin-bottom: 0; }
-    .cc-seo-section a { color: var(--brand); text-decoration: none; font-weight: 600; }
-    .cc-seo-section a:hover { text-decoration: underline; }
-
-    .cc-faq .cc-faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.5rem; }
-    .cc-faq-q { font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0 0 0.35rem; }
-    .cc-faq-a { font-size: 0.85rem; color: var(--muted); line-height: 1.5; margin: 0; }
-
-    @media (max-width: 768px) {
-      .cc-title { font-size: 2rem; }
-      .cc-stats-bar { gap: 1rem; padding: 0.6rem 1rem; }
-    }
-  </style>
 
   <main class="cc-root">
     <div class="cc-container">
 
-      <nav class="cc-breadcrumb" aria-label="Breadcrumb">
-        <ol>
-          <li><a href="/">Home</a></li>
-          <li>Popular Courses{selectedLanguage ? ` (${selectedLanguage})` : ''}</li>
-        </ol>
-      </nav>
-
       <header class="cc-header">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="cc-header-icon">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-        </svg>
-        <h1 class="cc-title">Popular Udemy Courses{selectedLanguage ? ` (${selectedLanguage})` : ''}</h1>
-        <p class="cc-subtitle">Discover <strong>{totalPopular}+ trending online courses</strong> with exceptional student ratings &amp; verified coupon codes</p>
-        <div class="cc-stats-bar">
-          <div class="cc-stat">
-            <span class="cc-stat-value">{totalPopular}+</span>
-            <span class="cc-stat-label">Popular</span>
+        <div class="cc-register">
+          <div class="cc-register-top">
+            <span class="cc-eyebrow"><span class="cc-blip"></span> Top-rated collection</span>
+            <span class="cc-folio">{totalPopular} courses &middot; avg {avgRating}★</span>
           </div>
-          <div class="cc-stat-divider"></div>
-          <div class="cc-stat">
-            <span class="cc-stat-value">{avgRating}★</span>
-            <span class="cc-stat-label">Avg Rating</span>
+          <h1 class="cc-title">Popular <span class="cc-accent">Udemy Courses</span>{selectedLanguage && <span class="cc-page-label">{selectedLanguage}</span>}</h1>
+          <p class="cc-subtitle">Discover <strong>{totalPopular}+ trending online courses</strong> with exceptional student ratings &amp; verified coupon codes — updated daily.</p>
+          <div class="cc-toolbar">
+            <a class="cc-hero-btn" href="#deals">Browse all {totalPopular} courses</a>
+            <a class="cc-hero-btn ghost" href="/categories">Browse by category</a>
+            <a class="cc-hero-btn ghost" href="/udemy-coupons-today">Today's new deals</a>
           </div>
-          <div class="cc-stat-divider"></div>
-          <div class="cc-stat">
-            <span class="cc-stat-value">100%</span>
-            <span class="cc-stat-label">Free Codes</span>
+          <div class="cc-ledger">
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Popular courses</div><div class="cc-ledger-value">{totalPopular}+</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Avg rating</div><div class="cc-ledger-value">{avgRating}★</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Verified codes</div><div class="cc-ledger-value">100%</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Categories</div><div class="cc-ledger-value">{categories.length}</div></div>
           </div>
         </div>
       </header>
 
-      <div class="cc-filter-bar">
-        <h3 class="cc-filter-bar-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="4" x2="20" y2="4"/><line x1="8" y1="10" x2="20" y2="10"/><line x1="12" y1="16" x2="20" y2="16"/><circle cx="6" cy="4" r="1.5" fill="currentColor"/><circle cx="10" cy="10" r="1.5" fill="currentColor"/><circle cx="14" cy="16" r="1.5" fill="currentColor"/></svg>
-          Categories
-        </h3>
-        <div class="cc-filter-links">
+      <section class="cc-section cc-chips-section" aria-label="Popular categories">
+        <div class="cc-sec-head">
+          <h2 class="cc-sec-title">Popular categories <span class="cc-tag">{categories.length} categories</span></h2>
+          <p class="cc-sec-desc">Find top-rated courses in your field — jump straight to the category archive.</p>
+        </div>
+        <nav class="cc-chip-nav" aria-label="Course categories">
           {categories.map(cat => (
-            <a href={`/categories/${slugifyCategory(cat.name)}`} class="cc-filter-chip">{cat.name}</a>
+            <a href={`/categories/${slugifyCategory(cat.name)}`} class="cc-chip">
+              <span class="cc-chip-arrow">→</span>
+              <span class="cc-chip-name">{cat.name}</span>
+              <span class="cc-chip-num">{cat.count}</span>
+            </a>
           ))}
-        </div>
-      </div>
+        </nav>
+      </section>
 
-      {/* ── COURSES GRID ── */}
-      <section class="cc-deals-section">
-        <div class="cc-deals-header">
-          <h2 class="cc-deals-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><path d="M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-            Popular Udemy Courses with Verified Coupons
-          </h2>
-          <p class="cc-deals-desc">Sorted by popularity — {popularCourses.length} courses</p>
+      <section class="cc-deals-section" id="deals" aria-label="Popular Udemy courses">
+        <div class="cc-sec-head">
+          <h2 class="cc-sec-title">Popular Udemy Courses with Verified Coupons <span class="cc-tag">4.5★+ rated</span></h2>
+          <p class="cc-sec-desc">Sorted by popularity — {popularCourses.length} courses with currently working coupon codes.</p>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:3rem;">
-          {popularCourses.length > 0 ? (
-            popularCourses.map(course => (
-              <DealCard deal={course} />
-            ))
-          ) : (
-            <div style="grid-column:1/-1;text-align:center;padding:4rem 2rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);">
-              <h3 style="font-size:1.5rem;font-weight:900;color:var(--text);margin-bottom:8px;">No Popular {selectedLanguage} Courses</h3>
-              <p style="color:var(--text-secondary);font-weight:500;margin-bottom:24px;">We don't have any 4.5★+ rated {selectedLanguage} courses at the moment.</p>
-              <a href="/popular" class="btn btn-primary" style="padding:12px 32px;border-radius:12px;font-weight:700;text-decoration:none;">View All Popular Courses</a>
-            </div>
-          )}
-        </div>
-
-        <div style="text-align:center;">
-          <a href="/udemy-coupon-code" class="btn btn-primary btn-lg" style="padding:1rem 2.5rem;border-radius:999px;font-size:1.1rem;">
-            Browse All {totalDeals.toLocaleString()}+ Deals
-          </a>
-        </div>
+        {popularCourses.length > 0 ? (
+          <div class="cc-ledger-wrap">
+            <table class="cc-ledger-table">
+              <thead><tr><th>Course</th><th>Price</th><th class="cc-col-hide">Status</th><th>Checked</th></tr></thead>
+              <tbody>
+                {popularCourses.map((course) => <LedgerRow deal={course} />)}
+              </tbody>
+            </table>
+            <div class="cc-deal-more"><span class="cc-deal-count">{popularCourses.length} top-rated courses — verified before listing</span><a href="/udemy-coupons-today">See today's new coupons →</a></div>
+          </div>
+        ) : (
+          <div class="cc-empty">
+            <h3>No Popular {selectedLanguage} Courses</h3>
+            <p>We don't have any 4.5★+ rated {selectedLanguage} courses at the moment.</p>
+            <a href="/popular" class="cc-hero-btn">View All Popular Courses →</a>
+          </div>
+        )}
       </section>
 
       <section class="cc-seo-section">
-        <h2>How CoursesWyn selects popular courses</h2>
-        <p>Our Popular page features the highest-rated <strong>Udemy courses with 4.5-5.0★ ratings</strong> — courses that students consistently praise through positive reviews and high enrollment numbers.             All {totalPopular}+ featured courses include <strong>verified coupon codes</strong> that are tested and confirmed working by our editorial team. Popular categories on this page include <a href="/categories/development">Development</a>, <a href="/categories/data-science">Data Science</a>, <a href="/categories/ai-and-machine-learning">AI & Machine Learning</a>, and <a href="/categories/it-and-software">IT & Software</a>.</p>
+        <h2 class="cc-section-title">How CoursesWyn selects popular courses</h2>
+        <p>Our Popular page features the highest-rated <strong>Udemy courses with 4.5-5.0★ ratings</strong> — courses that students consistently praise through positive reviews and high enrollment numbers. All {totalPopular}+ featured courses include <strong>verified coupon codes</strong> that are tested and confirmed working by our editorial team. Popular categories on this page include <a href="/categories/development">Development</a>, <a href="/categories/data-science">Data Science</a>, <a href="/categories/ai-and-machine-learning">AI & Machine Learning</a>, and <a href="/categories/it-and-software">IT & Software</a>.</p>
         <p>Courses are ranked using a proprietary scoring system that weighs <strong>student ratings, total enrollment, review quality, and recent engagement metrics</strong>. This means you're always seeing courses that are not only top-rated but currently trending among learners worldwide. Each course card displays the exact rating, student count, instructor name, and course duration — so you can make an informed decision before clicking through.</p>
         <p>Since <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's free coupon policy update</a>, most coupons are limited to a set number of redemptions or expire within days. Our system checks every coupon against Udemy in near real time — expired deals disappear automatically. Browse <a href="/udemy-coupon-code">all verified coupons</a>, explore <a href="/categories">course categories</a>, or check <a href="/udemy-coupons-today">today's latest deals</a> for freshly added discounts.</p>
       </section>
 
-      <section class="cc-section cc-faq">
-        <h2 class="cc-section-title">
+      <section class="cc-section cc-faq" aria-labelledby="faq-title">
+        <h2 id="faq-title" class="cc-section-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           Frequently asked questions
+          <span class="cc-tag">{faqs.length} questions</span>
         </h2>
-        {[
-          {
-            q: "What are popular online courses on CoursesWyn?",
-            a: "CoursesWyn's Popular page showcases trending online courses with 4.5-5.0★ student ratings. These are the most sought-after Udemy courses — where students consistently give high scores and enroll in high numbers."
-          },
-          {
-            q: "Are popular online courses discounted on CoursesWyn?",
-            a: "CoursesWyn lists verified coupon codes for all featured courses. Click any course card to see the current coupon and discounted price before enrolling."
-          },
-          {
-            q: "How are popular online courses ranked?",
-            a: "Popular courses are ranked by a combination of student rating (4.5-5.0★), enrollment numbers, and recent engagement. This ensures you discover courses that are both high-quality and currently trending among learners."
-          },
-          {
-            q: "Do popular online courses include a completion certificate?",
-            a: "Yes. All Udemy courses listed on CoursesWyn include a certificate of completion you can share on LinkedIn or add to your resume."
-          }
-        ].map(faq => (
-          <div class="cc-faq-item">
-            <h3 class="cc-faq-q">{faq.q}</h3>
-            <p class="cc-faq-a">{faq.a}</p>
-          </div>
-        ))}
+        <div class="cc-faq-grid">
+          {faqs.map((faq) => (
+            <div class="cc-faq-card">
+              <h6 class="cc-faq-q">{faq.q}</h6>
+              <p class="cc-faq-a">{faq.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="cc-cta">
+        <p class="cc-cta-eyebrow">Catalog complete</p>
+        <p class="cc-cta-text">Browse our full collection of <strong>{totalDeals.toLocaleString()}+ verified Udemy deals</strong> — every code checked against Udemy before listing.</p>
+        <a class="cc-hero-btn" href="/udemy-coupon-code">Browse All Deals →</a>
       </section>
 
     </div>
   </main>
+</Layout>
 
-  <script define:vars={{ totalPopular }}>
-    const GEO_COPY = {
-      US: '🇺🇸 Popular in the United States — Top Udemy courses with verified English-language coupons.',
-      GB: '🇬🇧 Trending in the UK — Expert Udemy courses with exclusive discount codes for UK learners.',
-      IN: '🇮🇳 Top picks for India — Thousands of Indian learners save daily with these Udemy course coupons.',
-      AU: '🇦🇺 Trending in Australia — Verified Udemy course coupons available to you right now.',
-      CA: '🇨🇦 Popular in Canada — Get discounted Udemy courses from top instructors.',
-      DE: '🇩🇪 Beliebt in Deutschland — Verifizierte Udemy-Coupons von Top-Kursen, täglich aktualisiert.',
-      BR: '🇧🇷 Popular no Brasil — Cupons Udemy verificados dos melhores cursos, atualizados diariamente.',
-      NG: '🇳🇬 Trending in Nigeria — Access world-class Udemy courses with verified coupon codes.',
-      PH: '🇵🇭 Popular in the Philippines — Discounted Udemy courses from expert instructors.',
-      ID: '🇮🇩 Populer di Indonesia — Kupon Udemy terverifikasi dari kursus terbaik, diperbarui harian.',
-      PK: '🇵🇰 Trending in Pakistan — Get discounted Udemy courses from top instructors, verified every day.',
-      EG: '🇪🇬 Popular in Egypt — Verified Udemy course coupons updated daily.',
-      MX: '🇲🇽 Popular en México — Cupones Udemy verificados de los mejores cursos.',
-      FR: '🇫🇷 Populaire en France — Coupons Udemy vérifiés auprès des meilleurs cours.',
-      TR: '🇹🇷 Türkiye\'de popüler — En iyi Udemy kurslarından doğrulanmış kuponlar.',
-      AR: '🇦🇷 Popular en Argentina — Cupones Udemy verificados de los mejores cursos.',
-      SA: '🇸🇦 رائج في المملكة العربية السعودية — كوبونات Udemy موثقة من أفضل الدورات.',
-      NL: '🇳🇱 Populair in Nederland — Geverifieerde Udemy-coupons van topcursussen.',
-      ES: '🇪🇸 Popular en España — Cupones Udemy verificados de los mejores cursos.',
-      IT: '🇮🇹 Popolare in Italia — Coupon Udemy verificati dai migliori corsi.',
-    };
+<style>
+  .cc-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+  .cc-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
 
-    async function initGeo() {
-      const banner  = document.getElementById('geo-banner');
-      const geoText = document.getElementById('geo-text');
-      if (!banner || !geoText) return;
+  /* ===== REGISTER / LEDGER HEADER ===== */
+  .cc-register { position: relative; background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(18, 32, 58, 0.35); }
+  .cc-register-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; font-weight: 600; color: #1F7A4D; background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.25); border-radius: 999px; padding: 6px 13px; }
+  .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #1F7A4D; animation: ccBlip 1.6s infinite; }
+  @keyframes ccBlip { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  .cc-folio { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #5B564C; border: 1px dashed #B9B29B; border-radius: 6px; padding: 5px 10px; letter-spacing: .05em; white-space: nowrap; }
+  .cc-title { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 700; color: #12203A; line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 12px; }
+  .cc-title .cc-accent { color: #C13B2E; }
+  .cc-page-label { display: inline-flex; align-items: center; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; font-weight: 600; color: #1F7A4D; background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.25); border-radius: 999px; padding: 4px 10px; margin-left: 0.6rem; vertical-align: middle; }
+  .cc-subtitle { color: #5B564C; font-size: 0.95rem; line-height: 1.7; margin: 0 0 20px; max-width: 640px; }
+  .cc-subtitle strong { color: #12203A; font-weight: 700; }
 
-      try {
-        const cached = sessionStorage.getItem('cs_geo');
-        let geo;
+  .cc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .cc-hero-btn { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-size: 0.9rem; font-weight: 600; text-decoration: none; padding: 12px 20px; border-radius: 9px; background: #12203A; color: #fff; box-shadow: 0 10px 24px rgba(18, 32, 58, 0.35); transition: background 0.2s, transform 0.2s; white-space: nowrap; }
+  .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
+  .cc-hero-btn.ghost { background: transparent; color: #1B2E52; border: 1px solid #1B2E52; box-shadow: none; }
+  .cc-hero-btn.ghost:hover { background: #1B2E52; color: #fff; }
 
-        if (cached) {
-          geo = JSON.parse(cached);
-        } else {
-          const res = await fetch('https://ipapi.co/json/', {
-            signal: AbortSignal.timeout(4000),
-          });
-          if (!res.ok) return;
-          geo = await res.json();
-          sessionStorage.setItem('cs_geo', JSON.stringify(geo));
-        }
+  .cc-ledger { display: flex; margin-top: 24px; border-top: 1px dashed #B9B29B; padding-top: 20px; flex-wrap: wrap; }
+  .cc-ledger-cell { flex: 1 1 150px; padding: 2px 18px; border-left: 1px solid #D8D0BC; }
+  .cc-ledger-cell:first-child { border-left: none; padding-left: 2px; }
+  .cc-ledger-label { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: #5B564C; margin-bottom: 4px; }
+  .cc-ledger-value { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-weight: 700; font-size: 22px; color: #12203A; }
 
-        const code = (geo.country_code ?? '').toUpperCase();
-        const msg  = GEO_COPY[code]
-          ?? `📍 Browsing from ${geo.country_name ?? 'your region'} — Verified Udemy course coupons available now.`;
+  /* ===== SECTION HEADS ===== */
+  .cc-section { margin-top: 3.25rem; }
+  .cc-sec-head { margin-bottom: 0.9rem; }
+  .cc-sec-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; letter-spacing: -0.01em; }
+  .cc-sec-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+  .cc-sec-desc { font-size: 0.85rem; color: #6E6A5E; margin: 0; }
 
-        geoText.textContent = msg;
-        banner.style.display = 'block';
-      } catch { }
-    }
+  /* ===== CHIP NAV ===== */
+  .cc-chip-nav { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cc-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: #fff; border: 1px solid #D8D0BC; border-radius: 999px; text-decoration: none; transition: all 0.15s; }
+  .cc-chip:hover { border-color: #1F7A4D; }
+  .cc-chip-name { font-size: 12.5px; font-weight: 600; color: #12203A; }
+  .cc-chip-num { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 600; color: #5B564C; background: #EDE7D6; border-radius: 999px; padding: 2px 8px; }
+  .cc-chip-arrow { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #5B564C; transition: transform 0.15s; }
+  .cc-chip:hover .cc-chip-arrow { color: #1F7A4D; transform: translateX(3px); }
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initGeo);
-    } else {
-      initGeo();
-    }
-  </script>
+  /* ===== LEDGER TABLE ===== */
+  .cc-deals-section { margin-top: 3.25rem; scroll-margin-top: 1.5rem; }
+  .cc-ledger-wrap { background: #fff; border: 1px solid #D8D0BC; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.16); margin-top: 16px; }
+  table.cc-ledger-table { width: 100%; border-collapse: collapse; }
+  .cc-ledger-table thead th { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #5B564C; text-align: left; padding: 12px 14px; border-bottom: 1px solid #D8D0BC; background: #EDE7D6; white-space: nowrap; }
+  .cc-deal-more { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px; background: #EDE7D6; border-top: 1px solid #D8D0BC; }
+  .cc-deal-more a { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 12.5px; font-weight: 600; color: #1F7A4D; text-decoration: none; }
+  .cc-deal-more a:hover { text-decoration: underline; }
+  .cc-deal-count { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11.5px; color: #5B564C; }
+
+  .cc-empty { text-align: center; padding: 3rem 2rem; background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 16px; margin-top: 16px; }
+  .cc-empty h3 { color: #12203A; margin-bottom: 0.75rem; font-size: 1.4rem; }
+  .cc-empty p { color: #5B564C; margin-bottom: 1.5rem; line-height: 1.6; max-width: 34rem; margin-left: auto; margin-right: auto; }
+
+  /* ===== GENERIC SECTION HEADS (seo/faq) ===== */
+  .cc-section-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.3rem; display: flex; align-items: center; gap: 0.6rem; letter-spacing: -0.01em; flex-wrap: wrap; }
+  .cc-section-title svg { color: #1F7A4D; flex-shrink: 0; }
+  .cc-section-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+
+  .cc-seo-section { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 14px; padding: 1.5rem; margin: 3.25rem 0 0; }
+  .cc-seo-section .cc-section-title { font-size: 1.15rem; margin-bottom: 0.75rem; }
+  .cc-seo-section p { font-size: 0.9rem; color: #5B564C; line-height: 1.6; margin: 0 0 0.75rem; }
+  .cc-seo-section p:last-child { margin-bottom: 0; }
+  .cc-seo-section strong { color: #12203A; font-weight: 700; }
+  .cc-seo-section a { color: #1F7A4D; text-decoration: none; font-weight: 600; }
+  .cc-seo-section a:hover { text-decoration: underline; }
+
+  .cc-faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  @media (max-width: 768px) { .cc-faq-grid { grid-template-columns: 1fr; } }
+  .cc-faq-card { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 12px; padding: 1.1rem 1.15rem; }
+  .cc-faq-card:hover { border-color: #B9B29B; }
+  .cc-faq-q { font-size: 0.95rem; font-weight: 700; color: #12203A; margin: 0 0 0.4rem; line-height: 1.4; }
+  .cc-faq-a { font-size: 0.85rem; color: #5B564C; line-height: 1.55; margin: 0; }
+
+  .cc-cta { background: #F5F1E6; border: 1px solid #D8D0BC; color: #12203A; border-radius: 16px; padding: 30px 32px; text-align: center; margin: 3.25rem 0 0; }
+  .cc-cta-eyebrow { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: #1F7A4D; margin: 0 0 8px; }
+  .cc-cta-text { font-size: 0.95rem; line-height: 1.6; margin: 0 auto 18px; max-width: 480px; color: #5B564C; }
+  .cc-cta .cc-hero-btn { background: #12203A; color: #fff; box-shadow: 0 12px 28px -12px rgba(18, 32, 58, 0.5); }
+  .cc-cta .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
+
+  @media (max-width: 768px) {
+    .cc-title { font-size: 1.9rem; }
+    .cc-register { padding: 26px 20px 22px; }
+    .cc-ledger-cell { border-left: none; padding: 8px 0; }
+  }
+  @media (max-width: 480px) {
+    .cc-title { font-size: 1.7rem; }
+    .cc-hero-btn { padding: 11px 16px; font-size: 0.85rem; }
+  }
+</style>
+
 </Layout>

@@ -1,0 +1,353 @@
+---
+import type { Deal } from "@/types/deal";
+
+interface Props {
+  deal?: Deal;
+}
+
+const { deal } = Astro.props;
+const isEdit = !!deal;
+
+const pad = (n: number) => String(n).padStart(2, "0");
+function toLocalInput(iso?: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const wib = new Date(d.getTime() + 7 * 3600000);
+  return `${wib.getUTCFullYear()}-${pad(wib.getUTCMonth() + 1)}-${pad(wib.getUTCDate())}T${pad(wib.getUTCHours())}:${pad(wib.getUTCMinutes())}`;
+}
+
+const fmtDT = (iso?: string) => {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+};
+
+const priceHistory = deal?.priceHistory ?? [];
+const historyRows = [...priceHistory].sort((a, b) => new Date(b.checkedAt).getTime() - new Date(a.checkedAt).getTime()).slice(0, 8);
+
+const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
+---
+
+<form id="couponForm" class="adm-form" data-is-edit={String(isEdit)} data-deal-id={deal?.slug ?? ""}>
+  <div class="adm-tabs">
+    <button type="button" class="adm-tab active" data-tab="basic">📝 Basic Info</button>
+    <button type="button" class="adm-tab" data-tab="pricing">💰 Pricing & Stats</button>
+    <button type="button" class="adm-tab" data-tab="tracking">🕐 Coupon & Tracking</button>
+    <button type="button" class="adm-tab" data-tab="content">📖 Content</button>
+    <button type="button" class="adm-tab" data-tab="seo">🔍 SEO</button>
+  </div>
+
+  <!-- ======================= BASIC ======================= -->
+  <div class="adm-tab-panel active" data-panel="basic">
+    <div class="adm-card">
+      <h3 class="adm-subhead"><span class="bar"></span>Basic Information</h3>
+      <div class="adm-grid">
+        <div>
+          <label class="adm-label" for="title">Course Title *</label>
+          <input class="adm-input" id="title" name="title" type="text" required placeholder="Advanced React Patterns & Performance" value={deal?.title ?? ""} data-slug-source />
+          <span class="adm-hint">Auto-generates the URL slug when left blank.</span>
+        </div>
+        <div class="adm-grid adm-grid-2">
+          <div>
+            <label class="adm-label" for="provider">Provider</label>
+            <input class="adm-input" id="provider" name="provider" type="text" value={deal?.provider ?? "Udemy"} readonly />
+          </div>
+          <div>
+            <label class="adm-label" for="category">Category *</label>
+            <input class="adm-input" id="category" name="category" type="text" required placeholder="Development" value={deal?.category ?? ""} />
+          </div>
+          <div>
+            <label class="adm-label" for="subcategory">Subcategory</label>
+            <input class="adm-input" id="subcategory" name="subcategory" type="text" placeholder="Web Development" value={deal?.subcategory ?? ""} />
+          </div>
+          <div>
+            <label class="adm-label" for="instructor">Instructor</label>
+            <input class="adm-input" id="instructor" name="instructor" type="text" placeholder="Maya Chen" value={deal?.instructor ?? ""} />
+          </div>
+        </div>
+        <div>
+          <label class="adm-label" for="url">Course URL (with coupon code) *</label>
+          <input class="adm-input code" id="url" name="url" type="url" required placeholder="https://trk.udemy.com/.../?couponCode=CODE" value={deal?.url ?? ""} />
+        </div>
+        <div class="adm-grid adm-grid-2">
+          <div>
+            <label class="adm-label" for="coupon">Coupon Code</label>
+            <input class="adm-input code" id="coupon" name="coupon" type="text" placeholder="VOUCHER202608" value={deal?.coupon ?? ""} />
+          </div>
+          <div>
+            <label class="adm-label" for="image">Thumbnail URL</label>
+            <input class="adm-input code" id="image" name="image" type="url" placeholder="https://img-c.udemycdn.com/course/480x270/..." value={deal?.image ?? ""} />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= PRICING ======================= -->
+  <div class="adm-tab-panel" data-panel="pricing">
+    <div class="adm-card">
+      <h3 class="adm-subhead"><span class="bar"></span>Pricing & Statistics</h3>
+      <div class="adm-grid adm-grid-2">
+        <div>
+          <label class="adm-label" for="price">Current Price (USD) *</label>
+          <input class="adm-input" id="price" name="price" type="number" step="0.01" min="0" required value={deal?.price ?? ""} />
+          <span class="adm-hint">Saving a changed price auto-appends a record to priceHistory.</span>
+        </div>
+        <div>
+          <label class="adm-label" for="originalPrice">Original Price (USD)</label>
+          <input class="adm-input" id="originalPrice" name="originalPrice" type="number" step="0.01" min="0" value={deal?.originalPrice ?? ""} />
+          <span class="adm-hint">Discount % is computed automatically.</span>
+        </div>
+        <div>
+          <label class="adm-label" for="rating">Rating (0–5)</label>
+          <input class="adm-input" id="rating" name="rating" type="number" step="0.1" min="0" max="5" value={deal?.rating ?? ""} />
+        </div>
+        <div>
+          <label class="adm-label" for="students">Students</label>
+          <input class="adm-input" id="students" name="students" type="number" min="0" value={deal?.students ?? ""} />
+        </div>
+        <div>
+          <label class="adm-label" for="duration">Duration</label>
+          <input class="adm-input" id="duration" name="duration" type="text" placeholder="18.5 hours" value={deal?.duration ?? ""} />
+        </div>
+        <div>
+          <label class="adm-label" for="level">Level</label>
+          <select class="adm-select" id="level" name="level">
+            <option value="">All Levels (default)</option>
+            {["Beginner", "Intermediate", "Advanced", "All Levels"].map((lvl) => (
+              <option value={lvl} selected={deal?.level === lvl}>{lvl}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label class="adm-label" for="language">Language</label>
+          <input class="adm-input" id="language" name="language" type="text" placeholder="English" value={deal?.language ?? ""} />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= TRACKING ======================= -->
+  <div class="adm-tab-panel" data-panel="tracking">
+    <div class="adm-card">
+      <h3 class="adm-subhead"><span class="bar"></span>Coupon & Tracking</h3>
+      <div class="adm-grid adm-grid-2">
+        <div>
+          <label class="adm-label" for="expiresAt">Coupon Expiry (WIB)</label>
+          <input class="adm-input" id="expiresAt" name="expiresAt" type="datetime-local" value={toLocalInput(deal?.expiresAt)} />
+          <span class="adm-hint">Stored in Asia/Jakarta (WIB) timezone.</span>
+        </div>
+        <div>
+          <label class="adm-label" for="createdAt">Created At</label>
+          <input class="adm-input" id="createdAt" type="text" value={fmtDT(deal?.createdAt)} readonly disabled />
+        </div>
+        <div>
+          <label class="adm-label" for="updatedAt">Last Updated</label>
+          <input class="adm-input" id="updatedAt" type="text" value={fmtDT(deal?.updatedAt)} readonly disabled />
+        </div>
+      </div>
+
+      <div style="margin-top:1.5rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+          <label class="adm-label" style="margin-bottom:0;">Price History (real tracking data)</label>
+          {isEdit && (
+            <button class="adm-btn adm-btn-ghost adm-btn-sm" type="button" id="recordCheck">✓ Record check now</button>
+          )}
+        </div>
+        {isEdit ? (
+          historyRows.length ? (
+            <table class="adm-table" style="margin-top:.5rem;">
+              <thead>
+                <tr><th>Checked At</th><th>Price</th><th></th></tr>
+              </thead>
+              <tbody>
+                {historyRows.map((row, i) => (
+                  <tr>
+                    <td>{fmtDT(row.checkedAt)}</td>
+                    <td class="adm-price">${row.price.toFixed(2)}</td>
+                    <td>{i === 0 && <span class="adm-chip" style="color:#1f7a4d;background:rgba(31,122,77,.15);border-color:rgba(31,122,77,.35);">latest</span>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p class="adm-note">No price history yet — it will be recorded the next time the price is saved.</p>
+          )
+        ) : (
+          <p class="adm-note">On create, the current price becomes the first priceHistory record. Later price edits are appended automatically, so the price history chart becomes real data over time.</p>
+        )}
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= CONTENT ======================= -->
+  <div class="adm-tab-panel" data-panel="content">
+    <div class="adm-card">
+      <h3 class="adm-subhead"><span class="bar"></span>Course Content</h3>
+      <div class="adm-grid">
+        <div>
+          <label class="adm-label" for="description">Short Description</label>
+          <textarea class="adm-textarea" id="description" name="description" rows="3" placeholder="One-two sentence summary shown in listings.">{deal?.description ?? ""}</textarea>
+        </div>
+        <div>
+          <label class="adm-label" for="contentNotes">Content details (optional)</label>
+          <input class="adm-input" id="contentNotes" name="contentNotes" type="text" placeholder="5 downloadable resources, 10 articles, exercises…" value={deal?.contentNotes ?? ""} />
+          <span class="adm-hint">Shown next to the duration on the deal page, e.g. "10h · 5 downloadable resources". Leave blank to show duration only.</span>
+        </div>
+        <div>
+          <label class="adm-label" for="learn">What you'll learn (one per line)</label>
+          <textarea class="adm-textarea" id="learn" name="learn" rows="6" placeholder={"Build production-ready React apps\nOptimize render performance"}>{deal?.learn?.join("\n") ?? ""}</textarea>
+        </div>
+        <div>
+          <label class="adm-label" for="tags">Topics / Tags (one per line)</label>
+          <textarea class="adm-textarea" id="tags" name="tags" rows="4" placeholder={"React Hooks\nPerformance Optimization\nFrontend"}>{deal?.tags?.join("\n") ?? ""}</textarea>
+          <span class="adm-hint">Real Udemy topics. Shown as chips on the deal page and power the /topics pages (fallback: subcategory).</span>
+        </div>
+        <div>
+          <label class="adm-label" for="requirements">Requirements (one per line)</label>
+          <textarea class="adm-textarea" id="requirements" name="requirements" rows="4" placeholder={"Basic JavaScript knowledge\nA computer with internet"}>{deal?.requirements?.join("\n") ?? ""}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= SEO ======================= -->
+  <div class="adm-tab-panel" data-panel="seo">
+    <div class="adm-card">
+      <h3 class="adm-subhead"><span class="bar"></span>SEO</h3>
+      <div class="adm-grid">
+        <div>
+          <label class="adm-label" for="slug">Slug (URL)</label>
+          <input class="adm-input code" id="slug" name="slug" type="text" placeholder="auto-generated from title" value={deal?.slug ?? ""} data-slug-target />
+          <span class="adm-hint">Leave blank to auto-generate from the title. Changing it renames the /coupon/ URL.</span>
+        </div>
+        <div>
+          <label class="adm-label" for="seoTitle">SEO Title</label>
+          <input class="adm-input" id="seoTitle" name="seoTitle" type="text" value={deal?.seoTitle ?? ""} />
+        </div>
+        <div>
+          <label class="adm-label" for="seoDescription">SEO Description</label>
+          <textarea class="adm-textarea" id="seoDescription" name="seoDescription" rows="3">{deal?.seoDescription ?? ""}</textarea>
+        </div>
+      </div>
+      <p class="adm-note">Share previews (og:image / twitter:image) automatically reuse the Thumbnail URL above — no need to fill it twice.</p>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:1rem;justify-content:flex-end;align-items:center;padding-top:1rem;border-top:1px solid #e2e6ec;">
+    <span id="formStatus" style="color:#6e7686;font-size:.85rem;"></span>
+    <a class="adm-btn adm-btn-outline" href="/admin">Cancel</a>
+    <button class="adm-btn adm-btn-primary" type="submit">{submitLabel}</button>
+  </div>
+</form>
+
+<script>
+  const form = document.getElementById("couponForm") as HTMLFormElement;
+  const isEdit = form.dataset.isEdit === "true";
+  const dealId = form.dataset.dealId || null;
+  const statusEl = document.getElementById("formStatus");
+
+  function setStatus(text: string, kind = "") {
+    if (statusEl) {
+      statusEl.textContent = text;
+      statusEl.className = kind;
+    }
+  }
+
+  function showTab(name: string) {
+    document.querySelectorAll<HTMLElement>(".adm-tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
+    document.querySelectorAll<HTMLElement>(".adm-tab-panel").forEach((p) => p.classList.toggle("active", p.dataset.panel === name));
+  }
+
+  document.querySelectorAll<HTMLButtonElement>(".adm-tab").forEach((btn) => {
+    btn.addEventListener("click", () => showTab(btn.dataset.tab || "basic"));
+  });
+
+  const slugSource = document.querySelector<HTMLInputElement>('[data-slug-source]');
+  const slugTarget = document.querySelector<HTMLInputElement>('[data-slug-target]');
+  if (slugSource && slugTarget) {
+    slugSource.addEventListener("blur", () => {
+      if (!slugTarget.value.trim()) {
+        slugTarget.value = slugify(slugSource.value);
+      }
+    });
+  }
+
+  function slugify(s: string): string {
+    return s.toLowerCase()
+      .replace(/&/g, " and ")
+      .replace(/[^\w\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  const recordCheckBtn = document.getElementById("recordCheck") as HTMLButtonElement | null;
+  recordCheckBtn?.addEventListener("click", async () => {
+    recordCheckBtn.disabled = true;
+    const original = recordCheckBtn.textContent;
+    recordCheckBtn.textContent = "…";
+    setStatus("Recording check…", "adm-warn");
+    try {
+      const res = await fetch(`/api/deals?id=${encodeURIComponent(String(dealId))}&check=1`, { method: "PUT" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Request failed");
+      setStatus("Check recorded ✓", "adm-ok");
+      setTimeout(() => location.reload(), 500);
+    } catch (err) {
+      setStatus(`Error: ${(err as Error).message}`, "adm-err");
+      recordCheckBtn.disabled = false;
+      recordCheckBtn.textContent = original;
+    }
+  });
+
+  const NUMERIC = new Set(["price", "originalPrice", "rating", "students"]);
+  const ARRAYS = new Set(["learn", "requirements", "tags"]);
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const payload: Record<string, unknown> = {};
+
+    for (const [key, value] of new FormData(form).entries()) {
+      const raw = value.toString().trim();
+      if (ARRAYS.has(key)) {
+        const items = raw.split("\n").map((l) => l.replace(/\r$/, "").trim()).filter(Boolean);
+        if (items.length) payload[key] = items;
+      } else if (NUMERIC.has(key)) {
+        const num = parseFloat(raw);
+        if (!isNaN(num)) payload[key] = num;
+      } else if (key === "expiresAt" && raw) {
+        payload[key] = `${raw}:00+07:00`;
+      } else if (raw) {
+        payload[key] = raw;
+      }
+    }
+
+    if (payload.slug === (dealId ?? "")) delete payload.slug;
+
+    setStatus("Saving…", "adm-warn");
+    const submitBtn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      const url = isEdit ? `/api/deals?id=${encodeURIComponent(String(dealId))}` : "/api/deals";
+      const res = await fetch(url, {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Request failed");
+      }
+      setStatus("Saved ✓", "adm-ok");
+      setTimeout(() => (window.location.href = "/admin"), 400);
+    } catch (err) {
+      setStatus(`Error: ${(err as Error).message}`, "adm-err");
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+</script>

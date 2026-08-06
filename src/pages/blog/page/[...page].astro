@@ -114,204 +114,208 @@ for (let p = 1; p <= page.lastPage; p++) {
     {page.url.prev && <link rel="prev" href={page.currentPage === 2 ? '/blog' : page.url.prev} />}
     {page.url.next && <link rel="next" href={page.url.next} />}
     <meta name="robots" content="noindex, follow" />
+    <meta name="keywords" content="udemy course reviews, best udemy courses, udemy course comparison, udemy coupon guides" />
   </Fragment>
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-  <div class="bl-root">
-    <div class="bl-container">
+  <main class="cc-root">
+    <div class="cc-container">
 
-      {/* Hero */}
-      <section class="bl-hero">
-        <div class="bl-hero-inner">
-          <div class="bl-hero-left">
-            <p class="bl-hero-label">Original research</p>
-            <h1>Course reviews, <span class="bl-grad">ranked by real data.</span></h1>
-            <p class="bl-claim">Page {page.currentPage} of {page.lastPage} — {page.total} expert guides and reviews built from our coupon verification pipeline.</p>
-            <div class="bl-hero-stats">
-              <div class="bl-stat">
-                <span class="bl-stat-lbl">Page</span>
-                <span class="bl-stat-val">{page.currentPage}</span>
-              </div>
-              <div class="bl-stat">
-                <span class="bl-stat-lbl">Total pages</span>
-                <span class="bl-stat-val">{page.lastPage}</span>
-              </div>
-              <div class="bl-stat">
-                <span class="bl-stat-lbl">Articles</span>
-                <span class="bl-stat-val">{page.total}</span>
-              </div>
-            </div>
+      <header class="cc-header">
+        <div class="cc-register">
+          <div class="cc-register-top">
+            <span class="cc-eyebrow"><span class="cc-blip"></span> Original research</span>
+            <span class="cc-folio">Page {page.currentPage} of {page.lastPage}</span>
           </div>
-          <div class="bl-hero-right">
-            <p>Every guide is written from <strong class="bl-em">real student ratings, review counts, and curriculum analysis</strong> — then filtered to courses where our verified coupon is still working. Coupons expire fast on Udemy, so we re-check deals in near real time.</p>
-            <p class="bl-fresh">Showing articles {page.start + 1}–{page.start + currentPosts.length} of {page.total}</p>
-            <a href="/udemy-coupon-code" class="bl-hero-link">Browse live coupon codes &#8594;</a>
+          <h1 class="cc-title">Udemy Course <span class="cc-accent">Reviews &amp; Guides</span></h1>
+          <p class="cc-subtitle">Showing articles {page.start + 1}–{page.start + currentPosts.length} of {page.total}. Every guide links to a course we've actually checked against Udemy, with the working discount code at hand.</p>
+          <div class="cc-toolbar">
+            <a class="cc-hero-btn" href="/blog">Newest reviews</a>
+            <a class="cc-hero-btn ghost" href="/topics">Browse by topic</a>
+            <a class="cc-hero-btn ghost" href="/udemy-coupon-code">Live coupon codes</a>
+          </div>
+          <div class="cc-ledger">
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Page</div><div class="cc-ledger-value">{page.currentPage}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Total pages</div><div class="cc-ledger-value">{page.lastPage}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Articles</div><div class="cc-ledger-value">{page.total}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">This page</div><div class="cc-ledger-value">{currentPosts.length}</div></div>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* Articles grid */}
-      <section class="bl-posts" aria-label="Articles">
-        <div class="bl-posts-head">
-          <h2>More Reviews & Guides</h2>
-          <p>Page {page.currentPage} of {page.lastPage}</p>
-        </div>
-        {posts.length > 0 ? (
-          <>
-            <div class="bl-grid">
-              {posts.map((post: any) => (
-                <a href={`/blog/${post.id}`} class="bl-card">
-                  <div class="bl-card-media">
-                    <Image
-                      src={resolveImage(post.data.image)}
-                      alt={post.data.title}
-                      width={480}
-                      height={270}
-                      loading="lazy"
-                      inferSize={false}
-                      class="bl-card-img"
-                    />
-                    {post.data.tags?.[0] && <span class="bl-badge">{post.data.tags[0]}</span>}
-                  </div>
-                  <div class="bl-card-body">
-                    <h3 class="bl-card-title">{post.data.title}</h3>
-                    <p class="bl-card-excerpt">{post.data.description}</p>
-                    <div class="bl-card-footer">
-                      <time class="bl-card-date" datetime={toISODateWIB(post.data.updatedAt || post.data.pubDate)}>
-                        {formatDate(post)}
-                      </time>
-                      <span class="bl-card-action">Read review &#8594;</span>
-                    </div>
-                  </div>
-                </a>
-              ))}
-            </div>
+      {posts.length > 0 ? (
+        <section class="cc-posts" aria-label="Articles">
+          <div class="cc-sec-head">
+            <h2 class="cc-sec-title">More Reviews &amp; Guides <span class="cc-tag">Page {page.currentPage}</span></h2>
+            <p class="cc-sec-desc">Ranked by real student data and re-checked as coupon codes change.</p>
+          </div>
 
-            <div class="bl-pag-wrap">
-              <nav class="bl-pagination" aria-label="Pagination">
-                {page.url.prev ? (
-                  <a href={page.currentPage === 2 ? '/blog' : page.url.prev} class="bl-pg-link">← Prev</a>
-                ) : (
-                  <span class="bl-pg-link bl-pg-disabled">← Prev</span>
-                )}
-                <div class="bl-pg-numbers">
-                  {pageItems.map((item: any) => {
-                    if (item.type === 'ellipsis') {
-                      return <span class="bl-pg-ellipsis">...</span>;
-                    }
-                    const isActive = item.value === page.currentPage;
-                    const href = item.value === 1 ? '/blog' : `/blog/page/${item.value}`;
-                    return isActive
-                      ? <span class="bl-pg-num bl-pg-active">{item.value}</span>
-                      : <a href={href} class="bl-pg-num">{item.value}</a>;
-                  })}
+          <div class="bl-grid">
+            {posts.map((post: any) => (
+              <a href={`/blog/${post.id}`} class="bl-card">
+                <div class="bl-card-media">
+                  <Image
+                    src={resolveImage(post.data.image)}
+                    alt={post.data.title}
+                    width={480}
+                    height={270}
+                    loading="lazy"
+                    inferSize={false}
+                    class="bl-card-img"
+                  />
+                  {post.data.tags?.[0] && <span class="bl-badge">{post.data.tags[0]}</span>}
                 </div>
-                {page.url.next ? (
-                  <a href={page.url.next} class="bl-pg-link">Next →</a>
-                ) : (
-                  <span class="bl-pg-link bl-pg-disabled">Next →</span>
-                )}
-              </nav>
-            </div>
-          </>
-        ) : (
-          <div class="bl-empty">
-            <p>No articles found.</p>
-            <a href="/blog" class="bl-more">Back to Blog</a>
+                <div class="bl-card-body">
+                  <h3 class="bl-card-title">{post.data.title}</h3>
+                  <p class="bl-card-excerpt">{post.data.description}</p>
+                  <div class="bl-card-footer">
+                    <time class="bl-card-date" datetime={toISODateWIB(post.data.updatedAt || post.data.pubDate)}>
+                      {formatDate(post)}
+                    </time>
+                    <span class="bl-card-action">Read review →</span>
+                  </div>
+                </div>
+              </a>
+            ))}
           </div>
-        )}
-      </section>
 
-      {/* SEO block */}
-      <section class="bl-seo">
-        <h2>Why trust CoursesWyn's Udemy course reviews?</h2>
+          <div class="cc-pagination">
+            {page.url.prev ? (
+              <a href={page.currentPage === 2 ? '/blog' : page.url.prev} class="cc-pg-link">← Prev</a>
+            ) : (
+              <span class="cc-pg-link cc-pg-disabled">← Prev</span>
+            )}
+            <div class="cc-pg-numbers">
+              {pageItems.map((item: any) => {
+                if (item.type === 'ellipsis') {
+                  return <span class="cc-pg-ellipsis">...</span>;
+                }
+                const isActive = item.value === page.currentPage;
+                const href = item.value === 1 ? '/blog' : `/blog/page/${item.value}`;
+                return isActive
+                  ? <span class="cc-pg-num cc-pg-active">{item.value}</span>
+                  : <a href={href} class="cc-pg-num">{item.value}</a>;
+              })}
+            </div>
+            {page.url.next ? (
+              <a href={page.url.next} class="cc-pg-link">Next →</a>
+            ) : (
+              <span class="cc-pg-link cc-pg-disabled">Next →</span>
+            )}
+          </div>
+        </section>
+      ) : (
+        <section class="cc-posts">
+          <div class="cc-empty">
+            <p>No articles found.</p>
+            <a href="/blog" class="cc-hero-btn">Back to Blog</a>
+          </div>
+        </section>
+      )}
+
+      <section class="cc-seo-section">
+        <h2 class="cc-section-title">Why trust CoursesWyn's Udemy course reviews?</h2>
         <p>Every guide on this blog is built on <strong>real data and hands-on analysis</strong>. We examine each course's curriculum depth, instructor credibility, student review sentiment, and practical outcomes — not just star ratings. Our team of edtech researchers has reviewed 1,300+ Udemy courses across <a href="/categories">every major category</a> to bring you detailed, honest reviews.</p>
         <p>All coupon codes listed in our reviews are <strong>verified, tested, and confirmed working</strong> before publication. Since Udemy's coupon policy update, coupons expire quickly — we monitor every deal and remove expired ones daily. Browse <a href="/udemy-coupon-code">all active coupon codes</a> to start learning today.</p>
       </section>
 
-      {/* Explore more */}
-      <section class="bl-back">
-        <h3>Find Discounted Courses Right Now</h3>
-        <p>Skip the reviews and jump straight to working coupon codes across every topic.</p>
-        <a href="/topics" class="bl-back-btn">Browse All Topics &#8594;</a>
+      <section class="cc-cta">
+        <p class="cc-cta-eyebrow">Skip the reviews</p>
+        <p class="cc-cta-text">Find discounted courses right now — jump straight to working coupon codes across every topic.</p>
+        <a class="cc-hero-btn" href="/topics">Browse All Topics →</a>
       </section>
 
     </div>
-  </div>
+  </main>
+</Layout>
 
 <style>
-  .bl-root { background: var(--bg); padding: 2rem 1rem 4rem; }
-  .bl-container { max-width: 1200px; margin: 0 auto; }
+  .cc-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+  .cc-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
 
-  .bl-hero { padding: 2rem 0 3rem; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
-  @media (min-width: 900px) { .bl-hero-inner { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr); gap: 3rem; align-items: start; } }
-  .bl-hero-label { display: flex; align-items: center; gap: 0.6rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--brand); margin: 0 0 1rem; }
-  .bl-hero-label::before { content: ''; width: 2rem; height: 3px; background: var(--brand); flex-shrink: 0; }
-  .bl-hero h1 { font-size: clamp(2.2rem, 4.5vw, 3.5rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; color: var(--text); margin: 0 0 1.25rem; }
-  .bl-grad { background: linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-  .bl-claim { font-size: 1rem; color: var(--muted); line-height: 1.7; margin: 0 0 1.75rem; max-width: 42rem; }
-  .bl-hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-width: 1px 0; max-width: 26rem; }
-  .bl-stat { padding: 1rem 1.25rem 1rem 0; }
-  .bl-stat + .bl-stat { border-left: 1px solid var(--border); padding-left: 1.25rem; }
-  .bl-stat-lbl { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 0.25rem; }
-  .bl-stat-val { font-size: 1.4rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
-  .bl-hero-right p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.75rem; }
-  .bl-em { color: var(--text); font-weight: 700; }
-  .bl-fresh { font-size: 0.78rem; color: var(--muted); font-weight: 600; margin-bottom: 1.25rem !important; display: flex; align-items: center; gap: 0.4rem; }
-  .bl-fresh::before { content: ''; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
-  .bl-hero-link { color: var(--brand); font-weight: 700; text-decoration: none; font-size: 0.88rem; }
-  .bl-hero-link:hover { text-decoration: underline; }
+  .cc-register { position: relative; background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(18, 32, 58, 0.35); }
+  .cc-register-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; font-weight: 600; color: #1F7A4D; background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.25); border-radius: 999px; padding: 6px 13px; }
+  .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #1F7A4D; animation: ccBlip 1.6s infinite; }
+  @keyframes ccBlip { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  .cc-folio { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #5B564C; border: 1px dashed #B9B29B; border-radius: 6px; padding: 5px 10px; letter-spacing: .05em; white-space: nowrap; }
+  .cc-title { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 700; color: #12203A; line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 12px; }
+  .cc-title .cc-accent { color: #C13B2E; }
+  .cc-subtitle { color: #5B564C; font-size: 0.95rem; line-height: 1.7; margin: 0 0 20px; max-width: 640px; }
 
-  .bl-posts { margin-bottom: 2.5rem; }
-  .bl-posts-head { margin-bottom: 1.5rem; }
-  .bl-posts-head h2 { font-size: clamp(1.4rem, 2.5vw, 1.75rem); font-weight: 800; color: var(--text); margin: 0 0 0.4rem; }
-  .bl-posts-head p { font-size: 0.88rem; color: var(--muted); margin: 0; }
-  .bl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+  .cc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .cc-hero-btn { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-size: 0.9rem; font-weight: 600; text-decoration: none; padding: 12px 20px; border-radius: 9px; background: #12203A; color: #fff; box-shadow: 0 10px 24px rgba(18, 32, 58, 0.35); transition: background 0.2s, transform 0.2s; white-space: nowrap; }
+  .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
+  .cc-hero-btn.ghost { background: transparent; color: #1B2E52; border: 1px solid #1B2E52; box-shadow: none; }
+  .cc-hero-btn.ghost:hover { background: #1B2E52; color: #fff; }
+
+  .cc-ledger { display: flex; margin-top: 24px; border-top: 1px dashed #B9B29B; padding-top: 20px; flex-wrap: wrap; }
+  .cc-ledger-cell { flex: 1 1 150px; padding: 2px 18px; border-left: 1px solid #D8D0BC; }
+  .cc-ledger-cell:first-child { border-left: none; padding-left: 2px; }
+  .cc-ledger-label { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: #5B564C; margin-bottom: 4px; }
+  .cc-ledger-value { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-weight: 700; font-size: 22px; color: #12203A; }
+
+  .cc-posts { margin-top: 3.25rem; }
+  .cc-sec-head { margin-bottom: 0.9rem; }
+  .cc-sec-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; letter-spacing: -0.01em; }
+  .cc-sec-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+  .cc-sec-desc { font-size: 0.85rem; color: #6E6A5E; margin: 0; }
+
+  .bl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 16px; }
   @media (max-width: 900px) { .bl-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 560px) { .bl-grid { grid-template-columns: 1fr; } }
 
-  .bl-card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; text-decoration: none; transition: all 0.2s; }
-  .bl-card:hover { border-color: var(--brand); transform: translateY(-2px); box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.4); }
-  .bl-card-media { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--border); }
+  .bl-card { display: flex; flex-direction: column; background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 12px; overflow: hidden; text-decoration: none; transition: all 0.2s; }
+  .bl-card:hover { transform: translateY(-2px); border-color: #B8901F; box-shadow: 0 10px 28px -16px rgba(18, 32, 58, 0.35); }
+  .bl-card-media { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #1B2E52; }
   .bl-card-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s; }
   .bl-card:hover .bl-card-img { transform: scale(1.04); }
-  .bl-badge { position: absolute; top: 0.65rem; left: 0.65rem; background: rgba(0, 0, 0, 0.7); color: #fff; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.28rem 0.65rem; border-radius: 100px; backdrop-filter: blur(4px); }
-  .bl-card-body { display: flex; flex-direction: column; flex: 1; padding: 1rem 1.1rem 1.15rem; }
-  .bl-card-title { font-size: 0.92rem; font-weight: 700; color: var(--text); line-height: 1.35; margin: 0 0 0.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5em; }
-  .bl-card:hover .bl-card-title { color: var(--brand); }
-  .bl-card-excerpt { font-size: 0.82rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.85rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .bl-card-footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding-top: 0.6rem; border-top: 1px solid var(--border); }
-  .bl-card-date { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
-  .bl-card-action { font-size: 0.78rem; font-weight: 800; color: var(--brand); white-space: nowrap; }
+  .bl-badge { position: absolute; top: 0.65rem; left: 0.65rem; background: #12203A; color: #fff; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.28rem 0.65rem; border-radius: 100px; }
+  .bl-card-body { display: flex; flex-direction: column; flex: 1; padding: 14px 16px 16px; }
+  .bl-card-title { font-size: 0.92rem; font-weight: 700; color: #12203A; line-height: 1.35; margin: 0 0 0.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5em; }
+  .bl-card:hover .bl-card-title { color: #C13B2E; }
+  .bl-card-excerpt { font-size: 0.82rem; color: #5B564C; line-height: 1.6; margin: 0 0 0.85rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .bl-card-footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding-top: 0.6rem; border-top: 1px dashed #D8D0BC; }
+  .bl-card-date { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.72rem; color: #5B564C; font-weight: 500; }
+  .bl-card-action { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.75rem; font-weight: 600; color: #1F7A4D; white-space: nowrap; }
 
-  .bl-pag-wrap { display: flex; justify-content: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
-  .bl-pagination { display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap; }
-  .bl-pg-link { font-size: 0.85rem; font-weight: 800; color: var(--brand); text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--card); transition: all 0.15s; }
-  .bl-pg-link:hover { border-color: var(--brand); background: var(--brand-soft); }
-  .bl-pg-disabled { color: var(--muted); opacity: 0.4; pointer-events: none; }
-  .bl-pg-numbers { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
-  .bl-pg-num { font-size: 0.85rem; font-weight: 800; color: var(--text); text-decoration: none; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border); background: var(--card); transition: all 0.15s; }
-  .bl-pg-num:hover { border-color: var(--brand); color: var(--brand); }
-  .bl-pg-active { background: var(--brand); border-color: var(--brand); color: var(--bg); }
-  .bl-pg-active:hover { color: var(--bg); }
-  .bl-pg-ellipsis { font-size: 0.85rem; color: var(--muted); width: 38px; text-align: center; }
+  .cc-pagination { display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 2.25rem; padding-top: 1.25rem; border-top: 1px dashed #D8D0BC; }
+  .cc-pg-link { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.8rem; font-weight: 600; color: #1B2E52; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid #D8D0BC; background: #fff; transition: all 0.15s; }
+  .cc-pg-link:hover { border-color: #1F7A4D; color: #1F7A4D; }
+  .cc-pg-disabled { color: #B9B29B; opacity: 0.5; pointer-events: none; }
+  .cc-pg-numbers { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+  .cc-pg-num { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.8rem; font-weight: 600; color: #12203A; text-decoration: none; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #D8D0BC; background: #fff; transition: all 0.15s; }
+  .cc-pg-num:hover { border-color: #1F7A4D; color: #1F7A4D; }
+  .cc-pg-active { background: #12203A; border-color: #12203A; color: #fff; }
+  .cc-pg-active:hover { color: #fff; }
+  .cc-pg-ellipsis { font-size: 0.8rem; color: #B9B29B; width: 38px; text-align: center; }
 
-  .bl-empty { text-align: center; padding: 3rem 1rem; }
-  .bl-empty p { color: var(--muted); font-size: 1rem; margin-bottom: 1.25rem; }
-  .bl-empty .bl-more { background: var(--brand); color: var(--bg); border: none; padding: 0.75rem 1.75rem; border-radius: 10px; font-size: 0.9rem; font-weight: 800; text-decoration: none; }
+  .cc-empty { text-align: center; padding: 3rem 1rem; }
+  .cc-empty p { color: #5B564C; font-size: 1rem; margin-bottom: 1.25rem; }
 
-  .bl-seo { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem 1.5rem; margin-bottom: 2rem; }
-  .bl-seo h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 0.85rem; }
-  .bl-seo p { font-size: 0.92rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.75rem; }
-  .bl-seo p:last-child { margin-bottom: 0; }
-  .bl-seo strong { color: var(--text); font-weight: 700; }
-  .bl-seo a { color: var(--brand); text-decoration: none; font-weight: 700; }
-  .bl-seo a:hover { text-decoration: underline; }
+  .cc-seo-section { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 14px; padding: 1.5rem; margin: 3.25rem 0 0; }
+  .cc-section-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.3rem; letter-spacing: -0.01em; }
+  .cc-seo-section .cc-section-title { font-size: 1.15rem; margin-bottom: 0.75rem; }
+  .cc-seo-section p { font-size: 0.9rem; color: #5B564C; line-height: 1.6; margin: 0 0 0.75rem; }
+  .cc-seo-section p:last-child { margin-bottom: 0; }
+  .cc-seo-section strong { color: #12203A; font-weight: 700; }
+  .cc-seo-section a { color: #1F7A4D; text-decoration: none; font-weight: 600; }
+  .cc-seo-section a:hover { text-decoration: underline; }
 
-  .bl-back { text-align: center; padding: 2rem 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 16px; }
-  .bl-back h3 { color: var(--text); margin: 0 0 0.4rem; font-size: 1.3rem; }
-  .bl-back p { color: var(--muted); margin: 0 0 1.25rem; font-size: 0.9rem; }
-  .bl-back-btn { display: inline-block; padding: 0.8rem 2rem; background: var(--brand); color: var(--bg); text-decoration: none; border-radius: 10px; font-weight: 800; }
-  .bl-back-btn:hover { opacity: 0.9; }
+  .cc-cta { background: #F5F1E6; border: 1px solid #D8D0BC; color: #12203A; border-radius: 16px; padding: 30px 32px; text-align: center; margin: 3.25rem 0 0; }
+  .cc-cta-eyebrow { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: #1F7A4D; margin: 0 0 8px; }
+  .cc-cta-text { font-size: 0.95rem; line-height: 1.6; margin: 0 auto 18px; max-width: 480px; color: #5B564C; }
+  .cc-cta .cc-hero-btn { background: #12203A; color: #fff; box-shadow: 0 12px 28px -12px rgba(18, 32, 58, 0.5); }
+  .cc-cta .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
+
+  @media (max-width: 768px) {
+    .cc-title { font-size: 1.9rem; }
+    .cc-register { padding: 26px 20px 22px; }
+    .cc-ledger-cell { border-left: none; padding: 8px 0; }
+  }
+  @media (max-width: 480px) {
+    .cc-title { font-size: 1.7rem; }
+    .cc-hero-btn { padding: 11px 16px; font-size: 0.85rem; }
+  }
 </style>
 </Layout>

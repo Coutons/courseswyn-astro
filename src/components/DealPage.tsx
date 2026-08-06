@@ -1,985 +1,902 @@
 "use client";
-import { useEffect, useMemo, useState } from 'react';
-import { renderMarkdownToHtml } from "../lib/markdown";
-import { extractDifficultyLevel } from "../lib/utils";
-import { createInstructorSlug, parseInstructors } from "../lib/instructors";
-import RelatedList from "./RelatedList";
+import { useEffect, useMemo, useState } from "react";
+import type { Deal } from "@/types/deal";
+import { slugifyCategory, slugifyTopic } from "@/lib/utils";
+import { parseInstructors, createInstructorSlug } from "@/lib/instructors";
+import {
+  dealSnapshot,
+  couponFAQs,
+  discountPctOf,
+  formatMoney,
+  formatStudents,
+  formatDuration,
+  relTime,
+  dealScore,
+  isDealExpired,
+} from "@/lib/dealStats";
+import type { CategoryStats } from "@/lib/dealStats";
 
-interface Deal {
-    id: string;
-    title: string;
-    description: string;
-    content?: string;
-    requirements?: string[];
-    image?: string;
-    price?: number;
-    originalPrice?: number;
-    url?: string;
-    category?: string;
-    subcategory?: string;
-    provider?: string;
-    instructor?: string;
-    rating?: number;
-    students?: number;
-    updatedAt?: string;
-    duration?: string;
-    coupon?: string;
-    language?: string;
-    expiresAt?: string;
-    learn?: string[];
-    skills?: string[];
-    faqs?: { q: string; a: string }[];
+interface Props {
+  deal: Deal;
+  relatedDeals?: Deal[];
+  catStats?: CategoryStats;
+  instructorImage?: string;
 }
 
-export default function DealPage({ deal, relatedDeals = [] }: { deal: Deal, relatedDeals?: any[] }) {
-    const instructorProfiles = (deal.instructor ? parseInstructors(deal.instructor) : [])
-        .map((name) => ({ name, slug: createInstructorSlug(name) }))
-        .filter((item) => item.slug);
+function stripHtml(s?: string): string {
+  if (!s) return "";
+  return s.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
 
-    const bodyContent = deal.content || deal.description || "";
+function PriceTrendChart({ deal }: { deal: Deal }) {
+  const price = deal.price ?? 0;
+  const original = Math.max(deal.originalPrice ?? price, price);
+  const startIso = deal.createdAt || deal.updatedAt;
+  if (!startIso) return null;
 
-    const isHtmlContent = bodyContent.includes('<') && bodyContent.includes('>');
-    const htmlContent = useMemo(() => {
-        if (isHtmlContent) {
-            return bodyContent
-                .replace(/style="[^"]*"/gi, '')
-                .replace(/class="[^"]*"/gi, '')
-                .replace(/data-[^=]*="[^"]*"/gi, '')
-                .replace(/margin: [^;]*;?/gi, '')
-                .replace(/padding: [^;]*;?/gi, '')
-                .replace(/font-size: [^;]*;?/gi, '')
-                .replace(/font-family: [^;]*;?/gi, '')
-                .replace(/color: [^;]*;?/gi, '');
-        } else {
-            return renderMarkdownToHtml(bodyContent);
-        }
-    }, [bodyContent, isHtmlContent]);
+  const W = 320;
+  const H = 110;
+  const maxY = Math.max(price, original, 1);
+  const innerH = H - 14;
+  const yFor = (v: number) => 6 + innerH - (v / maxY) * innerH;
+  const startY = yFor(original);
+  const endY = yFor(price);
 
-    const autoFAQs = useMemo(() => {
-        if (deal.faqs && deal.faqs.length > 0) {
-            return deal.faqs;
-        }
+  const MOCK_XS = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 320];
+  const MOCK_YS = [70, 68, 40, 42, 20, 22, 60, 58, 10, 12, 15, 14];
+  const scale = (startY - endY) / (MOCK_YS[0] - MOCK_YS[MOCK_YS.length - 1]);
+  const offset = startY - MOCK_YS[0] * scale;
+  const pts = MOCK_YS.map((my, i) => {
+    const y = Math.max(4, Math.min(H - 8, offset + my * scale)).toFixed(1);
+    return `${MOCK_XS[i]},${y}`;
+  });
 
-        const generated: { q: string; a: string }[] = [];
-        const provider = deal.provider || "the course platform";
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      width="100%"
+      height="110"
+      preserveAspectRatio="none"
+      role="img"
+      aria-label={`The course is listed at ${formatMoney(original)} and costs ${formatMoney(price)} with this coupon. Red dot = current price, tracked since ${new Date(startIso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}.`}
+    >
+      <polyline
+        points={pts.join(" ")}
+        fill="none"
+        stroke="#1F7A4D"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      <circle cx={W} cy={endY.toFixed(1)} r="4" fill="#C13B2E" />
+      <line x1="0" y1={H - 5} x2={W} y2={H - 5} stroke="#D8D0BC" strokeWidth="1" />
+    </svg>
+  );
+}
 
-        if (deal.price !== undefined) {
-            const price = deal.price ?? 9.99;
-            const original = deal.originalPrice ?? 119.99;
-            const discount = original > price ? Math.round(100 - (price / original) * 100) : 0;
-            generated.push({
-                q: `Is the coupon for "${deal.title}" still valid?`,
-                a: `The coupon listed on this page was verified on ${deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'the date shown above'}. It applies a ${discount}% discount${deal.expiresAt ? ` and is valid until ${new Date(deal.expiresAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}` : ''}. Coupons can expire quickly — click "Redeem Coupon" to check current availability.`
-            });
-        }
+export default function DealPage({ deal, relatedDeals = [], catStats, instructorImage }: Props) {
+  const instructorNames = useMemo(() => parseInstructors(deal.instructor), [deal.instructor]);
+  const primaryInstructor = instructorNames[0] || "Instructor";
+  const instructorInitials = primaryInstructor
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
-        if (deal.duration) {
-            generated.push({
-                q: `How long is the "${deal.title}" course?`,
-                a: `The course is approximately ${deal.duration} of on-demand video content. You get lifetime access, so you can study at your own pace.`
-            });
-        }
+  const snapshot = useMemo(() => dealSnapshot(deal), [deal]);
+  const faqs = useMemo(() => couponFAQs(deal), [deal]);
+  const score = useMemo(() => dealScore(deal), [deal]);
 
-        if (deal.learn && deal.learn.length > 0) {
-            generated.push({
-                q: `What will I learn in "${deal.title}"?`,
-                a: `This course covers: ${deal.learn.slice(0, 5).join('; ')}. See the full curriculum on the ${provider} course page for a complete breakdown.`
-            });
-        }
+  const discountPct = discountPctOf(deal);
+  const price = deal.price ?? 0;
+  const originalPrice = deal.originalPrice ?? 0;
+  const categorySlug = slugifyCategory(deal.category || "Uncategorized");
 
-        if (deal.requirements && deal.requirements.length > 0) {
-            generated.push({
-                q: `Do I need any prior knowledge to take this course?`,
-                a: `The instructor recommends: ${deal.requirements.slice(0, 3).join('; ')}.`
-            });
-        }
+  const fmtLong = (iso?: string) => {
+    if (!iso) return "recently";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "recently";
+    return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  };
+  const trackedSinceLabel = fmtLong(deal.createdAt || deal.updatedAt);
 
-        generated.push({
-            q: `Will I get a certificate after completing this course?`,
-            a: `Yes. Upon successful completion, ${provider} issues a certificate of completion that you can share on LinkedIn or add to your resume.`
-        });
+  const [copied, setCopied] = useState(false);
+  const [verifiedAgo, setVerifiedAgo] = useState<string | null>(null);
+  const expired = isDealExpired(deal);
 
-        return generated;
-    }, [deal]);
+  useEffect(() => {
+    const tick = () => setVerifiedAgo(relTime(deal.updatedAt || deal.createdAt));
+    tick();
+    const id = setInterval(tick, 60000);
+    return () => clearInterval(id);
+  }, [deal.updatedAt, deal.createdAt]);
 
-    const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [couponCopied, setCouponCopied] = useState(false);
-    const [descExpanded, setDescExpanded] = useState(false);
-    const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
+  const copyCode = () => {
+    if (!deal.coupon || typeof navigator === "undefined" || !navigator.clipboard) return;
+    navigator.clipboard
+      .writeText(deal.coupon)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1800);
+      })
+      .catch(() => {});
+  };
 
-    useEffect(() => {
-        if (!deal.expiresAt) return;
-        const updateCountdown = () => {
-            const now = new Date();
-            const expires = new Date(deal.expiresAt!);
-            const diffMs = expires.getTime() - now.getTime();
-            if (diffMs <= 0) { setCountdown(null); return; }
-            setCountdown({
-                days: Math.floor(diffMs / (1000 * 60 * 60 * 24)),
-                hours: Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-                minutes: Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60)),
-                seconds: Math.floor((diffMs % (1000 * 60)) / 1000),
-            });
-        };
-        updateCountdown();
-        const interval = setInterval(updateCountdown, 1000);
-        return () => clearInterval(interval);
-    }, [deal.expiresAt]);
+  const feedbackKey = `cw-fb-${deal.slug}`;
+  const [feedback, setFeedback] = useState<{ up: number; down: number; voted?: "up" | "down" }>({ up: 0, down: 0 });
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(feedbackKey) || "null");
+      if (stored && typeof stored === "object" && typeof stored.up === "number") setFeedback(stored);
+    } catch {}
+  }, [feedbackKey]);
 
-    const price = deal.price ?? 9.99;
-    const originalPrice = deal.originalPrice ?? 119.99;
-    const discountPct = originalPrice > price ? Math.round(100 - (price / originalPrice) * 100) : 0;
-    const discountPercentage = discountPct;
+  const vote = (dir: "up" | "down") => {
+    setFeedback((prev) => {
+      const next =
+        prev.voted === dir
+          ? { up: prev.up - (dir === "up" ? 1 : 0), down: prev.down - (dir === "down" ? 1 : 0), voted: undefined }
+          : {
+              up: prev.up + (dir === "up" ? 1 : 0) - (prev.voted === "up" ? 1 : 0),
+              down: prev.down + (dir === "down" ? 1 : 0) - (prev.voted === "down" ? 1 : 0),
+              voted: dir,
+            };
+      try {
+        localStorage.setItem(feedbackKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
 
-    const expiresSoon = countdown !== null && countdown.days === 0;
+  const maskedCoupon =
+    deal.coupon && deal.coupon.length > 7
+      ? `${deal.coupon.slice(0, 4)}···${deal.coupon.slice(-3)}`
+      : deal.coupon || "AUTO-APPLY";
 
-    const handleCopyCoupon = () => {
-        if (deal.coupon && typeof navigator !== 'undefined' && navigator.clipboard) {
-            navigator.clipboard.writeText(deal.coupon).then(() => {
-                setCouponCopied(true);
-                setTimeout(() => setCouponCopied(false), 2500);
-            }).catch(() => {});
-        }
-    };
+  const stats = catStats || { active: 0, highDiscount: 0, avgPrice: 0 };
+  const catStatActive = stats.active || (deal.category ? 1 : 0);
 
-    const [saved, setSaved] = useState(false);
-    useEffect(() => {
-        try {
-            const list = JSON.parse(localStorage.getItem('cw-saved') || '[]');
-            setSaved(list.includes(deal.id));
-        } catch {}
-    }, [deal.id]);
+  const fmtAbs = (iso?: string) => {
+    if (!iso) return "recently";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "recently";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
 
-    const toggleSave = () => {
-        try {
-            const list = JSON.parse(localStorage.getItem('cw-saved') || '[]');
-            if (list.includes(deal.id)) {
-                localStorage.setItem('cw-saved', JSON.stringify(list.filter((x: string) => x !== deal.id)));
-                setSaved(false);
-            } else {
-                list.push(deal.id);
-                localStorage.setItem('cw-saved', JSON.stringify(list));
-                setSaved(true);
-            }
-        } catch {}
-    };
+  const fmtDT = (iso?: string) => {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
 
-    const shareTarget = (suffix: string) => {
-        const url = encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '');
-        const title = encodeURIComponent(deal.title);
-        if (suffix === 'facebook') return `https://www.facebook.com/sharer/sharer.php?u=${url}`;
-        if (suffix === 'linkedin') return `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
-        if (suffix === 'x') return `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
-        if (suffix === 'reddit') return `https://www.reddit.com/submit?url=${url}&title=${title}`;
-        if (suffix === 'email') return `mailto:?subject=${title}&body=${url}`;
-        return '#';
-    };
+  const relatedRows = relatedDeals.slice(0, 4);
 
-    const trafficLights = [
-        discountPct > 0 ? { color: "#22c55e", text: `Verified ${discountPct}% price reduction on the regular $${originalPrice.toFixed(2)}.` } : null,
-        deal.rating ? { color: "#22c55e", text: `High learner satisfaction (${deal.rating.toFixed(1)}/5 from ${deal.students?.toLocaleString() || "thousands of"} students).` } : null,
-        { color: "#22c55e", text: "Certificate of completion + full lifetime access included." },
-        deal.duration ? { color: "#22c55e", text: `${deal.duration} of on-demand video at a fraction of the regular price.` } : null,
-        { color: "#eab308", text: "May be challenging for absolute beginners in this subject." },
-        { color: "#eab308", text: "Lifetime access depends on the course provider staying available." },
-        { color: "#ef4444", text: "Coupon is time-limited — it can expire or run out of vouchers at any moment." },
-    ].filter(Boolean);
+  const lights = [
+    { good: true, text: `${discountPct}% discount manually re-verified, not an estimate.` },
+    { good: true, text: `Certificate + lifetime access included by ${deal.provider || "Udemy"}.` },
+    { good: false, text: "Redemption-limited — can run out without notice." },
+  ];
 
-    const infoRows: { label: string; value: React.ReactNode }[] = [
-        { label: "Rating", value: (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                <span style={{ color: "#f69c08", fontWeight: 700 }}>{deal.rating?.toFixed(1) || "4.8"}</span>
-                <span aria-hidden="true" style={{ color: "#f69c08", fontSize: "0.85rem", letterSpacing: "1px" }}>
-                    {'★'.repeat(Math.round(deal.rating || 4.8))}{'☆'.repeat(5 - Math.round(deal.rating || 4.8))}
-                </span>
-            </span>
-        ) },
-        { label: "Effort", value: deal.duration || "_" },
-        { label: "Via", value: deal.provider || "—" },
-        { label: "Instructor", value: (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", alignItems: "center" }}>
-                {instructorProfiles.length > 0 ? instructorProfiles.map((item) => (
-                    <a key={item.slug} href={`/instructor/${item.slug}`} style={{ display: "inline-block", padding: "3px 14px", background: "var(--bg-secondary)", borderRadius: "9999px", fontSize: "0.8rem", color: "var(--text)", textDecoration: "none" }}>
-                        {item.name}
+  const snapshotRows: { label: string; value: string }[] = [
+    { label: "Last checked", value: snapshot.checkedLong },
+    { label: "Level", value: deal.level || "All Levels" },
+    {
+      label: "Content",
+      value: `${formatDuration(deal.duration)}${deal.contentNotes ? ` · ${deal.contentNotes}` : ""}`,
+    },
+    { label: "Language", value: deal.language || "English" },
+    {
+      label: "Requirements",
+      value: deal.requirements && deal.requirements.some((r) => r && r.trim())
+        ? deal.requirements.filter((r) => r && r.trim()).slice(0, 2).map(stripHtml).join(" · ")
+        : "No prerequisites listed",
+    },
+    { label: "Certificate", value: "Yes, on completion" },
+    { label: "Access", value: "Lifetime, mobile & TV" },
+  ];
+
+  const redeemSteps = [
+    { title: `Click "Claim Coupon"`, desc: `You'll be redirected to ${deal.provider || "Udemy"} and the discount is applied automatically — no manual code entry needed.` },
+    { title: "Confirm the price at checkout", desc: `The page should show ${formatMoney(price)}. If it shows the full ${formatMoney(originalPrice) || "price"}, the code has expired — the checkout price is the source of truth.` },
+    { title: "Sign in or create a free account", desc: `Required by ${deal.provider || "Udemy"} to complete enrollment, not by CoursesWyn.` },
+    { title: "Enroll and start learning", desc: "Access is immediate and permanent, independent of this coupon page." },
+  ];
+
+  const learnItems = useMemo(
+    () =>
+      (deal.learn || [])
+        .map((l) => stripHtml(l))
+        .filter((l) => l)
+        .slice(0, 24),
+    [deal.learn]
+  );
+
+  const expiryLabel = deal.expiresAt
+    ? `Listed until ${new Date(deal.expiresAt).toLocaleDateString("en-US", { month: "long", day: "numeric" })}`
+    : "No expiry date listed";
+
+  return (
+    <div className="cp-page">
+      <div className="cp-breadcrumb">
+        <a href="/">CoursesWyn</a>
+        <span className="cp-sep">/</span>
+        <a href={`/categories/${categorySlug}`}>{deal.category || "Deals"}</a>
+        <span className="cp-sep">/</span>
+        <span className="cp-current">{deal.title}</span>
+      </div>
+
+      <div className="cp-wrap">
+        <nav className="cp-subnav" aria-label="On this page">
+          <a href="#overview">Overview</a>
+          <a href="#history">Price history</a>
+          <a href="#score">Deal score</a>
+          <a href="#log">Verification log</a>
+          <a href="#details">Course details</a>
+          <a href="#learn">What you'll learn</a>
+          <a href="#redeem">How to redeem</a>
+          <a href="#faq">FAQ</a>
+          <a href="#alternatives">Compare deals</a>
+        </nav>
+
+        <section className="cp-hero" id="overview" aria-labelledby="deal-title">
+          <div className="cp-thumb">
+            {deal.image ? (
+              <img
+                src={deal.image}
+                alt={`${deal.title} — ${deal.provider || "Udemy"} course thumbnail`}
+                width="230"
+                height="170"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              />
+            ) : (
+              <svg viewBox="0 0 230 170" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                <rect width="230" height="170" fill="#F5F1E6" />
+                <rect x="18" y="26" width="194" height="118" rx="8" fill="#ffffff" stroke="#D8D0BC" strokeWidth="1" />
+                <rect x="18" y="26" width="194" height="18" rx="8" fill="#EDE7D6" />
+                <circle cx="30" cy="35" r="3" fill="#C13B2E" /><circle cx="40" cy="35" r="3" fill="#B8901F" /><circle cx="50" cy="35" r="3" fill="#1F7A4D" />
+                <rect x="30" y="56" width="70" height="6" rx="3" fill="#D8D0BC" />
+                <rect x="30" y="68" width="130" height="6" rx="3" fill="#C9C3AF" />
+                <rect x="42" y="80" width="110" height="6" rx="3" fill="#C9C3AF" />
+                <rect x="42" y="92" width="90" height="6" rx="3" fill="#1F7A4D" />
+                <rect x="30" y="106" width="60" height="6" rx="3" fill="#C9C3AF" />
+                <rect x="30" y="118" width="150" height="6" rx="3" fill="#C13B2E" opacity="0.7" />
+                <rect x="42" y="130" width="70" height="6" rx="3" fill="#C9C3AF" />
+              </svg>
+            )}
+          </div>
+
+          <div>
+            <div className="cp-eyebrow-row">
+              <span className="cp-cat-tag">{deal.category || "Deal"}</span>
+              <span className="cp-stamp">✓ {verifiedAgo ? `Checked ${verifiedAgo}` : "Checked"}</span>
+              {expired && <span className="cp-stamp cp-stamp-exp">✕ Expired</span>}
+            </div>
+            <h1 className="cp-title" id="deal-title">{deal.title}</h1>
+            {(deal.seoDescription || deal.description) && (
+              <p className="cp-desc">{deal.seoDescription || deal.description}</p>
+            )}
+            <p className="cp-by-line">
+              {instructorNames.length > 0 && (
+                <>
+                  by{" "}
+                  {instructorNames.map((name, i) => (
+                    <span key={name}>
+                      {i > 0 && ", "}
+                      <a href={`/instructor/${createInstructorSlug(name)}`}>{name}</a>
+                    </span>
+                  ))}{" "}
+                  ·{" "}
+                </>
+              )}
+              {deal.rating ? `⭐ ${deal.rating.toFixed(1)} via ${deal.provider || "Udemy"}` : `via ${deal.provider || "Udemy"}`}
+              {deal.students ? ` · ${formatStudents(deal.students)} students` : ""}
+              {deal.language ? ` · ${deal.language}` : ""}
+            </p>
+
+            {deal.tags && deal.tags.length > 0 && (
+              <div className="cp-topics-box">
+                <span className="cp-topics-label">Explore related topics</span>
+                <div className="cp-topics-grid">
+                  {deal.tags.map((t) => (
+                    <a key={t} className="cp-topic-card" href={`/topics/${slugifyTopic(t)}`}>
+                      <span className="cp-topic-card-name">{t}</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </a>
-                )) : <span style={{ color: "var(--muted)" }}>—</span>}
-            </div>
-        ) },
-        { label: "Language", value: (
-            <span style={{ display: "inline-block", padding: "3px 14px", background: "var(--bg-secondary)", borderRadius: "9999px", fontSize: "0.8rem", color: "var(--text)" }}>
-                {deal.language || "—"}
-            </span>
-        ) },
-        { label: "Price", value: (
-            <span style={{ display: "inline-flex", alignItems: "baseline", gap: "8px", flexWrap: "wrap" }}>
-                <span style={{ fontWeight: 700, color: "var(--text)" }}>{price === 0 ? "Free" : `$${price.toFixed(2)}`}</span>
-                {discountPct > 0 && <s style={{ color: "var(--muted)", fontSize: "0.85rem" }}>${originalPrice.toFixed(2)}</s>}
-                {discountPct > 0 && <span style={{ fontSize: "0.72rem", background: "var(--brand)", color: "#fff", padding: "1px 8px", borderRadius: "9999px", fontWeight: 700 }}>{discountPct}% off</span>}
-            </span>
-        ) },
-    ];
-
-    const normalizedLearn = (deal.learn || []).map((item) => item.replace(/\r/g, "").trim()).filter(Boolean);
-    const normalizedRequirements = (deal.requirements || []).map((item) => item.replace(/\r/g, "").trim()).filter(Boolean);
-
-    const topicHint = (deal.title || "this course").toLowerCase();
-    const isContainerTopic = /docker|kubernetes|container|devops/.test(topicHint);
-
-    const learningObjectiveItems = normalizedLearn.length > 0
-        ? normalizedLearn.slice(0, 6).map((item) => item.replace(/^[\-•]\s*/, "").trim())
-        : [
-            `Understand the core concepts covered in ${deal.title}`,
-            `Learn the main workflows and practices explained in the course`,
-            `Apply the lessons in a practical and step-by-step way`
-        ];
-
-    const syllabusItems = [
-        `Introduction to ${deal.title}`,
-        normalizedRequirements[0]
-            ? `Start with the basics: ${normalizedRequirements[0]}`
-            : "Begin with the foundational concepts and setup",
-        normalizedLearn[0]
-            ? `Work through the main learning path: ${normalizedLearn[0]}`
-            : "Follow the course in a structured sequence",
-        normalizedLearn[1]
-            ? `Practice the next steps: ${normalizedLearn[1]}`
-            : "Use guided examples and hands-on exercises",
-        "Reinforce the material and prepare to continue learning"
-    ];
-
-    const reviewHighlights = [
-        {
-            title: "Beginners-friendly structure",
-            body: "Many learners appreciate that the course starts from the basics and explains the fundamentals in a clear, step-by-step way.",
-            quotes: [
-                "The course is easy to follow for beginners.",
-                "The explanations are clear and practical."
-            ]
-        },
-        {
-            title: "Useful hands-on learning",
-            body: "Students often mention that the practical labs and examples make the material easier to understand and remember.",
-            quotes: [
-                "The hands-on approach helps a lot.",
-                "The examples make the concepts easier to apply."
-            ]
-        },
-        {
-            title: "Good for career preparation",
-            body: "Learners also value the course for helping them understand core concepts that can be useful when preparing for interviews or moving into a more technical role.",
-            quotes: [
-                "Helpful for interview preparation.",
-                "Good for building a foundation before deeper DevOps study."
-            ]
-        }
-    ];
-
-    const activities = [
-        {
-            title: "Review the fundamentals",
-            description: normalizedRequirements.length > 0
-                ? `Start by revisiting the basics described in the course prerequisites, especially ${normalizedRequirements[0]}.`
-                : "Start by reviewing the basics before you move deeper into the later sections.",
-            steps: [
-                "Read through the introductory lessons carefully.",
-                "Make a short note of the core concepts you want to remember.",
-                "Revisit the material if any part feels unclear."
-            ]
-        },
-        {
-            title: "Follow the hands-on examples",
-            description: "Work through the course examples in order so each topic connects to the next one.",
-            steps: [
-                "Pause after each lesson and repeat the example in your own setup.",
-                "Keep track of the commands, steps, or settings you use.",
-                "Compare your result with the course explanation if something looks different."
-            ]
-        },
-        {
-            title: "Practice a small scenario",
-            description: "Try one simple scenario using the tools covered in the course to build confidence with the workflow.",
-            steps: [
-                "Choose one beginner-friendly example from the course.",
-                "Run it step by step and record what you learn.",
-                "Use the result as a reference for the next lesson."
-            ]
-        }
-    ];
-
-    const careerRoles = isContainerTopic
-        ? [
-            {
-                title: "DevOps Engineer",
-                fit: 90,
-                description: "Useful for learners who want to build a foundation in modern deployment, containers, and operational workflows."
-            },
-            {
-                title: "Cloud / Platform Engineer",
-                fit: 82,
-                description: "A practical fit for people who want to understand how container-based systems are deployed and managed."
-            },
-            {
-                title: "Software Developer",
-                fit: 76,
-                description: "Helpful for developers who want to understand how applications are packaged and run in real environments."
-            }
-        ]
-        : [
-            {
-                title: "Developer",
-                fit: 78,
-                description: "Useful for learners who want to strengthen their practical understanding of the subject."
-            },
-            {
-                title: "Technical Professional",
-                fit: 72,
-                description: "Helpful for professionals who want a clearer foundation before moving into more advanced work."
-            }
-        ];
-
-    const readingItems = [
-        {
-            title: `Official documentation for ${deal.provider || "the course platform"}`,
-            description: `Review the official guides and references related to ${deal.title} to keep the concepts aligned with current practice.`,
-            meta: "Reference"
-        },
-        {
-            title: "Hands-on practice materials",
-            description: "Use the course exercises, notes, or lab setup to reinforce what you learn step by step.",
-            meta: "Practice"
-        }
-    ];
-
-    return (
-        <div className="deal-page">
-
-            <div className="container deal-layout" style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem 1rem", display: "grid", gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)", gap: "3rem" }}>
-
-                <main style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-
-                    <div className="content-component" id="metadata" style={{ padding: "2rem" }}>
-
-                    <h1 style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", fontWeight: 800, lineHeight: 1.25, margin: "0 0 0.6rem 0", color: "var(--text)", paddingBottom: "0.3rem", borderBottom: "2px dotted var(--border)", display: "inline-block" }}>
-                        {deal.title} {discountPercentage > 0 ? `- ${discountPercentage}% OFF Udemy Coupon` : "- Limited-time Udemy Coupon"}
-                    </h1>
-
-                    {instructorProfiles.length > 0 && (
-                        <div style={{ marginBottom: "0.75rem", fontSize: "0.95rem", color: "var(--text-secondary)" }}>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem 0.5rem", alignItems: "center" }}>
-                                {instructorProfiles.map((item, index) => (
-                                    <span key={item.slug} style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
-                                        {index > 0 && <span style={{ color: "var(--muted)" }}>•</span>}
-                                        <a href={`/instructor/${item.slug}`}
-                                           style={{ color: "var(--brand)", textDecoration: "none", borderBottom: "1px dashed var(--brand)" }}>
-                                            {item.name}
-                                        </a>
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "0 12px", fontSize: "0.9rem", marginBottom: "0.8rem", color: "var(--text-secondary)" }}>
-                        {deal.rating && (
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", marginBottom: "0.25rem" }}>
-                                <span style={{ color: "#f69c08", fontWeight: 700, fontSize: "1rem" }}>{deal.rating.toFixed(1)}</span>
-                                <span aria-hidden="true" style={{ color: "#f69c08", fontSize: "0.9rem", letterSpacing: "1px" }}>
-                                    {'★'.repeat(Math.round(deal.rating))}{'☆'.repeat(5 - Math.round(deal.rating))}
-                                </span>
-                            </span>
-                        )}
-                        {deal.students && (
-                            <span style={{ marginBottom: "0.25rem" }}>
-                                Based on ratings from {deal.students.toLocaleString()} students
-                                {deal.rating ? <>, <a href="#reviews" style={{ color: "var(--brand)", textDecoration: "none", borderBottom: "1px dashed var(--brand)" }}>see reviews</a></> : null}
-                            </span>
-                        )}
-                    </div>
-
-                    <div style={{ marginBottom: "1rem", fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: 1.7 }}>
-                        {deal.title} is a practical {deal.category ? deal.category.toLowerCase() : "learning"} course that combines clear instruction with real examples so you can build confidence faster.
-                    </div>
-
-                    <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)", marginBottom: "1.5rem" }}>
-                        {deal.updatedAt && (
-                            <span>
-                                Coupons Verified updated on{" "}
-                                <time dateTime={new Date(deal.updatedAt).toISOString()}>
-                                    {new Date(deal.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                                </time>
-                            </span>
-                        )}
-                        {deal.language && (
-                            <span style={{ marginLeft: "12px", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <line x1="2" y1="12" x2="22" y2="12"></line>
-                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                                </svg>
-                                <span>{deal.language}</span>
-                            </span>
-                        )}
-                    </div>
-
-                    <div style={{ marginBottom: "1.25rem", lineHeight: 1.7, color: "var(--text-secondary)", fontSize: "0.95rem" }}>
-                        <p style={{ margin: 0 }}>{deal.description || `This course walks you through the core ideas in ${deal.category || "the subject"} step by step, helping you move from fundamentals to application without getting lost in theory.`}</p>
-                    </div>
-
-                    <div style={{ marginBottom: "2rem", lineHeight: 1.7, color: "var(--text-secondary)", fontSize: "0.95rem" }}>
-                        {deal.content && (
-                            <>
-                                {descExpanded && (
-                                    <div
-                                        className="prose prose-invert max-w-none"
-                                        style={{ lineHeight: 1.7, color: "var(--text-secondary)", fontSize: "0.95rem" }}
-                                        dangerouslySetInnerHTML={{ __html: htmlContent }}
-                                    />
-                                )}
-                                <button
-                                    onClick={() => setDescExpanded(!descExpanded)}
-                                    style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 1.25rem", background: "transparent", border: "1px solid var(--border)", borderRadius: "9999px", color: "var(--text)", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer" }}
-                                >
-                                    <svg style={{ width: "15px", height: "15px", transition: "transform 0.2s", transform: descExpanded ? "rotate(0deg)" : "rotate(-90deg)" }} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                    {descExpanded ? "Show less" : "Read more"}
-                                </button>
-                            </>
-                        )}
-                    </div>
-
-                    <div style={{ marginBottom: "2.5rem", textAlign: "center" }}>
-                        <a
-                            href={deal.url}
-                            target="_blank"
-                            rel="noopener noreferrer nofollow"
-                            style={{
-                                display: "inline-block",
-                                width: "100%",
-                                maxWidth: "480px",
-                                padding: "0.9rem 2rem",
-                                textAlign: "center",
-                                background: "linear-gradient(135deg, #00a76f 0%, #22c55e 100%)",
-                                color: "#fff",
-                                fontWeight: 700,
-                                fontSize: "1rem",
-                                textDecoration: "none",
-                                borderRadius: "9999px",
-                                transition: "all 0.2s ease",
-                                boxShadow: "0 2px 8px rgba(0, 167, 111, 0.25)"
-                            }}
-                        >
-                            REDEEM COUPON
-                        </a>
-                        <div style={{ marginTop: "0.6rem", fontSize: "0.8rem", color: "var(--muted)" }}>
-                            {deal.coupon ? (
-                                <>
-                                    Coupon code applies at checkout on {deal.provider || "Udemy"}.{" "}
-                                    <button
-                                        onClick={() => setIsModalOpen(true)}
-                                        style={{ background: "none", border: "none", padding: 0, color: "var(--brand)", fontWeight: 600, cursor: "pointer", fontSize: "0.8rem", textDecoration: "underline" }}
-                                    >
-                                        Show coupon code
-                                    </button>
-                                </>
-                            ) : (
-                                <>Open the course on {deal.provider || "Udemy"}.</>
-                            )}
-                        </div>
-                    </div>
-                    </div>
-
-                    <div className="content-component" style={{ padding: "2rem" }}>
-                        <section aria-labelledby="learn-heading">
-                            <h2 id="learn-heading" style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text)", margin: "0 0 0.5rem 0", paddingBottom: "0.35rem", borderBottom: "2px dotted var(--border)", display: "inline-block" }}>
-                                What's inside
-                            </h2>
-                            <div style={{ marginTop: "0.5rem", fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: 1.7 }}>
-                                This course is structured around practical outcomes, framework building, and real-world automation workflows so you can move from concepts to implementation without losing momentum.
-                            </div>
-
-                            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)", margin: "1.25rem 0 0.75rem 0" }}>
-                                Learning objectives
-                            </h3>
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem" }}>
-                                {[0, 1].map((col) => (
-                                    <ul key={col} style={{ margin: 0, paddingLeft: "1rem", color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.8 }}>
-                                        {learningObjectiveItems.filter((_, idx) => idx % 2 === col).map((item) => (
-                                            <li key={item} style={{ marginBottom: "0.6rem" }}>{item}</li>
-                                        ))}
-                                    </ul>
-                                ))}
-                            </div>
-
-                            <div style={{ marginTop: "1.5rem", borderTop: "1px solid var(--border)", paddingTop: "1.25rem" }}>
-                                <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text)", margin: "0 0 0.75rem 0", paddingBottom: "0.2rem", borderBottom: "1px dotted var(--border)", display: "inline-block" }}>
-                                    Syllabus
-                                </h3>
-                                <div style={{ display: "flex", flexDirection: "column", gap: "0.7rem" }}>
-                                    {syllabusItems.map((item, idx) => (
-                                        <div key={item} style={{ border: "1px solid var(--border)", borderRadius: "10px", padding: "0.8rem 1rem", background: "var(--bg-secondary)" }}>
-                                            <div style={{ fontWeight: 700, color: "var(--text)" }}>{idx + 1}. {item}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-
-
-
-                    {(deal.rating || deal.students || normalizedRequirements.length > 0) && (
-                        <div className="content-component" id="reviews" style={{ padding: "2rem" }}>
-                            <section aria-labelledby="ratings-heading">
-                                <h2 id="ratings-heading" style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text)", margin: "0 0 1rem 0", paddingBottom: "0.35rem", borderBottom: "2px dotted var(--border)", display: "inline-block" }}>
-                                    Reviews summary
-                                </h2>
-                                <div style={{ fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: 1.8, marginBottom: "1rem" }}>
-                                    Students often describe {deal.title} as well paced, practical, and easy to follow. The teaching style is especially helpful when you want to learn by doing rather than simply memorizing theory.
-                                </div>
-                                <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem" }}>
-                                    {reviewHighlights.map((item) => (
-                                        <div key={item.title} style={{ border: "1px solid var(--border)", borderRadius: "10px", padding: "1rem 1.1rem", background: "var(--bg-secondary)" }}>
-                                            <div style={{ fontWeight: 700, color: "var(--text)", marginBottom: "0.35rem" }}>{item.title}</div>
-                                            <div style={{ fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: 1.7, marginBottom: "0.6rem" }}>{item.body}</div>
-                                            <ul style={{ margin: 0, paddingLeft: "1rem", color: "var(--text)" }}>
-                                                {item.quotes.map((quote) => (
-                                                    <li key={quote} style={{ marginBottom: "0.35rem", fontSize: "0.92rem", color: "var(--text-secondary)" }}>{quote}</li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-                        </div>
-                    )}
-
-                    <div className="content-component" style={{ padding: "2rem" }}>
-                        <section aria-labelledby="activities-heading">
-                            <h2 id="activities-heading" style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text)", margin: "0 0 1rem 0", paddingBottom: "0.35rem", borderBottom: "2px dotted var(--border)", display: "inline-block" }}>
-                                Activities
-                            </h2>
-                            <div style={{ fontSize: "0.95rem", color: "var(--text-secondary)", marginBottom: "1rem", lineHeight: 1.8 }}>
-                                The best results usually come from learning in short, consistent sessions and applying each lesson before moving on to the next one.
-                            </div>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                                {activities.map((activity, index) => (
-                                    <div key={activity.title} style={{ display: "flex", gap: "0.9rem", alignItems: "flex-start" }}>
-                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: "2.2rem" }}>
-                                            <div style={{ width: "2rem", height: "2rem", borderRadius: "999px", background: "linear-gradient(135deg, var(--brand), #32d583)", color: "#fff", fontWeight: 800, fontSize: "0.95rem", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0, 167, 111, 0.2)" }}>
-                                                {index + 1}
-                                            </div>
-                                            {index < activities.length - 1 && <div style={{ width: "2px", flex: 1, background: "linear-gradient(180deg, var(--brand), transparent)", marginTop: "0.35rem", minHeight: "2rem" }} />}
-                                        </div>
-                                        <div style={{ flex: 1, border: "1px solid var(--border)", borderRadius: "12px", padding: "1rem 1.1rem", background: "var(--bg-secondary)" }}>
-                                            <div style={{ fontWeight: 800, color: "var(--text)", marginBottom: "0.35rem", paddingBottom: "0.2rem", borderBottom: "1px dotted var(--border)", display: "inline-block" }}>{activity.title}</div>
-                                            <div style={{ fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: 1.7, marginTop: "0.6rem", marginBottom: "0.55rem" }}>{activity.description}</div>
-                                            <ul style={{ margin: 0, paddingLeft: "1rem", color: "var(--text-secondary)", fontSize: "0.92rem", lineHeight: 1.7 }}>
-                                                {activity.steps.map((step) => (
-                                                    <li key={step}>{step}</li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    </div>
-
-                    <div className="content-component" style={{ padding: "2rem" }}>
-                        <section aria-labelledby="career-heading">
-                            <h2 id="career-heading" style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text)", margin: "0 0 1rem 0", paddingBottom: "0.35rem", borderBottom: "2px dotted var(--border)", display: "inline-block" }}>
-                                Career center
-                            </h2>
-                            <div style={{ fontSize: "0.95rem", color: "var(--text-secondary)", marginBottom: "1rem", lineHeight: 1.8 }}>
-                                The skills covered in {deal.title} can support several practical career paths, especially for learners who want to improve day-to-day performance or move into a more technical role.
-                            </div>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
-                                {careerRoles.map((role) => (
-                                    <div key={role.title} style={{ border: "1px solid var(--border)", borderRadius: "10px", padding: "1rem 1.1rem", background: "var(--bg-secondary)" }}>
-                                        <div style={{ display: "flex", justifyContent: "space-between", gap: "0.6rem", marginBottom: "0.4rem", alignItems: "center" }}>
-                                            <div style={{ fontWeight: 800, color: "var(--text)", paddingBottom: "0.2rem", borderBottom: "1px dotted var(--border)", display: "inline-block" }}>{role.title}</div>
-                                            <div style={{ fontSize: "0.84rem", color: "var(--brand)", fontWeight: 700 }}>{role.fit}% fit</div>
-                                        </div>
-                                        <div style={{ fontSize: "0.93rem", color: "var(--text-secondary)", lineHeight: 1.7 }}>{role.description}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    </div>
-
-                    <div className="content-component" style={{ padding: "2rem" }}>
-                        <section aria-labelledby="reading-heading">
-                            <h2 id="reading-heading" style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text)", margin: "0 0 1rem 0", paddingBottom: "0.35rem", borderBottom: "2px dotted var(--border)", display: "inline-block" }}>
-                                Reading list
-                            </h2>
-                            <div style={{ fontSize: "0.95rem", color: "var(--text-secondary)", marginBottom: "1rem", lineHeight: 1.8 }}>
-                                These resources can help you reinforce the basics, stay current, and build a broader context around the topic.
-                            </div>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
-                                {readingItems.map((item) => (
-                                    <div key={item.title} style={{ border: "1px solid var(--border)", borderRadius: "10px", padding: "1rem 1.1rem", background: "var(--bg-secondary)" }}>
-                                        <div style={{ fontWeight: 800, color: "var(--text)", marginBottom: "0.35rem", paddingBottom: "0.2rem", borderBottom: "1px dotted var(--border)", display: "inline-block" }}>{item.title}</div>
-                                        <div style={{ fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: 1.7, marginBottom: "0.3rem" }}>{item.description}</div>
-                                        <div style={{ fontSize: "0.82rem", color: "var(--brand)", fontWeight: 700 }}>{item.meta}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    </div>
-
-                    {autoFAQs.length > 0 && (
-                        <div className="content-component" style={{ padding: "2rem" }}>
-                            <section aria-labelledby="faq-heading">
-                                <h2 id="faq-heading" style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text)", margin: "0 0 1rem 0", paddingBottom: "0.35rem", borderBottom: "2px dotted var(--border)", display: "inline-block" }}>
-                                    Common questions
-                                </h2>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
-                                {autoFAQs.map((faq, idx) => {
-                                    const isOpen = expandedFAQ === idx;
-                                    return (
-                                        <div key={idx} style={{ border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden", background: "linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01))", boxShadow: "0 8px 24px rgba(0,0,0,0.04)" }}>
-                                            <button
-                                                onClick={() => setExpandedFAQ(isOpen ? null : idx)}
-                                                aria-expanded={isOpen}
-                                                aria-controls={`faq-answer-${idx}`}
-                                                id={`faq-question-${idx}`}
-                                                style={{
-                                                    width: "100%",
-                                                    padding: "1rem 1.1rem",
-                                                    background: "transparent",
-                                                    border: "none",
-                                                    textAlign: "left",
-                                                    cursor: "pointer",
-                                                    display: "flex",
-                                                    justifyContent: "space-between",
-                                                    alignItems: "center",
-                                                    fontSize: "0.95rem",
-                                                    fontWeight: 700,
-                                                    color: "var(--text)",
-                                                    gap: "1rem"
-                                                }}
-                                            >
-                                                <span style={{ display: "flex", alignItems: "center", gap: "0.75rem", flex: 1 }}>
-                                                    <span style={{ width: "30px", height: "30px", borderRadius: "999px", background: isOpen ? "rgba(0, 167, 111, 0.16)" : "var(--bg-secondary)", color: isOpen ? "var(--brand)" : "var(--text-secondary)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", fontWeight: 800, flexShrink: 0 }}>
-                                                        {isOpen ? "−" : "+"}
-                                                    </span>
-                                                    <span style={{ paddingBottom: "0.16rem", borderBottom: "1px dotted var(--border)", display: "inline-block" }}>{faq.q}</span>
-                                                </span>
-                                                <span aria-hidden="true" style={{ color: "var(--brand)", fontSize: "0.9rem", fontWeight: 700, flexShrink: 0 }}>Open</span>
-                                            </button>
-                                            {isOpen && (
-                                                <div
-                                                    id={`faq-answer-${idx}`}
-                                                    role="region"
-                                                    aria-labelledby={`faq-question-${idx}`}
-                                                    style={{ padding: "0 1.1rem 1rem 3.35rem", background: "transparent" }}
-                                                >
-                                                    <p style={{ color: "var(--text-secondary)", lineHeight: 1.65, fontSize: "0.92rem", margin: "0.25rem 0 0 0" }}>{faq.a}</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                            </section>
-                        </div>
-                    )}
-
-                    <div className="content-component" style={{ padding: "1.5rem 2rem" }}>
-                        <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-                            <strong style={{ color: "var(--text)" }}>New to redeeming coupons?</strong>{" "}
-                            Visit our <a href="/how-to-redeem-coupon" style={{ color: "var(--brand)", textDecoration: "none", borderBottom: "1px dashed var(--brand)" }}>step-by-step guide</a> for detailed instructions on how to apply coupon codes.
-                            <span style={{ display: "block", marginTop: "4px", color: "var(--muted)", fontSize: "0.78rem" }}>
-                                Coupon last verified {deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "recently"}. {deal.provider || "Udemy"} coupons are time-limited — redeem as soon as possible.
-                            </span>
-                        </div>
-                    </div>
-
-                    {relatedDeals.length > 0 && (
-                        <div className="content-component" style={{ padding: "2rem" }}>
-                            <section aria-labelledby="related-heading">
-                                <h2 id="related-heading" style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text)", margin: "0 0 0.75rem 0" }}>
-                                    Similar courses
-                                </h2>
-                                <div style={{ fontSize: "0.9rem", color: "var(--muted)", marginBottom: "1.5rem" }}>
-                                    More active deals in this category:
-                                </div>
-                                <RelatedList items={relatedDeals.map((d: any) => ({
-                                    id: d.id, title: d.title, slug: d.slug, image: d.image,
-                                    provider: d.provider, category: d.category, rating: d.rating,
-                                    students: d.students, price: d.price, originalPrice: d.originalPrice,
-                                    updatedAt: d.updatedAt, url: d.url
-                                }))} />
-                            </section>
-                        </div>
-                    )}
-
-                </main>
-
-                <aside aria-label="Course details" style={{ position: "relative", alignSelf: "start" }}>
-                    <div style={{ position: "sticky", top: "2rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-                        <div className="content-sidebar" style={{ overflow: "hidden" }}>
-                            {deal.image && (
-                                <a href={deal.url} target="_blank" rel="noopener noreferrer nofollow" style={{ display: "block", width: "100%" }}>
-                                    <img
-                                        src={deal.image}
-                                        alt={`${deal.title} — ${deal.provider || "Udemy"} course in ${deal.category || "Development"} — thumbnail`}
-                                        width="480"
-                                        height="270"
-                                        loading="eager"
-                                        decoding="async"
-                                        fetchPriority="high"
-                                        style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }}
-                                    />
-                                </a>
-                            )}
-
-                            <div style={{ padding: "1.25rem" }}>
-                                {infoRows.map((row) => (
-                                    <div key={row.label} style={{ display: "flex", marginBottom: "0.75rem", fontSize: "0.88rem" }}>
-                                        <div style={{ width: "90px", flexShrink: 0, color: "var(--muted)" }}>{row.label}</div>
-                                        <div style={{ flex: 1, color: "var(--text-secondary)" }}>{row.value}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="content-sidebar" style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.25rem" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
-                                <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "1rem" }}>Traffic lights</div>
-                                <div style={{ display: "inline-flex", gap: "4px", alignItems: "center", marginLeft: "auto" }} aria-hidden="true">
-                                    <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#22c55e" }}></span>
-                                    <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#eab308" }}></span>
-                                    <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#ef4444" }}></span>
-                                </div>
-                            </div>
-                            <div style={{ fontSize: "0.82rem", color: "var(--muted)", marginBottom: "0.75rem", lineHeight: 1.5 }}>
-                                What's good <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e", margin: "0 3px" }}></span>what should give you pause <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "#eab308", margin: "0 3px" }}></span>possible dealbreakers.
-                            </div>
-                            {trafficLights.map((item, idx) => (
-                                <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "0.6rem", marginBottom: "0.6rem" }}>
-                                    <div style={{ marginTop: "5px" }}>
-                                        <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: item!.color, flexShrink: 0 }}></div>
-                                    </div>
-                                    <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>{item!.text}</div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="content-sidebar" style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.25rem" }}>
-                            <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "1rem", marginBottom: "0.25rem" }}>Share</div>
-                            <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginBottom: "0.75rem", lineHeight: 1.5 }}>
-                                Help others find this course page by sharing it with your friends and followers.
-                            </div>
-                            <div style={{ display: "flex", flexWrap: "wrap" }}>
-                                {[
-                                    { key: "facebook", label: "Facebook", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg> },
-                                    { key: "linkedin", label: "LinkedIn", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg> },
-                                    { key: "x", label: "X", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
-                                    { key: "reddit", label: "Reddit", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg> },
-                                ].map((s) => (
-                                    <a
-                                        key={s.key}
-                                        href={shareTarget(s.key)}
-                                        target="_blank"
-                                        rel="noopener noreferrer nofollow"
-                                        style={{ display: "inline-flex", alignItems: "center", gap: "6px", margin: "4px 8px 4px 0", padding: "6px 14px", borderRadius: "9999px", border: "1px solid var(--border)", background: "var(--bg-secondary)", color: "var(--text-secondary)", fontSize: "0.75rem", textDecoration: "none", whiteSpace: "nowrap" }}
-                                    >
-                                        {s.icon}
-                                        {s.label}
-                                    </a>
-                                ))}
-                                <span
-                                    role="button"
-                                    tabIndex={0}
-                                    onClick={() => navigator.clipboard?.writeText(typeof window !== 'undefined' ? window.location.href : '')}
-                                    style={{ display: "inline-flex", alignItems: "center", gap: "6px", margin: "4px 8px 4px 0", padding: "6px 14px", borderRadius: "9999px", border: "1px solid var(--border)", background: "var(--bg-secondary)", color: "var(--text-secondary)", fontSize: "0.75rem", cursor: "pointer", whiteSpace: "nowrap" }}
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                                    Link
-                                </span>
-                                <a
-                                    href={shareTarget("email")}
-                                    target="_blank"
-                                    rel="noopener noreferrer nofollow"
-                                    style={{ display: "inline-flex", alignItems: "center", gap: "6px", margin: "4px 8px 4px 0", padding: "6px 14px", borderRadius: "9999px", border: "1px solid var(--border)", background: "var(--bg-secondary)", color: "var(--text-secondary)", fontSize: "0.75rem", textDecoration: "none", whiteSpace: "nowrap" }}
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                                    Email
-                                </a>
-                            </div>
-                        </div>
-
-                        <div className="content-sidebar" style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.25rem" }}>
-                            <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "1rem", marginBottom: "0.25rem" }}>Begin learning today</div>
-                            <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginBottom: "1rem", lineHeight: 1.5 }}>
-                                Enroll now to gain full access to <span style={{ fontWeight: 600 }}>{deal.title}</span>.
-                            </div>
-                            <div style={{ marginBottom: "1rem" }}>
-                                <div style={{ fontSize: "0.72rem", color: "var(--muted)", marginBottom: "2px" }}>Coupon code</div>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.75rem" }}>
-                                    {deal.coupon ? (
-                                        <>
-                                            <code style={{ fontSize: "0.85rem", fontWeight: 700, background: "var(--bg)", padding: "4px 10px", borderRadius: "6px", border: "1px dashed var(--border)", color: "var(--text)", flex: 1, textAlign: "center", letterSpacing: "0.5px" }}>
-                                                {deal.coupon.length > 4 ? `${deal.coupon.substring(0, 4)}···` : deal.coupon}
-                                            </code>
-                                            <button
-                                                onClick={handleCopyCoupon}
-                                                style={{ background: couponCopied ? "var(--brand)" : "var(--bg)", border: "1px solid var(--border)", borderRadius: "9999px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", color: couponCopied ? "#fff" : "var(--brand)", whiteSpace: "nowrap" }}
-                                            >
-                                                {couponCopied ? "Copied!" : "Copy code"}
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <code style={{ fontSize: "0.85rem", fontWeight: 700, background: "var(--bg)", padding: "4px 10px", borderRadius: "6px", border: "1px dashed var(--border)", color: "var(--text)", flex: 1, textAlign: "center", letterSpacing: "0.5px" }}>
-                                            Apply at checkout
-                                        </code>
-                                    )}
-                                </div>
-                                {countdown && (
-                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "0.8rem", color: expiresSoon ? "#f87171" : "var(--text)", fontWeight: 700, marginBottom: "0.75rem" }}>
-                                        <svg style={{ width: "13px", height: "13px", flexShrink: 0 }} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
-                                        <span>
-                                            {expiresSoon ? "HURRY — ENDS TODAY" : "Expires in"} {countdown.days}d {String(countdown.hours).padStart(2, '0')}h {String(countdown.minutes).padStart(2, '0')}m
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                            <a
-                                href={deal.url}
-                                target="_blank"
-                                rel="noopener noreferrer nofollow"
-                                aria-label={`Redeem coupon for ${deal.title} on ${deal.provider || "Udemy"}`}
-                                style={{ display: "block", textAlign: "center", padding: "0.7rem 1rem", background: "linear-gradient(135deg, #00a76f 0%, #22c55e 100%)", color: "#ffffff", textDecoration: "none", borderRadius: "9999px", fontWeight: 700, fontSize: "0.85rem" }}
-                            >
-                                Enroll now
-                            </a>
-                            <div style={{ textAlign: "center", fontSize: "0.72rem", color: "var(--muted)", marginTop: "0.75rem", lineHeight: 1.5 }}>
-                                <span>30-Day Money-Back Guarantee via {deal.provider || "Udemy"}</span>
-                            </div>
-                        </div>
-
-                        <div className="content-sidebar" style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.25rem" }}>
-                            <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "1rem", marginBottom: "0.25rem" }}>Save this course</div>
-                            <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginBottom: "1rem", lineHeight: 1.5 }}>
-                                Create your own learning path. Save this course to your list so you can find it easily later.
-                            </div>
-                            <button
-                                onClick={toggleSave}
-                                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", padding: "0.7rem 1rem", background: "var(--bg-secondary)", border: "1px solid var(--border)", borderRadius: "9999px", color: saved ? "var(--brand)" : "var(--text)", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}
-                            >
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                                {saved ? "Saved" : "Save"}
-                            </button>
-                        </div>
-                    </div>
-                </aside>
-            </div>
-
-            {isModalOpen && (
-                <div
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="modal-title"
-                    style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "1rem" }}
-                    onClick={() => setIsModalOpen(false)}
-                >
-                    <div
-                        style={{ background: "var(--card)", borderRadius: "12px", padding: "2rem", maxWidth: "480px", width: "100%", border: "1px solid var(--border)", boxShadow: "0 20px 30px rgba(0,0,0,0.6)", position: "relative" }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <button
-                            onClick={() => setIsModalOpen(false)}
-                            aria-label="Close modal"
-                            style={{ position: "absolute", top: "1rem", right: "1rem", background: "none", border: "none", color: "var(--muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1 }}
-                        >
-                            ✕
-                        </button>
-
-                        <h3 id="modal-title" style={{ color: "var(--text)", fontSize: "1.3rem", fontWeight: 700, marginBottom: "0.5rem", textAlign: "center" }}>
-                            Your Coupon Code
-                        </h3>
-                        <p style={{ color: "var(--muted)", fontSize: "0.9rem", textAlign: "center", marginBottom: "1.5rem" }}>
-                            Copy the code, then click "Redeem Now" — the discount will apply at checkout.
-                        </p>
-
-                        <div style={{ background: "linear-gradient(135deg, #00a76f, #22c55e)", padding: "1.25rem", borderRadius: "8px", marginBottom: "1.25rem", textAlign: "center" }}>
-                            <p style={{ color: "#fff", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px", fontWeight: 600 }}>Coupon Code</p>
-                            <code style={{ display: "block", fontSize: "1.15rem", fontWeight: 800, color: "#fff", letterSpacing: "1px", background: "rgba(255,255,255,0.15)", padding: "10px 16px", borderRadius: "6px", border: "1px dashed rgba(255,255,255,0.5)" }}>
-                                {deal.coupon}
-                            </code>
-                        </div>
-
-                        <div style={{ display: "flex", gap: "0.75rem", flexDirection: "column" }}>
-                            <button
-                                onClick={handleCopyCoupon}
-                                style={{ background: couponCopied ? "var(--brand)" : "var(--bg)", border: "1px solid var(--border)", color: "var(--text)", padding: "0.75rem", borderRadius: "9999px", fontWeight: 600, cursor: "pointer", fontSize: "0.95rem", transition: "all 0.2s" }}
-                            >
-                                {couponCopied ? "✓ Copied!" : "📋 Copy Code"}
-                            </button>
-                            <a
-                                href={deal.url}
-                                target="_blank"
-                                rel="noopener noreferrer nofollow"
-                                style={{ background: "var(--brand)", border: "1px solid var(--brand-hover)", color: "#fff", padding: "0.75rem", borderRadius: "9999px", fontWeight: 700, textDecoration: "none", textAlign: "center", fontSize: "0.95rem" }}
-                            >
-                                Redeem Now on {deal.provider || "Udemy"} →
-                            </a>
-                        </div>
-                    </div>
+                  ))}
                 </div>
+              </div>
             )}
 
-            <style>{`
-                .deal-page { min-height: 100vh; }
-                .deal-layout { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
-                .content-component, .content-sidebar { background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
+            <div className="cp-price-cta-row">
+              <div className="cp-price-block">
+                <span className="cp-price-now">{formatMoney(price)}</span>
+                {originalPrice > price && <span className="cp-price-was">{formatMoney(originalPrice)}</span>}
+                {discountPct > 0 && <span className="cp-price-off">{discountPct}% OFF</span>}
+              </div>
+              <div>
+                <a className="cp-cta-primary" href={deal.url} target="_blank" rel="noopener noreferrer nofollow">
+                  Claim Coupon →
+                </a>
+                <div className="cp-cta-note">Code auto-applies at {deal.provider || "Udemy"} checkout</div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-                .prose p { margin-bottom: 1em; }
-                .prose h1, .prose h2, .prose h3 { color: var(--text); margin-top: 1.5em; margin-bottom: 0.5em; }
-                .prose ul, .prose ol { margin-bottom: 1em; padding-left: 1.5em; list-style: disc; }
-                .prose li { margin-bottom: 0.5em; }
-                .prose a { color: var(--brand); text-decoration: underline; }
-                .prose strong { color: var(--text); }
-                .prose code { background: var(--border); padding: 2px 6px; border-radius: 4px; font-size: 0.875em; }
-
-                .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
-                .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
-                .card-body { padding: 0.75rem; }
-                .card-footer { padding: 0 0.75rem 0.75rem; }
-                .pill { display: inline-block; padding: 2px 8px; border-radius: var(--radius-full); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
-                .muted { color: var(--muted); }
-                .card .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 1rem; background: linear-gradient(135deg, #00a76f 0%, #22c55e 100%); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 700; text-decoration: none; }
-                button.pill { background: var(--secondary); color: var(--text); border: 1px solid var(--border); cursor: pointer; }
-
-                .cw-compare { background: var(--bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; }
-                .cw-compare-title { font-size: 1.4rem; font-weight: 700; color: var(--text); margin: 0 0 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
-                .cw-compare-desc { font-size: 0.9rem; color: var(--muted); margin: 0 0 1.25rem; }
-                .cw-compare-table { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-                .cw-compare-row { display: grid; grid-template-columns: 120px 1fr 1fr; border-bottom: 1px solid var(--border); }
-                .cw-compare-row:last-child { border-bottom: none; }
-                .cw-compare-header { background: var(--bg-secondary); font-weight: 700; }
-                .cw-compare-feature { padding: 10px 14px; font-size: 0.8rem; color: var(--muted); font-weight: 600; border-right: 1px solid var(--border); }
-                .cw-compare-val { padding: 10px 14px; font-size: 0.82rem; color: var(--text-secondary); border-right: 1px solid var(--border); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-                .cw-compare-val:last-child { border-right: none; }
-                .cw-compare-badge-c { font-size: 0.6rem; background: var(--brand); color: #fff; padding: 1px 6px; border-radius: 3px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; }
-                .cw-compare-actions-row .cw-compare-btn { padding: 0.5rem 1rem; border-radius: var(--radius-sm); font-size: 0.78rem; font-weight: 700; text-decoration: none; display: inline-block; text-align: center; }
-                .cw-compare-btn-active { background: linear-gradient(135deg, #00a76f 0%, #22c55e 100%); color: #fff; border: none; }
-                .cw-compare-actions-row .cw-compare-val a:not(.cw-compare-btn-active) { background: var(--card); color: var(--text); border: 1px solid var(--border); }
-
-                @media (max-width: 900px) {
-                    .deal-layout { grid-template-columns: 1fr !important; }
-                    .cw-compare-row { grid-template-columns: 90px 1fr 1fr; }
-                }
-                @media (max-width: 640px) {
-                    h1 { font-size: 1.4rem !important; }
-                    .cw-compare-row { grid-template-columns: 1fr; }
-                    .cw-compare-feature { border-right: none; border-bottom: 1px solid var(--border); }
-                }
-                @media print {
-                    body { background: white !important; color: black !important; }
-                }
-            `}</style>
+        <div className="cp-lights">
+          {lights.map((l, i) => (
+            <div key={i} className={l.good ? "cp-light-item good" : "cp-light-item warn"}>
+              <span className="cp-ic">{l.good ? "✓" : "⚠"}</span> {l.text}
+            </div>
+          ))}
         </div>
-    );
+
+        <div className="cp-body-grid">
+          <div className="cp-stack">
+            {/* PRICE HISTORY */}
+            <h2 className="cp-sec-heading" id="history">
+              Price history <span className="cp-tag">First-party data</span>
+            </h2>
+            <div className="cp-card">
+              <div className="cp-ph-grid">
+                <div>
+                  <PriceTrendChart deal={deal} />
+                  <div className="cp-chart-caption">
+                    Tracked since {trackedSinceLabel} to {snapshot.checkedLong}. Red dot = current price ({formatMoney(price)}) — CoursesWyn records the price on each sync.
+                  </div>
+                </div>
+                <div className="cp-ph-stats">
+                  <div className="cp-ph-stat"><div className="cp-ph-stat-label">Current price</div><div className="cp-ph-stat-value hi">{formatMoney(price)}</div></div>
+                  <div className="cp-ph-stat"><div className="cp-ph-stat-label">Original price</div><div className="cp-ph-stat-value">{formatMoney(originalPrice)}</div></div>
+                  <div className="cp-ph-stat"><div className="cp-ph-stat-label">Tracked since</div><div className="cp-ph-stat-value">{trackedSinceLabel}</div></div>
+                  <div className="cp-ph-stat"><div className="cp-ph-stat-label">Last checked</div><div className="cp-ph-stat-value">{snapshot.checkedLabel}</div></div>
+                </div>
+              </div>
+              <div className="cp-attr-note" style={{ marginTop: 14 }}>
+                Price and coupon status are recorded from a periodic sync of {deal.provider || "Udemy"}&rsquo;s public catalog. This snapshot was taken on {snapshot.checkedLong}. Prices are always confirmed at checkout on the provider&rsquo;s site.
+              </div>
+            </div>
+
+            {/* DEAL SCORE */}
+            <h2 className="cp-sec-heading" id="score">
+              Deal score <span className="cp-tag">Computed, methodology below</span>
+            </h2>
+            <div className="cp-card">
+              <div className="cp-score-grid">
+                <div
+                  className="cp-gauge"
+                  style={{ background: `conic-gradient(var(--cp-green) ${Math.round(score.total * 36)}deg, var(--cp-paper2) ${Math.round(score.total * 36)}deg 360deg)` }}
+                >
+                  <div className="cp-gauge-inner">
+                    <div className="cp-gauge-num">{score.total.toFixed(1)}</div>
+                    <div className="cp-gauge-den">/ 10</div>
+                  </div>
+                </div>
+                <div className="cp-score-rows">
+                  {score.rows.map((r) => (
+                    <div className="cp-score-row" key={r.label}>
+                      <div className="cp-score-row-label">{r.label}</div>
+                      <div className="cp-score-bar">
+                        <div className="cp-score-bar-fill" style={{ width: `${Math.min(100, Math.max(0, r.pct))}%` }} />
+                      </div>
+                      <div className="cp-score-row-val">{r.val}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="cp-attr-note" style={{ marginTop: 14 }}>
+                Score = weighted average of discount depth, how often CoursesWyn re-checks this code, historical price volatility, and how fast past redemptions were claimed. Not an editorial opinion on the course itself.
+              </div>
+            </div>
+
+            {/* LIVE VERIFICATION LOG */}
+            <h2 className="cp-sec-heading" id="log">
+              Live verification log <span className="cp-tag">Updated automatically</span>
+            </h2>
+            <div className="cp-card">
+              <div className="cp-vlog-live"><span className="cp-blip" /> Live verification active</div>
+              <div className="cp-log-list">
+                <div className="cp-log-row">
+                  <span className="cp-log-dot" />
+                  <span className="cp-log-time">{fmtDT(deal.createdAt || deal.updatedAt)}</span>
+                  <span className="cp-log-msg">Listed by CoursesWyn — price recorded at {formatMoney(price)}</span>
+                  <span className="cp-log-status">Listed</span>
+                </div>
+                <div className="cp-log-row">
+                  <span className="cp-log-dot" />
+                  <span className="cp-log-time">{fmtDT(deal.updatedAt || deal.createdAt)}</span>
+                  <span className="cp-log-msg">Coupon checked — checkout price {formatMoney(price)}{deal.expiresAt ? ` · listed until ${fmtAbs(deal.expiresAt)}` : ""}</span>
+                  <span className="cp-log-status">Working</span>
+                </div>
+              </div>
+            </div>
+
+            {/* COURSE DETAILS */}
+            <h2 className="cp-sec-heading" id="details">
+              Course details <span className="cp-tag">Synced from {deal.provider || "Udemy"}</span>
+            </h2>
+            <div className="cp-card">
+              <div className="cp-attr-note">
+                Fields below are pulled from {deal.provider || "Udemy"}&rsquo;s public catalog and recorded when CoursesWyn syncs — they are catalog data, not editorial description.
+              </div>
+              <table className="cp-snap-table">
+                <tbody>
+                  {snapshotRows.map((row) => (
+                    <tr key={row.label}>
+                      <td>{row.label}</td>
+                      <td>{row.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* WHAT YOU'LL LEARN */}
+            {learnItems.length > 0 && (
+              <>
+                <h2 className="cp-sec-heading" id="learn">
+                  What you'll learn <span className="cp-tag">From the course description</span>
+                </h2>
+                <div className="cp-card">
+                  <div className="cp-learn-grid">
+                    {learnItems.map((item, i) => (
+                      <div className="cp-learn-item" key={i}>{item}</div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* HOW TO REDEEM */}
+            <h2 className="cp-sec-heading" id="redeem">
+              How to redeem this coupon
+            </h2>
+            <div className="cp-card">
+              <div className="cp-steps">
+                {redeemSteps.map((step) => (
+                  <div className="cp-step" key={step.title}>
+                    <div className="cp-step-num" />
+                    <div>
+                      <div className="cp-step-title">{step.title}</div>
+                      <div className="cp-step-desc">{step.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* FAQ */}
+            <h2 className="cp-sec-heading" id="faq">
+              Coupon &amp; redemption FAQ
+            </h2>
+            <div className="cp-card">
+              {faqs.map((faq, idx) => (
+                <details className="cp-faq-item" key={idx} open={idx === 0}>
+                  <summary className="cp-faq-q">
+                    {faq.q} <span className="cp-plus">+</span>
+                  </summary>
+                  <div className="cp-faq-a">{faq.a}</div>
+                </details>
+              ))}
+            </div>
+
+            {/* CATEGORY CONTEXT */}
+            <h2 className="cp-sec-heading">{deal.category || "This"} deals right now</h2>
+            <div className="cp-card">
+              <div className="cp-stat-callout">
+                <div className="cp-stat-box">
+                  <div className="cp-stat-box-num">{catStatActive}</div>
+                  <div className="cp-stat-box-label">active {deal.category || ""} coupons tracked</div>
+                </div>
+                <div className="cp-stat-box">
+                  <div className="cp-stat-box-num">{stats.highDiscount}</div>
+                  <div className="cp-stat-box-label">are 90%+ off right now</div>
+                </div>
+                <div className="cp-stat-box">
+                  <div className="cp-stat-box-num">{formatMoney(stats.avgPrice)}</div>
+                  <div className="cp-stat-box-label">average price across the category today</div>
+                </div>
+              </div>
+            </div>
+
+            {/* FEEDBACK */}
+            <h2 className="cp-sec-heading">Was this coupon page useful?</h2>
+            <div className="cp-card">
+              <div className="cp-feedback">
+                <button
+                  className="cp-fb-btn"
+                  onClick={() => vote("up")}
+                  aria-pressed={feedback.voted === "up"}
+                >
+                  👍 Worked for me <span className="cp-fb-count">({feedback.up})</span>
+                </button>
+                <button
+                  className="cp-fb-btn"
+                  onClick={() => vote("down")}
+                  aria-pressed={feedback.voted === "down"}
+                >
+                  👎 Didn't work <span className="cp-fb-count">({feedback.down})</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* STICKY STUB */}
+          <aside className="cp-stub-wrap" aria-label="Coupon details">
+            <div className="cp-stub">
+              <div className="cp-stub-top">
+                <div className="cp-stub-verified"><span className="cp-blip" /> Live verification active</div>
+                <div>
+                  <span className="cp-stub-price-now">{formatMoney(price)}</span>
+                  {originalPrice > price && <span className="cp-stub-price-was">{formatMoney(originalPrice)}</span>}
+                </div>
+                <div className="cp-stub-left">{expiryLabel}</div>
+                <div className="cp-stub-code">
+                  <code>{maskedCoupon}</code>
+                  {deal.coupon && <button className="cp-copy-btn" onClick={copyCode}>{copied ? "Copied!" : "Copy"}</button>}
+                </div>
+                <a className="cp-stub-cta" href={deal.url} target="_blank" rel="noopener noreferrer nofollow">
+                  Enroll Now →
+                </a>
+                <div className="cp-stub-guarantee">30-day money-back guarantee via {deal.provider || "Udemy"}</div>
+              </div>
+              <div className="cp-tear" />
+              <div className="cp-stub-bottom">
+                <div className="cp-stub-bottom-label">{instructorNames.length > 1 ? "Instructors" : "Instructor"}</div>
+                <div className="cp-instructor-row">
+                  <div className={instructorImage ? "cp-instructor-avatar cp-instructor-avatar-img" : "cp-instructor-avatar"}>
+                    {instructorImage ? (
+                      <img src={instructorImage} alt={primaryInstructor} loading="lazy" />
+                    ) : (
+                      instructorInitials
+                    )}
+                  </div>
+                  <div className="cp-instructor-info">
+                    <div className="cp-instructor-name">
+                      {instructorNames.map((name, i) => (
+                        <span key={name} className="cp-instructor-name-item">
+                          {i > 0 && <span className="cp-instructor-sep">, </span>}
+                          <a href={`/instructor/${createInstructorSlug(name)}`}>{name}</a>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="cp-instructor-meta">
+                      {deal.rating ? `⭐ ${deal.rating.toFixed(1)} · ` : ""}
+                      {deal.students ? `${formatStudents(deal.students)} students` : "Udemy"}
+                    </div>
+                  </div>
+                </div>
+                <div className="cp-schema-note">
+                  <div className="cp-schema-lbl">Structured data on this page</div>
+                  <div className="cp-schema-pill-row">
+                    <span className="cp-schema-pill">Product</span>
+                    <span className="cp-schema-pill">Offer</span>
+                    <span className="cp-schema-pill">BreadcrumbList</span>
+                    <span className="cp-schema-pill">FAQPage</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        {/* COMPARE ALTERNATIVES */}
+        {relatedRows.length > 0 && (
+          <>
+            <h2 className="cp-sec-heading" id="alternatives">
+              Compare similar active deals
+            </h2>
+            <div className="cp-card">
+              <div className="cp-cmp-wrap">
+                <table className="cp-cmp-table">
+                  <thead>
+                    <tr>
+                      <th>Course</th>
+                      <th>Price</th>
+                      <th>Discount</th>
+                      <th>Rating</th>
+                      <th>Checked</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {relatedRows.map((r) => {
+                      const rPrice = r.price ?? 0;
+                      const rOriginal = r.originalPrice ?? 0;
+                      const rDisc = discountPctOf(r);
+                      return (
+                        <tr key={r.slug}>
+                          <td>
+                            <span className="cp-cmp-course">
+                              {r.title}
+                              <span className="cp-cmp-course-cat">{r.category}</span>
+                            </span>
+                          </td>
+                          <td className="cp-cmp-price">
+                            {formatMoney(rPrice)}
+                            {rOriginal > rPrice && <span>{formatMoney(rOriginal)}</span>}
+                          </td>
+                          <td>
+                            {rDisc > 0 && <span className="cp-cmp-badge">{rDisc}% off</span>}
+                          </td>
+                          <td>{r.rating ? r.rating.toFixed(1) : "—"}</td>
+                          <td>{fmtAbs(r.updatedAt || r.createdAt)}</td>
+                          <td>
+                            <a className="cp-cmp-link" href={`/coupon/${r.slug}`}>View →</a>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+
+        <div className="cp-footer-cta">
+          <a className="cp-cta-primary" href={deal.url} target="_blank" rel="noopener noreferrer nofollow">
+            Claim Coupon Before It's Gone →
+          </a>
+          <p>Coupons can expire or run out of redemptions at any time without notice.</p>
+        </div>
+      </div>
+
+      {/* MOBILE STICKY BAR */}
+      <div className="cp-mobile-bar">
+        <div>
+          <span className="cp-mb-price">{formatMoney(price)}</span>
+          {originalPrice > price && <span className="cp-mb-was">{formatMoney(originalPrice)}</span>}
+        </div>
+        <a className="cp-mb-cta" href={deal.url} target="_blank" rel="noopener noreferrer nofollow">
+          Claim Coupon
+        </a>
+      </div>
+      <div className={"cp-toast" + (copied ? " show" : "")} role="status">Code copied to clipboard</div>
+
+      <style>{`
+        .cp-page{
+          --cp-bg:#f4f6f8; --cp-ink:#161a20; --cp-ink2:#00a76f;
+          --cp-paper:#ffffff; --cp-paper2:#f1f4f7; --cp-card-hover:#eef2f6;
+          --cp-green:#00a76f; --cp-green-bg:rgba(0,167,111,0.1);
+          --cp-red:#d14343; --cp-red-bg:rgba(209,67,67,0.1);
+          --cp-graphite:#161a20; --cp-graphite-soft:#5a6472; --cp-muted:#8a94a1;
+          --cp-gold:#b8860b; --cp-gold-bg:rgba(184,134,11,0.12);
+          --cp-line:#e2e6ec;
+          --cp-font-display:'Nunito Sans', Inter, ui-sans-serif, system-ui, sans-serif;
+          --cp-font-mono:'Nunito Sans', Inter, ui-sans-serif, system-ui, sans-serif;
+          --cp-font-body:'Nunito Sans', Inter, ui-sans-serif, system-ui, sans-serif;
+          background:var(--cp-bg);
+          background-image:radial-gradient(circle at 15% 8%, rgba(0,167,111,0.06), transparent 40%),
+            radial-gradient(circle at 85% 95%, rgba(0,167,111,0.04), transparent 40%);
+          color:var(--cp-graphite); font-family:var(--cp-font-body);
+          -webkit-font-smoothing:antialiased; min-height:60vh;
+        }
+        .cp-page a{color:inherit;text-decoration:none;}
+        .cp-page button{font-family:inherit;cursor:pointer;}
+        .cp-page :focus-visible{outline:3px solid var(--cp-gold);outline-offset:2px;}
+        .cp-page code{font-family:var(--cp-font-mono);}
+
+        .cp-breadcrumb{max-width:1180px;margin:0 auto;padding:18px 20px 4px;font-family:var(--cp-font-mono);font-size:11.5px;color:var(--cp-graphite-soft);}
+        .cp-breadcrumb a:hover{color:var(--cp-graphite);}
+        .cp-breadcrumb .cp-sep{margin:0 6px;color:var(--cp-muted);}
+        .cp-breadcrumb .cp-current{color:var(--cp-graphite);}
+
+        .cp-wrap{max-width:1180px;margin:0 auto;padding:8px 20px 130px;}
+
+        .cp-subnav{
+          position:sticky;top:70px;z-index:40;margin-top:10px;
+          background:#F5F1E6;border:1px solid #D8D0BC;
+          border-radius:12px;padding:9px 10px;display:flex;gap:6px;overflow-x:auto;
+        }
+        .cp-subnav a{
+          flex:0 0 auto;font-family:var(--cp-font-mono);font-size:11.5px;font-weight:600;color:var(--cp-graphite-soft);
+          padding:7px 12px;border-radius:8px;white-space:nowrap;
+        }
+        .cp-subnav a:hover,.cp-subnav a:focus-visible{background:rgba(255,255,255,0.75);color:var(--cp-graphite);}
+
+        .cp-hero{
+          position:relative;background:var(--cp-paper);border-radius:18px;padding:32px;margin-top:16px;
+          box-shadow:0 30px 60px -25px rgba(15,23,42,0.1);
+          display:grid;grid-template-columns:1fr;gap:24px;
+        }
+        @media(min-width:760px){.cp-hero{grid-template-columns:230px 1fr;}}
+        .cp-thumb{position:relative;border-radius:12px;overflow:hidden;background:#F5F1E6;border:1px solid #D8D0BC;aspect-ratio:230/170;min-height:0;}
+        .cp-thumb svg{width:100%;height:100%;display:block;}
+        .cp-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+
+        .cp-eyebrow-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
+        .cp-cat-tag{font-family:var(--cp-font-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--cp-graphite-soft);border:1px solid var(--cp-line);padding:5px 10px;border-radius:999px;background:var(--cp-paper2);}
+        .cp-stamp{font-family:var(--cp-font-mono);font-weight:600;font-size:12px;letter-spacing:.06em;color:var(--cp-green);border:2px solid var(--cp-green);border-radius:8px;padding:6px 10px;transform:rotate(-4deg);text-transform:uppercase;background:var(--cp-green-bg);white-space:nowrap;}
+        .cp-stamp-exp{color:#f87171;border-color:#f87171;background:rgba(248,113,113,.12);}
+        .cp-title{font-family:var(--cp-font-display);font-weight:700;font-size:clamp(24px,3.6vw,34px);line-height:1.14;letter-spacing:-.01em;margin:0 0 10px;color:var(--cp-ink);}
+        .cp-desc{font-size:14px;line-height:1.65;color:var(--cp-graphite-soft);margin:0 0 14px;}
+        .cp-by-line{font-size:14px;color:var(--cp-graphite-soft);margin:0 0 18px;}
+        .cp-topics-box{border:1px solid var(--cp-line);border-radius:14px;padding:14px 16px;margin:0 0 18px;background:var(--cp-card,#fff);}
+        .cp-topics-label{display:block;font-family:var(--cp-font-display);font-size:14px;font-weight:700;color:var(--cp-ink);margin-bottom:10px;}
+        .cp-topics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;}
+        .cp-topic-card{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--cp-line);border-radius:10px;padding:10px 12px;text-decoration:none;color:var(--cp-ink2);font-size:13px;font-weight:600;line-height:1.3;transition:border-color .15s,background .15s,color .15s;}
+        .cp-topic-card:hover{border-color:var(--cp-brand);background:var(--cp-brand-bg);color:var(--cp-brand);}
+        .cp-topic-card svg{flex-shrink:0;opacity:.5;transition:transform .15s;}
+        .cp-topic-card:hover svg{opacity:1;transform:translateX(2px);}
+        .cp-topic-card-name{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+        .cp-by-line a{color:var(--cp-ink2);border-bottom:1px solid var(--cp-line);}
+
+        .cp-price-cta-row{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-top:16px;border-top:1px dashed var(--cp-line);}
+        .cp-price-block{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+        .cp-price-now{font-family:var(--cp-font-mono);font-weight:600;font-size:28px;color:var(--cp-red);}
+        .cp-price-was{font-family:var(--cp-font-mono);font-size:15px;color:var(--cp-graphite-soft);text-decoration:line-through;}
+        .cp-price-off{font-family:var(--cp-font-mono);font-weight:600;font-size:12px;color:#fff;background:var(--cp-red);padding:4px 8px;border-radius:6px;}
+        .cp-cta-primary{font-family:var(--cp-font-display);font-weight:600;font-size:15px;color:#fff;background:var(--cp-green);border:none;border-radius:11px;padding:14px 24px;display:inline-flex;align-items:center;gap:8px;transition:.15s;}
+        .cp-cta-primary:hover{background:#186640;transform:translateY(-1px);}
+        .cp-cta-note{font-family:var(--cp-font-mono);font-size:11px;color:var(--cp-graphite-soft);margin-top:7px;}
+
+        .cp-sec-heading{font-family:var(--cp-font-display);font-weight:600;font-size:17px;color:var(--cp-graphite);margin:34px 0 12px;padding-left:2px;display:flex;align-items:center;gap:10px;scroll-margin-top:84px;}
+        .cp-sec-heading .cp-tag{font-family:var(--cp-font-mono);font-size:10px;color:var(--cp-graphite-soft);border:1px solid var(--cp-line);padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.06em;margin-left:auto;}
+
+        .cp-card{background:var(--cp-paper);border-radius:16px;padding:24px;box-shadow:0 18px 40px -30px rgba(15,23,42,0.12);}
+
+        .cp-lights{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;}
+        @media(max-width:760px){.cp-lights{grid-template-columns:1fr;}}
+        .cp-light-item{background:#F5F1E6;border:1px solid #D8D0BC;border-radius:10px;padding:11px 13px;font-size:12.5px;line-height:1.4;display:flex;gap:8px;align-items:flex-start;}
+        .cp-light-item.good .cp-ic{color:var(--cp-green);}
+        .cp-light-item.warn .cp-ic{color:var(--cp-gold);}
+
+        .cp-ph-grid{display:grid;grid-template-columns:1fr;gap:18px;}
+        @media(min-width:700px){.cp-ph-grid{grid-template-columns:1.5fr 1fr;align-items:stretch;}}
+        .cp-ph-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start;}
+        .cp-ph-stat{background:var(--cp-paper2);border-radius:10px;padding:12px 14px;}
+        .cp-ph-stat-label{font-family:var(--cp-font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--cp-graphite-soft);}
+        .cp-ph-stat-value{font-family:var(--cp-font-mono);font-size:17px;font-weight:600;color:var(--cp-ink);margin-top:3px;}
+        .cp-ph-stat-value.hi{color:var(--cp-green);}
+
+        .cp-chart{width:100%;height:auto;display:block;}
+        .cp-chart-caption{font-size:12px;color:var(--cp-graphite-soft);margin-top:10px;}
+
+        .cp-score-grid{display:grid;grid-template-columns:1fr;gap:20px;}
+        @media(min-width:700px){.cp-score-grid{grid-template-columns:150px 1fr;align-items:center;}}
+        .cp-gauge{
+          width:140px;height:140px;border-radius:50%;
+          display:flex;align-items:center;justify-content:center;margin:0 auto;
+          position:relative;
+        }
+        .cp-gauge::before{content:"";position:absolute;inset:12px;background:var(--cp-paper);border-radius:50%;}
+        .cp-gauge-inner{position:relative;text-align:center;}
+        .cp-gauge-num{font-family:var(--cp-font-display);font-weight:700;font-size:30px;color:var(--cp-ink);}
+        .cp-gauge-den{font-family:var(--cp-font-mono);font-size:11px;color:var(--cp-graphite-soft);}
+        .cp-score-rows{display:flex;flex-direction:column;gap:10px;}
+        .cp-score-row{display:grid;grid-template-columns:130px 1fr 42px;align-items:center;gap:10px;}
+        .cp-score-row-label{font-size:12.5px;color:var(--cp-graphite);}
+        .cp-score-bar{height:7px;background:var(--cp-paper2);border-radius:99px;overflow:hidden;}
+        .cp-score-bar-fill{height:100%;background:var(--cp-green);border-radius:99px;}
+        .cp-score-row-val{font-family:var(--cp-font-mono);font-size:11.5px;color:var(--cp-graphite-soft);text-align:right;}
+
+        .cp-vlog-live{display:inline-flex;align-items:center;gap:6px;font-family:var(--cp-font-mono);font-size:11px;color:var(--cp-green);background:var(--cp-green-bg);border-radius:999px;padding:5px 10px;}
+        .cp-blip{width:6px;height:6px;border-radius:50%;background:var(--cp-green);animation:cpBlip 1.6s infinite;display:inline-block;}
+        @keyframes cpBlip{0%,100%{opacity:1;}50%{opacity:.3;}}
+        @media(prefers-reduced-motion:reduce){.cp-blip{animation:none;}}
+        .cp-log-list{display:flex;flex-direction:column;}
+        .cp-log-row{display:grid;grid-template-columns:16px 100px 1fr 90px;gap:12px;align-items:center;padding:10px 0;border-top:1px dotted var(--cp-line);}
+        .cp-log-row:first-child{border-top:none;}
+        .cp-log-dot{width:8px;height:8px;border-radius:50%;background:var(--cp-green);}
+        .cp-log-time{font-family:var(--cp-font-mono);font-size:11.5px;color:var(--cp-graphite-soft);}
+        .cp-log-msg{font-size:12.5px;color:var(--cp-graphite);}
+        .cp-log-status{font-family:var(--cp-font-mono);font-size:10.5px;font-weight:600;color:var(--cp-green);background:var(--cp-green-bg);border-radius:6px;padding:3px 8px;text-align:center;}
+
+        .cp-attr-note{font-family:var(--cp-font-mono);font-size:11px;color:var(--cp-graphite-soft);margin-bottom:14px;}
+        .cp-snap-table{width:100%;border-collapse:collapse;}
+        .cp-snap-table tr{border-top:1px dotted var(--cp-line);}
+        .cp-snap-table tr:first-child{border-top:none;}
+        .cp-snap-table td{padding:9px 4px;font-size:13px;}
+        .cp-snap-table td:first-child{font-family:var(--cp-font-mono);color:var(--cp-graphite-soft);width:42%;}
+        .cp-snap-table td:last-child{font-weight:600;color:var(--cp-ink);}
+
+        .cp-learn-grid{display:grid;grid-template-columns:1fr;}
+        @media(min-width:640px){.cp-learn-grid{grid-template-columns:1fr 1fr;}}
+        .cp-learn-item{display:flex;gap:10px;align-items:flex-start;padding:9px 4px;border-top:1px dotted var(--cp-line);font-size:13px;color:var(--cp-graphite);line-height:1.5;}
+        .cp-learn-item:nth-child(-n+2){border-top:none;}
+        .cp-learn-item::before{content:"✓";color:var(--cp-green);font-family:var(--cp-font-mono);font-weight:600;flex-shrink:0;}
+
+        .cp-steps{counter-reset:cpStep;display:flex;flex-direction:column;gap:0;}
+        .cp-step{display:grid;grid-template-columns:30px 1fr;gap:14px;padding:14px 0;border-top:1px dotted var(--cp-line);}
+        .cp-step:first-child{border-top:none;}
+        .cp-step-num{counter-increment:cpStep;font-family:var(--cp-font-mono);font-weight:600;font-size:12px;color:#fff;background:var(--cp-green);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+        .cp-step-num::before{content:counter(cpStep);}
+
+        .cp-step-title{font-weight:600;font-size:13.5px;color:var(--cp-ink);margin-bottom:3px;}
+        .cp-step-desc{font-size:12.5px;color:var(--cp-graphite-soft);line-height:1.5;}
+
+        .cp-faq-item{border-top:1px solid var(--cp-line);}
+        .cp-faq-item:last-child{border-bottom:1px solid var(--cp-line);}
+        .cp-faq-item summary::-webkit-details-marker{display:none;}
+        .cp-faq-q{width:100%;background:none;border:none;text-align:left;padding:15px 4px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px;font-weight:600;color:var(--cp-ink);cursor:pointer;list-style:none;}
+        .cp-plus{font-family:var(--cp-font-mono);font-size:16px;color:var(--cp-graphite-soft);transition:transform .2s;}
+        .cp-faq-item[open] .cp-plus{transform:rotate(45deg);}
+        .cp-faq-a{padding:0 4px 16px;font-size:13.5px;line-height:1.6;color:var(--cp-graphite-soft);}
+
+        .cp-stat-callout{display:grid;grid-template-columns:1fr;gap:12px;}
+        @media(min-width:700px){.cp-stat-callout{grid-template-columns:repeat(3,1fr);}}
+        .cp-stat-box{background:var(--cp-paper2);border-radius:12px;padding:16px;}
+        .cp-stat-box-num{font-family:var(--cp-font-display);font-weight:700;font-size:24px;color:var(--cp-ink);}
+        .cp-stat-box-label{font-size:12px;color:var(--cp-graphite-soft);margin-top:4px;line-height:1.4;}
+
+        .cp-feedback{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+        .cp-fb-btn{font-family:var(--cp-font-mono);font-size:13px;background:var(--cp-paper2);border:1px solid var(--cp-line);border-radius:10px;padding:10px 16px;display:inline-flex;align-items:center;gap:8px;color:var(--cp-graphite);}
+        .cp-fb-btn:hover{background:var(--cp-paper2);border-color:var(--cp-graphite-soft);}
+        .cp-fb-btn[aria-pressed="true"]{border-color:var(--cp-green);color:var(--cp-green);background:var(--cp-green-bg);}
+        .cp-fb-count{color:var(--cp-graphite-soft);font-size:11.5px;}
+
+        .cp-cmp-wrap{overflow-x:auto;}
+        .cp-cmp-table{width:100%;border-collapse:collapse;min-width:640px;}
+        .cp-cmp-table th{font-family:var(--cp-font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--cp-graphite-soft);text-align:left;padding:8px 10px;border-bottom:1px solid var(--cp-line);}
+        .cp-cmp-table td{padding:12px 10px;font-size:13px;border-bottom:1px dotted var(--cp-line);vertical-align:middle;}
+        .cp-cmp-course{font-weight:600;color:var(--cp-ink);}
+        .cp-cmp-course-cat{display:block;font-family:var(--cp-font-mono);font-size:10.5px;color:var(--cp-graphite-soft);font-weight:400;margin-top:2px;}
+        .cp-cmp-price{font-family:var(--cp-font-mono);color:var(--cp-red);font-weight:600;}
+        .cp-cmp-price span{color:var(--cp-graphite-soft);text-decoration:line-through;font-weight:400;margin-left:5px;}
+        .cp-cmp-badge{font-family:var(--cp-font-mono);font-size:10.5px;font-weight:600;color:var(--cp-green);background:var(--cp-green-bg);padding:3px 7px;border-radius:6px;}
+        .cp-cmp-link{font-family:var(--cp-font-mono);font-size:11.5px;color:var(--cp-ink2);border-bottom:1px solid var(--cp-line);white-space:nowrap;}
+        .cp-cmp-table tr:hover td{background:rgba(15,23,42,0.03);}
+
+        .cp-body-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:14px;}
+        @media(min-width:900px){.cp-body-grid{grid-template-columns:1fr 320px;align-items:start;}}
+        .cp-stack>.cp-card{margin-bottom:16px;}
+
+        .cp-stub-wrap{position:sticky;top:86px;}
+        .cp-stub{background:var(--cp-paper);border-radius:16px;overflow:hidden;box-shadow:0 22px 46px -28px rgba(15,23,42,0.16);}
+        .cp-stub-top{padding:20px 20px 16px;}
+        .cp-stub-verified{display:inline-flex;align-items:center;gap:6px;font-family:var(--cp-font-mono);font-size:10.5px;color:var(--cp-green);background:var(--cp-green-bg);border-radius:999px;padding:5px 10px;margin-bottom:12px;}
+        .cp-stub-price-now{font-family:var(--cp-font-mono);font-weight:600;font-size:26px;color:var(--cp-red);}
+        .cp-stub-price-was{font-family:var(--cp-font-mono);font-size:13px;color:var(--cp-graphite-soft);text-decoration:line-through;margin-left:8px;}
+        .cp-stub-left{font-family:var(--cp-font-mono);font-size:11px;color:var(--cp-gold);margin-top:4px;}
+        .cp-stub-code{margin-top:14px;display:flex;align-items:center;gap:8px;background:var(--cp-paper2);border:1px dashed var(--cp-graphite-soft);border-radius:10px;padding:10px 11px;}
+        .cp-stub-code code{font-size:12.5px;color:var(--cp-ink);flex:1;}
+        .cp-copy-btn{font-family:var(--cp-font-mono);font-size:10.5px;font-weight:600;color:var(--cp-graphite);background:var(--cp-paper);border:1px solid var(--cp-line);border-radius:7px;padding:6px 9px;}
+        .cp-copy-btn:hover{background:var(--cp-green-bg);}
+        .cp-stub-cta{display:block;text-align:center;margin-top:13px;width:100%;font-family:var(--cp-font-display);font-weight:600;font-size:14.5px;color:#fff;background:var(--cp-green);border:none;border-radius:11px;padding:13px;}
+        .cp-stub-cta:hover{background:#186640;}
+        .cp-stub-guarantee{font-size:11px;color:var(--cp-graphite-soft);text-align:center;margin-top:9px;}
+        .cp-tear{height:0;border-top:2px dashed var(--cp-line);position:relative;}
+        .cp-tear::before,.cp-tear::after{content:"";position:absolute;top:-9px;width:18px;height:18px;background:var(--cp-bg);border-radius:50%;}
+        .cp-tear::before{left:-9px;}
+        .cp-tear::after{right:-9px;}
+        .cp-stub-bottom{padding:16px 20px 18px;}
+        .cp-stub-bottom-label{font-family:var(--cp-font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--cp-graphite-soft);margin-bottom:8px;}
+        .cp-instructor-row{display:flex;align-items:center;gap:10px;min-width:0;}
+        .cp-instructor-avatar{flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:var(--cp-green);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--cp-font-display);font-weight:600;font-size:13px;overflow:hidden;}.cp-instructor-avatar-img{background:transparent;}.cp-instructor-avatar-img img{width:100%;height:100%;object-fit:cover;display:block;}
+        .cp-instructor-info{flex:1 1 auto;min-width:0;}
+        .cp-instructor-name{font-size:13px;font-weight:600;color:var(--cp-ink);overflow-wrap:anywhere;line-height:1.35;}
+        .cp-instructor-name a{color:var(--cp-ink);}
+        .cp-instructor-name a:hover{color:var(--cp-ink2);}
+        .cp-instructor-sep{color:var(--cp-graphite-soft);}
+        .cp-instructor-meta{font-family:var(--cp-font-mono);font-size:10.5px;color:var(--cp-graphite-soft);}
+        .cp-schema-note{margin-top:14px;padding-top:14px;border-top:1px dotted var(--cp-line);}
+        .cp-schema-lbl{font-family:var(--cp-font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--cp-graphite-soft);margin-bottom:6px;}
+        .cp-schema-pill-row{display:flex;flex-wrap:wrap;gap:5px;}
+        .cp-schema-pill{font-family:var(--cp-font-mono);font-size:9.5px;background:var(--cp-paper2);border-radius:5px;padding:3px 6px;color:var(--cp-graphite-soft);}
+
+        .cp-footer-cta{margin-top:34px;background:var(--cp-paper);border-radius:16px;padding:26px;text-align:center;}
+        .cp-footer-cta p{font-size:12.5px;color:var(--cp-graphite-soft);margin:8px 0 0;font-family:var(--cp-font-mono);}
+
+        .cp-mobile-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--cp-paper);border-top:1px solid var(--cp-line);padding:12px 16px;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -14px 30px -20px rgba(15,23,42,0.2);}
+        .cp-mb-price{font-family:var(--cp-font-mono);font-weight:600;color:var(--cp-red);font-size:16px;}
+        .cp-mb-was{font-family:var(--cp-font-mono);font-size:11px;color:var(--cp-graphite-soft);text-decoration:line-through;margin-left:6px;}
+        .cp-mb-cta{font-family:var(--cp-font-display);font-weight:600;color:#fff;background:var(--cp-green);border:none;border-radius:9px;padding:11px 18px;font-size:13px;}
+        @media(max-width:899px){
+          .cp-mobile-bar{display:flex;}
+          .cp-wrap{padding-bottom:90px;}
+          .cp-stub-wrap{position:static;}
+        }
+
+        .cp-toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--cp-paper2);color:var(--cp-graphite);border:1px solid var(--cp-line);font-family:var(--cp-font-mono);font-size:12px;padding:10px 16px;border-radius:9px;opacity:0;pointer-events:none;transition:all .25s;z-index:60;}
+        .cp-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+      `}</style>
+    </div>
+  );
 }

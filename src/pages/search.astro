@@ -96,7 +96,7 @@ import Layout from "../layouts/Layout.astro";
 <script>
   interface Deal {
     id: string; slug?: string; title: string; description?: string;
-    category?: string; subcategory?: string; instructor?: string;
+    category?: string; subcategory?: string; instructor?: string; language?: string;
     price?: number; originalPrice?: number; rating?: number;
     students?: number; image?: string; updatedAt?: string;
   }
@@ -110,7 +110,7 @@ import Layout from "../layouts/Layout.astro";
       const deals = await fetch("/api/deals").then(r => r.json());
       const seen = new Set<string>();
       allDeals = deals.filter((d: Deal) => {
-        const key = d.id || d.slug || "";
+        const key = d.slug || d.title || "";
         if (seen.has(key)) return false;
         seen.add(key);
         return d.title;
@@ -152,7 +152,7 @@ import Layout from "../layouts/Layout.astro";
     const isFree = price === 0;
     const hasDiscount = op && op > price;
     const discountPct = hasDiscount ? Math.round(100 - (price / op) * 100) : (isFree ? 100 : null);
-    const slug = esc(deal.slug || deal.id);
+    const slug = esc(deal.slug);
     const title = esc(deal.title);
     const image = esc(deal.image || '/assets/images/og-default.svg');
     const instructor = deal.instructor ? esc(deal.instructor.split(',')[0].trim()) : '';

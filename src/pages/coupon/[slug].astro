@@ -1,7 +1,10 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { getDealById, readDeals } from "../../lib/store";
+import { readDeals } from "../../lib/store";
 import { slugifyCategory } from "../../lib/utils";
+import { categoryStats, couponFAQs } from "../../lib/dealStats";
+import { parseInstructors, createInstructorSlug } from "../../lib/instructors";
+import { getInstructorImage } from "../../lib/instructorProfiles";
 import DealPage from "../../components/DealPage";
 import type { Deal } from "../../types/deal.d.ts";
 
@@ -11,7 +14,7 @@ export async function getStaticPaths() {
   const generated = new Set();
 
   for (const deal of allDeals) {
-    const s = deal.slug || deal.id;
+    const s = deal.slug;
     if (!s.endsWith('.amp') && !generated.has(s)) {
       generated.add(s);
       paths.push({
@@ -41,7 +44,7 @@ if (import.meta.env.PROD) {
 } else {
   const { slug } = Astro.params;
   allDeals = await readDeals();
-  const foundDeal = allDeals.find((d) => d.id === slug || d.slug === slug);
+  const foundDeal = allDeals.find((d) => d.slug === slug);
 
   if (!foundDeal) {
     return new Response(null, {
@@ -55,7 +58,7 @@ if (import.meta.env.PROD) {
 
 const relatedDeals = allDeals
   .filter((d) => {
-    if (d.id === deal.id) return false;
+    if (d.slug === deal.slug) return false;
     if (deal.subcategory && d.subcategory) {
       return d.subcategory === deal.subcategory;
     }
@@ -67,13 +70,33 @@ const discountPercentage = deal.originalPrice && deal.price && deal.originalPric
   ? Math.round(((deal.originalPrice - deal.price) / deal.originalPrice) * 100)
   : 0;
 
+const couponFaqList = couponFAQs(deal);
+const dealFaqList = deal.faqs || [];
+const faqPageEntities = [...couponFaqList, ...dealFaqList]
+  .slice(0, 10)
+  .map((faq) => ({
+    "@type": "Question",
+    "name": faq.q,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": faq.a.replace(/<[^>]*>/g, '').trim()
+    }
+  }));
+
+const catStats = categoryStats(deal, allDeals);
+
+const primaryInstructorName = parseInstructors(deal.instructor)[0];
+const instructorImage = primaryInstructorName
+  ? await getInstructorImage(createInstructorSlug(primaryInstructorName))
+  : undefined;
+
 const normalizedTitle = deal.title?.trim() || "Premium Course";
 const discountLabel = discountPercentage > 0 ? `${discountPercentage}% OFF` : "Discount";
-const seoTitle = `${normalizedTitle} - ${discountLabel} Udemy Coupon`;
-const seoDescription = (deal.seoDescription || `${normalizedTitle} is available with a verified coupon and ${discountPercentage > 0 ? `up to ${discountPercentage}% off` : "a discount"}. Explore the course overview, learning objectives, and what you can expect to learn before enrolling.`).trim();
+const seoTitle = (deal.seoTitle || `${normalizedTitle} - ${discountLabel} Udemy Coupon`).trim();
+const seoDescription = (deal.seoDescription || `${normalizedTitle} is available with a verified coupon and ${discountPercentage > 0 ? `up to ${discountPercentage}% off` : "a discount"}${deal.students ? `, taken by ${deal.students.toLocaleString("en-US")} students` : ""}${deal.duration ? `, covering about ${deal.duration} of video content` : ""}. ${deal.category ? `This ${deal.category} course walks you through real-world skills` : "Explore the course overview"} and learning objectives before you enroll.`).trim();
 
 const siteUrl = "https://courseswyn.com";
-const dealUrl = `${siteUrl}/coupon/${deal.slug || deal.id}`;
+const dealUrl = `${siteUrl}/coupon/${deal.slug}`;
 const orgName = "CoursesWyn";
 const totalDeals = allDeals.length;
 const avgRating = totalDeals > 0
@@ -86,7 +109,14 @@ const avgRating = totalDeals > 0
     description={seoDescription}
     image={deal.seoOgImage || deal.image}
     canonical={dealUrl}
+    type="product"
 >
+    <Fragment slot="head">
+        <meta property="product:retailer_item_id" content={deal.slug} />
+        <meta property="product:price:amount" content={String(deal.price ?? 0)} />
+        <meta property="product:price:currency" content="USD" />
+        <meta name="keywords" content={`${deal.title}, ${deal.category || "Udemy"} coupon, Udemy coupon code, Udemy discount, ${deal.provider || "Udemy"} coupon, ${normalizedTitle} coupon`} />
+    </Fragment>
     <script type="application/ld+json" set:html={
         JSON.stringify({
             "@context": "https://schema.org",
@@ -141,15 +171,15 @@ const avgRating = totalDeals > 0
                         "name": deal.provider || "Udemy",
                         "url": deal.provider === "Udemy" ? "https://www.udemy.com" : siteUrl
                     },
-                    "instructor": deal.instructor ? {
+                    "instructor": deal.instructor ? parseInstructors(deal.instructor).map((name) => ({
                         "@type": "Person",
-                        "name": deal.instructor,
+                        "name": name,
                         "jobTitle": "Course Instructor",
                         "affiliation": {
                             "@type": "Organization",
                             "name": deal.provider || "Udemy"
                         }
-                    } : undefined,
+                    })) : undefined,
                     "offers": {
                         "@type": "Offer",
                         "price": deal.price || 0,
@@ -181,10 +211,10 @@ const avgRating = totalDeals > 0
                     "hasCourseInstance": {
                         "@type": "CourseInstance",
                         "courseMode": "online",
-                        "instructor": deal.instructor ? {
+                        "instructor": deal.instructor ? parseInstructors(deal.instructor).map((name) => ({
                             "@type": "Person",
-                            "name": deal.instructor
-                        } : undefined,
+                            "name": name
+                        })) : undefined,
                         "location": { "@type": "Place", "name": "Online" }
                     }
                 },
@@ -231,17 +261,10 @@ const avgRating = totalDeals > 0
                         { "@type": "ListItem", "position": deal.category ? 4 : 3, "name": deal.title, "item": dealUrl }
                     ]
                 },
-                ...(deal.faqs?.length ? [{
+                ...(faqPageEntities.length ? [{
                     "@type": "FAQPage",
                     "@id": `${dealUrl}#faq`,
-                    "mainEntity": deal.faqs.slice(0, 5).map((faq) => ({
-                        "@type": "Question",
-                        "name": faq.q,
-                        "acceptedAnswer": {
-                            "@type": "Answer",
-                            "text": faq.a.replace(/<[^>]*>/g, '').trim()
-                        }
-                    }))
+                    "mainEntity": faqPageEntities
                 }] : []),
                 {
                     "@type": "WebPage",
@@ -276,7 +299,7 @@ const avgRating = totalDeals > 0
                     },
                     "publisher": { "@id": `${siteUrl}/#organization` },
                     "datePublished": deal.updatedAt ? new Date(deal.updatedAt).toISOString() : new Date().toISOString(),
-                    "reviewBody": `${deal.title} has a rating of ${deal.rating} out of 5 based on ${(deal.students || 0).toLocaleString()} student reviews.${deal.instructor ? ` Taught by ${deal.instructor}.` : ''}`
+                    "reviewBody": `${deal.title} has a rating of ${deal.rating} out of 5 based on ${(deal.students || 0).toLocaleString()} student reviews.${deal.instructor ? ` Taught by ${parseInstructors(deal.instructor).join(', ')}.` : ''}`
                 }] : []),
                 {
                     "@type": "HowTo",
@@ -324,6 +347,6 @@ const avgRating = totalDeals > 0
         })
     } />
 
-    <DealPage client:load deal={deal} relatedDeals={relatedDeals} />
+    <DealPage client:load deal={deal} relatedDeals={relatedDeals} catStats={catStats} instructorImage={instructorImage} />
 
 </Layout>

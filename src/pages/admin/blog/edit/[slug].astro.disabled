@@ -1,0 +1,21 @@
+---
+import AdminShell from "../../../../components/admin/AdminShell.astro";
+import BlogForm from "../../../../components/admin/BlogForm.astro";
+import { readBlogPost } from "../../../../lib/blog";
+
+const slug = Astro.params.slug ?? "";
+const post = await readBlogPost(slug);
+---
+
+{post ? (
+  <AdminShell title="Edit Post" badge={post.slug} parent="Blog" parentHref="/admin/blog">
+    <BlogForm post={post} />
+  </AdminShell>
+) : (
+  <AdminShell title="Post Not Found" badge="404" parent="Blog" parentHref="/admin/blog">
+    <div class="adm-card adm-empty">
+      <p style="font-size:1.05rem;color:#161a20;margin-bottom:.4rem;">No post found for <strong style="color:#00a76f;">"{slug}"</strong>.</p>
+      <a class="adm-btn adm-btn-primary" href="/admin/blog">Back to Blog</a>
+    </div>
+  </AdminShell>
+)}

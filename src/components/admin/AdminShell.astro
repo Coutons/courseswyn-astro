@@ -1,0 +1,240 @@
+---
+import AdminProtection from "./AdminProtection.astro";
+import AdminAuthGate from "./AdminAuthGate";
+
+interface Props {
+  title: string;
+  badge?: string;
+  desc?: string;
+  parent?: string;
+  parentHref?: string;
+}
+const { title, badge, desc, parent, parentHref = "/admin" } = Astro.props;
+
+const path = Astro.url.pathname;
+const isCoupons = path === "/admin" || path.startsWith("/admin/coupons");
+const isBlog = path.startsWith("/admin/blog");
+const isInstructors = path.startsWith("/admin/instructors");
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} — CourseWyn Admin</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <style is:global>
+      .adm{min-height:100vh;background:#f4f6f8;color:#161a20;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;display:flex;}
+      .adm *{box-sizing:border-box;}
+      .adm a{text-decoration:none;}
+
+      /* ================= Sidebar ================= */
+      .adm-sidebar{width:258px;flex-shrink:0;background:#ffffff;border-right:1px solid #e2e6ec;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;z-index:60;transition:width .22s ease;}
+      .adm-sidebar.collapsed{width:74px;}
+      .adm-sidebar.collapsed .adm-brand{padding-left:.5rem;padding-right:.5rem;justify-content:center;}
+      .adm-sidebar.collapsed .adm-brand-text,
+      .adm-sidebar.collapsed .adm-nav-section,
+      .adm-sidebar.collapsed .adm-nav-label{display:none;}
+      .adm-sidebar.collapsed .adm-nav{padding-left:.55rem;padding-right:.55rem;}
+      .adm-sidebar.collapsed .adm-nav-item{justify-content:center;padding:.65rem;}
+      .adm-sidebar.collapsed .adm-sidebar-foot .adm-nav-item{justify-content:center;}
+      .adm-sidebar.collapsed .adm-collapse{width:38px;margin-left:auto;margin-right:auto;}
+      .adm-sidebar.collapsed .adm-collapse svg{transform:rotate(180deg);}
+      .adm-collapse{display:flex;align-items:center;justify-content:center;width:100%;margin-top:.6rem;padding:.55rem;background:transparent;border:1px solid #e2e6ec;border-radius:.6rem;color:#5a6472;cursor:pointer;font-family:inherit;transition:color .15s,border-color .15s;}
+      .adm-collapse:hover{color:#00a76f;border-color:rgba(0,167,111,.4);}
+      .adm-collapse svg{width:18px;height:18px;transition:transform .2s ease;}
+      .adm-brand{display:flex;align-items:center;gap:.8rem;padding:1.25rem 1.25rem 1rem;}
+      .adm-brand-logo{width:40px;height:40px;border-radius:.7rem;background:linear-gradient(135deg,#00a76f,#00c487);color:#fff;font-weight:800;font-size:1.15rem;display:grid;place-items:center;box-shadow:0 6px 16px rgba(0,167,111,.35);}
+      .adm-brand-name{font-weight:800;font-size:1rem;color:#161a20;line-height:1.1;}
+      .adm-brand-sub{font-size:.72rem;color:#8a94a3;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+      .adm-nav{flex:1;overflow-y:auto;padding:.5rem .9rem 1rem;}
+      .adm-nav-section{font-size:.7rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#9aa3ad;padding:.9rem .75rem .45rem;}
+      .adm-nav-item{display:flex;align-items:center;gap:.7rem;padding:.62rem .8rem;border-radius:.6rem;color:#5a6472;font-weight:600;font-size:.9rem;margin-bottom:2px;transition:background .15s,color .15s;position:relative;}
+      .adm-nav-item:hover{background:#f2f6f4;color:#161a20;}
+      .adm-nav-item.active{background:rgba(0,167,111,.1);color:#00a76f;font-weight:700;}
+      .adm-nav-item.active::before{content:"";position:absolute;left:-9px;top:50%;transform:translateY(-50%);width:3px;height:20px;border-radius:2px;background:#00a76f;}
+      .adm-nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.85;}
+      .adm-sidebar-foot{padding:.9rem;border-top:1px solid #eef1f4;}
+
+      /* ================= Topbar ================= */
+      .adm-main-col{flex:1;min-width:0;display:flex;flex-direction:column;}
+      .adm-topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:1rem;padding:.95rem 1.5rem;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);border-bottom:1px solid #e2e6ec;}
+      .adm-burger{display:none;width:38px;height:38px;border:1px solid #e2e6ec;border-radius:.6rem;background:#fff;color:#5a6472;font-size:1.1rem;cursor:pointer;place-items:center;flex-shrink:0;font-family:inherit;}
+      .adm-topbar-left{display:flex;align-items:center;gap:.75rem;min-width:0;flex-wrap:wrap;}
+      .adm-crumb{display:inline-flex;align-items:center;gap:.35rem;color:#6e7686;font-weight:600;font-size:.82rem;padding:.35rem .75rem;border-radius:.5rem;background:#f1f4f7;border:1px solid #e2e6ec;white-space:nowrap;}
+      .adm-crumb:hover{color:#00a76f;border-color:rgba(0,167,111,.4);}
+      .adm-title{margin:0;font-size:1.4rem;font-weight:800;color:#161a20;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .adm-desc{width:100%;color:#6e7686;font-size:.85rem;margin:0;padding-left:.1rem;}
+      .adm-badge{font-size:.78rem;color:#5a6472;background:#eceff3;border:1px solid #e2e6ec;padding:.25rem .7rem;border-radius:999px;white-space:nowrap;}
+      .adm-topbar-right{display:flex;align-items:center;gap:.6rem;flex-shrink:0;margin-left:auto;flex-wrap:wrap;}
+      .adm-overlay{display:none;}
+
+      /* ================= Content ================= */
+      .adm-content{width:100%;max-width:1340px;margin:0 auto;padding:1.75rem 1.5rem 4rem;}
+
+      /* ================= Cards & forms ================= */
+      .adm-card{background:#ffffff;border:1px solid #e2e6ec;border-radius:1rem;box-shadow:0 10px 30px rgba(15,23,42,0.06);padding:1.5rem;margin-bottom:1.5rem;}
+      .adm-grid{display:grid;gap:1.25rem;}
+      .adm-grid-2{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
+      .adm-label{display:block;color:#161a20;font-weight:700;font-size:.9rem;margin-bottom:.45rem;}
+      .adm-hint{display:block;color:#6e7686;font-size:.78rem;margin-top:.3rem;line-height:1.4;}
+      .adm-input,.adm-select,.adm-textarea{width:100%;padding:.75rem .9rem;background:#ffffff;border:1px solid #e2e6ec;border-radius:.65rem;color:#161a20;font-size:.95rem;outline:none;box-shadow:0 1px 2px rgba(0,0,0,0.03);transition:border-color .15s,box-shadow .15s;font-family:inherit;}
+      .adm-input:focus,.adm-select:focus,.adm-textarea:focus{border-color:#00a76f;box-shadow:0 0 0 3px rgba(0,167,111,0.12);}
+      .adm-input[readonly],.adm-input:disabled{background:#f1f4f7;color:#6e7686;cursor:not-allowed;}
+      .adm-textarea{resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85rem;line-height:1.5;}
+      .adm-input.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+      .adm-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.65rem 1.25rem;border-radius:.6rem;font-weight:700;font-size:.88rem;cursor:pointer;border:1px solid transparent;color:inherit;transition:background .15s,color .15s,border-color .15s;font-family:inherit;line-height:1;}
+      .adm-btn-primary{background:#00a76f;color:#fff;}
+      .adm-btn-primary:hover{background:#00975f;}
+      .adm-btn-outline{background:transparent;color:#5a6472;border-color:#c9d0d9;}
+      .adm-btn-outline:hover{color:#161a20;border-color:#161a20;}
+      .adm-btn-ghost{background:transparent;color:#00a76f;border-color:rgba(0,167,111,0.4);}
+      .adm-btn-ghost:hover{background:rgba(0,167,111,0.1);}
+      .adm-btn-danger{background:transparent;color:#c53030;border-color:#f0a8a8;}
+      .adm-btn-danger:hover{background:rgba(197,48,48,0.08);}
+      .adm-btn-sm{padding:.4rem .75rem;font-size:.8rem;border-radius:.45rem;}
+      .adm-tabs{display:flex;gap:.35rem;flex-wrap:wrap;border-bottom:1px solid #e2e6ec;padding-bottom:1rem;margin-bottom:1.5rem;}
+      .adm-tab{display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1.15rem;background:transparent;color:#5a6472;border:1px solid transparent;border-radius:.65rem;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+      .adm-tab:hover{color:#161a20;background:#f4f7f6;}
+      .adm-tab.active{background:rgba(0,167,111,0.08);color:#00a76f;border-color:rgba(0,167,111,0.3);box-shadow:0 2px 8px rgba(0,167,111,0.12);}
+      .adm-tab-panel{display:none;}
+      .adm-tab-panel.active{display:block;}
+
+      /* ================= Stats ================= */
+      .adm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:1rem;margin-bottom:1.5rem;}
+      .adm-stat{display:flex;align-items:center;gap:1rem;background:#fff;border:1px solid #e2e6ec;border-radius:1rem;padding:1.15rem 1.25rem;box-shadow:0 8px 24px rgba(15,23,42,.05);}
+      .adm-stat-ic{width:46px;height:46px;border-radius:.85rem;display:grid;place-items:center;flex-shrink:0;}
+      .adm-stat-ic svg{width:22px;height:22px;}
+      .adm-stat-body{min-width:0;}
+      .adm-stat-num{font-size:1.55rem;font-weight:800;color:#161a20;line-height:1.05;}
+      .adm-stat-lbl{font-size:.78rem;color:#6e7686;font-weight:600;margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .ic-green{background:rgba(0,167,111,.12);color:#00a76f;}
+      .ic-blue{background:rgba(59,130,246,.12);color:#3b82f6;}
+      .ic-red{background:rgba(239,68,68,.12);color:#ef4444;}
+      .ic-amber{background:rgba(245,158,11,.15);color:#d97706;}
+      .ic-purple{background:rgba(139,92,246,.12);color:#8b5cf6;}
+
+      /* ================= Table ================= */
+      .adm-table{width:100%;border-collapse:collapse;}
+      .adm-table th{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:#7d8794;text-align:left;padding:.75rem 1rem;border-bottom:1px solid #e2e6ec;white-space:nowrap;font-weight:800;}
+      .adm-table td{padding:.8rem 1rem;font-size:.9rem;border-bottom:1px solid #eef1f4;vertical-align:middle;}
+      .adm-table tbody tr{transition:background .12s;}
+      .adm-table tbody tr:hover{background:#f6f9f7;}
+      .adm-table-wrap{overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;border:1px solid #e2e6ec;border-radius:.9rem;}
+      .adm-table th:last-child,.adm-table td:last-child{position:sticky;right:0;background:#ffffff;z-index:2;border-left:1px solid #eef1f4;}
+      .adm-table tbody tr:hover td:last-child{background:#f6f9f7;}
+      .adm-chip{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem;background:#f1f4f7;border:1px solid #e2e6ec;color:#5a6472;padding:.2rem .5rem;border-radius:.35rem;display:inline-block;}
+      .adm-price{color:#c53030;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700;white-space:nowrap;}
+      .adm-price s{color:#9aa3ad;font-weight:400;margin-left:.4rem;}
+      .adm-actions{display:flex;gap:.45rem;flex-wrap:wrap;}
+      .adm-ok{background:#e7f7f0;color:#0f7a52;border:1px solid rgba(0,167,111,0.4);}
+      .adm-warn{background:#fff4e0;color:#9a6b0f;border:1px solid rgba(245,158,11,0.4);}
+      .adm-err{background:#fdeaea;color:#c53030;border:1px solid rgba(248,113,113,0.4);}
+      .adm-note{font-size:.82rem;color:#5a6472;background:#f8fafc;border:1px solid #e2e6ec;border-radius:.7rem;padding:.8rem 1rem;line-height:1.5;}
+      .adm-subhead{font-size:1.05rem;font-weight:800;color:#161a20;margin:0 0 .4rem;display:flex;align-items:center;gap:.6rem;}
+      .adm-subhead .bar{width:4px;height:17px;border-radius:2px;background:#00a76f;display:inline-block;}
+      .adm-empty{color:#6e7686;text-align:center;padding:3rem 1rem;}
+      .adm-thumb{width:52px;height:36px;border-radius:.4rem;object-fit:cover;border:1px solid #e2e6ec;background:#f1f4f7;flex-shrink:0;}
+      .adm-course{display:flex;align-items:center;gap:.8rem;min-width:0;}
+
+      @media (max-width:920px){
+        .adm-sidebar{position:fixed;left:0;top:0;height:100%;transform:translateX(-105%);transition:transform .22s ease;box-shadow:0 20px 60px rgba(15,23,42,.25);}
+        .adm-nav-open .adm-sidebar{transform:translateX(0);}
+        .adm-overlay{display:block;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:55;opacity:0;pointer-events:none;transition:opacity .2s;}
+        .adm-nav-open .adm-overlay{opacity:1;pointer-events:auto;}
+        .adm-burger{display:grid;}
+        .adm-topbar{flex-wrap:wrap;}
+      }
+      @media (max-width:640px){
+        .adm-content{padding:1.25rem 1rem 3rem;}
+        .adm-title{font-size:1.2rem;}
+        .adm-crumb{padding:.3rem .6rem;}
+      }
+    </style>
+  </head>
+  <body>
+    <AdminProtection>
+      <AdminAuthGate>
+        <div class="adm">
+          <aside class="adm-sidebar" id="admSidebar">
+            <div class="adm-brand">
+              <div class="adm-brand-logo">W</div>
+              <div class="adm-brand-text">
+                <div class="adm-brand-name">CourseWyn</div>
+                <div class="adm-brand-sub">Admin Panel</div>
+              </div>
+            </div>
+            <nav class="adm-nav">
+              <div class="adm-nav-section">Manage</div>
+              <a class="adm-nav-item" class:list={[{ active: isCoupons }]} href="/admin">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                <span class="adm-nav-label">Coupons</span>
+              </a>
+              <a class="adm-nav-item" class:list={[{ active: isBlog }]} href="/admin/blog">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span class="adm-nav-label">Blog</span>
+              </a>
+              <a class="adm-nav-item" class:list={[{ active: isInstructors }]} href="/admin/instructors">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span class="adm-nav-label">Instructors</span>
+              </a>
+            </nav>
+            <div class="adm-sidebar-foot">
+              <a class="adm-nav-item" href="/" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <span class="adm-nav-label">View Site</span>
+              </a>
+              <button class="adm-collapse" id="admCollapse" type="button" aria-label="Collapse sidebar" title="Collapse sidebar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+              </button>
+            </div>
+          </aside>
+
+          <div class="adm-main-col">
+            <div class="adm-overlay" id="admOverlay"></div>
+            <header class="adm-topbar">
+              <button class="adm-burger" id="admBurger" type="button" aria-label="Toggle navigation">☰</button>
+              <div class="adm-topbar-left">
+                {parent && <a class="adm-crumb" href={parentHref}>← {parent}</a>}
+                <h1 class="adm-title">{title}</h1>
+                {badge && <span class="adm-badge">{badge}</span>}
+                {desc && <p class="adm-desc">{desc}</p>}
+              </div>
+              <div class="adm-topbar-right">
+                <slot name="actions" />
+              </div>
+            </header>
+            <main class="adm-content">
+              <slot />
+            </main>
+          </div>
+        </div>
+      </AdminAuthGate>
+    </AdminProtection>
+  </body>
+</html>
+
+<script>
+  const burger = document.getElementById("admBurger");
+  const overlay = document.getElementById("admOverlay");
+  function setNav(open: boolean) {
+    document.body.classList.toggle("adm-nav-open", open);
+  }
+  burger?.addEventListener("click", () => setNav(!document.body.classList.contains("adm-nav-open")));
+  overlay?.addEventListener("click", () => setNav(false));
+  document.querySelectorAll<HTMLAnchorElement>(".adm-nav-item").forEach((a) =>
+    a.addEventListener("click", () => setNav(false))
+  );
+
+  const sidebar = document.getElementById("admSidebar");
+  const collapseBtn = document.getElementById("admCollapse");
+  function setCollapsed(collapsed: boolean) {
+    sidebar?.classList.toggle("collapsed", collapsed);
+    try { localStorage.setItem("adm.sidebar.collapsed", collapsed ? "1" : "0"); } catch {}
+  }
+  try {
+    if (localStorage.getItem("adm.sidebar.collapsed") === "1") sidebar?.classList.add("collapsed");
+  } catch {}
+  collapseBtn?.addEventListener("click", () => setCollapsed(!sidebar?.classList.contains("collapsed")));
+</script>

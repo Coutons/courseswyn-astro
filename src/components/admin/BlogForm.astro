@@ -1,0 +1,177 @@
+---
+import type { BlogPost } from "@/lib/blog";
+
+interface Props {
+  post?: BlogPost;
+}
+
+const { post } = Astro.props;
+const isEdit = !!post;
+
+const pad = (n: number) => String(n).padStart(2, "0");
+function toLocalInput(iso?: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+const fmtDT = (iso?: string) => {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+};
+
+const submitLabel = isEdit ? "Save Changes" : "Publish Post";
+---
+
+<form id="blogForm" class="adm-form" data-is-edit={String(isEdit)} data-post-slug={post?.slug ?? ""}>
+  <div class="adm-card">
+    <h3 class="adm-subhead"><span class="bar"></span>Article</h3>
+    <div class="adm-grid">
+      <div>
+        <label class="adm-label" for="title">Title *</label>
+        <input class="adm-input" id="title" name="title" type="text" required placeholder="10 Best Java Spring Courses on Udemy (2026)" value={post?.title ?? ""} data-slug-source />
+      </div>
+      <div class="adm-grid adm-grid-2">
+        <div>
+          <label class="adm-label" for="slug">Slug (URL)</label>
+          <input class="adm-input code" id="slug" name="slug" type="text" placeholder="auto-generated from title" value={post?.slug ?? ""} data-slug-target />
+          <span class="adm-hint">Leave blank to auto-generate. {isEdit ? "Renaming it moves /blog/{slug}/." : ""}</span>
+        </div>
+        <div>
+          <label class="adm-label" for="pubDate">Published (local time) *</label>
+          <input class="adm-input" id="pubDate" name="pubDate" type="datetime-local" value={toLocalInput(post?.pubDate)} />
+        </div>
+      </div>
+      <div>
+        <label class="adm-label" for="description">Description *</label>
+        <textarea class="adm-textarea" id="description" name="description" rows="3" required placeholder="Short summary shown on /blog listing and search engines.">{post?.description ?? ""}</textarea>
+      </div>
+      <div class="adm-grid adm-grid-2">
+        <div>
+          <label class="adm-label" for="author">Author</label>
+          <input class="adm-input" id="author" name="author" type="text" placeholder="Andrew Derek" value={post?.author ?? ""} />
+        </div>
+        <div>
+          <label class="adm-label" for="image">Image URL (or relative path)</label>
+          <input class="adm-input code" id="image" name="image" type="text" placeholder="../../../assets/images/spring-boot-udemy-courses.jpg" value={post?.image ?? ""} />
+        </div>
+        <div>
+          <label class="adm-label" for="tags">Tags (comma separated)</label>
+          <input class="adm-input" id="tags" name="tags" type="text" placeholder="java, spring boot, backend" value={post?.tags?.join(", ") ?? ""} />
+        </div>
+        <div style="display:flex;align-items:center;gap:.6rem;padding-top:1.9rem;">
+          <input type="checkbox" id="draft" name="draft" checked={!!post?.draft} />
+          <label class="adm-label" for="draft" style="margin:0;">Save as draft (hidden from site)</label>
+        </div>
+      </div>
+      {isEdit && (
+        <div class="adm-grid adm-grid-2">
+          <div>
+            <label class="adm-label" for="updatedAt">Last Updated (local time)</label>
+            <input class="adm-input" id="updatedAt" name="updatedAt" type="datetime-local" value={toLocalInput(post?.updatedAt)} />
+          </div>
+          <div>
+            <label class="adm-label">Stored dates</label>
+            <div class="adm-note" style="margin:0;">pubDate: <b>{fmtDT(post?.pubDate)}</b><br />updatedAt: <b>{fmtDT(post?.updatedAt)}</b></div>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+
+  <div class="adm-card">
+    <h3 class="adm-subhead"><span class="bar"></span>Content (Markdown)</h3>
+    <textarea class="adm-textarea" id="body" name="body" rows="22" placeholder="# Heading&#10;&#10;Write your article in Markdown. HTML is supported too.">{post?.body ?? ""}</textarea>
+    <p class="adm-note" style="margin:1rem 0 0;">Markdown &amp; HTML supported. Set the first <code># Heading</code> to match the title for best SEO.</p>
+  </div>
+
+  <div style="display:flex;gap:1rem;justify-content:flex-end;align-items:center;padding-top:1rem;border-top:1px solid #e2e6ec;">
+    <span id="formStatus" style="color:#6e7686;font-size:.85rem;"></span>
+    {isEdit && <a class="adm-btn adm-btn-outline" href={`/blog/${post?.slug}`} target="_blank">View Post</a>}
+    <a class="adm-btn adm-btn-outline" href="/admin/blog">Cancel</a>
+    <button class="adm-btn adm-btn-primary" type="submit">{submitLabel}</button>
+  </div>
+</form>
+
+<script>
+  const form = document.getElementById("blogForm") as HTMLFormElement;
+  const isEdit = form.dataset.isEdit === "true";
+  const postSlug = form.dataset.postSlug || null;
+  const statusEl = document.getElementById("formStatus");
+
+  function setStatus(text: string, kind = "") {
+    if (statusEl) {
+      statusEl.textContent = text;
+      statusEl.className = kind;
+    }
+  }
+
+  const slugSource = document.querySelector<HTMLInputElement>("[data-slug-source]");
+  const slugTarget = document.querySelector<HTMLInputElement>("[data-slug-target]");
+  if (slugSource && slugTarget) {
+    slugSource.addEventListener("blur", () => {
+      if (!slugTarget.value.trim()) {
+        slugTarget.value = slugify(slugSource.value);
+      }
+    });
+  }
+
+  function slugify(s: string): string {
+    return s.toLowerCase()
+      .replace(/&/g, " and ")
+      .replace(/[^\w\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const title = (document.getElementById("title") as HTMLInputElement).value.trim();
+    const description = (document.getElementById("description") as HTMLTextAreaElement).value.trim();
+    if (!title || !description) {
+      setStatus("Title and Description are required", "adm-err");
+      return;
+    }
+
+    const payload: Record<string, unknown> = {
+      title,
+      description,
+      slug: (slugTarget as HTMLInputElement).value.trim() || undefined,
+      author: (document.getElementById("author") as HTMLInputElement).value.trim(),
+      image: (document.getElementById("image") as HTMLInputElement).value.trim(),
+      tags: (document.getElementById("tags") as HTMLInputElement).value.split(",").map((t) => t.trim()).filter(Boolean),
+      draft: (document.getElementById("draft") as HTMLInputElement).checked,
+      body: (document.getElementById("body") as HTMLTextAreaElement).value,
+    };
+
+    const pubDate = (document.getElementById("pubDate") as HTMLInputElement).value;
+    const updatedAt = (document.getElementById("updatedAt") as HTMLInputElement)?.value || "";
+    if (pubDate) payload.pubDate = new Date(pubDate).toISOString();
+    if (updatedAt) payload.updatedAt = new Date(updatedAt).toISOString();
+
+    setStatus(isEdit ? "Saving…" : "Publishing…", "adm-warn");
+    const submitBtn = form.querySelector<HTMLButtonElement>("button[type='submit']");
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      const url = isEdit ? `/api/blog?slug=${encodeURIComponent(String(postSlug))}` : "/api/blog";
+      const res = await fetch(url, {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Request failed");
+      setStatus("Saved ✓", "adm-ok");
+      setTimeout(() => (window.location.href = "/admin/blog"), 500);
+    } catch (err) {
+      setStatus(`Error: ${(err as Error).message}`, "adm-err");
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+</script>

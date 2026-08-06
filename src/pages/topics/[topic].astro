@@ -1,34 +1,24 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { Image } from 'astro:assets';
 import { readDeals } from '../../lib/store';
-import DealCard from '../../components/DealCard.astro';
+import { dealTopicNames } from '../../lib/dealStats';
+import LedgerRow from '../../components/LedgerRow.astro';
 import { toISODateWIB } from '../../lib/date';
+import { slugifyTopic } from '../../lib/utils';
 
 // Function to decode HTML entities
 const decodeHtml = (str: string) => str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
 
 export async function getStaticPaths() {
-  // Function to decode HTML entities
-  const decodeHtml = (str: string) => str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
-
   const allDeals = await readDeals();
-
-  // Decode subcategories
-  allDeals.forEach(deal => {
-    if (deal.subcategory) {
-      deal.subcategory = decodeHtml(deal.subcategory);
-    }
-  });
 
   const topicMap = new Map();
   for (const deal of allDeals) {
-    const subcategory = deal.subcategory;
-    if (!subcategory || typeof subcategory !== 'string') continue;
-
-    const slug = subcategory.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
-    if (!topicMap.has(slug)) {
-      topicMap.set(slug, subcategory);
+    for (const name of dealTopicNames(deal)) {
+      const slug = slugifyTopic(name);
+      if (!topicMap.has(slug)) {
+        topicMap.set(slug, name);
+      }
     }
   }
 
@@ -56,17 +46,15 @@ allDeals.forEach(deal => {
 // Use originalTopic for exact matching, with fallback for dev mode
 let topic = originalTopic;
 if (!topic) {
-  // Fallback for dev mode or missing props
-  const allSubcategories = [...new Set(allDeals.map(deal => deal.subcategory).filter(sub => sub != null && typeof sub === 'string'))];
-  const matching = allSubcategories.find(sub => sub.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-') === topicSlug);
+  const allNames = [...new Set(allDeals.flatMap(dealTopicNames))];
+  const matching = allNames.find(name => slugifyTopic(name) === topicSlug);
   topic = matching || 'Unknown Topic';
 }
 
-// Filter deals for this topic (subcategory) - exact match
+// Filter deals for this topic (real Udemy tags, fallback subcategory) - exact match
 const topicDeals = allDeals.filter(deal => {
   try {
-    if (!deal.subcategory || typeof deal.subcategory !== 'string') return false;
-    return deal.subcategory === topic;
+    return dealTopicNames(deal).includes(topic);
   } catch (e) {
     return false;
   }
@@ -129,11 +117,7 @@ const freeCourses = topicDeals.filter(deal => deal.price === 0 || deal.price ===
 const topicDescription = `Looking for the best ${topicName} courses on Udemy? We ranked ${topicDeals.length}+ verified ${topicName} courses by student rating and coupon availability — save up to ${avgDiscount}% with working codes updated daily. Updated ${currentDate}.`;
 
 // Get all topics for sidebar
-const topics = [...new Set(allDeals.map(deal => deal.subcategory).filter(sub => sub != null))];
-
-// Featured image: top-rated course in this topic (like real.discount's per-topic featured image)
-const featuredDeal = [...topicDeals].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))[0];
-const featuredImage = featuredDeal?.image ?? null;
+const topics = [...new Set(allDeals.flatMap(dealTopicNames).filter(Boolean))];
 
 // Other topics for "Discover More"
 const GRADIENT_COLORS = [
@@ -154,201 +138,217 @@ const rotateOffset = hashFor(topicSlug);
 const otherTopics = topics
   .filter(sub => sub != null && typeof sub === 'string')
   .map((sub) => {
-    const subDeals = allDeals.filter(deal => deal.subcategory === sub);
-    const hashRaw = [...sub].reduce((h, ch) => h * 31 + ch.charCodeAt(0), 7);
-    const hash = ((hashRaw % 100000) + 100000) % 100000;
+    const subDeals = allDeals.filter(deal => dealTopicNames(deal).includes(sub));
+    const hash = hashFor(sub);
     const grad = GRADIENT_COLORS[hash % GRADIENT_COLORS.length];
     return {
       name: sub.replace(/\b\w/g, (l: string) => l.toUpperCase()),
       slug: sub.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
       count: subDeals.length,
       c1: grad.c1,
-      c2: grad.c2,
-      s1x: 24 + (hash % 56),
-      s1y: 16 + (hash >> 3) % 34,
-      s1r: 26 + (hash >> 4) % 26,
-      s2x: 200 + (hash >> 2) % 96,
-      s2y: 10 + (hash >> 6) % 30,
-      s2r: 22 + (hash >> 5) % 22,
-      s3x: 280 - (hash >> 7) % 60,
-      s3y: 130 + (hash >> 8) % 40,
-      s3r: 12 + (hash >> 9) % 14
+      c2: grad.c2
     };
   })
   .filter(t => t.slug !== topicSlug)
   .sort((a, b) => a.name.localeCompare(b.name))
   .sort((a, b) => ((hashFor(a.slug) - rotateOffset + 100000) % 100000) - ((hashFor(b.slug) - rotateOffset + 100000) % 100000))
-  .slice(0, 8)
-  .map(t => ({ name: t.name, slug: t.slug, count: t.count, c1: t.c1, c2: t.c2, s1x: t.s1x, s1y: t.s1y, s1r: t.s1r, s2x: t.s2x, s2y: t.s2y, s2r: t.s2r, s3x: t.s3x, s3y: t.s3y, s3r: t.s3r }));
+  .slice(0, 8);
 
+const siteUrl = "https://courseswyn.com";
+const topicBaseUrl = `${siteUrl}/topics/${topicSlug}`;
+const currentUrl = currentPage === 1 ? topicBaseUrl : `${topicBaseUrl}?page=${currentPage}`;
+
+const pageKeywords = [
+  `${topicName.toLowerCase()} courses`,
+  `best ${topicName.toLowerCase()} courses on udemy`,
+  `${topicName.toLowerCase()} udemy coupon`,
+  `${topicName.toLowerCase()} course free`,
+  `${topicName.toLowerCase()} certification`,
+  `learn ${topicName.toLowerCase()}`,
+  `free ${topicName.toLowerCase()} course with certificate`,
+  "udemy coupon code"
+].join(", ");
+
+const faqs = [
+  { q: `What are the best ${topicName} courses on Udemy right now?`, a: `We rank the top ${topicName} courses by student rating and review count, keeping only those with a working verified coupon code. The current ranking above is updated daily — every code is checked against Udemy before it stays listed.` },
+  { q: `How do I use a ${topicName} coupon code?`, a: `Simply browse the ranked courses above and click any deal. You'll be redirected to Udemy with the discount pre-applied. Complete enrollment to get lifetime access.` },
+  { q: `Do discounted ${topicName} courses include certificates?`, a: `Yes! All Udemy courses accessed through our coupons include a certificate of completion — identical to paid enrollments.` },
+  { q: `How often are new ${topicName} courses added?`, a: `New ${topicName} courses and deals are added daily. We recommend bookmarking this page and checking back regularly.` },
+  { q: `Are these ${topicName} coupon codes legitimate?`, a: `Absolutely! All coupons are verified and sourced directly from Udemy or authorized instructors. We test every coupon before listing — these are official promotional codes, not hacks or exploits.` },
+  { q: `What skill level are these ${topicName} courses for?`, a: `We curate ${topicName} courses for all levels — complete beginners, intermediate learners, and advanced professionals. Each course listing shows the skill level so you can find the perfect match.` }
+];
 ---
 
-<Layout title={`Best ${topicName} Courses on Udemy for ${currentYear} — Ranked & Verified | CoursesWyn`} description={topicDescription} hideBreadcrumbs={true}>
+<Layout
+  title={`Best ${topicName} Courses on Udemy for ${currentYear} — Ranked & Verified | CoursesWyn`}
+  description={topicDescription}
+  canonical={topicBaseUrl}
+  hideBreadcrumbs={true}
+>
+  <Fragment slot="head">
+    {currentPage > 1 && <>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="googlebot" content="noindex, follow" />
+      <meta name="bingbot" content="noindex, follow" />
+    </>}
+    <meta name="keywords" content={pageKeywords} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  </Fragment>
+
   <!-- Structured Data -->
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "CollectionPage",
-        "@id": `https://courseswyn.com/topics/${topicSlug}`,
-        "url": `https://courseswyn.com/topics/${topicSlug}`,
+        "@type": ["WebPage", "CollectionPage"],
+        "@id": topicBaseUrl,
+        "url": topicBaseUrl,
         "name": `Best ${topicName} Courses on Udemy for ${currentYear}`,
         "description": topicDescription,
+        "keywords": pageKeywords,
         "inLanguage": "en-US",
         "dateModified": currentDate,
+        "isPartOf": { "@id": `${siteUrl}#website` },
         "breadcrumb": {
           "@type": "BreadcrumbList",
           "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" },
-            { "@type": "ListItem", "position": 2, "name": "Topics", "item": "https://courseswyn.com/topics" },
-            { "@type": "ListItem", "position": 3, "name": topicName, "item": `https://courseswyn.com/topics/${topicSlug}` }
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
+            { "@type": "ListItem", "position": 2, "name": "Topics", "item": `${siteUrl}/topics` },
+            { "@type": "ListItem", "position": 3, "name": topicName, "item": topicBaseUrl }
           ]
         },
-        "mainEntity": {
-          "@type": "ItemList",
-          "name": `Best ${topicName} Courses`,
-          "numberOfItems": topicDeals.length,
-          "itemListElement": topicDeals.slice(0, 10).map((deal, i) => ({
-            "@type": "ListItem",
-            "position": i + 1,
-            "item": {
-              "@type": "Course",
-              "name": deal.title,
-              "url": `https://courseswyn.com/coupon/${deal.slug}`,
-              "provider": { "@type": "Organization", "name": "Udemy" }
+        "mainEntity": { "@id": `${topicBaseUrl}#itemlist` }
+      },
+      {
+        "@type": "ItemList",
+        "@id": `${topicBaseUrl}#itemlist`,
+        "name": `Best ${topicName} Courses`,
+        "numberOfItems": topicDeals.length,
+        "itemListElement": topicDeals.slice(0, 20).map((deal, i) => ({
+          "@type": "ListItem",
+          "position": i + 1,
+          "url": `${siteUrl}/coupon/${deal.slug}`,
+          "item": {
+            "@type": "Course",
+            "name": deal.title,
+            "url": `${siteUrl}/coupon/${deal.slug}`,
+            "image": deal.image,
+            "provider": { "@type": "Organization", "name": "Udemy" },
+            "offers": {
+              "@type": "Offer",
+              "price": String(deal.price ?? "0"),
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock"
             }
-          }))
-        }
+          }
+        }))
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": faqs.map(f => ({
+          "@type": "Question",
+          "name": f.q,
+          "acceptedAnswer": { "@type": "Answer", "text": f.a }
+        }))
       }
     ]
   })} />
 
-  <div class="tp2-root">
-    <div class="tp2-container">
+  <main class="cc-root">
+    <div class="cc-container">
 
-      <nav aria-label="Breadcrumb" class="tp2-breadcrumb" itemscope itemtype="https://schema.org/BreadcrumbList">
-        <ol itemscope itemtype="https://schema.org/BreadcrumbList">
-          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-            <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
-            <meta itemprop="position" content="1" />
-          </li>
-          <li class="tp2-sep">/</li>
-          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-            <a href="/topics" itemprop="item"><span itemprop="name">Topics</span></a>
-            <meta itemprop="position" content="2" />
-          </li>
-          <li class="tp2-sep">/</li>
-          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" class="tp2-crumb-current">
-            <span itemprop="name">{topicName}</span>
-            <meta itemprop="position" content="3" />
-          </li>
-        </ol>
-      </nav>
-
-      {/* Hero */}
-      <section class="tp2-hero">
-        <div class="tp2-hero-inner">
-          <div class="tp2-hero-left">
-            <p class="tp2-hero-label">Best of {currentYear} &middot; Ranked &amp; Verified</p>
-            <h1>Best <span class="tp2-grad">{topicName}</span> Courses on Udemy for {currentYear}</h1>
-            <p class="tp2-claim">We ranked the top {topicName} courses by student rating and coupon availability — every code tested against Udemy before listing.</p>
-            <div class="tp2-hero-stats">
-              <div class="tp2-stat">
-                <span class="tp2-stat-lbl">Courses</span>
-                <span class="tp2-stat-val">{topicDeals.length}+</span>
-              </div>
-              <div class="tp2-stat">
-                <span class="tp2-stat-lbl">Avg discount</span>
-                <span class="tp2-stat-val">{avgDiscount}%</span>
-              </div>
-              <div class="tp2-stat">
-                <span class="tp2-stat-lbl">Updated</span>
-                <span class="tp2-stat-val">{currentYear}</span>
-              </div>
-            </div>
+      <header class="cc-header">
+        <div class="cc-register">
+          <div class="cc-register-top">
+            <span class="cc-eyebrow"><span class="cc-blip"></span> Best of {currentYear} · Ranked &amp; Verified</span>
+            <span class="cc-folio">Updated {currentDate}</span>
           </div>
-          <div class="tp2-hero-right">
-            {featuredImage && (
-              <div class="tp2-featured">
-                <Image
-                  src={featuredImage}
-                  alt={`Best ${topicName} courses on Udemy`}
-                  width={750}
-                  height={422}
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  inferSize={false}
-                  loading="eager"
-                />
-                <span class="tp2-featured-badge">Top rated</span>
-              </div>
-            )}
-            <p>Ranked by real student ratings and review counts from Udemy, filtered to only courses with <strong class="tp2-em">working verified coupon codes</strong>. New {topicName.toLowerCase()} deals are added every day and checked in near real time — expired coupons disappear automatically.</p>
-            <a href="/udemy-coupons-today" class="tp2-hero-link">See today's newest deals &#8594;</a>
+          <h1 class="cc-title">Best <span class="cc-accent">{topicName}</span> Courses on Udemy for {currentYear}</h1>
+          <p class="cc-subtitle">Ranked by student rating and coupon availability — every code tested against Udemy before listing. New {topicName.toLowerCase()} deals are added daily and checked in near real time.</p>
+          <div class="cc-toolbar">
+            <a class="cc-hero-btn" href="#deals">View all {topicDeals.length} courses</a>
+            <a class="cc-hero-btn ghost" href="/topics">Browse all topics</a>
+            <a class="cc-hero-btn ghost" href="/udemy-coupons-today">Today's new deals</a>
+          </div>
+          <div class="cc-ledger">
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Courses</div><div class="cc-ledger-value">{topicDeals.length}+</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Avg discount</div><div class="cc-ledger-value">{avgDiscount}%</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Free courses</div><div class="cc-ledger-value">{freeCourses}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Updated</div><div class="cc-ledger-value">{currentYear}</div></div>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* Related searches (plain text, above the cards, like real.discount) */}
-      <section class="tp2-related">
-        <h2>Related Searches</h2>
-        <p class="tp2-related-text">{relatedSearches.join(', ')}</p>
-      </section>
-
-      {/* Deals list */}
-      <section class="tp2-deals" aria-label={`Best ${topicName} courses on Udemy`}>
-        <div class="tp2-deals-head">
-          <h2>Discover {topicName} Courses on Udemy Today</h2>
-          <p>Looking for the best {topicName} courses available today? You've come to the right place. Our curated collection of top {topicName} courses spans multiple languages including English, Arabic, Dutch and more, giving you access to high-quality educational content at unbeatable prices. Whether you're looking to learn {topicName} from scratch, advance your {topicName} skills, or explore new {topicName} techniques, these courses with verified coupon codes provide an excellent starting point.</p>
+      <section class="cc-section cc-chips-section" aria-label="Related searches">
+        <div class="cc-sec-head">
+          <h2 class="cc-sec-title">Related searches <span class="cc-tag">{relatedSearches.length} terms</span></h2>
+          <p class="cc-sec-desc">Popular ways people look for {topicName} training — each link runs a live search.</p>
         </div>
-        <div class="tp2-deals-list">
-          {currentItems.length > 0 ? (
-            currentItems.map((deal) => (
-              <DealCard deal={deal} />
-            ))
-          ) : (
-            <div class="tp2-empty">
-              <h3>No courses found in {topicName}</h3>
-              <p>We couldn't find any courses in this topic right now. Try browsing our other topics or check back later for fresh deals.</p>
-              <a href="/udemy-coupon-code" class="tp2-empty-btn">Browse All Courses</a>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <nav class="tp2-pagination" aria-label="Pagination">
-          <div class="tp2-pg-btns">
-            {currentPage > 1 && (
-              <a href={`/topics/${topicSlug}?page=${currentPage - 1}`} class="tp2-pg-btn">&#8592;</a>
-            )}
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter(pageNum =>
-                pageNum === 1 ||
-                pageNum === totalPages ||
-                (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-              )
-              .map((pageNum) => (
-                <a
-                  href={`/topics/${topicSlug}?page=${pageNum}`}
-                  class:list={["tp2-pg-btn", { "tp2-pg-active": pageNum === currentPage }]}
-                >
-                  {pageNum}
-                </a>
-              ))}
-            {currentPage < totalPages && (
-              <a href={`/topics/${topicSlug}?page=${currentPage + 1}`} class="tp2-pg-btn">&#8594;</a>
-            )}
-          </div>
-          <div class="tp2-pg-info">
-            Showing {startIndex + 1}-{Math.min(endIndex, topicDeals.length)} of {topicDeals.length} courses
-          </div>
+        <nav class="cc-chip-nav" aria-label="Related searches">
+          {relatedSearches.map((s) => (
+            <a href={`/search?q=${encodeURIComponent(s)}`} class="cc-chip">
+              <span class="cc-chip-arrow">→</span>
+              <span class="cc-chip-name">{s}</span>
+            </a>
+          ))}
         </nav>
-      )}
+      </section>
 
-      {/* SEO block */}
-      <section class="tp2-seo">
-        <h2>Why These Are the Best {topicName} Courses on Udemy</h2>
+      <section class="cc-deals-section" id="deals" aria-label={`Best ${topicName} courses on Udemy`}>
+        <div class="cc-sec-head">
+          <h2 class="cc-sec-title">Discover {topicName} Courses on Udemy Today <span class="cc-tag">{topicDeals.length} courses</span></h2>
+          <p class="cc-sec-desc">Looking for the best {topicName} courses available today? You've come to the right place. Our curated collection of top {topicName} courses spans multiple languages including English, Arabic, Dutch and more, giving you access to high-quality educational content at unbeatable prices. Whether you're looking to learn {topicName} from scratch, advance your {topicName} skills, or explore new {topicName} techniques, these courses with verified coupon codes provide an excellent starting point.</p>
+        </div>
+
+        {currentItems.length > 0 ? (
+          <div class="cc-ledger-wrap">
+            <table class="cc-ledger-table">
+              <thead><tr><th>Course</th><th>Price</th><th class="cc-col-hide">Status</th><th>Checked</th></tr></thead>
+              <tbody>
+                {currentItems.map((deal) => <LedgerRow deal={deal} />)}
+              </tbody>
+            </table>
+            <div class="cc-deal-more"><span class="cc-deal-count">Showing {startIndex + 1}-{Math.min(endIndex, topicDeals.length)} of {topicDeals.length} courses</span><a href="/udemy-coupons-today">See today's new coupons →</a></div>
+          </div>
+        ) : (
+          <div class="cc-empty">
+            <h3>No courses found in {topicName}</h3>
+            <p>We couldn't find any courses in this topic right now. Try browsing our other topics or check back later for fresh deals.</p>
+            <a href="/udemy-coupon-code" class="cc-hero-btn">Browse All Courses →</a>
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <nav class="cc-pagination" aria-label="Pagination">
+            {currentPage > 1 ? (
+              <a href={`/topics/${topicSlug}?page=${currentPage - 1}`} class="cc-page-link cc-page-prev">← Prev</a>
+            ) : (
+              <span class="cc-page-link cc-page-disabled">← Prev</span>
+            )}
+            <div class="cc-page-numbers">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(pageNum => pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1))
+                .map((pageNum) => (
+                  pageNum === currentPage ? (
+                    <span class="cc-page-num cc-page-active">{pageNum}</span>
+                  ) : (
+                    <a href={`/topics/${topicSlug}?page=${pageNum}`} class="cc-page-num">{pageNum}</a>
+                  )
+                ))}
+            </div>
+            {currentPage < totalPages ? (
+              <a href={`/topics/${topicSlug}?page=${currentPage + 1}`} class="cc-page-link cc-page-next">Next →</a>
+            ) : (
+              <span class="cc-page-link cc-page-disabled">Next →</span>
+            )}
+          </nav>
+        )}
+      </section>
+
+      <section class="cc-seo-section">
+        <h2 class="cc-section-title">Why These Are the Best {topicName} Courses on Udemy</h2>
         <p>Every {topicName.toLowerCase()} course below is ranked using real student ratings and review volume from Udemy, then filtered to keep only listings where our <strong>verified coupon code is currently working</strong>. We re-check each deal in near real time, so the discount you see is the price you pay.</p>
         <p>Whether you're a complete beginner or an experienced professional, you'll find top-rated {topicName.toLowerCase()} training with hands-on projects, lifetime access, and a certificate of completion included with every enrollment.</p>
 
@@ -370,163 +370,163 @@ const otherTopics = topics
         <p>Ready to start learning? Explore our collection of {topicName.toLowerCase()} courses available today and begin your educational journey. With {topicDeals.length}+ courses to choose from, you're sure to find something that matches your interests and learning goals. Remember, the best part about verified coupon codes is that you can try multiple subjects at huge discounts, allowing you to discover new passions and expand your knowledge base.</p>
       </section>
 
-      {/* Discover More = related topics */}
-      <section class="tp2-related">
-        <h2>Discover More Courses in Related Topics</h2>
-        <div class="tp2-more-grid">
-          {otherTopics.map((t) => (
-            <a href={`/topics/${t.slug}`} class="tp2-more-card">
-              <div class="tp2-more-media">
-                <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" role="img" aria-label={t.name} class="tp2-more-svg">
-                  <defs>
-                    <linearGradient id={`g-${t.slug}`} x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stop-color={t.c1} />
-                      <stop offset="100%" stop-color={t.c2} />
-                    </linearGradient>
-                  </defs>
-                  <rect width="320" height="180" fill={`url(#g-${t.slug})`} />
-                  <circle cx={t.s1x} cy={t.s1y} r={t.s1r} fill="rgba(255,255,255,0.14)" />
-                  <circle cx={t.s2x} cy={t.s2y} r={t.s2r} fill="rgba(255,255,255,0.10)" />
-                  <circle cx={t.s3x} cy={t.s3y} r={t.s3r} fill="rgba(255,255,255,0.18)" />
-                  <text x="16" y="112" fill="rgba(255,255,255,0.95)" font-size="30" font-weight="800" font-family="inherit">{t.name}</text>
-                  <text x="16" y="148" fill="rgba(255,255,255,0.8)" font-size="16" font-weight="600" font-family="inherit">{t.count} courses</text>
-                </svg>
-              </div>
-              <div class="tp2-more-body">
-                <span class="tp2-more-name">Best {t.name} Courses on Udemy for {currentYear}</span>
-                <span class="tp2-more-count">{t.count} courses &#8594;</span>
-              </div>
-            </a>
+      {otherTopics.length > 0 && (
+        <section class="cc-section" aria-labelledby="more-topics-title">
+          <div class="cc-sec-head">
+            <h2 id="more-topics-title" class="cc-sec-title">Discover More Courses in Related Topics <span class="cc-tag">{otherTopics.length} topics</span></h2>
+            <p class="cc-sec-desc">Keep exploring — every topic below is ranked and verified the same way.</p>
+          </div>
+          <nav class="cc-cat-grid" aria-label="Related topics">
+            {otherTopics.map((t) => (
+              <a href={`/topics/${t.slug}`} class="cc-cat" title={`Best ${t.name} Courses on Udemy for ${currentYear}`}>
+                <div class="cc-cat-num">{t.count}</div>
+                <div class="cc-cat-label">Best {t.name} for {currentYear}</div>
+                <div class="cc-cat-count">courses</div>
+              </a>
+            ))}
+          </nav>
+        </section>
+      )}
+
+      <section class="cc-section cc-faq" aria-labelledby="faq-title">
+        <h2 id="faq-title" class="cc-section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Frequently asked questions about Best {topicName} Courses
+          <span class="cc-tag">{faqs.length} questions</span>
+        </h2>
+        <div class="cc-faq-grid">
+          {faqs.map((faq) => (
+            <div class="cc-faq-card">
+              <h6 class="cc-faq-q">{faq.q}</h6>
+              <p class="cc-faq-a">{faq.a}</p>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* FAQ */}
-      <section class="tp2-faq">
-        <h2>Frequently Asked Questions About Best {topicName} Courses</h2>
-        <div class="tp2-faq-list">
-          {[
-            { q: `What are the best ${topicName} courses on Udemy right now?`, a: `We rank the top ${topicName} courses by student rating and review count, keeping only those with a working verified coupon code. The current ranking above is updated daily — every code is checked against Udemy before it stays listed.` },
-            { q: `How do I use a ${topicName} coupon code?`, a: `Simply browse the ranked courses above and click any deal. You'll be redirected to Udemy with the discount pre-applied. Complete enrollment to get lifetime access.` },
-            { q: `Do discounted ${topicName} courses include certificates?`, a: `Yes! All Udemy courses accessed through our coupons include a certificate of completion — identical to paid enrollments.` },
-            { q: `How often are new ${topicName} courses added?`, a: `New ${topicName} courses and deals are added daily. We recommend bookmarking this page and checking back regularly.` },
-            { q: `Are these ${topicName} coupon codes legitimate?`, a: `Absolutely! All coupons are verified and sourced directly from Udemy or authorized instructors. We test every coupon before listing — these are official promotional codes, not hacks or exploits.` },
-            { q: `What skill level are these ${topicName} courses for?`, a: `We curate ${topicName} courses for all levels — complete beginners, intermediate learners, and advanced professionals. Each course listing shows the skill level so you can find the perfect match.` }
-          ].map((faq) => (
-            <details class="tp2-faq-item">
-              <summary>
-                {faq.q}
-                <span class="tp2-faq-plus">+</span>
-              </summary>
-              <div class="tp2-faq-a">{faq.a}</div>
-            </details>
-          ))}
-        </div>
-      </section>
-
-      {/* Back to topics */}
-      <section class="tp2-back">
-        <h3>Explore More Course Topics</h3>
-        <p>Discover courses in other categories — all with verified coupon codes.</p>
-        <a href="/topics" class="tp2-back-btn">Browse All Topics &#8594;</a>
+      <section class="cc-cta">
+        <p class="cc-cta-eyebrow">More topics to explore</p>
+        <p class="cc-cta-text">Discover courses in other categories — all with verified coupon codes.</p>
+        <a class="cc-hero-btn" href="/topics">Browse All Topics →</a>
       </section>
 
     </div>
-  </div>
+  </main>
+</Layout>
 
 <style>
-  .tp2-root { background: var(--bg); padding: 2rem 1rem 4rem; }
-  .tp2-container { max-width: 1200px; margin: 0 auto; }
+  .cc-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+  .cc-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
 
-  .tp2-breadcrumb { margin-bottom: 1.5rem; }
-  .tp2-breadcrumb ol { display: flex; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; gap: 0.5rem; font-size: 0.82rem; font-weight: 600; color: var(--muted); }
-  .tp2-breadcrumb a { color: inherit; text-decoration: none; }
-  .tp2-breadcrumb a:hover { color: var(--brand); }
-  .tp2-sep { color: var(--border); }
-  .tp2-crumb-current { color: var(--text); }
+  /* ===== REGISTER / LEDGER HEADER ===== */
+  .cc-register { position: relative; background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(18, 32, 58, 0.35); }
+  .cc-register-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; font-weight: 600; color: #1F7A4D; background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.25); border-radius: 999px; padding: 6px 13px; }
+  .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #1F7A4D; animation: ccBlip 1.6s infinite; }
+  @keyframes ccBlip { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  .cc-folio { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #5B564C; border: 1px dashed #B9B29B; border-radius: 6px; padding: 5px 10px; letter-spacing: .05em; white-space: nowrap; }
+  .cc-title { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 700; color: #12203A; line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 12px; }
+  .cc-title .cc-accent { color: #C13B2E; }
+  .cc-subtitle { color: #5B564C; font-size: 0.95rem; line-height: 1.7; margin: 0 0 20px; max-width: 640px; }
+  .cc-subtitle strong { color: #12203A; font-weight: 700; }
 
-  .tp2-hero { padding: 2rem 0 3rem; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
-  @media (min-width: 900px) { .tp2-hero-inner { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr); gap: 3rem; align-items: start; } }
-  .tp2-hero-label { display: flex; align-items: center; gap: 0.6rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--brand); margin: 0 0 1rem; }
-  .tp2-hero-label::before { content: ''; width: 2rem; height: 3px; background: var(--brand); flex-shrink: 0; }
-  .tp2-hero h1 { font-size: clamp(2.2rem, 4.5vw, 3.5rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; color: var(--text); margin: 0 0 1.25rem; }
-  .tp2-grad { background: linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-  .tp2-claim { font-size: 1rem; color: var(--muted); line-height: 1.7; margin: 0 0 1.75rem; max-width: 42rem; }
-  .tp2-hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-width: 1px 0; max-width: 26rem; }
-  .tp2-stat { padding: 1rem 1.25rem 1rem 0; }
-  .tp2-stat + .tp2-stat { border-left: 1px solid var(--border); padding-left: 1.25rem; }
-  .tp2-stat-lbl { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 0.25rem; }
-  .tp2-stat-val { font-size: 1.4rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
-  .tp2-hero-right p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin: 0 0 1.25rem; }
-  .tp2-em { color: var(--text); font-weight: 700; }
-  .tp2-hero-link { color: var(--brand); font-weight: 700; text-decoration: none; font-size: 0.88rem; }
-  .tp2-hero-link:hover { text-decoration: underline; }
+  .cc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .cc-hero-btn { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-size: 0.9rem; font-weight: 600; text-decoration: none; padding: 12px 20px; border-radius: 9px; background: #12203A; color: #fff; box-shadow: 0 10px 24px rgba(18, 32, 58, 0.35); transition: background 0.2s, transform 0.2s; white-space: nowrap; }
+  .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
+  .cc-hero-btn.ghost { background: transparent; color: #1B2E52; border: 1px solid #1B2E52; box-shadow: none; }
+  .cc-hero-btn.ghost:hover { background: #1B2E52; color: #fff; }
 
-  .tp2-featured { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 9; margin-bottom: 1.25rem; border: 1px solid var(--border); box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.5); }
-  .tp2-featured img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .tp2-featured-badge { position: absolute; top: 0.75rem; left: 0.75rem; background: rgba(0, 0, 0, 0.7); color: #fff; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; padding: 0.3rem 0.7rem; border-radius: 100px; backdrop-filter: blur(4px); }
+  .cc-ledger { display: flex; margin-top: 24px; border-top: 1px dashed #B9B29B; padding-top: 20px; flex-wrap: wrap; }
+  .cc-ledger-cell { flex: 1 1 150px; padding: 2px 18px; border-left: 1px solid #D8D0BC; }
+  .cc-ledger-cell:first-child { border-left: none; padding-left: 2px; }
+  .cc-ledger-label { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: #5B564C; margin-bottom: 4px; }
+  .cc-ledger-value { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-weight: 700; font-size: 22px; color: #12203A; }
 
-  .tp2-deals { margin-bottom: 2.5rem; }
-  .tp2-deals-head { margin-bottom: 1.5rem; }
-  .tp2-deals-head h2 { font-size: clamp(1.4rem, 2.5vw, 1.75rem); font-weight: 800; color: var(--text); margin: 0 0 0.4rem; }
-  .tp2-deals-head p { font-size: 0.88rem; color: var(--muted); margin: 0; }
-  .tp2-deals-list { display: flex; flex-direction: column; gap: 1rem; }
+  /* ===== SECTION HEADS ===== */
+  .cc-section { margin-top: 3.25rem; }
+  .cc-sec-head { margin-bottom: 0.9rem; }
+  .cc-sec-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; letter-spacing: -0.01em; }
+  .cc-sec-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+  .cc-sec-desc { font-size: 0.85rem; color: #6E6A5E; margin: 0; }
 
-  .tp2-empty { text-align: center; padding: 3rem 2rem; background: var(--card); border: 1px solid var(--border); border-radius: 16px; }
-  .tp2-empty h3 { color: var(--text); margin-bottom: 0.75rem; font-size: 1.4rem; }
-  .tp2-empty p { color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; max-width: 34rem; margin-left: auto; margin-right: auto; }
-  .tp2-empty-btn { display: inline-block; padding: 0.75rem 1.75rem; background: var(--brand); color: #fff; text-decoration: none; border-radius: 10px; font-weight: 700; }
-  .tp2-empty-btn:hover { filter: brightness(1.08); }
+  /* ===== CHIP NAV ===== */
+  .cc-chip-nav { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cc-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: #fff; border: 1px solid #D8D0BC; border-radius: 999px; text-decoration: none; transition: all 0.15s; }
+  .cc-chip:hover { border-color: #1F7A4D; }
+  .cc-chip-name { font-size: 12.5px; font-weight: 600; color: #12203A; }
+  .cc-chip-arrow { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #5B564C; transition: transform 0.15s; }
+  .cc-chip:hover .cc-chip-arrow { color: #1F7A4D; transform: translateX(3px); }
 
-  .tp2-pagination { text-align: center; margin: 2.5rem 0; }
-  .tp2-pg-btns { display: flex; justify-content: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
-  .tp2-pg-btn { min-width: 40px; padding: 0.5rem 0.75rem; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); text-decoration: none; font-size: 0.9rem; font-weight: 700; text-align: center; transition: all 0.15s; }
-  .tp2-pg-btn:hover { border-color: var(--brand); color: var(--brand); }
-  .tp2-pg-active { background: var(--brand); border-color: var(--brand); color: #fff; }
-  .tp2-pg-active:hover { color: #fff; }
-  .tp2-pg-info { color: var(--muted); font-size: 0.85rem; }
+  /* ===== LEDGER TABLE ===== */
+  .cc-deals-section { margin-top: 3.25rem; scroll-margin-top: 1.5rem; }
+  .cc-ledger-wrap { background: #fff; border: 1px solid #D8D0BC; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.16); margin-top: 16px; }
+  table.cc-ledger-table { width: 100%; border-collapse: collapse; }
+  .cc-ledger-table thead th { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #5B564C; text-align: left; padding: 12px 14px; border-bottom: 1px solid #D8D0BC; background: #EDE7D6; white-space: nowrap; }
+  .cc-deal-more { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px; background: #EDE7D6; border-top: 1px solid #D8D0BC; }
+  .cc-deal-more a { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 12.5px; font-weight: 600; color: #1F7A4D; text-decoration: none; }
+  .cc-deal-more a:hover { text-decoration: underline; }
+  .cc-deal-count { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11.5px; color: #5B564C; }
 
-  .tp2-seo { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem 1.5rem; margin-bottom: 2rem; }
-  .tp2-seo h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 0.85rem; }
-  .tp2-seo h3 { font-size: 1.05rem; font-weight: 800; color: var(--text); margin: 1.4rem 0 0.5rem; }
-  .tp2-seo p { font-size: 0.92rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.75rem; }
-  .tp2-seo p:last-child { margin-bottom: 0; }
-  .tp2-seo strong { color: var(--text); font-weight: 700; }
+  .cc-empty { text-align: center; padding: 3rem 2rem; background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 16px; margin-top: 16px; }
+  .cc-empty h3 { color: #12203A; margin-bottom: 0.75rem; font-size: 1.4rem; }
+  .cc-empty p { color: #5B564C; margin-bottom: 1.5rem; line-height: 1.6; max-width: 34rem; margin-left: auto; margin-right: auto; }
 
-  .tp2-related { margin-bottom: 2.5rem; }
-  .tp2-related h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 1rem; }
-  .tp2-related-text { font-size: 0.92rem; color: var(--muted); line-height: 1.9; margin: 0; }
-  .tp2-related-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  .tp2-chip { display: inline-flex; padding: 0.5rem 0.9rem; background: var(--card); border: 1px solid var(--border); border-radius: 100px; font-size: 0.82rem; font-weight: 700; color: var(--text); }
-  .tp2-chip-link { text-decoration: none; transition: all 0.15s; }
-  .tp2-chip-link:hover { border-color: var(--brand); color: var(--brand); }
+  /* ===== FOLIO PAGINATION ===== */
+  .cc-pagination { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 1.1rem 0 0; margin-top: 1rem; border-top: 1px dashed #B9B29B; }
+  .cc-page-link { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.8rem; font-weight: 600; color: #12203A; text-decoration: none; padding: 0.4rem 0.85rem; border: 1px solid #D8D0BC; border-radius: 6px; background: #fff; transition: all 0.2s; white-space: nowrap; }
+  .cc-page-link:hover { border-color: #1F7A4D; color: #1F7A4D; }
+  .cc-page-disabled { color: #B9B29B; opacity: 0.6; pointer-events: none; border-style: dashed; }
+  .cc-page-numbers { display: flex; align-items: center; gap: 4px; }
+  .cc-page-num { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.8rem; font-weight: 600; color: #12203A; text-decoration: none; min-width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #D8D0BC; background: #fff; transition: all 0.2s; }
+  .cc-page-num:hover { border-color: #1F7A4D; color: #1F7A4D; }
+  .cc-page-active { background: #12203A; color: #fff; border-color: #12203A; }
+  .cc-page-active:hover { color: #fff; }
 
-  .tp2-more-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-  @media (max-width: 900px) { .tp2-more-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 520px) { .tp2-more-grid { grid-template-columns: 1fr; } }
-  .tp2-more-card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; text-decoration: none; transition: all 0.2s; }
-  .tp2-more-card:hover { border-color: var(--brand); transform: translateY(-2px); box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.4); }
-  .tp2-more-media { position: relative; aspect-ratio: 16 / 9; overflow: hidden; }
-  .tp2-more-svg { width: 100%; height: 100%; display: block; }
-  .tp2-more-body { display: flex; flex-direction: column; gap: 0.4rem; padding: 1rem 1.1rem 1.15rem; }
-  .tp2-more-name { font-weight: 800; font-size: 0.9rem; color: var(--text); line-height: 1.35; }
-  .tp2-more-count { font-size: 0.78rem; color: var(--brand); font-weight: 700; }
+  /* ===== TOPIC BOXES ===== */
+  .cc-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+  .cc-cat { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 12px; padding: 16px; text-align: left; text-decoration: none; display: block; transition: all 0.2s; }
+  .cc-cat:hover { transform: translateY(-2px); border-color: #B8901F; box-shadow: 0 10px 28px -16px rgba(18, 32, 58, 0.35); }
+  .cc-cat-num { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-weight: 700; font-size: 20px; color: #12203A; }
+  .cc-cat-label { font-size: 12px; color: #5B564C; margin-top: 3px; font-weight: 600; }
+  .cc-cat-count { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10.5px; color: #1F7A4D; margin-top: 6px; font-weight: 500; }
 
-  .tp2-faq { margin-bottom: 2.5rem; }
-  .tp2-faq h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 1rem; }
-  .tp2-faq-list { display: flex; flex-direction: column; gap: 0.65rem; }
-  .tp2-faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .tp2-faq-item summary { padding: 1rem 1.25rem; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.98rem; color: var(--text); list-style: none; gap: 0.75rem; }
-  .tp2-faq-item summary::-webkit-details-marker { display: none; }
-  .tp2-faq-plus { color: var(--brand); font-size: 1.2rem; flex-shrink: 0; transition: transform 0.2s; }
-  .tp2-faq-item[open] summary .tp2-faq-plus { transform: rotate(45deg); }
-  .tp2-faq-a { padding: 0 1.25rem 1.1rem; color: var(--muted); font-weight: 500; line-height: 1.65; font-size: 0.9rem; }
+  /* ===== GENERIC SECTION HEADS (seo/faq) ===== */
+  .cc-section-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.3rem; display: flex; align-items: center; gap: 0.6rem; letter-spacing: -0.01em; flex-wrap: wrap; }
+  .cc-section-title svg { color: #1F7A4D; flex-shrink: 0; }
+  .cc-section-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
 
-  .tp2-back { text-align: center; padding: 2rem 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 16px; }
-  .tp2-back h3 { color: var(--text); margin: 0 0 0.4rem; font-size: 1.3rem; }
-  .tp2-back p { color: var(--muted); margin: 0 0 1.25rem; font-size: 0.9rem; }
-  .tp2-back-btn { display: inline-block; padding: 0.8rem 2rem; background: var(--brand); color: #fff; text-decoration: none; border-radius: 10px; font-weight: 800; }
-  .tp2-back-btn:hover { filter: brightness(1.08); }
+  .cc-seo-section { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 14px; padding: 1.5rem; margin: 3.25rem 0 0; }
+  .cc-seo-section .cc-section-title { font-size: 1.15rem; margin-bottom: 0.75rem; }
+  .cc-seo-section h3 { font-size: 1rem; font-weight: 700; color: #12203A; margin: 1.4rem 0 0.5rem; }
+  .cc-seo-section p { font-size: 0.9rem; color: #5B564C; line-height: 1.6; margin: 0 0 0.75rem; }
+  .cc-seo-section p:last-child { margin-bottom: 0; }
+  .cc-seo-section strong { color: #12203A; font-weight: 700; }
+  .cc-seo-section a { color: #1F7A4D; text-decoration: none; font-weight: 600; }
+  .cc-seo-section a:hover { text-decoration: underline; }
+
+  .cc-faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  @media (max-width: 768px) { .cc-faq-grid { grid-template-columns: 1fr; } }
+  .cc-faq-card { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 12px; padding: 1.1rem 1.15rem; }
+  .cc-faq-card:hover { border-color: #B9B29B; }
+  .cc-faq-q { font-size: 0.95rem; font-weight: 700; color: #12203A; margin: 0 0 0.4rem; line-height: 1.4; }
+  .cc-faq-a { font-size: 0.85rem; color: #5B564C; line-height: 1.55; margin: 0; }
+
+  .cc-cta { background: #F5F1E6; border: 1px solid #D8D0BC; color: #12203A; border-radius: 16px; padding: 30px 32px; text-align: center; margin: 3.25rem 0 0; }
+  .cc-cta-eyebrow { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: #1F7A4D; margin: 0 0 8px; }
+  .cc-cta-text { font-size: 0.95rem; line-height: 1.6; margin: 0 auto 18px; max-width: 480px; color: #5B564C; }
+  .cc-cta .cc-hero-btn { background: #12203A; color: #fff; box-shadow: 0 12px 28px -12px rgba(18, 32, 58, 0.5); }
+  .cc-cta .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
+
+  @media (max-width: 768px) {
+    .cc-title { font-size: 1.9rem; }
+    .cc-register { padding: 26px 20px 22px; }
+    .cc-ledger-cell { border-left: none; padding: 8px 0; }
+    .cc-pagination { flex-wrap: wrap; justify-content: center; }
+  }
+  @media (max-width: 480px) {
+    .cc-title { font-size: 1.7rem; }
+    .cc-hero-btn { padding: 11px 16px; font-size: 0.85rem; }
+  }
 </style>
 
 </Layout>

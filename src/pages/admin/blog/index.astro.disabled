@@ -1,0 +1,241 @@
+---
+import AdminShell from "../../../components/admin/AdminShell.astro";
+import { listBlogPosts } from "../../../lib/blog";
+
+const posts = await listBlogPosts();
+const publishedCount = posts.filter((p) => !p.draft).length;
+const draftCount = posts.length - publishedCount;
+---
+
+<AdminShell title="Blog" desc="Articles & guides on /blog" badge={`${posts.length} posts`} parent="Admin" parentHref="/admin">
+  <div slot="actions">
+    <a class="adm-btn adm-btn-primary" href="/admin/blog/create">+ New Post</a>
+  </div>
+
+  <div class="adm-stats">
+    <div class="adm-stat">
+      <div class="adm-stat-ic ic-purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </div>
+      <div class="adm-stat-body"><div class="adm-stat-num">{posts.length}</div><div class="adm-stat-lbl">Total Posts</div></div>
+    </div>
+    <div class="adm-stat">
+      <div class="adm-stat-ic ic-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div class="adm-stat-body"><div class="adm-stat-num">{publishedCount}</div><div class="adm-stat-lbl">Published</div></div>
+    </div>
+    <div class="adm-stat">
+      <div class="adm-stat-ic ic-amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div class="adm-stat-body"><div class="adm-stat-num">{draftCount}</div><div class="adm-stat-lbl">Drafts</div></div>
+    </div>
+  </div>
+
+  <div class="adm-card">
+    <div class="adm-toolbar">
+      <input class="adm-input" id="searchBox" type="search" placeholder="Search title, slug, tags…" />
+      <select class="adm-select" id="draftFilter" style="max-width:200px;">
+        <option value="">All status</option>
+        <option value="draft">Draft</option>
+        <option value="published">Published</option>
+      </select>
+      <span class="adm-count" id="countLabel"></span>
+    </div>
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Published</th>
+            <th>Tags</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          {posts.map((p) => (
+            <tr data-row
+                data-search={[p.title, p.slug, (p.tags || []).join(" ")].join(" ").toLowerCase()}
+                data-draft={p.draft ? "draft" : "published"}>
+              <td>
+                <div class="adm-course">
+                  {p.image && p.image.startsWith("http") ? (
+                    <img class="adm-thumb" src={p.image} alt="" loading="lazy" />
+                  ) : (
+                    <div class="adm-thumb" style="display:grid;place-items:center;color:#b6bec9;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    </div>
+                  )}
+                  <div style="min-width:0;">
+                    <a class="adm-link" href={`/blog/${p.slug}`} target="_blank">{p.title}</a>
+                    <div class="adm-chip">{p.slug}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class={"adm-chip " + (p.draft ? "adm-chip-draft" : "adm-chip-ok")}>{p.draft ? "Draft" : "Published"}</span>
+              </td>
+              <td class="adm-muted">{p.pubDate ? new Date(p.pubDate).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "-"}</td>
+              <td>
+                {p.tags?.length
+                  ? <span style="display:flex;gap:.35rem;flex-wrap:wrap;">{p.tags.map((t) => <span class="adm-chip">{t}</span>)}</span>
+                  : <span class="adm-muted">—</span>}
+              </td>
+              <td>
+                <div class="adm-actions" style="justify-content:flex-end;">
+                  <a class="adm-btn adm-btn-ghost adm-btn-sm" href={`/admin/blog/edit/${p.slug}`}>Edit</a>
+                  <button class="adm-btn adm-btn-danger adm-btn-sm" type="button" data-delete data-id={p.slug}>Delete</button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div class="adm-pagination" id="pager"></div>
+  </div>
+</AdminShell>
+
+<style is:global>
+  .adm-toolbar{display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem;}
+  .adm-toolbar .adm-input{max-width:380px;}
+  .adm-count{color:#5a6472;font-size:.85rem;margin-left:auto;white-space:nowrap;}
+  .adm-link{color:#161a20;text-decoration:none;font-weight:700;display:block;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .adm-link:hover{color:#00a76f;}
+  .adm-link+.adm-chip{margin-top:.3rem;display:inline-block;}
+  .adm-muted{color:#6e7686;font-size:.82rem;white-space:nowrap;}
+  .adm-chip-ok{color:#0f7a52;background:rgba(0,167,111,.1);border-color:rgba(0,167,111,.35);}
+  .adm-chip-draft{color:#9a6b0f;background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.35);}
+  .adm-pagination{display:flex;align-items:center;justify-content:center;gap:.4rem;flex-wrap:wrap;margin-top:1rem;}
+  .adm-pg-btn{padding:.45rem .85rem;border-radius:.5rem;border:1px solid #e2e6ec;background:#fff;color:#5a6472;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit;transition:all .15s;}
+  .adm-pg-btn:hover:not(:disabled){border-color:#00a76f;color:#00a76f;}
+  .adm-pg-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .adm-pg-btn.current{background:#00a76f;border-color:#00a76f;color:#fff;}
+  .adm-pg-info{color:#5a6472;font-size:.85rem;margin-right:.5rem;}
+  @media (max-width:900px){
+    .adm-table th:nth-child(3),.adm-table td:nth-child(3){display:none;}
+    .adm-link{max-width:220px;}
+  }
+  @media (max-width:720px){
+    .adm-link{max-width:140px;}
+    .adm-stat-num{font-size:1.25rem;}
+  }
+</style>
+
+<script>
+  const searchBox = document.getElementById("searchBox") as HTMLInputElement;
+  const draftFilter = document.getElementById("draftFilter") as HTMLSelectElement;
+  const countLabel = document.getElementById("countLabel") as HTMLElement;
+  const pager = document.getElementById("pager") as HTMLElement;
+  const rows = Array.from(document.querySelectorAll<HTMLElement>("[data-row]"));
+  const PAGE_SIZE = 50;
+  let currentPage = 1;
+  let matched: HTMLElement[] = [];
+
+  function applyFilters() {
+    const q = searchBox.value.trim().toLowerCase();
+    const status = draftFilter.value;
+    matched = rows.filter((row) => {
+      const text = row.dataset.search || "";
+      const matchQ = !q || text.includes(q);
+      const matchStatus = !status || row.dataset.draft === status;
+      return matchQ && matchStatus;
+    });
+    const totalPages = Math.max(1, Math.ceil(matched.length / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    renderPage();
+    countLabel.textContent = `${matched.length} / ${rows.length} shown`;
+    renderPager(totalPages);
+  }
+
+  function renderPage() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    rows.forEach((row) => {
+      row.style.display = "none";
+    });
+    matched.slice(start, end).forEach((row) => {
+      row.style.display = "";
+    });
+  }
+
+  function makePgBtn(label: string, page: number, opts: { disabled?: boolean; current?: boolean } = {}) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "adm-pg-btn" + (opts.current ? " current" : "");
+    b.textContent = label;
+    b.disabled = !!opts.disabled;
+    if (!opts.disabled && !opts.current) b.addEventListener("click", () => {
+      currentPage = page;
+      applyFilters();
+    });
+    return b;
+  }
+
+  function makePgEllipsis() {
+    const s = document.createElement("span");
+    s.className = "adm-pg-info";
+    s.textContent = "…";
+    return s;
+  }
+
+  function renderPager(totalPages: number) {
+    pager.innerHTML = "";
+    if (totalPages <= 1) return;
+
+    const info = document.createElement("span");
+    info.className = "adm-pg-info";
+    info.textContent = `Page ${currentPage} of ${totalPages}`;
+    pager.appendChild(info);
+
+    pager.appendChild(makePgBtn("‹ Prev", currentPage - 1, { disabled: currentPage === 1 }));
+
+    const windowSize = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(windowSize / 2));
+    let endPage = Math.min(totalPages, startPage + windowSize - 1);
+    startPage = Math.max(1, endPage - windowSize + 1);
+
+    if (startPage > 1) {
+      pager.appendChild(makePgBtn("1", 1, { current: currentPage === 1 }));
+      if (startPage > 2) pager.appendChild(makePgEllipsis());
+    }
+    for (let p = startPage; p <= endPage; p++) {
+      pager.appendChild(makePgBtn(String(p), p, { current: p === currentPage }));
+    }
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) pager.appendChild(makePgEllipsis());
+      pager.appendChild(makePgBtn(String(totalPages), totalPages, { current: currentPage === totalPages }));
+    }
+
+    pager.appendChild(makePgBtn("Next ›", currentPage + 1, { disabled: currentPage === totalPages }));
+  }
+
+  searchBox.addEventListener("input", () => { currentPage = 1; applyFilters(); });
+  draftFilter.addEventListener("change", () => { currentPage = 1; applyFilters(); });
+  applyFilters();
+
+  document.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const slug = btn.dataset.id || "";
+      const title = btn.closest("tr")?.querySelector(".adm-link")?.textContent || slug;
+      if (!confirm(`Delete blog post "${title}"?\n\nThis permanently deletes the file.`)) return;
+
+      btn.disabled = true;
+      btn.textContent = "…";
+      try {
+        const res = await fetch(`/api/blog?slug=${encodeURIComponent(slug)}`, { method: "DELETE" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Delete failed");
+        btn.closest("tr")?.remove();
+        currentPage = 1;
+        applyFilters();
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = "Delete";
+        alert(`Error: ${(err as Error).message}`);
+      }
+    });
+  });
+</script>

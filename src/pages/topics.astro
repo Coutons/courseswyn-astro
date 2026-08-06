@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { readDeals } from '../lib/store';
+import { dealTopicNames } from '../lib/dealStats';
 import { toISODateWIB } from '../lib/date';
 
 const allDeals = await readDeals();
@@ -15,42 +16,6 @@ const categoryOrder = [
   "Photography & Video"
 ];
 
-const GRADIENT_COLORS = [
-  { c1: '#0d9488', c2: '#115e59' },
-  { c1: '#059669', c2: '#047857' },
-  { c1: '#0891b2', c2: '#0e7490' },
-  { c1: '#3b82f6', c2: '#1d4ed8' },
-  { c1: '#6d28d9', c2: '#5b21b6' },
-  { c1: '#b45309', c2: '#92400e' },
-  { c1: '#7e22ce', c2: '#6b21a8' },
-  { c1: '#0f766e', c2: '#134e4a' }
-];
-
-const hashFor = (s: string) => ((s.split('').reduce((h, ch) => h * 31 + ch.charCodeAt(0), 7) % 100000) + 100000) % 100000;
-
-type TopicCard = { name: string; slug: string; count: number; c1: string; c2: string; s1x: number; s1y: number; s1r: number; s2x: number; s2y: number; s2r: number; s3x: number; s3y: number; s3r: number };
-
-const buildCard = (name: string, count: number): TopicCard => {
-  const hash = hashFor(name);
-  const grad = GRADIENT_COLORS[hash % GRADIENT_COLORS.length];
-  return {
-    name,
-    slug: name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
-    count,
-    c1: grad.c1,
-    c2: grad.c2,
-    s1x: 24 + (hash % 56),
-    s1y: 16 + (hash >> 3) % 34,
-    s1r: 26 + (hash >> 4) % 26,
-    s2x: 200 + (hash >> 2) % 96,
-    s2y: 10 + (hash >> 6) % 30,
-    s2r: 22 + (hash >> 5) % 22,
-    s3x: 280 - (hash >> 7) % 60,
-    s3y: 130 + (hash >> 8) % 40,
-    s3r: 12 + (hash >> 9) % 14
-  };
-};
-
 const grouped: Record<string, { total: number; topics: Record<string, number> }> = {};
 
 allDeals.forEach(deal => {
@@ -58,19 +23,24 @@ allDeals.forEach(deal => {
   const sub = deal.subcategory ? normSub(deal.subcategory) : '';
   if (!grouped[cat]) grouped[cat] = { total: 0, topics: {} };
   grouped[cat].total++;
-  if (sub) grouped[cat].topics[sub] = (grouped[cat].topics[sub] || 0) + 1;
+  const names = dealTopicNames(deal).length ? dealTopicNames(deal) : (sub ? [sub] : []);
+  for (const name of names) {
+    const t = normSub(name);
+    if (t) grouped[cat].topics[t] = (grouped[cat].topics[t] || 0) + 1;
+  }
 });
+
+const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
 
 const catGroups = categoryOrder
   .filter(c => grouped[c])
   .map(c => ({
     name: c,
-    slug: c.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
+    slug: slugify(c),
     total: grouped[c].total,
     topics: Object.entries(grouped[c].topics)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 12)
-      .map(([name, count]) => buildCard(name, count))
+      .map(([name, count]) => ({ name, slug: slugify(name), count }))
   }));
 
 const totalTopics = catGroups.reduce((s, g) => s + g.topics.length, 0);
@@ -89,6 +59,12 @@ const title = `Browse ${totalTopics.toLocaleString()}+ Udemy Course Topics with 
 const description = `Explore ${totalTopics.toLocaleString()} Udemy course topics across ${totalCategories} categories — each with verified coupon codes updated ${latestStr || 'daily'}. Find discounted deals on Python, AI, web dev, cloud & more.`;
 const canonicalUrl = "https://courseswyn.com/topics";
 
+const pageKeywords = [
+  "udemy topics", "udemy course topics", "udemy courses by topic",
+  "python udemy coupon", "ai udemy coupon", "web development coupon",
+  "data science coupon", "cybersecurity coupon", "udemy coupon code"
+].join(", ");
+
 const faqs = [
   { q: "What are Udemy course topics on CoursesWyn?", a: "CoursesWyn organizes Udemy courses into specialized topic pages — such as Python, Web Development, Data Science, AI, and Cybersecurity. Each topic page lists verified coupon deals for courses in that subject area, updated daily." },
   { q: "How do I find Udemy courses by topic?", a: "Browse the topic categories above and click on any subject that interests you. You'll see all available courses in that topic with verified discount codes." },
@@ -102,7 +78,7 @@ const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
     { "@type": "BreadcrumbList", "itemListElement": [{ "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" }, { "@type": "ListItem", "position": 2, "name": "Course Topics", "item": canonicalUrl }] },
-    { "@type": "CollectionPage", "@id": canonicalUrl, "url": canonicalUrl, "name": title, "description": description, "isPartOf": { "@id": "https://courseswyn.com" }, ...(latestDate ? { "dateModified": latestDate, "datePublished": latestDate } : {}) },
+    { "@type": ["WebPage", "CollectionPage"], "@id": canonicalUrl, "url": canonicalUrl, "name": title, "description": description, "keywords": pageKeywords, "inLanguage": "en-US", "isPartOf": { "@id": "https://courseswyn.com/#website" }, ...(latestDate ? { "dateModified": latestDate, "datePublished": latestDate } : {}) },
     { "@type": "FAQPage", "mainEntity": faqs.map(f => ({ "@type": "Question", "name": f.q, "acceptedAnswer": { "@type": "Answer", "text": f.a } })) },
     { "@type": "WebSite", "@id": "https://courseswyn.com/#website", "url": "https://courseswyn.com", "name": "CoursesWyn", "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://courseswyn.com/search?q={search_term_string}" }, "query-input": "required name=search_term_string" } }
   ]
@@ -110,189 +86,185 @@ const structuredData = {
 ---
 
 <Layout title={title} description={description} canonical={canonicalUrl} hideBreadcrumbs={true}>
+  <Fragment slot="head">
+    <meta name="keywords" content={pageKeywords} />
+  </Fragment>
   <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-  <div class="tp3-root">
+  <main class="cc-root">
+    <div class="cc-container">
 
-    <div class="tp3-container">
-
-      {/* Hero */}
-      <section class="tp3-hero">
-        <div class="tp3-hero-inner">
-          <div class="tp3-hero-left">
-            <p class="tp3-hero-label">Course taxonomy</p>
-            <h1>Browse Udemy by <span class="tp3-grad">what you want to learn.</span></h1>
-            <p class="tp3-claim">An independent taxonomy built from what courses actually teach, not their marketing tags. Open any topic to see its courses and their current coupon availability.</p>
-            <div class="tp3-hero-stats">
-              <div class="tp3-stat">
-                <span class="tp3-stat-lbl">Curated topics</span>
-                <span class="tp3-stat-val">{totalTopics.toLocaleString()}</span>
-              </div>
-              <div class="tp3-stat">
-                <span class="tp3-stat-lbl">Learning areas</span>
-                <span class="tp3-stat-val">{totalCategories}</span>
-              </div>
-              <div class="tp3-stat">
-                <span class="tp3-stat-lbl">Avg discount</span>
-                <span class="tp3-stat-val">{avgDiscount}%</span>
-              </div>
-            </div>
+      <header class="cc-header">
+        <div class="cc-register">
+          <div class="cc-register-top">
+            <span class="cc-eyebrow"><span class="cc-blip"></span> Course taxonomy</span>
+            <span class="cc-folio">{totalTopics.toLocaleString()} topics &middot; {totalCategories} areas</span>
           </div>
-          <div class="tp3-hero-right">
-            <p>Every topic page is ranked by real student ratings and review counts from Udemy, filtered to only courses with <strong class="tp3-em">working verified coupon codes</strong>. New deals are added every day and checked in near real time — expired coupons disappear automatically.</p>
-            <p class="tp3-fresh">Updated {latestStr || 'daily'} &middot; {totalCourses.toLocaleString()} tracked coupons</p>
-            <a href="/udemy-coupons-today" class="tp3-hero-link">See today's newest deals &#8594;</a>
+          <h1 class="cc-title">Browse Udemy <span class="cc-accent">Course Topics</span></h1>
+          <p class="cc-subtitle">An independent taxonomy built from what courses actually teach, not their marketing tags. Open any topic to see its courses and their current coupon availability.</p>
+          <div class="cc-toolbar">
+            {catGroups.length > 0 && <a class="cc-hero-btn" href={`#cat-${catGroups[0].slug}`}>Explore topics</a>}
+            <a class="cc-hero-btn ghost" href="/categories">Browse by category</a>
+            <a class="cc-hero-btn ghost" href="/udemy-coupons-today">Today's new deals</a>
+          </div>
+          <div class="cc-ledger">
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Curated topics</div><div class="cc-ledger-value">{totalTopics.toLocaleString()}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Learning areas</div><div class="cc-ledger-value">{totalCategories}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Avg discount</div><div class="cc-ledger-value">{avgDiscount}%</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Tracked coupons</div><div class="cc-ledger-value">{totalCourses.toLocaleString()}</div></div>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* Category nav */}
-      <nav class="tp3-nav" aria-label="Topic categories">
-        <ol class="tp3-nav-list">
-          {catGroups.map((g, i) => (
-            <li class="tp3-nav-item">
-              <a href={`#cat-${g.slug}`} class="tp3-nav-link">
-                <span class="tp3-nav-num">{(i + 1).toString().padStart(2, '0')}</span>
-                <span class="tp3-nav-name">{g.name}</span>
-                <span class="tp3-nav-arrow">&#8594;</span>
-              </a>
-            </li>
-          ))}
-        </ol>
+      <nav class="cc-chip-nav" aria-label="Topic categories">
+        {catGroups.map((g, i) => (
+          <a href={`#cat-${g.slug}`} class="cc-chip">
+            <span class="cc-chip-num">{(i + 1).toString().padStart(2, '0')}</span>
+            <span class="cc-chip-name">{g.name}</span>
+            <span class="cc-chip-arrow">→</span>
+          </a>
+        ))}
       </nav>
 
-      {/* Category sections */}
-      {catGroups.map((g, i) => (
-        <section id={`cat-${g.slug}`} class="tp3-cat" aria-labelledby={`cat-title-${g.slug}`}>
-          <div class="tp3-cat-head">
-            <span class="tp3-cat-num">{(i + 1).toString().padStart(2, '0')}</span>
-            <h2 id={`cat-title-${g.slug}`} class="tp3-cat-title">{g.name}</h2>
-            <p class="tp3-cat-meta">{g.total.toLocaleString()} tracked courses</p>
-            <a href={`/categories/${g.slug}`} class="tp3-cat-link">Browse all {g.topics.length} topics <span class="tp3-cat-link-arrow">&#8594;</span></a>
+      {catGroups.map((g) => (
+        <section id={`cat-${g.slug}`} class="cc-section" aria-labelledby={`cat-title-${g.slug}`}>
+          <div class="cc-sec-head">
+            <h2 id={`cat-title-${g.slug}`} class="cc-sec-title">{g.name} <span class="cc-tag">{g.total.toLocaleString()} tracked courses</span></h2>
+            <p class="cc-sec-desc">The most popular {g.name} topics with verified coupon codes — ranked by deal count.</p>
           </div>
-          <div class="tp3-cat-cards">
+          <nav class="cc-cat-grid" aria-label={`${g.name} topics`}>
             {g.topics.map((t) => (
-              <a href={`/topics/${t.slug}`} class="tp3-card">
-                <div class="tp3-card-media">
-                  <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" role="img" aria-label={t.name} class="tp3-card-svg">
-                    <defs>
-                      <linearGradient id={`lg-${g.slug}-${t.slug}`} x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stop-color={t.c1} />
-                        <stop offset="100%" stop-color={t.c2} />
-                      </linearGradient>
-                    </defs>
-                    <rect width="320" height="180" fill={`url(#lg-${g.slug}-${t.slug})`} />
-                    <circle cx={t.s1x} cy={t.s1y} r={t.s1r} fill="rgba(255,255,255,0.14)" />
-                    <circle cx={t.s2x} cy={t.s2y} r={t.s2r} fill="rgba(255,255,255,0.10)" />
-                    <circle cx={t.s3x} cy={t.s3y} r={t.s3r} fill="rgba(255,255,255,0.18)" />
-                    <text x="16" y="112" fill="rgba(255,255,255,0.95)" font-size="30" font-weight="800" font-family="inherit">{t.name}</text>
-                    <text x="16" y="148" fill="rgba(255,255,255,0.8)" font-size="16" font-weight="600" font-family="inherit">{t.count} courses</text>
-                  </svg>
-                </div>
-                <div class="tp3-card-body">
-                  <span class="tp3-card-name">Best {t.name} Courses on Udemy for {currentYear}</span>
-                  <span class="tp3-card-count">{t.count} courses &#8594;</span>
-                </div>
+              <a href={`/topics/${t.slug}`} class="cc-cat" title={`Best ${t.name} Courses on Udemy for ${currentYear}`}>
+                <div class="cc-cat-num">{t.count}</div>
+                <div class="cc-cat-label">{t.name}</div>
+                <div class="cc-cat-count">courses</div>
               </a>
             ))}
-          </div>
+          </nav>
         </section>
       ))}
 
-      {/* SEO block */}
-      <section class="tp3-seo">
-        <h2>How CoursesWyn Topic Pages Work</h2>
+      <section class="cc-seo-section">
+        <h2 class="cc-section-title">How CoursesWyn Topic Pages Work</h2>
         <p>Each topic page below is built from the same verified data pipeline as the rest of the site: courses are ranked using real student ratings and review volume from Udemy, then filtered to keep only listings where our <strong>verified coupon code is currently working</strong>. We re-check every deal in near real time, so the discount you see is the price you pay.</p>
         <p>Whether you're a complete beginner or an experienced professional, you'll find top-rated training across {totalCategories} learning areas with hands-on projects, lifetime access, and a certificate of completion included with every enrollment. New {currentYear} deals are added daily, so check back often.</p>
       </section>
 
-      {/* FAQ */}
-      <section class="tp3-faq">
-        <h2>Frequently Asked Questions About Udemy Course Topics</h2>
-        <div class="tp3-faq-list">
+      <section class="cc-section cc-faq">
+        <h2 class="cc-section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Frequently asked questions
+          <span class="cc-tag">{faqs.length} questions</span>
+        </h2>
+        <div class="cc-faq-grid">
           {faqs.map((faq) => (
-            <details class="tp3-faq-item">
-              <summary>
-                {faq.q}
-                <span class="tp3-faq-plus">+</span>
-              </summary>
-              <div class="tp3-faq-a">{faq.a}</div>
-            </details>
+            <div class="cc-faq-card">
+              <h6 class="cc-faq-q">{faq.q}</h6>
+              <p class="cc-faq-a">{faq.a}</p>
+            </div>
           ))}
         </div>
       </section>
 
+      <section class="cc-cta">
+        <p class="cc-cta-eyebrow">Every topic verified</p>
+        <p class="cc-cta-text">Every topic on this page is built from courses with currently working coupon codes. Prefer browsing by category? Start there instead.</p>
+        <a class="cc-hero-btn" href="/udemy-coupon-code">Browse all verified coupons →</a>
+      </section>
+
     </div>
-  </div>
+  </main>
+</Layout>
 
 <style>
-  .tp3-root { background: var(--bg); padding: 2rem 1rem 4rem; }
-  .tp3-container { max-width: 1200px; margin: 0 auto; }
+  .cc-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+  .cc-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
 
-  .tp3-hero { padding: 2rem 0 3rem; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
-  @media (min-width: 900px) { .tp3-hero-inner { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr); gap: 3rem; align-items: start; } }
-  .tp3-hero-label { display: flex; align-items: center; gap: 0.6rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--brand); margin: 0 0 1rem; }
-  .tp3-hero-label::before { content: ''; width: 2rem; height: 3px; background: var(--brand); flex-shrink: 0; }
-  .tp3-hero h1 { font-size: clamp(2.2rem, 4.5vw, 3.5rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; color: var(--text); margin: 0 0 1.25rem; }
-  .tp3-grad { background: linear-gradient(135deg, var(--brand) 0%, var(--secondary) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-  .tp3-claim { font-size: 1rem; color: var(--muted); line-height: 1.7; margin: 0 0 1.75rem; max-width: 42rem; }
-  .tp3-hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-width: 1px 0; max-width: 26rem; }
-  .tp3-stat { padding: 1rem 1.25rem 1rem 0; }
-  .tp3-stat + .tp3-stat { border-left: 1px solid var(--border); padding-left: 1.25rem; }
-  .tp3-stat-lbl { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 0.25rem; }
-  .tp3-stat-val { font-size: 1.4rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
-  .tp3-hero-right p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.75rem; }
-  .tp3-em { color: var(--text); font-weight: 700; }
-  .tp3-fresh { font-size: 0.78rem; color: var(--muted); font-weight: 600; margin-bottom: 1.25rem !important; display: flex; align-items: center; gap: 0.4rem; }
-  .tp3-fresh::before { content: ''; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
-  .tp3-hero-link { color: var(--brand); font-weight: 700; text-decoration: none; font-size: 0.88rem; }
-  .tp3-hero-link:hover { text-decoration: underline; }
+  /* ===== REGISTER / LEDGER HEADER ===== */
+  .cc-register { position: relative; background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(18, 32, 58, 0.35); }
+  .cc-register-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; font-weight: 600; color: #1F7A4D; background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.25); border-radius: 999px; padding: 6px 13px; }
+  .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #1F7A4D; animation: ccBlip 1.6s infinite; }
+  @keyframes ccBlip { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  .cc-folio { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #5B564C; border: 1px dashed #B9B29B; border-radius: 6px; padding: 5px 10px; letter-spacing: .05em; white-space: nowrap; }
+  .cc-title { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 700; color: #12203A; line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 12px; }
+  .cc-title .cc-accent { color: #C13B2E; }
+  .cc-subtitle { color: #5B564C; font-size: 0.95rem; line-height: 1.7; margin: 0 0 20px; max-width: 640px; }
+  .cc-subtitle strong { color: #12203A; font-weight: 700; }
 
-  .tp3-nav { margin-bottom: 3rem; }
-  .tp3-nav-list { display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; margin: 0; padding: 0; }
-  .tp3-nav-link { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.6rem 1rem; background: var(--card); border: 1px solid var(--border); border-radius: 100px; text-decoration: none; transition: all 0.15s; }
-  .tp3-nav-link:hover { border-color: var(--brand); }
-  .tp3-nav-num { font-size: 0.6rem; font-weight: 800; color: var(--brand); font-variant-numeric: tabular-nums; }
-  .tp3-nav-name { font-size: 0.82rem; font-weight: 700; color: var(--text); }
-  .tp3-nav-arrow { font-size: 0.7rem; color: var(--muted); opacity: 0; transform: translateX(-0.25rem); transition: all 0.15s; }
-  .tp3-nav-link:hover .tp3-nav-arrow { opacity: 1; transform: translateX(0); color: var(--brand); }
+  .cc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .cc-hero-btn { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-size: 0.9rem; font-weight: 600; text-decoration: none; padding: 12px 20px; border-radius: 9px; background: #12203A; color: #fff; box-shadow: 0 10px 24px rgba(18, 32, 58, 0.35); transition: background 0.2s, transform 0.2s; white-space: nowrap; }
+  .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
+  .cc-hero-btn.ghost { background: transparent; color: #1B2E52; border: 1px solid #1B2E52; box-shadow: none; }
+  .cc-hero-btn.ghost:hover { background: #1B2E52; color: #fff; }
 
-  .tp3-cat { margin-bottom: 3rem; scroll-margin-top: 2rem; }
-  .tp3-cat-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
-  .tp3-cat-num { font-size: 0.7rem; font-weight: 800; color: var(--brand); font-variant-numeric: tabular-nums; border: 1px solid var(--brand); border-radius: 100px; padding: 0.25rem 0.6rem; }
-  .tp3-cat-title { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin: 0; }
-  .tp3-cat-meta { font-size: 0.85rem; color: var(--muted); margin: 0; }
-  .tp3-cat-link { margin-left: auto; font-size: 0.85rem; font-weight: 700; color: var(--brand); text-decoration: none; }
-  .tp3-cat-link:hover { text-decoration: underline; }
-  .tp3-cat-link-arrow { display: inline-block; transition: transform 0.15s; }
-  .tp3-cat-link:hover .tp3-cat-link-arrow { transform: translateX(0.25rem); }
+  .cc-ledger { display: flex; margin-top: 24px; border-top: 1px dashed #B9B29B; padding-top: 20px; flex-wrap: wrap; }
+  .cc-ledger-cell { flex: 1 1 150px; padding: 2px 18px; border-left: 1px solid #D8D0BC; }
+  .cc-ledger-cell:first-child { border-left: none; padding-left: 2px; }
+  .cc-ledger-label { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: #5B564C; margin-bottom: 4px; }
+  .cc-ledger-value { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-weight: 700; font-size: 22px; color: #12203A; }
 
-  .tp3-cat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-  @media (max-width: 1000px) { .tp3-cat-cards { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 520px) { .tp3-cat-cards { grid-template-columns: 1fr; } }
-  .tp3-card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; text-decoration: none; transition: all 0.2s; }
-  .tp3-card:hover { border-color: var(--brand); transform: translateY(-2px); box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.4); }
-  .tp3-card-media { position: relative; aspect-ratio: 16 / 9; overflow: hidden; }
-  .tp3-card-svg { width: 100%; height: 100%; display: block; }
-  .tp3-card-body { display: flex; flex-direction: column; gap: 0.4rem; padding: 1rem 1.1rem 1.15rem; }
-  .tp3-card-name { font-weight: 800; font-size: 0.9rem; color: var(--text); line-height: 1.35; }
-  .tp3-card-count { font-size: 0.78rem; color: var(--brand); font-weight: 700; }
+  /* ===== CHIP NAV ===== */
+  .cc-chip-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 3.25rem -1.5rem 0; padding: 12px 1.5rem 10px; position: sticky; top: 70px; z-index: 40; background: var(--bg); border-bottom: 1px solid #D8D0BC; box-shadow: 0 8px 18px -12px rgba(18, 32, 58, 0.25); }
+  .cc-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: #fff; border: 1px solid #D8D0BC; border-radius: 999px; text-decoration: none; transition: all 0.15s; }
+  .cc-chip:hover { border-color: #1F7A4D; }
+  .cc-chip-num { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 600; color: #5B564C; }
+  .cc-chip-name { font-size: 12.5px; font-weight: 600; color: #12203A; }
+  .cc-chip-arrow { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #5B564C; transition: transform 0.15s; }
+  .cc-chip:hover .cc-chip-arrow { color: #1F7A4D; transform: translateX(3px); }
 
-  .tp3-seo { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem 1.5rem; margin-bottom: 2.5rem; }
-  .tp3-seo h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 0.85rem; }
-  .tp3-seo p { font-size: 0.92rem; color: var(--muted); line-height: 1.7; margin: 0 0 0.75rem; }
-  .tp3-seo p:last-child { margin-bottom: 0; }
-  .tp3-seo strong { color: var(--text); font-weight: 700; }
+  /* ===== SECTION HEADS ===== */
+  .cc-sec-head { margin-bottom: 0.9rem; }
+  .cc-sec-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; letter-spacing: -0.01em; }
+  .cc-sec-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+  .cc-sec-desc { font-size: 0.85rem; color: #6E6A5E; margin: 0; }
 
-  .tp3-faq { margin-bottom: 2.5rem; }
-  .tp3-faq h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 1rem; }
-  .tp3-faq-list { display: flex; flex-direction: column; gap: 0.65rem; }
-  .tp3-faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .tp3-faq-item summary { padding: 1rem 1.25rem; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.98rem; color: var(--text); list-style: none; gap: 0.75rem; }
-  .tp3-faq-item summary::-webkit-details-marker { display: none; }
-  .tp3-faq-plus { color: var(--brand); font-size: 1.2rem; flex-shrink: 0; transition: transform 0.2s; }
-  .tp3-faq-item[open] summary .tp3-faq-plus { transform: rotate(45deg); }
-  .tp3-faq-a { padding: 0 1.25rem 1.1rem; color: var(--muted); font-weight: 500; line-height: 1.65; font-size: 0.9rem; }
+  .cc-section { margin-top: 3.25rem; scroll-margin-top: 120px; }
+
+  /* ===== TOPIC BOXES ===== */
+  .cc-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+  .cc-cat { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 12px; padding: 16px; text-align: left; text-decoration: none; display: block; transition: all 0.2s; }
+  .cc-cat:hover { transform: translateY(-2px); border-color: #B8901F; box-shadow: 0 10px 28px -16px rgba(18, 32, 58, 0.35); }
+  .cc-cat-num { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-weight: 700; font-size: 20px; color: #12203A; }
+  .cc-cat-label { font-size: 12px; color: #5B564C; margin-top: 3px; font-weight: 600; }
+  .cc-cat-count { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10.5px; color: #1F7A4D; margin-top: 6px; font-weight: 500; }
+
+  /* ===== GENERIC SECTION HEADS (seo/faq) ===== */
+  .cc-section-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.3rem; display: flex; align-items: center; gap: 0.6rem; letter-spacing: -0.01em; flex-wrap: wrap; }
+  .cc-section-title svg { color: #1F7A4D; flex-shrink: 0; }
+  .cc-section-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+
+  .cc-seo-section { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 14px; padding: 1.5rem; margin: 3.25rem 0 0; }
+  .cc-seo-section .cc-section-title { font-size: 1.15rem; margin-bottom: 0.75rem; }
+  .cc-seo-section p { font-size: 0.9rem; color: #5B564C; line-height: 1.6; margin: 0 0 0.75rem; }
+  .cc-seo-section p:last-child { margin-bottom: 0; }
+  .cc-seo-section a { color: #1F7A4D; text-decoration: none; font-weight: 600; }
+  .cc-seo-section a:hover { text-decoration: underline; }
+
+  .cc-faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  @media (max-width: 768px) { .cc-faq-grid { grid-template-columns: 1fr; } }
+  .cc-faq-card { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 12px; padding: 1.1rem 1.15rem; }
+  .cc-faq-card:hover { border-color: #B9B29B; }
+  .cc-faq-q { font-size: 0.95rem; font-weight: 700; color: #12203A; margin: 0 0 0.4rem; line-height: 1.4; }
+  .cc-faq-a { font-size: 0.85rem; color: #5B564C; line-height: 1.55; margin: 0; }
+  .cc-faq-a a { color: #1F7A4D; text-decoration: none; font-weight: 600; }
+  .cc-faq-a a:hover { text-decoration: underline; }
+
+  .cc-cta { background: #F5F1E6; border: 1px solid #D8D0BC; color: #12203A; border-radius: 16px; padding: 30px 32px; text-align: center; margin: 3.25rem 0 0; }
+  .cc-cta-eyebrow { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: #1F7A4D; margin: 0 0 8px; }
+  .cc-cta-text { font-size: 0.95rem; line-height: 1.6; margin: 0 auto 18px; max-width: 480px; color: #5B564C; }
+  .cc-cta .cc-hero-btn { background: #12203A; color: #fff; box-shadow: 0 12px 28px -12px rgba(18, 32, 58, 0.5); }
+  .cc-cta .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
+
+  @media (max-width: 768px) {
+    .cc-title { font-size: 1.9rem; }
+    .cc-register { padding: 26px 20px 22px; }
+    .cc-ledger-cell { border-left: none; padding: 8px 0; }
+  }
+  @media (max-width: 480px) {
+    .cc-title { font-size: 1.7rem; }
+    .cc-hero-btn { padding: 11px 16px; font-size: 0.85rem; }
+  }
 </style>
 
 </Layout>
