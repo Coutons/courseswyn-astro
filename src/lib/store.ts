@@ -21,6 +21,7 @@ function resolveDealsFilePath(): string {
 const DEALS_FILE = resolveDealsFilePath();
 
 let cachedDeals: Deal[] | null = null;
+let cachedDealsMtime = 0;
 
 /**
  * Deals are validated on read so invalid or duplicate records never reach
@@ -93,10 +94,13 @@ function validateDeals(raw: unknown[]): Deal[] {
 
 export async function readDealsFromFile(): Promise<Deal[]> {
   try {
+    const stat = await fs.stat(DEALS_FILE);
+    if (cachedDeals && stat.mtimeMs === cachedDealsMtime) return cachedDeals;
     const buf = await fs.readFile(DEALS_FILE, "utf-8");
     const data = JSON.parse(buf) as unknown;
     if (Array.isArray(data)) {
       cachedDeals = validateDeals(data);
+      cachedDealsMtime = stat.mtimeMs;
       return cachedDeals;
     }
   } catch (error) {
