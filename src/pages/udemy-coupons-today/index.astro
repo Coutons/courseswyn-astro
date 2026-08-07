@@ -6,25 +6,28 @@ import { formatDateWIB, toISODateWIB } from '../../lib/date';
 
 const allDeals = await getDeals();
 const now = new Date();
-const activeDeals = allDeals.filter(d => !d.expiresAt || new Date(d.expiresAt) > now);
 
 const todayStr = toISODateWIB(now);
-const todayAdded = allDeals.filter(d => {
+const isUpdatedToday = (d: { updatedAt?: string; createdAt?: string }) => {
   const raw = d.updatedAt || d.createdAt || '';
   if (!raw) return false;
   return toISODateWIB(new Date(raw)) === todayStr;
-}).length;
+};
 
-const paidDeals = activeDeals.filter(d => d.price > 0 || d.price == null).slice(0, 48);
-const freeDeals = activeDeals.filter(d => d.price === 0);
-const totalActive = activeDeals.length;
+const todayDeals = allDeals.filter(isUpdatedToday);
+const activeToday = todayDeals.filter(d => !d.expiresAt || new Date(d.expiresAt) > now);
+
+const todayAdded = todayDeals.length;
+const paidDeals = activeToday.filter(d => d.price > 0 || d.price == null).slice(0, 48);
+const freeDeals = activeToday.filter(d => d.price === 0);
+const totalActive = activeToday.length;
 const totalCoupons = allDeals.length;
 
 const decodeHtml = (str: string) =>
   str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
 
 const topicCounts: Record<string, number> = {};
-for (const d of allDeals) {
+for (const d of activeToday) {
   const sub = d.subcategory ? decodeHtml(d.subcategory) : '';
   if (sub) {
     topicCounts[sub] = (topicCounts[sub] || 0) + 1;
@@ -35,7 +38,7 @@ const trendingTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).s
 
 const dateFull = formatDateWIB(now, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-const latestUpdate = allDeals.reduce((latest, d) => {
+const latestUpdate = todayDeals.reduce((latest, d) => {
   const t = new Date(d.updatedAt || d.createdAt || 0).getTime();
   return t > latest ? t : latest;
 }, 0);
@@ -49,7 +52,7 @@ else {
   lastVerified = diffHr < 24 ? `${diffHr}h ago` : `${Math.floor(diffHr / 24)}d ago`;
 }
 
-const almostGone = allDeals
+const almostGone = activeToday
   .filter(d => d.expiresAt)
   .filter(d => {
     const diff = new Date(d.expiresAt!).getTime() - now.getTime();
@@ -58,18 +61,18 @@ const almostGone = allDeals
   .sort((a, b) => new Date(a.expiresAt!).getTime() - new Date(b.expiresAt!).getTime())
   .slice(0, 3);
 
-const expiringCount = allDeals
+const expiringCount = activeToday
   .filter(d => d.expiresAt)
   .filter(d => {
     const diff = new Date(d.expiresAt!).getTime() - now.getTime();
     return diff > 0 && diff < 7 * 24 * 3600000;
   }).length;
 
-const popularDeals = allDeals
+const popularDeals = activeToday
   .filter(d => (d.rating ?? 0) >= 4.5)
   .slice(0, 8);
 
-const discountPcts = allDeals
+const discountPcts = activeToday
   .filter(d => d.price && d.originalPrice && d.originalPrice > d.price)
   .map(d => Math.round(100 - (d.price / d.originalPrice!) * 100));
 const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 95;
@@ -137,8 +140,8 @@ const jsonLd = {
       "@id": `${pageUrl}#itemlist`,
       "name": "Today's Udemy Coupon Codes",
       "description": metaDescription,
-      "numberOfItems": totalActive,
-      "itemListElement": allDeals.slice(0, 20).map((d, i) => ({
+      "numberOfItems": todayDeals.length,
+      "itemListElement": todayDeals.slice(0, 20).map((d, i) => ({
         "@type": "ListItem",
         "position": i + 1,
         "item": {
@@ -224,7 +227,7 @@ const jsonLd = {
       {almostGone.length > 0 && (
         <section class="cc-featured">
           <div class="cc-sec-head">
-            <h2 class="cc-sec-title">Almost gone <span class="cc-tag">expires soon</span></h2>
+            <h2 class="cc-sec-title">Udemy Coupons Expiring Soon <span class="cc-tag">almost gone</span></h2>
             <p class="cc-sec-desc">These coupons expire within 7 days &mdash; enroll now before they run out.</p>
           </div>
           <div class="cc-ledger-wrap">
@@ -240,25 +243,32 @@ const jsonLd = {
 
       <section class="cc-deals-section" id="latest">
         <div class="cc-sec-head">
-          <h2 class="cc-sec-title">Latest coupons <span class="cc-tag">{paidCount} deals</span></h2>
-          <p class="cc-sec-desc">The most recent verified deals, freshest first.</p>
+          <h2 class="cc-sec-title">Latest Udemy Coupon Codes Added Today <span class="cc-tag">{paidCount} deals</span></h2>
+          <p class="cc-sec-desc">Coupons added or updated today, freshest first.</p>
         </div>
         <div class="cc-ledger-wrap">
-          <table class="cc-ledger-table">
-            <thead><tr><th>Course</th><th>Price</th><th class="cc-col-hide">Status</th><th>Checked</th></tr></thead>
-            <tbody>
-              {paidDeals.map((deal: any) => <LedgerRow deal={deal} />)}
-            </tbody>
-          </table>
-          <div class="cc-deal-more"><span class="cc-deal-count">Showing the {paidCount} most recent of {totalActive} active coupons</span><a href="/udemy-coupon-code">Browse them all →</a></div>
+          {paidDeals.length > 0 ? (
+            <table class="cc-ledger-table">
+              <thead><tr><th>Course</th><th>Price</th><th class="cc-col-hide">Status</th><th>Checked</th></tr></thead>
+              <tbody>
+                {paidDeals.map((deal: any) => <LedgerRow deal={deal} />)}
+              </tbody>
+            </table>
+          ) : (
+            <div class="cc-empty">
+              <p>No new paid coupons have been added today yet.</p>
+              <p>Fresh deals are verified throughout the day — check back soon, or browse every verified code below.</p>
+            </div>
+          )}
+          <div class="cc-deal-more"><span class="cc-deal-count">Showing the {paidCount} most recent of {totalActive} coupons added today</span><a href="/udemy-coupon-code">Browse them all →</a></div>
         </div>
       </section>
 
       {popularDeals.length > 0 && (
         <section class="cc-section">
           <div class="cc-sec-head">
-            <h2 class="cc-sec-title">Popular deals <span class="cc-tag">Top-rated</span></h2>
-            <p class="cc-sec-desc">Top-rated courses with the highest student reviews.</p>
+            <h2 class="cc-sec-title">Popular Udemy Courses on Sale Today <span class="cc-tag">Top-rated</span></h2>
+            <p class="cc-sec-desc">Top-rated courses with the highest student reviews, discounted with today's coupons.</p>
           </div>
           <div class="cc-ledger-wrap">
             <table class="cc-ledger-table">
@@ -267,13 +277,14 @@ const jsonLd = {
                 {popularDeals.map((deal: any) => <LedgerRow deal={deal} />)}
               </tbody>
             </table>
+            <div class="cc-deal-more"><span class="cc-deal-count">Showing {popularDeals.length} of the most popular courses today</span><a href="/popular">See all popular courses →</a></div>
           </div>
         </section>
       )}
 
       <section class="cc-section">
         <div class="cc-sec-head">
-          <h2 class="cc-sec-title">Trending topics <span class="cc-tag">{trendingTopics.length} topics</span></h2>
+          <h2 class="cc-sec-title">Trending Udemy Course Categories Today <span class="cc-tag">{trendingTopics.length} topics</span></h2>
           <p class="cc-sec-desc">Most popular categories among today's coupons.</p>
         </div>
         <nav class="cc-cat-grid" aria-label="Trending topics">
@@ -288,7 +299,7 @@ const jsonLd = {
       </section>
 
       <section class="cc-seo-section">
-        <h2 class="cc-section-title">Why are today's coupons different from our full list?</h2>
+        <h2 class="cc-section-title">Why Today's Udemy Coupons Are Different From Our Full List</h2>
         <p>Since <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's coupon policy update</a>, most coupons are limited to about 10 to 100 redemptions or expire within days, which is why so many coupon sites list codes that no longer work. This page only shows deals added or re-verified in the last 24 hours &mdash; the freshest, most reliable codes available right now.</p>
         <p>CoursesWyn checks every coupon against Udemy in near real time. When a coupon runs out, it disappears from this list automatically. For the complete archive with category filters, browse <a href="/udemy-coupon-code">all verified coupons</a>.</p>
       </section>
@@ -302,7 +313,7 @@ const jsonLd = {
         <div class="cc-faq-grid">
           {faqs.map(faq => (
             <div class="cc-faq-card">
-              <h6 class="cc-faq-q">{faq.q}</h6>
+              <h3 class="cc-faq-q">{faq.q}</h3>
               <p class="cc-faq-a" set:html={faq.a} />
             </div>
           ))}
@@ -386,6 +397,9 @@ const jsonLd = {
   .cc-deal-more a { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 12.5px; font-weight: 600; color: #1F7A4D; text-decoration: none; }
   .cc-deal-more a:hover { text-decoration: underline; }
   .cc-deal-count { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11.5px; color: #5B564C; }
+  .cc-empty { padding: 36px 20px; text-align: center; color: #5B564C; }
+  .cc-empty p { margin: 0 0 6px; font-size: 0.95rem; line-height: 1.6; }
+  .cc-empty p:last-child { margin-bottom: 0; }
 
   /* ===== TOPIC BOXES ===== */
   .cc-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-top: 16px; }

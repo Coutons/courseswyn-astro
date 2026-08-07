@@ -72,7 +72,7 @@ function getInitials(name: string): string {
 }
 
 function getAvatarColor(name: string): string {
-  const colors = ['#00a76f', '#00a76f', '#22c55e', '#e67e22', '#f39c12', '#2ecc71', '#1abc9c', '#3498db', '#9b59b6', '#e74c3c'];
+  const colors = ['#1F7A4D', '#22c55e', '#e67e22', '#f39c12', '#2ecc71', '#1abc9c', '#3498db', '#9b59b6', '#e74c3c'];
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
@@ -85,62 +85,117 @@ const siteUrl = 'https://courseswyn.com';
 const canonicalUrl = `${siteUrl}/instructors`;
 const title = `Top Instructors — Udemy Coupon Leaderboard ${currentMonth} ${currentYear} | CoursesWyn`;
 const description = `Top ${topInstructors.length} instructors ranked by verified coupon submissions. ${totalCoupons.toLocaleString()}+ active deals. Updated daily.`;
----
 
-<Layout title={title} description={description} canonical={canonicalUrl}>
-  <script type="application/ld+json" set:html={JSON.stringify({
-    "@context": "https://schema.org",
-    "@graph": [
-      { "@type": "BreadcrumbList", "itemListElement": [
+const faqs = [
+  {
+    q: "How are instructors ranked on CoursesWyn?",
+    a: "Instructors are ranked by their total number of active, verified coupon deals currently listed on CoursesWyn. This leaderboard updates daily as new coupons are added and expired ones are removed, so you always see the educators giving back most to the community."
+  },
+  {
+    q: "Are the instructor coupon codes on this page verified?",
+    a: "Yes. Every coupon linked from an instructor profile is checked against Udemy before listing and re-checked periodically. Deals that expire or hit their redemption limit are removed automatically, so you only see codes that still work."
+  },
+  {
+    q: "How do I find all courses from a specific instructor?",
+    a: "Click any instructor name on this page to open their profile. Each profile lists every verified coupon deal from that educator, sorted by enrollment, with the current price, rating, and discount shown up front."
+  },
+  {
+    q: "Do these instructors offer free courses too?",
+    a: "Many do. A large share of the coupons we verify are 100% off codes, giving you the full course — including certificate and lifetime access — at no cost. Each deal clearly shows the final price before you click through."
+  }
+];
+
+const avgDiscountOverall = Math.round(deals.reduce((s, d) => s + (d.originalPrice ? Math.round(100 - (d.price / d.originalPrice) * 100) : 0), 0) / deals.length);
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
         { "@type": "ListItem", "position": 2, "name": "Top Instructors", "item": canonicalUrl }
-      ]},
-      { "@type": "CollectionPage", "url": canonicalUrl, "name": title, "description": description,
-        "mainEntity": { "@type": "ItemList", "numberOfItems": topInstructors.length }}
-    ]
-  })} />
+      ]
+    },
+    {
+      "@type": ["WebPage", "CollectionPage"],
+      "@id": canonicalUrl,
+      "url": canonicalUrl,
+      "name": title,
+      "description": description,
+      "isPartOf": { "@id": `${siteUrl}/#website` },
+      "inLanguage": "en-US",
+      "mainEntity": {
+        "@type": "ItemList",
+        "numberOfItems": topInstructors.length,
+        "itemListElement": topInstructors.slice(0, 20).map((instructor, index) => ({
+          "@type": "ListItem",
+          "position": index + 1,
+          "url": `${siteUrl}/instructor/${createInstructorSlug(instructor.name)}`,
+          "item": {
+            "@type": "Person",
+            "name": instructor.name,
+            "url": `${siteUrl}/instructor/${createInstructorSlug(instructor.name)}`
+          }
+        }))
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": faqs.map(f => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": { "@type": "Answer", "text": f.a }
+      }))
+    }
+  ]
+};
+---
 
-  <main class="cl-root">
-    <div class="cl-container">
+<Layout title={title} description={description} canonical={canonicalUrl} hideBreadcrumbs={true}>
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-      <section class="cl-hero">
-        <div class="cl-hero-bg"></div>
-        <div class="cl-hero-inner">
-          <div class="cl-hero-head">
-            <div class="cl-hero-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 6 9 6 9z"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 18 9 18 9z"/><path d="M4 22h16"/><path d="M10 22V2h4v20"/><path d="M8 22h8"/></svg>
-            </div>
-            <h1 class="cl-hero-title">Top Instructors</h1>
+  <main class="cc-root">
+    <div class="cc-container">
+
+      <header class="cc-header">
+        <div class="cc-register">
+          <div class="cc-register-top">
+            <span class="cc-eyebrow"><span class="cc-blip"></span> Verified instructor directory</span>
+            <span class="cc-folio">{topInstructors.length} instructors &middot; {totalCoupons.toLocaleString()} coupons</span>
           </div>
-          <p class="cl-hero-sub">Instructors ranked by verified coupon deals shared with the community</p>
-          <div class="cl-hero-stats">
-            <div class="cl-hero-stat">
-              <span class="cl-hero-stat-val">{totalCoupons.toLocaleString()}</span>
-              <span class="cl-hero-stat-lbl">Coupons Tracked</span>
-            </div>
-            <div class="cl-hero-stat">
-              <span class="cl-hero-stat-val">{topInstructors.length}</span>
-              <span class="cl-hero-stat-lbl">Instructors</span>
-            </div>
-            <div class="cl-hero-stat">
-              <span class="cl-hero-stat-val">{Math.round(deals.reduce((s,d) => s + (d.originalPrice ? Math.round(100 - (d.price/d.originalPrice)*100) : 0), 0) / deals.length)}%</span>
-              <span class="cl-hero-stat-lbl">Avg Discount</span>
-            </div>
+          <h1 class="cc-title">Top Udemy <span class="cc-accent">Instructors</span></h1>
+          <p class="cc-subtitle">Instructors ranked by <strong>{totalCoupons.toLocaleString()}+ verified coupon deals</strong> shared with the community — every code checked against Udemy before listing.</p>
+          <div class="cc-toolbar">
+            <a class="cc-hero-btn" href="#leaderboard">View the leaderboard</a>
+            <a class="cc-hero-btn ghost" href="/categories">Browse by category</a>
+            <a class="cc-hero-btn ghost" href="/udemy-coupons-today">Today's new deals</a>
+          </div>
+          <div class="cc-ledger">
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Instructors</div><div class="cc-ledger-value">{topInstructors.length}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Coupons tracked</div><div class="cc-ledger-value">{totalCoupons.toLocaleString()}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Avg discount</div><div class="cc-ledger-value">{avgDiscountOverall}%</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Top deals</div><div class="cc-ledger-value">{topInstructors[0]?.totalCoupons}</div></div>
           </div>
         </div>
-      </section>
+      </header>
 
-      <section class="cl-table-section">
-        <div class="cl-table-wrap">
-          <table class="cl-table">
+      <section class="cc-deals-section" id="leaderboard" aria-label="Top instructors leaderboard">
+        <div class="cc-sec-head">
+          <h2 class="cc-sec-title">Top Instructors with Verified Coupons <span class="cc-tag">{topInstructors.length} ranked</span></h2>
+          <p class="cc-sec-desc">Sorted by active coupon deal count — every code verified against Udemy before listing.</p>
+        </div>
+
+        <div class="cc-ledger-wrap">
+          <table class="cc-ledger-table">
             <thead>
               <tr>
-                <th class="cl-th-rank">#</th>
-                <th class="cl-th-name">Instructor</th>
-                <th class="cl-th-num">Coupons</th>
-                <th class="cl-th-num">Avg Disc</th>
-                <th class="cl-th-num">Students</th>
-                <th class="cl-th-num">Rating</th>
+                <th class="cc-th-rank">#</th>
+                <th class="cc-th-name">Instructor</th>
+                <th class="cc-th-num">Coupons</th>
+                <th class="cc-th-num">Avg Disc</th>
+                <th class="cc-th-num">Students</th>
+                <th class="cc-th-num">Rating</th>
               </tr>
             </thead>
             <tbody>
@@ -151,32 +206,32 @@ const description = `Top ${topInstructors.length} instructors ranked by verified
                 const instructorImg = instructorImages.get(slug);
 
                 return (
-                  <tr class:list={['cl-row', isTop3 && 'cl-row-top']}>
-                    <td class="cl-rank">
-                      {medal === 'gold' && <svg class="cl-medal" width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>}
-                      {medal === 'silver' && <svg class="cl-medal" width="18" height="18" viewBox="0 0 24 24" fill="#94a3b8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>}
-                      {medal === 'bronze' && <svg class="cl-medal" width="18" height="18" viewBox="0 0 24 24" fill="#cd7f32"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>}
-                      {!medal && <span class="cl-rank-num">{index + 1}</span>}
+                  <tr class:list={['cc-row', isTop3 && 'cc-row-top']}>
+                    <td class="cc-th-rank">
+                      {medal === 'gold' && <svg class="cc-medal" width="16" height="16" viewBox="0 0 24 24" fill="#B8901F"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>}
+                      {medal === 'silver' && <svg class="cc-medal" width="16" height="16" viewBox="0 0 24 24" fill="#94a3b8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>}
+                      {medal === 'bronze' && <svg class="cc-medal" width="16" height="16" viewBox="0 0 24 24" fill="#cd7f32"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>}
+                      {!medal && <span class="cc-rank-num">{index + 1}</span>}
                     </td>
-                    <td class="cl-name-cell">
+                    <td class="cc-name-cell">
                       {instructorImg ? (
-                        <div class="cl-avatar cl-avatar-img"><img src={instructorImg} alt={instructor.name} loading="lazy" /></div>
+                        <div class="cc-avatar cc-avatar-img"><img src={instructorImg} alt={instructor.name} loading="lazy" /></div>
                       ) : (
-                        <div class="cl-avatar" style={`background:${getAvatarColor(instructor.name)}`}>
+                        <div class="cc-avatar" style={`background:${getAvatarColor(instructor.name)}`}>
                           {getInitials(instructor.name)}
                         </div>
                       )}
-                      <div class="cl-name-info">
-                        <a href={`/instructor/${slug}`} class="cl-name-link">{instructor.name}</a>
-                        <span class="cl-name-meta">{instructor.categories.slice(0, 2).join(', ') || instructor.provider}</span>
+                      <div class="cc-name-info">
+                        <a href={`/instructor/${slug}`} class="cc-name-link">{instructor.name}</a>
+                        <span class="cc-name-meta">{instructor.categories.slice(0, 2).join(', ') || instructor.provider}</span>
                       </div>
                     </td>
-                    <td class="cl-num">{instructor.totalCoupons}</td>
-                    <td class="cl-num">{Math.round(instructor.avgDiscount)}%</td>
-                    <td class="cl-num">{instructor.totalStudents > 1000 ? (instructor.totalStudents / 1000).toFixed(1) + 'k' : instructor.totalStudents}</td>
-                    <td class="cl-num">
-                      <span class="cl-rating">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--brand)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <td class="cc-num">{instructor.totalCoupons}</td>
+                    <td class="cc-num">{Math.round(instructor.avgDiscount)}%</td>
+                    <td class="cc-num">{instructor.totalStudents > 1000 ? (instructor.totalStudents / 1000).toFixed(1) + 'k' : instructor.totalStudents}</td>
+                    <td class="cc-num">
+                      <span class="cc-rating">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#B8901F"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                         {instructor.avgRating}
                       </span>
                     </td>
@@ -188,113 +243,130 @@ const description = `Top ${topInstructors.length} instructors ranked by verified
         </div>
       </section>
 
-      <section class="cl-seo">
-        <h2 class="cl-seo-title">Top Udemy Instructors with Verified Coupon Codes</h2>
-        <p class="cl-seo-text">
-          Browse our directory of <strong>{topInstructors.length} instructors</strong> who offer verified Udemy coupon codes and discounts. Each instructor is ranked by their total number of active coupon deals — from industry veterans like <strong>{topInstructors[0]?.name}</strong> to rising experts across development, business, IT, design, and more. Every coupon on this page is verified before listing, so you get real discounts on real courses.
-        </p>
-        <p class="cl-seo-text">
-          Whether you are looking for deep discounts on premium courses or want to follow a specific instructor's work, this leaderboard helps you discover the most active educators in the Udemy ecosystem. The average discount across all listed instructors is <strong>{Math.round(deals.reduce((s,d) => s + (d.originalPrice ? Math.round(100 - (d.price/d.originalPrice)*100) : 0), 0) / deals.length)}%</strong>, with top instructors offering dozens of coupon deals each.
-        </p>
-        <p class="cl-seo-text">
-          All data is updated daily. Coupons that expire or reach their redemption limit are removed within hours, ensuring you only see deals that actually work. Click any instructor name to view all their available coupon codes and start learning today.
-        </p>
+      <section class="cc-seo-section">
+        <h2 class="cc-section-title">Top Udemy Instructors with Verified Coupon Codes</h2>
+        <p>Browse our directory of <strong>{topInstructors.length} instructors</strong> who offer verified Udemy coupon codes and discounts. Each instructor is ranked by their total number of active coupon deals — from industry veterans like <strong>{topInstructors[0]?.name}</strong> to rising experts across development, business, IT, design, and more. Every coupon on this page is verified before listing, so you get real discounts on real courses.</p>
+        <p>Whether you are looking for deep discounts on premium courses or want to follow a specific instructor's work, this leaderboard helps you discover the most active educators in the Udemy ecosystem. The average discount across all listed instructors is <strong>{avgDiscountOverall}%</strong>, with top instructors offering dozens of coupon deals each.</p>
+        <p>All data is updated daily. Coupons that expire or reach their redemption limit are removed within hours, ensuring you only see deals that actually work. Click any instructor name to view all their available coupon codes and start learning today.</p>
       </section>
 
-      <section class="cl-cta">
-        <div class="cl-cta-box">
-          <h2 class="cl-cta-title">Share Your Coupons</h2>
-          <p class="cl-cta-desc">Help the learning community by submitting verified coupon deals.</p>
-          <div class="cl-cta-actions">
-            <a href="/contact" class="cl-cta-btn cl-cta-primary">Contact Us</a>
-          </div>
+      <section class="cc-section cc-faq" aria-labelledby="faq-title">
+        <h2 id="faq-title" class="cc-section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Udemy Instructor FAQs
+          <span class="cc-tag">{faqs.length} questions</span>
+        </h2>
+        <div class="cc-faq-grid">
+          {faqs.map((faq) => (
+            <div class="cc-faq-card">
+              <h3 class="cc-faq-q">{faq.q}</h3>
+              <p class="cc-faq-a">{faq.a}</p>
+            </div>
+          ))}
         </div>
+      </section>
+
+      <section class="cc-cta">
+        <p class="cc-cta-eyebrow">Share your coupons</p>
+        <p class="cc-cta-text">Help the learning community by submitting verified coupon deals.</p>
+        <a class="cc-hero-btn" href="/contact">Contact Us</a>
       </section>
 
     </div>
   </main>
 
-  <script>
-    // placeholder for future filtering
-  </script>
-
   <style>
-    .cl-root { padding: 0 0 4rem; }
-    .cl-container { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem; }
+    .cc-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+    .cc-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
 
-    .cl-hero { position: relative; text-align: center; padding: 3rem 0 2rem; overflow: hidden; }
-    .cl-hero-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(0,167,111,0.08) 0%, transparent 60%); pointer-events: none; }
-    .cl-hero-inner { position: relative; }
-    .cl-hero-head { display: flex; align-items: center; justify-content: center; gap: 0.75rem; }
-    .cl-hero-icon { width: 48px; height: 48px; flex-shrink: 0; background: linear-gradient(135deg, rgba(0,167,111,0.15), rgba(0,167,111,0.05)); border-radius: 14px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(0,167,111,0.2); color: var(--brand); }
-    .cl-hero-title { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; color: var(--text); margin: 0; letter-spacing: -0.02em; }
-    .cl-hero-sub { font-size: 0.92rem; color: var(--muted); margin: 0.5rem 0 0; }
-    .cl-hero-stats { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; }
-    .cl-hero-stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.5rem; text-align: center; min-width: 120px; }
-    .cl-hero-stat-val { display: block; font-size: 1.3rem; font-weight: 800; color: var(--brand); }
-    .cl-hero-stat-lbl { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 0.2rem; }
+    /* ===== REGISTER / LEDGER HEADER ===== */
+    .cc-register { position: relative; background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(18, 32, 58, 0.35); }
+    .cc-register-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; font-weight: 600; color: #1F7A4D; background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.25); border-radius: 999px; padding: 6px 13px; }
+    .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #1F7A4D; animation: ccBlip 1.6s infinite; }
+    @keyframes ccBlip { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+    .cc-folio { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #5B564C; border: 1px dashed #B9B29B; border-radius: 6px; padding: 5px 10px; letter-spacing: .05em; white-space: nowrap; }
+    .cc-title { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 700; color: #12203A; line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 12px; }
+    .cc-title .cc-accent { color: #C13B2E; }
+    .cc-subtitle { color: #5B564C; font-size: 0.95rem; line-height: 1.7; margin: 0 0 20px; max-width: 640px; }
+    .cc-subtitle strong { color: #12203A; font-weight: 700; }
 
-    .cl-table-section { margin-top: 1rem; }
-    .cl-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
-    .cl-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    .cl-table thead { border-bottom: 1px solid var(--border); }
-    .cl-table th { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 0.75rem 0.75rem; white-space: nowrap; text-align: left; }
-    .cl-th-rank { width: 2.5rem; text-align: center !important; }
-    .cl-th-name { text-align: left; }
-    .cl-th-num { text-align: right; }
-    .cl-table td { padding: 0.7rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    .cl-row:last-child td { border-bottom: none; }
-    .cl-row:hover { background: rgba(0,167,111,0.03); }
-    .cl-row-top td { border-bottom-color: rgba(0,167,111,0.15); }
+    .cc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .cc-hero-btn { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-size: 0.9rem; font-weight: 600; text-decoration: none; padding: 12px 20px; border-radius: 9px; background: #12203A; color: #fff; box-shadow: 0 10px 24px rgba(18, 32, 58, 0.35); transition: background 0.2s, transform 0.2s; white-space: nowrap; }
+    .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
+    .cc-hero-btn.ghost { background: transparent; color: #1B2E52; border: 1px solid #1B2E52; box-shadow: none; }
+    .cc-hero-btn.ghost:hover { background: #1B2E52; color: #fff; }
 
-    .cl-rank { text-align: center; width: 2.5rem; }
-    .cl-rank-num { font-size: 0.82rem; font-weight: 700; color: var(--muted); }
-    .cl-medal { display: inline-block; vertical-align: middle; }
+    .cc-ledger { display: flex; margin-top: 24px; border-top: 1px dashed #B9B29B; padding-top: 20px; flex-wrap: wrap; }
+    .cc-ledger-cell { flex: 1 1 150px; padding: 2px 18px; border-left: 1px solid #D8D0BC; }
+    .cc-ledger-cell:first-child { border-left: none; padding-left: 2px; }
+    .cc-ledger-label { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: #5B564C; margin-bottom: 4px; }
+    .cc-ledger-value { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-weight: 700; font-size: 22px; color: #12203A; }
 
-    .cl-name-cell { display: flex; align-items: center; gap: 0.65rem; }
-    .cl-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; color: #fff; flex-shrink: 0; overflow: hidden; }
-    .cl-avatar-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .cl-name-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
-    .cl-name-link { color: var(--text); text-decoration: none; font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .cl-name-link:hover { color: var(--brand); }
-    .cl-name-meta { font-size: 0.68rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* ===== LEADERBOARD TABLE ===== */
+    .cc-deals-section { margin-top: 3.25rem; scroll-margin-top: 1.5rem; }
+    .cc-sec-head { margin-bottom: 0.9rem; }
+    .cc-sec-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; letter-spacing: -0.01em; }
+    .cc-sec-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+    .cc-sec-desc { font-size: 0.85rem; color: #6E6A5E; margin: 0; }
 
-    .cl-num { text-align: right; font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; font-variant-numeric: tabular-nums; }
-    .cl-num-bold { font-weight: 700; color: var(--text); }
+    .cc-ledger-wrap { background: #fff; border: 1px solid #D8D0BC; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.16); margin-top: 16px; }
+    table.cc-ledger-table { width: 100%; border-collapse: collapse; }
+    .cc-ledger-table thead th { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #5B564C; text-align: left; padding: 12px 14px; border-bottom: 1px solid #D8D0BC; background: #EDE7D6; white-space: nowrap; }
+    .cc-ledger-table td { padding: 12px 14px; border-bottom: 1px dotted #D8D0BC; vertical-align: middle; }
+    .cc-ledger-table tr:last-child td { border-bottom: none; }
+    .cc-ledger-table tr:hover td { background: #F5F1E6; }
+    .cc-th-rank { width: 2.5rem; text-align: center; }
+    .cc-th-name { text-align: left; }
+    .cc-th-num { text-align: right; }
+    .cc-num { text-align: right; font-size: 0.9rem; color: #5B564C; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .cc-row-top td { border-bottom-color: rgba(184, 144, 31, 0.25); }
+    .cc-rank-num { font-size: 0.82rem; font-weight: 700; color: #5B564C; }
+    .cc-medal { display: inline-block; vertical-align: middle; }
 
-    .cl-rating { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.82rem; font-weight: 600; color: var(--text); }
-    .cl-rating svg { width: 12px; height: 12px; }
+    .cc-name-cell { display: flex; align-items: center; gap: 0.65rem; }
+    .cc-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 800; color: #fff; flex-shrink: 0; overflow: hidden; }
+    .cc-avatar-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cc-name-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+    .cc-name-link { color: #12203A; text-decoration: none; font-weight: 700; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cc-name-link:hover { color: #C13B2E; text-decoration: underline; }
+    .cc-name-meta { font-size: 0.68rem; color: #5B564C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .cl-seo { margin-top: 3rem; padding: 2rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
-    .cl-seo-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0 0 1rem; }
-    .cl-seo-text { font-size: 0.88rem; line-height: 1.7; color: var(--muted); margin: 0 0 0.75rem; }
-    .cl-seo-text:last-child { margin-bottom: 0; }
-    .cl-seo-text strong { color: var(--text); font-weight: 600; }
+    .cc-rating { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; font-weight: 600; color: #12203A; }
+    .cc-rating svg { width: 12px; height: 12px; }
 
-    .cl-cta { margin-top: 3rem; }
-    .cl-cta-box { background: var(--card); border: 2px solid var(--brand-soft); border-radius: 16px; padding: 2.5rem 2rem; text-align: center; position: relative; overflow: hidden; box-shadow: 0 0 40px -8px rgba(0,167,111,0.1); }
-    .cl-cta-box::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,167,111,0.05), transparent 50%); pointer-events: none; }
-    .cl-cta-title { font-size: clamp(1.3rem, 2.5vw, 1.6rem); font-weight: 800; color: var(--text); margin: 0; position: relative; }
-    .cl-cta-desc { font-size: 0.92rem; color: var(--muted); margin: 0.5rem 0 1.5rem; position: relative; }
-    .cl-cta-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; position: relative; }
-    .cl-cta-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.5rem; border-radius: 8px; font-size: 0.88rem; font-weight: 700; text-decoration: none; transition: all 0.2s; }
-    .cl-cta-primary { background: var(--brand); color: #fff; }
-    .cl-cta-primary:hover { background: var(--brand-hover); }
-    .cl-cta-secondary { border: 1px solid var(--border); color: var(--text); }
-    .cl-cta-secondary:hover { border-color: var(--brand); color: var(--brand); }
+    /* ===== GENERIC SECTION HEADS (seo/faq) ===== */
+    .cc-section-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.3rem; display: flex; align-items: center; gap: 0.6rem; letter-spacing: -0.01em; flex-wrap: wrap; }
+    .cc-section-title svg { color: #1F7A4D; flex-shrink: 0; }
+    .cc-section-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
 
-    @media (max-width: 640px) {
-      .cl-hero-stats { flex-direction: column; align-items: center; }
-      .cl-hero-stat { min-width: 200px; }
-      .cl-table { font-size: 0.78rem; }
-      .cl-table th, .cl-table td { padding: 0.5rem 0.5rem; }
-      .cl-name-link { font-size: 0.82rem; }
-      .cl-avatar { width: 28px; height: 28px; font-size: 0.6rem; }
+    .cc-seo-section { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 14px; padding: 1.5rem; margin: 3.25rem 0 0; }
+    .cc-seo-section .cc-section-title { font-size: 1.15rem; margin-bottom: 0.75rem; }
+    .cc-seo-section p { font-size: 0.9rem; color: #5B564C; line-height: 1.6; margin: 0 0 0.75rem; }
+    .cc-seo-section p:last-child { margin-bottom: 0; }
+    .cc-seo-section strong { color: #12203A; font-weight: 700; }
+
+    .cc-faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    @media (max-width: 768px) { .cc-faq-grid { grid-template-columns: 1fr; } }
+    .cc-faq-card { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 12px; padding: 1.1rem 1.15rem; }
+    .cc-faq-card:hover { border-color: #B9B29B; }
+    .cc-faq-q { font-size: 0.95rem; font-weight: 700; color: #12203A; margin: 0 0 0.4rem; line-height: 1.4; }
+    .cc-faq-a { font-size: 0.85rem; color: #5B564C; line-height: 1.55; margin: 0; }
+
+    .cc-cta { background: #F5F1E6; border: 1px solid #D8D0BC; color: #12203A; border-radius: 16px; padding: 30px 32px; text-align: center; margin: 3.25rem 0 0; }
+    .cc-cta-eyebrow { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: #1F7A4D; margin: 0 0 8px; }
+    .cc-cta-text { font-size: 0.95rem; line-height: 1.6; margin: 0 auto 18px; max-width: 480px; color: #5B564C; }
+    .cc-cta .cc-hero-btn { background: #12203A; color: #fff; box-shadow: 0 12px 28px -12px rgba(18, 32, 58, 0.5); }
+    .cc-cta .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
+
+    @media (max-width: 768px) {
+      .cc-title { font-size: 1.9rem; }
+      .cc-register { padding: 26px 20px 22px; }
+      .cc-ledger-cell { border-left: none; padding: 8px 0; }
     }
     @media (max-width: 480px) {
-      .cl-th-rank { width: 1.8rem; }
-      .cl-table th:nth-child(4), .cl-table td:nth-child(4),
-      .cl-table th:nth-child(5), .cl-table td:nth-child(5) { display: none; }
+      .cc-title { font-size: 1.7rem; }
+      .cc-hero-btn { padding: 11px 16px; font-size: 0.85rem; }
     }
   </style>
 </Layout>
