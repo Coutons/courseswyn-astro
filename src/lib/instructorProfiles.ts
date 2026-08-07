@@ -1,5 +1,5 @@
 import fs from 'fs/promises';
-import { fileURLToPath } from 'url';
+import path from 'path';
 import { readDeals } from './store';
 import { parseInstructors, createInstructorSlug } from './instructors';
 
@@ -8,7 +8,7 @@ export interface InstructorProfile {
   image?: string;
 }
 
-const profilesFile = fileURLToPath(new URL('../data/instructors.json', import.meta.url));
+const profilesFile = path.join(process.cwd(), 'src', 'data', 'instructors.json');
 
 export async function readInstructorProfiles(): Promise<Record<string, InstructorProfile>> {
   try {
