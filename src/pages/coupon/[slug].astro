@@ -92,16 +92,13 @@ const instructorImage = primaryInstructorName
 
 const normalizedTitle = deal.title?.trim() || "Premium Course";
 const discountLabel = discountPercentage > 0 ? `${discountPercentage}% OFF` : "Discount";
-const seoTitle = (deal.seoTitle || `${normalizedTitle} - ${discountLabel} Udemy Coupon`).trim();
+const baseSeoTitle = (deal.seoTitle || `${normalizedTitle} - ${discountLabel} Udemy Discount`).trim();
+const seoTitle = baseSeoTitle.endsWith("(Coupon)") ? baseSeoTitle : `${baseSeoTitle} (Coupon)`;
 const seoDescription = (deal.seoDescription || `${normalizedTitle} is available with a verified coupon and ${discountPercentage > 0 ? `up to ${discountPercentage}% off` : "a discount"}${deal.students ? `, taken by ${deal.students.toLocaleString("en-US")} students` : ""}${deal.duration ? `, covering about ${deal.duration} of video content` : ""}. ${deal.category ? `This ${deal.category} course walks you through real-world skills` : "Explore the course overview"} and learning objectives before you enroll.`).trim();
 
 const siteUrl = "https://courseswyn.com";
 const dealUrl = `${siteUrl}/coupon/${deal.slug}`;
 const orgName = "CoursesWyn";
-const totalDeals = allDeals.length;
-const avgRating = totalDeals > 0
-  ? (allDeals.reduce((sum, d) => sum + (d.rating || 0), 0) / allDeals.filter(d => d.rating).length).toFixed(1)
-  : "4.5";
 ---
 
 <Layout
@@ -133,14 +130,7 @@ const avgRating = totalDeals > 0
                     "sameAs": [
                         "https://www.facebook.com/courseswyn",
                         "https://twitter.com/courseswyn"
-                    ],
-                    "aggregateRating": {
-                        "@type": "AggregateRating",
-                        "ratingValue": avgRating,
-                        "bestRating": "5",
-                        "ratingCount": totalDeals,
-                        "reviewCount": totalDeals
-                    }
+                    ]
                 },
                 {
                     "@type": "WebSite",
@@ -188,20 +178,13 @@ const avgRating = totalDeals > 0
                         "validThrough": deal.expiresAt || undefined,
                         "url": deal.url || dealUrl,
                         "seller": { "@id": `${siteUrl}/#organization` },
-                        "hasMerchantReturnPolicy": {
-                            "@type": "MerchantReturnPolicy",
-                            "merchantReturnDays": 30,
-                            "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow"
-                        }
-                    },
-                    "aggregateRating": deal.rating ? {
-                        "@type": "AggregateRating",
-                        "ratingValue": deal.rating,
-                        "ratingCount": deal.students || 1,
-                        "bestRating": 5,
-                        "worstRating": 1
-                    } : undefined,
-                    "timeRequired": deal.duration ? `PT${deal.duration.replace(/[^\d]/g, '')}H` : undefined,
+                            "hasMerchantReturnPolicy": {
+                                "@type": "MerchantReturnPolicy",
+                                "merchantReturnDays": 30,
+                                "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow"
+                            }
+                        },
+                        "timeRequired": deal.duration ? `PT${deal.duration.replace(/[^\d]/g, '')}H` : undefined,
                     "inLanguage": deal.language || "en",
                     "teaches": deal.learn ? deal.learn.map((l) => l.replace(/\r$/, '')).join(", ") : (deal.skills?.length ? deal.skills.join(", ") : undefined),
                     "educationalLevel": deal.level || "Beginner to Advanced",
@@ -243,14 +226,7 @@ const avgRating = totalDeals > 0
                         },
                         "discount": `${discountPercentage}%`,
                         "discountCode": deal.coupon
-                    },
-                    "aggregateRating": deal.rating ? {
-                        "@type": "AggregateRating",
-                        "ratingValue": deal.rating,
-                        "reviewCount": deal.students || 1,
-                        "bestRating": 5,
-                        "worstRating": 1
-                    } : undefined
+                    }
                 },
                 {
                     "@type": "BreadcrumbList",
@@ -282,25 +258,6 @@ const avgRating = totalDeals > 0
                         "cssSelector": ["h1", "p", ".prose"]
                     }
                 },
-                ...(deal.rating ? [{
-                    "@type": "Review",
-                    "@id": `${dealUrl}#review`,
-                    "itemReviewed": { "@id": `${dealUrl}#course` },
-                    "reviewRating": {
-                        "@type": "Rating",
-                        "ratingValue": deal.rating,
-                        "bestRating": 5,
-                        "worstRating": 1
-                    },
-                    "author": {
-                        "@type": "Organization",
-                        "name": orgName,
-                        "url": siteUrl
-                    },
-                    "publisher": { "@id": `${siteUrl}/#organization` },
-                    "datePublished": deal.updatedAt ? new Date(deal.updatedAt).toISOString() : new Date().toISOString(),
-                    "reviewBody": `${deal.title} has a rating of ${deal.rating} out of 5 based on ${(deal.students || 0).toLocaleString()} student reviews.${deal.instructor ? ` Taught by ${parseInstructors(deal.instructor).join(', ')}.` : ''}`
-                }] : []),
                 {
                     "@type": "HowTo",
                     "@id": `${dealUrl}#howto`,
