@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import { readDeals } from "../../lib/store";
 import { slugifyCategory } from "../../lib/utils";
+import { maskCoupon } from "../../lib/couponMask";
 import { categoryStats, couponFAQs } from "../../lib/dealStats";
 import { parseInstructors, createInstructorSlug } from "../../lib/instructors";
 import { getInstructorImage } from "../../lib/instructorProfiles";
@@ -99,6 +100,10 @@ const seoDescription = (deal.seoDescription || `${normalizedTitle} is available 
 const siteUrl = "https://courseswyn.com";
 const dealUrl = `${siteUrl}/coupon/${deal.slug}`;
 const orgName = "CoursesWyn";
+
+const couponMask = maskCoupon(deal.coupon);
+const clientDeal: Deal = { ...deal };
+delete clientDeal.coupon;
 ---
 
 <Layout
@@ -224,8 +229,7 @@ const orgName = "CoursesWyn";
                             "merchantReturnDays": 30,
                             "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow"
                         },
-                        "discount": `${discountPercentage}%`,
-                        "discountCode": deal.coupon
+                        "discount": `${discountPercentage}%`
                     }
                 },
                 {
@@ -304,6 +308,6 @@ const orgName = "CoursesWyn";
         })
     } />
 
-    <DealPage client:load deal={deal} relatedDeals={relatedDeals} catStats={catStats} instructorImage={instructorImage} />
+    <DealPage client:load deal={clientDeal} relatedDeals={relatedDeals} catStats={catStats} instructorImage={instructorImage} couponMask={couponMask} />
 
 </Layout>

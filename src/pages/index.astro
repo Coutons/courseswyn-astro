@@ -6,6 +6,7 @@ import { normName, slugifyCategory } from "../lib/utils";
 
 const allDeals = await readDeals();
 const now = new Date();
+const currentYear = now.getFullYear();
 const activeDeals = allDeals.filter((d) => !d.expiresAt || new Date(d.expiresAt) > now);
 const sortedDeals = [...activeDeals].sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime());
 
@@ -30,7 +31,7 @@ const discountPcts = allDeals
   .filter((d): d is typeof d & { price: number; originalPrice: number } => typeof d.price === "number" && typeof d.originalPrice === "number" && d.originalPrice > d.price && d.price > 0)
   .map((d) => Math.round(100 - (d.price / d.originalPrice) * 100));
 const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 95;
-const liveCount = allDeals.length;
+const liveCount = activeDeals.length;
 
 const cat90Off: Record<string, number> = {};
 for (const d of allDeals) {
@@ -40,11 +41,10 @@ for (const d of allDeals) {
   }
 }
 
-const totalStudents = activeDeals.reduce((acc, d) => acc + (typeof d.students === "number" && d.students > 0 ? d.students : genStudents(String(d.slug || d.title || ""))), 0);
+
 
 function clean(s: string) { return String(s || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;|&#8217;/g, "'").replace(/\s{2,}/g, " ").trim(); }
-function formatCompact(n: number): string { if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M'; if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K'; return n.toLocaleString(); }
-function genStudents(key: string): number { let h = 0; for (let i = 0; i < key.length; i++) { h = (h * 31 + key.charCodeAt(i)) & 0x7fffffff; } return 1000 + (h % 50000); }
+
 function timeAgo(d?: string | Date): string {
   if (!d) return "now";
   const t = typeof d === "string" ? new Date(d).getTime() : d.getTime();
@@ -66,14 +66,14 @@ const faqs = [
   { q: "How does CoursesWyn pick which courses to list?", a: "We prioritize courses with strong ratings, reputable instructors, and current curriculum. Our automated pipeline checks every deal against quality signals (rating, reviews, instructor history) before publishing — so a big discount doesn't mean low quality." }
 ];
 
-const pageTitle = `Verified Udemy Coupon Codes ${new Date().getFullYear()} - Get Premium Courses for Less | CoursesWyn`;
-const pageDescription = `Get premium Udemy courses for less. Find verified coupon codes and discounts, save up to ${maxDiscountPct}% on top courses — new deals added daily.`;
+const pageTitle = `Udemy Coupons & Discounts ${currentYear} — Save Up to ${maxDiscountPct}% | Verified Daily | CoursesWyn`;
+const pageDescription = `Save up to ${maxDiscountPct}% on Udemy courses with verified coupons. Daily-updated discount codes for programming, design, business & more — every deal checked at checkout.`;
 
 const jsonLd = {
   "@context": "https://schema.org", "@graph": [
     { "@type": "WebSite", "@id": "https://courseswyn.com/#website", "url": "https://courseswyn.com", "name": "CoursesWyn", "description": pageDescription, "inLanguage": "en-US", "publisher": { "@id": "https://courseswyn.com/#organization" }, "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://courseswyn.com/search?q={search_term_string}" }, "query-input": "required name=search_term_string" } },
     { "@type": "Organization", "@id": "https://courseswyn.com/#organization", "name": "CoursesWyn", "url": "https://courseswyn.com", "logo": { "@type": "ImageObject", "url": "https://courseswyn.com/logo.svg", "width": 200, "height": 60 }, "sameAs": ["https://x.com/CoursesWyn", "https://www.facebook.com/CoursesWyn", "https://medium.com/@coursewyn"], "description": `Verified working Udemy coupon and discount directory with up to ${maxDiscountPct}% off codes, updated daily.` },
-    { "@type": "WebPage", "@id": "https://courseswyn.com/#webpage", "url": "https://courseswyn.com", "name": pageTitle, "description": pageDescription, "isPartOf": { "@id": "https://courseswyn.com/#website" }, "mainEntityOfPage": { "@type": "WebPage", "@id": "https://courseswyn.com/#webpage" }, "dateModified": toISODateWIB(new Date()), "datePublished": toISODateWIB(new Date()), "inLanguage": "en-US", "about": { "@id": "https://courseswyn.com/#organization" }, "primaryImageOfPage": { "@type": "ImageObject", "url": "https://courseswyn.com/assets/images/og-default.svg" }, "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["h1", ".rd2-sub", ".hp-faq-q", ".hp-faq-a"] } },
+    { "@type": "WebPage", "@id": "https://courseswyn.com/#webpage", "url": "https://courseswyn.com", "name": pageTitle, "description": pageDescription, "author": { "@type": "Person", "name": "Andrew Derek", "url": "https://courseswyn.com/about" }, "isPartOf": { "@id": "https://courseswyn.com/#website" }, "mainEntityOfPage": { "@type": "WebPage", "@id": "https://courseswyn.com/#webpage" }, "dateModified": toISODateWIB(new Date()), "datePublished": toISODateWIB(new Date()), "inLanguage": "en-US", "about": { "@id": "https://courseswyn.com/#organization" }, "primaryImageOfPage": { "@type": "ImageObject", "url": "https://courseswyn.com/assets/images/og-default.svg" }, "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["h1", ".rd2-sub", ".hp-faq-q", ".hp-faq-a"] } },
     { "@type": "BreadcrumbList", "itemListElement": [{ "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" }] },
     {
       "@type": "ItemList", "numberOfItems": featuredDeals.length, "itemListElement": featuredDeals.slice(0, 10).map((d, i) => ({
@@ -101,7 +101,7 @@ const typewriterWords = [
   `${last24h} new deals added in last 24 hours`,
   `${last7d} new deals added in last 7 days`,
   'Try: "Python programming", "Web design", "Business"',
-  `Over ${liveCount.toLocaleString()}+ coupon deals available!`
+  `Over ${liveCount.toLocaleString()} verified coupons live!`
 ];
 const typewriterJson = JSON.stringify(typewriterWords);
 ---
@@ -116,7 +116,7 @@ const typewriterJson = JSON.stringify(typewriterWords);
   <meta property="og:image:type" content="image/svg+xml" slot="head" />
   <meta property="og:image:width" content="1200" slot="head" />
   <meta property="og:image:height" content="630" slot="head" />
-  <meta property="og:image:alt" content="CoursesWyn - Verified Udemy Coupon Codes" slot="head" />
+  <meta property="og:image:alt" content="CoursesWyn - Udemy Coupons & Discounts" slot="head" />
   <meta property="og:site_name" content="CoursesWyn" slot="head" />
   <meta property="og:locale" content="en_US" slot="head" />
   <meta name="twitter:card" content="summary_large_image" slot="head" />
@@ -124,7 +124,7 @@ const typewriterJson = JSON.stringify(typewriterWords);
   <meta name="twitter:title" content={pageTitle} slot="head" />
   <meta name="twitter:description" content={pageDescription} slot="head" />
   <meta name="twitter:image" content="/assets/images/og-default.svg" slot="head" />
-  <meta name="twitter:image:alt" content="CoursesWyn - Verified Udemy Coupon Codes" slot="head" />
+  <meta name="twitter:image:alt" content="CoursesWyn - Udemy Coupons & Discounts" slot="head" />
   <meta name="twitter:site" content="@CoursesWyn" slot="head" />
   <meta name="keywords" content="udemy coupon code, udemy discount, verified udemy coupons, free udemy courses, udemy coupon, udemy discount code, learn udemy, online course discount" slot="head" />
   <link rel="preconnect" href="https://fonts.googleapis.com" slot="head" />
@@ -220,6 +220,8 @@ const typewriterJson = JSON.stringify(typewriterWords);
     .hp-vf-title { font-weight: 700; font-size: 13.5px; color: var(--hp-ink); margin-bottom: 4px; }
     .hp-vf-desc { font-size: 12px; color: var(--hp-muted); line-height: 1.55; }
     .hp-vf-status { display: inline-block; margin-top: 8px; font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; color: var(--hp-green); background: var(--hp-green-bg); border-radius: 5px; padding: 2px 8px; }
+    .hp-more-link { display: inline-block; margin-top: 14px; font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; color: var(--hp-brand); text-decoration: none; }
+    .hp-more-link:hover { text-decoration: underline; }
 
     /* ===== CATEGORY BAR + DEAL TABLE ===== */
     .hp-catbar { position: sticky; top: 0; z-index: 40; margin-top: 16px; background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(6px); border: 1px solid var(--hp-line); border-radius: 12px; padding: 9px 10px; display: flex; gap: 6px; overflow-x: auto; }
@@ -318,8 +320,8 @@ const typewriterJson = JSON.stringify(typewriterWords);
   <section class="hp-wrap" aria-label="Discounted Udemy courses hero">
     <div class="hp-hero">
       <span class="hp-eyebrow"><span class="blip"></span> {liveCount.toLocaleString()} coupons verified live right now</span>
-      <h1>Verified <span>Udemy Coupon Codes</span></h1>
-      <h2 class="rd2-hero-claim">Get Premium Courses for Less Today!</h2>
+      <h1><span>Udemy Coupons</span> &amp; Discounts — Save Up to {maxDiscountPct}%</h1>
+      <h2 class="rd2-hero-claim">Verified Coupon Codes, Checked Daily</h2>
       <p class="rd2-sub">Discover thousands of premium Udemy courses for less. From programming and design to business and marketing — learn anything for a fraction of the cost with verified coupon codes.</p>
       <form action="/search" method="GET" role="search" aria-label="Search courses" class="hp-search" id="rd2Search">
         <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
@@ -350,10 +352,10 @@ const typewriterJson = JSON.stringify(typewriterWords);
         ))}
       </div>
       <div class="hp-ledger">
-        <div class="hp-ledger-cell"><div class="hp-ledger-label">Verified coupons</div><div class="hp-ledger-value">{liveCount.toLocaleString()}</div></div>
-        <div class="hp-ledger-cell"><div class="hp-ledger-label">Courses watched</div><div class="hp-ledger-value">{formatCompact(totalStudents)}</div></div>
-        <div class="hp-ledger-cell"><div class="hp-ledger-label">Median code lifetime</div><div class="hp-ledger-value">430h</div></div>
-        <div class="hp-ledger-cell"><div class="hp-ledger-label">Checks / 24h</div><div class="hp-ledger-value">5.6K</div></div>
+        <div class="hp-ledger-cell"><div class="hp-ledger-label">Coupon catalog</div><div class="hp-ledger-value">{allDeals.length.toLocaleString()}</div></div>
+        <div class="hp-ledger-cell"><div class="hp-ledger-label">Live right now</div><div class="hp-ledger-value">{liveCount.toLocaleString()}</div></div>
+        <div class="hp-ledger-cell"><div class="hp-ledger-label">Added in last 24h</div><div class="hp-ledger-value">{last24h}</div></div>
+        <div class="hp-ledger-cell"><div class="hp-ledger-label">Max discount</div><div class="hp-ledger-value">-{maxDiscountPct}%</div></div>
       </div>
     </div>
   </section>
@@ -370,6 +372,7 @@ const typewriterJson = JSON.stringify(typewriterWords);
         <div class="hp-vf"><div class="hp-vf-num"></div><div class="hp-vf-title">Working coupon confirmed</div><div class="hp-vf-desc">The redemption link is only released once that final check passes.</div><span class="hp-vf-status">Queued</span></div>
         <div class="hp-vf"><div class="hp-vf-num"></div><div class="hp-vf-title">Udemy opens automatically</div><div class="hp-vf-desc">You land on checkout with the code already applied — no manual entry.</div><span class="hp-vf-status">Queued</span></div>
       </div>
+      <a class="hp-more-link" href="/how-we-test-and-verify-udemy-coupons">How we test &amp; verify Udemy coupons →</a>
     </div>
   </section>
 

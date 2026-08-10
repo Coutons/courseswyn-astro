@@ -1,0 +1,255 @@
+---
+import Layout from "../layouts/Layout.astro";
+import AuthorBox from "../components/AuthorBox.astro";
+import { readDeals } from "../lib/store";
+import { formatDateWIB, toISODateWIB } from "../lib/date";
+
+const siteUrl = "https://courseswyn.com";
+const today = toISODateWIB(new Date());
+
+const allDeals = await readDeals();
+const now = new Date();
+const live = allDeals.filter((d: any) => !d.expiresAt || new Date(d.expiresAt) > now);
+const totalLive = live.length;
+const expiring7 = live.filter((d: any) => {
+  if (!d.expiresAt) return false;
+  const t = new Date(d.expiresAt).getTime();
+  return t > now.getTime() && t < now.getTime() + 7 * 24 * 3600 * 1000;
+}).length;
+const maxDiscount = live.reduce((m: number, d: any) => {
+  if (typeof d.price === "number" && typeof d.originalPrice === "number" && d.originalPrice > 0) {
+    return Math.max(m, Math.round((1 - d.price / d.originalPrice) * 100));
+  }
+  return m;
+}, 0);
+const newestCheck = allDeals.reduce((latest: string, d: any) => {
+  const t = d.updatedAt || d.createdAt || "";
+  return t > latest ? t : latest;
+}, "");
+const lastCheckedText = newestCheck ? formatDateWIB(newestCheck) : "";
+
+const pipeline = [
+  { n: "01", t: "Collect", d: "Codes come from Udemy's official affiliate feeds and direct submissions from verified instructors. Every source and retrieval timestamp is logged per listing." },
+  { n: "02", t: "Check against the real checkout", d: "We open each deal against an authentic Udemy checkout in a fresh browser session and record the final price, discount %, and the timestamp of the test." },
+  { n: "03", t: "Publish or reject", d: "A coupon is listed only if it returns the stated discount at checkout. Anything that doesn't apply is rejected immediately and never reaches the public tables." },
+  { n: "04", t: "Re-verify throughout the day", d: "Every live listing is re-tested on a schedule. Expired, redemption-capped, or beaten-by-sale deals are removed automatically so the tables always reflect now." },
+  { n: "05", t: "Human spot-checks", d: "An editor reviews anything the automation flags as ambiguous and audits editorial pages. The \"Checked\" date on every listing is proof of the last live test." }
+];
+
+const faqs = [
+  {
+    q: "How often are the coupons on this site re-verified?",
+    a: `Every listing carries the timestamp of its most recent check (the "Checked" date). Deals are refreshed continuously against a real Udemy checkout, and expired, capped, or beaten-by-sale codes are removed automatically. The newest check across the current set was ${lastCheckedText}.`
+  },
+  {
+    q: "Why did a coupon stop working even though it was verified?",
+    a: "Verification is always tied to a timestamp. Since Udemy's policy update, free coupons are capped at roughly 10\u2013100 redemptions or expire within days \u2014 a code that worked this morning can be exhausted by the afternoon. That's why every listing shows when it was last checked."
+  },
+  {
+    q: "How do you know instructor-submitted coupons are genuine?",
+    a: "Submissions are only accepted from instructors who can prove they own the course. Regardless of the source, every code still has to pass the real-checkout test before it is published \u2014 a submitted code that doesn't apply is never listed."
+  },
+  {
+    q: "Do you charge instructors or students to list a coupon?",
+    a: "No. CoursesWyn never charges a fee to list or use a coupon. We earn a commission only through Udemy's official affiliate program when you enroll through our links \u2014 at no extra cost to you \u2014 as described in our affiliate disclosure."
+  },
+  {
+    q: "How do I report a broken coupon or a wrong price?",
+    a: "Use the contact form. Confirmed errors are corrected in the next pipeline run, the listing or page is updated, and the \"last updated\" date is bumped so you can see the change."
+  }
+];
+---
+
+<Layout
+  title="How We Test & Verify Udemy Coupons | CoursesWyn"
+  description={`How CoursesWyn tests and verifies Udemy coupons before they go live: ${totalLive} coupons currently live, our 5-step checkout-check pipeline, sources, re-verification, and corrections policy.`}
+  canonical={`${siteUrl}/how-we-test-and-verify-udemy-coupons`}
+>
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": `${siteUrl}/how-we-test-and-verify-udemy-coupons`,
+        "url": `${siteUrl}/how-we-test-and-verify-udemy-coupons`,
+        "name": "How We Test & Verify Udemy Coupons | CoursesWyn",
+        "description": `How CoursesWyn tests and verifies Udemy coupons before they go live: ${totalLive} coupons currently live, our 5-step checkout-check pipeline, sources, re-verification, and corrections policy.`,
+        "isPartOf": { "@id": `${siteUrl}#organization` },
+        "datePublished": today,
+        "dateModified": today,
+        "inLanguage": "en-US",
+        "breadcrumb": { "@id": `${siteUrl}/how-we-test-and-verify-udemy-coupons#breadcrumb` }
+      },
+      {
+        "@type": "HowTo",
+        "@id": `${siteUrl}/how-we-test-and-verify-udemy-coupons#howto`,
+        "name": "How CoursesWyn Tests and Verifies Udemy Coupons",
+        "description": "Every coupon on CoursesWyn passes through five stages before and after it is published.",
+        "step": pipeline.map((s, i) => ({
+          "@type": "HowToStep",
+          "position": i + 1,
+          "name": s.t,
+          "text": s.d
+        }))
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${siteUrl}/how-we-test-and-verify-udemy-coupons#faq`,
+        "mainEntity": faqs.map(faq => ({
+          "@type": "Question",
+          "name": faq.q,
+          "acceptedAnswer": { "@type": "Answer", "text": faq.a }
+        }))
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${siteUrl}/how-we-test-and-verify-udemy-coupons#breadcrumb`,
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
+          { "@type": "ListItem", "position": 2, "name": "How We Test & Verify Udemy Coupons", "item": `${siteUrl}/how-we-test-and-verify-udemy-coupons` }
+        ]
+      },
+      {
+        "@type": "Organization",
+        "@id": `${siteUrl}#organization`,
+        "name": "CoursesWyn",
+        "url": siteUrl,
+        "sameAs": ["https://x.com/CoursesWyn", "https://www.facebook.com/CoursesWyn"]
+      }
+    ]
+  })} />
+
+  <main class="p-root">
+    <article class="p-article">
+
+      <header class="p-hdr">
+        <h1>How We Test &amp; Verify Udemy Coupons</h1>
+        <p class="p-date">Last updated: {lastCheckedText || today} &middot; By <a href="/about" class="p-link">Andrew Derek</a>, Lead Course Analyst</p>
+      </header>
+
+      <section class="p-intro">
+        <p>Every coupon on CoursesWyn is checked against a real Udemy checkout before it is published &mdash; and re-checked after that. We never list a code we haven't live-tested, and we never sell codes. This page explains exactly how that works.</p>
+      </section>
+
+      <section class="p-stats" aria-label="Current verification stats">
+        <div class="p-stat"><div class="p-stat-value">{totalLive.toLocaleString()}</div><div class="p-stat-label">coupons live right now</div></div>
+        <div class="p-stat"><div class="p-stat-value">{allDeals.length.toLocaleString()}</div><div class="p-stat-label">deals in the current set</div></div>
+        <div class="p-stat"><div class="p-stat-value">{expiring7}</div><div class="p-stat-label">expiring within 7 days</div></div>
+        <div class="p-stat"><div class="p-stat-value">up to {maxDiscount}%</div><div class="p-stat-label">discount at checkout</div></div>
+      </section>
+
+      <section>
+        <div class="p-sec-hdr"><h2>What "Verified" Means on This Site</h2></div>
+        <p>A listing is marked <span class="p-bold">verified</span> when a test of the coupon returned the stated discount at checkout in a real browser session. Because Udemy coupons can be redeemed up to a cap and also expire, a verified status is always tied to the <span class="p-bold">"Checked" date</span> shown on the listing. Verified today does not guarantee verified tomorrow &mdash; which is precisely why we re-verify.</p>
+      </section>
+
+      <section>
+        <div class="p-sec-hdr"><h2>The Verification Pipeline</h2></div>
+        <p>Each coupon that appears on CoursesWyn passes through the same five stages:</p>
+        <ol class="p-steps">
+          {pipeline.map((s) => (
+            <li class="p-step">
+              <span class="p-step-num">{s.n}</span>
+              <div>
+                <h3 class="p-step-title">{s.t}</h3>
+                <p class="p-step-text">{s.d}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section>
+        <div class="p-sec-hdr"><h2>Where the Coupons Come From</h2></div>
+        <ul>
+          <li><span class="p-bold">Udemy's official affiliate program.</span> Course and pricing data, including sale prices, is pulled from Udemy's official data and affiliate feed.</li>
+          <li><span class="p-bold">Direct instructor submissions.</span> Instructors can submit codes for their own courses. We only accept submissions from someone who can prove they own the course, and the submitted code still has to pass the same checkout check.</li>
+          <li><span class="p-bold">Udemy sitewide sales.</span> Udemy's own promotions (the discount that auto-applies at checkout) are listed without any code and verified the same way.</li>
+        </ul>
+        <p>We do not scrape codes from third-party directories, and we do not buy, sell, or trade coupon codes.</p>
+      </section>
+
+      <section>
+        <div class="p-sec-hdr"><h2>Removal &amp; Corrections Policy</h2></div>
+        <ul>
+          <li><span class="p-bold">A listing is no longer valid?</span> The re-verification pipeline catches it the same day and removes it automatically, so dead codes don't linger.</li>
+          <li><span class="p-bold">An editorial page is wrong?</span> Report it through the <a href="/contact" class="p-link">contact form</a>. Once confirmed, we correct it and bump the "last updated" date on the page.</li>
+          <li><span class="p-bold">Pricing disputes.</span> Prices on Udemy change constantly. We record the price at the time of each live test; the "Checked" date defines what that price refers to.</li>
+          <li><span class="p-bold">Our relationship with Udemy.</span> CoursesWyn is an independent affiliate. We earn a commission when you enroll through our links &mdash; at no extra cost to you &mdash; as explained in our <a href="/affiliate-disclosure" class="p-link">affiliate disclosure</a>. Commissions never affect what we test or publish.</li>
+        </ul>
+      </section>
+
+      <section>
+        <div class="p-sec-hdr"><h2>Frequently Asked Questions</h2></div>
+        <div class="p-faqs">
+          {faqs.map((faq) => (
+            <details class="p-faq">
+              <summary class="p-faq-q">
+                <span>{faq.q}</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="p-faq-arrow">
+                  <path d="M7 10l5 5 5-5z"/>
+                </svg>
+              </summary>
+              <div class="p-faq-a">{faq.a}</div>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <div class="p-sec-hdr"><h2>Put It To Use</h2></div>
+        <p>Browse <a href="/udemy-coupon-code" class="p-link">all verified Udemy coupons</a> (each listing dated and checked), see <a href="/udemy-coupons-today" class="p-link">today's new drops</a>, or follow the <a href="/how-to-redeem-coupon" class="p-link">redemption walkthrough</a> with screenshots.</p>
+      </section>
+
+      <AuthorBox image="/images/author.jpg" />
+
+    </article>
+  </main>
+
+  <style>
+    .p-root { padding: 3rem 1rem 4rem; }
+    .p-article { max-width: 48rem; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem; }
+
+    .p-hdr h1 { font-size: 1.75rem; font-weight: 700; color: var(--text); margin: 0; line-height: 1.15; }
+    .p-date { font-size: 0.85rem; color: var(--muted); margin: 0.5rem 0 0; }
+
+    .p-intro p { font-size: 0.92rem; color: var(--muted); line-height: 1.65; margin: 0; }
+
+    .p-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; }
+    .p-stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem; }
+    .p-stat-value { font-size: 1.35rem; font-weight: 700; color: var(--brand); line-height: 1.1; }
+    .p-stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; line-height: 1.4; }
+
+    section { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .p-sec-hdr { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 0.5rem 0; margin: 0; }
+    .p-sec-hdr h2 { font-size: 0.92rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text); margin: 0; }
+
+    section p { font-size: 0.9rem; color: var(--muted); line-height: 1.65; margin: 0; }
+    section ul { list-style: disc; padding-left: 1.5rem; display: flex; flex-direction: column; gap: 0.25rem; margin: 0; }
+    section li { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+    .p-bold { font-weight: 600; color: var(--text); }
+
+    .p-link { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .p-link:hover { text-decoration: underline; }
+
+    .p-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+    .p-step { display: flex; gap: 0.9rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem; }
+    .p-step-num { flex-shrink: 0; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--brand); color: #fff; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; font-weight: 600; }
+    .p-step-title { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0 0 0.25rem; }
+    .p-step-text { font-size: 0.85rem; color: var(--muted); line-height: 1.55; margin: 0; }
+
+    .p-faqs { display: flex; flex-direction: column; gap: 0.5rem; }
+    .p-faq { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .p-faq-q { padding: 1rem 1.25rem; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--text); display: flex; align-items: center; justify-content: space-between; gap: 1rem; list-style: none; transition: background 0.15s; }
+    .p-faq-q:hover { background: var(--card-hover); }
+    .p-faq-arrow { flex-shrink: 0; color: var(--muted); transition: transform 0.2s; }
+    details[open] .p-faq-arrow { transform: rotate(180deg); }
+    .p-faq-a { padding: 0 1.25rem 1rem 1.25rem; font-size: 0.85rem; color: var(--muted); line-height: 1.6; border-top: 1px solid var(--border); padding-top: 1rem; }
+
+    @media (max-width: 640px) {
+      .p-root { padding: 2rem 1rem 3rem; }
+      .p-hdr h1 { font-size: 1.5rem; }
+    }
+  </style>
+</Layout>

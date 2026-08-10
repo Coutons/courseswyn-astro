@@ -21,6 +21,7 @@ interface Props {
   relatedDeals?: Deal[];
   catStats?: CategoryStats;
   instructorImage?: string;
+  couponMask?: string;
 }
 
 function stripHtml(s?: string): string {
@@ -74,7 +75,7 @@ function PriceTrendChart({ deal }: { deal: Deal }) {
   );
 }
 
-export default function DealPage({ deal, relatedDeals = [], catStats, instructorImage }: Props) {
+export default function DealPage({ deal, relatedDeals = [], catStats, instructorImage, couponMask }: Props) {
   const instructorNames = useMemo(() => parseInstructors(deal.instructor), [deal.instructor]);
   const primaryInstructor = instructorNames[0] || "Instructor";
   const instructorInitials = primaryInstructor
@@ -102,7 +103,6 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
   };
   const trackedSinceLabel = fmtLong(deal.createdAt || deal.updatedAt);
 
-  const [copied, setCopied] = useState(false);
   const [verifiedAgo, setVerifiedAgo] = useState<string | null>(null);
   const expired = isDealExpired(deal);
 
@@ -112,17 +112,6 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
     const id = setInterval(tick, 60000);
     return () => clearInterval(id);
   }, [deal.updatedAt, deal.createdAt]);
-
-  const copyCode = () => {
-    if (!deal.coupon || typeof navigator === "undefined" || !navigator.clipboard) return;
-    navigator.clipboard
-      .writeText(deal.coupon)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1800);
-      })
-      .catch(() => {});
-  };
 
   const feedbackKey = `cw-fb-${deal.slug}`;
   const [feedback, setFeedback] = useState<{ up: number; down: number; voted?: "up" | "down" }>({ up: 0, down: 0 });
@@ -150,10 +139,7 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
     });
   };
 
-  const maskedCoupon =
-    deal.coupon && deal.coupon.length > 7
-      ? `${deal.coupon.slice(0, 4)}···${deal.coupon.slice(-3)}`
-      : deal.coupon || "AUTO-APPLY";
+  const maskedCoupon = couponMask || "AUTO-APPLY";
 
   const stats = catStats || { active: 0, highDiscount: 0, avgPrice: 0 };
   const catStatActive = stats.active || (deal.category ? 1 : 0);
@@ -275,8 +261,12 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
             <div className="cp-eyebrow-row">
               <span className="cp-cat-tag">{deal.category || "Deal"}</span>
               <span className="cp-stamp">✓ {verifiedAgo ? `Checked ${verifiedAgo}` : "Checked"}</span>
-              {expired && <span className="cp-stamp cp-stamp-exp">✕ Expired</span>}
             </div>
+            {expired && (
+              <div className="cp-stamp-exp-row">
+                <span className="cp-stamp cp-stamp-exp">✕ Expired</span>
+              </div>
+            )}
             <h1 className="cp-title" id="deal-title">{deal.title}</h1>
             {(deal.seoDescription || deal.description) && (
               <p className="cp-desc">{deal.seoDescription || deal.description}</p>
@@ -539,7 +529,7 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
                 <div className="cp-stub-left">{expiryLabel}</div>
                 <div className="cp-stub-code">
                   <code>{maskedCoupon}</code>
-                  {deal.coupon && <button className="cp-copy-btn" onClick={copyCode}>{copied ? "Copied!" : "Copy"}</button>}
+                  <span className="cp-stub-code-note">auto-applies at checkout</span>
                 </div>
                 <a className="cp-stub-cta" href={deal.url} target="_blank" rel="noopener noreferrer nofollow">
                   Enroll Now →
@@ -658,8 +648,6 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
           Claim Coupon
         </a>
       </div>
-      <div className={"cp-toast" + (copied ? " show" : "")} role="status">Code copied to clipboard</div>
-
       <style>{`
         .cp-page{
           --cp-bg:#f4f6f8; --cp-ink:#161a20; --cp-ink2:#00a76f;
@@ -714,7 +702,8 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
         .cp-eyebrow-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
         .cp-cat-tag{font-family:var(--cp-font-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--cp-graphite-soft);border:1px solid var(--cp-line);padding:5px 10px;border-radius:999px;background:var(--cp-paper2);}
         .cp-stamp{font-family:var(--cp-font-mono);font-weight:600;font-size:12px;letter-spacing:.06em;color:var(--cp-green);border:2px solid var(--cp-green);border-radius:8px;padding:6px 10px;transform:rotate(-4deg);text-transform:uppercase;background:var(--cp-green-bg);white-space:nowrap;}
-        .cp-stamp-exp{color:#f87171;border-color:#f87171;background:rgba(248,113,113,.12);}
+        .cp-stamp-exp-row{margin-top:6px;}
+        .cp-stamp-exp{color:#f87171;border-color:#f87171;background:rgba(248,113,113,.12);font-size:10px;font-weight:600;padding:3px 8px;border-width:1.5px;border-radius:6px;transform:rotate(0deg);letter-spacing:.05em;}
         .cp-title{font-family:var(--cp-font-display);font-weight:700;font-size:clamp(24px,3.6vw,34px);line-height:1.14;letter-spacing:-.01em;margin:0 0 10px;color:var(--cp-ink);}
         .cp-desc{font-size:14px;line-height:1.65;color:var(--cp-graphite-soft);margin:0 0 14px;}
         .cp-by-line{font-size:14px;color:var(--cp-graphite-soft);margin:0 0 18px;}
@@ -857,8 +846,7 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
         .cp-stub-left{font-family:var(--cp-font-mono);font-size:11px;color:var(--cp-gold);margin-top:4px;}
         .cp-stub-code{margin-top:14px;display:flex;align-items:center;gap:8px;background:var(--cp-paper2);border:1px dashed var(--cp-graphite-soft);border-radius:10px;padding:10px 11px;}
         .cp-stub-code code{font-size:12.5px;color:var(--cp-ink);flex:1;}
-        .cp-copy-btn{font-family:var(--cp-font-mono);font-size:10.5px;font-weight:600;color:var(--cp-graphite);background:var(--cp-paper);border:1px solid var(--cp-line);border-radius:7px;padding:6px 9px;}
-        .cp-copy-btn:hover{background:var(--cp-green-bg);}
+        .cp-stub-code-note{font-family:var(--cp-font-mono);font-size:9.5px;color:var(--cp-graphite-soft);white-space:nowrap;}
         .cp-stub-cta{display:block;text-align:center;margin-top:13px;width:100%;font-family:var(--cp-font-display);font-weight:600;font-size:14.5px;color:#fff;background:var(--cp-green);border:none;border-radius:11px;padding:13px;}
         .cp-stub-cta:hover{background:#186640;}
         .cp-stub-guarantee{font-size:11px;color:var(--cp-graphite-soft);text-align:center;margin-top:9px;}
@@ -894,8 +882,6 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
           .cp-stub-wrap{position:static;}
         }
 
-        .cp-toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--cp-paper2);color:var(--cp-graphite);border:1px solid var(--cp-line);font-family:var(--cp-font-mono);font-size:12px;padding:10px 16px;border-radius:9px;opacity:0;pointer-events:none;transition:all .25s;z-index:60;}
-        .cp-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
       `}</style>
     </div>
   );

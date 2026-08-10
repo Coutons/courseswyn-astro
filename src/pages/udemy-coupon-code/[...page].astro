@@ -2,6 +2,7 @@
 export const prerender = true;
 import Layout from "../../layouts/Layout.astro";
 import LedgerRow from "../../components/LedgerRow.astro";
+import AuthorBox from "../../components/AuthorBox.astro";
 import { readDeals } from "../../lib/store";
 import { toISODateWIB } from "../../lib/date";
 import { slugifyCategory } from "../../lib/utils";
@@ -57,6 +58,8 @@ const monthNames = ["January","February","March","April","May","June",
 const currentMonth = monthNames[currentDate.getMonth()];
 const currentYear = currentDate.getFullYear();
 
+const lastChecked = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jakarta', month: 'long', day: 'numeric', year: 'numeric' }).format(now);
+
 const discountPcts = allDeals
   .filter((d: any) => d.price && d.originalPrice && d.originalPrice > d.price)
   .map((d: any) => Math.round(100 - (d.price / d.originalPrice) * 100));
@@ -105,6 +108,9 @@ const faqs = [
   { q: "Do discounted Udemy courses include certificates?", a: "Yes! When you enroll in a Udemy course using our coupons, you receive the same certificate as students who paid full price — lifetime access included." },
   { q: "Why do some Udemy coupons say 'This coupon has expired'?", a: "Udemy coupons have two expiration triggers: time limit (usually 3-7 days) OR redemption limit (typically 1,000 students). Once either limit is hit, the coupon stops working. Return to CoursesWyn — we refresh our listings multiple times daily." },
   { q: "Is there a catch? Why do instructors offer coupons?", a: "No catch! Instructors offer coupons for strategic marketing: building student numbers, generating reviews for new courses, and boosting algorithm rankings. You get premium education at a discount — a win-win." },
+  { q: "Can I use a Udemy coupon code on the Udemy mobile app?", a: "No. Udemy coupon codes can only be applied in a desktop or mobile browser at udemy.com checkout. The Udemy mobile app does not accept coupon codes — open the course page in your browser and log in there instead." },
+  { q: "Can I get a refund on a Udemy course if I used a coupon?", a: "Yes. Udemy's 30-day money-back guarantee applies even when you enroll with a coupon code. Request the refund from your Purchase History within 30 days — it returns to your original payment method." },
+  { q: "How much can I actually save with Udemy coupons?", a: "Most course coupons bring the price down to $9.99–$19.99 from a retail price of $49.99–$199.99 — savings of up to 95%. Many 100% off coupons are also available, though they sell out fast." },
 ];
 
 const jsonLd: any = {
@@ -132,6 +138,7 @@ const jsonLd: any = {
       "dateModified": currentDate.toISOString().split('T')[0],
       "inLanguage": "en-US",
       "mainEntity": { "@id": `${currentUrl}#itemlist` },
+      "author": { "@type": "Person", "name": "Andrew Derek", "url": siteUrl },
     },
     {
       "@type": "ItemList",
@@ -165,6 +172,19 @@ const jsonLd: any = {
         "name": f.q,
         "acceptedAnswer": { "@type": "Answer", "text": f.a },
       })),
+    },
+    {
+      "@type": "HowTo",
+      "@id": `${baseDealsUrl}#howto`,
+      "name": "How to Redeem a Udemy Coupon Code",
+      "description": "Four simple steps to redeem a Udemy coupon code and unlock your discount.",
+      "totalTime": "PT5M",
+      "step": [
+        { "@type": "HowToStep", "position": 1, "name": "Choose your course", "text": "Browse the deals on this page and pick a course you want. Check the rating, review count, and curriculum before you enroll." },
+        { "@type": "HowToStep", "position": 2, "name": "Click the deal card", "text": "Click the course card to open its deal page on CoursesWyn, then click the coupon or 'Get deal' button to jump to Udemy with the code pre-applied." },
+        { "@type": "HowToStep", "position": 3, "name": "Verify the discounted price", "text": "On Udemy, check that the coupon discount is reflected in the final price before you pay. For codes entered by hand, paste the code into the coupon field and click Apply." },
+        { "@type": "HowToStep", "position": 4, "name": "Enroll now", "text": "Click 'Enroll Now' to confirm your enrollment. Your course, certificate, and lifetime access are added immediately." },
+      ],
     }] : []),
   ],
 };
@@ -199,6 +219,7 @@ for (let p = 1; p <= totalPages; p++) {
       <meta name="bingbot" content="noindex, follow" />
     </>}
     <meta name="keywords" content={pageKeywords} />
+    <meta name="author" content="Andrew Derek" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -212,11 +233,20 @@ for (let p = 1; p <= totalPages; p++) {
       <header class="cc-header">
         <div class="cc-register">
           <div class="cc-register-top">
-            <span class="cc-eyebrow"><span class="cc-blip"></span> {totalActive.toLocaleString()} coupons verified live right now</span>
+            <span class="cc-eyebrow"><span class="cc-blip"></span><a href="/how-we-test-and-verify-udemy-coupons">{totalActive.toLocaleString()} coupons verified live right now</a></span>
             <span class="cc-folio">Page {currentPage} / {totalPages}</span>
           </div>
           <h1 class="cc-title">All Verified <span class="cc-accent">Udemy Coupon Codes</span>{currentPage > 1 && <span class="cc-page-label">Page {currentPage}</span>}</h1>
           <p class="cc-subtitle">Every code below is checked against Udemy before listing — save up to <strong>{maxDiscountPct}%</strong> on programming, design, business and more. New deals added daily.</p>
+          <div class="cc-byline">
+            <a class="cc-byline-badge" href="/about">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1 1 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+              Compiled &amp; checked by Andrew Derek
+            </a>
+            <span class="cc-byline-date">Offers last checked {lastChecked}</span>
+            <a class="cc-byline-verify" href="/how-we-test-and-verify-udemy-coupons">How we test &amp; verify Udemy coupons</a>
+          </div>
+          <p class="cc-byline-note">CoursesWyn may earn a commission when you buy through links on this page &mdash; at no extra cost to you. <a href="/affiliate-disclosure">Affiliate Disclosure</a></p>
           <div class="cc-toolbar">
             <form action="/search" method="GET" role="search" aria-label="Search courses" class="cc-hero-search">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -305,6 +335,111 @@ for (let p = 1; p <= totalPages; p++) {
       </section>
 
       {currentPage === 1 && (
+      <div class="cc-guide" aria-label="Udemy coupon guide">
+
+        <section class="cc-guide-block" id="how-to-redeem">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
+            How to Redeem a Udemy Coupon Code
+            <span class="cc-tag">Step-by-step</span>
+          </h2>
+          <p class="cc-guide-desc">Most coupons on this page apply automatically — click a deal and you're taken to Udemy with the discount pre-applied. For codes you enter by hand, follow these four steps:</p>
+          <ol class="cc-steps">
+            <li class="cc-step">
+              <span class="cc-step-num">1</span>
+              <div>
+                <h3 class="cc-step-title">Choose your course</h3>
+                <p class="cc-step-text">Browse the deals above and pick a course you want. Check the rating, review count, and curriculum before you enroll.</p>
+              </div>
+            </li>
+            <li class="cc-step">
+              <span class="cc-step-num">2</span>
+              <div>
+                <h3 class="cc-step-title">Open the deal page</h3>
+                <p class="cc-step-text">Click the course card to open its deal page on CoursesWyn, then click the coupon or "Get deal" button. You'll be redirected to Udemy with the code already applied.</p>
+              </div>
+            </li>
+            <li class="cc-step">
+              <span class="cc-step-num">3</span>
+              <div>
+                <h3 class="cc-step-title">Verify the discounted price</h3>
+                <p class="cc-step-text">On Udemy, confirm the coupon discount is reflected in the final price. For manual codes, paste the code into the coupon field at checkout and click Apply — Udemy shows the new total instantly.</p>
+              </div>
+            </li>
+            <li class="cc-step">
+              <span class="cc-step-num">4</span>
+              <div>
+                <h3 class="cc-step-title">Enroll now</h3>
+                <p class="cc-step-text">Click "Enroll Now" to confirm. Your course, certificate of completion, and lifetime access are added immediately. Coupons can't be applied in the Udemy mobile app, so redeem in a browser.</p>
+              </div>
+            </li>
+          </ol>
+          <p class="cc-guide-note">Full walkthrough with screenshots: <a href="/how-to-redeem-coupon">How to Redeem a Udemy Coupon</a></p>
+        </section>
+
+        <section class="cc-guide-block" id="coupon-not-working">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+            Why Your Udemy Coupon Code Isn't Working
+            <span class="cc-tag">Troubleshooting</span>
+          </h2>
+          <p class="cc-guide-desc">If a coupon shows the full price at checkout, one of these is usually the cause:</p>
+          <ul class="cc-tips">
+            <li class="cc-tip"><strong>The coupon expired.</strong> Most Udemy coupons last only 3-7 days or until 1,000 redemptions. Check the "Checked" column on this page — anything older may already be dead.</li>
+            <li class="cc-tip"><strong>Course restrictions.</strong> Some codes only work on specific courses, categories, or first-time users. The deal page states any limitations.</li>
+            <li class="cc-tip"><strong>Hidden spaces when pasting.</strong> Copy-paste often adds invisible spaces. Delete the code and type it manually.</li>
+            <li class="cc-tip"><strong>Browser cache or cookies.</strong> Open the checkout page in incognito mode and try again.</li>
+            <li class="cc-tip"><strong>The current sale price is lower.</strong> Udemy runs frequent sitewide sales (often 80-90% off). If the automatic sale price is already lower than the coupon, Udemy shows the lower price — that's not a bug.</li>
+            <li class="cc-tip"><strong>Currency or region settings.</strong> Udemy prices by location. Changing your country or currency settings can change whether a code is accepted.</li>
+          </ul>
+          <p class="cc-guide-note">Still stuck? Our <a href="/how-to-redeem-coupon">redemption guide</a> covers every error you might see.</p>
+        </section>
+
+        <section class="cc-guide-block" id="find-more-coupons">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-11 11H3v-6L14 4z"/><path d="M14 4l6 6"/><path d="m9 9 6 6"/></svg>
+            How to Find More Udemy Coupon Codes
+            <span class="cc-tag">Save more</span>
+          </h2>
+          <ul class="cc-tips">
+            <li class="cc-tip"><strong>Bookmark this page.</strong> We verify and refresh deals in near real time throughout the day — fresh codes drop constantly, not just in the morning.</li>
+            <li class="cc-tip"><strong>Check during major sales.</strong> Black Friday, New Year, Back-to-School, and seasonal sales push discounts as high as 90-95% off.</li>
+            <li class="cc-tip"><strong>Follow instructors directly.</strong> Many Udemy instructors share exclusive codes on their newsletters, YouTube, and personal sites.</li>
+            <li class="cc-tip"><strong>Use the wishlist.</strong> Add courses you want to your Udemy wishlist — Udemy emails you the moment they go on sale.</li>
+            <li class="cc-tip"><strong>Browse by category or topic.</strong> Use our <a href="/categories">categories</a> and <a href="/topics">topics</a> pages to find deals in the exact field you're learning.</li>
+          </ul>
+        </section>
+
+        <section class="cc-guide-block" id="personal-plan">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            No Coupon Available? Try Udemy Personal Plan
+            <span class="cc-tag">Unlimited access</span>
+          </h2>
+          <p class="cc-guide-text">Some of the courses we list no longer have a standalone coupon &mdash; Udemy's updated coupon policy means many codes auto-apply at checkout, cap at 10&ndash;100 redemptions, or expire within days. When a specific code is sold out, <strong>Udemy Personal Plan</strong> is often the better deal: one flat monthly price unlocks thousands of courses across programming, design, business and more &mdash; no per-course codes needed, cancel anytime.</p>
+          <p class="cc-guide-text">It suits learners who take several courses per month. If you only want one course, keep an eye on this page instead &mdash; fresh codes drop every day and Udemy runs regular sitewide sales with discounts up to {maxDiscountPct}%.</p>
+          <p class="cc-guide-note">Want to know if it's worth it? Read our <a href="/blog/udemy-personal-plan-review-2026/">Udemy Personal Plan review</a>.</p>
+          <a class="cc-ppoffer" href="https://trk.udemy.com/c/6564357/3775958/39854" target="_blank" rel="noopener noreferrer sponsored">
+            <span class="cc-ppoffer-label">Udemy Personal Plan</span>
+            <span class="cc-ppoffer-cta">Get up to 80% off &rarr;</span>
+          </a>
+        </section>
+
+        <section class="cc-guide-block" id="refund-policy">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Udemy Refund Policy & Getting Help
+            <span class="cc-tag">Good to know</span>
+          </h2>
+          <p class="cc-guide-text">Udemy offers a <strong>30-day money-back guarantee</strong> on most individual course purchases — even when you enrolled with a coupon. Request a refund from your Purchase History within 30 days; it returns to your original payment method (some payment types get Udemy credit instead, and Apple purchases are handled by Apple).</p>
+          <p class="cc-guide-text">Note that <strong>Personal Plan subscriptions</strong> bought through Udemy.com carry no 30-day guarantee and are not refundable unless local law requires it. Refunds can't be requested from the mobile app.</p>
+          <p class="cc-guide-text">For coupon, billing, or account issues, submit a ticket via the <a href="https://support.udemy.com" rel="noopener" target="_blank">official Udemy Help Center</a>. Udemy doesn't offer phone support in most regions — everything runs through their online ticket system.</p>
+        </section>
+
+      </div>
+      )}
+
+      {currentPage === 1 && (
         <section class="cc-category" aria-label="Browse Udemy coupon codes by category">
           <div class="cc-deals-header">
             <h2 class="cc-section-title">
@@ -347,6 +482,10 @@ for (let p = 1; p <= totalPages; p++) {
         </section>
       )}
 
+      {currentPage === 1 && (
+        <AuthorBox image="/images/author.jpg" />
+      )}
+
       <section class="cc-cta">
         <p class="cc-cta-eyebrow">Catalog complete</p>
         <p class="cc-cta-text">Every coupon on this page was checked against Udemy before listing. Check back tomorrow — fresh verified codes are added daily.</p>
@@ -365,6 +504,8 @@ for (let p = 1; p <= totalPages; p++) {
   .cc-register { position: relative; background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(18, 32, 58, 0.35); }
   .cc-register-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
   .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; font-weight: 600; color: #1F7A4D; background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.25); border-radius: 999px; padding: 6px 13px; }
+  .cc-eyebrow a { color: inherit; text-decoration: none; }
+  .cc-eyebrow a:hover { text-decoration: underline; }
   .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #1F7A4D; animation: ccBlip 1.6s infinite; }
   @keyframes ccBlip { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   .cc-folio { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #5B564C; border: 1px dashed #B9B29B; border-radius: 6px; padding: 5px 10px; letter-spacing: .05em; white-space: nowrap; }
@@ -373,6 +514,17 @@ for (let p = 1; p <= totalPages; p++) {
   .cc-page-label { display: inline-flex; align-items: center; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; font-weight: 600; color: #1F7A4D; background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.25); border-radius: 999px; padding: 4px 10px; margin-left: 0.6rem; vertical-align: middle; }
   .cc-subtitle { color: #5B564C; font-size: 0.95rem; line-height: 1.7; margin: 0 0 20px; max-width: 640px; }
   .cc-subtitle strong { color: #12203A; font-weight: 700; }
+
+  .cc-byline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 20px; }
+  .cc-byline-badge { display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; font-weight: 600; color: #1F7A4D; background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.25); border-radius: 999px; padding: 5px 12px; text-decoration: none; transition: background 0.2s; }
+  .cc-byline-badge:hover { background: #D9EDE2; }
+  .cc-byline-badge svg { flex-shrink: 0; }
+  .cc-byline-date { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #5B564C; }
+  .cc-byline-verify { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; font-weight: 600; color: #12203A; text-decoration: none; border: 1px solid #B9B29B; border-radius: 999px; padding: 5px 12px; transition: all 0.2s; }
+  .cc-byline-verify:hover { border-color: #1F7A4D; color: #1F7A4D; }
+  .cc-byline-note { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11px; color: #5B564C; margin: -6px 0 18px; line-height: 1.6; }
+  .cc-byline-note a { color: #1F7A4D; text-decoration: none; font-weight: 600; }
+  .cc-byline-note a:hover { text-decoration: underline; }
 
   .cc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .cc-hero-search { display: flex; align-items: center; gap: 10px; flex: 1 1 300px; max-width: 460px; min-width: 240px; background: #fff; border: 1px solid #D8D0BC; border-radius: 10px; padding: 0 14px; height: 48px; box-shadow: 0 8px 24px -18px rgba(18, 32, 58, 0.4); transition: border-color 0.2s, box-shadow 0.2s; }
@@ -443,6 +595,32 @@ for (let p = 1; p <= totalPages; p++) {
   .cc-seo-section p:last-child { margin-bottom: 0; }
   .cc-seo-section a { color: #1F7A4D; text-decoration: none; font-weight: 600; }
   .cc-seo-section a:hover { text-decoration: underline; }
+
+  /* ===== EVERGREEN GUIDE BLOCKS ===== */
+  .cc-guide { margin: 3.25rem 0 0; display: grid; gap: 1.25rem; }
+  .cc-guide-block { background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 14px; padding: 1.5rem; }
+  .cc-guide-block .cc-section-title { font-size: 1.15rem; margin-bottom: 0.75rem; }
+  .cc-guide-desc { font-size: 0.9rem; color: #5B564C; line-height: 1.6; margin: 0 0 1rem; }
+  .cc-guide-text { font-size: 0.9rem; color: #5B564C; line-height: 1.6; margin: 0 0 0.75rem; }
+  .cc-guide-text:last-child { margin-bottom: 0; }
+  .cc-guide-note { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 12px; color: #5B564C; margin: 1rem 0 0; }
+  .cc-ppoffer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.35); border-radius: 10px; padding: 12px 16px; text-decoration: none; transition: all 0.2s; }
+  .cc-ppoffer:hover { background: #D9EDE2; border-color: #1F7A4D; }
+  .cc-ppoffer-label { font-family: 'Space Grotesk', 'Nunito Sans', Inter, sans-serif; font-size: 13px; font-weight: 700; color: #12203A; }
+  .cc-ppoffer-cta { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 11.5px; font-weight: 600; color: #1F7A4D; white-space: nowrap; }
+  .cc-guide-block a { color: #1F7A4D; text-decoration: none; font-weight: 600; }
+  .cc-guide-block a:hover { text-decoration: underline; }
+
+  .cc-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+  .cc-step { display: flex; gap: 0.9rem; background: #fff; border: 1px solid #D8D0BC; border-radius: 12px; padding: 1rem 1.1rem; }
+  .cc-step-num { flex-shrink: 0; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: #12203A; color: #fff; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 12px; font-weight: 600; }
+  .cc-step-title { font-size: 0.95rem; font-weight: 700; color: #12203A; margin: 0 0 0.25rem; }
+  .cc-step-text { font-size: 0.85rem; color: #5B564C; line-height: 1.55; margin: 0; }
+
+  .cc-tips { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+  .cc-tip { font-size: 0.87rem; color: #5B564C; line-height: 1.55; background: #fff; border: 1px solid #D8D0BC; border-radius: 10px; padding: 0.85rem 1rem; }
+  .cc-tip strong { color: #12203A; }
+  .cc-tip a { font-weight: 600; }
 
   .cc-faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
   @media (max-width: 768px) { .cc-faq-grid { grid-template-columns: 1fr; } }
