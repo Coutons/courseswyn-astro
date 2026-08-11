@@ -27,6 +27,8 @@ const ENV_PATH = path.join(ROOT, '.env');
 
 const MIN_LEN = 250;
 const MAX_LEN = 350;
+const BULK_MAX = 320;
+const BULK_MIN_BODY = 170;
 const YEAR = 2026;
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const BATCH_SIZE = 8;
@@ -609,6 +611,160 @@ function preview(file) {
   console.log(`Preview: ${ok}/${Object.keys(batch).length} would apply OK`);
 }
 
+// ---------- Bulk hybrid generator ----------
+
+const FRESH_EN = [
+  (c, d, price, orig, cat, until, updated) =>
+    `— ${price} today (${d}% off), listed until ${until}.`,
+  (c, d, price, orig, cat, until, updated) =>
+    `— now ${price}, was ${orig}, ${cat} deal updated ${updated}.`,
+  (c, d, price, orig, cat, until, updated) =>
+    `— ${d}% off through ${until}, ${c.rating}★ on Udemy.`,
+  (c, d, price, orig, cat, until, updated) =>
+    `— ${price} verified deal, ${cat}, last synced ${updated}.`,
+];
+
+const FRESH_ES = [
+  (c, d, price, orig, cat, until, updated) =>
+    `— ${price} hoy (${d}% de descuento), listado hasta el ${until}.`,
+  (c, d, price, orig, cat, until, updated) =>
+    `— ahora ${price}, antes ${orig}, oferta de ${cat} actualizada el ${updated}.`,
+  (c, d, price, orig, cat, until, updated) =>
+    `— ${d}% de descuento hasta ${until}, ${c.rating}★ en Udemy.`,
+  (c, d, price, orig, cat, until, updated) =>
+    `— ${price} oferta verificada, ${cat}, última sincronización ${updated}.`,
+];
+
+function hashStr(s) {
+  let h = 0;
+  for (const ch of String(s || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return h;
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function fmtShortDate(iso) {
+  if (!iso) return '';
+  const m = String(iso).match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (!m) return '';
+  return `${MONTHS[Number(m[2]) - 1]} ${Number(m[3])}`;
+}
+
+function fmtPrice(n) {
+  const v = Number(n);
+  if (!isFinite(v) || v <= 0) return '';
+  return `$${v.toFixed(2).replace(/\.00$/, '')}`;
+}
+
+function isSpanishCourse(c) {
+  return /es\b|spanish|español/i.test(c.language || '');
+}
+
+function cleanText(s) {
+  return String(s || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/["“”‘’]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function freshnessClause(course) {
+  const d = realDiscountPercent(course);
+  const price = fmtPrice(course.price) || 'current price';
+  const orig = fmtPrice(course.originalPrice) || 'regular price';
+  const cat = cleanText(course.subcategory || course.category || '');
+  const until = fmtShortDate(course.expiresAt || course.updatedAt || course.createdAt);
+  const updated = fmtShortDate(course.updatedAt || course.createdAt || course.expiresAt);
+  const variants = isSpanishCourse(course) ? FRESH_ES : FRESH_EN;
+  let idx = hashStr(course.slug) % variants.length;
+  if (d == null && (idx === 0 || idx === 2)) idx = idx === 0 ? 1 : 3;
+  return variants[idx](course, d, price, orig, cat, until, updated);
+}
+
+function bulkPieces(course) {
+  const raw = [
+    ...(course.learn || []),
+    course.description,
+    course.title,
+    course.seoTitle,
+    ...(course.requirements || []),
+  ]
+    .map(cleanText)
+    .filter(Boolean);
+  const real = realDiscountPercent(course);
+  const seen = new Set();
+  const pieces = [];
+  for (const p of raw) {
+    const low = p.toLowerCase();
+    if (seen.has(low)) continue;
+    if (BOILERPLATE.some((b) => low.includes(b))) continue;
+    if (TEMPLATE_FRAGMENTS.some((f) => low.includes(f))) continue;
+    if (real != null) {
+      const m = p.match(/(\d{1,3})\s*%/);
+      if (m && Math.abs(parseInt(m[1], 10) - real) > 1) continue;
+    }
+    seen.add(low);
+    pieces.push(p);
+  }
+  return pieces;
+}
+
+function bulkBodyFor(course, used) {
+  const pieces = bulkPieces(course);
+  if (pieces.length === 0) return null;
+  const fresh = freshnessClause(course);
+  const maxBody = BULK_MAX - fresh.length - 1;
+  const minBody = Math.max(BULK_MIN_BODY, MIN_LEN - fresh.length + 10);
+  const start = hashStr(course.slug) % pieces.length;
+  let lastIssues = [];
+  for (let tries = 0; tries < pieces.length * 3; tries++) {
+    const parts = [];
+    let len = 0;
+    for (let k = 0; k < pieces.length; k++) {
+      const piece = pieces[(start + tries + k) % pieces.length];
+      parts.push(piece);
+      len += piece.length;
+      if (len >= minBody) break;
+    }
+    const body = parts.join('. ');
+    const b = trimToFit(body, maxBody);
+    const desc = `${b} ${fresh}`.trim().replace(/\s+/g, ' ');
+    const issues = issuesFor(desc, course);
+    if (used.has(normalize(desc))) issues.push('duplicateWording');
+    lastIssues = issues;
+    if (issues.length === 0) return { body: b, desc };
+  }
+  return { issue: lastIssues.join(' | ') };
+}
+
+function bulk(all) {
+  const courses = loadCourses();
+  const used = new Set(courses.map((c) => normalize(c.seoDescription)).filter(Boolean));
+  const targets = all
+    ? courses
+    : courses.filter((c) => issuesFor(c.seoDescription, c).length > 0);
+  let ok = 0;
+  const failed = [];
+  for (const course of targets) {
+    const r = bulkBodyFor(course, used);
+    if (r && r.desc) {
+      course.seoDescription = r.desc;
+      used.add(normalize(r.desc));
+      ok++;
+    } else {
+      failed.push(`${course.slug} (${(r && r.issue) || 'no-source'})`);
+    }
+  }
+  if (ok > 0) saveCourses(courses);
+  const remaining = courses.filter((c) => issuesFor(c.seoDescription, c).length > 0).length;
+  console.log(`✅ Bulk regenerated: ${ok} course(s)${all ? ' (--all)' : ''}`);
+  if (failed.length) {
+    console.log('❌ Could not generate:');
+    failed.forEach((s) => console.log(`   - ${s}`));
+  }
+  console.log(`📊 Remaining bad descriptions: ${remaining}`);
+}
+
 function check(instructor) {
   if (!instructor) {
     console.error('❌ Usage: npm run seo:check -- "<instructor name>"');
@@ -640,6 +796,8 @@ function showHelp() {
   console.log('  npm run seo:dump                       Dump all pending courses to scripts/work/pending.json');
   console.log('  npm run seo:apply -- <file>            Apply {"<slug>": "<body>"} batch file');
   console.log('  npm run seo:preview -- <file>          Dry-run check a batch file without applying');
+  console.log('  npm run seo:bulk                        Regenerate bad descriptions from course data');
+  console.log('  npm run seo:bulk -- --all               Regenerate descriptions for ALL courses');
   console.log('');
   console.log('Env (.env): GEMINI_API_KEY=..., GEMINI_MODEL=gemini-2.5-flash (optional)');
 }
@@ -664,6 +822,9 @@ switch (command) {
     break;
   case 'preview':
     preview(process.argv[3]);
+    break;
+  case 'bulk':
+    bulk(process.argv[3] === '--all');
     break;
   case 'check':
     check(process.argv[3]);

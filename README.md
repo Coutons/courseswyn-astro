@@ -1,13 +1,13 @@
 # CoursesWyn — Verified Udemy Coupons & Expert Course Reviews
 
-> **1,300+ Udemy coupons verified daily** — 100% OFF promo codes, expert reviews & savings guides. 68+ in-depth course audits across AI, Web Dev, Cloud & more.
-> Built with Astro 7.1 + React 19 + Tailwind CSS. Featured in the Official Astro Showcase.
+> **1,355 Udemy coupons verified daily** — 100% OFF promo codes, expert reviews & savings guides. 69 in-depth course audits across AI, Web Dev, Cloud & more.
+> Built with Astro 7.2 + React 19 + Tailwind CSS. Featured in the Official Astro Showcase.
 
 <p align="center">
   <a href="https://courseswyn.com"><img src="https://img.shields.io/badge/CoursesWyn.com-Verified_Udemy_Coupons-FF5D01?style=for-the-badge&logo=udemy&logoColor=white" alt="Live Site"></a>
   <a href="https://courseswyn.com/udemy-coupon-code"><img src="https://img.shields.io/badge/1.3k%2B_Coupons_Verified-100%25_Tested-38B2AC?style=for-the-badge" alt="Active Coupons"></a>
-  <a href="https://courseswyn.com/blog"><img src="https://img.shields.io/badge/68%2B_Expert_Reviews-No_Affiliate_Bias-A435F0?style=for-the-badge" alt="Expert Reviews"></a>
-  <a href="https://courseswyn.com/categories"><img src="https://img.shields.io/badge/20%2B_Categories_Browse-By_Topic-BC52EE?style=for-the-badge" alt="Browse Categories"></a>
+  <a href="https://courseswyn.com/blog"><img src="https://img.shields.io/badge/69_Expert_Reviews-No_Affiliate_Bias-A435F0?style=for-the-badge" alt="Expert Reviews"></a>
+  <a href="https://courseswyn.com/categories"><img src="https://img.shields.io/badge/15_Categories_Browse-By_Topic-BC52EE?style=for-the-badge" alt="Browse Categories"></a>
 </p>
 
 <p align="center">
@@ -15,7 +15,7 @@
   <a href="https://github.com/Coutons/courseswyn-astro/commits/main"><img src="https://img.shields.io/github/last-commit/Coutons/courseswyn-astro?style=flat&label=Updated" alt="Last Commit"></a>
   <a href="https://github.com/Coutons/courseswyn-astro/actions/workflows/deploy.yml"><img src="https://github.com/Coutons/courseswyn-astro/actions/workflows/deploy.yml/badge.svg" alt="Deploy"></a>
   <a href="https://courseswyn.com"><img src="https://img.shields.io/badge/Lighthouse-95%2B-38B2AC?style=flat&logo=lighthouse" alt="Lighthouse"></a>
-  <a href="https://astro.build"><img src="https://img.shields.io/badge/Astro_7-FF5D01?style=flat&logo=astro&logoColor=white" alt="Astro"></a>
+  <a href="https://astro.build"><img src="https://img.shields.io/badge/Astro_7.2-FF5D01?style=flat&logo=astro&logoColor=white" alt="Astro"></a>
 </p>
 
 ---
@@ -23,7 +23,7 @@
 ## Preview
 
 <p align="center">
-  <img src="screenshot.jpeg" alt="CoursesWyn.com — Verified Udemy coupon codes, 100% OFF daily deals and expert course reviews with ratings" width="80%">
+  <img src="public/assets/images/screenshot.jpeg" alt="CoursesWyn.com — Verified Udemy coupon codes, 100% OFF daily deals and expert course reviews with ratings" width="80%">
   <br><em>CoursesWyn — Daily Verified Promo Codes & Savings Strategies for Lifelong Learners</em>
 </p>
 
@@ -31,14 +31,31 @@
 
 ---
 
+## License & Usage Notice — Read Before You Fork or Clone
+
+> **⚠️ This repository is NOT open source.** It is shared publicly for **viewing
+> and transparency only**. Cloning, copying, mirroring, or reusing this codebase,
+> its data, or its content to build a competing or similar service is strictly
+> prohibited without written permission from CoursesWyn.
+
+- Full terms: see **[LICENSE](LICENSE)**.
+- This repo contains the **complete course database** (`src/data/coupons.json`),
+  original reviews, and admin tooling. Treat it as copyrighted material.
+- If you are not the owner, you may **read** the code to learn from it — you may
+  **not** redistribute it or deploy a copy.
+- Violating this license may result in the repository being taken down or legal
+  action.
+
+---
+
 ## What Is CoursesWyn?
 
 [CoursesWyn](https://courseswyn.com) is an independent platform providing **verified Udemy promo codes**, **expert course reviews**, and **structured career roadmaps**. Every coupon is manually tested before publishing — expired deals are purged within 4 hours.
 
-- **1,300+ active coupons** — manually verified, updated daily with 100% OFF and limited-time discounts
-- **68+ in-depth expert reviews** — opinionated audits covering AI engineering, agentic AI, web development, cloud computing, data science, and business
-- **20+ categories** — browse by topic at [courseswyn.com/categories](https://courseswyn.com/categories)
-- **Instructor rankings** — top-rated educators with curated course collections at [courseswyn.com/instructors](https://courseswyn.com/instructors)
+- **1,355 active coupons** — manually verified, updated daily with 100% OFF and limited-time discounts
+- **69 in-depth expert reviews** — opinionated audits covering AI engineering, agentic AI, web development, cloud computing, data science, and business
+- **15 categories** — browse by topic at [courseswyn.com/categories](https://courseswyn.com/categories)
+- **183 instructor profiles** — top-rated educators with curated course collections at [courseswyn.com/instructors](https://courseswyn.com/instructors)
 - **Real-time search** — Fuse.js powered instant search across all deals and reviews at [courseswyn.com/search](https://courseswyn.com/search)
 - **Featured** in the Official Astro Showcase for high-performance implementation
 
@@ -52,13 +69,13 @@ We don't just aggregate links — we audit every course. Our mission is to prote
 - **No Affiliate Bias**: Rankings based on curriculum quality and instructor credibility, not commission
 - **Daily Updates**: Fresh deals added every day. Price drops, flash sales, and new 100% OFF coupons tracked in real time
 - **Career Roadmaps**: Structured learning paths across AI engineering, web development, cloud, and data science — from beginner to job-ready
-- **Expert Reviews**: 68+ opinionated deep-dives with curriculum analysis, instructor background checks, and alternative recommendations
+- **Expert Reviews**: 69 opinionated deep-dives with curriculum analysis, instructor background checks, and alternative recommendations
 
 ---
 
 ## Expert Course Reviews
 
-Browse all [68+ expert reviews](https://courseswyn.com/blog) with opinionated rankings across every major category.
+Browse all [69 expert reviews](https://courseswyn.com/blog) with opinionated rankings across every major category.
 
 ### AI & Agentic AI
 
@@ -143,13 +160,14 @@ Browse all instructors at [courseswyn.com/instructors](https://courseswyn.com/in
 
 | Metric | Value |
 |---|---|
-| Active Coupons | 1,300+ verified daily |
-| Expert Reviews | 68+ in-depth audits |
-| Course Categories | 20+ topics |
+| Active Coupons | 1,355 verified daily |
+| Expert Reviews | 69 in-depth audits |
+| Instructor Profiles | 183 |
+| Course Categories | 15 topics |
 | Update Frequency | Daily (4-hour expiry purge) |
 | Learners Served | 150K+ worldwide |
 | Lighthouse Score | 95+ (All Categories) |
-| Tech Stack | Astro 7.1, React 19, Tailwind CSS |
+| Tech Stack | Astro 7.2, React 19.2, Tailwind CSS |
 
 ---
 
@@ -157,7 +175,7 @@ Browse all instructors at [courseswyn.com/instructors](https://courseswyn.com/in
 
 ```bash
 # Clone the repository
-git clone https://github.com/Coutons/courseswyn-astro.git
+git clone git@github.com:Coutons/courseswyn-astro.git
 
 # Install dependencies
 npm install
@@ -168,37 +186,92 @@ npm run dev
 
 Open [http://localhost:4321](http://localhost:4321) in your browser.
 
+> **Note:** If you are not the repo owner, you only have read access for learning
+> purposes. Redistribution and reuse are prohibited by the LICENSE.
+
 ### Available Scripts
 
 - `npm run dev` — Start dev server at localhost:4321 (TZ=Asia/Jakarta)
 - `npm run build` — Build production site to `./dist/`
 - `npm run preview` — Preview production build locally
 - `npm run lint` — Run `astro check` for type and content validation
+- `npm run deploy` — Switch to prod config, build, and push `dist/` to the `gh-pages` branch
 
 ---
 
-### Write SEO Descriptions (auto, free Gemini)
+## SEO Description Tooling (`scripts/seo.js`)
 
-Improves `seoDescription` in `src/data/coupons.json` for one instructor at a time using the Google Gemini API (free tier).
+`seo.js` is the main CLI used to generate, validate, and fix `seoDescription`
+for every course in `src/data/coupons.json`. Every generated description is
+validated to be **250–350 characters**, with no boilerplate/template wording,
+no duplicate phrasing, and a discount % that matches the real price.
 
-**Setup (once):**
+### Bulk hybrid generator (recommended)
+
+Automatically regenerates descriptions for every course with an invalid
+description by composing unique sentences from the course's `learn` bullets,
+`description`, `title`, and `requirements`, then appending a rotating freshness
+clause (price, discount %, expiry date) localized to the course language.
+
 ```bash
-# create .env in the project root (already gitignored, never commit it)
-GEMINI_API_KEY=your-key
-GEMINI_MODEL=gemini-2.5-flash   # optional
+# Fix all invalid/empty descriptions (recommended after adding new courses)
+npm run seo:bulk
+
+# Force-regenerate descriptions for ALL courses (overwrites good ones too)
+npm run seo:bulk -- --all
 ```
 
-**Run:**
+**Usage flow for new courses:** add the course to `src/data/coupons.json`
+(make sure `learn` and/or `description` have real content, ideally 250+ chars in
+total), then run `npm run seo:bulk`. Any course still failing is printed with
+its reason — check the log and top up its `learn`/`description`.
+
+### Batch workflow (manual)
+
+If you prefer writing descriptions yourself, dump pending courses for an
+instructor, preview them, then apply:
+
+```bash
+# 1. Dump courses needing fixes to scripts/work/seo.json
+npm run seo:start -- "Emre Yilmaz"
+
+# 2. Dry-run validation without saving (shows what WOULD be applied)
+npm run seo:preview -- scripts/work/seo.json
+
+# 3. Validate + apply scripts/work/seo.json to coupons.json
+npm run seo:finish
+```
+
+### One-off helpers
+
+```bash
+npm run seo:check -- "Emre Yilmaz"   # pass/fail status for one instructor
+npm run seo:dump                     # dump every course still needing a fix
+npm run seo:apply -- <file.json>     # apply a hand-written JSON mapping directly
+```
+
+### Gemini auto-writer (optional, free tier)
+
 ```bash
 npm run seo:auto -- "Emre Yilmaz"
 ```
-Gemini writes a unique description body per course, the script appends the real coupon CTA, validates everything (250–350 chars, no boilerplate/template wording, no duplicates, discount % must match real price), retries rejected ones automatically, and saves to `src/data/coupons.json`. A review copy is written to `scripts/work/seo.json`.
 
-**Manual helpers:**
+Requires `GEMINI_API_KEY` in `.env` (never committed). Gemini writes a unique
+description body per course, the script appends the real coupon CTA, validates
+everything, retries rejected ones automatically, and saves the result. A review
+copy is written to `scripts/work/seo.json`.
+
+### Mode switcher (dev ↔ prod)
+
+The site ships with separate Astro configs for dev and production:
+`astro.config.dev.mjs`, `astro.config.prod.mjs`, and `astro.config.mjs`.
+
 ```bash
-npm run seo:start -- "Emre Yilmaz"   # dump courses needing fixes to scripts/work/seo.json
-npm run seo:finish                   # validate + apply scripts/work/seo.json
-npm run seo:check -- "Emre Yilmaz"   # pass/fail for one instructor
+npm run mode:status   # show the current active config
+npm run mode:dev      # switch to the dev config
+npm run mode:prod     # switch to the production config
+npm run mode:backup   # back up the current config
+npm run mode:restore  # restore the last backup
 ```
 
 ---
@@ -207,12 +280,12 @@ npm run seo:check -- "Emre Yilmaz"   # pass/fail for one instructor
 
 | Technology | Purpose |
 |---|---|
-| **Astro 7.1** | Islands Architecture — static-first with dynamic islands |
+| **Astro 7.2** | Islands Architecture — static-first with dynamic islands |
 | **React 19** | Interactive UI components (deal cards, search, comparison tables) |
 | **Tailwind CSS** | Neo-Brutalist design system |
 | **MDX + Content Layer** | Blog with schema-validated frontmatter |
 | **Fuse.js** | Client-side fuzzy search across 1,300+ deals |
-| **Vercel** | Global CDN deployment with automatic deploys |
+| **GitHub Actions + Pages** | CI build and deployment (see `.github/workflows/deploy.yml`) |
 | **Schema.org (LD+JSON)** | Automated rich snippets for every page |
 | **astro-seo** | Per-page meta tags, OG images, and canonical URLs |
 
@@ -228,7 +301,7 @@ npm run seo:check -- "Emre Yilmaz"   # pass/fail for one instructor
 | `/categories` | Browse coupons by category |
 | `/topics` | Browse by topic (AI, Web Dev, Cloud, etc.) |
 | `/instructors` | Top-rated instructor profiles |
-| `/blog` | 68+ expert course reviews and guides |
+| `/blog` | 69 expert course reviews and guides |
 | `/popular` | Most popular deals |
 | `/search` | Instant full-text search |
 | `/how-to-redeem-coupon` | Step-by-step coupon redemption guide |
@@ -248,7 +321,10 @@ npm run seo:check -- "Emre Yilmaz"   # pass/fail for one instructor
 
 © 2026 CoursesWyn. All Rights Reserved.
 
-This repository is shared for educational and transparency purposes. Copying or redistributing this codebase to build a competing service is not permitted without explicit written permission.
+This repository is **not open source**. It is shared for educational and
+transparency purposes only. **Cloning, copying, or redistributing** this
+codebase — in whole or in part — to build a competing or similar service is
+**strictly prohibited** without explicit written permission. See **[LICENSE](LICENSE)**.
 
 ---
 
