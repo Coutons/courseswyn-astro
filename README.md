@@ -177,6 +177,32 @@ Open [http://localhost:4321](http://localhost:4321) in your browser.
 
 ---
 
+### Write SEO Descriptions (auto, free Gemini)
+
+Improves `seoDescription` in `src/data/coupons.json` for one instructor at a time using the Google Gemini API (free tier).
+
+**Setup (once):**
+```bash
+# create .env in the project root (already gitignored, never commit it)
+GEMINI_API_KEY=your-key
+GEMINI_MODEL=gemini-2.5-flash   # optional
+```
+
+**Run:**
+```bash
+npm run seo:auto -- "Emre Yilmaz"
+```
+Gemini writes a unique description body per course, the script appends the real coupon CTA, validates everything (250–350 chars, no boilerplate/template wording, no duplicates, discount % must match real price), retries rejected ones automatically, and saves to `src/data/coupons.json`. A review copy is written to `scripts/work/seo.json`.
+
+**Manual helpers:**
+```bash
+npm run seo:start -- "Emre Yilmaz"   # dump courses needing fixes to scripts/work/seo.json
+npm run seo:finish                   # validate + apply scripts/work/seo.json
+npm run seo:check -- "Emre Yilmaz"   # pass/fail for one instructor
+```
+
+---
+
 ## Tech Stack
 
 | Technology | Purpose |
