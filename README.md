@@ -201,65 +201,23 @@ Open [http://localhost:4321](http://localhost:4321) in your browser.
 
 ## SEO Description Tooling (`scripts/seo.js`)
 
-`seo.js` is the main CLI used to generate, validate, and fix `seoDescription`
-for every course in `src/data/coupons.json`. Every generated description is
-validated to be **250–350 characters**, with no boilerplate/template wording,
-no duplicate phrasing, and a discount % that matches the real price.
-
-### Bulk hybrid generator (recommended)
-
-Automatically regenerates descriptions for every course with an invalid
-description by composing unique sentences from the course's `learn` bullets,
-`description`, `title`, and `requirements`, then appending a rotating freshness
-clause (price, discount %, expiry date) localized to the course language.
+`seo.js` fixes `seoDescription` for courses in `src/data/coupons.json`. One
+command, no API key needed — descriptions are composed from the course's own
+`learn` bullets, `description`, `title`, and `requirements`, then validated to
+be **250–350 characters** with no boilerplate, no duplicate wording, and a
+discount % that matches the real price.
 
 ```bash
-# Fix all invalid/empty descriptions (recommended after adding new courses)
-npm run seo:bulk
+# Fix all instructors
+npm run seo:start
 
-# Force-regenerate descriptions for ALL courses (overwrites good ones too)
-npm run seo:bulk -- --all
+# Fix ONE instructor
+npm run seo:start -- "Prashant Kumar Pandey"
 ```
 
-**Usage flow for new courses:** add the course to `src/data/coupons.json`
-(make sure `learn` and/or `description` have real content, ideally 250+ chars in
-total), then run `npm run seo:bulk`. Any course still failing is printed with
-its reason — check the log and top up its `learn`/`description`.
-
-### Batch workflow (manual)
-
-If you prefer writing descriptions yourself, dump pending courses for an
-instructor, preview them, then apply:
-
-```bash
-# 1. Dump courses needing fixes to scripts/work/seo.json
-npm run seo:start -- "Emre Yilmaz"
-
-# 2. Dry-run validation without saving (shows what WOULD be applied)
-npm run seo:preview -- scripts/work/seo.json
-
-# 3. Validate + apply scripts/work/seo.json to coupons.json
-npm run seo:finish
-```
-
-### One-off helpers
-
-```bash
-npm run seo:check -- "Emre Yilmaz"   # pass/fail status for one instructor
-npm run seo:dump                     # dump every course still needing a fix
-npm run seo:apply -- <file.json>     # apply a hand-written JSON mapping directly
-```
-
-### Gemini auto-writer (optional, free tier)
-
-```bash
-npm run seo:auto -- "Emre Yilmaz"
-```
-
-Requires `GEMINI_API_KEY` in `.env` (never committed). Gemini writes a unique
-description body per course, the script appends the real coupon CTA, validates
-everything, retries rejected ones automatically, and saves the result. A review
-copy is written to `scripts/work/seo.json`.
+Run this whenever you add new courses (make sure their `learn`/`description`
+has real content, ideally 250+ chars total). Any course that can't be fixed is
+printed with its reason — top up its `learn`/`description`, then re-run.
 
 ### Mode switcher (dev ↔ prod)
 

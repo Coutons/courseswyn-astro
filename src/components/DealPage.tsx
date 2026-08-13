@@ -630,11 +630,26 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
           </>
         )}
 
-        <div className="cp-footer-cta">
-          <a className="cp-cta-primary" href={deal.url} target="_blank" rel="noopener noreferrer nofollow">
-            Claim Coupon Before It's Gone →
+        <div className="cp-plan">
+          <div className="cp-plan-inner">
+            <span className="cp-plan-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              Udemy Personal Plan
+            </span>
+            <div className="cp-plan-title">Love learning? Get <span>26,000+ top-rated courses</span> with 25% OFF your first year</div>
+            <p className="cp-plan-desc">Tired of hunting for a new coupon before every course? Udemy Personal Plan gives you unlimited access to 26,000+ curated top-rated courses for one flat monthly or annual price.</p>
+            <a className="cp-plan-btn" href="https://trk.udemy.com/c/6564357/3775958/39854" aria-label="Get Udemy Personal Plan with 25% off your first year" rel="nofollow sponsored noopener" target="_blank">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4v4"/><path d="M10 14L21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+              Get Udemy Personal Plan — 25% OFF
+            </a>
+            <div className="cp-plan-note">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> 26,000+ courses included</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Cancel anytime</span>
+            </div>
+          </div>
+          <a className="cp-plan-coupon-link" href={deal.url} aria-label={`Claim this ${deal.title} Udemy coupon before it expires`} target="_blank" rel="noopener noreferrer nofollow">
+            Claim this Udemy coupon before it expires →
           </a>
-          <p>Coupons can expire or run out of redemptions at any time without notice.</p>
         </div>
       </div>
 
@@ -869,8 +884,21 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
         .cp-schema-pill-row{display:flex;flex-wrap:wrap;gap:5px;}
         .cp-schema-pill{font-family:var(--cp-font-mono);font-size:9.5px;background:var(--cp-paper2);border-radius:5px;padding:3px 6px;color:var(--cp-graphite-soft);}
 
-        .cp-footer-cta{margin-top:34px;background:var(--cp-paper);border-radius:16px;padding:26px;text-align:center;}
-        .cp-footer-cta p{font-size:12.5px;color:var(--cp-graphite-soft);margin:8px 0 0;font-family:var(--cp-font-mono);}
+        .cp-plan{margin-top:34px;background:var(--cp-paper);border:1px solid var(--cp-line);border-radius:16px;padding:28px 24px 22px;box-shadow:0 12px 32px -22px rgba(15,23,42,0.18);}
+        .cp-plan-inner{max-width:640px;margin:0 auto;text-align:center;}
+        .cp-plan-badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--cp-font-mono);font-size:11px;font-weight:600;color:var(--cp-green);background:var(--cp-green-bg);border:1px solid rgba(0,167,111,0.25);border-radius:999px;padding:6px 13px;margin-bottom:14px;}
+        .cp-plan-badge svg{width:14px;height:14px;flex-shrink:0;}
+        .cp-plan-title{font-family:var(--cp-font-display);font-weight:700;font-size:clamp(1.25rem,2.4vw,1.55rem);color:var(--cp-ink);line-height:1.25;letter-spacing:-0.01em;margin:0 0 10px;}
+        .cp-plan-title span{color:var(--cp-green);}
+        .cp-plan-desc{font-size:13.5px;line-height:1.7;color:var(--cp-graphite-soft);margin:0 auto 18px;max-width:540px;}
+        .cp-page .cp-plan-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 28px;border-radius:11px;font-size:1rem;font-weight:700;text-decoration:none;background:var(--cp-green);color:#fff;border:none;box-shadow:0 10px 24px rgba(0,167,111,0.32);transition:all 0.2s ease;cursor:pointer;}
+        .cp-page .cp-plan-btn:hover{background:#186640;transform:translateY(-1px);}
+        .cp-plan-btn svg{width:18px;height:18px;flex-shrink:0;}
+        .cp-plan-note{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:center;margin-top:14px;font-family:var(--cp-font-mono);font-size:10.5px;color:var(--cp-graphite-soft);}
+        .cp-plan-note span{display:inline-flex;align-items:center;gap:6px;}
+        .cp-plan-note svg{width:12px;height:12px;color:var(--cp-green);flex-shrink:0;}
+        .cp-page .cp-plan-coupon-link{display:block;margin:18px auto 0;width:fit-content;font-family:var(--cp-font-body);font-size:13.5px;font-weight:600;color:var(--cp-green);text-decoration:underline dotted;text-underline-offset:5px;transition:color .15s;}
+        .cp-page .cp-plan-coupon-link:hover{color:#186640;}
 
         .cp-mobile-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--cp-paper);border-top:1px solid var(--cp-line);padding:12px 16px;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -14px 30px -20px rgba(15,23,42,0.2);}
         .cp-mb-price{font-family:var(--cp-font-mono);font-weight:600;color:var(--cp-red);font-size:16px;}
