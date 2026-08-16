@@ -20,7 +20,6 @@ const DATA_PATH = path.join(ROOT, 'src', 'data', 'coupons.json');
 const MIN_LEN = 250;
 const MAX_LEN = 350;
 const BULK_MAX = 320;
-const BULK_MIN_BODY = 170;
 
 const BOILERPLATE = [
   'this is applicable',
@@ -41,6 +40,23 @@ const TEMPLATE_FRAGMENTS = [
   'through real-world projects.',
   'from start to finish.',
   'with practical examples.',
+];
+
+/**
+ * Old auto-generated "freshness" clauses (see scripts/seo.js history) that
+ * made meta descriptions misleading: they only repeated price/discount/date
+ * and the subcategory instead of describing the actual course. Anything
+ * matching these gets regenerated.
+ */
+const MISLEADING_RE = [
+  /— now \$\d[\d.,]*, was \$\d[\d.,]*, [a-z].* deal updated [a-z]+ \d+\./i,
+  /— ahora \$[\d.,]*, antes \$[\d.,]*, oferta de .* actualizada el [a-z]+ \d+\./i,
+  /— \$\d[\d.,]* verified deal, .* last synced [a-z]+ \d+\./i,
+  /— \$\d[\d.,]* oferta verificada, .* última sincronización [a-z]+ \d+\./i,
+  /— \$\d[\d.,]* today \(\d+% off\), listed until [a-z]+ \d+\./i,
+  /— \$\d[\d.,]* hoy \(\d+% de descuento\), listado hasta el [a-z]+ \d+\./i,
+  /— \d+% off through [a-z]+ \d+, \d(\.\d)?★ on udemy\./i,
+  /— \d+% de descuento hasta [a-z]+ \d+, \d(\.\d)?★ en udemy\./i,
 ];
 
 function loadCourses() {
@@ -72,8 +88,12 @@ function issuesFor(desc, course) {
   for (const f of TEMPLATE_FRAGMENTS) {
     if (lower.includes(f)) { issues.push(`template:${JSON.stringify(f.trim())}`); break; }
   }
+  for (const re of MISLEADING_RE) {
+    if (re.test(text)) { issues.push('misleadingDealClause'); break; }
+  }
+  if (!TEMPLATE_RE.test(text)) issues.push('notTemplate');
   const real = realDiscountPercent(course);
-  const matches = text.match(/(\d{1,3})\s*%/g) || [];
+  const matches = text.match(/(\d{1,3})\s*%\s*(?:de\s+)?(?:off|discount|descuento|oferta|rebaja|menos|less)\b/gi) || [];
   for (const m of matches) {
     const n = parseInt(m, 10);
     if (real != null && Math.abs(n - real) > 1) {
@@ -103,19 +123,16 @@ function hashStr(s) {
   return h;
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTHS_FULL_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-function fmtShortDate(iso) {
+function fmtMonthYear(iso, months) {
   if (!iso) return '';
-  const m = String(iso).match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  const m = String(iso).match(/^(\d{4})-(\d{1,2})/);
   if (!m) return '';
-  return `${MONTHS[Number(m[2]) - 1]} ${Number(m[3])}`;
-}
-
-function fmtPrice(n) {
-  const v = Number(n);
-  if (!isFinite(v) || v <= 0) return '';
-  return `$${v.toFixed(2).replace(/\.00$/, '')}`;
+  const mo = Number(m[2]);
+  if (mo < 1 || mo > 12) return '';
+  return `${months[mo - 1]} ${m[1]}`;
 }
 
 function isSpanishCourse(c) {
@@ -130,47 +147,40 @@ function cleanText(s) {
     .trim();
 }
 
-const FRESH_EN = [
-  (c, d, price, orig, cat, until, updated) =>
-    `— ${price} today (${d}% off), listed until ${until}.`,
-  (c, d, price, orig, cat, until, updated) =>
-    `— now ${price}, was ${orig}, ${cat} deal updated ${updated}.`,
-  (c, d, price, orig, cat, until, updated) =>
-    `— ${d}% off through ${until}, ${c.rating}★ on Udemy.`,
-  (c, d, price, orig, cat, until, updated) =>
-    `— ${price} verified deal, ${cat}, last synced ${updated}.`,
-];
+/**
+ * Descriptions must follow the site's SEO template:
+ *   "Title" is a Udemy course by Instructor, rated X/5, updated in Month Year, <course description>
+ * Anything that doesn't open with the quoted title gets regenerated.
+ */
+const TEMPLATE_RE = /^"[^"]+"\s+(?:is a |es un curso de )/;
 
-const FRESH_ES = [
-  (c, d, price, orig, cat, until, updated) =>
-    `— ${price} hoy (${d}% de descuento), listado hasta el ${until}.`,
-  (c, d, price, orig, cat, until, updated) =>
-    `— ahora ${price}, antes ${orig}, oferta de ${cat} actualizada el ${updated}.`,
-  (c, d, price, orig, cat, until, updated) =>
-    `— ${d}% de descuento hasta ${until}, ${c.rating}★ en Udemy.`,
-  (c, d, price, orig, cat, until, updated) =>
-    `— ${price} oferta verificada, ${cat}, última sincronización ${updated}.`,
-];
-
-function freshnessClause(course) {
-  const d = realDiscountPercent(course);
-  const price = fmtPrice(course.price) || 'current price';
-  const orig = fmtPrice(course.originalPrice) || 'regular price';
-  const cat = cleanText(course.subcategory || course.category || '');
-  const until = fmtShortDate(course.expiresAt || course.updatedAt || course.createdAt);
-  const updated = fmtShortDate(course.updatedAt || course.createdAt || course.expiresAt);
-  const variants = isSpanishCourse(course) ? FRESH_ES : FRESH_EN;
-  let idx = hashStr(course.slug) % variants.length;
-  if (d == null && (idx === 0 || idx === 2)) idx = idx === 0 ? 1 : 3;
-  return variants[idx](course, d, price, orig, cat, until, updated);
+function identityLead(course) {
+  const es = isSpanishCourse(course);
+  const title = cleanText(course.title) || 'This course';
+  const provider = cleanText(course.provider) || 'Udemy';
+  const months = es ? MONTHS_FULL_ES : MONTHS_FULL;
+  const clauses = [];
+  if (course.instructor) {
+    clauses.push(
+      es
+        ? `es un curso de ${provider} de ${cleanText(course.instructor)}`
+        : `is a ${provider} course by ${cleanText(course.instructor)}`
+    );
+  } else {
+    clauses.push(es ? `es un curso de ${provider}` : `is a ${provider} course`);
+  }
+  if (course.rating != null) {
+    clauses.push(es ? `con ${course.rating}/5 de calificación` : `rated ${course.rating}/5`);
+  }
+  const dt = fmtMonthYear(course.updatedAt || course.createdAt || course.expiresAt, months);
+  if (dt) clauses.push(es ? `actualizado en ${dt}` : `updated in ${dt}`);
+  return `"${title}" ${clauses.join(', ')}`;
 }
 
 function bulkPieces(course) {
   const raw = [
-    ...(course.learn || []),
     course.description,
-    course.title,
-    course.seoTitle,
+    ...(course.learn || []),
     ...(course.requirements || []),
   ]
     .map(cleanText)
@@ -184,7 +194,7 @@ function bulkPieces(course) {
     if (BOILERPLATE.some((b) => low.includes(b))) continue;
     if (TEMPLATE_FRAGMENTS.some((f) => low.includes(f))) continue;
     if (real != null) {
-      const m = p.match(/(\d{1,3})\s*%/);
+      const m = p.match(/(\d{1,3})\s*%\s*(?:de\s+)?(?:off|discount|descuento|oferta|rebaja|menos|less)\b/i);
       if (m && Math.abs(parseInt(m[1], 10) - real) > 1) continue;
     }
     seen.add(low);
@@ -196,9 +206,10 @@ function bulkPieces(course) {
 function bulkBodyFor(course, used) {
   const pieces = bulkPieces(course);
   if (pieces.length === 0) return null;
-  const fresh = freshnessClause(course);
-  const maxBody = BULK_MAX - fresh.length - 1;
-  const minBody = Math.max(BULK_MIN_BODY, MIN_LEN - fresh.length + 10);
+  const lead = identityLead(course);
+  const fixedLen = lead.length + 2;
+  const maxBody = Math.max(30, BULK_MAX - fixedLen - 1);
+  const minBody = Math.max(20, MIN_LEN - fixedLen + 10);
   const start = hashStr(course.slug) % pieces.length;
   let lastIssues = [];
   for (let tries = 0; tries < pieces.length * 3; tries++) {
@@ -210,9 +221,9 @@ function bulkBodyFor(course, used) {
       len += piece.length;
       if (len >= minBody) break;
     }
-    const body = parts.join('. ');
-    const b = trimToFit(body, maxBody);
-    const desc = `${b} ${fresh}`.trim().replace(/\s+/g, ' ');
+    const body = trimToFit(parts.join('. '), maxBody).trim().replace(/\s+/g, ' ');
+    const b = body.replace(/\.+$/, '') + '.';
+    const desc = `${lead}, ${b}`.trim().replace(/\s+/g, ' ');
     const issues = issuesFor(desc, course);
     if (used.has(normalize(desc))) issues.push('duplicateWording');
     lastIssues = issues;

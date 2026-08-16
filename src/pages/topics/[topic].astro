@@ -116,8 +116,13 @@ const freeCourses = topicDeals.filter(deal => deal.price === 0 || deal.price ===
 // SEO description - optimized
 const topicDescription = `Looking for the best ${topicName} courses on Udemy? We ranked ${topicDeals.length}+ verified ${topicName} courses by student rating and coupon availability — save up to ${avgDiscount}% with working codes updated daily. Updated ${currentDate}.`;
 
-// Get all topics for sidebar
-const topics = [...new Set(allDeals.flatMap(dealTopicNames).filter(Boolean))];
+const topicCounts = new Map<string, number>();
+for (const deal of allDeals) {
+  for (const name of dealTopicNames(deal)) {
+    if (!name) continue;
+    topicCounts.set(name, (topicCounts.get(name) ?? 0) + 1);
+  }
+}
 
 // Other topics for "Discover More"
 const GRADIENT_COLORS = [
@@ -135,16 +140,16 @@ const GRADIENT_COLORS = [
 const hashFor = (s: string) => ((s.split('').reduce((h, ch) => h * 31 + ch.charCodeAt(0), 7) % 100000) + 100000) % 100000;
 const rotateOffset = hashFor(topicSlug);
 
-const otherTopics = topics
+const otherTopics = [...topicCounts.keys()]
   .filter(sub => sub != null && typeof sub === 'string')
   .map((sub) => {
-    const subDeals = allDeals.filter(deal => dealTopicNames(deal).includes(sub));
     const hash = hashFor(sub);
     const grad = GRADIENT_COLORS[hash % GRADIENT_COLORS.length];
+    const slug = sub.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
     return {
       name: sub.replace(/\b\w/g, (l: string) => l.toUpperCase()),
-      slug: sub.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
-      count: subDeals.length,
+      slug,
+      count: topicCounts.get(sub) ?? 0,
       c1: grad.c1,
       c2: grad.c2
     };

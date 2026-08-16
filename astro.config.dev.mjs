@@ -1,4 +1,8 @@
 // @ts-check
+// Force WIB (Asia/Jakarta, UTC+7) for all date rendering — cross-platform
+// replacement for `set TZ=Asia/Jakarta` in npm scripts (Windows-only syntax).
+process.env.TZ = 'Asia/Jakarta';
+
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import node from '@astrojs/node';

@@ -159,6 +159,11 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
   };
 
   const relatedRows = relatedDeals.slice(0, 4);
+  const compareHeading = deal.subcategory
+    ? `Compare similar ${deal.subcategory} deals`
+    : deal.category
+      ? `Compare similar ${deal.category} deals`
+      : "Compare similar active deals";
 
   const lights = [
     { good: true, text: `${discountPct}% discount manually re-verified, not an estimate.` },
@@ -166,9 +171,17 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
     { good: false, text: "Redemption-limited — can run out without notice." },
   ];
 
+  const offerEnds = deal.expiresAt
+    ? `Listed until ${new Date(deal.expiresAt).toLocaleDateString("en-US", { month: "long", day: "numeric" })}`
+    : null;
+
   const snapshotRows: { label: string; value: string }[] = [
     { label: "Last checked", value: snapshot.checkedLong },
+    ...(offerEnds ? [{ label: "Offer ends", value: offerEnds }] : []),
+    { label: "Provider", value: deal.provider || "Udemy" },
     { label: "Level", value: deal.level || "All Levels" },
+    ...(deal.rating ? [{ label: "Rating", value: `${deal.rating.toFixed(1)} / 5` }] : []),
+    ...(deal.students ? [{ label: "Students", value: formatStudents(deal.students) }] : []),
     {
       label: "Content",
       value: `${formatDuration(deal.duration)}${deal.contentNotes ? ` · ${deal.contentNotes}` : ""}`,
@@ -180,6 +193,7 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
         ? deal.requirements.filter((r) => r && r.trim()).slice(0, 2).map(stripHtml).join(" · ")
         : "No prerequisites listed",
     },
+    ...(deal.tags && deal.tags.length ? [{ label: "Topics", value: deal.tags.join(", ") }] : []),
     { label: "Certificate", value: "Yes, on completion" },
     { label: "Access", value: "Lifetime, mobile & TV" },
   ];
@@ -200,9 +214,7 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
     [deal.learn]
   );
 
-  const expiryLabel = deal.expiresAt
-    ? `Listed until ${new Date(deal.expiresAt).toLocaleDateString("en-US", { month: "long", day: "numeric" })}`
-    : "No expiry date listed";
+  const expiryLabel = offerEnds || "No expiry date listed";
 
   return (
     <div className="cp-page">
@@ -221,7 +233,7 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
           <a href="#score">Deal score</a>
           <a href="#log">Verification log</a>
           <a href="#details">Course details</a>
-          <a href="#learn">What you'll learn</a>
+          <a href="#learn">Key Topics Covered</a>
           <a href="#redeem">How to redeem</a>
           <a href="#faq">FAQ</a>
           <a href="#alternatives">Compare deals</a>
@@ -431,7 +443,7 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
             {learnItems.length > 0 && (
               <>
                 <h2 className="cp-sec-heading" id="learn">
-                  What you'll learn <span className="cp-tag">From the course description</span>
+                  Key Topics Covered <span className="cp-tag">From the course description</span>
                 </h2>
                 <div className="cp-card">
                   <div className="cp-learn-grid">
@@ -580,7 +592,7 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
         {relatedRows.length > 0 && (
           <>
             <h2 className="cp-sec-heading" id="alternatives">
-              Compare similar active deals
+              {compareHeading}
             </h2>
             <div className="cp-card">
               <div className="cp-cmp-wrap">
