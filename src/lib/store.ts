@@ -52,8 +52,6 @@ const dealSchema = z
     learn: z.array(z.string()).optional(),
     requirements: z.array(z.string()).optional(),
     skills: z.array(z.string()).optional(),
-    seoTitle: z.string().optional(),
-    seoDescription: z.string().optional(),
     seoOgImage: z.string().optional(),
     expiresAt: z.string().optional(),
     createdAt: z.string().optional(),

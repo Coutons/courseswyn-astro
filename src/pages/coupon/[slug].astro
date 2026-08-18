@@ -6,6 +6,7 @@ import { maskCoupon } from "../../lib/couponMask";
 import { categoryStats, couponFAQs } from "../../lib/dealStats";
 import { parseInstructors, createInstructorSlug } from "../../lib/instructors";
 import { getInstructorImage } from "../../lib/instructorProfiles";
+import { generateSeoDescription } from "../../lib/seo";
 import DealPage from "../../components/DealPage";
 import type { Deal } from "../../types/deal.d.ts";
 
@@ -93,9 +94,8 @@ const instructorImage = primaryInstructorName
 
 const normalizedTitle = deal.title?.trim() || "Premium Course";
 const discountLabel = discountPercentage > 0 ? `${discountPercentage}% OFF` : "Discount";
-const baseSeoTitle = (deal.seoTitle || `${normalizedTitle} - ${discountLabel} Udemy Discount`).trim();
-const seoTitle = baseSeoTitle.endsWith("(Coupon)") ? baseSeoTitle : `${baseSeoTitle} (Coupon)`;
-const seoDescription = (deal.seoDescription || `${normalizedTitle} is available with a verified coupon and ${discountPercentage > 0 ? `up to ${discountPercentage}% off` : "a discount"}${deal.students ? `, taken by ${deal.students.toLocaleString("en-US")} students` : ""}${deal.duration ? `, covering about ${deal.duration} of video content` : ""}. ${deal.category ? `This ${deal.category} course walks you through real-world skills` : "Explore the course overview"} and learning objectives before you enroll.`).trim();
+const seoTitle = `${normalizedTitle} - ${discountLabel} Udemy Discount (Coupon)`;
+const seoDescription = generateSeoDescription(deal);
 
 const siteUrl = "https://courseswyn.com";
 const dealUrl = `${siteUrl}/coupon/${deal.slug}`;
@@ -158,7 +158,7 @@ delete clientDeal.coupon;
                     "@type": "Course",
                     "@id": `${dealUrl}#course`,
                     "name": deal.title,
-                    "description": deal.seoDescription || deal.description || `${deal.title} - Learn from expert instructors with verified coupons`,
+                    "description": generateSeoDescription(deal),
                     "url": dealUrl,
                     "image": deal.seoOgImage || deal.image || `${siteUrl}/logo.svg`,
                     "provider": {

@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Deal } from "@/types/deal";
 import { slugifyCategory, slugifyTopic } from "@/lib/utils";
+import { generateSeoDescription } from "@/lib/seo";
 import { parseInstructors, createInstructorSlug } from "@/lib/instructors";
 import {
   dealSnapshot,
@@ -240,7 +241,8 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
         </nav>
 
         <section className="cp-hero" id="overview" aria-labelledby="deal-title">
-          <div className="cp-thumb">
+          <div className="cp-hero-left">
+            <div className="cp-thumb">
             {deal.image ? (
               <img
                 src={deal.image}
@@ -267,6 +269,8 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
                 <rect x="42" y="130" width="70" height="6" rx="3" fill="#C9C3AF" />
               </svg>
             )}
+            </div>
+            {deal.description && <p className="cp-short-desc">{deal.description}</p>}
           </div>
 
           <div>
@@ -280,9 +284,7 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
               </div>
             )}
             <h1 className="cp-title" id="deal-title">{deal.title}</h1>
-            {(deal.seoDescription || deal.description) && (
-              <p className="cp-desc">{deal.seoDescription || deal.description}</p>
-            )}
+            <p className="cp-desc">{generateSeoDescription(deal)}</p>
             <p className="cp-by-line">
               {instructorNames.length > 0 && (
                 <>
@@ -722,9 +724,11 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
           display:grid;grid-template-columns:1fr;gap:24px;
         }
         @media(min-width:760px){.cp-hero{grid-template-columns:230px 1fr;}}
+        .cp-hero-left{display:flex;flex-direction:column;gap:12px;min-width:0;}
         .cp-thumb{position:relative;border-radius:12px;overflow:hidden;background:#F5F1E6;border:1px solid #D8D0BC;aspect-ratio:230/170;min-height:0;}
         .cp-thumb svg{width:100%;height:100%;display:block;}
         .cp-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+        .cp-short-desc{font-size:0.78125rem;line-height:1.55;color:var(--cp-graphite-soft);margin:0;}
 
         .cp-eyebrow-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
         .cp-cat-tag{font-family:var(--cp-font-mono);font-size:0.71875rem;letter-spacing:.08em;text-transform:uppercase;color:var(--cp-graphite-soft);border:1px solid var(--cp-line);padding:5px 10px;border-radius:999px;background:var(--cp-paper2);}

@@ -199,26 +199,6 @@ Open [http://localhost:4321](http://localhost:4321) in your browser.
 
 ---
 
-## SEO Description Tooling (`scripts/seo.js`)
-
-`seo.js` fixes `seoDescription` for courses in `src/data/coupons.json`. One
-command, no API key needed — descriptions are composed from the course's own
-`learn` bullets, `description`, `title`, and `requirements`, then validated to
-be **250–350 characters** with no boilerplate, no duplicate wording, and a
-discount % that matches the real price.
-
-```bash
-# Fix all instructors
-npm run seo:start
-
-# Fix ONE instructor
-npm run seo:start -- "Prashant Kumar Pandey"
-```
-
-Run this whenever you add new courses (make sure their `learn`/`description`
-has real content, ideally 250+ chars total). Any course that can't be fixed is
-printed with its reason — top up its `learn`/`description`, then re-run.
-
 ### Mode switcher (dev ↔ prod)
 
 The site ships with separate Astro configs for dev and production:

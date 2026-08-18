@@ -14,6 +14,7 @@ const rows = allDeals.map((d) => ({
   subcategory: d.subcategory ?? "",
   price: d.price,
   originalPrice: d.originalPrice ?? 0,
+  coupon: d.coupon ?? "",
   instructor: d.instructor ?? "",
   updatedAt: d.updatedAt ?? d.createdAt ?? "",
   expiresAt: d.expiresAt ?? "",
@@ -86,7 +87,7 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
 
   <div class="adm-card">
     <div class="adm-toolbar">
-      <input class="adm-input" id="searchBox" type="search" placeholder="Search title, category, instructor…" />
+      <input class="adm-input" id="searchBox" type="search" placeholder="Search title, coupon code, category…" />
       <select class="adm-select" id="catFilter" style="max-width:220px;">
         <option value="">All categories</option>
         {[...new Set(allDeals.map((d) => d.category).filter(Boolean))].sort().map((cat) => (
@@ -107,8 +108,7 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
             <th style="width:32px;"><input type="checkbox" id="selAll" aria-label="Select all" /></th>
             <th>Title</th>
             <th>Category</th>
-            <th>Price</th>
-            <th>Status</th>
+            <th>Coupon Code</th>
             <th>Updated</th>
             <th style="text-align:right;">Actions</th>
           </tr>
@@ -116,7 +116,7 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
         <tbody id="rows">
           {rows.map((r) => (
             <tr data-row
-                data-search={[r.title, r.category, r.subcategory, r.instructor, r.slug].join(" ").toLowerCase()}
+                data-search={[r.title, r.category, r.subcategory, r.instructor, r.slug, r.coupon].join(" ").toLowerCase()}
                 data-status={r.expired ? "expired" : "active"}
                 data-id={r.slug}
                 data-stale={staleDays(r.updatedAt)}>
@@ -140,14 +140,11 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
                 {r.category}
                 {r.subcategory && <div class="adm-sub">{r.subcategory}</div>}
               </td>
-              <td class="adm-price">
-                ${r.price.toFixed(2)}
-                {r.originalPrice > r.price && <s>${r.originalPrice.toFixed(2)}</s>}
-              </td>
               <td>
-                <span class={"adm-chip " + (r.expired ? "adm-chip-exp" : "adm-chip-ok")}>{r.expired ? "Expired" : "Active"}</span>
-                {!r.expired && staleDays(r.updatedAt) >= 7 && (
-                  <div class="adm-stale">stale {staleDays(r.updatedAt)}d</div>
+                {r.coupon ? (
+                  <code class="adm-coupon">{r.coupon}</code>
+                ) : (
+                  <span class="adm-muted">—</span>
                 )}
               </td>
               <td class="adm-muted">{new Date(r.updatedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</td>
@@ -175,6 +172,9 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
   .adm-link+.adm-chip{margin-top:.3rem;display:inline-block;}
   .adm-sub{font-size:.78rem;color:#6e7686;margin-top:.15rem;}
   .adm-muted{color:#6e7686;font-size:.82rem;white-space:nowrap;}
+  .adm-coupon{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;color:#0f7a52;background:rgba(0,167,111,.08);border:1px solid rgba(0,167,111,.3);border-radius:.35rem;padding:.15rem .45rem;cursor:pointer;white-space:nowrap;transition:all .15s;}
+  .adm-coupon:hover{background:rgba(0,167,111,.16);}
+  .adm-coupon.copied{background:rgba(0,167,111,.25);border-color:rgba(0,167,111,.55);}
   .adm-chip-ok{color:#0f7a52;background:rgba(0,167,111,.1);border-color:rgba(0,167,111,.35);}
   .adm-chip-exp{color:#c53030;background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.35);}
   .adm-stale{font-size:.72rem;color:#9a6b0f;margin-top:.25rem;}
@@ -189,7 +189,7 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
   .adm-pg-btn.current{background:#00a76f;border-color:#00a76f;color:#fff;}
   .adm-pg-info{color:#5a6472;font-size:.85rem;margin-right:.5rem;}
   @media (max-width:1150px){
-    .adm-table th:nth-child(6),.adm-table td:nth-child(6){display:none;}
+    .adm-table th:nth-child(5),.adm-table td:nth-child(5){display:none;}
   }
   @media (max-width:950px){
     .adm-table th:nth-child(3),.adm-table td:nth-child(3){display:none;}
@@ -317,6 +317,21 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
   });
   rowChecks.forEach((c) => c.addEventListener("change", updateSel));
   applyFilters();
+
+  document.querySelectorAll<HTMLElement>(".adm-coupon").forEach((el) => {
+    el.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(el.textContent || "");
+        el.classList.add("copied");
+        const orig = el.textContent;
+        el.textContent = "Copied ✓";
+        setTimeout(() => {
+          el.textContent = orig;
+          el.classList.remove("copied");
+        }, 1200);
+      } catch {}
+    });
+  });
 
   document.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach((btn) => {
     btn.addEventListener("click", async () => {
