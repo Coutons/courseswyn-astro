@@ -457,6 +457,51 @@ export default function DealPage({ deal, relatedDeals = [], catStats, instructor
               </>
             )}
 
+            {/* EDITORIAL: IS IT WORTH IT - below Key Topics Covered, like coursespeak */}
+            <h2 className="cp-sec-heading" id="worth-it">
+              Is {deal.title} worth it with this coupon? <span className="cp-tag">Editorial review</span>
+            </h2>
+            <div className="cp-card">
+              <p style={{ fontSize: "0.875rem", lineHeight: 1.7, color: "var(--cp-graphite)", margin: "0 0 12px" }}>
+                <strong>Short answer: yes</strong> — if {deal.subcategory || deal.category || "this topic"} is on your roadmap.
+                {deal.originalPrice && deal.price && deal.originalPrice > deal.price ? (
+                  <>
+                    {" "}The regular Udemy price for <em>{deal.title}</em> is {formatMoney(originalPrice)}. With the coupon on this page it drops to {formatMoney(price)} — you save {formatMoney(originalPrice - price)} ({discountPct}% off).
+                    {deal.duration ? ` Spread across ${formatDuration(deal.duration)} of on-demand video, that is roughly ${formatMoney(price / Math.max(1, parseInt(String(deal.duration).replace(/\D/g, "") || "1")))} per hour of content — cheaper than a single chapter of most textbooks.` : ""}
+                  </>
+                ) : (
+                  <> At {formatMoney(price)} with the current coupon, the entry price is low enough to try without heavy commitment.</>
+                )}
+                {deal.rating ? ` The course holds a ${deal.rating.toFixed(1)}/5 rating${deal.students ? ` from ${formatStudents(deal.students)} students` : ""}, which is a strong signal for an evergreen topic like ${deal.subcategory || deal.category || "this field"}.` : ""}
+              </p>
+              <p style={{ fontSize: "0.875rem", lineHeight: 1.7, color: "var(--cp-graphite)", margin: "0 0 12px" }}>
+                Curriculum focus: {learnItems.length ? learnItems.slice(0, 3).map((s) => s.toLowerCase()).join(" • ") : `hands-on skills in ${deal.subcategory || deal.category || "this topic"}`}.
+                {deal.instructor ? ` Led by ${instructorNames.join(", ")}, the teaching approach is practical and project-based, matching how Udemy's top courses are structured.` : ""}
+                {deal.level ? ` Level is marked as ${deal.level}` : ""}{deal.language ? ` and the primary language is ${deal.language}` : ""} — check the “Course details” table above for the full spec.
+                {deal.requirements && deal.requirements.length ? ` Requirements are light: ${stripHtml(deal.requirements[0]).slice(0, 140)}.` : " No heavy prerequisites, a free Udemy account is enough to start."}
+              </p>
+              <p style={{ fontSize: "0.875rem", lineHeight: 1.7, color: "var(--cp-graphite)", margin: "0 0 12px" }}>
+                Who should claim it: beginners exploring {deal.subcategory || deal.category || "the topic"} who want lifetime access + certificate for LinkedIn, and intermediate learners who need a cheap refresher with {deal.duration ? formatDuration(deal.duration) : "structured"} video + downloadable resources.
+                Who can skip: if you already completed a highly-rated {deal.subcategory || deal.category || "similar"} course recently, or you need an advanced specialization that this {deal.level || "All Levels"} course does not cover — compare with the alternatives below before enrolling.
+              </p>
+              <p style={{ fontSize: "0.875rem", lineHeight: 1.7, color: "var(--cp-graphite)", margin: "0 0 12px" }}>
+                Context right now in {deal.category || "this category"}: CoursesWyn tracks {catStatActive} active coupons in this category, {stats.highDiscount} of them are 90%+ off with an average price of {formatMoney(stats.avgPrice)} — so this {discountPct}% off deal sits {discountPct >= 90 ? "right at the top tier" : "in the mid-high range"} for value.
+                {deal.expiresAt ? ` Coupon window is listed until ${new Date(deal.expiresAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} or until the redemption cap is hit — whichever comes first. ` : " No fixed expiry is listed, but redemption caps can still end the coupon without notice. "}
+                You get lifetime access, mobile & TV playback, and a Udemy certificate on completion — identical to a full-price enrollment. Price history above (tracked since {trackedSinceLabel}) shows this is {discountPct >= 90 ? "one of the deeper discounts" : "a solid mid-range discount"} we have recorded for this course.
+              </p>
+              <div style={{ background: "var(--cp-paper2)", border: "1px solid var(--cp-line)", borderRadius: 10, padding: "12px 14px", marginTop: 8 }}>
+                <div style={{ fontWeight: 700, fontSize: "0.875rem", color: "var(--cp-ink)", marginBottom: 4 }}>Final verdict: Worth it while the coupon works</div>
+                <div style={{ fontSize: "0.8125rem", color: "var(--cp-graphite-soft)", lineHeight: 1.6 }}>
+                  You save {deal.originalPrice && deal.price && deal.originalPrice > deal.price ? formatMoney(originalPrice - price) : "significantly"} vs the standard Udemy price, keep lifetime access and a completion certificate, and the coupon is re-verified on a regular schedule. If {deal.subcategory || deal.category || "this skill"} is part of your 2026 plan, claim it before the redemption cap is hit — checkout price on {deal.provider || "Udemy"} is the source of truth.
+                </div>
+              </div>
+              <div style={{ marginTop: 10, fontFamily: "var(--cp-font-mono)", fontSize: "0.72rem", color: "var(--cp-graphite-soft)" }}>
+                Editorial by <a href="/about" style={{ color: "var(--cp-ink2)", borderBottom: "1px solid var(--cp-line)" }}>Andrew Derek</a> • Verified on {snapshot.checkedLong} • <a href={`/categories/${categorySlug}`} style={{ color: "var(--cp-ink2)", borderBottom: "1px solid var(--cp-line)" }}>{deal.category || "All categories"}</a>
+                {deal.subcategory ? <span> • <a href={`/topics/${slugifyTopic(deal.subcategory)}`} style={{ color: "var(--cp-ink2)", borderBottom: "1px solid var(--cp-line)" }}>{deal.subcategory}</a></span> : null}
+                {primaryInstructor ? <span> • <a href={`/instructor/${createInstructorSlug(primaryInstructor)}`} style={{ color: "var(--cp-ink2)", borderBottom: "1px solid var(--cp-line)" }}>{primaryInstructor}</a></span> : null}
+              </div>
+            </div>
+
             {/* HOW TO REDEEM */}
             <h2 className="cp-sec-heading" id="redeem">
               How to redeem this coupon

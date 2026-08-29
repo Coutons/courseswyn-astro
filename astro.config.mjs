@@ -17,6 +17,10 @@ export default defineConfig({
     filter: (page) => {
       if (page.includes('/admin/')) return false;
       if (page.includes('/api/')) return false;
+      // Exclude paginated pages that are noindex (avoid Submitted URL marked noindex)
+      if (/\/udemy-coupon-code\/\d+\/?$/.test(page)) return false;
+      if (page.includes('?page=')) return false;
+      if (/\/blog\/page\//.test(page)) return false;
       return true;
     }
   }), mdx()],
