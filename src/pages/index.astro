@@ -1,5 +1,6 @@
 ﻿---
 import Layout from "../layouts/Layout.astro";
+import LedgerRow from "../components/LedgerRow.astro";
 import { readDeals } from "../lib/store";
 import { toISODateWIB } from "../lib/date";
 import { normName, slugifyCategory } from "../lib/utils";
@@ -249,6 +250,10 @@ const typewriterJson = JSON.stringify(typewriterWords);
     .hp-deal-more a { font-family: var(--font-mono); font-size: 0.78125rem; font-weight: 600; color: var(--hp-brand); text-decoration: none; }
     .hp-deal-count { font-family: var(--font-mono); font-size: 0.71875rem; color: var(--hp-muted); }
     .hp-table tr[data-primary="0"] { display: none; }
+    /* ===== DEAL GRID (coursecard grid design) ===== */
+    .hp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; margin-top: 16px; }
+    @media (max-width: 640px) { .hp-grid { grid-template-columns: 1fr; } }
+    .hp-grid-item[data-primary="0"] { display: none; }
 
     /* ===== 3 STEPS ===== */
     .hp-steps3 { display: grid; grid-template-columns: 1fr; gap: 0; }
@@ -399,40 +404,18 @@ const typewriterJson = JSON.stringify(typewriterWords);
       <a class="active" href="/udemy-coupon-code" data-filter="all">All ({liveCount.toLocaleString()})</a>
       {topCats.map((c) => <a href={"/categories/" + c.slug} data-filter={c.slug}>{c.name} ({c.count})</a>)}
     </div>
-    <div class="hp-table-wrap">
-      <table class="hp-table">
-        <thead><tr><th>Course</th><th class="hp-col-hide">Price</th><th class="hp-col-hide">Status</th><th>Checked</th></tr></thead>
-        <tbody>
-          {poolDeals.map((deal) => {
-            const p = typeof deal.price === "number" && isFinite(deal.price) && deal.price > 0 ? deal.price : 0;
-            const opRaw = typeof deal.originalPrice === "number" && isFinite(deal.originalPrice) ? deal.originalPrice : 119.99;
-            const op = opRaw > p ? opRaw : 119.99;
-            const r = typeof deal.rating === "number" && isFinite(deal.rating) ? deal.rating : 4.5;
-            const instructor = deal.instructor ? deal.instructor.split(",")[0].trim() : "Udemy";
-            const thumbStyle = deal.image ? `background-image:url(${deal.image})` : "background-image:linear-gradient(155deg,#1B2E52 0%,#0E1A33 100%)";
-            const rowCat = slugifyCategory(normName(deal.category) || "other");
-            const rowPrimary = poolPrimary.has(String(deal.slug)) ? 1 : 0;
-            return (
-              <tr data-cat={rowCat} data-primary={rowPrimary}>
-                <td>
-                  <div class="hp-dt-course">
-                    <div class="hp-dt-thumb" style={thumbStyle} aria-hidden="true"></div>
-                    <div>
-                      <a class="hp-dt-title" href={"/coupon/" + deal.slug}>{clean(deal.title)}</a>
-                      <div class="hp-dt-meta">{instructor} · ⭐ {r.toFixed(1)}</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="hp-col-hide"><span class="hp-dt-price">{p > 0 ? "$" + p.toFixed(2) : "FREE"}{op > p && <s>${op.toFixed(2)}</s>}</span></td>
-                <td class="hp-col-hide"><span class="hp-dt-status">Working</span></td>
-                <td class="hp-dt-checked">{timeAgo(deal.updatedAt ?? deal.createdAt)}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      <div class="hp-deal-more"><span class="hp-deal-count">Showing {poolPrimary.size} of {poolDeals.length} fresh coupons</span></div>
+    <div class="hp-grid" id="hp-grid">
+      {poolDeals.map((deal) => {
+        const rowCat = slugifyCategory(normName(deal.category) || "other");
+        const rowPrimary = poolPrimary.has(String(deal.slug)) ? 1 : 0;
+        return (
+          <div class="hp-grid-item" data-cat={rowCat} data-primary={rowPrimary}>
+            <LedgerRow deal={deal} variant="grid" />
+          </div>
+        );
+      })}
     </div>
+    <div class="hp-deal-more" style="margin-top:16px"><span class="hp-deal-count">Showing {poolPrimary.size} of {poolDeals.length} fresh coupons</span></div>
   </section>
 
   <!-- HOW TO REDEEM -->
@@ -623,7 +606,7 @@ const typewriterJson = JSON.stringify(typewriterWords);
     const count = document.querySelector<HTMLElement>('.hp-deal-count');
     if (!bar) return;
     const links = Array.from(bar.querySelectorAll<HTMLAnchorElement>('a'));
-    const rows = Array.from(document.querySelectorAll<HTMLTableRowElement>('.hp-table tbody tr'));
+    const rows = Array.from(document.querySelectorAll<HTMLElement>('.hp-grid-item'));
     if (!links.length || !rows.length) return;
 
     function currentFilter(): string {
@@ -635,7 +618,7 @@ const typewriterJson = JSON.stringify(typewriterWords);
       let n = 0;
       for (const row of rows) {
         const show = filter === 'all' ? row.getAttribute('data-primary') === '1' : row.getAttribute('data-cat') === filter;
-        row.style.display = show ? 'table-row' : 'none';
+        row.style.display = show ? '' : 'none';
         if (show) n++;
       }
       for (const a of links) {

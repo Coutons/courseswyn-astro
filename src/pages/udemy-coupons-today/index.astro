@@ -239,13 +239,8 @@ const jsonLd = {
             <h2 class="cc-sec-title">Udemy Coupons Expiring Soon <span class="cc-tag">almost gone</span></h2>
             <p class="cc-sec-desc">These coupons expire within 7 days &mdash; enroll now before they run out.</p>
           </div>
-          <div class="cc-ledger-wrap">
-            <table class="cc-ledger-table">
-              <thead><tr><th>Course</th><th>Price</th><th class="cc-col-hide">Status</th><th>Checked</th></tr></thead>
-              <tbody>
-                {almostGone.slice(0, 3).map((deal: any) => <LedgerRow deal={deal} />)}
-              </tbody>
-            </table>
+          <div class="cc-grid">
+            {almostGone.slice(0, 3).map((deal: any) => <LedgerRow deal={deal} variant="grid" />)}
           </div>
         </section>
       )}
@@ -255,22 +250,17 @@ const jsonLd = {
           <h2 class="cc-sec-title">Latest Udemy Coupon Codes Added Today <span class="cc-tag">{paidCount} deals</span></h2>
           <p class="cc-sec-desc">Coupons added or updated today, freshest first.</p>
         </div>
-        <div class="cc-ledger-wrap">
-          {paidDeals.length > 0 ? (
-            <table class="cc-ledger-table">
-              <thead><tr><th>Course</th><th>Price</th><th class="cc-col-hide">Status</th><th>Checked</th></tr></thead>
-              <tbody>
-                {paidDeals.map((deal: any) => <LedgerRow deal={deal} />)}
-              </tbody>
-            </table>
-          ) : (
-            <div class="cc-empty">
-              <p>No new paid coupons have been added today yet.</p>
-              <p>Fresh deals are verified throughout the day — check back soon, or browse every verified code below.</p>
-            </div>
-          )}
-          <div class="cc-deal-more"><span class="cc-deal-count">Showing the {paidCount} most recent of {totalActive} coupons added today</span><a href="/udemy-coupon-code">Browse them all →</a></div>
-        </div>
+        {paidDeals.length > 0 ? (
+          <div class="cc-grid">
+            {paidDeals.map((deal: any) => <LedgerRow deal={deal} variant="grid" />)}
+          </div>
+        ) : (
+          <div class="cc-empty">
+            <p>No new paid coupons have been added today yet.</p>
+            <p>Fresh deals are verified throughout the day — check back soon, or browse every verified code below.</p>
+          </div>
+        )}
+        <div class="cc-deal-more"><span class="cc-deal-count">Showing the {paidCount} most recent of {totalActive} coupons added today</span><a href="/udemy-coupon-code">Browse them all →</a></div>
       </section>
 
       {popularDeals.length > 0 && (
@@ -279,15 +269,10 @@ const jsonLd = {
             <h2 class="cc-sec-title">Popular Udemy Courses on Sale Today <span class="cc-tag">Top-rated</span></h2>
             <p class="cc-sec-desc">Top-rated courses with the highest student reviews, discounted with today's coupons.</p>
           </div>
-          <div class="cc-ledger-wrap">
-            <table class="cc-ledger-table">
-              <thead><tr><th>Course</th><th>Price</th><th class="cc-col-hide">Status</th><th>Checked</th></tr></thead>
-              <tbody>
-                {popularDeals.map((deal: any) => <LedgerRow deal={deal} />)}
-              </tbody>
-            </table>
-            <div class="cc-deal-more"><span class="cc-deal-count">Showing {popularDeals.length} of the most popular courses today</span><a href="/popular">See all popular courses →</a></div>
+          <div class="cc-grid">
+            {popularDeals.map((deal: any) => <LedgerRow deal={deal} variant="grid" />)}
           </div>
+          <div class="cc-deal-more"><span class="cc-deal-count">Showing {popularDeals.length} of the most popular courses today</span><a href="/popular">See all popular courses →</a></div>
         </section>
       )}
 
@@ -416,12 +401,14 @@ const jsonLd = {
   .cc-sec-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.625rem; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
   .cc-sec-desc { font-size: 0.85rem; color: #6E6A5E; margin: 0; }
 
-  /* ===== LEDGER TABLE (matches homepage deal table) ===== */
+  /* ===== LEDGER TABLE + GRID (coursecard grid design) ===== */
   .cc-featured { margin-top: 3.25rem; }
   .cc-deals-section { margin-top: 3.25rem; }
   .cc-ledger-wrap { background: #fff; border: 1px solid #D8D0BC; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.16); margin-top: 16px; }
   table.cc-ledger-table { width: 100%; border-collapse: collapse; }
   .cc-ledger-table thead th { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.625rem; text-transform: uppercase; letter-spacing: .05em; color: #5B564C; text-align: left; padding: 12px 14px; border-bottom: 1px solid #D8D0BC; background: #EDE7D6; white-space: nowrap; }
+  .cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; margin-top: 16px; }
+  @media (max-width: 640px) { .cc-grid { grid-template-columns: 1fr; } }
   .cc-deal-more { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px; background: #EDE7D6; border-top: 1px solid #D8D0BC; }
   .cc-deal-more a { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.78125rem; font-weight: 600; color: #1F7A4D; text-decoration: none; }
   .cc-deal-more a:hover { text-decoration: underline; }
