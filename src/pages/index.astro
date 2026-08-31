@@ -250,10 +250,9 @@ const typewriterJson = JSON.stringify(typewriterWords);
     .hp-deal-more a { font-family: var(--font-mono); font-size: 0.78125rem; font-weight: 600; color: var(--hp-brand); text-decoration: none; }
     .hp-deal-count { font-family: var(--font-mono); font-size: 0.71875rem; color: var(--hp-muted); }
     .hp-table tr[data-primary="0"] { display: none; }
-    /* ===== DEAL GRID (coursecard grid design) ===== */
+    /* ===== DEAL GRID (coursecard grid design) — filter handled by JS, not CSS */
     .hp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; margin-top: 16px; }
     @media (max-width: 640px) { .hp-grid { grid-template-columns: 1fr; } }
-    .hp-grid-item[data-primary="0"] { display: none; }
 
     /* ===== 3 STEPS ===== */
     .hp-steps3 { display: grid; grid-template-columns: 1fr; gap: 0; }
@@ -325,6 +324,29 @@ const typewriterJson = JSON.stringify(typewriterWords);
     .hp-plan-note { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center; margin-top: 14px; font-family: var(--font-mono); font-size: 0.65625rem; color: var(--hp-muted); }
     .hp-plan-note span { display: inline-flex; align-items: center; gap: 6px; }
     .hp-plan-note svg { width: 12px; height: 12px; color: var(--hp-green); flex-shrink: 0; }
+    /* Dark hero variant — high conversion */
+    .hp-plan-dark { background: #0F1D33; border-color: rgba(255,255,255,0.08); overflow: hidden; box-shadow: 0 24px 48px -20px rgba(15,23,42,0.65); }
+    .hp-plan-bg { position: absolute; inset: 0; background: radial-gradient(600px 300px at 20% 0%, rgba(164,53,240,0.18), transparent 60%), radial-gradient(700px 400px at 90% 100%, rgba(34,197,94,0.12), transparent 60%); pointer-events: none; }
+    .hp-plan-dark .hp-plan-inner { position: relative; }
+    .hp-plan-dark .hp-plan-badge { color: #FDE68A; background: rgba(245,158,11,0.14); border-color: rgba(245,158,11,0.35); }
+    .hp-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; animation: blip 1.4s infinite; display: inline-block; }
+    .hp-plan-dark h2 { color: #fff; } .hp-plan-dark h2 span { color: #FACC15; background: linear-gradient(90deg,#FACC15,#FDE68A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hp-plan-dark .hp-plan-desc { color: #CBD5E1; } .hp-plan-dark .hp-plan-desc strong { color: #fff; }
+    .hp-plan-compare { display: flex; align-items: stretch; justify-content: center; gap: 0; margin: 0 auto 20px; max-width: 520px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; }
+    .hp-compare-col { flex: 1; padding: 16px 12px; text-align: center; }
+    .hp-compare-col.highlight { background: rgba(250,204,21,0.12); border-left: 1px solid rgba(250,204,21,0.25); }
+    .hp-compare-label { display: block; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: .06em; text-transform: uppercase; color: #94A3B8; margin-bottom: 6px; }
+    .hp-compare-col.highlight .hp-compare-label { color: #FDE68A; }
+    .hp-compare-price { display: block; font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: #fff; line-height: 1; }
+    .hp-compare-col.highlight .hp-compare-price { color: #FACC15; }
+    .hp-compare-price span { font-size: 0.95rem; font-weight: 600; color: #94A3B8; }
+    .hp-compare-sub { display: block; font-size: 0.71875rem; color: #94A3B8; margin-top: 4px; }
+    .hp-compare-vs { display: flex; align-items: center; justify-content: center; padding: 0 8px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; color: #64748B; background: rgba(255,255,255,0.04); border-left: 1px solid rgba(255,255,255,0.06); border-right: 1px solid rgba(255,255,255,0.06); }
+    .hp-plan-dark .hp-plan-btn { background: #FACC15; color: #0F1D33; box-shadow: 0 12px 28px -10px rgba(250,204,21,0.6); animation: hpPulse 2.2s infinite; }
+    .hp-plan-dark .hp-plan-btn:hover { background: #FDE047; transform: translateY(-2px); }
+    @keyframes hpPulse { 0% { box-shadow: 0 12px 28px -10px rgba(250,204,21,0.6), 0 0 0 0 rgba(250,204,21,0.4); } 70% { box-shadow: 0 12px 28px -10px rgba(250,204,21,0.6), 0 0 0 12px rgba(250,204,21,0); } 100% { box-shadow: 0 12px 28px -10px rgba(250,204,21,0.6), 0 0 0 0 rgba(250,204,21,0); } }
+    .hp-plan-trust { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; font-family: var(--font-mono); font-size: 0.6875rem; color: #94A3B8; }
+    .hp-plan-subnote { font-size: 0.75rem; color: #94A3B8; line-height: 1.6; margin: 14px 0 0; } .hp-plan-subnote a { color: #93C5FD; font-weight: 600; text-decoration: none; } .hp-plan-subnote a:hover { color: #BFDBFE; text-decoration: underline; }
 
     @media (max-width: 700px) {
       .hp-hero { padding: 34px 22px 26px; }
@@ -409,7 +431,7 @@ const typewriterJson = JSON.stringify(typewriterWords);
         const rowCat = slugifyCategory(normName(deal.category) || "other");
         const rowPrimary = poolPrimary.has(String(deal.slug)) ? 1 : 0;
         return (
-          <div class="hp-grid-item" data-cat={rowCat} data-primary={rowPrimary}>
+          <div class="hp-grid-item" data-cat={rowCat} data-primary={rowPrimary} style={rowPrimary === 0 ? "display:none" : undefined}>
             <LedgerRow deal={deal} variant="grid" />
           </div>
         );
@@ -512,25 +534,29 @@ const typewriterJson = JSON.stringify(typewriterWords);
     </div>
   </section>
 
-  <!-- PERSONAL PLAN CTA -->
+  <!-- PERSONAL PLAN CTA — dark high-conversion hero (sync with /udemy-coupons-today) -->
   <section class="hp-wrap" aria-label="Udemy Personal Plan promotion">
-    <div class="hp-plan">
+    <div class="hp-plan hp-plan-dark">
+      <div class="hp-plan-bg"></div>
       <div class="hp-plan-inner">
         <span class="hp-plan-badge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-          Udemy Personal Plan
+          <span class="hp-dot"></span> Sponsored — CoursesWyn readers exclusive
         </span>
-        <h2>Unlimited access to 26,000+ top-rated courses — <span>25% OFF your first year</span></h2>
-        <p class="hp-plan-desc">Tired of hunting for a new coupon before every course? Udemy Personal Plan gives you unlimited access to 26,000+ curated top-rated courses for one flat monthly or annual price. CoursesWyn readers get 25% off their first year.</p>
-        <a class="hp-plan-btn" href="https://trk.udemy.com/c/6564357/3775958/39854" rel="nofollow sponsored noopener" target="_blank">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4v4"/><path d="M10 14L21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-          Get Udemy Personal Plan — 25% OFF
-        </a>
-        <div class="hp-plan-note">
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> 26,000+ courses included</span>
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Annual plan $240/yr ($20/mo)</span>
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Cancel anytime</span>
+        <h2>Stop chasing <span>single coupons</span> — unlock <span>26,000+</span> courses for $20/mo</h2>
+        <p class="hp-plan-desc">Today's coupons expire in ~7 hours / 100 redemptions. Personal Plan gives you unlimited access to 26,000+ curated courses with certificates — one flat price, cancel anytime. <strong>25% OFF your first year.</strong></p>
+        <div class="hp-plan-compare">
+          <div class="hp-compare-col"><span class="hp-compare-label">Buy individually</span><span class="hp-compare-price">$45</span><span class="hp-compare-sub">3 courses × $15</span></div>
+          <div class="hp-compare-vs">vs</div>
+          <div class="hp-compare-col highlight"><span class="hp-compare-label">Personal Plan</span><span class="hp-compare-price">$20<span>/mo</span></span><span class="hp-compare-sub">26,000+ unlimited</span></div>
         </div>
+        <a class="hp-plan-btn" href="https://trk.udemy.com/c/6564357/3775958/39854" rel="nofollow sponsored noopener" target="_blank">
+          Yes, I Want 25% OFF Personal Plan
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+        <div class="hp-plan-trust">
+          <span>★ 4.8/5 rating</span><span>·</span><span>75k+ learners</span><span>·</span><span>7-day free trial</span>
+        </div>
+        <p class="hp-plan-subnote">Sponsored — We may earn a commission at no extra cost to you. <a href="/blog/udemy-personal-plan-review-2026/">Read 2026 review →</a> · <a href="/affiliate-disclosure">Affiliate Disclosure</a></p>
       </div>
     </div>
   </section>

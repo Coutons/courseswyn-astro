@@ -18,11 +18,15 @@ const isUpdatedToday = (d: { updatedAt?: string; createdAt?: string }) => {
 const todayDeals = allDeals.filter(isUpdatedToday);
 const activeToday = todayDeals.filter(d => !d.expiresAt || new Date(d.expiresAt) > now);
 
+// Single deduped grid: free+paid sorted freshest first (fix freeDeals unused + duplicate grids)
+const todayGridDeals = [...activeToday]
+  .sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime())
+  .slice(0, 48);
+
 const todayAdded = todayDeals.length;
-const paidDeals = activeToday.filter(d => d.price > 0 || d.price == null).slice(0, 48);
-const freeDeals = activeToday.filter(d => d.price === 0);
 const totalActive = activeToday.length;
 const totalCoupons = allDeals.length;
+const freeCount = activeToday.filter(d => d.price === 0).length;
 
 const decodeHtml = (str: string) =>
   str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
@@ -43,6 +47,7 @@ const latestUpdate = todayDeals.reduce((latest, d) => {
   const t = new Date(d.updatedAt || d.createdAt || 0).getTime();
   return t > latest ? t : latest;
 }, 0);
+const latestUpdateIso = latestUpdate ? new Date(latestUpdate).toISOString() : now.toISOString();
 const diffMs = now.getTime() - latestUpdate;
 const diffMin = Math.floor(diffMs / 60000);
 let lastVerified;
@@ -53,15 +58,6 @@ else {
   lastVerified = diffHr < 24 ? `${diffHr}h ago` : `${Math.floor(diffHr / 24)}d ago`;
 }
 
-const almostGone = activeToday
-  .filter(d => d.expiresAt)
-  .filter(d => {
-    const diff = new Date(d.expiresAt!).getTime() - now.getTime();
-    return diff > 0 && diff < 7 * 24 * 3600000;
-  })
-  .sort((a, b) => new Date(a.expiresAt!).getTime() - new Date(b.expiresAt!).getTime())
-  .slice(0, 3);
-
 const expiringCount = activeToday
   .filter(d => d.expiresAt)
   .filter(d => {
@@ -69,26 +65,24 @@ const expiringCount = activeToday
     return diff > 0 && diff < 7 * 24 * 3600000;
   }).length;
 
-const popularDeals = activeToday
-  .filter(d => (d.rating ?? 0) >= 4.5)
-  .slice(0, 8);
-
 const discountPcts = activeToday
   .filter(d => d.price && d.originalPrice && d.originalPrice > d.price)
   .map(d => Math.round(100 - (d.price / d.originalPrice!) * 100));
 const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 95;
 
-const paidCount = paidDeals.length;
-
 const siteUrl = "https://courseswyn.com";
 const pageUrl = `${siteUrl}/udemy-coupons-today/`;
 const shortDate = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'long', day: 'numeric' }).format(now);
-const pageTitle = `${todayAdded} New Udemy Coupons Today (${shortDate}) | CoursesWyn`;
-const metaDescription = `Fresh Udemy coupon codes added today - ${todayAdded} new deals verified in the last 24 hours. Save up to ${maxDiscountPct}% on premium courses.`;
+const pageTitle = todayAdded > 0
+  ? `${todayAdded} Verified Udemy Coupons Today — ${shortDate} | Save Up To ${maxDiscountPct}% | CoursesWyn`
+  : `Udemy Coupons Today (${shortDate}) — Fresh Verified Deals | CoursesWyn`;
+const metaDescription = todayAdded > 0
+  ? `${todayAdded} fresh Udemy coupon codes verified today (${shortDate}). ${totalActive} active deals, save up to ${maxDiscountPct}% — checked ${lastVerified}, expires in hours.`
+  : `Fresh Udemy coupons updated ${lastVerified} — ${totalActive} verified codes today. No code? Try Udemy Personal Plan with 26,000+ courses.`;
 const pageKeywords = [
-  "udemy coupons today", "new udemy coupon", "fresh udemy coupon codes",
-  "free udemy coupon", "udemy discount", "udemy promo code",
-  "udemy deals today", "verified udemy coupons", "udemy course deals"
+  "udemy coupons today", "udemy coupon today", "todays udemy coupons",
+  "new udemy coupon", "fresh udemy coupon codes today", "udemy deals today",
+  "udemy discount today", "free udemy coupon", "verified udemy coupons", "udemy promo code"
 ].join(", ");
 
 const shareUrl = encodeURIComponent(pageUrl);
@@ -101,13 +95,17 @@ function slugify(s: string) {
   return s.toLowerCase().replace(/\s+&\s+/g, '-and-').replace(/['\s]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
 }
 
+function cleanDesc(s: string) {
+  return String(s || "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim().slice(0, 120);
+}
+
 const faqs = [
-  { q: "What's the difference between Today's Coupons and the full coupon page?", a: "Today's Coupons highlights only deals added or updated in the last 24 hours — the freshest, most likely to still work. Our full coupon code page lists every verified deal, sorted by newest first, with category filters and pagination." },
-  { q: "Are these Udemy coupons verified?", a: "Yes. Every coupon listed is manually verified before publishing. We check each code to ensure it still works and shows the correct discount." },
-  { q: "How long do these Udemy coupons last?", a: "Udemy coupons typically expire within a few days or run out of redemptions. We recommend enrolling as soon as you find a course you want. If a code has expired, check our main deals page for the latest listings." },
-  { q: "How do I redeem a Udemy coupon?", a: "Click the course card to open its deal page on CoursesWyn, then click the coupon or 'Get deal' button. You'll be taken to Udemy with the discount pre-applied. Complete enrollment there." },
-  { q: "Do I get a certificate with discounted Udemy courses?", a: "Yes. Courses enrolled via our coupons include lifetime access, downloadable resources, and an official Udemy completion certificate when you finish the course." },
-  { q: "How often are new coupons added?", a: "New coupons are added throughout the day as instructors publish them. We check Udemy in near real time and update this list automatically, so checking back every few hours will show fresh deals." },
+  { q: "What's the difference between Today's Coupons and the full coupon page?", a: "Today's Coupons highlights only deals added or updated in the last 24 hours — the freshest, most likely to still work. Our <a href='/udemy-coupon-code'>full coupon code page</a> lists every verified deal, sorted by newest first, with category filters and pagination." },
+  { q: "Are these Udemy coupons verified today?", a: "Yes. Every coupon on this page was re-verified against Udemy before listing. The timestamp <em>Updated " + lastVerified + " WIB</em> shows the last check; expired codes disappear automatically." },
+  { q: "How long do Udemy coupons added today last?", a: "Since Udemy's 2025 policy update most coupons are capped at 10-100 redemptions and expire within days. We recommend enrolling immediately — " + expiringCount + " of today's coupons already expire within 7 days." },
+  { q: "How do I redeem a Udemy coupon from today's list?", a: "Click the course card to open its deal page on CoursesWyn, then click 'Claim Coupon'. You'll land on Udemy with the discount pre-applied. Complete enrollment there — no manual code entry needed." },
+  { q: "Do discounted courses from today include certificates?", a: "Yes. Courses enrolled via today's coupons include lifetime access, downloadable resources, and an official Udemy completion certificate when you finish the course." },
+  { q: "How often are new Udemy coupons added today?", a: "New coupons are added throughout the day as instructors publish them. We check Udemy in near real time and update this list automatically — checking back every few hours shows fresh deals. You can also try <a href='/blog/udemy-personal-plan-review-2026/'>Udemy Personal Plan</a> for unlimited access when no coupon fits." },
   { q: "Why did Udemy change its coupon policy?", a: `In 2025 Udemy updated its coupon policy to improve course quality. Most coupons are now limited to 10-100 redemptions. Read more on <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's instructor blog</a>.` },
 ];
 
@@ -115,7 +113,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "WebPage",
+      "@type": ["WebPage", "CollectionPage"],
       "@id": `${pageUrl}#webpage`,
       "url": pageUrl,
       "name": pageTitle,
@@ -123,10 +121,12 @@ const jsonLd = {
       "keywords": pageKeywords,
       "isPartOf": { "@id": `${siteUrl}#website` },
       "inLanguage": "en-US",
-      "datePublished": new Date(latestUpdate).toISOString().split('T')[0],
-      "dateModified": new Date(latestUpdate).toISOString(),
+      "datePublished": latestUpdateIso,
+      "dateModified": latestUpdateIso,
       "breadcrumb": { "@id": `${pageUrl}#breadcrumb` },
       "mainEntity": { "@id": `${pageUrl}#itemlist` },
+      "author": { "@type": "Person", "name": "Andrew Derek", "url": `${siteUrl}/about` },
+      "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["h1", ".cc-subtitle", ".cc-faq-q"] }
     },
     {
       "@type": "BreadcrumbList",
@@ -139,24 +139,33 @@ const jsonLd = {
     {
       "@type": "ItemList",
       "@id": `${pageUrl}#itemlist`,
-      "name": "Today's Udemy Coupon Codes",
+      "name": `Today's Udemy Coupon Codes — ${shortDate}`,
       "description": metaDescription,
-      "numberOfItems": todayDeals.length,
-      "itemListElement": todayDeals.slice(0, 20).map((d, i) => ({
+      "numberOfItems": totalActive,
+      "itemListElement": todayGridDeals.slice(0, 20).map((d, i) => ({
         "@type": "ListItem",
         "position": i + 1,
+        "url": `${siteUrl}/coupon/${d.slug}`,
         "item": {
           "@type": "Course",
           "name": d.title,
           "url": `${siteUrl}/coupon/${d.slug}`,
-          "description": d.description,
-          "provider": { "@type": "Organization", "name": "Udemy" },
-          "offers": { "@type": "Offer", "price": d.price ?? 0, "priceCurrency": "USD", "availability": "https://schema.org/InStock" },
+          "description": cleanDesc(d.description),
+          "provider": { "@type": "Organization", "name": "Udemy", "sameAs": "https://www.udemy.com" },
+          "offers": {
+            "@type": "Offer",
+            "price": d.price ?? 0,
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "url": `${siteUrl}/coupon/${d.slug}`,
+            ...(d.expiresAt ? { "priceValidUntil": new Date(d.expiresAt).toISOString() } : {})
+          },
         },
       })),
     },
     {
       "@type": "FAQPage",
+      "@id": `${pageUrl}#faq`,
       "mainEntity": faqs.map(f => ({
         "@type": "Question",
         "name": f.q,
@@ -167,9 +176,19 @@ const jsonLd = {
 };
 ---
 
-<Layout title={pageTitle} description={metaDescription} canonical={pageUrl} hideBreadcrumbs={true}>
+<Layout title={pageTitle} description={metaDescription} canonical={pageUrl} hideBreadcrumbs={false} pubDate={new Date(latestUpdate || Date.now())} updatedDate={now}>
   <Fragment slot="head">
     <meta name="keywords" content={pageKeywords} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={metaDescription} />
+    <meta property="og:image" content={`${siteUrl}/assets/images/og-default.svg`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={metaDescription} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </Fragment>
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
@@ -179,23 +198,24 @@ const jsonLd = {
       <header class="cc-header">
         <div class="cc-register">
           <div class="cc-register-top">
-            <span class="cc-eyebrow"><span class="cc-blip"></span><a href="/how-we-test-and-verify-udemy-coupons">Live &middot; updated {lastVerified}</a></span>
-            <span class="cc-folio">{dateFull}</span>
+            <span class="cc-eyebrow"><span class="cc-blip"></span><a href="/how-we-test-and-verify-udemy-coupons">Live &middot; updated {lastVerified} WIB</a></span>
+            <span class="cc-folio">{dateFull} · {todayAdded} new</span>
           </div>
-          <h1 class="cc-title">Today's <span class="cc-accent">Udemy Coupons</span></h1>
-          <p class="cc-subtitle">{todayAdded} hand-picked deals added in the last 24 hours &mdash; every code re-verified before it's listed. Save up to <strong>{maxDiscountPct}%</strong> on premium courses.</p>
+          <h1 class="cc-title">Verified <span class="cc-accent">Udemy Coupons Today</span> — {todayAdded} New Deals for {shortDate}</h1>
+          <p class="cc-subtitle">{todayAdded} hand-picked deals added in the last 24 hours &mdash; every code re-verified before it's listed. Save up to <strong>{maxDiscountPct}%</strong> on premium courses. <time datetime={latestUpdateIso} style="font-weight:600;color:#1F7A4D">Updated {lastVerified}</time> WIB.</p>
           <div class="cc-byline">
             <a class="cc-byline-badge" href="/about">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1 1 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
               Compiled &amp; checked by Andrew Derek
             </a>
-            <span class="cc-byline-date">Updated {lastVerified}</span>
+            <span class="cc-byline-date">Updated <time datetime={latestUpdateIso}>{lastVerified}</time> WIB</span>
             <a class="cc-byline-verify" href="/how-we-test-and-verify-udemy-coupons">How we test &amp; verify Udemy coupons</a>
           </div>
+          <p class="cc-affiliate">CoursesWyn may earn a commission when you buy through links on this page — at no extra cost to you. <a href="/affiliate-disclosure">Affiliate Disclosure</a></p>
           <div class="cc-toolbar">
             <form action="/search" method="GET" role="search" aria-label="Search courses" class="cc-hero-search">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input type="search" name="q" placeholder="Search for discounted Udemy courses..." autocomplete="off" aria-label="Search courses" />
+              <input type="search" name="q" placeholder="Search today's discounted Udemy courses..." autocomplete="off" aria-label="Search courses" />
               <kbd>? + K</kbd>
             </form>
             <a class="cc-hero-btn" href="#latest">Browse today's deals</a>
@@ -203,16 +223,16 @@ const jsonLd = {
           </div>
           <div class="cc-ledger">
             <div class="cc-ledger-cell"><div class="cc-ledger-label">Added today</div><div class="cc-ledger-value">{todayAdded}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Active today</div><div class="cc-ledger-value">{totalActive}</div></div>
+            <div class="cc-ledger-cell"><div class="cc-ledger-label">Free today</div><div class="cc-ledger-value">{freeCount}</div></div>
             <div class="cc-ledger-cell"><div class="cc-ledger-label">Save up to</div><div class="cc-ledger-value">{maxDiscountPct}%</div></div>
-            <div class="cc-ledger-cell"><div class="cc-ledger-label">Topics</div><div class="cc-ledger-value">{totalTopics}</div></div>
-            <div class="cc-ledger-cell"><div class="cc-ledger-label">Total coupons</div><div class="cc-ledger-value">{totalCoupons}</div></div>
           </div>
         </div>
       </header>
 
       <div class="daily-urgency" role="note">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span><strong>Coupons expire fast</strong> &mdash; {todayAdded} added today{expiringCount > 0 ? `, ${expiringCount} expiring within 7 days` : ''}. Enroll before they run out.</span>
+        <span><strong>Coupons expire fast</strong> &mdash; {todayAdded} added today{expiringCount > 0 ? `, ${expiringCount} expiring within 7 days` : ''}{freeCount > 0 ? `, ${freeCount} free` : ''}. Enroll before they run out.</span>
         <a href="/how-to-redeem-coupon">How to redeem &rarr;</a>
       </div>
 
@@ -233,60 +253,108 @@ const jsonLd = {
         <button class="daily-share-copy" data-copy-url={pageUrl} type="button" aria-label="Copy link">Copy link</button>
       </div>
 
-      {almostGone.length > 0 && (
-        <section class="cc-featured">
-          <div class="cc-sec-head">
-            <h2 class="cc-sec-title">Udemy Coupons Expiring Soon <span class="cc-tag">almost gone</span></h2>
-            <p class="cc-sec-desc">These coupons expire within 7 days &mdash; enroll now before they run out.</p>
+      {/* COMPACT PERSONAL PLAN BANNER - high CTR, urgency */}
+      <section class="pp-compact" aria-label="Udemy Personal Plan alternative">
+        <div class="pp-compact-inner">
+          <div class="pp-compact-left">
+            <span class="pp-compact-pill"><span class="pp-dot"></span> CoursesWyn readers: 25% OFF — limited time</span>
+            <div class="pp-compact-text">
+              <strong>No coupon for the course you want?</strong> Get unlimited access to <strong>26,000+ top-rated courses</strong> with Udemy Personal Plan — one flat price, cancel anytime. <a href="/blog/udemy-personal-plan-review-2026/">See 2026 review</a>
+            </div>
           </div>
-          <div class="cc-grid">
-            {almostGone.slice(0, 3).map((deal: any) => <LedgerRow deal={deal} variant="grid" />)}
-          </div>
-        </section>
-      )}
+          <a class="pp-compact-cta" href="https://trk.udemy.com/c/6564357/3775958/39854" target="_blank" rel="noopener noreferrer sponsored">
+            <span class="pp-compact-cta-main">Claim 25% OFF <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+            <span class="pp-compact-cta-sub">$20/mo · 7-day free trial · Cancel anytime</span>
+          </a>
+        </div>
+        <p class="pp-compact-note">Sponsored — CoursesWyn may earn a commission at no extra cost to you. <a href="/affiliate-disclosure">Learn more</a> · <span style="color:#B8901F">⏰ Most coupons cap at 100 redemptions</span></p>
+      </section>
 
+      {/* SINGLE GRID - NO DUPLICATES: free+paid combined, freshest first */}
       <section class="cc-deals-section" id="latest">
         <div class="cc-sec-head">
-          <h2 class="cc-sec-title">Latest Udemy Coupon Codes Added Today <span class="cc-tag">{paidCount} deals</span></h2>
-          <p class="cc-sec-desc">Coupons added or updated today, freshest first.</p>
+          <h2 class="cc-sec-title">Today's Verified Udemy Coupons <span class="cc-tag">{totalActive} deals · freshest first</span></h2>
+          <p class="cc-sec-desc">One list, no duplicates — {freeCount > 0 ? `${freeCount} free & ` : ''}{totalActive - freeCount} paid coupons added or re-verified today. Sorted by freshest. Expires soon = enroll now.</p>
         </div>
-        {paidDeals.length > 0 ? (
+        {todayGridDeals.length > 0 ? (
           <div class="cc-grid">
-            {paidDeals.map((deal: any) => <LedgerRow deal={deal} variant="grid" />)}
+            {todayGridDeals.map((deal: any, idx: number) => (
+              <>
+                <LedgerRow deal={deal} variant="grid" eager={idx < 6} priority={idx < 3} />
+                {/* In-grid Personal Plan card — dark high-contrast */}
+                {idx === 11 && todayGridDeals.length > 14 && (
+                  <div class="pp-inline-card">
+                    <div class="pp-inline-badge"><span class="pp-dot"></span> Sponsored · Best value</div>
+                    <h3 class="pp-inline-title">Coupon expired? Get everything — $20/mo</h3>
+                    <p class="pp-inline-desc">3 courses @ $15 = $45. Personal Plan = <strong>$20 unlimited</strong>. Perfect for binge learners.</p>
+                    <div class="pp-inline-price"><span class="pp-inline-was">$29.99/mo</span> <span class="pp-inline-now">$20/mo</span> <span class="pp-inline-off">25% OFF</span></div>
+                    <ul class="pp-inline-list">
+                      <li>26,000+ top-rated courses</li>
+                      <li>Cancel anytime · 7-day trial</li>
+                      <li>Certificate included</li>
+                    </ul>
+                    <a class="pp-inline-btn" href="https://trk.udemy.com/c/6564357/3775958/39854" target="_blank" rel="noopener noreferrer sponsored">Get Personal Plan — 25% OFF <span class="pp-inline-arrow">→</span></a>
+                    <a class="pp-inline-link" href="/blog/udemy-personal-plan-review-2026/">Read 2026 review →</a>
+                  </div>
+                )}
+              </>
+            ))}
           </div>
         ) : (
           <div class="cc-empty">
-            <p>No new paid coupons have been added today yet.</p>
-            <p>Fresh deals are verified throughout the day — check back soon, or browse every verified code below.</p>
+            <p>No coupons have been verified yet today — fresh deals drop throughout the day.</p>
+            <p>Check back in a few hours, or browse every verified code, or try <a href="https://trk.udemy.com/c/6564357/3775958/39854" target="_blank" rel="noopener noreferrer sponsored">Udemy Personal Plan (26k+ courses)</a> while you wait.</p>
           </div>
         )}
-        <div class="cc-deal-more"><span class="cc-deal-count">Showing the {paidCount} most recent of {totalActive} coupons added today</span><a href="/udemy-coupon-code">Browse them all →</a></div>
+        <div class="cc-deal-more"><span class="cc-deal-count">Showing {todayGridDeals.length} of {totalActive} coupons verified today</span><a href="/udemy-coupon-code">Browse all {totalCoupons.toLocaleString()} coupons →</a></div>
       </section>
 
-      {popularDeals.length > 0 && (
-        <section class="cc-section">
-          <div class="cc-sec-head">
-            <h2 class="cc-sec-title">Popular Udemy Courses on Sale Today <span class="cc-tag">Top-rated</span></h2>
-            <p class="cc-sec-desc">Top-rated courses with the highest student reviews, discounted with today's coupons.</p>
+      {/* PREMIUM PERSONAL PLAN SECTION - dark high-conversion hero */}
+      <section class="pp-premium" aria-label="Udemy Personal Plan promotion">
+        <div class="pp-premium-bg"></div>
+        <div class="pp-premium-inner">
+          <span class="pp-premium-badge"><span class="pp-dot"></span> Sponsored — CoursesWyn readers exclusive</span>
+          <h2>Stop chasing <span>single coupons</span> — unlock <span>26,000+</span> courses for $20/mo</h2>
+          <p class="pp-premium-desc">Today's coupons expire in <strong>~7 hours / 100 redemptions</strong> on average. Instead of hunting one by one, Personal Plan gives you unlimited access to 26,000+ curated courses with certificates — one flat price, cancel anytime. <strong>25% OFF your first year for CoursesWyn readers.</strong></p>
+
+          <div class="pp-premium-compare">
+            <div class="pp-compare-col"><span class="pp-compare-label">Buy individually</span><span class="pp-compare-price">$45</span><span class="pp-compare-sub">3 courses × $15</span></div>
+            <div class="pp-compare-vs">vs</div>
+            <div class="pp-compare-col highlight"><span class="pp-compare-label">Personal Plan</span><span class="pp-compare-price">$20<span>/mo</span></span><span class="pp-compare-sub">26,000+ courses unlimited</span></div>
           </div>
-          <div class="cc-grid">
-            {popularDeals.map((deal: any) => <LedgerRow deal={deal} variant="grid" />)}
+
+          <div class="pp-premium-grid">
+            <div class="pp-premium-point"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.8"><path d="M20 6L9 17l-5-5"/></svg><span><strong>26,000+</strong> top-rated courses</span></div>
+            <div class="pp-premium-point"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.8"><path d="M20 6L9 17l-5-5"/></svg><span><strong>$240/yr</strong> ($20/mo) — 25% OFF</span></div>
+            <div class="pp-premium-point"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.8"><path d="M20 6L9 17l-5-5"/></svg><span><strong>Cancel anytime</strong> · 7-day trial</span></div>
           </div>
-          <div class="cc-deal-more"><span class="cc-deal-count">Showing {popularDeals.length} of the most popular courses today</span><a href="/popular">See all popular courses →</a></div>
-        </section>
-      )}
+
+          <a class="pp-premium-btn" href="https://trk.udemy.com/c/6564357/3775958/39854" rel="nofollow sponsored noopener" target="_blank">
+            <span>Yes, I Want 25% OFF Personal Plan</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+          <div class="pp-premium-trust">
+            <span><svg width="12" height="12" viewBox="0 0 24 24" fill="#22c55e"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg> 4.8/5 rating</span>
+            <span>·</span>
+            <span>75k+ learners</span>
+            <span>·</span>
+            <span>7-day free trial</span>
+          </div>
+          <p class="pp-premium-note">Sponsored — We may earn a commission at no extra cost to you. <a href="/blog/udemy-personal-plan-review-2026/">Read detailed 2026 review →</a> · <a href="/affiliate-disclosure">Affiliate Disclosure</a></p>
+        </div>
+      </section>
 
       <section class="cc-section">
         <div class="cc-sec-head">
-          <h2 class="cc-sec-title">Trending Udemy Course Categories Today <span class="cc-tag">{trendingTopics.length} topics</span></h2>
-          <p class="cc-sec-desc">Most popular categories among today's coupons.</p>
+          <h2 class="cc-sec-title">Trending Udemy Topics Today <span class="cc-tag">{trendingTopics.length} topics</span></h2>
+          <p class="cc-sec-desc">Most popular topics among today's verified coupons.</p>
         </div>
         <nav class="cc-cat-grid" aria-label="Trending topics">
           {trendingTopics.map(([topic, count]) => (
-            <a href={`/categories/${slugify(topic)}/`} class="cc-cat">
+            <a href={`/topics/${slugify(topic)}`} class="cc-cat">
               <div class="cc-cat-num">{count}</div>
               <div class="cc-cat-label">{topic}</div>
-              <div class="cc-cat-count">coupons</div>
+              <div class="cc-cat-count">coupons today</div>
             </a>
           ))}
         </nav>
@@ -295,13 +363,13 @@ const jsonLd = {
       <section class="cc-seo-section">
         <h2 class="cc-section-title">Why Today's Udemy Coupons Are Different From Our Full List</h2>
         <p>Since <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's coupon policy update</a>, most coupons are limited to about 10 to 100 redemptions or expire within days, which is why so many coupon sites list codes that no longer work. This page only shows deals added or re-verified in the last 24 hours &mdash; the freshest, most reliable codes available right now.</p>
-        <p>CoursesWyn checks every coupon against Udemy in near real time. When a coupon runs out, it disappears from this list automatically. For the complete archive with category filters, browse <a href="/udemy-coupon-code">all verified coupons</a>.</p>
+        <p>CoursesWyn checks every coupon against Udemy in near real time. When a coupon runs out, it disappears from this list automatically. For the complete archive with category filters, browse <a href="/udemy-coupon-code">all verified coupons</a>. No coupon for the course you want? <a href="https://trk.udemy.com/c/6564357/3775958/39854" rel="sponsored noopener" target="_blank">Udemy Personal Plan</a> gives unlimited access to 26,000+ courses for one price — see our <a href="/blog/udemy-personal-plan-review-2026/">Personal Plan review</a>.</p>
       </section>
 
-      <section class="cc-section cc-faq">
+      <section class="cc-section cc-faq" id="faq">
         <h2 class="cc-section-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Frequently asked questions
+          Frequently asked questions — Udemy coupons today
           <span class="cc-tag">{faqs.length} questions</span>
         </h2>
         <div class="cc-faq-grid">
@@ -314,18 +382,10 @@ const jsonLd = {
         </div>
       </section>
 
-      <section class="cc-ppoffer-wrap">
-        <p class="cc-ppoffer-title">Sold out? Try <strong>Udemy Personal Plan</strong> &mdash; one flat price, thousands of courses included.</p>
-        <a class="cc-ppoffer" href="https://trk.udemy.com/c/6564357/3775958/39854" target="_blank" rel="noopener noreferrer sponsored">
-          <span class="cc-ppoffer-label">Udemy Personal Plan</span>
-          <span class="cc-ppoffer-cta">Get up to 80% off &rarr;</span>
-        </a>
-      </section>
-
       <AuthorBox image="/images/author.jpg" />
 
       <section class="cc-cta">
-        <p class="cc-cta-eyebrow">New codes drop all day</p>
+        <p class="cc-cta-eyebrow">New codes drop all day — updated {lastVerified} WIB</p>
         <p class="cc-cta-text">Every coupon on this page was checked against Udemy before listing. For the full archive with category filters, browse every verified code.</p>
         <a class="cc-hero-btn" href="/udemy-coupon-code">Browse all verified coupons →</a>
       </section>
@@ -349,16 +409,20 @@ const jsonLd = {
   .cc-folio { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.6875rem; color: #5B564C; border: 1px dashed #B9B29B; border-radius: 6px; padding: 5px 10px; letter-spacing: .05em; white-space: nowrap; }
   .cc-title { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 700; color: #12203A; line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 12px; }
   .cc-title .cc-accent { color: #C13B2E; }
-  .cc-subtitle { color: #5B564C; font-size: 0.95rem; line-height: 1.7; margin: 0 0 20px; max-width: 640px; }
+  .cc-subtitle { color: #5B564C; font-size: 0.95rem; line-height: 1.7; margin: 0 0 20px; max-width: 680px; }
   .cc-subtitle strong { color: #12203A; font-weight: 700; }
+  .cc-subtitle time { white-space: nowrap; }
 
-  .cc-byline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 20px; }
+  .cc-byline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; }
   .cc-byline-badge { display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.6875rem; font-weight: 600; color: #1F7A4D; background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.25); border-radius: 999px; padding: 5px 12px; text-decoration: none; transition: background 0.2s; }
   .cc-byline-badge:hover { background: #D9EDE2; }
   .cc-byline-badge svg { flex-shrink: 0; }
   .cc-byline-date { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.6875rem; color: #5B564C; }
   .cc-byline-verify { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.6875rem; font-weight: 600; color: #12203A; text-decoration: none; border: 1px solid #B9B29B; border-radius: 999px; padding: 5px 12px; transition: all 0.2s; }
   .cc-byline-verify:hover { border-color: #1F7A4D; color: #1F7A4D; }
+  .cc-affiliate { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.6875rem; color: #5B564C; margin: 0 0 18px; line-height: 1.5; }
+  .cc-affiliate a { color: #1F7A4D; font-weight: 600; text-decoration: none; }
+  .cc-affiliate a:hover { text-decoration: underline; }
 
   .cc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .cc-hero-search { display: flex; align-items: center; gap: 10px; flex: 1 1 300px; max-width: 460px; min-width: 240px; background: #fff; border: 1px solid #D8D0BC; border-radius: 10px; padding: 0 14px; height: 48px; box-shadow: 0 8px 24px -18px rgba(18, 32, 58, 0.4); transition: border-color 0.2s, box-shadow 0.2s; }
@@ -395,27 +459,93 @@ const jsonLd = {
   .daily-share-copy:hover { background: #E4F1E9; }
   .daily-share-copy.copied { background: #1F7A4D; color: #fff; }
 
+  /* ===== COMPACT PP BANNER — high CTR (amber urgency + Udemy purple CTA) ===== */
+  .pp-compact { background: linear-gradient(135deg, #FFFBEB 0%, #fff 55%, #FFFBEB 100%); border: 1.5px solid #FCD34D; border-left: 4px solid #F59E0B; border-radius: 14px; padding: 16px 18px; margin: 20px 0 0; box-shadow: 0 6px 20px -10px rgba(245,158,11,0.35); }
+  .pp-compact-inner { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .pp-compact-left { flex: 1; min-width: 260px; }
+  .pp-compact-pill { display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 0.625rem; font-weight: 700; color: #92400E; background: #FEF3C7; border: 1px solid #FCD34D; padding: 4px 10px; border-radius: 999px; margin-bottom: 6px; letter-spacing: .02em; }
+  .pp-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; animation: ccBlip 1.4s infinite; display: inline-block; }
+  .pp-compact-text { font-size: 0.875rem; color: #12203A; line-height: 1.55; }
+  .pp-compact-text strong { color: #B45309; }
+  .pp-compact-text a { color: #92400E; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+  .pp-compact-cta { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; background: #A435F0; color: #fff; padding: 12px 18px; border-radius: 10px; text-decoration: none; white-space: nowrap; box-shadow: 0 8px 18px -8px rgba(164,53,240,0.55); transition: all 0.2s; flex-shrink: 0; }
+  .pp-compact-cta:hover { background: #8C2EC5; transform: translateY(-1px); box-shadow: 0 12px 24px -8px rgba(164,53,240,0.65); }
+  .pp-compact-cta-main { display: inline-flex; align-items: center; gap: 6px; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 0.875rem; font-weight: 800; letter-spacing: -0.01em; }
+  .pp-compact-cta-main svg { transition: transform 0.2s; }
+  .pp-compact-cta:hover .pp-compact-cta-main svg { transform: translateX(3px); }
+  .pp-compact-cta-sub { font-family: 'IBM Plex Mono', monospace; font-size: 0.625rem; font-weight: 500; opacity: 0.9; }
+  .pp-compact-note { font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 0.625rem; color: #78716C; margin: 10px 0 0; }
+  .pp-compact-note a { color: #92400E; font-weight: 600; text-decoration: none; }
+
   /* ===== SECTION HEADS ===== */
   .cc-sec-head { margin-bottom: 0.9rem; }
   .cc-sec-title { font-size: 1.2rem; font-weight: 700; color: #12203A; margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; letter-spacing: -0.01em; }
   .cc-sec-title .cc-tag { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.625rem; font-weight: 500; color: #5B564C; border: 1px solid #D8D0BC; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
   .cc-sec-desc { font-size: 0.85rem; color: #6E6A5E; margin: 0; }
 
-  /* ===== LEDGER TABLE + GRID (coursecard grid design) ===== */
-  .cc-featured { margin-top: 3.25rem; }
+  /* ===== GRID ===== */
   .cc-deals-section { margin-top: 3.25rem; }
-  .cc-ledger-wrap { background: #fff; border: 1px solid #D8D0BC; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.16); margin-top: 16px; }
-  table.cc-ledger-table { width: 100%; border-collapse: collapse; }
-  .cc-ledger-table thead th { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.625rem; text-transform: uppercase; letter-spacing: .05em; color: #5B564C; text-align: left; padding: 12px 14px; border-bottom: 1px solid #D8D0BC; background: #EDE7D6; white-space: nowrap; }
   .cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; margin-top: 16px; }
   @media (max-width: 640px) { .cc-grid { grid-template-columns: 1fr; } }
-  .cc-deal-more { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px; background: #EDE7D6; border-top: 1px solid #D8D0BC; }
+  .cc-deal-more { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px; background: #EDE7D6; border-top: 1px solid #D8D0BC; margin-top: 16px; border-radius: 0 0 12px 12px; }
   .cc-deal-more a { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.78125rem; font-weight: 600; color: #1F7A4D; text-decoration: none; }
   .cc-deal-more a:hover { text-decoration: underline; }
   .cc-deal-count { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.71875rem; color: #5B564C; }
-  .cc-empty { padding: 36px 20px; text-align: center; color: #5B564C; }
+  .cc-empty { padding: 36px 20px; text-align: center; color: #5B564C; background: #F5F1E6; border: 1px solid #D8D0BC; border-radius: 12px; margin-top: 16px; }
   .cc-empty p { margin: 0 0 6px; font-size: 0.95rem; line-height: 1.6; }
   .cc-empty p:last-child { margin-bottom: 0; }
+  .cc-empty a { color: #1F7A4D; font-weight: 600; text-decoration: none; }
+  .cc-empty a:hover { text-decoration: underline; }
+
+  /* ===== INLINE PP CARD — dark converting ===== */
+  .pp-inline-card { background: #12203A; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 10px; min-height: 100%; position: relative; overflow: hidden; box-shadow: 0 16px 32px -12px rgba(18,32,58,0.45); }
+  .pp-inline-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #A435F0, #F59E0B, #22c55e); }
+  .pp-inline-badge { display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 0.625rem; font-weight: 700; color: #FDE68A; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); padding: 4px 10px; border-radius: 999px; align-self: flex-start; }
+  .pp-inline-title { font-size: 1.08rem; font-weight: 800; color: #fff; margin: 0; line-height: 1.3; letter-spacing: -0.01em; }
+  .pp-inline-desc { font-size: 0.85rem; color: #CBD5E1; line-height: 1.6; margin: 0; }
+  .pp-inline-price { display: flex; align-items: baseline; gap: 8px; margin: 2px 0; }
+  .pp-inline-was { font-family: 'IBM Plex Mono', monospace; font-size: 0.8125rem; color: #94A3B8; text-decoration: line-through; }
+  .pp-inline-now { font-family: 'Space Grotesk', sans-serif; font-size: 1.25rem; font-weight: 800; color: #FACC15; }
+  .pp-inline-off { font-family: 'IBM Plex Mono', monospace; font-size: 0.625rem; font-weight: 700; color: #12203A; background: #FACC15; padding: 2px 6px; border-radius: 6px; }
+  .pp-inline-list { margin: 2px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .pp-inline-list li { font-size: 0.8125rem; color: #E2E8F0; padding-left: 18px; position: relative; }
+  .pp-inline-list li::before { content: "✓"; position: absolute; left: 0; color: #22c55e; font-weight: 800; }
+  .pp-inline-btn { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; padding: 12px 16px; border-radius: 10px; background: #FACC15; color: #12203A; font-size: 0.875rem; font-weight: 800; text-decoration: none; transition: all 0.2s; box-shadow: 0 8px 18px -8px rgba(250,204,21,0.5); }
+  .pp-inline-btn:hover { background: #FDE047; transform: translateY(-1px); }
+  .pp-inline-arrow { transition: transform 0.2s; }
+  .pp-inline-btn:hover .pp-inline-arrow { transform: translateX(3px); }
+  .pp-inline-link { font-size: 0.75rem; font-weight: 600; color: #93C5FD; text-decoration: none; text-align: center; }
+  .pp-inline-link:hover { color: #BFDBFE; text-decoration: underline; }
+
+  /* ===== PREMIUM PP — dark high-conversion hero ===== */
+  .pp-premium { position: relative; margin-top: 3.25rem; background: #0F1D33; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 36px 32px; overflow: hidden; box-shadow: 0 24px 48px -20px rgba(15,23,42,0.65); }
+  .pp-premium-bg { position: absolute; inset: 0; background: radial-gradient(600px 300px at 20% 0%, rgba(164,53,240,0.18), transparent 60%), radial-gradient(700px 400px at 90% 100%, rgba(34,197,94,0.12), transparent 60%), radial-gradient(1px 1px at 30% 40%, rgba(255,255,255,0.35) 1px, transparent 0); background-size: 100% 100%, 100% 100%, 24px 24px; pointer-events: none; }
+  .pp-premium-inner { position: relative; max-width: 720px; margin: 0 auto; text-align: center; }
+  .pp-premium-badge { display: inline-flex; align-items: center; gap: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 0.6875rem; font-weight: 700; color: #FDE68A; background: rgba(245,158,11,0.14); border: 1px solid rgba(245,158,11,0.35); border-radius: 999px; padding: 6px 14px; margin-bottom: 14px; letter-spacing: .02em; }
+  .pp-premium h2 { font-size: clamp(1.55rem, 3.2vw, 2.1rem); font-weight: 800; color: #fff; margin: 0 0 12px; line-height: 1.18; letter-spacing: -0.02em; }
+  .pp-premium h2 span { color: #FACC15; background: linear-gradient(90deg, #FACC15, #FDE68A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .pp-premium-desc { font-size: 0.9rem; line-height: 1.7; color: #CBD5E1; margin: 0 auto 20px; max-width: 600px; }
+  .pp-premium-desc strong { color: #fff; }
+  .pp-premium-compare { display: flex; align-items: stretch; justify-content: center; gap: 0; margin: 0 auto 20px; max-width: 520px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; }
+  .pp-compare-col { flex: 1; padding: 16px 12px; text-align: center; }
+  .pp-compare-col.highlight { background: rgba(250,204,21,0.12); border-left: 1px solid rgba(250,204,21,0.25); }
+  .pp-compare-label { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.625rem; letter-spacing: .06em; text-transform: uppercase; color: #94A3B8; margin-bottom: 6px; }
+  .pp-compare-col.highlight .pp-compare-label { color: #FDE68A; }
+  .pp-compare-price { display: block; font-family: 'Space Grotesk', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; line-height: 1; }
+  .pp-compare-col.highlight .pp-compare-price { color: #FACC15; }
+  .pp-compare-price span { font-size: 0.95rem; font-weight: 600; color: #94A3B8; }
+  .pp-compare-sub { display: block; font-size: 0.71875rem; color: #94A3B8; margin-top: 4px; }
+  .pp-compare-vs { display: flex; align-items: center; justify-content: center; padding: 0 8px; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; font-weight: 700; color: #64748B; background: rgba(255,255,255,0.04); border-left: 1px solid rgba(255,255,255,0.06); border-right: 1px solid rgba(255,255,255,0.06); }
+  .pp-premium-grid { display: flex; flex-wrap: wrap; gap: 10px 18px; justify-content: center; margin-bottom: 22px; }
+  .pp-premium-point { display: inline-flex; align-items: center; gap: 7px; font-size: 0.8125rem; color: #E2E8F0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); padding: 6px 12px; border-radius: 999px; }
+  .pp-premium-point strong { color: #fff; }
+  .pp-premium-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 15px 28px; border-radius: 12px; font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; text-decoration: none; background: #FACC15; color: #0F1D33; box-shadow: 0 12px 28px -10px rgba(250,204,21,0.6), 0 0 0 0 rgba(250,204,21,0.5); animation: ppPulse 2.2s infinite; transition: all 0.2s; }
+  .pp-premium-btn:hover { background: #FDE047; transform: translateY(-2px); box-shadow: 0 16px 32px -10px rgba(250,204,21,0.7); }
+  @keyframes ppPulse { 0% { box-shadow: 0 12px 28px -10px rgba(250,204,21,0.6), 0 0 0 0 rgba(250,204,21,0.4); } 70% { box-shadow: 0 12px 28px -10px rgba(250,204,21,0.6), 0 0 0 12px rgba(250,204,21,0); } 100% { box-shadow: 0 12px 28px -10px rgba(250,204,21,0.6), 0 0 0 0 rgba(250,204,21,0); } }
+  .pp-premium-trust { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 0.6875rem; color: #94A3B8; }
+  .pp-premium-note { font-size: 0.75rem; color: #94A3B8; line-height: 1.6; margin: 14px 0 0; }
+  .pp-premium-note a { color: #93C5FD; font-weight: 600; text-decoration: none; }
+  .pp-premium-note a:hover { color: #BFDBFE; text-decoration: underline; }
 
   /* ===== TOPIC BOXES ===== */
   .cc-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-top: 16px; }
@@ -450,13 +580,6 @@ const jsonLd = {
   .cc-cta { background: #F5F1E6; border: 1px solid #D8D0BC; color: #12203A; border-radius: 16px; padding: 30px 32px; text-align: center; margin: 3.25rem 0 0; }
   .cc-cta-eyebrow { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.625rem; letter-spacing: .07em; text-transform: uppercase; color: #1F7A4D; margin: 0 0 8px; }
 
-  .cc-ppoffer-wrap { background: #E4F1E9; border: 1px solid rgba(31, 122, 77, 0.35); border-radius: 14px; padding: 20px 24px; margin: 3.25rem 0 0; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
-  .cc-ppoffer-title { font-size: 0.8125rem; color: #12203A; margin: 0; line-height: 1.5; max-width: 420px; }
-  .cc-ppoffer-title strong { color: #1F7A4D; }
-  .cc-ppoffer { display: inline-flex; align-items: center; gap: 10px; background: #12203A; color: #fff; border-radius: 9px; padding: 12px 18px; text-decoration: none; transition: background 0.2s, transform 0.2s; white-space: nowrap; }
-  .cc-ppoffer:hover { background: #1B2E52; transform: translateY(-1px); }
-  .cc-ppoffer-label { font-family: 'Space Grotesk', Inter, sans-serif; font-size: 0.78125rem; font-weight: 600; }
-  .cc-ppoffer-cta { font-family: 'IBM Plex Mono', Consolas, 'Courier New', monospace; font-size: 0.6875rem; font-weight: 600; color: #B8F0CA; }
   .cc-cta-text { font-size: 0.95rem; line-height: 1.6; margin: 0 auto 18px; max-width: 480px; color: #5B564C; }
   .cc-cta .cc-hero-btn { background: #12203A; color: #fff; box-shadow: 0 12px 28px -12px rgba(18, 32, 58, 0.5); }
   .cc-cta .cc-hero-btn:hover { background: #1B2E52; transform: translateY(-1px); }
@@ -465,6 +588,8 @@ const jsonLd = {
     .cc-title { font-size: 1.9rem; }
     .cc-register { padding: 26px 20px 22px; }
     .cc-ledger-cell { border-left: none; padding: 8px 0; }
+    .pp-compact-inner { flex-direction: column; align-items: stretch; }
+    .pp-premium { padding: 26px 20px; }
   }
   @media (max-width: 480px) {
     .cc-title { font-size: 1.7rem; }
