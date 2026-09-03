@@ -1,23 +1,20 @@
-const TZ = 'Asia/Jakarta';
-
 export function formatDateWIB(
   date: Date | string,
   options: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric', year: 'numeric' }
 ): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-US', { ...options, timeZone: TZ });
+  return d.toLocaleDateString('en-US', options);
 }
 
 export function formatStringWIB(
   date: Date,
   options: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' }
 ): string {
-  return date.toLocaleString('en-US', { ...options, timeZone: TZ });
+  return date.toLocaleString('en-US', options);
 }
 
 export function toISODateWIB(date: Date = new Date()): string {
   const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: TZ,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -30,7 +27,7 @@ export function toISODateWIB(date: Date = new Date()): string {
 
 export function currentYearWIB(): number {
   return Number(
-    new Intl.DateTimeFormat('en-US', { timeZone: TZ, year: 'numeric' }).format(new Date())
+    new Intl.DateTimeFormat('en-US', { year: 'numeric' }).format(new Date())
   );
 }
 
