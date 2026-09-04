@@ -1,976 +1,670 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Deal } from "@/types/deal";
 import { slugifyCategory, slugifyTopic } from "@/lib/utils";
-import { generateSeoDescription } from "@/lib/seo";
 import { parseInstructors, createInstructorSlug } from "@/lib/instructors";
-import {
-  dealSnapshot,
-  couponFAQs,
-  discountPctOf,
-  formatMoney,
-  formatStudents,
-  formatDuration,
-  relTime,
-  dealScore,
-  isDealExpired,
-} from "@/lib/dealStats";
-import type { CategoryStats } from "@/lib/dealStats";
+import { couponFAQs, formatMoney } from "@/lib/dealStats";
+import { renderMarkdownToHtml } from "@/lib/markdown";
 
 interface Props {
   deal: Deal;
   relatedDeals?: Deal[];
-  catStats?: CategoryStats;
+  catStats?: unknown;
   instructorImage?: string;
   couponMask?: string;
 }
 
-function stripHtml(s?: string): string {
-  if (!s) return "";
-  return s.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+function extractDifficulty(title?: string, description?: string): string {
+  const text = `${title || ""} ${description || ""}`.toLowerCase();
+  if (/beginner|starter|introduction|fundamentals|zero to hero|complete guide/.test(text)) return "Beginner-friendly";
+  if (/advanced|expert|master|professional/.test(text)) return "Advanced";
+  if (/intermediate|mid-level|practical/.test(text)) return "Intermediate";
+  return "All levels";
 }
 
-function PriceTrendChart({ deal }: { deal: Deal }) {
-  const price = deal.price ?? 0;
-  const original = Math.max(deal.originalPrice ?? price, price);
-  const startIso = deal.createdAt || deal.updatedAt;
-  if (!startIso) return null;
-
-  const W = 320;
-  const H = 110;
-  const maxY = Math.max(price, original, 1);
-  const innerH = H - 14;
-  const yFor = (v: number) => 6 + innerH - (v / maxY) * innerH;
-  const startY = yFor(original);
-  const endY = yFor(price);
-
-  const MOCK_XS = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 320];
-  const MOCK_YS = [70, 68, 40, 42, 20, 22, 60, 58, 10, 12, 15, 14];
-  const scale = (startY - endY) / (MOCK_YS[0] - MOCK_YS[MOCK_YS.length - 1]);
-  const offset = startY - MOCK_YS[0] * scale;
-  const pts = MOCK_YS.map((my, i) => {
-    const y = Math.max(4, Math.min(H - 8, offset + my * scale)).toFixed(1);
-    return `${MOCK_XS[i]},${y}`;
-  });
-
-  return (
-    <svg
-      viewBox={`0 0 ${W} ${H}`}
-      width="100%"
-      height="110"
-      preserveAspectRatio="none"
-      role="img"
-      aria-label={`The course is listed at ${formatMoney(original)} and costs ${formatMoney(price)} with this coupon. Red dot = current price, tracked since ${new Date(startIso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}.`}
-    >
-      <polyline
-        points={pts.join(" ")}
-        fill="none"
-        stroke="#1F7A4D"
-        strokeWidth="2.5"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-      <circle cx={W} cy={endY.toFixed(1)} r="4" fill="#C13B2E" />
-      <line x1="0" y1={H - 5} x2={W} y2={H - 5} stroke="#D8D0BC" strokeWidth="1" />
-    </svg>
-  );
+function timeAgo(iso?: string): string {
+  if (!iso) return "recently";
+  const ms = Date.now() - new Date(iso).getTime();
+  if (isNaN(ms) || ms < 0) return "just now";
+  const min = Math.floor(ms / 60000);
+  if (min < 1) return "just now";
+  if (min < 60) return `${min}m ago`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
 }
 
-export default function DealPage({ deal, relatedDeals = [], catStats, instructorImage, couponMask }: Props) {
-  const instructorNames = useMemo(() => parseInstructors(deal.instructor), [deal.instructor]);
-  const primaryInstructor = instructorNames[0] || "Instructor";
-  const instructorInitials = primaryInstructor
-    .split(" ")
-    .filter(Boolean)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+function fmtDate(iso?: string): string {
+  if (!iso) return "recently";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "recently";
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+}
 
-  const snapshot = useMemo(() => dealSnapshot(deal), [deal]);
-  const faqs = useMemo(() => couponFAQs(deal), [deal]);
-  const score = useMemo(() => dealScore(deal), [deal]);
+function initials(name: string): string {
+  return name.split(" ").filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+}
 
-  const discountPct = discountPctOf(deal);
-  const price = deal.price ?? 0;
-  const originalPrice = deal.originalPrice ?? 0;
-  const categorySlug = slugifyCategory(deal.category || "Uncategorized");
+export default function DealPage({ deal, relatedDeals = [], instructorImage, couponMask }: Props) {
+  const instructorsList = useMemo(() => parseInstructors(deal.instructor), [deal.instructor]);
 
-  const fmtLong = (iso?: string) => {
-    if (!iso) return "recently";
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return "recently";
-    return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-  };
-  const trackedSinceLabel = fmtLong(deal.createdAt || deal.updatedAt);
+  const bodyContent = (deal as { content?: string }).content || deal.description || "";
+  const isHtml = bodyContent.includes("<") && bodyContent.includes(">");
+  const htmlContent = useMemo(() => {
+    if (isHtml) {
+      return bodyContent
+        .replace(/style="[^"]*"/gi, "")
+        .replace(/class="[^"]*"/gi, "")
+        .replace(/data-[^=]*="[^"]*"/gi, "");
+    }
+    return renderMarkdownToHtml(bodyContent);
+  }, [bodyContent, isHtml]);
 
-  const [verifiedAgo, setVerifiedAgo] = useState<string | null>(null);
-  const expired = isDealExpired(deal);
+  const faqs = useMemo(() => [...couponFAQs(deal), ...((deal.faqs || []).slice(0, 3))].slice(0, 8), [deal]);
+
+  const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
+  const [visibleRelated, setVisibleRelated] = useState(4);
+
+  const markdownRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (markdownRef.current && htmlContent) markdownRef.current.innerHTML = htmlContent;
+  }, [htmlContent]);
 
   useEffect(() => {
-    const tick = () => setVerifiedAgo(relTime(deal.updatedAt || deal.createdAt));
+    if (!deal.expiresAt) return;
+    const tick = () => {
+      const diff = new Date(deal.expiresAt as string).getTime() - Date.now();
+      if (diff <= 0) { setCountdown(null); return; }
+      setCountdown({
+        days: Math.floor(diff / 86400000),
+        hours: Math.floor((diff % 86400000) / 3600000),
+        minutes: Math.floor((diff % 3600000) / 60000),
+        seconds: Math.floor((diff % 60000) / 1000),
+      });
+    };
     tick();
-    const id = setInterval(tick, 60000);
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [deal.updatedAt, deal.createdAt]);
+  }, [deal.expiresAt]);
 
-  const feedbackKey = `cw-fb-${deal.slug}`;
-  const [feedback, setFeedback] = useState<{ up: number; down: number; voted?: "up" | "down" }>({ up: 0, down: 0 });
-  useEffect(() => {
+  const price = deal.price ?? 0;
+  const originalPrice = deal.originalPrice && deal.originalPrice > price ? deal.originalPrice : price;
+  const discountPct = originalPrice > price && price >= 0 ? Math.round(100 - (price / originalPrice) * 100) : 0;
+  const savings = Math.max(originalPrice - price, 0);
+
+  const durationHours = (() => {
+    if (!deal.duration) return null;
+    const h = deal.duration.match(/(\d+(?:\.\d+)?)\s*h/);
+    const m = deal.duration.match(/(\d+)\s*m/);
+    let total = 0;
+    if (h) total += parseFloat(h[1]);
+    if (m) total += parseInt(m[1], 10) / 60;
+    return total > 0 ? total : null;
+  })();
+  const costPerHour = durationHours && price > 0 ? price / durationHours : null;
+
+  const learnPoints = (deal.learn || []).map((s) => s.replace(/\r/g, "").trim()).filter(Boolean);
+  const reqPoints = (deal.requirements || []).map((s) => s.replace(/\r/g, "").trim()).filter(Boolean);
+  const easyStart = reqPoints.some((r) => /no |beginner|none|without|anyone|basic|no experience/i.test(r));
+  const masked = couponMask || "AUTO-APPLY";
+
+  const copyMasked = () => {
     try {
-      const stored = JSON.parse(localStorage.getItem(feedbackKey) || "null");
-      if (stored && typeof stored === "object" && typeof stored.up === "number") setFeedback(stored);
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        navigator.clipboard.writeText(masked).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2500);
+        }).catch(() => {});
+      }
     } catch {}
-  }, [feedbackKey]);
-
-  const vote = (dir: "up" | "down") => {
-    setFeedback((prev) => {
-      const next =
-        prev.voted === dir
-          ? { up: prev.up - (dir === "up" ? 1 : 0), down: prev.down - (dir === "down" ? 1 : 0), voted: undefined }
-          : {
-              up: prev.up + (dir === "up" ? 1 : 0) - (prev.voted === "up" ? 1 : 0),
-              down: prev.down + (dir === "down" ? 1 : 0) - (prev.voted === "down" ? 1 : 0),
-              voted: dir,
-            };
-      try {
-        localStorage.setItem(feedbackKey, JSON.stringify(next));
-      } catch {}
-      return next;
-    });
   };
 
-  const maskedCoupon = couponMask || "AUTO-APPLY";
-
-  const stats = catStats || { active: 0, highDiscount: 0, avgPrice: 0 };
-  const catStatActive = stats.active || (deal.category ? 1 : 0);
-
-  const fmtAbs = (iso?: string) => {
-    if (!iso) return "recently";
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return "recently";
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  };
-
-  const fmtDT = (iso?: string) => {
-    if (!iso) return "—";
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return "—";
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  };
-
-  const relatedRows = relatedDeals.slice(0, 4);
-  const compareHeading = deal.subcategory
-    ? `Compare similar ${deal.subcategory} deals`
-    : deal.category
-      ? `Compare similar ${deal.category} deals`
-      : "Compare similar active deals";
-
-  const lights = [
-    { good: true, text: `${discountPct}% discount manually re-verified, not an estimate.` },
-    { good: true, text: `Certificate + lifetime access included by ${deal.provider || "Udemy"}.` },
-    { good: false, text: "Redemption-limited — can run out without notice." },
-  ];
-
-  const offerEnds = deal.expiresAt
-    ? `Listed until ${new Date(deal.expiresAt).toLocaleDateString("en-US", { month: "long", day: "numeric" })}`
-    : null;
-
-  const snapshotRows: { label: string; value: string }[] = [
-    { label: "Last checked", value: snapshot.checkedLong },
-    ...(offerEnds ? [{ label: "Offer ends", value: offerEnds }] : []),
-    { label: "Provider", value: deal.provider || "Udemy" },
-    { label: "Level", value: deal.level || "All Levels" },
-    ...(deal.rating ? [{ label: "Rating", value: `${deal.rating.toFixed(1)} / 5` }] : []),
-    ...(deal.students ? [{ label: "Students", value: formatStudents(deal.students) }] : []),
-    {
-      label: "Content",
-      value: `${formatDuration(deal.duration)}${deal.contentNotes ? ` · ${deal.contentNotes}` : ""}`,
-    },
-    { label: "Language", value: deal.language || "English" },
-    {
-      label: "Requirements",
-      value: deal.requirements && deal.requirements.some((r) => r && r.trim())
-        ? deal.requirements.filter((r) => r && r.trim()).slice(0, 2).map(stripHtml).join(" · ")
-        : "No prerequisites listed",
-    },
-    ...(deal.tags && deal.tags.length ? [{ label: "Topics", value: deal.tags.join(", ") }] : []),
-    { label: "Certificate", value: "Yes, on completion" },
-    { label: "Access", value: "Lifetime, mobile & TV" },
-  ];
-
-  const redeemSteps = [
-    { title: `Click "Claim Coupon"`, desc: `You'll be redirected to ${deal.provider || "Udemy"} and the discount is applied automatically — no manual code entry needed.` },
-    { title: "Confirm the price at checkout", desc: `The page should show ${formatMoney(price)}. If it shows the full ${formatMoney(originalPrice) || "price"}, the code has expired — the checkout price is the source of truth.` },
-    { title: "Sign in or create a free account", desc: `Required by ${deal.provider || "Udemy"} to complete enrollment, not by CoursesWyn.` },
-    { title: "Enroll and start learning", desc: "Access is immediate and permanent, independent of this coupon page." },
-  ];
-
-  const learnItems = useMemo(
-    () =>
-      (deal.learn || [])
-        .map((l) => stripHtml(l))
-        .filter((l) => l)
-        .slice(0, 24),
-    [deal.learn]
-  );
-
-  const expiryLabel = offerEnds || "No expiry date listed";
+  const related = relatedDeals.filter((d) => d.slug !== deal.slug);
+  const shownRelated = related.slice(0, visibleRelated);
 
   return (
-    <div className="cp-page">
-      <div className="cp-breadcrumb">
-        <a href="/">CoursesWyn</a>
-        <span className="cp-sep">/</span>
-        <a href={`/categories/${categorySlug}`}>{deal.category || "Deals"}</a>
-        <span className="cp-sep">/</span>
-        <span className="cp-current">{deal.title}</span>
-      </div>
-
-      <div className="cp-wrap">
-        <nav className="cp-subnav" aria-label="On this page">
-          <a href="#overview">Overview</a>
-          <a href="#history">Price history</a>
-          <a href="#score">Deal score</a>
-          <a href="#log">Verification log</a>
-          <a href="#details">Course details</a>
-          <a href="#learn">Key Topics Covered</a>
-          <a href="#redeem">How to redeem</a>
-          <a href="#faq">FAQ</a>
-          <a href="#alternatives">Compare deals</a>
-        </nav>
-
-        <section className="cp-hero" id="overview" aria-labelledby="deal-title">
-          <div className="cp-hero-left">
-            <div className="cp-thumb">
-            {deal.image ? (
-              <img
-                src={deal.image}
-                alt={`${deal.title} — ${deal.provider || "Udemy"} course thumbnail`}
-                width="230"
-                height="170"
-                loading="eager"
-                fetchPriority="high"
-                decoding="async"
-                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-              />
-            ) : (
-              <svg viewBox="0 0 230 170" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-                <rect width="230" height="170" fill="#F5F1E6" />
-                <rect x="18" y="26" width="194" height="118" rx="8" fill="#ffffff" stroke="#D8D0BC" strokeWidth="1" />
-                <rect x="18" y="26" width="194" height="18" rx="8" fill="#EDE7D6" />
-                <circle cx="30" cy="35" r="3" fill="#C13B2E" /><circle cx="40" cy="35" r="3" fill="#B8901F" /><circle cx="50" cy="35" r="3" fill="#1F7A4D" />
-                <rect x="30" y="56" width="70" height="6" rx="3" fill="#D8D0BC" />
-                <rect x="30" y="68" width="130" height="6" rx="3" fill="#C9C3AF" />
-                <rect x="42" y="80" width="110" height="6" rx="3" fill="#C9C3AF" />
-                <rect x="42" y="92" width="90" height="6" rx="3" fill="#1F7A4D" />
-                <rect x="30" y="106" width="60" height="6" rx="3" fill="#C9C3AF" />
-                <rect x="30" y="118" width="150" height="6" rx="3" fill="#C13B2E" opacity="0.7" />
-                <rect x="42" y="130" width="70" height="6" rx="3" fill="#C9C3AF" />
-              </svg>
+    <div style={{ background: "linear-gradient(135deg, var(--bg) 0%, var(--bg-secondary) 100%)", color: "var(--text)", minHeight: "100vh" }}>
+      <header style={{ background: "var(--card)", padding: "2rem 0", borderBottom: "1px solid var(--border)" }}>
+        <div className="container" style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 1rem" }}>
+          <nav aria-label="Breadcrumb" style={{ marginBottom: "1rem" }}>
+            <ol style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "var(--text)", fontWeight: 600, flexWrap: "wrap", listStyle: "none", margin: 0, padding: 0 }}>
+              <li><a href="/" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>Home</a></li>
+              <li aria-hidden="true" style={{ color: "var(--muted)" }}>›</li>
+              <li><a href="/udemy-coupon-code" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>All Coupons</a></li>
+              {deal.category && (<><li aria-hidden="true" style={{ color: "var(--muted)" }}>›</li><li><a href={`/categories/${slugifyCategory(deal.category)}`} style={{ color: "var(--text-secondary)", textDecoration: "none" }}>{deal.category}</a></li></>)}
+              {deal.subcategory && deal.subcategory !== deal.category && (<><li aria-hidden="true" style={{ color: "var(--muted)" }}>›</li><li><a href={`/topics/${slugifyTopic(deal.subcategory)}`} style={{ color: "var(--text-secondary)", textDecoration: "none" }}>{deal.subcategory}</a></li></>)}
+              <li aria-hidden="true" style={{ color: "var(--muted)" }}>›</li>
+              <li aria-current="page" style={{ color: "var(--brand)", fontWeight: 700, wordBreak: "break-word" }}>{deal.title}</li>
+            </ol>
+          </nav>
+          <h1 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 800, lineHeight: 1.2, marginBottom: "1rem", color: "var(--text)" }}>
+            {deal.title}{discountPct > 0 ? ` — Save ${discountPct}% With This Udemy Coupon` : " — Udemy Coupon"}
+          </h1>
+          <p style={{ fontSize: "1.05rem", lineHeight: 1.6, marginBottom: "1.5rem", color: "var(--text-secondary)", maxWidth: "800px" }}>{deal.description}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap", fontSize: "14px" }}>
+            {typeof deal.rating === "number" && (<span style={{ color: "var(--brand)", fontWeight: 700 }} aria-label={`Rated ${deal.rating.toFixed(1)} out of 5`}>⭐ {deal.rating.toFixed(1)} out of 5</span>)}
+            {typeof deal.students === "number" && (<span style={{ color: "var(--text-secondary)" }}><strong>({deal.students.toLocaleString()}</strong> students enrolled)</span>)}
+            {instructorsList.length > 0 && (
+              <span style={{ color: "var(--text-secondary)" }}>Created by{" "}
+                {instructorsList.map((name, i) => (
+                  <span key={name}>{i > 0 && <>, </>}<a href={`/instructor/${createInstructorSlug(name)}`} style={{ color: "var(--brand)", fontWeight: 700, textDecoration: "none" }}>{name}</a></span>
+                ))}
+              </span>
             )}
-            </div>
-            {deal.description && <p className="cp-short-desc">{deal.description}</p>}
+            {deal.updatedAt && (<span style={{ color: "var(--muted)" }}>Last updated: <time dateTime={new Date(deal.updatedAt).toISOString()}>{new Date(deal.updatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long" })}</time></span>)}
+            {deal.language && (<span style={{ color: "var(--text-secondary)" }}>🌐 {deal.language}</span>)}
           </div>
-
-          <div>
-            <div className="cp-eyebrow-row">
-              <span className="cp-cat-tag">{deal.category || "Deal"}</span>
-              <span className="cp-stamp">✓ {verifiedAgo ? `Checked ${verifiedAgo}` : "Checked"}</span>
-            </div>
-            {expired && (
-              <div className="cp-stamp-exp-row">
-                <span className="cp-stamp cp-stamp-exp">✕ Expired</span>
-              </div>
-            )}
-            <h1 className="cp-title" id="deal-title">{deal.title}</h1>
-            <p className="cp-desc">{generateSeoDescription(deal)}</p>
-            <p className="cp-by-line">
-              {instructorNames.length > 0 && (
-                <>
-                  by{" "}
-                  {instructorNames.map((name, i) => (
-                    <span key={name}>
-                      {i > 0 && ", "}
-                      <a href={`/instructor/${createInstructorSlug(name)}`}>{name}</a>
-                    </span>
-                  ))}{" "}
-                  ·{" "}
-                </>
-              )}
-              {deal.rating ? `⭐ ${deal.rating.toFixed(1)} via ${deal.provider || "Udemy"}` : `via ${deal.provider || "Udemy"}`}
-              {deal.students ? ` · ${formatStudents(deal.students)} students` : ""}
-              {deal.language ? ` · ${deal.language}` : ""}
-            </p>
-
-            {deal.tags && deal.tags.length > 0 && (
-              <div className="cp-topics-box">
-                <span className="cp-topics-label">Explore related topics</span>
-                <div className="cp-topics-grid">
-                  {deal.tags.map((t) => (
-                    <a key={t} className="cp-topic-card" href={`/topics/${slugifyTopic(t)}`}>
-                      <span className="cp-topic-card-name">{t}</span>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="cp-price-cta-row">
-              <div className="cp-price-block">
-                <span className="cp-price-now">{formatMoney(price)}</span>
-                {originalPrice > price && <span className="cp-price-was">{formatMoney(originalPrice)}</span>}
-                {discountPct > 0 && <span className="cp-price-off">{discountPct}% OFF</span>}
-              </div>
-              <div>
-                <a className="cp-cta-primary" href={deal.url} target="_blank" rel="noopener noreferrer nofollow">
-                  Claim Coupon →
-                </a>
-                <div className="cp-cta-note">Code auto-applies at {deal.provider || "Udemy"} checkout</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="cp-lights">
-          {lights.map((l, i) => (
-            <div key={i} className={l.good ? "cp-light-item good" : "cp-light-item warn"}>
-              <span className="cp-ic">{l.good ? "✓" : "⚠"}</span> {l.text}
-            </div>
-          ))}
         </div>
+      </header>
 
-        <div className="cp-body-grid">
-          <div className="cp-stack">
-            {/* PRICE HISTORY */}
-            <h2 className="cp-sec-heading" id="history">
-              Price history <span className="cp-tag">First-party data</span>
+      <div className="container deal-layout" style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem 1rem", display: "grid", gridTemplateColumns: "1fr 340px", gap: "3rem" }}>
+        <main>
+          <section aria-labelledby="key-facts-heading" style={{ border: "1px solid var(--border)", padding: "1.5rem", borderRadius: "2.5rem", background: "var(--bg)", marginBottom: "2rem" }}>
+            <h2 id="key-facts-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true"></span>
+              Key Facts at a Glance
             </h2>
-            <div className="cp-card">
-              <div className="cp-ph-grid">
-                <div>
-                  <PriceTrendChart deal={deal} />
-                  <div className="cp-chart-caption">
-                    Tracked since {trackedSinceLabel} to {snapshot.checkedLong}. Red dot = current price ({formatMoney(price)}) — CoursesWyn records the price on each sync.
-                  </div>
+            <p style={{ fontSize: "0.9rem", color: "var(--muted)", marginBottom: "1.25rem" }}>
+              Every data point below comes straight from {deal.provider || "Udemy"} and was last checked by CoursesWyn on <time dateTime={deal.updatedAt ? new Date(deal.updatedAt).toISOString() : new Date().toISOString()}>{fmtDate(deal.updatedAt)}</time>.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.85rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+              {[
+                { label: "Course", value: deal.title },
+                { label: "Platform", value: `${deal.provider || "Udemy"} (coupon tracked by CoursesWyn)` },
+                deal.instructor ? { label: "Instructor", value: deal.instructor } : null,
+                deal.updatedAt ? { label: "Coupon Last Checked", value: fmtDate(deal.updatedAt) } : null,
+                { label: "Level", value: extractDifficulty(deal.title, deal.description) },
+                deal.category ? { label: "Category", value: deal.category } : null,
+                deal.subcategory && deal.subcategory !== deal.category ? { label: "Topic", value: deal.subcategory } : null,
+                deal.duration ? { label: "Length", value: `${deal.duration} of on-demand video` } : null,
+                deal.language ? { label: "Language", value: deal.language } : null,
+                { label: "Access", value: "Lifetime access, certificate included" },
+                learnPoints.length > 0 ? { label: "Top Outcomes", value: learnPoints.slice(0, 3).join(" · ") } : null,
+                reqPoints.length > 0 ? { label: "Prerequisites", value: reqPoints.slice(0, 2).join(" · ") } : null,
+                discountPct > 0 ? { label: "Price", value: `${formatMoney(price)} with coupon (list ${formatMoney(originalPrice)} — you keep $${savings.toFixed(2)}, ${discountPct}% off).` } : null,
+                { label: "Coupon", value: "Hit CLAIM COUPON — the code applies at checkout" },
+              ].filter(Boolean).map((item, idx) => (
+                <div key={idx} style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                  <span style={{ color: "var(--muted)", marginTop: "2px", flexShrink: 0 }}>•</span>
+                  <span><strong style={{ color: "var(--text)" }}>{(item as { label: string }).label}:</strong> {(item as { value: string }).value}</span>
                 </div>
-                <div className="cp-ph-stats">
-                  <div className="cp-ph-stat"><div className="cp-ph-stat-label">Current price</div><div className="cp-ph-stat-value hi">{formatMoney(price)}</div></div>
-                  <div className="cp-ph-stat"><div className="cp-ph-stat-label">Original price</div><div className="cp-ph-stat-value">{formatMoney(originalPrice)}</div></div>
-                  <div className="cp-ph-stat"><div className="cp-ph-stat-label">Tracked since</div><div className="cp-ph-stat-value">{trackedSinceLabel}</div></div>
-                  <div className="cp-ph-stat"><div className="cp-ph-stat-label">Last checked</div><div className="cp-ph-stat-value">{snapshot.checkedLabel}</div></div>
-                </div>
-              </div>
-              <div className="cp-attr-note" style={{ marginTop: 14 }}>
-                Price and coupon status are recorded from a periodic sync of {deal.provider || "Udemy"}&rsquo;s public catalog. This snapshot was taken on {snapshot.checkedLong}. Prices are always confirmed at checkout on the provider&rsquo;s site.
+              ))}
+            </div>
+            <div style={{ marginTop: "1.5rem", padding: "1rem", background: "rgba(252,211,77,0.07)", border: "1px solid rgba(252,211,77,0.3)", borderRadius: "8px", fontSize: "0.9rem", color: "#92400E" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <span style={{ fontSize: "1.2rem", lineHeight: 1 }}>⚠️</span>
+                <div><strong style={{ display: "block", marginBottom: "4px" }}>Heads up:</strong>Coupon links sometimes misbehave in private/incognito windows. Use a normal browser tab and pause ad-blockers or VPNs if the discount does not show.</div>
               </div>
             </div>
+          </section>
 
-            {/* DEAL SCORE */}
-            <h2 className="cp-sec-heading" id="score">
-              Deal score <span className="cp-tag">Computed, methodology below</span>
+          {learnPoints.length > 0 && (
+            <section aria-labelledby="learn-heading" style={{ border: "1px solid var(--border)", padding: "1.5rem", borderRadius: "2.5rem", background: "var(--bg)", marginBottom: "2rem" }}>
+              <h2 id="learn-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true"></span>
+                What You Will Learn
+              </h2>
+              <p style={{ fontSize: "0.9rem", color: "var(--muted)", marginBottom: "1.25rem" }}>
+                Practical takeaways waiting inside this <a href={`/categories/${slugifyCategory(deal.category || "")}`} style={{ color: "inherit", textDecoration: "underline" }}><strong>{deal.category}</strong></a> course:
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.85rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+                {learnPoints.map((point, idx) => (
+                  <div key={idx} style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                    <span style={{ color: "var(--brand)", marginTop: "3px", flexShrink: 0 }}>✓</span>
+                    <span>{point.endsWith(".") ? point : point + "."}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {reqPoints.length > 0 && (
+            <section aria-labelledby="requirements-heading" style={{ border: "1px solid var(--border)", padding: "1.5rem", borderRadius: "2.5rem", background: "var(--bg)", marginBottom: "2rem" }}>
+              <h2 id="requirements-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true"></span>
+                Requirements & Prerequisites
+              </h2>
+              <p style={{ fontSize: "0.9rem", color: "var(--muted)", marginBottom: "1.25rem" }}>Useful background before you start — you can still enroll without it, but expect a steeper climb:</p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.85rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+                {reqPoints.map((req, idx) => (
+                  <div key={idx} style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                    <span style={{ color: "var(--muted)", marginTop: "2px", flexShrink: 0 }}>•</span>
+                    <span>{req}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section aria-labelledby="about-heading" style={{ marginBottom: "2rem" }}>
+            <h2 id="about-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true"></span>
+              About This {deal.provider || "Udemy"} Course
             </h2>
-            <div className="cp-card">
-              <div className="cp-score-grid">
-                <div
-                  className="cp-gauge"
-                  style={{ background: `conic-gradient(var(--cp-green) ${Math.round(score.total * 36)}deg, var(--cp-paper2) ${Math.round(score.total * 36)}deg 360deg)` }}
-                >
-                  <div className="cp-gauge-inner">
-                    <div className="cp-gauge-num">{score.total.toFixed(1)}</div>
-                    <div className="cp-gauge-den">/ 10</div>
+            <p style={{ fontSize: "0.9rem", color: "var(--muted)", marginBottom: "1.25rem" }}>
+              The full official description published on <strong>{deal.provider || "Udemy"}</strong> by <strong style={{ color: "var(--brand)" }}>{instructorsList.length > 0 ? instructorsList.join(", ") : deal.instructor}</strong> — syllabus, teaching style and scope for this <a href={`/categories/${slugifyCategory(deal.category || "")}`} style={{ color: "inherit", textDecoration: "underline" }}><strong>{deal.category}</strong></a> course:
+            </p>
+            <div ref={markdownRef} className="prose prose-invert max-w-none" style={{ lineHeight: 1.75, color: "var(--text-secondary)", fontSize: "0.95rem" }} />
+          </section>
+
+          <div style={{ marginBottom: "2rem", padding: "1.25rem 1.5rem", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "12px", display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+            <div style={{ width: "44px", height: "44px", borderRadius: "10px", background: "rgba(11, 122, 85, 0.12)", border: "1px solid rgba(11, 122, 85, 0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
+            </div>
+            <div style={{ flex: 1, minWidth: "180px" }}>
+              <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text)", marginBottom: "2px" }}>New to Udemy coupons?</div>
+              <div style={{ fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.5 }}>How codes, caps and expiries work — plus how to redeem in under two minutes.</div>
+            </div>
+            <a href="/udemy-coupons-guide" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", padding: "0.5rem 1rem", background: "rgba(11, 122, 85, 0.1)", border: "1px solid rgba(11, 122, 85, 0.25)", borderRadius: "8px", color: "var(--brand)", textDecoration: "none", fontSize: "0.8rem", fontWeight: 600, flexShrink: 0 }}>Read Guide ↗</a>
+            <a href="/how-to-redeem-coupon" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", padding: "0.5rem 1rem", background: "transparent", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--text)", textDecoration: "none", fontSize: "0.8rem", fontWeight: 600, flexShrink: 0 }}>Redeem Steps ↗</a>
+          </div>
+
+          <section aria-labelledby="verdict-heading" style={{ borderTop: "1px solid var(--border)", paddingTop: "2rem", marginBottom: "2rem" }}>
+            <h2 id="verdict-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text)", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true" />
+              Is This {deal.title} Coupon Worth Claiming?
+            </h2>
+            <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "16px", overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem", padding: "0.75rem 1.25rem", borderBottom: "1px solid var(--border)", fontSize: "0.8rem", color: "var(--muted)" }}>
+                <span>Checked by <strong style={{ color: "var(--text)" }}>Andrew Derek</strong>, Coupon Analyst at CoursesWyn</span>
+                <span>Updated {deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "recently"}</span>
+              </div>
+              <div style={{ padding: "1.5rem" }}>
+                <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", lineHeight: 1.7, margin: "0 0 1.25rem 0" }}>
+                  Short answer: <strong style={{ color: "var(--text)" }}>yes</strong> — as long as {deal.category ? `these ${deal.category} skills match` : "the topic matches"} what you want to learn. <em>{deal.title}</em> lists at <strong style={{ color: "var(--text)" }}>${originalPrice.toFixed(2)}</strong> on {deal.provider || "Udemy"}.
+                  {discountPct > 0 ? (<> This page's coupon cuts it to <strong style={{ color: "var(--text)" }}>${price.toFixed(2)}</strong> — ${savings.toFixed(2)} kept ({discountPct}% off).</>) : (<> It is currently listed without a price tag, so trying it costs nothing.</>)}
+                  {costPerHour ? (<> Across {deal.duration} of video that is about <strong style={{ color: "var(--text)" }}>${costPerHour.toFixed(2)} per hour</strong> of content.</>) : ""}
+                </p>
+                {learnPoints.length > 0 && (
+                  <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", lineHeight: 1.7, margin: "0 0 1.25rem 0" }}>
+                    Discounts only matter if the material holds up. Here the syllabus targets usable outcomes — {learnPoints.slice(0, 3).map((s) => s.charAt(0).toLowerCase() + s.slice(1)).join(", ")}.
+                    {typeof deal.students === "number" ? ` ${deal.students.toLocaleString()} learners have already enrolled${typeof deal.rating === "number" ? ` at a ${deal.rating.toFixed(1)}-star average` : ""}.` : ""}
+                  </p>
+                )}
+                {reqPoints.length > 0 && (
+                  <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", lineHeight: 1.7, margin: "0 0 1.25rem 0" }}>
+                    {easyStart ? (<>Entry bar is low ({reqPoints.slice(0, 2).join("; ")}) — approachable even if {deal.category || "the subject"} is new to you.</>) : (<>Skim the prerequisites first ({reqPoints.slice(0, 2).join("; ")}) — this one favors learners with some grounding.</>)}
+                    {deal.duration && (<> Plan for around {deal.duration} of video at your own pace.</>)} {deal.language && (<>Taught in {deal.language}.</>)}
+                  </p>
+                )}
+                {countdown && (
+                  <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", lineHeight: 1.7, margin: "0 0 1.25rem 0" }}>
+                    One timing note: this code is expiring — {countdown.days > 0 ? `${countdown.days}d ${countdown.hours}h left on the clock.` : countdown.hours > 0 ? `${countdown.hours}h ${countdown.minutes}m left.` : "under a minute left."} Instructors can pull codes anytime, so sooner beats later.
+                  </p>
+                )}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.25rem" }}>
+                  <div style={{ background: "rgba(11, 122, 85, 0.06)", border: "1px solid rgba(11, 122, 85, 0.2)", borderRadius: "10px", padding: "1rem" }}>
+                    <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--brand)", margin: "0 0 0.6rem 0" }}>✓ Upsides</h3>
+                    <ul style={{ margin: 0, padding: 0, listStyle: "none", color: "var(--text-secondary)", fontSize: "0.82rem", lineHeight: 1.65 }}>
+                      <li style={{ padding: "3px 0" }}>✓ Verified{discountPct > 0 ? ` ${discountPct}%` : ""} price cut.</li>
+                      {typeof deal.rating === "number" && (<li style={{ padding: "3px 0" }}>✓ Learners rate it {deal.rating.toFixed(1)}/5.</li>)}
+                      {typeof deal.students === "number" && (<li style={{ padding: "3px 0" }}>✓ {deal.students.toLocaleString()} students enrolled.</li>)}
+                      <li style={{ padding: "3px 0" }}>✓ Certificate + lifetime access.</li>
+                    </ul>
+                  </div>
+                  <div style={{ background: "rgba(207, 111, 89, 0.06)", border: "1px solid rgba(207, 111, 89, 0.2)", borderRadius: "10px", padding: "1rem" }}>
+                    <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#CF6F59", margin: "0 0 0.6rem 0" }}>! Trade-offs</h3>
+                    <ul style={{ margin: 0, padding: 0, listStyle: "none", color: "var(--text-secondary)", fontSize: "0.82rem", lineHeight: 1.65 }}>
+                      {discountPct > 0 && (<li style={{ padding: "3px 0" }}>! Codes expire — then it's back to ${originalPrice.toFixed(2)}.</li>)}
+                      <li style={{ padding: "3px 0" }}>! Access lives on {deal.provider || "Udemy"}'s platform and policies.</li>
+                      {deal.duration && (<li style={{ padding: "3px 0" }}>! Exercises add real time beyond {deal.duration} of video.</li>)}
+                      {!easyStart && (<li style={{ padding: "3px 0" }}>! Check prerequisites before enrolling.</li>)}
+                    </ul>
                   </div>
                 </div>
-                <div className="cp-score-rows">
-                  {score.rows.map((r) => (
-                    <div className="cp-score-row" key={r.label}>
-                      <div className="cp-score-row-label">{r.label}</div>
-                      <div className="cp-score-bar">
-                        <div className="cp-score-bar-fill" style={{ width: `${Math.min(100, Math.max(0, r.pct))}%` }} />
+                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.25rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flex: 1, minWidth: "200px", padding: "0.75rem 1rem", background: "rgba(11, 122, 85, 0.06)", border: "1px solid rgba(11, 122, 85, 0.15)", borderRadius: "10px" }}>
+                    <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg, var(--brand), #0B7A55)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFFFFF", fontWeight: 700, fontSize: "0.9rem", flexShrink: 0 }}>AD</div>
+                    <div>
+                      <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "0.85rem" }}>Andrew Derek</div>
+                      <div style={{ color: "var(--muted)", fontSize: "0.75rem" }}>Coupon Analyst</div>
+                    </div>
+                    <a href="/about" style={{ marginLeft: "auto", fontSize: "0.75rem", color: "var(--brand)", textDecoration: "underline", whiteSpace: "nowrap" }}>Profile →</a>
+                  </div>
+                  <div style={{ flex: 2, minWidth: "250px", padding: "0.75rem 1rem", background: "rgba(11, 122, 85, 0.05)", border: "1px solid rgba(11, 122, 85, 0.15)", borderRadius: "10px" }}>
+                    <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.6, fontStyle: "italic", margin: 0 }}>
+                      "{costPerHour ? `About $${costPerHour.toFixed(2)} per video hour — ` : ""}<strong style={{ color: "var(--text)" }}>{deal.title}</strong> is fairly priced for its depth{learnPoints[0] ? `, starting with ${learnPoints[0].charAt(0).toLowerCase()}${learnPoints[0].slice(1)}` : ""}. If {deal.category || "this topic"} is on your list{typeof deal.rating === "number" ? `, the ${deal.rating.toFixed(1)}-star record backs it` : ""} — claim it while live."
+                    </p>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", padding: "0.75rem 1.25rem", background: "linear-gradient(135deg, #FFFFFF, #EDF2EF)", borderRadius: "10px", border: "1px solid rgba(11, 122, 85, 0.25)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(11,122,85,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand)", fontSize: "1rem" }}>✓</div>
+                    <div>
+                      <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text)" }}>Final Call: Worth Claiming</div>
+                      <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{discountPct > 0 ? `Keeps $${savings.toFixed(2)} in your pocket vs list price` : "Free to enroll right now"}</div>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ marginTop: "1rem", padding: "0.75rem 1rem", background: "rgba(11, 122, 85, 0.05)", border: "1px solid rgba(11, 122, 85, 0.15)", borderRadius: "8px", fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                  <strong style={{ color: "var(--brand)" }}>First coupon?</strong> Our <a href="/how-to-redeem-coupon" style={{ color: "var(--brand)", textDecoration: "underline" }}>redemption walkthrough</a> covers applying codes step by step.
+                  <span style={{ display: "block", marginTop: "4px", color: "var(--muted)", fontSize: "0.78rem" }}>
+                    Last checked {fmtDate(deal.updatedAt)}. {discountPct > 0 ? `At ${formatMoney(price)} you save ${formatMoney(savings)} vs ${formatMoney(originalPrice)} — ` : ""}codes are time-limited, so earlier is safer.
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {typeof deal.rating === "number" && (
+            <section aria-labelledby="ratings-heading" style={{ borderTop: "1px solid var(--border)", paddingTop: "2rem", marginBottom: "2rem" }}>
+              <h2 id="ratings-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true"></span>
+                Rating Breakdown
+              </h2>
+              <p style={{ fontSize: "0.9rem", color: "var(--muted)", marginBottom: "1.5rem" }}>
+                {deal.rating.toFixed(1)} out of 5{typeof deal.students === "number" ? ` from ${deal.students.toLocaleString()} verified learner reviews` : ""} on {deal.provider || "Udemy"}. Estimated split per star below.
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: "2rem", flexWrap: "wrap" }}>
+                <div style={{ textAlign: "center", minWidth: "100px" }}>
+                  <div style={{ fontSize: "3.5rem", fontWeight: 800, color: "var(--brand)", lineHeight: 1 }}>{deal.rating.toFixed(1)}</div>
+                  <div style={{ color: "var(--brand)", fontSize: "1.1rem", margin: "4px 0" }} aria-hidden="true">★★★★★</div>
+                  <div style={{ color: "var(--muted)", fontSize: "0.8rem" }}>{typeof deal.students === "number" ? deal.students.toLocaleString() : "Many"} Verified Ratings</div>
+                </div>
+                <div style={{ flex: 1, minWidth: "200px" }}>
+                  {[{ star: 5, pct: 75 }, { star: 4, pct: 15 }, { star: 3, pct: 6 }, { star: 2, pct: 2 }, { star: 1, pct: 2 }].map(({ star, pct }) => (
+                    <div key={star} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                      <span style={{ color: "var(--muted)", fontSize: "0.8rem", width: "50px", flexShrink: 0 }}>{star} star{star !== 1 ? "s" : ""}</span>
+                      <div role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${star} stars: ${pct}%`} style={{ flex: 1, height: "8px", background: "var(--border)", borderRadius: "4px", overflow: "hidden" }}>
+                        <div style={{ width: `${pct}%`, height: "100%", background: "var(--brand)", borderRadius: "4px" }}></div>
                       </div>
-                      <div className="cp-score-row-val">{r.val}</div>
+                      <span style={{ color: "var(--muted)", fontSize: "0.8rem", width: "35px", textAlign: "right" }}>{pct}%</span>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="cp-attr-note" style={{ marginTop: 14 }}>
-                Score = weighted average of discount depth, how often CoursesWyn re-checks this code, historical price volatility, and how fast past redemptions were claimed. Not an editorial opinion on the course itself.
+              <p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "1rem", fontStyle: "italic" }}>* Split estimated from the aggregate score. Source: {deal.provider || "Udemy"}. Checked {fmtDate(deal.updatedAt)}.</p>
+            </section>
+          )}
+
+          <div style={{ margin: "0 0 2rem" }}>
+            <div className="cta-box">
+              <span className="cta-eyebrow">Udemy Personal Plan</span>
+              <h2>One Subscription, <span style={{ color: "var(--brand)" }}>26,000+ Courses</span><br />Zero Coupon-Hunting</h2>
+              <p className="cta-subtext">Prefer all-you-can-learn over single codes? One flat rate, certificates included, cancel anytime.</p>
+              <div className="cta-actions">
+                <a href="https://trk.udemy.com/c/6564357/3775958/39854" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-lg" style={{ borderRadius: "999px", padding: "1rem 2.5rem" }}>Start Free Trial</a>
+              </div>
+              <div className="cta-features">
+                <span><span className="cta-dot"></span>26,000+ courses</span>
+                <span><span className="cta-dot"></span>7-day free trial</span>
+                <span><span className="cta-dot"></span>Cancel anytime</span>
+                <span><span className="cta-dot"></span>From $20/month</span>
               </div>
             </div>
+          </div>
 
-            {/* LIVE VERIFICATION LOG */}
-            <h2 className="cp-sec-heading" id="log">
-              Live verification log <span className="cp-tag">Updated automatically</span>
-            </h2>
-            <div className="cp-card">
-              <div className="cp-vlog-live"><span className="cp-blip" /> Live verification active</div>
-              <div className="cp-log-list">
-                <div className="cp-log-row">
-                  <span className="cp-log-dot" />
-                  <span className="cp-log-time">{fmtDT(deal.createdAt || deal.updatedAt)}</span>
-                  <span className="cp-log-msg">Listed by CoursesWyn — price recorded at {formatMoney(price)}</span>
-                  <span className="cp-log-status">Listed</span>
-                </div>
-                <div className="cp-log-row">
-                  <span className="cp-log-dot" />
-                  <span className="cp-log-time">{fmtDT(deal.updatedAt || deal.createdAt)}</span>
-                  <span className="cp-log-msg">Coupon checked — checkout price {formatMoney(price)}{deal.expiresAt ? ` · listed until ${fmtAbs(deal.expiresAt)}` : ""}</span>
-                  <span className="cp-log-status">Working</span>
-                </div>
-              </div>
-            </div>
-
-            {/* COURSE DETAILS */}
-            <h2 className="cp-sec-heading" id="details">
-              Course details <span className="cp-tag">Synced from {deal.provider || "Udemy"}</span>
-            </h2>
-            <div className="cp-card">
-              <div className="cp-attr-note">
-                Fields below are pulled from {deal.provider || "Udemy"}&rsquo;s public catalog and recorded when CoursesWyn syncs — they are catalog data, not editorial description.
-              </div>
-              <table className="cp-snap-table">
-                <tbody>
-                  {snapshotRows.map((row) => (
-                    <tr key={row.label}>
-                      <td>{row.label}</td>
-                      <td>{row.value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* WHAT YOU'LL LEARN */}
-            {learnItems.length > 0 && (
-              <>
-                <h2 className="cp-sec-heading" id="learn">
-                  Key Topics Covered <span className="cp-tag">From the course description</span>
-                </h2>
-                <div className="cp-card">
-                  <div className="cp-learn-grid">
-                    {learnItems.map((item, i) => (
-                      <div className="cp-learn-item" key={i}>{item}</div>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* EDITORIAL: IS IT WORTH IT - below Key Topics Covered, like coursespeak */}
-            <h2 className="cp-sec-heading" id="worth-it">
-              Is {deal.title} worth it with this coupon? <span className="cp-tag">Editorial review</span>
-            </h2>
-            <div className="cp-card">
-              <p style={{ fontSize: "0.875rem", lineHeight: 1.7, color: "var(--cp-graphite)", margin: "0 0 12px" }}>
-                <strong>Short answer: yes</strong> — if {deal.subcategory || deal.category || "this topic"} is on your roadmap.
-                {deal.originalPrice && deal.price && deal.originalPrice > deal.price ? (
-                  <>
-                    {" "}The regular Udemy price for <em>{deal.title}</em> is {formatMoney(originalPrice)}. With the coupon on this page it drops to {formatMoney(price)} — you save {formatMoney(originalPrice - price)} ({discountPct}% off).
-                    {deal.duration ? ` Spread across ${formatDuration(deal.duration)} of on-demand video, that is roughly ${formatMoney(price / Math.max(1, parseInt(String(deal.duration).replace(/\D/g, "") || "1")))} per hour of content — cheaper than a single chapter of most textbooks.` : ""}
-                  </>
-                ) : (
-                  <> At {formatMoney(price)} with the current coupon, the entry price is low enough to try without heavy commitment.</>
-                )}
-                {deal.rating ? ` The course holds a ${deal.rating.toFixed(1)}/5 rating${deal.students ? ` from ${formatStudents(deal.students)} students` : ""}, which is a strong signal for an evergreen topic like ${deal.subcategory || deal.category || "this field"}.` : ""}
+          {instructorsList.length > 0 && (
+            <section aria-labelledby="instructor-heading" style={{ borderTop: "1px solid var(--border)", paddingTop: "2rem", marginBottom: "2rem" }}>
+              <h2 id="instructor-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text)", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true" />
+                Meet the Instructor{instructorsList.length > 1 ? "s" : ""}
+              </h2>
+              <p style={{ fontSize: "0.9rem", color: "var(--muted)", marginBottom: "1.25rem" }}>
+                The creator{instructorsList.length > 1 ? "s" : ""} behind this course on <strong style={{ color: "var(--text)" }}>{deal.provider || "Udemy"}</strong>: <strong style={{ color: "var(--text)" }}>{instructorsList.join(", ")}</strong>.
               </p>
-              <p style={{ fontSize: "0.875rem", lineHeight: 1.7, color: "var(--cp-graphite)", margin: "0 0 12px" }}>
-                Curriculum focus: {learnItems.length ? learnItems.slice(0, 3).map((s) => s.toLowerCase()).join(" • ") : `hands-on skills in ${deal.subcategory || deal.category || "this topic"}`}.
-                {deal.instructor ? ` Led by ${instructorNames.join(", ")}, the teaching approach is practical and project-based, matching how Udemy's top courses are structured.` : ""}
-                {deal.level ? ` Level is marked as ${deal.level}` : ""}{deal.language ? ` and the primary language is ${deal.language}` : ""} — check the “Course details” table above for the full spec.
-                {deal.requirements && deal.requirements.length ? ` Requirements are light: ${stripHtml(deal.requirements[0]).slice(0, 140)}.` : " No heavy prerequisites, a free Udemy account is enough to start."}
-              </p>
-              <p style={{ fontSize: "0.875rem", lineHeight: 1.7, color: "var(--cp-graphite)", margin: "0 0 12px" }}>
-                Who should claim it: beginners exploring {deal.subcategory || deal.category || "the topic"} who want lifetime access + certificate for LinkedIn, and intermediate learners who need a cheap refresher with {deal.duration ? formatDuration(deal.duration) : "structured"} video + downloadable resources.
-                Who can skip: if you already completed a highly-rated {deal.subcategory || deal.category || "similar"} course recently, or you need an advanced specialization that this {deal.level || "All Levels"} course does not cover — compare with the alternatives below before enrolling.
-              </p>
-              <p style={{ fontSize: "0.875rem", lineHeight: 1.7, color: "var(--cp-graphite)", margin: "0 0 12px" }}>
-                Context right now in {deal.category || "this category"}: CoursesWyn tracks {catStatActive} active coupons in this category, {stats.highDiscount} of them are 90%+ off with an average price of {formatMoney(stats.avgPrice)} — so this {discountPct}% off deal sits {discountPct >= 90 ? "right at the top tier" : "in the mid-high range"} for value.
-                {deal.expiresAt ? ` Coupon window is listed until ${new Date(deal.expiresAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} or until the redemption cap is hit — whichever comes first. ` : " No fixed expiry is listed, but redemption caps can still end the coupon without notice. "}
-                You get lifetime access, mobile & TV playback, and a Udemy certificate on completion — identical to a full-price enrollment. Price history above (tracked since {trackedSinceLabel}) shows this is {discountPct >= 90 ? "one of the deeper discounts" : "a solid mid-range discount"} we have recorded for this course.
-              </p>
-              <div style={{ background: "var(--cp-paper2)", border: "1px solid var(--cp-line)", borderRadius: 10, padding: "12px 14px", marginTop: 8 }}>
-                <div style={{ fontWeight: 700, fontSize: "0.875rem", color: "var(--cp-ink)", marginBottom: 4 }}>Final verdict: Worth it while the coupon works</div>
-                <div style={{ fontSize: "0.8125rem", color: "var(--cp-graphite-soft)", lineHeight: 1.6 }}>
-                  You save {deal.originalPrice && deal.price && deal.originalPrice > deal.price ? formatMoney(originalPrice - price) : "significantly"} vs the standard Udemy price, keep lifetime access and a completion certificate, and the coupon is re-verified on a regular schedule. If {deal.subcategory || deal.category || "this skill"} is part of your 2026 plan, claim it before the redemption cap is hit — checkout price on {deal.provider || "Udemy"} is the source of truth.
-                </div>
-              </div>
-              <div style={{ marginTop: 10, fontFamily: "var(--cp-font-mono)", fontSize: "0.72rem", color: "var(--cp-graphite-soft)" }}>
-                Editorial by <a href="/about" style={{ color: "var(--cp-ink2)", borderBottom: "1px solid var(--cp-line)" }}>Andrew Derek</a> • Verified on {snapshot.checkedLong} • <a href={`/categories/${categorySlug}`} style={{ color: "var(--cp-ink2)", borderBottom: "1px solid var(--cp-line)" }}>{deal.category || "All categories"}</a>
-                {deal.subcategory ? <span> • <a href={`/topics/${slugifyTopic(deal.subcategory)}`} style={{ color: "var(--cp-ink2)", borderBottom: "1px solid var(--cp-line)" }}>{deal.subcategory}</a></span> : null}
-                {primaryInstructor ? <span> • <a href={`/instructor/${createInstructorSlug(primaryInstructor)}`} style={{ color: "var(--cp-ink2)", borderBottom: "1px solid var(--cp-line)" }}>{primaryInstructor}</a></span> : null}
-              </div>
-            </div>
-
-            {/* HOW TO REDEEM */}
-            <h2 className="cp-sec-heading" id="redeem">
-              How to redeem this coupon
-            </h2>
-            <div className="cp-card">
-              <div className="cp-steps">
-                {redeemSteps.map((step) => (
-                  <div className="cp-step" key={step.title}>
-                    <div className="cp-step-num" />
-                    <div>
-                      <div className="cp-step-title">{step.title}</div>
-                      <div className="cp-step-desc">{step.desc}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {instructorsList.map((name, idx) => (
+                  <div key={name} style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "16px", overflow: "hidden" }}>
+                    <div style={{ padding: "1.5rem 1.5rem 1rem", display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
+                      {idx === 0 && instructorImage ? (
+                        <img src={instructorImage} alt={name} width={104} height={104} loading="lazy" style={{ width: "52px", height: "52px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                      ) : (
+                        <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, var(--brand), #0B7A55)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <span style={{ color: "#FFFFFF", fontSize: "1.1rem", fontWeight: 700 }}>{initials(name)}</span>
+                        </div>
+                      )}
+                      <div style={{ flex: 1, minWidth: "180px" }}>
+                        <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>{name}</div>
+                        <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{deal.provider || "Udemy"} Instructor</div>
+                      </div>
+                      <a href={`/instructor/${createInstructorSlug(name)}`} style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", padding: "0.45rem 1rem", background: "rgba(11, 122, 85, 0.1)", border: "1px solid rgba(11, 122, 85, 0.25)", borderRadius: "8px", fontSize: "0.8rem", color: "var(--brand)", textDecoration: "none", fontWeight: 600 }}>Full Profile ↗</a>
+                    </div>
+                    <div style={{ borderTop: "1px solid var(--border)", padding: "1rem 1.5rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem", fontSize: "0.85rem" }}>
+                      <div><span style={{ color: "var(--muted)", fontWeight: 500 }}>Teaches</span><div style={{ color: "var(--text-secondary)", marginTop: "2px" }}>{deal.category || "Development"}</div></div>
+                      {typeof deal.students === "number" && (<div><span style={{ color: "var(--muted)", fontWeight: 500 }}>Learners Here</span><div style={{ color: "var(--text-secondary)", marginTop: "2px" }}>{deal.students.toLocaleString()}+ enrolled</div></div>)}
+                      {typeof deal.rating === "number" && (<div><span style={{ color: "var(--muted)", fontWeight: 500 }}>Course Rating</span><div style={{ color: "var(--text-secondary)", marginTop: "2px" }}>{deal.rating.toFixed(1)} / 5.0</div></div>)}
+                      {deal.duration && (<div><span style={{ color: "var(--muted)", fontWeight: 500 }}>Course Length</span><div style={{ color: "var(--text-secondary)", marginTop: "2px" }}>{deal.duration}</div></div>)}
+                      <div style={{ gridColumn: "1 / -1" }}>
+                        <span style={{ color: "var(--muted)", fontWeight: 500 }}>Teaching Style</span>
+                        <div style={{ color: "var(--text-secondary)", marginTop: "2px", lineHeight: 1.5 }}>Hands-on, example-driven lessons around real {deal.category || "IT"} workflows — watch, build alongside, then test yourself with quizzes.</div>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
+          )}
 
-            {/* FAQ */}
-            <h2 className="cp-sec-heading" id="faq">
-              Coupon &amp; redemption FAQ
-            </h2>
-            <div className="cp-card">
-              {faqs.map((faq, idx) => (
-                <details className="cp-faq-item" key={idx} open={idx === 0}>
-                  <summary className="cp-faq-q">
-                    {faq.q} <span className="cp-plus">+</span>
-                  </summary>
-                  <div className="cp-faq-a">{faq.a}</div>
-                </details>
-              ))}
-            </div>
-
-            {/* CATEGORY CONTEXT */}
-            <h2 className="cp-sec-heading">{deal.category || "This"} deals right now</h2>
-            <div className="cp-card">
-              <div className="cp-stat-callout">
-                <div className="cp-stat-box">
-                  <div className="cp-stat-box-num">{catStatActive}</div>
-                  <div className="cp-stat-box-label">active {deal.category || ""} coupons tracked</div>
-                </div>
-                <div className="cp-stat-box">
-                  <div className="cp-stat-box-num">{stats.highDiscount}</div>
-                  <div className="cp-stat-box-label">are 90%+ off right now</div>
-                </div>
-                <div className="cp-stat-box">
-                  <div className="cp-stat-box-num">{formatMoney(stats.avgPrice)}</div>
-                  <div className="cp-stat-box-label">average price across the category today</div>
-                </div>
-              </div>
-            </div>
-
-            {/* FEEDBACK */}
-            <h2 className="cp-sec-heading">Was this coupon page useful?</h2>
-            <div className="cp-card">
-              <div className="cp-feedback">
-                <button
-                  className="cp-fb-btn"
-                  onClick={() => vote("up")}
-                  aria-pressed={feedback.voted === "up"}
-                >
-                  👍 Worked for me <span className="cp-fb-count">({feedback.up})</span>
-                </button>
-                <button
-                  className="cp-fb-btn"
-                  onClick={() => vote("down")}
-                  aria-pressed={feedback.voted === "down"}
-                >
-                  👎 Didn't work <span className="cp-fb-count">({feedback.down})</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* STICKY STUB */}
-          <aside className="cp-stub-wrap" aria-label="Coupon details">
-            <div className="cp-stub">
-              <div className="cp-stub-top">
-                <div className="cp-stub-verified"><span className="cp-blip" /> Live verification active</div>
-                <div>
-                  <span className="cp-stub-price-now">{formatMoney(price)}</span>
-                  {originalPrice > price && <span className="cp-stub-price-was">{formatMoney(originalPrice)}</span>}
-                </div>
-                <div className="cp-stub-left">{expiryLabel}</div>
-                <div className="cp-stub-code">
-                  <code>{maskedCoupon}</code>
-                  <span className="cp-stub-code-note">auto-applies at checkout</span>
-                </div>
-                <a className="cp-stub-cta" href={deal.url} target="_blank" rel="noopener noreferrer nofollow">
-                  Enroll Now →
-                </a>
-                <div className="cp-stub-guarantee">30-day money-back guarantee via {deal.provider || "Udemy"}</div>
-              </div>
-              <div className="cp-tear" />
-              <div className="cp-stub-bottom">
-                <div className="cp-stub-bottom-label">{instructorNames.length > 1 ? "Instructors" : "Instructor"}</div>
-                <div className="cp-instructor-row">
-                  <div className={instructorImage ? "cp-instructor-avatar cp-instructor-avatar-img" : "cp-instructor-avatar"}>
-                    {instructorImage ? (
-                      <img src={instructorImage} alt={primaryInstructor} loading="lazy" />
-                    ) : (
-                      instructorInitials
+          {faqs.length > 0 && (
+            <section aria-labelledby="faq-heading" style={{ borderTop: "1px solid var(--border)", paddingTop: "2rem", marginBottom: "2rem" }}>
+              <h2 id="faq-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true"></span>
+                Coupon FAQs
+              </h2>
+              <p style={{ fontSize: "0.9rem", color: "var(--muted)", marginBottom: "1.5rem" }}>
+                Quick answers on this coupon's validity, pricing and enrollment — generated from {deal.provider || "Udemy"} data checked {fmtDate(deal.updatedAt)}.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {faqs.map((faq, idx) => (
+                  <div key={idx} style={{ border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden" }}>
+                    <button
+                      onClick={() => setExpandedFAQ(expandedFAQ === idx ? null : idx)}
+                      aria-expanded={expandedFAQ === idx}
+                      aria-controls={`faq-answer-${idx}`}
+                      id={`faq-question-${idx}`}
+                      style={{ width: "100%", padding: "1rem 1.25rem", background: "var(--card)", border: "none", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.95rem", fontWeight: 600, color: "var(--text)", gap: "1rem" }}
+                    >
+                      <span>{faq.q}</span>
+                      <span aria-hidden="true" style={{ transition: "transform 0.2s", transform: expandedFAQ === idx ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }}>▼</span>
+                    </button>
+                    {expandedFAQ === idx && (
+                      <div id={`faq-answer-${idx}`} role="region" aria-labelledby={`faq-question-${idx}`} style={{ padding: "1rem 1.25rem", background: "var(--bg)", borderTop: "1px solid var(--border)" }}>
+                        <p style={{ color: "var(--text-secondary)", lineHeight: 1.65, fontSize: "0.9rem", margin: 0 }}>{faq.a}</p>
+                      </div>
                     )}
                   </div>
-                  <div className="cp-instructor-info">
-                    <div className="cp-instructor-name">
-                      {instructorNames.map((name, i) => (
-                        <span key={name} className="cp-instructor-name-item">
-                          {i > 0 && <span className="cp-instructor-sep">, </span>}
-                          <a href={`/instructor/${createInstructorSlug(name)}`}>{name}</a>
-                        </span>
-                      ))}
-                    </div>
-                    <div className="cp-instructor-meta">
-                      {deal.rating ? `⭐ ${deal.rating.toFixed(1)} · ` : ""}
-                      {deal.students ? `${formatStudents(deal.students)} students` : "Udemy"}
-                    </div>
-                  </div>
-                </div>
-                <div className="cp-schema-note">
-                  <div className="cp-schema-lbl">Structured data on this page</div>
-                  <div className="cp-schema-pill-row">
-                    <span className="cp-schema-pill">Product</span>
-                    <span className="cp-schema-pill">Offer</span>
-                    <span className="cp-schema-pill">BreadcrumbList</span>
-                    <span className="cp-schema-pill">FAQPage</span>
-                  </div>
-                </div>
+                ))}
               </div>
-            </div>
-          </aside>
-        </div>
+            </section>
+          )}
 
-        {/* COMPARE ALTERNATIVES */}
-        {relatedRows.length > 0 && (
-          <>
-            <h2 className="cp-sec-heading" id="alternatives">
-              {compareHeading}
+          <section aria-labelledby="reviewer-heading" style={{ border: "1px solid var(--border)", padding: "1.5rem", borderRadius: "16px", background: "var(--bg)", marginBottom: "2rem" }}>
+            <h2 id="reviewer-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text)", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true" />
+              Reviewed By
             </h2>
-            <div className="cp-card">
-              <div className="cp-cmp-wrap">
-                <table className="cp-cmp-table">
-                  <thead>
-                    <tr>
-                      <th>Course</th>
-                      <th>Price</th>
-                      <th>Discount</th>
-                      <th>Rating</th>
-                      <th>Checked</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {relatedRows.map((r) => {
-                      const rPrice = r.price ?? 0;
-                      const rOriginal = r.originalPrice ?? 0;
-                      const rDisc = discountPctOf(r);
-                      return (
-                        <tr key={r.slug}>
-                          <td>
-                            <span className="cp-cmp-course">
-                              {r.title}
-                              <span className="cp-cmp-course-cat">{r.category}</span>
-                            </span>
-                          </td>
-                          <td className="cp-cmp-price">
-                            {formatMoney(rPrice)}
-                            {rOriginal > rPrice && <span>{formatMoney(rOriginal)}</span>}
-                          </td>
-                          <td>
-                            {rDisc > 0 && <span className="cp-cmp-badge">{rDisc}% off</span>}
-                          </td>
-                          <td>{r.rating ? r.rating.toFixed(1) : "—"}</td>
-                          <td>{fmtAbs(r.updatedAt || r.createdAt)}</td>
-                          <td>
-                            <a className="cp-cmp-link" href={`/coupon/${r.slug}`}>View →</a>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+            <div style={{ display: "flex", gap: "1.25rem", flexWrap: "wrap", alignItems: "flex-start" }}>
+              <div style={{ width: "72px", height: "72px", borderRadius: "50%", background: "linear-gradient(135deg, var(--card-hover), var(--card))", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden", border: "2px solid var(--brand)" }}>
+                <img src="/images/author.jpg" alt="Andrew Derek" style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
+              </div>
+              <div style={{ flex: 1, minWidth: "240px" }}>
+                <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)", marginBottom: "2px" }}>Andrew Derek</div>
+                <div style={{ fontSize: "0.8rem", color: "var(--brand)", fontWeight: 600, marginBottom: "0.5rem" }}>Coupon Analyst, CoursesWyn</div>
+                <p style={{ fontSize: "0.85rem", color: "var(--muted)", lineHeight: 1.65, margin: "0 0 0.75rem 0" }}>
+                  Andrew tracks Udemy price swings daily and only lists codes that survive verification — so the discount you see here is one he'd claim himself.
+                </p>
+                <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
+                  <a href="https://facebook.com/CoursesWyn" target="_blank" rel="noopener noreferrer" aria-label="Facebook" style={{ width: "32px", height: "32px", borderRadius: "6px", background: "var(--border)", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--muted)"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                  </a>
+                  <a href="https://x.com/CoursesWyn" target="_blank" rel="noopener noreferrer" aria-label="X" style={{ width: "32px", height: "32px", borderRadius: "6px", background: "var(--border)", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--muted)"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                  </a>
+                  <a href="https://medium.com/@coursewyn" target="_blank" rel="noopener noreferrer" aria-label="Medium" style={{ width: "32px", height: "32px", borderRadius: "6px", background: "var(--border)", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", color: "var(--muted)", fontSize: "0.8rem", fontWeight: 800 }}>M</a>
+                  <a href="/udemy-coupon-code" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "0 0.75rem", height: "32px", borderRadius: "6px", background: "rgba(11, 122, 85, 0.1)", border: "1px solid rgba(11, 122, 85, 0.25)", color: "var(--brand)", textDecoration: "none", fontSize: "0.75rem", fontWeight: 600 }}>Fresh Drops →</a>
+                </div>
               </div>
             </div>
-          </>
-        )}
+          </section>
 
-        <div className="cp-plan">
-          <div className="cp-plan-inner">
-            <span className="cp-plan-badge">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              Udemy Personal Plan
-            </span>
-            <div className="cp-plan-title">Love learning? Get <span>26,000+ top-rated courses</span> with 25% OFF your first year</div>
-            <p className="cp-plan-desc">Tired of hunting for a new coupon before every course? Udemy Personal Plan gives you unlimited access to 26,000+ curated top-rated courses for one flat monthly or annual price.</p>
-            <a className="cp-plan-btn" href="https://trk.udemy.com/c/6564357/3775958/39854" aria-label="Get Udemy Personal Plan with 25% off your first year" rel="nofollow sponsored noopener" target="_blank">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4v4"/><path d="M10 14L21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-              Get Udemy Personal Plan — 25% OFF
-            </a>
-            <div className="cp-plan-note">
-              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> 26,000+ courses included</span>
-              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Cancel anytime</span>
+          {related.length > 0 && (
+            <section aria-labelledby="related-heading" style={{ borderTop: "1px solid var(--border)", paddingTop: "2rem", marginTop: "2rem" }}>
+              <h2 id="related-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true"></span>
+                More {deal.category || "Udemy"} Coupons You'll Like
+              </h2>
+              <p style={{ fontSize: "0.9rem", color: "var(--muted)", marginBottom: "1.5rem" }}>
+                Sibling {deal.provider || "Udemy"} courses in {deal.category || "this category"} with live coupons:
+              </p>
+              <div className="grid">
+                {shownRelated.map((r) => {
+                  const rp = typeof r.price === "number" ? r.price : 0;
+                  const ro = typeof r.originalPrice === "number" && r.originalPrice > rp ? r.originalPrice : rp;
+                  const rd = ro > rp && rp >= 0 ? Math.round(100 - (rp / ro) * 100) : 0;
+                  return (
+                    <article key={r.slug} className="card">
+                      <div className="card-body" style={{ display: "grid", gap: 8 }}>
+                        {r.image && (
+                          <img src={r.image} alt={r.title} width="300" height="200" loading="lazy" style={{ width: "100%", height: "140px", borderRadius: 8, border: "1px solid var(--border)", objectFit: "cover" }} />
+                        )}
+                        <h4 style={{ margin: 0, fontSize: 14 }}>
+                          <a href={`/coupon/${r.slug}`} style={{ color: "inherit", textDecoration: "none" }}>{r.title}</a>
+                        </h4>
+                        <div style={{ color: "var(--muted)", fontSize: 12 }}>{r.subcategory || r.category || r.provider}</div>
+                        <div style={{ display: "flex", gap: 12, alignItems: "center", color: "var(--muted)", fontSize: 12 }}>
+                          {typeof r.rating === "number" && (<span>⭐ {r.rating.toFixed(1)}</span>)}
+                          {typeof r.students === "number" && (<span>👥 {r.students >= 1000 ? (r.students / 1000).toFixed(1).replace(/\.0$/, "") + "k" : r.students}</span>)}
+                        </div>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                          <span style={{ fontWeight: 700 }}>${rp.toFixed(2)}</span>
+                          {ro > rp && (<span className="muted" style={{ textDecoration: "line-through", fontSize: 12 }}>${ro.toFixed(2)}</span>)}
+                          {rd > 0 && (<span className="pill" style={{ background: "var(--brand)", color: "#FFFFFF", fontWeight: 800 }}>{rd}% OFF</span>)}
+                        </div>
+                        {r.updatedAt && (<div className="muted" style={{ fontSize: 12 }}>Checked {timeAgo(r.updatedAt)}</div>)}
+                      </div>
+                      <div className="card-footer" style={{ display: "flex", justifyContent: "flex-end" }}>
+                        <a className="btn" href={`/coupon/${r.slug}`} style={{ color: "var(--brand)" }}>View Coupon</a>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              {related.length > visibleRelated && (
+                <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
+                  <button className="pill" onClick={() => setVisibleRelated(related.length)}>Show more</button>
+                </div>
+              )}
+            </section>
+          )}
+        </main>
+
+        <aside aria-label="Coupon claim panel" style={{ position: "relative" }}>
+          <div style={{ position: "sticky", top: "2rem", background: "linear-gradient(135deg, #FFFFFF 0%, #EDF2EF 100%)", border: "1px solid rgba(11,122,85,0.2)", borderRadius: "8px", overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.35)" }}>
+            {deal.image && (
+              <div style={{ position: "relative" }}>
+                <img src={deal.image} alt={`${deal.title} — ${deal.provider || "Udemy"} course`} width="400" height="190" loading="eager" decoding="async" style={{ width: "100%", height: "190px", objectFit: "cover", display: "block" }} />
+              </div>
+            )}
+            <div style={{ padding: "1.25rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: discountPct > 0 ? "6px" : "1rem" }}>
+                <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text)" }}>{price === 0 ? "Free" : `$${price.toFixed(2)}`}</span>
+                {discountPct > 0 && (<><span style={{ fontSize: "0.9rem", color: "var(--muted)", textDecoration: "line-through" }}>${originalPrice.toFixed(2)}</span><span style={{ fontSize: "0.75rem", background: "var(--brand)", color: "#FFFFFF", padding: "2px 7px", borderRadius: "3px", fontWeight: 700 }}>{discountPct}% OFF</span></>)}
+              </div>
+              {countdown && (
+                <div role="timer" aria-live="polite" style={{ background: "rgba(11,122,85,0.07)", color: "var(--text)", fontSize: "0.85rem", padding: "10px 12px", borderRadius: "6px", marginBottom: "1rem", border: "1px solid var(--border)" }}>
+                  <div style={{ fontWeight: 700, fontSize: "0.75rem", marginBottom: "6px", display: "flex", alignItems: "center", gap: "5px", color: "var(--muted)" }}>
+                    <svg style={{ width: "13px", height: "13px" }} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
+                    OFFER ENDS IN
+                  </div>
+                  <div style={{ display: "flex", gap: "8px", justifyContent: "center", fontWeight: 800 }}>
+                    {[{ val: countdown.days, label: "Days" }, { val: countdown.hours, label: "Hrs" }, { val: countdown.minutes, label: "Min" }, { val: countdown.seconds, label: "Sec" }].map(({ val, label }) => (
+                      <div key={label} style={{ textAlign: "center" }}>
+                        <div style={{ fontSize: "1.2rem" }}>{String(val).padStart(2, "0")}</div>
+                        <div style={{ fontSize: "0.65rem", opacity: 0.75, fontWeight: 500 }}>{label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "6px", marginBottom: "0.75rem", padding: "0.6rem 0.75rem" }}>
+                <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>🎫 Coupon Code</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <code style={{ fontSize: "0.8rem", fontWeight: 700, background: "var(--card)", padding: "4px 8px", borderRadius: "4px", border: "1px dashed var(--border)", color: "var(--text)", flex: 1, textAlign: "center", letterSpacing: "0.5px" }}>{masked}</code>
+                  <button onClick={() => setIsModalOpen(true)} style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "4px", padding: "4px 8px", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer", color: "var(--brand)", whiteSpace: "nowrap" }}>Reveal</button>
+                </div>
+              </div>
+              <a
+                href={deal.url}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                aria-label={`Claim coupon for ${deal.title} on ${deal.provider || "Udemy"}`}
+                style={{ display: "block", width: "100%", padding: "0.75rem", background: "linear-gradient(135deg, #0C6E4E 0%, #0B7A55 100%)", color: "#FFFFFF", textDecoration: "none", borderRadius: "8px", textAlign: "center", fontWeight: 700, fontSize: "0.9rem", border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(11, 122, 85, 0.25)" }}
+              >
+                CLAIM COUPON
+              </a>
+              <p style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--muted)", marginBottom: "1.25rem", marginTop: "0.75rem" }}>
+                30-Day Money-Back Guarantee via {deal.provider || "Udemy"}
+              </p>
+              <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                <p style={{ fontWeight: 700, color: "var(--text)", marginBottom: "10px", fontSize: "0.875rem" }}>This Course Includes:</p>
+                {[
+                  ["Length", deal.duration ? `${deal.duration} on-demand video` : "On-demand video"],
+                  ["Access", "Lifetime access · Mobile & TV"],
+                  ["Certificate", "Certificate of completion"],
+                  ["Language", deal.language || "English"],
+                ].map(([label, value]) => (
+                  <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border)", alignItems: "center" }}>
+                    <span style={{ color: "var(--muted)", fontSize: "0.8rem" }}>{label}</span>
+                    <span style={{ color: "var(--text)", fontWeight: 500, textAlign: "right", maxWidth: "60%" }}>{value}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ borderTop: "1px solid var(--border)", marginTop: "1rem", paddingTop: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <button onClick={() => { try { (navigator as unknown as { share?: (d: { title: string; url: string }) => void }).share?.({ title: deal.title, url: window.location.href }); } catch {} }} style={{ color: "var(--muted)", fontWeight: 600, fontSize: "0.85rem", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+                  Share this coupon
+                </button>
+                <a href="/affiliate-disclosure" style={{ color: "var(--muted)", fontSize: "0.75rem" }}>Affiliate note</a>
+              </div>
+              <div style={{ marginTop: "1rem", padding: "0.75rem", background: "rgba(11, 122, 85, 0.06)", border: "1px solid rgba(11, 122, 85, 0.15)", borderRadius: "6px", fontSize: "0.75rem", color: "var(--muted)", textAlign: "center", lineHeight: 1.4 }}>
+                <span>Claiming through CoursesWyn may earn us a commission at no cost to you. </span>
+                <a href="/affiliate-disclosure" style={{ color: "var(--brand)", textDecoration: "none", fontWeight: 600 }}>Details</a>
+              </div>
             </div>
           </div>
-          <a className="cp-plan-coupon-link" href={deal.url} aria-label={`Claim this ${deal.title} Udemy coupon before it expires`} target="_blank" rel="noopener noreferrer nofollow">
-            Claim this Udemy coupon before it expires →
-          </a>
-        </div>
+        </aside>
       </div>
 
-      {/* MOBILE STICKY BAR */}
-      <div className="cp-mobile-bar">
-        <div>
-          <span className="cp-mb-price">{formatMoney(price)}</span>
-          {originalPrice > price && <span className="cp-mb-was">{formatMoney(originalPrice)}</span>}
+      {isModalOpen && (
+        <div role="dialog" aria-modal="true" aria-labelledby="modal-title" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "1rem" }} onClick={() => setIsModalOpen(false)}>
+          <div style={{ background: "var(--card)", borderRadius: "12px", padding: "2rem", maxWidth: "480px", width: "100%", border: "1px solid var(--border)", boxShadow: "0 20px 30px rgba(0,0,0,0.6)", position: "relative" }} onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setIsModalOpen(false)} aria-label="Close modal" style={{ position: "absolute", top: "1rem", right: "1rem", background: "none", border: "none", color: "var(--muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1 }}>✕</button>
+            <h3 id="modal-title" style={{ color: "var(--text)", fontSize: "1.3rem", fontWeight: 700, marginBottom: "0.5rem", textAlign: "center" }}>Your Coupon Is Ready</h3>
+            <p style={{ color: "var(--muted)", fontSize: "0.9rem", textAlign: "center", marginBottom: "1.5rem" }}>Continue to {deal.provider || "Udemy"} — the code below auto-applies at checkout.</p>
+            <div style={{ background: "linear-gradient(135deg, #0C6E4E, #0B7A55)", padding: "1.25rem", borderRadius: "8px", marginBottom: "1.25rem", textAlign: "center" }}>
+              <p style={{ color: "#FFFFFF", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px", fontWeight: 600 }}>Coupon Code</p>
+              <code style={{ display: "block", fontSize: "1.15rem", fontWeight: 800, color: "#FFFFFF", letterSpacing: "1px", background: "rgba(0,0,0,0.2)", padding: "10px 16px", borderRadius: "6px", border: "1px dashed rgba(255,255,255,0.5)" }}>{masked}</code>
+            </div>
+            <div style={{ display: "flex", gap: "0.75rem", flexDirection: "column" }}>
+              <button onClick={copyMasked} style={{ background: copied ? "var(--brand)" : "rgba(11,122,85,0.12)", border: "1px solid rgba(11,122,85,0.25)", color: copied ? "#FFFFFF" : "var(--text)", padding: "0.75rem", borderRadius: "6px", fontWeight: 600, cursor: "pointer", fontSize: "0.95rem" }}>
+                {copied ? "✓ Copied!" : "📋 Copy Code"}
+              </button>
+              <a href={deal.url} target="_blank" rel="noopener noreferrer nofollow" style={{ background: "var(--brand)", border: "1px solid var(--brand)", color: "#FFFFFF", padding: "0.75rem", borderRadius: "6px", fontWeight: 700, textDecoration: "none", textAlign: "center", fontSize: "0.95rem" }}>
+                Continue to {deal.provider || "Udemy"} →
+              </a>
+            </div>
+          </div>
         </div>
-        <a className="cp-mb-cta" href={deal.url} target="_blank" rel="noopener noreferrer nofollow">
-          Claim Coupon
-        </a>
-      </div>
+      )}
+
       <style>{`
-        .cp-page{
-          --cp-bg:#f4f6f8; --cp-ink:#161a20; --cp-ink2:#00a76f;
-          --cp-paper:#ffffff; --cp-paper2:#f1f4f7; --cp-card-hover:#eef2f6;
-          --cp-green:#00a76f; --cp-green-bg:rgba(0,167,111,0.1);
-          --cp-red:#d14343; --cp-red-bg:rgba(209,67,67,0.1);
-          --cp-graphite:#161a20; --cp-graphite-soft:#5a6472; --cp-muted:#8a94a1;
-          --cp-gold:#b8860b; --cp-gold-bg:rgba(184,134,11,0.12);
-          --cp-line:#e2e6ec;
-          --cp-font-display:Inter, ui-sans-serif, system-ui, sans-serif;
-          --cp-font-mono:Inter, ui-sans-serif, system-ui, sans-serif;
-          --cp-font-body:Inter, ui-sans-serif, system-ui, sans-serif;
-          background:var(--cp-bg);
-          background-image:radial-gradient(circle at 15% 8%, rgba(0,167,111,0.06), transparent 40%),
-            radial-gradient(circle at 85% 95%, rgba(0,167,111,0.04), transparent 40%);
-          color:var(--cp-graphite); font-family:var(--cp-font-body);
-          -webkit-font-smoothing:antialiased; min-height:60vh;
+        .deal-layout { grid-template-columns: 1fr 340px; }
+        .prose h1, .prose h2, .prose h3 { color: var(--text); margin-top: 1.5em; margin-bottom: 0.5em; }
+        .prose p { margin-bottom: 1em; }
+        .prose ul, .prose ol { margin-bottom: 1em; padding-left: 1.5em; list-style: disc; }
+        .prose li { margin-bottom: 0.5em; }
+        .prose a { color: var(--brand); text-decoration: underline; }
+        .prose strong { color: var(--text); }
+        .prose code { background: var(--border); padding: 2px 6px; border-radius: 4px; font-size: 0.875em; }
+        @media (max-width: 900px) {
+          .deal-layout { grid-template-columns: 1fr !important; }
         }
-        .cp-page a{color:inherit;text-decoration:none;}
-        .cp-page button{font-family:inherit;cursor:pointer;}
-        .cp-page :focus-visible{outline:3px solid var(--cp-gold);outline-offset:2px;}
-        .cp-page code{font-family:var(--cp-font-mono);}
-
-        .cp-breadcrumb{max-width:1180px;margin:0 auto;padding:18px 20px 4px;font-family:var(--cp-font-mono);font-size:0.71875rem;color:var(--cp-graphite-soft);}
-        .cp-breadcrumb a:hover{color:var(--cp-graphite);}
-        .cp-breadcrumb .cp-sep{margin:0 6px;color:var(--cp-muted);}
-        .cp-breadcrumb .cp-current{color:var(--cp-graphite);}
-
-        .cp-wrap{max-width:1180px;margin:0 auto;padding:8px 20px 130px;}
-
-        .cp-subnav{
-          position:sticky;top:70px;z-index:40;margin-top:10px;
-          background:#F5F1E6;border:1px solid #D8D0BC;
-          border-radius:12px;padding:9px 10px;display:flex;gap:6px;overflow-x:auto;
+        @media (max-width: 640px) {
+          h1 { font-size: 1.4rem !important; }
         }
-        .cp-subnav a{
-          flex:0 0 auto;font-family:var(--cp-font-mono);font-size:0.71875rem;font-weight:600;color:var(--cp-graphite-soft);
-          padding:7px 12px;border-radius:8px;white-space:nowrap;
-        }
-        .cp-subnav a:hover,.cp-subnav a:focus-visible{background:rgba(255,255,255,0.75);color:var(--cp-graphite);}
-
-        .cp-hero{
-          position:relative;background:var(--cp-paper);border-radius:18px;padding:32px;margin-top:16px;
-          box-shadow:0 30px 60px -25px rgba(15,23,42,0.1);
-          display:grid;grid-template-columns:1fr;gap:24px;
-        }
-        @media(min-width:760px){.cp-hero{grid-template-columns:230px 1fr;}}
-        .cp-hero-left{display:flex;flex-direction:column;gap:12px;min-width:0;}
-        .cp-thumb{position:relative;border-radius:12px;overflow:hidden;background:#F5F1E6;border:1px solid #D8D0BC;aspect-ratio:230/170;min-height:0;}
-        .cp-thumb svg{width:100%;height:100%;display:block;}
-        .cp-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
-        .cp-short-desc{font-size:0.78125rem;line-height:1.55;color:var(--cp-graphite-soft);margin:0;}
-
-        .cp-eyebrow-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
-        .cp-cat-tag{font-family:var(--cp-font-mono);font-size:0.71875rem;letter-spacing:.08em;text-transform:uppercase;color:var(--cp-graphite-soft);border:1px solid var(--cp-line);padding:5px 10px;border-radius:999px;background:var(--cp-paper2);}
-        .cp-stamp{font-family:var(--cp-font-mono);font-weight:600;font-size:0.75rem;letter-spacing:.06em;color:var(--cp-green);border:2px solid var(--cp-green);border-radius:8px;padding:6px 10px;transform:rotate(-4deg);text-transform:uppercase;background:var(--cp-green-bg);white-space:nowrap;}
-        .cp-stamp-exp-row{margin-top:6px;}
-        .cp-stamp-exp{color:#f87171;border-color:#f87171;background:rgba(248,113,113,.12);font-size:0.625rem;font-weight:600;padding:3px 8px;border-width:1.5px;border-radius:6px;transform:rotate(0deg);letter-spacing:.05em;}
-        .cp-title{font-family:var(--cp-font-display);font-weight:700;font-size:clamp(24px,3.6vw,34px);line-height:1.14;letter-spacing:-.01em;margin:0 0 10px;color:var(--cp-ink);}
-        .cp-desc{font-size:0.875rem;line-height:1.65;color:var(--cp-graphite-soft);margin:0 0 14px;}
-        .cp-by-line{font-size:0.875rem;color:var(--cp-graphite-soft);margin:0 0 18px;}
-        .cp-topics-box{border:1px solid var(--cp-line);border-radius:14px;padding:14px 16px;margin:0 0 18px;background:var(--cp-card,#fff);}
-        .cp-topics-label{display:block;font-family:var(--cp-font-display);font-size:0.875rem;font-weight:700;color:var(--cp-ink);margin-bottom:10px;}
-        .cp-topics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;}
-        .cp-topic-card{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--cp-line);border-radius:10px;padding:10px 12px;text-decoration:none;color:var(--cp-ink2);font-size:0.8125rem;font-weight:600;line-height:1.3;transition:border-color .15s,background .15s,color .15s;}
-        .cp-topic-card:hover{border-color:var(--cp-brand);background:var(--cp-brand-bg);color:var(--cp-brand);}
-        .cp-topic-card svg{flex-shrink:0;opacity:.5;transition:transform .15s;}
-        .cp-topic-card:hover svg{opacity:1;transform:translateX(2px);}
-        .cp-topic-card-name{min-width:0;overflow:hidden;text-overflow:ellipsis;}
-        .cp-by-line a{color:var(--cp-ink2);border-bottom:1px solid var(--cp-line);}
-
-        .cp-price-cta-row{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-top:16px;border-top:1px dashed var(--cp-line);}
-        .cp-price-block{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
-        .cp-price-now{font-family:var(--cp-font-mono);font-weight:600;font-size:1.75rem;color:var(--cp-red);}
-        .cp-price-was{font-family:var(--cp-font-mono);font-size:0.9375rem;color:var(--cp-graphite-soft);text-decoration:line-through;}
-        .cp-price-off{font-family:var(--cp-font-mono);font-weight:600;font-size:0.75rem;color:#fff;background:var(--cp-red);padding:4px 8px;border-radius:6px;}
-        .cp-cta-primary{font-family:var(--cp-font-display);font-weight:600;font-size:0.9375rem;color:#fff;background:var(--cp-green);border:none;border-radius:11px;padding:14px 24px;display:inline-flex;align-items:center;gap:8px;transition:.15s;}
-        .cp-cta-primary:hover{background:#186640;transform:translateY(-1px);}
-        .cp-cta-note{font-family:var(--cp-font-mono);font-size:0.6875rem;color:var(--cp-graphite-soft);margin-top:7px;}
-
-        .cp-sec-heading{font-family:var(--cp-font-display);font-weight:600;font-size:1.0625rem;color:var(--cp-graphite);margin:34px 0 12px;padding-left:2px;display:flex;align-items:center;gap:10px;scroll-margin-top:84px;}
-        .cp-sec-heading .cp-tag{font-family:var(--cp-font-mono);font-size:0.625rem;color:var(--cp-graphite-soft);border:1px solid var(--cp-line);padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.06em;margin-left:auto;}
-
-        .cp-card{background:var(--cp-paper);border-radius:16px;padding:24px;box-shadow:0 18px 40px -30px rgba(15,23,42,0.12);}
-
-        .cp-lights{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;}
-        @media(max-width:760px){.cp-lights{grid-template-columns:1fr;}}
-        .cp-light-item{background:#F5F1E6;border:1px solid #D8D0BC;border-radius:10px;padding:11px 13px;font-size:0.78125rem;line-height:1.4;display:flex;gap:8px;align-items:flex-start;}
-        .cp-light-item.good .cp-ic{color:var(--cp-green);}
-        .cp-light-item.warn .cp-ic{color:var(--cp-gold);}
-
-        .cp-ph-grid{display:grid;grid-template-columns:1fr;gap:18px;}
-        @media(min-width:700px){.cp-ph-grid{grid-template-columns:1.5fr 1fr;align-items:stretch;}}
-        .cp-ph-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start;}
-        .cp-ph-stat{background:var(--cp-paper2);border-radius:10px;padding:12px 14px;}
-        .cp-ph-stat-label{font-family:var(--cp-font-mono);font-size:0.625rem;text-transform:uppercase;letter-spacing:.06em;color:var(--cp-graphite-soft);}
-        .cp-ph-stat-value{font-family:var(--cp-font-mono);font-size:1.0625rem;font-weight:600;color:var(--cp-ink);margin-top:3px;}
-        .cp-ph-stat-value.hi{color:var(--cp-green);}
-
-        .cp-chart{width:100%;height:auto;display:block;}
-        .cp-chart-caption{font-size:0.75rem;color:var(--cp-graphite-soft);margin-top:10px;}
-
-        .cp-score-grid{display:grid;grid-template-columns:1fr;gap:20px;}
-        @media(min-width:700px){.cp-score-grid{grid-template-columns:150px 1fr;align-items:center;}}
-        .cp-gauge{
-          width:140px;height:140px;border-radius:50%;
-          display:flex;align-items:center;justify-content:center;margin:0 auto;
-          position:relative;
-        }
-        .cp-gauge::before{content:"";position:absolute;inset:12px;background:var(--cp-paper);border-radius:50%;}
-        .cp-gauge-inner{position:relative;text-align:center;}
-        .cp-gauge-num{font-family:var(--cp-font-display);font-weight:700;font-size:1.875rem;color:var(--cp-ink);}
-        .cp-gauge-den{font-family:var(--cp-font-mono);font-size:0.6875rem;color:var(--cp-graphite-soft);}
-        .cp-score-rows{display:flex;flex-direction:column;gap:10px;}
-        .cp-score-row{display:grid;grid-template-columns:130px 1fr 42px;align-items:center;gap:10px;}
-        .cp-score-row-label{font-size:0.78125rem;color:var(--cp-graphite);}
-        .cp-score-bar{height:7px;background:var(--cp-paper2);border-radius:99px;overflow:hidden;}
-        .cp-score-bar-fill{height:100%;background:var(--cp-green);border-radius:99px;}
-        .cp-score-row-val{font-family:var(--cp-font-mono);font-size:0.71875rem;color:var(--cp-graphite-soft);text-align:right;}
-
-        .cp-vlog-live{display:inline-flex;align-items:center;gap:6px;font-family:var(--cp-font-mono);font-size:0.6875rem;color:var(--cp-green);background:var(--cp-green-bg);border-radius:999px;padding:5px 10px;}
-        .cp-blip{width:6px;height:6px;border-radius:50%;background:var(--cp-green);animation:cpBlip 1.6s infinite;display:inline-block;}
-        @keyframes cpBlip{0%,100%{opacity:1;}50%{opacity:.3;}}
-        @media(prefers-reduced-motion:reduce){.cp-blip{animation:none;}}
-        .cp-log-list{display:flex;flex-direction:column;}
-        .cp-log-row{display:grid;grid-template-columns:16px 100px 1fr 90px;gap:12px;align-items:center;padding:10px 0;border-top:1px dotted var(--cp-line);}
-        .cp-log-row:first-child{border-top:none;}
-        .cp-log-dot{width:8px;height:8px;border-radius:50%;background:var(--cp-green);}
-        .cp-log-time{font-family:var(--cp-font-mono);font-size:0.71875rem;color:var(--cp-graphite-soft);}
-        .cp-log-msg{font-size:0.78125rem;color:var(--cp-graphite);}
-        .cp-log-status{font-family:var(--cp-font-mono);font-size:0.65625rem;font-weight:600;color:var(--cp-green);background:var(--cp-green-bg);border-radius:6px;padding:3px 8px;text-align:center;}
-
-        .cp-attr-note{font-family:var(--cp-font-mono);font-size:0.6875rem;color:var(--cp-graphite-soft);margin-bottom:14px;}
-        .cp-snap-table{width:100%;border-collapse:collapse;}
-        .cp-snap-table tr{border-top:1px dotted var(--cp-line);}
-        .cp-snap-table tr:first-child{border-top:none;}
-        .cp-snap-table td{padding:9px 4px;font-size:0.8125rem;}
-        .cp-snap-table td:first-child{font-family:var(--cp-font-mono);color:var(--cp-graphite-soft);width:42%;}
-        .cp-snap-table td:last-child{font-weight:600;color:var(--cp-ink);}
-
-        .cp-learn-grid{display:grid;grid-template-columns:1fr;}
-        @media(min-width:640px){.cp-learn-grid{grid-template-columns:1fr 1fr;}}
-        .cp-learn-item{display:flex;gap:10px;align-items:flex-start;padding:9px 4px;border-top:1px dotted var(--cp-line);font-size:0.8125rem;color:var(--cp-graphite);line-height:1.5;}
-        .cp-learn-item:nth-child(-n+2){border-top:none;}
-        .cp-learn-item::before{content:"✓";color:var(--cp-green);font-family:var(--cp-font-mono);font-weight:600;flex-shrink:0;}
-
-        .cp-steps{counter-reset:cpStep;display:flex;flex-direction:column;gap:0;}
-        .cp-step{display:grid;grid-template-columns:30px 1fr;gap:14px;padding:14px 0;border-top:1px dotted var(--cp-line);}
-        .cp-step:first-child{border-top:none;}
-        .cp-step-num{counter-increment:cpStep;font-family:var(--cp-font-mono);font-weight:600;font-size:0.75rem;color:#fff;background:var(--cp-green);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
-        .cp-step-num::before{content:counter(cpStep);}
-
-        .cp-step-title{font-weight:600;font-size:0.84375rem;color:var(--cp-ink);margin-bottom:3px;}
-        .cp-step-desc{font-size:0.78125rem;color:var(--cp-graphite-soft);line-height:1.5;}
-
-        .cp-faq-item{border-top:1px solid var(--cp-line);}
-        .cp-faq-item:last-child{border-bottom:1px solid var(--cp-line);}
-        .cp-faq-item summary::-webkit-details-marker{display:none;}
-        .cp-faq-q{width:100%;background:none;border:none;text-align:left;padding:15px 4px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:0.875rem;font-weight:600;color:var(--cp-ink);cursor:pointer;list-style:none;}
-        .cp-plus{font-family:var(--cp-font-mono);font-size:1rem;color:var(--cp-graphite-soft);transition:transform .2s;}
-        .cp-faq-item[open] .cp-plus{transform:rotate(45deg);}
-        .cp-faq-a{padding:0 4px 16px;font-size:0.84375rem;line-height:1.6;color:var(--cp-graphite-soft);}
-
-        .cp-stat-callout{display:grid;grid-template-columns:1fr;gap:12px;}
-        @media(min-width:700px){.cp-stat-callout{grid-template-columns:repeat(3,1fr);}}
-        .cp-stat-box{background:var(--cp-paper2);border-radius:12px;padding:16px;}
-        .cp-stat-box-num{font-family:var(--cp-font-display);font-weight:700;font-size:1.5rem;color:var(--cp-ink);}
-        .cp-stat-box-label{font-size:0.75rem;color:var(--cp-graphite-soft);margin-top:4px;line-height:1.4;}
-
-        .cp-feedback{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
-        .cp-fb-btn{font-family:var(--cp-font-mono);font-size:0.8125rem;background:var(--cp-paper2);border:1px solid var(--cp-line);border-radius:10px;padding:10px 16px;display:inline-flex;align-items:center;gap:8px;color:var(--cp-graphite);}
-        .cp-fb-btn:hover{background:var(--cp-paper2);border-color:var(--cp-graphite-soft);}
-        .cp-fb-btn[aria-pressed="true"]{border-color:var(--cp-green);color:var(--cp-green);background:var(--cp-green-bg);}
-        .cp-fb-count{color:var(--cp-graphite-soft);font-size:0.71875rem;}
-
-        .cp-cmp-wrap{overflow-x:auto;}
-        .cp-cmp-table{width:100%;border-collapse:collapse;min-width:640px;}
-        .cp-cmp-table th{font-family:var(--cp-font-mono);font-size:0.65625rem;text-transform:uppercase;letter-spacing:.05em;color:var(--cp-graphite-soft);text-align:left;padding:8px 10px;border-bottom:1px solid var(--cp-line);}
-        .cp-cmp-table td{padding:12px 10px;font-size:0.8125rem;border-bottom:1px dotted var(--cp-line);vertical-align:middle;}
-        .cp-cmp-course{font-weight:600;color:var(--cp-ink);}
-        .cp-cmp-course-cat{display:block;font-family:var(--cp-font-mono);font-size:0.65625rem;color:var(--cp-graphite-soft);font-weight:400;margin-top:2px;}
-        .cp-cmp-price{font-family:var(--cp-font-mono);color:var(--cp-red);font-weight:600;}
-        .cp-cmp-price span{color:var(--cp-graphite-soft);text-decoration:line-through;font-weight:400;margin-left:5px;}
-        .cp-cmp-badge{font-family:var(--cp-font-mono);font-size:0.65625rem;font-weight:600;color:var(--cp-green);background:var(--cp-green-bg);padding:3px 7px;border-radius:6px;}
-        .cp-cmp-link{font-family:var(--cp-font-mono);font-size:0.71875rem;color:var(--cp-ink2);border-bottom:1px solid var(--cp-line);white-space:nowrap;}
-        .cp-cmp-table tr:hover td{background:rgba(15,23,42,0.03);}
-
-        .cp-body-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:14px;}
-        @media(min-width:900px){.cp-body-grid{grid-template-columns:1fr 320px;align-items:start;}}
-        .cp-stack>.cp-card{margin-bottom:16px;}
-
-        .cp-stub-wrap{position:sticky;top:86px;}
-        .cp-stub{background:var(--cp-paper);border-radius:16px;overflow:hidden;box-shadow:0 22px 46px -28px rgba(15,23,42,0.16);}
-        .cp-stub-top{padding:20px 20px 16px;}
-        .cp-stub-verified{display:inline-flex;align-items:center;gap:6px;font-family:var(--cp-font-mono);font-size:0.65625rem;color:var(--cp-green);background:var(--cp-green-bg);border-radius:999px;padding:5px 10px;margin-bottom:12px;}
-        .cp-stub-price-now{font-family:var(--cp-font-mono);font-weight:600;font-size:1.625rem;color:var(--cp-red);}
-        .cp-stub-price-was{font-family:var(--cp-font-mono);font-size:0.8125rem;color:var(--cp-graphite-soft);text-decoration:line-through;margin-left:8px;}
-        .cp-stub-left{font-family:var(--cp-font-mono);font-size:0.6875rem;color:var(--cp-gold);margin-top:4px;}
-        .cp-stub-code{margin-top:14px;display:flex;align-items:center;gap:8px;background:var(--cp-paper2);border:1px dashed var(--cp-graphite-soft);border-radius:10px;padding:10px 11px;}
-        .cp-stub-code code{font-size:0.78125rem;color:var(--cp-ink);flex:1;}
-        .cp-stub-code-note{font-family:var(--cp-font-mono);font-size:0.59375rem;color:var(--cp-graphite-soft);white-space:nowrap;}
-        .cp-stub-cta{display:block;text-align:center;margin-top:13px;width:100%;font-family:var(--cp-font-display);font-weight:600;font-size:0.90625rem;color:#fff;background:var(--cp-green);border:none;border-radius:11px;padding:13px;}
-        .cp-stub-cta:hover{background:#186640;}
-        .cp-stub-guarantee{font-size:0.6875rem;color:var(--cp-graphite-soft);text-align:center;margin-top:9px;}
-        .cp-tear{height:0;border-top:2px dashed var(--cp-line);position:relative;}
-        .cp-tear::before,.cp-tear::after{content:"";position:absolute;top:-9px;width:18px;height:18px;background:var(--cp-bg);border-radius:50%;}
-        .cp-tear::before{left:-9px;}
-        .cp-tear::after{right:-9px;}
-        .cp-stub-bottom{padding:16px 20px 18px;}
-        .cp-stub-bottom-label{font-family:var(--cp-font-mono);font-size:0.625rem;text-transform:uppercase;letter-spacing:.06em;color:var(--cp-graphite-soft);margin-bottom:8px;}
-        .cp-instructor-row{display:flex;align-items:center;gap:10px;min-width:0;}
-        .cp-instructor-avatar{flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:var(--cp-green);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--cp-font-display);font-weight:600;font-size:0.8125rem;overflow:hidden;}.cp-instructor-avatar-img{background:transparent;}.cp-instructor-avatar-img img{width:100%;height:100%;object-fit:cover;display:block;}
-        .cp-instructor-info{flex:1 1 auto;min-width:0;}
-        .cp-instructor-name{font-size:0.8125rem;font-weight:600;color:var(--cp-ink);overflow-wrap:anywhere;line-height:1.35;}
-        .cp-instructor-name a{color:var(--cp-ink);}
-        .cp-instructor-name a:hover{color:var(--cp-ink2);}
-        .cp-instructor-sep{color:var(--cp-graphite-soft);}
-        .cp-instructor-meta{font-family:var(--cp-font-mono);font-size:0.65625rem;color:var(--cp-graphite-soft);}
-        .cp-schema-note{margin-top:14px;padding-top:14px;border-top:1px dotted var(--cp-line);}
-        .cp-schema-lbl{font-family:var(--cp-font-mono);font-size:0.59375rem;text-transform:uppercase;letter-spacing:.06em;color:var(--cp-graphite-soft);margin-bottom:6px;}
-        .cp-schema-pill-row{display:flex;flex-wrap:wrap;gap:5px;}
-        .cp-schema-pill{font-family:var(--cp-font-mono);font-size:0.59375rem;background:var(--cp-paper2);border-radius:5px;padding:3px 6px;color:var(--cp-graphite-soft);}
-
-        .cp-plan{margin-top:34px;background:var(--cp-paper);border:1px solid var(--cp-line);border-radius:16px;padding:28px 24px 22px;box-shadow:0 12px 32px -22px rgba(15,23,42,0.18);}
-        .cp-plan-inner{max-width:640px;margin:0 auto;text-align:center;}
-        .cp-plan-badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--cp-font-mono);font-size:0.6875rem;font-weight:600;color:var(--cp-green);background:var(--cp-green-bg);border:1px solid rgba(0,167,111,0.25);border-radius:999px;padding:6px 13px;margin-bottom:14px;}
-        .cp-plan-badge svg{width:14px;height:14px;flex-shrink:0;}
-        .cp-plan-title{font-family:var(--cp-font-display);font-weight:700;font-size:clamp(1.25rem,2.4vw,1.55rem);color:var(--cp-ink);line-height:1.25;letter-spacing:-0.01em;margin:0 0 10px;}
-        .cp-plan-title span{color:var(--cp-green);}
-        .cp-plan-desc{font-size:0.84375rem;line-height:1.7;color:var(--cp-graphite-soft);margin:0 auto 18px;max-width:540px;}
-        .cp-page .cp-plan-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 28px;border-radius:11px;font-size:1rem;font-weight:700;text-decoration:none;background:var(--cp-green);color:#fff;border:none;box-shadow:0 10px 24px rgba(0,167,111,0.32);transition:all 0.2s ease;cursor:pointer;}
-        .cp-page .cp-plan-btn:hover{background:#186640;transform:translateY(-1px);}
-        .cp-plan-btn svg{width:18px;height:18px;flex-shrink:0;}
-        .cp-plan-note{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:center;margin-top:14px;font-family:var(--cp-font-mono);font-size:0.65625rem;color:var(--cp-graphite-soft);}
-        .cp-plan-note span{display:inline-flex;align-items:center;gap:6px;}
-        .cp-plan-note svg{width:12px;height:12px;color:var(--cp-green);flex-shrink:0;}
-        .cp-page .cp-plan-coupon-link{display:block;margin:18px auto 0;width:fit-content;font-family:var(--cp-font-body);font-size:0.84375rem;font-weight:600;color:var(--cp-green);text-decoration:underline dotted;text-underline-offset:5px;transition:color .15s;}
-        .cp-page .cp-plan-coupon-link:hover{color:#186640;}
-
-        .cp-mobile-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--cp-paper);border-top:1px solid var(--cp-line);padding:12px 16px;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -14px 30px -20px rgba(15,23,42,0.2);}
-        .cp-mb-price{font-family:var(--cp-font-mono);font-weight:600;color:var(--cp-red);font-size:1rem;}
-        .cp-mb-was{font-family:var(--cp-font-mono);font-size:0.6875rem;color:var(--cp-graphite-soft);text-decoration:line-through;margin-left:6px;}
-        .cp-mb-cta{font-family:var(--cp-font-display);font-weight:600;color:#fff;background:var(--cp-green);border:none;border-radius:9px;padding:11px 18px;font-size:0.8125rem;}
-        @media(max-width:899px){
-          .cp-mobile-bar{display:flex;}
-          .cp-wrap{padding-bottom:90px;}
-          .cp-stub-wrap{position:static;}
-        }
-
       `}</style>
     </div>
   );

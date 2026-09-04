@@ -4,107 +4,173 @@ import LedgerRow from "../components/LedgerRow.astro";
 import { readDeals } from "../lib/store";
 import { toISODateWIB } from "../lib/date";
 import { normName, slugifyCategory } from "../lib/utils";
+import { parseInstructors, createInstructorSlug } from "../lib/instructors";
+import { getInstructorImage } from "../lib/instructorProfiles";
 
 const allDeals = await readDeals();
 const now = new Date();
 const currentYear = now.getFullYear();
+const currentMonth = now.toLocaleDateString("en-US", { month: "long" });
 const activeDeals = allDeals.filter((d) => !d.expiresAt || new Date(d.expiresAt) > now);
 const sortedDeals = [...activeDeals].sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime());
 
-const last24h = sortedDeals.filter((d) => { const t = new Date(d.updatedAt ?? d.createdAt ?? 0).getTime(); return now.getTime() - t < 24 * 3600000; }).length;
-const last7d = sortedDeals.filter((d) => { const t = new Date(d.updatedAt ?? d.createdAt ?? 0).getTime(); return now.getTime() - t < 7 * 24 * 3600000; }).length;
+const last24h = allDeals.filter((d) => { const t = new Date(d.updatedAt ?? d.createdAt ?? 0).getTime(); return now.getTime() - t < 24 * 3600000; }).length;
+
+function catBlurb(name: string) {
+  const c = name.toLowerCase();
+  if (c.includes("it") || c.includes("software") || c.includes("inform")) return "Networks, security, certs and the tooling teams actually run on.";
+  if (c === "development" || c.includes("program") || c.includes("desarrollo")) return "Code, apps and shipping software — from first script to deploy.";
+  if (c.includes("business") || c.includes("negocio")) return "Lead teams, read numbers and grow something that lasts.";
+  if (c.includes("design") || c.includes("dis")) return "Interfaces, visuals and the craft behind good-looking products.";
+  if (c.includes("market")) return "Traffic, funnels and campaigns that pay for themselves.";
+  if (c.includes("data") || c.includes("office") || c.includes("productiv") || c.includes("excel")) return "Sheets, dashboards and data skills used in real jobs.";
+  if (c.includes("teach") || c.includes("academ")) return "Languages, exams and classroom-tested study paths.";
+  if (c.includes("finance") || c.includes("account")) return "Money skills: accounting basics through investing logic.";
+  if (c.includes("photo") || c.includes("video") || c.includes("music")) return "Creative production — shoot, edit and publish with confidence.";
+  if (c.includes("personal")) return "Habits, focus and soft skills that compound over a career.";
+  return "Hand-picked courses in this field at a fraction of list price.";
+}
 
 const catCounts = allDeals.reduce<Record<string, number>>((acc, d) => { const c = normName(d.category); if (c) acc[c] = (acc[c] || 0) + 1; return acc; }, {});
-const sortedCats = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
-const topCats = sortedCats.slice(0, 5).map(([name, count]) => ({ name, count, slug: slugifyCategory(name) }));
+const topCats = Object.entries(catCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name, count]) => ({ name, count, slug: slugifyCategory(name), blurb: catBlurb(name) }));
+const topCats5 = topCats.slice(0, 5);
 
-const featuredPool = [...sortedDeals].slice(0, 36);
-const featuredDeals = featuredPool.slice(0, 6);
 const poolPrimary = new Set<string>();
 sortedDeals.slice(0, 8).forEach((d) => poolPrimary.add(String(d.slug)));
 const poolSet = new Set<string>(poolPrimary);
-for (const c of topCats) {
+for (const c of topCats5) {
   sortedDeals.filter((d) => normName(d.category) === c.name).slice(0, 6).forEach((d) => poolSet.add(String(d.slug)));
 }
 const poolDeals = sortedDeals.filter((d) => poolSet.has(String(d.slug)));
+const latestSix = sortedDeals.slice(0, 6);
+
+// Trending skills from real catalog depth (subcategory frequency)
+const subcatCounts = new Map<string, number>();
+for (const d of allDeals) {
+  const s = (d.subcategory || "").trim();
+  if (!s) continue;
+  subcatCounts.set(s, (subcatCounts.get(s) ?? 0) + 1);
+}
+const trendingSkills = [...subcatCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([name, count]) => ({ name, count }));
+
+// Learner favorites: highest rated with real enrollment weight
+const popularPicks = [...activeDeals].filter((d) => (d.rating ?? 0) >= 4.5).sort((a, b) => ((b.rating ?? 0) - (a.rating ?? 0)) || ((b.students ?? 0) - (a.students ?? 0))).slice(0, 6);
+
+// Deepest cuts: top-rated courses at 90%+ off — anti-duplikat rel latest.
+// Selalu 6 kartu: prioritas 90%+, backfill dari favorit 4.5★ lalu diskon terbesar.
+const latestSlugs = new Set(latestSix.map((d) => String(d.slug)));
+const deepCuts: typeof popularPicks = [];
+const pickedSlugs = new Set<string>();
+for (const d of popularPicks) {
+  if (deepCuts.length >= 6) break;
+  const s = String(d.slug);
+  if (pctOf(d) >= 90 && !latestSlugs.has(s) && !pickedSlugs.has(s)) { deepCuts.push(d); pickedSlugs.add(s); }
+}
+for (const d of popularPicks) {
+  if (deepCuts.length >= 6) break;
+  const s = String(d.slug);
+  if (!latestSlugs.has(s) && !pickedSlugs.has(s)) { deepCuts.push(d); pickedSlugs.add(s); }
+}
+if (deepCuts.length < 6) {
+  const byPct = [...sortedDeals].sort((a, b) => pctOf(b) - pctOf(a));
+  for (const d of byPct) {
+    if (deepCuts.length >= 6) break;
+    const s = String(d.slug);
+    if (!latestSlugs.has(s) && !pickedSlugs.has(s)) { deepCuts.push(d); pickedSlugs.add(s); }
+  }
+}
+const deepCutsCount = sortedDeals.filter((d) => pctOf(d) >= 90).length;
+
+// Instructors with the deepest bench in this catalog
+const instructorCounts = new Map<string, { name: string; count: number; slug: string }>();
+for (const d of allDeals) {
+  if (!d.instructor) continue;
+  for (const n of parseInstructors(d.instructor)) {
+    const slug = createInstructorSlug(n);
+    if (!slug) continue;
+    const e = instructorCounts.get(slug);
+    if (e) e.count++;
+    else instructorCounts.set(slug, { name: n, count: 1, slug });
+  }
+}
+const topInstructors = [...instructorCounts.values()].sort((a, b) => b.count - a.count).slice(0, 8);
+const instructorImages = new Map<string, string>();
+for (const ins of topInstructors) {
+  const img = await getInstructorImage(ins.slug);
+  if (img) instructorImages.set(ins.slug, img);
+}
 
 const discountPcts = allDeals
   .filter((d): d is typeof d & { price: number; originalPrice: number } => typeof d.price === "number" && typeof d.originalPrice === "number" && d.originalPrice > d.price && d.price > 0)
   .map((d) => Math.round(100 - (d.price / d.originalPrice) * 100));
 const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 95;
+const avgDiscount = discountPcts.length ? Math.round(discountPcts.reduce((a, b) => a + b, 0) / discountPcts.length) : 0;
 const liveCount = activeDeals.length;
+const totalCount = allDeals.length;
+const uniqueInstructors = new Set(allDeals.map((d) => (d.instructor || "").trim()).filter(Boolean)).size;
 
-const cat90Off: Record<string, number> = {};
-for (const d of allDeals) {
-  const c = normName(d.category) || "Other";
-  if (typeof d.price === "number" && typeof d.originalPrice === "number" && d.originalPrice > d.price && d.price > 0) {
-    if (Math.round(100 - (d.price / d.originalPrice) * 100) >= 90) cat90Off[c] = (cat90Off[c] || 0) + 1;
-  }
-}
-
-
-
+const spotlight = [...sortedDeals].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))[0];
 function clean(s: string) { return String(s || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;|&#8217;/g, "'").replace(/\s{2,}/g, " ").trim(); }
-
-function timeAgo(d?: string | Date): string {
-  if (!d) return "now";
-  const t = typeof d === "string" ? new Date(d).getTime() : d.getTime();
-  if (isNaN(t)) return "now";
-  const m = Math.floor(Math.max(0, Date.now() - t) / 60000);
-  if (m < 1) return "now";
-  if (m < 60) return m + "m ago";
-  const h = Math.floor(m / 60);
-  if (h < 24) return h + "h ago";
-  return Math.floor(h / 24) + "d ago";
+function pctOf(d: any) {
+  if (typeof d?.price === "number" && typeof d?.originalPrice === "number" && d.originalPrice > d.price && d.price > 0) {
+    return Math.round(100 - (d.price / d.originalPrice) * 100);
+  }
+  return 0;
 }
 
 const faqs = [
-  { q: "Does it cost anything to use CoursesWyn?", a: "No. CoursesWyn is completely free to use — no signup, no account, no credit card. Every coupon we list gets you the course at a heavily discounted price, often up to " + maxDiscountPct + "% off. You only need a free Udemy account to enroll." },
-  { q: "How frequently are new deals added?", a: "New coupons are added throughout the day as soon as they go live on Udemy. We recommend checking back daily or visiting the latest deals page to catch fresh discounts before they expire." },
-  { q: "What happens if a coupon expires before I enroll?", a: "Coupons have limited redemptions and fixed expiry dates. If a coupon expires, the course returns to full price. We remove expired deals from our listings daily — just check back for new discounts in the same category." },
-  { q: "Do discounted courses include a certificate?", a: "Yes. Enrolling through a CoursesWyn coupon gives you the same certificate of completion as a full-price student — plus lifetime access to materials, future updates, and instructor Q&A. Nothing is held back." },
-  { q: "Can I watch discounted courses on my phone?", a: "Absolutely. Any course you claim through a CoursesWyn coupon is fully accessible on the Udemy mobile app (iOS and Android). You can stream or download lectures for offline learning." },
-  { q: "How does CoursesWyn pick which courses to list?", a: "We prioritize courses with strong ratings, reputable instructors, and current curriculum. Our automated pipeline checks every deal against quality signals (rating, reviews, instructor history) before publishing — so a big discount doesn't mean low quality." }
+  { q: "Is CoursesWyn free to use?", a: "Yes — browsing CoursesWyn costs nothing and needs no account. You only need a free Udemy account when you decide to enroll, where discounts of up to " + maxDiscountPct + "% are applied at checkout." },
+  { q: "How fresh are the coupons?", a: "Our pipeline re-checks listings around the clock and pulls dead codes fast. The freshest batch is labelled by recency, and the count from the last 24 hours is shown right on this page." },
+  { q: "What if a code stops working?", a: "Instructor codes carry redemption caps and expiry dates. If one runs out, the price snaps back to list — pick a sibling deal in the same category or come back tomorrow for the next batch." },
+  { q: "Do I still get a certificate?", a: "Yes. A discounted enrollment carries the same certificate, lifetime access, updates and instructor Q&A as a full-price seat." },
+  { q: "Can I learn on my phone?", a: "Yes. Every claimed course works in the Udemy iOS and Android apps, including offline downloads for commutes and flights." },
+  { q: "How do you choose what to list?", a: "We rank candidates by rating depth, instructor track record and curriculum freshness before they go live — a steep cut alone is never enough to get listed." }
 ];
 
-const pageTitle = `Udemy Coupons & Discounts ${currentYear} — Save Up to ${maxDiscountPct}% | Verified Daily | CoursesWyn`;
-const pageDescription = `Save up to ${maxDiscountPct}% on Udemy courses with verified coupons. Daily-updated discount codes for programming, design, business & more — every deal checked at checkout.`;
+const pageTitle = `CoursesWyn — Verified Udemy Coupons Up to ${maxDiscountPct}% Off (Checked Daily)`;
+const pageDescription = `Start at CoursesWyn: hand-picked verified Udemy coupons up to ${maxDiscountPct}% off for ${currentMonth} ${currentYear}. Browse today's top markdowns, top-rated picks and categories — every code re-checked daily.`;
 
 const jsonLd = {
   "@context": "https://schema.org", "@graph": [
     { "@type": "WebSite", "@id": "https://courseswyn.com/#website", "url": "https://courseswyn.com", "name": "CoursesWyn", "description": pageDescription, "inLanguage": "en-US", "publisher": { "@id": "https://courseswyn.com/#organization" }, "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://courseswyn.com/search?q={search_term_string}" }, "query-input": "required name=search_term_string" } },
-    { "@type": "Organization", "@id": "https://courseswyn.com/#organization", "name": "CoursesWyn", "url": "https://courseswyn.com", "logo": { "@type": "ImageObject", "url": "https://courseswyn.com/logo.svg", "width": 200, "height": 60 }, "sameAs": ["https://x.com/CoursesWyn", "https://www.facebook.com/CoursesWyn", "https://medium.com/@coursewyn"], "description": `Verified working Udemy coupon and discount directory with up to ${maxDiscountPct}% off codes, updated daily.` },
-    { "@type": "WebPage", "@id": "https://courseswyn.com/#webpage", "url": "https://courseswyn.com", "name": pageTitle, "description": pageDescription, "author": { "@type": "Person", "name": "Andrew Derek", "url": "https://courseswyn.com/about" }, "isPartOf": { "@id": "https://courseswyn.com/#website" }, "mainEntityOfPage": { "@type": "WebPage", "@id": "https://courseswyn.com/#webpage" }, "dateModified": toISODateWIB(new Date()), "datePublished": toISODateWIB(new Date()), "inLanguage": "en-US", "about": { "@id": "https://courseswyn.com/#organization" }, "primaryImageOfPage": { "@type": "ImageObject", "url": "https://courseswyn.com/assets/images/og-default.svg" }, "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["h1", ".rd2-sub", ".hp-faq-q", ".hp-faq-a"] } },
+    { "@type": "Organization", "@id": "https://courseswyn.com/#organization", "name": "CoursesWyn", "url": "https://courseswyn.com", "logo": { "@type": "ImageObject", "url": "https://courseswyn.com/logo.svg", "width": 200, "height": 60 }, "sameAs": ["https://x.com/CoursesWyn", "https://www.facebook.com/CoursesWyn", "https://medium.com/@coursewyn"], "description": `Verified Udemy coupons with savings up to ${maxDiscountPct}%, refreshed daily.` },
+    { "@type": "WebPage", "@id": "https://courseswyn.com/#webpage", "url": "https://courseswyn.com", "name": pageTitle, "description": pageDescription, "author": { "@type": "Person", "name": "Andrew Derek", "url": "https://courseswyn.com/about" }, "isPartOf": { "@id": "https://courseswyn.com/#website" }, "dateModified": toISODateWIB(new Date()), "datePublished": toISODateWIB(new Date()), "inLanguage": "en-US" },
     { "@type": "BreadcrumbList", "itemListElement": [{ "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" }] },
-    {
-      "@type": "ItemList", "numberOfItems": featuredDeals.length, "itemListElement": featuredDeals.slice(0, 10).map((d, i) => ({
-        "@type": "ListItem", "position": i + 1, "item": {
-          "@type": "Course", "name": clean(d.title), "url": "https://courseswyn.com/coupon/" + d.slug,
-          "description": clean(d.description), "provider": { "@type": "Organization", "name": d.provider || "Udemy", "sameAs": "https://www.udemy.com" },
-          "offers": { "@type": "Offer", "price": d.price && d.price > 0 ? d.price : (d.originalPrice || 0), "priceCurrency": "USD", "availability": "https://schema.org/InStock", "url": "https://courseswyn.com/coupon/" + d.slug }
-        }
-      }))
-    },
+    { "@type": "ItemList", "numberOfItems": latestSix.length, "itemListElement": latestSix.slice(0, 10).map((d, i) => ({ "@type": "ListItem", "position": i + 1, "item": { "@type": "Course", "name": clean(d.title), "url": "https://courseswyn.com/coupon/" + d.slug, "description": clean(d.description), "provider": { "@type": "Organization", "name": d.provider || "Udemy", "sameAs": "https://www.udemy.com" }, "offers": { "@type": "Offer", "price": d.price && d.price > 0 ? d.price : (d.originalPrice || 0), "priceCurrency": "USD", "availability": "https://schema.org/InStock", "url": "https://courseswyn.com/coupon/" + d.slug } } })) },
+    { "@type": "ItemList", "name": "Deepest verified Udemy discounts", "numberOfItems": deepCuts.length, "itemListElement": deepCuts.map((d, i) => ({ "@type": "ListItem", "position": i + 1, "item": { "@type": "Course", "name": clean(d.title), "url": "https://courseswyn.com/coupon/" + d.slug, "provider": { "@type": "Organization", "name": "Udemy", "sameAs": "https://www.udemy.com" }, "offers": { "@type": "Offer", "price": d.price && d.price > 0 ? d.price : (d.originalPrice || 0), "priceCurrency": "USD", "availability": "https://schema.org/InStock", "url": "https://courseswyn.com/coupon/" + d.slug } } })) },
     { "@type": "FAQPage", "mainEntity": faqs.map(f => ({ "@type": "Question", "name": f.q, "acceptedAnswer": { "@type": "Answer", "text": f.a } })) }
   ]
 };
 
 const heroChips = [
-  { name: "Python", q: "Python", icon: '<path d="M13 2L4 13h5l-2 9 9-11h-5l2-9z" />' },
-  { name: "ChatGPT", q: "ChatGPT", icon: '<circle cx="12" cy="12" r="3" /><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3" />' },
-  { name: "AWS", q: "AWS", icon: '<path d="M6 6L3 12l3 6M18 6l3 6-3 6M13 4l-2 16" />' },
-  { name: "Excel", q: "Excel", icon: '<path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5zm5 3v8m3-8l6 8m0-8l-6 8" />' },
-  { name: "React", q: "React", icon: '<circle cx="12" cy="12" r="2" /><ellipse cx="12" cy="12" rx="10" ry="4.5" /><ellipse cx="12" cy="12" rx="10" ry="4.5" transform="rotate(60 12 12)" /><ellipse cx="12" cy="12" rx="10" ry="4.5" transform="rotate(-60 12 12)" />' },
-  { name: "Machine Learning", q: "Machine Learning", icon: '<path d="M12 2a10 10 0 1 0 10 10M12 2v20M2 12h20" />' }
+  { name: "Python", q: "Python" },
+  { name: "Web Dev", q: "Web development" },
+  { name: "AWS", q: "AWS" },
+  { name: "Excel", q: "Excel" },
+  { name: "Design", q: "Design" },
+  { name: "Business", q: "Business" },
 ];
 const typewriterWords = [
-  "Search for discounted Udemy courses...",
-  `${last24h} new deals added in last 24 hours`,
-  `${last7d} new deals added in last 7 days`,
-  'Try: "Python programming", "Web design", "Business"',
-  `Over ${liveCount.toLocaleString()} verified coupons live!`
+  "Search discounted Udemy courses...",
+  `${last24h} fresh finds in the last 24 hours`,
+  'Try "Python", "Excel" or "AWS"',
+  `Over ${totalCount.toLocaleString()} coupons tracked`,
 ];
 const typewriterJson = JSON.stringify(typewriterWords);
+
+const whyItems = [
+  { t: "Keep more of your budget", d: "List prices on Udemy climb past $100 fast. Our tracked codes routinely cut 80–95%, so a month of serious upskilling can cost less than lunch." },
+  { t: "Browse first, sign up never", d: "No CoursesWyn account, no newsletter hostage-taking. Open the directory, filter by what you want to learn, and only sign in on Udemy when you enroll." },
+  { t: "Skills employers pay for", d: "We overweight IT, development, data, business and design — the categories hiring managers actually screen for — instead of filler catalog padding." },
+];
+const trustItems = [
+  { t: "Re-checked at checkout", d: "Listings pass an automated pass plus a final check when you click through, so the price you see is the price Udemy shows." },
+  { t: "Quality gate before price", d: "Ratings, review depth, instructor history and syllabus freshness decide what gets published — not how big the percentage looks." },
+  { t: "Dead codes get buried", d: "Expired or capped-out coupons are pruned on a loop instead of lingering for months to waste your evening." },
+  { t: "Same seat, smaller bill", d: "Discounted seats include the identical certificate, lifetime access, downloads and Q&A as full-price enrollments." },
+  { t: "No CoursesWyn paywall", d: "Every filter, every category, every code is open. There is no premium tier holding the good stuff back." },
+  { t: "Instructor-sourced supply", d: "A large share of codes comes straight from creators promoting launches and seasonal pushes — legitimate supply, not scraped guesses." },
+];
 ---
 
 <Layout title={pageTitle} description={pageDescription} canonical="https://courseswyn.com">
@@ -113,556 +179,393 @@ const typewriterJson = JSON.stringify(typewriterWords);
   <meta property="og:title" content={pageTitle} slot="head" />
   <meta property="og:description" content={pageDescription} slot="head" />
   <meta property="og:image" content="/assets/images/og-default.svg" slot="head" />
-  <meta property="og:image:secure_url" content="https://courseswyn.com/assets/images/og-default.svg" slot="head" />
-  <meta property="og:image:type" content="image/svg+xml" slot="head" />
-  <meta property="og:image:width" content="1200" slot="head" />
-  <meta property="og:image:height" content="630" slot="head" />
-  <meta property="og:image:alt" content="CoursesWyn - Udemy Coupons & Discounts" slot="head" />
   <meta property="og:site_name" content="CoursesWyn" slot="head" />
   <meta property="og:locale" content="en_US" slot="head" />
   <meta name="twitter:card" content="summary_large_image" slot="head" />
-  <meta name="twitter:url" content="https://courseswyn.com" slot="head" />
   <meta name="twitter:title" content={pageTitle} slot="head" />
   <meta name="twitter:description" content={pageDescription} slot="head" />
-  <meta name="twitter:image" content="/assets/images/og-default.svg" slot="head" />
-  <meta name="twitter:image:alt" content="CoursesWyn - Udemy Coupons & Discounts" slot="head" />
   <meta name="twitter:site" content="@CoursesWyn" slot="head" />
-  <meta name="keywords" content="udemy coupon code, udemy discount, verified udemy coupons, free udemy courses, udemy coupon, udemy discount code, learn udemy, online course discount" slot="head" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" slot="head" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin slot="head" />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" slot="head" />
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
-  <style is:global>
-    :root {
-      --hp-ink: #12203A;
-      --hp-ink2: #1B2E52;
-      --hp-paper: #F5F1E6;
-      --hp-paper2: #EDE7D6;
-      --hp-bg: #12203A;
-      --hp-bg2: #EDE7D6;
-      --hp-line: #D8D0BC;
-      --hp-muted: #5B564C;
-      --hp-ink-text: #12203A;
-      --hp-graphite: #2B2B28;
-      --hp-brand: #1F7A4D;
-      --hp-green: #1F7A4D;
-      --hp-green-bg: #E4F1E9;
-      --hp-red: #C13B2E;
-      --hp-red-bg: #F7E7E4;
-      --hp-gold: #B8901F;
-      --hp-gold-bg: #F5EDD8;
-      --font-display: 'Space Grotesk', Inter, ui-sans-serif, system-ui, sans-serif;
-      --font-mono: 'IBM Plex Mono', Inter, Consolas, 'Courier New', monospace;
-    }
-    .rd2-home {
-      background: var(--bg);
-      color: var(--hp-graphite);
-      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-      padding-bottom: 60px;
-    }
-    .hp-wrap { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+<style>
+  .section-wrapper { width: 100%; padding: 3.5rem 1rem; }
+  .container { max-width: 1200px; margin: 0 auto; width: 100%; }
+  .prose-section h2 { font-size: clamp(1.4rem, 2.5vw, 1.8rem); font-weight: 700; color: var(--text); margin-bottom: 1rem; }
+  .prose-section h3 { font-size: 1.15rem; font-weight: 600; color: var(--text); margin: 1.5rem 0 0.5rem; }
+  .prose-section p { color: var(--muted); line-height: 1.75; font-size: 1rem; margin-bottom: 1rem; }
+  .prose-section a { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
+  .community-btn:hover { border-color: var(--brand) !important; background: var(--brand) !important; color: #FFFFFF !important; transform: translateY(-2px); }
+  @media (max-width: 768px) { h1 { font-size: 2.4rem !important; } .section-wrapper { padding: 2.5rem 1rem; } .featured-grid { grid-template-columns: 1fr !important; } .stat-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+  html { scroll-behavior: smooth; }
+</style>
 
-    @keyframes blip { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
-    @media (prefers-reduced-motion: reduce) { .hp-eyebrow .blip { animation: none; } }
+  <!-- 1. HERO -->
+  <section class="hero" aria-label="Hero — Udemy coupon codes">
+    <div class="container">
+      <div class="hero-content anim-up">
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 1rem", borderRadius: "9999px", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", background: "var(--brand-soft)", color: "var(--brand)", border: "1px solid rgba(11,122,85,0.3)", marginBottom: "1rem" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          {totalCount.toLocaleString()} verified coupons tracked
+        </div>
+        <h1>
+          <span style="display:block">Verified Udemy Coupons</span>
+          <span class="hero-gradient-text" style="display:block;font-size:clamp(2.5rem,6vw,4.5rem)">{currentMonth} {currentYear}</span>
+          <span style="display:block">Hand-Picked Daily by CoursesWyn</span>
+        </h1>
+        <p>Today's top verified Udemy coupons and discount codes for {currentMonth} {currentYear} — up to {maxDiscountPct}% off development, IT, business, design and data. Open the <a href="/udemy-coupon-code" style={{ color: "var(--brand)", fontWeight: 600 }}>full coupon catalog</a> or claim a pick below.</p>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "2rem" }}>
+          <form action="/search" method="GET" role="search" aria-label="Search discounted Udemy courses" style={{ position: "relative", width: "100%", maxWidth: "700px" }}>
+            <div style={{ display: "flex", alignItems: "center", borderRadius: "9999px", border: "2px solid var(--border)", padding: "0.25rem 0.25rem 0.25rem 1.25rem", boxShadow: "0 8px 32px rgba(0,0,0,0.15)", height: "56px", background: "var(--card)" }}>
+              <svg style={{ width: "1.2rem", height: "1.2rem", flexShrink: 0, color: "#9ca3af" }} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <input type="search" name="q" id="hpSearchInput" data-typewriter={typewriterJson} style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "var(--text)", fontSize: "0.95rem", height: "100%", fontWeight: 500, padding: "0 0.75rem" }} placeholder="Try Python, Excel, AWS..." autocomplete="off" aria-label="Search discounted courses" />
+              <button type="submit" class="btn btn-primary" style={{ borderRadius: "9999px", padding: "0.6rem 1.5rem", fontSize: "0.9rem" }}>Find deals</button>
+            </div>
+          </form>
+        </div>
+        <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "0.5rem" }}>{totalCount.toLocaleString()} coupons &middot; up to {maxDiscountPct}% off &middot; {uniqueInstructors.toLocaleString()} instructors tracked</p>
+        <div class="hero-cta">
+          <a href="/udemy-coupon-code" class="btn btn-primary btn-lg" style={{ borderRadius: "999px", padding: "1rem 2.5rem", fontSize: "1.05rem" }}>Explore today's drops</a>
+          <a href="/how-to-redeem-coupon" class="btn btn-ghost btn-lg" style={{ borderRadius: "999px", padding: "1rem 2.5rem", color: "var(--brand)", borderColor: "var(--brand)" }}>How claiming works</a>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "center", marginTop: "22px" }}>
+          {heroChips.map((c) => (<a href={"/search?q=" + encodeURIComponent(c.q)} class="pill">{c.name}</a>))}
+        </div>
+      </div>
+    </div>
+  </section>
 
-    /* ===== HERO ===== */
-    .hp-hero { position: relative; background: var(--hp-paper); border: 1px solid var(--hp-line); border-radius: 22px; padding: 46px 40px 34px; margin-top: 30px; text-align: center; box-shadow: 0 24px 48px -28px rgba(15, 23, 42, 0.28); }
-    .hp-hero::before, .hp-hero::after { content: ""; position: absolute; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; background: var(--bg); border: 1px solid var(--hp-line); border-radius: 50%; }
-    .hp-hero::before { left: -13px; } .hp-hero::after { right: -13px; }
-    .hp-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.71875rem; font-weight: 500; color: var(--hp-green); background: var(--hp-green-bg); border: 1px solid rgba(22, 163, 74, 0.25); border-radius: 999px; padding: 6px 13px; margin-bottom: 18px; }
-    .hp-eyebrow .blip { width: 6px; height: 6px; border-radius: 50%; background: var(--hp-green); animation: blip 1.6s infinite; }
-    .rd2-home h1 { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; line-height: 1.12; letter-spacing: -0.02em; margin: 0 auto 10px; max-width: 760px; color: var(--hp-ink); }
-    .rd2-home h1 span { color: var(--hp-ink); -webkit-text-fill-color: var(--hp-ink); }
-    .rd2-hero-claim { font-size: clamp(1.6rem, 3vw, 2rem); font-weight: 800; color: var(--hp-ink); margin: 0 auto 12px; line-height: 1.3; letter-spacing: -0.01em; }
-    .rd2-sub { color: var(--hp-muted); font-size: 0.98rem; line-height: 1.7; margin: 0 auto 22px; max-width: 620px; }
-    .hp-search { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--hp-line); border-radius: 12px; padding: 0 16px; height: 54px; max-width: 520px; margin: 0 auto 8px; box-shadow: 0 8px 28px -18px rgba(18, 32, 58, 0.4); transition: border-color 0.2s, box-shadow 0.2s; }
-    .hp-search:focus-within { border-color: var(--hp-brand); box-shadow: 0 8px 32px -14px rgba(31, 122, 77, 0.4); }
-    .hp-search svg { width: 20px; height: 20px; color: var(--hp-muted); flex-shrink: 0; }
-    .hp-search input { flex: 1; background: transparent; border: none; outline: none; color: var(--hp-ink-text); font-size: 0.95rem; font-family: inherit; }
-    .hp-search kbd { color: var(--hp-muted); font-size: 0.72rem; font-family: inherit; border: 1px solid var(--hp-line); border-radius: 6px; padding: 3px 8px; white-space: nowrap; }
-    .hp-ctas { display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 20px; }
-    .rd2-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-width: 200px; padding: 13px 24px; border-radius: 10px; font-size: 1rem; font-weight: 600; text-decoration: none; transition: all 0.2s ease; }
-    .rd2-btn.contained { background: var(--hp-ink); color: #fff; box-shadow: 0 10px 24px rgba(18, 32, 58, 0.4); }
-    .rd2-btn.contained:hover { background: var(--hp-ink2); transform: translateY(-1px); }
-    .rd2-btn.outlined { background: transparent; color: var(--hp-ink2); border: 1px solid var(--hp-ink2); }
-    .rd2-btn.outlined:hover { background: var(--hp-ink2); color: #fff; }
-    .rd2-trust { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; justify-content: center; margin-top: 20px; }
-    .rd2-trust span { display: inline-flex; align-items: center; gap: 7px; color: var(--hp-muted); font-size: 0.82rem; font-weight: 600; }
-    .rd2-trust svg { width: 16px; height: 16px; color: var(--hp-brand); flex-shrink: 0; }
-    .rd2-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 22px; }
-    .rd2-chip { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 10px; background: var(--hp-paper2); border: 1px solid var(--hp-line); color: var(--hp-ink-text); text-decoration: none; transition: all 0.2s; }
-    .rd2-chip:hover { background: var(--hp-paper); border-color: var(--hp-brand); box-shadow: 0 8px 22px -12px rgba(18, 32, 58, 0.45); transform: translateY(-2px); }
-    .rd2-chip svg { width: 20px; height: 20px; stroke: var(--hp-brand); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .rd2-chip span { font-size: 0.78rem; font-weight: 600; }
-    .hp-ledger { display: flex; margin-top: 26px; background: var(--hp-bg2); border: 1px solid var(--hp-line); border-radius: 14px; overflow: hidden; flex-wrap: wrap; }
-    .hp-ledger-cell { flex: 1 1 150px; padding: 16px 18px; border-right: 1px solid var(--hp-line); }
-    .hp-ledger-cell:last-child { border-right: none; }
-    .hp-ledger-label { font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: .07em; text-transform: uppercase; color: var(--hp-muted); margin-bottom: 4px; }
-    .hp-ledger-value { font-family: var(--font-display); font-weight: 700; font-size: 1.375rem; color: var(--hp-ink); }
+  <!-- STATS -->
+  <section style={{ paddingBottom: "2rem" }}>
+    <div class="container">
+      <div class="stat-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+        <div class="stat-box"><div class="stat-icon"><span class="stat-value">{totalCount.toLocaleString()}</span></div><div class="stat-label">Total coupons</div></div>
+        <div class="stat-box"><div class="stat-icon"><span class="stat-value">{last24h.toLocaleString()}</span></div><div class="stat-label">Fresh in 24h</div></div>
+        <div class="stat-box"><div class="stat-icon"><span class="stat-value">{uniqueInstructors.toLocaleString()}</span></div><div class="stat-label">Instructors covered</div></div>
+        <div class="stat-box"><div class="stat-icon"><span class="stat-value">{maxDiscountPct}%</span></div><div class="stat-label">Biggest cut</div></div>
+      </div>
+    </div>
+  </section>
 
-    /* ===== SECTION HEADINGS ===== */
-    .hp-sec-heading { font-family: var(--font-display); font-weight: 700; font-size: 1.375rem; color: var(--hp-ink); margin: 52px 0 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-    .hp-sec-heading .tag { font-family: var(--font-mono); font-size: 0.65625rem; font-weight: 500; color: var(--hp-muted); border: 1px solid var(--hp-line); padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; }
-    .hp-sec-desc { font-size: 0.84375rem; color: var(--hp-muted); margin: 0 0 18px; max-width: 680px; line-height: 1.6; }
-    .hp-card { background: #fff; border: 1px solid var(--hp-line); border-radius: 16px; padding: 26px; box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.16); }
+  <!-- TRENDING UDEMY TOPICS -->
+  <section class="section" aria-label="Trending Udemy course topics" style="padding-top:0;padding-bottom:0">
+    <div class="container">
+      <span class="section-title">Trending now</span>
+      <h2 class="section-heading" style={{ marginBottom: "0.25rem" }}>Trending <span style={{ color: "var(--brand)" }}>Udemy course topics</span></h2>
+      <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.5, margin: "0 0 1rem", maxWidth: "560px" }}>The most stocked topics in our verified Udemy coupon catalog — ranked by live coupon count.</p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+        {trendingSkills.map((t) => (<a href={"/search?q=" + encodeURIComponent(t.name)} class="pill" title={"Udemy coupons for " + t.name}>{t.name} ({t.count})</a>))}
+      </div>
+    </div>
+  </section>
 
-    /* ===== VERIFICATION FLOW ===== */
-    .hp-vflow { display: grid; grid-template-columns: 1fr; gap: 0; counter-reset: hvf; }
-    @media (min-width: 900px) { .hp-vflow { grid-template-columns: repeat(5, 1fr); } }
-    .hp-vf { padding: 16px 0; border-top: 1px dotted var(--hp-line); position: relative; }
-    .hp-vf:first-child { border-top: none; }
-    @media (min-width: 900px) {
-      .hp-vf { border-top: none; border-left: 1px dotted var(--hp-line); padding: 2px 16px; }
-      .hp-vf:first-child { border-left: none; padding-left: 0; }
-    }
-    .hp-vf-num { counter-increment: hvf; font-family: var(--font-mono); font-weight: 600; font-size: 0.6875rem; color: #fff; background: var(--hp-ink); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 9px; }
-    .hp-vf-num::before { content: counter(hvf); }
-    .hp-vf-title { font-weight: 700; font-size: 0.84375rem; color: var(--hp-ink); margin-bottom: 4px; }
-    .hp-vf-desc { font-size: 0.75rem; color: var(--hp-muted); line-height: 1.55; }
-    .hp-vf-status { display: inline-block; margin-top: 8px; font-family: var(--font-mono); font-size: 0.59375rem; font-weight: 600; color: var(--hp-green); background: var(--hp-green-bg); border-radius: 5px; padding: 2px 8px; }
-    .hp-more-link { display: inline-block; margin-top: 14px; font-family: var(--font-mono); font-size: 0.71875rem; font-weight: 600; color: var(--hp-brand); text-decoration: none; }
-    .hp-more-link:hover { text-decoration: underline; }
-
-    /* ===== CATEGORY BAR + DEAL TABLE ===== */
-    .hp-catbar { position: sticky; top: 0; z-index: 40; margin-top: 16px; background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(6px); border: 1px solid var(--hp-line); border-radius: 12px; padding: 9px 10px; display: flex; gap: 6px; overflow-x: auto; }
-    .hp-catbar a { flex: 0 0 auto; font-family: var(--font-mono); font-size: 0.71875rem; font-weight: 500; color: var(--hp-muted); padding: 7px 13px; border-radius: 8px; white-space: nowrap; text-decoration: none; }
-    .hp-catbar a.active { background: var(--hp-brand); color: #fff; }
-    .hp-catbar a:hover:not(.active) { background: var(--hp-paper2); color: var(--hp-ink); }
-    .hp-table-wrap { background: #fff; border: 1px solid var(--hp-line); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.16); margin-top: 16px; }
-    .hp-table tr:hover td { background: var(--hp-paper2); }
-    table.hp-table { width: 100%; border-collapse: collapse; }
-    .hp-table thead th { font-family: var(--font-mono); font-size: 0.625rem; text-transform: uppercase; letter-spacing: .05em; color: var(--hp-muted); text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--hp-line); background: var(--hp-bg2); }
-    .hp-table td { padding: 12px 14px; border-bottom: 1px dotted var(--hp-line); vertical-align: middle; }
-    .hp-table tr:last-child td { border-bottom: none; }
-    .hp-table tr:hover td { background: var(--hp-paper2); }
-    .hp-dt-course { display: flex; align-items: center; gap: 12px; }
-    .hp-dt-thumb { width: 52px; height: 38px; border-radius: 6px; flex: 0 0 auto; background-size: cover; background-position: center; background-color: var(--hp-ink2); }
-    .hp-dt-title { font-size: 0.8125rem; font-weight: 700; color: var(--hp-ink); line-height: 1.3; text-decoration: none; }
-    .hp-dt-title:hover { color: var(--hp-brand); }
-    .hp-dt-meta { font-family: var(--font-mono); font-size: 0.65625rem; color: var(--hp-muted); margin-top: 2px; }
-    .hp-dt-price { font-family: var(--font-mono); font-size: 0.78125rem; color: var(--hp-red); font-weight: 600; white-space: nowrap; }
-    .hp-dt-price s { color: var(--hp-muted); text-decoration: line-through; font-weight: 400; margin-left: 4px; }
-    .hp-dt-status { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 600; color: var(--hp-green); background: var(--hp-green-bg); padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
-    .hp-dt-checked { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--hp-muted); white-space: nowrap; }
-    @media (max-width: 700px) { .hp-col-hide { display: none; } }
-    .hp-deal-more { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px; background: var(--hp-bg2); border-top: 1px solid var(--hp-line); }
-    .hp-deal-more a { font-family: var(--font-mono); font-size: 0.78125rem; font-weight: 600; color: var(--hp-brand); text-decoration: none; }
-    .hp-deal-count { font-family: var(--font-mono); font-size: 0.71875rem; color: var(--hp-muted); }
-    .hp-table tr[data-primary="0"] { display: none; }
-    /* ===== DEAL GRID (coursecard grid design) — filter handled by JS, not CSS */
-    .hp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; margin-top: 16px; }
-    @media (max-width: 640px) { .hp-grid { grid-template-columns: 1fr; } }
-
-    /* ===== 3 STEPS ===== */
-    .hp-steps3 { display: grid; grid-template-columns: 1fr; gap: 0; }
-    @media (min-width: 760px) { .hp-steps3 { grid-template-columns: repeat(3, 1fr); gap: 18px; } }
-    .hp-step3 { display: flex; flex-direction: column; gap: 8px; padding: 16px 0; border-top: 1px dotted var(--hp-line); }
-    .hp-step3:first-child { border-top: none; }
-    @media (min-width: 760px) { .hp-step3 { border-top: none; border-left: 1px dotted var(--hp-line); padding: 0 0 0 18px; } .hp-step3:first-child { border-left: none; padding-left: 0; } }
-    .hp-step3-num { font-family: var(--font-mono); font-weight: 600; font-size: 0.75rem; color: #fff; background: var(--hp-ink); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .hp-step3-title { font-weight: 700; font-size: 0.90625rem; color: var(--hp-ink); }
-    .hp-step3-desc { font-size: 0.78125rem; color: var(--hp-muted); line-height: 1.6; }
-    .hp-step3-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-    .hp-step3-pill { font-family: var(--font-mono); font-size: 0.65625rem; background: var(--hp-bg2); border: 1px solid var(--hp-line); border-radius: 999px; padding: 4px 10px; color: var(--hp-muted); }
-
-    /* ===== TRUST COMPARISON ===== */
-    .hp-trust-grid { display: grid; grid-template-columns: 1fr; gap: 0; }
-    @media (min-width: 700px) { .hp-trust-grid { grid-template-columns: 1fr 1fr; } }
-    .hp-trust-col { padding: 26px; }
-    .hp-trust-col.other { border-bottom: 1px dashed var(--hp-line); }
-    @media (min-width: 700px) { .hp-trust-col.other { border-bottom: none; border-right: 1px dashed var(--hp-line); } }
-    .hp-trust-col-h { font-family: var(--font-mono); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: .06em; color: var(--hp-muted); margin-bottom: 14px; }
-    .hp-trust-step { display: flex; gap: 10px; padding: 9px 0; border-top: 1px dotted var(--hp-line); }
-    .hp-trust-step:first-child { border-top: none; }
-    .hp-trust-step .n { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; flex: 0 0 auto; width: 20px; }
-    .other .hp-trust-step .n { color: var(--hp-red); }
-    .hp-trust-col:not(.other) .hp-trust-step .n { color: var(--hp-green); }
-    .hp-trust-step-text { font-size: 0.78125rem; color: var(--hp-ink); line-height: 1.55; }
-
-    /* ===== VALUE PROPS ===== */
-    .hp-value-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
-    @media (min-width: 760px) { .hp-value-grid { grid-template-columns: repeat(2, 1fr); } }
-    .hp-value-card { background: #fff; border: 1px solid var(--hp-line); border-radius: 16px; padding: 26px; box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.16); }
-    .hp-value-badge { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: #fff; background: var(--hp-ink); border-radius: 10px; width: 44px; height: 44px; margin-bottom: 14px; }
-    .hp-value-title { font-family: var(--font-display); font-weight: 700; font-size: 0.96875rem; color: var(--hp-ink); margin-bottom: 10px; }
-    .hp-value-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 7px; }
-    .hp-value-list li { font-size: 0.78125rem; color: var(--hp-ink); padding-left: 20px; position: relative; }
-    .hp-value-list li::before { content: "✓"; position: absolute; left: 0; color: var(--hp-green); font-weight: 700; }
-
-    /* ===== CATEGORY GRID ===== */
-    .hp-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-    .hp-cat-box { background: #fff; border: 1px solid var(--hp-line); border-radius: 12px; padding: 16px; text-align: left; text-decoration: none; display: block; transition: all 0.2s; }
-    .hp-cat-box:hover { transform: translateY(-2px); box-shadow: 0 10px 28px -16px rgba(0, 0, 0, 0.3); }
-    .hp-cat-box-num { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: var(--hp-ink); }
-    .hp-cat-box-label { font-size: 0.75rem; color: var(--hp-muted); margin-top: 3px; font-weight: 600; }
-    .hp-cat-box-count { font-family: var(--font-mono); font-size: 0.65625rem; color: var(--hp-green); margin-top: 6px; font-weight: 500; }
-
-    /* ===== FAQ ===== */
-    .hp-faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-    @media (max-width: 768px) { .hp-faq-grid { grid-template-columns: 1fr; } }
-    .hp-faq-card { background: var(--hp-paper); border: 1px solid var(--hp-line); border-radius: 12px; padding: 1.1rem 1.15rem; }
-    .hp-faq-card:hover { border-color: #B9B29B; }
-    .hp-faq-q { font-size: 0.95rem; font-weight: 700; color: var(--hp-ink); margin: 0 0 0.4rem; line-height: 1.4; }
-    .hp-faq-a { font-size: 0.85rem; color: var(--hp-muted); line-height: 1.55; margin: 0; }
-
-    /* ===== FOOTER CTA ===== */
-    .hp-footer-cta { margin-top: 52px; background: #fff; border: 1px solid var(--hp-line); border-radius: 16px; padding: 32px; text-align: center; box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.16); }
-    .hp-footer-cta p { font-size: 0.78125rem; color: var(--hp-muted); margin: 10px 0 0; font-family: var(--font-mono); }
-
-    /* ===== PERSONAL PLAN CTA ===== */
-    .hp-plan { position: relative; margin-top: 52px; background: #fff; border: 1px solid var(--hp-line); border-radius: 16px; padding: 32px; box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.16); }
-    .hp-plan-inner { max-width: 720px; margin: 0 auto; text-align: center; }
-    .hp-plan-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--hp-green); background: var(--hp-green-bg); border: 1px solid rgba(22, 163, 74, 0.25); border-radius: 999px; padding: 6px 13px; margin-bottom: 14px; }
-    .hp-plan-badge svg { width: 14px; height: 14px; color: var(--hp-green); flex-shrink: 0; }
-    .hp-plan h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.5rem, 3vw, 2rem); color: var(--hp-ink); margin: 0 0 10px; line-height: 1.2; letter-spacing: -0.01em; }
-    .hp-plan h2 span { color: var(--hp-green); }
-    .hp-plan-desc { font-size: 0.875rem; line-height: 1.7; color: var(--hp-muted); margin: 0 auto 20px; max-width: 560px; }
-    .hp-plan-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 13px 26px; border-radius: 10px; font-size: 0.98rem; font-weight: 700; text-decoration: none; background: var(--hp-ink); color: #fff; box-shadow: 0 10px 24px rgba(18, 32, 58, 0.4); transition: all 0.2s ease; }
-    .hp-plan-btn:hover { background: var(--hp-ink2); transform: translateY(-1px); }
-    .hp-plan-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
-    .hp-plan-note { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center; margin-top: 14px; font-family: var(--font-mono); font-size: 0.65625rem; color: var(--hp-muted); }
-    .hp-plan-note span { display: inline-flex; align-items: center; gap: 6px; }
-    .hp-plan-note svg { width: 12px; height: 12px; color: var(--hp-green); flex-shrink: 0; }
-    /* Dark hero variant — high conversion */
-    .hp-plan-dark { background: #0F1D33; border-color: rgba(255,255,255,0.08); overflow: hidden; box-shadow: 0 24px 48px -20px rgba(15,23,42,0.65); }
-    .hp-plan-bg { position: absolute; inset: 0; background: radial-gradient(600px 300px at 20% 0%, rgba(164,53,240,0.18), transparent 60%), radial-gradient(700px 400px at 90% 100%, rgba(34,197,94,0.12), transparent 60%); pointer-events: none; }
-    .hp-plan-dark .hp-plan-inner { position: relative; }
-    .hp-plan-dark .hp-plan-badge { color: #FDE68A; background: rgba(245,158,11,0.14); border-color: rgba(245,158,11,0.35); }
-    .hp-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; animation: blip 1.4s infinite; display: inline-block; }
-    .hp-plan-dark h2 { color: #fff; } .hp-plan-dark h2 span { color: #FACC15; background: linear-gradient(90deg,#FACC15,#FDE68A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .hp-plan-dark .hp-plan-desc { color: #CBD5E1; } .hp-plan-dark .hp-plan-desc strong { color: #fff; }
-    .hp-plan-compare { display: flex; align-items: stretch; justify-content: center; gap: 0; margin: 0 auto 20px; max-width: 520px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; }
-    .hp-compare-col { flex: 1; padding: 16px 12px; text-align: center; }
-    .hp-compare-col.highlight { background: rgba(250,204,21,0.12); border-left: 1px solid rgba(250,204,21,0.25); }
-    .hp-compare-label { display: block; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: .06em; text-transform: uppercase; color: #94A3B8; margin-bottom: 6px; }
-    .hp-compare-col.highlight .hp-compare-label { color: #FDE68A; }
-    .hp-compare-price { display: block; font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: #fff; line-height: 1; }
-    .hp-compare-col.highlight .hp-compare-price { color: #FACC15; }
-    .hp-compare-price span { font-size: 0.95rem; font-weight: 600; color: #94A3B8; }
-    .hp-compare-sub { display: block; font-size: 0.71875rem; color: #94A3B8; margin-top: 4px; }
-    .hp-compare-vs { display: flex; align-items: center; justify-content: center; padding: 0 8px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; color: #64748B; background: rgba(255,255,255,0.04); border-left: 1px solid rgba(255,255,255,0.06); border-right: 1px solid rgba(255,255,255,0.06); }
-    .hp-plan-dark .hp-plan-btn { background: #FACC15; color: #0F1D33; box-shadow: 0 12px 28px -10px rgba(250,204,21,0.6); animation: hpPulse 2.2s infinite; }
-    .hp-plan-dark .hp-plan-btn:hover { background: #FDE047; transform: translateY(-2px); }
-    @keyframes hpPulse { 0% { box-shadow: 0 12px 28px -10px rgba(250,204,21,0.6), 0 0 0 0 rgba(250,204,21,0.4); } 70% { box-shadow: 0 12px 28px -10px rgba(250,204,21,0.6), 0 0 0 12px rgba(250,204,21,0); } 100% { box-shadow: 0 12px 28px -10px rgba(250,204,21,0.6), 0 0 0 0 rgba(250,204,21,0); } }
-    .hp-plan-trust { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; font-family: var(--font-mono); font-size: 0.6875rem; color: #94A3B8; }
-    .hp-plan-subnote { font-size: 0.75rem; color: #94A3B8; line-height: 1.6; margin: 14px 0 0; } .hp-plan-subnote a { color: #93C5FD; font-weight: 600; text-decoration: none; } .hp-plan-subnote a:hover { color: #BFDBFE; text-decoration: underline; }
-
-    @media (max-width: 700px) {
-      .hp-hero { padding: 34px 22px 26px; }
-      .hp-ledger-cell { flex: 1 1 50%; border-bottom: 1px solid var(--hp-line); }
-      .hp-ledger-cell:nth-child(2n) { border-right: none; }
-      .hp-ledger-cell:nth-last-child(-n+2) { border-bottom: none; }
-    }
-  </style>
-
-<div class="rd2-home">
-
-  <!-- HERO -->
-  <section class="hp-wrap" aria-label="Discounted Udemy courses hero">
-    <div class="hp-hero">
-      <span class="hp-eyebrow"><span class="blip"></span> {liveCount.toLocaleString()} coupons verified live right now</span>
-      <h1><span>Udemy Coupons</span> &amp; Discounts — Save Up to {maxDiscountPct}%</h1>
-      <h2 class="rd2-hero-claim">Verified Coupon Codes, Checked Daily</h2>
-      <p class="rd2-sub">Discover thousands of premium Udemy courses for less. From programming and design to business and marketing — learn anything for a fraction of the cost with verified coupon codes.</p>
-      <form action="/search" method="GET" role="search" aria-label="Search courses" class="hp-search" id="rd2Search">
-        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
-        <input type="search" name="q" placeholder="Search for discounted Udemy courses..." autocomplete="off" aria-label="Search courses" data-typewriter={typewriterJson} />
-        <kbd>? + K</kbd>
-      </form>
-      <div class="hp-ctas">
-        <a class="rd2-btn contained" href="/udemy-coupon-code">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5zm2 3v2h12V8H6zm0 4v2h8v-2H6zm0 4v2h12v-2H6z" /></svg>
-          Browse Courses
-        </a>
-        <a class="rd2-btn outlined" href="/categories">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9" /><path d="M12 7v5l3 3" /></svg>
-          Browse by Category
+  <!-- 2. LATEST DEALS -->
+  <section class="section" aria-label="Latest Udemy coupons and discounts" style="padding-top:2.5rem;padding-bottom:0">
+    <div class="container">
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "0.5rem", flexWrap: "wrap", gap: "0.5rem" }}>
+        <div>
+          <span class="section-title">Fresh drops</span>
+          <h2 class="section-heading" style={{ marginBottom: "0.25rem" }}>Latest <span style={{ color: "var(--brand)" }}>Udemy coupons</span></h2>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.5, margin: 0, maxWidth: "480px" }}>Newly verified Udemy coupon codes for {currentMonth}. Open any card to claim the discount on Udemy.</p>
+        </div>
+        <a href="/udemy-coupon-code" style={{ color: "#0B7A55", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.75rem 1.5rem", background: "rgba(11,122,85,0.1)", borderRadius: "12px", border: "1px solid rgba(11,122,85,0.3)" }}>
+          All {totalCount.toLocaleString()} coupons
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
         </a>
       </div>
-      <div class="rd2-trust">
-        <span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg> {liveCount.toLocaleString()}+ verified coupons</span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5"/></svg> Up to {maxDiscountPct}% off</span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Verified daily</span>
+      <div class="grid">
+        {latestSix.map((deal) => (<LedgerRow deal={deal} variant="grid" />))}
       </div>
-      <div class="rd2-chips">
-        {heroChips.map(c => (
-          <a class="rd2-chip" href={"/search?q=" + encodeURIComponent(c.q)}>
-            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={c.icon}></svg>
-            <span>{c.name}</span>
+    </div>
+  </section>
+
+  <!-- DEEPEST CUTS: 90%+ OFF UDEMY COURSES -->
+  <section class="section" aria-label="90 percent off Udemy courses" style="padding-top:2.5rem;padding-bottom:0">
+    <div class="container">
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "0.5rem", flexWrap: "wrap", gap: "0.5rem" }}>
+        <div>
+          <span class="section-title">Maximum savings</span>
+          <h2 class="section-heading" style={{ marginBottom: "0.25rem" }}>90% off <span style={{ color: "var(--brand)" }}>top-rated Udemy courses</span></h2>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.5, margin: 0, maxWidth: "480px" }}>{deepCutsCount.toLocaleString()} coupons cut 90% or more — below are the highest-rated ones, 4.5★ and up.</p>
+        </div>
+        <a href="/udemy-coupon-code" style={{ color: "#0B7A55", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.75rem 1.5rem", background: "rgba(11,122,85,0.1)", borderRadius: "12px", border: "1px solid rgba(11,122,85,0.3)" }}>
+          All {totalCount.toLocaleString()} Udemy coupons
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+        </a>
+      </div>
+      <div class="grid">
+        {deepCuts.map((deal) => (<LedgerRow deal={deal} variant="grid" />))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. SPOTLIGHT -->
+  {spotlight && (
+    <section class="section-wrapper" aria-label="Featured Udemy discount of the day">
+      <div class="container">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2.5rem", flexWrap: "wrap", gap: "1rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={{ width: "48px", height: "48px", background: "linear-gradient(135deg, #0B7A55 0%, #0B7A55 100%)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+            <div>
+              <h2 style={{ fontSize: "1.8rem", fontWeight: 800, marginBottom: "0.25rem", background: "linear-gradient(135deg, #0B7A55 0%, #0B7A55 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Featured Udemy coupon of the day</h2>
+              <div style={{ fontSize: "0.9rem", color: "var(--muted)" }}>Highest-rated verified Udemy discount in today's batch &middot; seats go quickly</div>
+            </div>
+          </div>
+          <a href="/popular" style={{ color: "#0B7A55", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.75rem 1.5rem", background: "rgba(11,122,85,0.1)", borderRadius: "12px", border: "1px solid rgba(11,122,85,0.3)" }}>More popular picks</a>
+        </div>
+        <div class="featured-grid" style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: "3rem", alignItems: "center" }}>
+          <div style={{ textAlign: "left" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "linear-gradient(135deg, #0B7A55 0%, #0B7A55 100%)", color: "#FFFFFF", padding: "0.4rem 1rem", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "1rem" }}>★ Best rating in today's batch</div>
+            <h3 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text)", marginBottom: "1rem", lineHeight: 1.2 }}><a href={"/coupon/" + spotlight.slug} style={{ color: "inherit", textDecoration: "none" }}>{clean(spotlight.title)}</a>{spotlight.instructor && <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--muted)", display: "block", marginTop: "0.5rem" }}>by {spotlight.instructor}</span>}</h3>
+            <p style={{ color: "var(--muted)", fontSize: "1.05rem", marginBottom: "1.75rem", lineHeight: 1.65 }}>{clean(spotlight.description)?.slice(0, 220) || "A standout course from the current verification batch — strong ratings, active instructor, and a working discount."}</p>
+            <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <span style={{ fontSize: "2rem", fontWeight: 800, color: "var(--brand)" }}>${Number(spotlight.price ?? 0).toFixed(2)}</span>
+                {Number(spotlight.originalPrice ?? 0) > Number(spotlight.price ?? 0) && (<><span style={{ textDecoration: "line-through", color: "var(--muted)", fontSize: "1.1rem" }}>${Number(spotlight.originalPrice).toFixed(2)}</span><span style={{ background: "#CF6F59", color: "white", padding: "0.2rem 0.6rem", borderRadius: "6px", fontSize: "0.85rem", fontWeight: 700 }}>-{pctOf(spotlight)}%</span></>)}
+              </div>
+              <a href={spotlight.url || ("/coupon/" + spotlight.slug)} target="_blank" rel="noopener noreferrer" style={{ padding: "0.9rem 1.75rem", background: "linear-gradient(135deg, #0B7A55 0%, #0B7A55 100%)", color: "#FFFFFF", textDecoration: "none", borderRadius: "12px", fontSize: "1rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>Claim this code</a>
+            </div>
+          </div>
+          <div style={{ position: "relative", borderRadius: "16px", overflow: "hidden", boxShadow: "0 20px 40px -8px rgba(11,122,85,0.2)" }}>
+            {spotlight.image ? (<img src={spotlight.image} alt={clean(spotlight.title)} width={400} height={300} loading="lazy" decoding="async" style={{ width: "100%", height: "300px", objectFit: "cover", display: "block" }} />) : (<div style={{ width: "100%", height: "300px", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--card)" }}>CoursesWyn</div>)}
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- 4. WHY COURSESWYN -->
+  <section class="section-wrapper" aria-label="Why learn with CoursesWyn">
+    <div class="container">
+      <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+        <h2 style={{ fontSize: "clamp(1.5rem, 3vw, 2.2rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>Why use CoursesWyn for <span style={{ color: "var(--brand)" }}>Udemy coupons?</span></h2>
+        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "500px", margin: "0 auto", lineHeight: 1.6 }}>Pay less for the same Udemy courses: verified coupon codes, no noise, certificate included.</p>
+      </div>
+      <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "1.5rem", justifyContent: "center" }}>
+        {whyItems.map((item) => (
+          <div style={{ background: "var(--card)", padding: "1.25rem 1.5rem", borderRadius: "16px", border: "1px solid var(--border)", display: "flex", alignItems: "flex-start", gap: "1rem", flex: "1 1 300px", maxWidth: "400px" }}>
+            <div style={{ width: "48px", height: "48px", background: "linear-gradient(135deg, #0B7A55 0%, #0B7A55 100%)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#FFFFFF", fontWeight: 800 }}>✓</div>
+            <div><h3 style={{ color: "var(--text)", fontSize: "1rem", fontWeight: 700, margin: "0 0 0.35rem 0", lineHeight: 1.3 }}>{item.t}</h3><p style={{ color: "var(--muted)", fontSize: "0.9rem", margin: 0, lineHeight: 1.5 }}>{item.d}</p></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. BY THE NUMBERS -->
+  <section class="section-wrapper" aria-label="CoursesWyn in numbers">
+    <div class="container">
+      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+        <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>Udemy coupon <span style={{ color: "var(--brand)" }}>statistics</span></h2>
+        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "650px", margin: "0 auto", lineHeight: 1.65 }}>Live Udemy discount data — these counters move every time the checker runs.</p>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem" }}>
+        {[["Total coupons", totalCount.toLocaleString(), "Tracked across every category"], ["Fresh in 24h", last24h.toLocaleString(), "Added or re-verified since yesterday"], ["Average saving", avgDiscount + "%", "Mean cut across priced deals"], ["Peak saving", maxDiscountPct + "%", "Deepest verified markdown live"]].map(([label, value, sub]) => (
+          <div style={{ background: "var(--card)", padding: "2rem 1.5rem", borderRadius: "16px", border: "1px solid rgba(11,122,85,0.15)", textAlign: "center" }}>
+            <div style={{ fontSize: "2.5rem", fontWeight: 700, color: "var(--brand)", marginBottom: "0.5rem" }}>{value}</div>
+            <div style={{ color: "var(--text)", fontSize: "1rem", fontWeight: 600, marginBottom: "0.25rem" }}>{label}</div>
+            <div style={{ color: "var(--muted)", fontSize: "0.85rem" }}>{sub}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. CATEGORIES -->
+  <section class="section" aria-label="Browse courses by category">
+    <div class="container">
+      <div style={{ textAlign: "center", maxWidth: "600px", margin: "0 auto 2.5rem" }}>
+        <span class="section-title">Udemy coupon categories</span>
+        <h2 class="section-heading">Udemy coupons <span style={{ color: "var(--brand)" }}>by category</span></h2>
+        <p style={{ color: "var(--text-secondary)", fontSize: "0.92rem", lineHeight: 1.6, margin: "0.5rem auto 0" }}>Eight stocked Udemy categories — pick your field and find the deepest verified coupon.</p>
+      </div>
+      <nav aria-label="Course categories"><div class="adv-cards">
+        {topCats.map((cat) => (
+          <a href={"/categories/" + cat.slug} title={"Browse " + cat.count + " " + cat.name + " courses"} class="adv-card">
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+              <div style={{ width: "44px", height: "44px", borderRadius: "10px", background: "linear-gradient(135deg,var(--brand),#0B7A55)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFFFFF", flexShrink: 0, fontWeight: 800 }}>{cat.name.charAt(0).toUpperCase()}</div>
+              <div><h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "var(--text)", lineHeight: 1.2 }}>{cat.name}</h3><p style={{ margin: "2px 0 0", fontSize: "0.82rem", color: "var(--brand)", fontWeight: 600 }}>{cat.count} coupons</p></div>
+            </div>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.55, margin: "0 0 12px" }}>{cat.blurb}</p>
+          </a>
+        ))}
+      </div></nav>
+      <div style={{ textAlign: "center", marginTop: "2rem" }}><a href="/categories" class="btn btn-ghost" style={{ borderRadius: "999px", padding: "0.75rem 2rem" }}>See every Udemy category</a></div>
+    </div>
+  </section>
+
+  <!-- TOP UDEMY INSTRUCTORS -->
+  <section class="section-wrapper" aria-label="Top Udemy instructors with active coupons">
+    <div class="container">
+      <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+        <span class="section-title">Udemy instructors</span>
+        <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>Top Udemy instructors <span style={{ color: "var(--brand)" }}>with active coupons</span></h2>
+        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "650px", margin: "0 auto", lineHeight: 1.65 }}>Creators with the most verified Udemy discounts live right now — ranked by active coupon count.</p>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
+        {topInstructors.map((ins) => (
+          <a href={"/instructor/" + ins.slug} title={"Udemy coupons by " + ins.name} class="adv-card" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {instructorImages.get(ins.slug) ? (
+              <img src={instructorImages.get(ins.slug)} alt={ins.name} width={88} height={88} loading="lazy" style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+            ) : (
+              <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "linear-gradient(135deg,var(--brand),#0B7A55)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFFFFF", flexShrink: 0, fontWeight: 800, fontSize: "1.1rem" }}>{ins.name.charAt(0).toUpperCase()}</div>
+            )}
+            <div><h3 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, color: "var(--text)", lineHeight: 1.3 }}>{ins.name}</h3><p style={{ margin: "2px 0 0", fontSize: "0.8rem", color: "var(--brand)", fontWeight: 600 }}>{ins.count} coupons</p></div>
           </a>
         ))}
       </div>
-      <div class="hp-ledger">
-        <div class="hp-ledger-cell"><div class="hp-ledger-label">Coupon catalog</div><div class="hp-ledger-value">{allDeals.length.toLocaleString()}</div></div>
-        <div class="hp-ledger-cell"><div class="hp-ledger-label">Live right now</div><div class="hp-ledger-value">{liveCount.toLocaleString()}</div></div>
-        <div class="hp-ledger-cell"><div class="hp-ledger-label">Added in last 24h</div><div class="hp-ledger-value">{last24h}</div></div>
-        <div class="hp-ledger-cell"><div class="hp-ledger-label">Max discount</div><div class="hp-ledger-value">-{maxDiscountPct}%</div></div>
+      <div style={{ textAlign: "center", marginTop: "2rem" }}><a href="/instructors" class="btn btn-ghost" style={{ borderRadius: "999px", padding: "0.75rem 2rem" }}>All Udemy instructors</a></div>
+    </div>
+  </section>
+
+  <!-- 7. LANGUAGES / TOPICS -->
+  <section class="section-wrapper" aria-label="Courses by language and topic">
+    <div class="container">
+      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+        <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>Learn in <span style={{ color: "var(--brand)" }}>your language</span></h2>
+        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "650px", margin: "0 auto", lineHeight: 1.65 }}>Most of the catalog is English-first with a growing Spanish shelf — or skip language entirely and browse by topic.</p>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
+        <a href="/search?q=English" class="adv-card" style={{ textAlign: "center", alignItems: "center" }}><h3>English catalog</h3><p>The full {totalCount.toLocaleString()}-strong directory, fully searchable.</p></a>
+        <a href="/search?q=Spanish" class="adv-card" style={{ textAlign: "center", alignItems: "center" }}><h3>Catálogo en español</h3><p>Descuentos verificados en cursos seleccionados en español.</p></a>
+        <a href="/topics" class="adv-card" style={{ textAlign: "center", alignItems: "center" }}><h3>Browse by topic</h3><p>Python, AWS, Excel, design and 400+ narrower trails.</p></a>
       </div>
     </div>
   </section>
 
-  <!-- HOW LIVE VERIFICATION WORKS -->
-  <section class="hp-wrap" aria-label="How live verification works">
-    <h2 class="hp-sec-heading">How live verification works <span class="tag">System process</span></h2>
-    <p class="hp-sec-desc">Every code on CoursesWyn passes through the same pipeline before you ever see it — and keeps getting re-checked after.</p>
-    <div class="hp-card">
-      <div class="hp-vflow">
-        <div class="hp-vf"><div class="hp-vf-num"></div><div class="hp-vf-title">Coupon discovered</div><div class="hp-vf-desc">Sourced from Udemy's affiliate program and direct instructor submissions.</div><span class="hp-vf-status">Indexed</span></div>
-        <div class="hp-vf"><div class="hp-vf-num"></div><div class="hp-vf-title">Continuous rechecks</div><div class="hp-vf-desc">Automated checks run on a fixed schedule; dead codes are pulled immediately.</div><span class="hp-vf-status">Queued</span></div>
-        <div class="hp-vf"><div class="hp-vf-num"></div><div class="hp-vf-title">You request access</div><div class="hp-vf-desc">Clicking "Claim Coupon" triggers one more fresh check before redirect.</div><span class="hp-vf-status">Queued</span></div>
-        <div class="hp-vf"><div class="hp-vf-num"></div><div class="hp-vf-title">Working coupon confirmed</div><div class="hp-vf-desc">The redemption link is only released once that final check passes.</div><span class="hp-vf-status">Queued</span></div>
-        <div class="hp-vf"><div class="hp-vf-num"></div><div class="hp-vf-title">Udemy opens automatically</div><div class="hp-vf-desc">You land on checkout with the code already applied — no manual entry.</div><span class="hp-vf-status">Queued</span></div>
+  <!-- 8. GUIDE PROSE -->
+  <section class="section-wrapper prose-section" aria-label="How Udemy discounts work">
+    <div class="container">
+      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+        <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>How Udemy <span style={{ color: "var(--brand)" }}>discounts actually work</span></h2>
+        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "650px", margin: "0 auto", lineHeight: 1.65 }}>Short version: instructors trade margin for momentum. Longer version below — or jump to our <a href="/udemy-coupons-guide">coupon guide</a>.</p>
       </div>
-      <a class="hp-more-link" href="/how-we-test-and-verify-udemy-coupons">How we test &amp; verify Udemy coupons →</a>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4rem", alignItems: "start" }}>
+        <div>
+          <h3>Where do these codes come from?</h3>
+          <p>Instructors generate coupon codes inside Udemy to push launches, seasonal sales and back-catalog titles. Each code carries its own expiry and redemption cap, which is why the same course can swing from $89 to $12 and back within days.</p>
+          <p>Claiming one is deliberately boring: open a CoursesWyn card, hit the claim link, and Udemy applies the code at checkout. The course then lives in your library permanently.</p>
+          <h3>Why would anyone discount 90%+?</h3>
+          <p>Volume beats margin early on. A flood of enrolled learners means more ratings, better search placement inside Udemy, and social proof the instructor reuses everywhere else. You get the cheap seat; they get the flywheel.</p>
+        </div>
+        <div>
+          <h3>How CoursesWyn keeps the list honest</h3>
+          <p>Every candidate goes through rating, review-depth and instructor-history checks before it surfaces here, then gets re-polled on a schedule. Worked yesterday is no guarantee for today — so stale entries are retired instead of left to rot.</p>
+          <ul style={{ color: "var(--muted)", lineHeight: 1.9, paddingLeft: "1.25rem", marginBottom: "1rem" }}>
+            <li>Discount math is recomputed from live price pairs</li>
+            <li>Thin, outdated or review-starved courses are filtered out</li>
+            <li>Recency is shown so you can triage what to grab first</li>
+          </ul>
+          <p>Prefer a path over a single course? Start with <a href="/topics">topics</a> for skills or <a href="/categories">categories</a> for departments.</p>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- LIVE COUPON FEED -->
-  <section class="hp-wrap" aria-label="Live coupon feed">
-    <h2 class="hp-sec-heading">Latest Verified Udemy Coupon Codes <span class="tag">Streaming from the verification database</span></h2>
-    <p class="hp-sec-desc">Not hand-picked examples — this feed reflects the live database. Prices and status update as codes are checked.</p>
-    <div class="hp-catbar">
-      <a class="active" href="/udemy-coupon-code" data-filter="all">All ({liveCount.toLocaleString()})</a>
-      {topCats.map((c) => <a href={"/categories/" + c.slug} data-filter={c.slug}>{c.name} ({c.count})</a>)}
+  <!-- 9. THREE WAYS TO SAVE (instead of broken /platforms links) -->
+  <section class="section-wrapper" aria-label="Three ways to save on CoursesWyn">
+    <div class="container">
+      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+        <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>Where to find <span style={{ color: "var(--brand)" }}>Udemy coupons</span> on CoursesWyn</h2>
+        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "700px", margin: "0 auto", lineHeight: 1.65 }}>Pick your hunting style — the same verification engine sits behind all three doors.</p>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
+        <a href="/udemy-coupon-code" class="adv-card"><h3>Full coupon directory →</h3><p>Every live code in one filterable grid. Best when you know roughly what you want and want the deepest cut available.</p></a>
+        <a href="/udemy-coupons-today" class="adv-card"><h3>Just landed today →</h3><p>Only the freshest verifications from the last rotation. Ideal for deal-hunters who check back daily.</p></a>
+        <a href="/udemy-coupons-guide" class="adv-card"><h3>Learn the playbook →</h3><p>How caps, expiries and seasonal pushes work — so you stop missing codes by hours instead of days.</p></a>
+      </div>
     </div>
-    <div class="hp-grid" id="hp-grid">
-      {poolDeals.map((deal) => {
-        const rowCat = slugifyCategory(normName(deal.category) || "other");
-        const rowPrimary = poolPrimary.has(String(deal.slug)) ? 1 : 0;
-        return (
-          <div class="hp-grid-item" data-cat={rowCat} data-primary={rowPrimary} style={rowPrimary === 0 ? "display:none" : undefined}>
-            <LedgerRow deal={deal} variant="grid" />
+  </section>
+
+  <!-- 10. TRUST -->
+  <section class="section-wrapper" aria-label="Why learners trust CoursesWyn">
+    <div class="container">
+      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+        <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>Built to be <span style={{ color: "var(--brand)" }}>boringly reliable</span></h2>
+        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "650px", margin: "0 auto", lineHeight: 1.65 }}>No mystery mechanics — just a directory that would rather show fewer working codes than many broken ones.</p>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
+        {trustItems.map((item) => (
+          <div style={{ background: "var(--card)", padding: "2rem", borderRadius: "20px", border: "1px solid rgba(11,122,85,0.15)", textAlign: "left" }}>
+            <h3 style={{ color: "var(--text)", fontSize: "1.2rem", marginBottom: "0.75rem", fontWeight: 700 }}>{item.t}</h3>
+            <p style={{ color: "var(--muted)", lineHeight: 1.7, fontSize: "0.95rem", margin: 0 }}>{item.d}</p>
           </div>
-        );
-      })}
-    </div>
-    <div class="hp-deal-more" style="margin-top:16px"><span class="hp-deal-count">Showing {poolPrimary.size} of {poolDeals.length} fresh coupons</span></div>
-  </section>
-
-  <!-- HOW TO REDEEM -->
-  <section class="hp-wrap" aria-label="Get a free course in 3 steps">
-    <h2 class="hp-sec-heading">Get a free course in 3 steps</h2>
-    <div class="hp-card">
-      <div class="hp-steps3">
-        <div class="hp-step3">
-          <div class="hp-step3-num">1</div>
-          <div class="hp-step3-title">Browse verified coupons</div>
-          <div class="hp-step3-desc">Search by category, topic, or instructor. Every deal shows discount, rating, and last-verified time.</div>
-          <div class="hp-step3-pills"><span class="hp-step3-pill">{liveCount.toLocaleString()} active</span><span class="hp-step3-pill">Filter by category</span></div>
-        </div>
-        <div class="hp-step3">
-          <div class="hp-step3-num">2</div>
-          <div class="hp-step3-title">Claim your coupon</div>
-          <div class="hp-step3-desc">Code is pre-applied at Udemy checkout — no copy-paste. Confirm the price shows $0.00–$9.99.</div>
-          <div class="hp-step3-pills"><span class="hp-step3-pill">Auto-applied</span><span class="hp-step3-pill">No signup on CoursesWyn</span></div>
-        </div>
-        <div class="hp-step3">
-          <div class="hp-step3-num">3</div>
-          <div class="hp-step3-title">Enroll and learn</div>
-          <div class="hp-step3-desc">Sign in to Udemy, finish enrollment, and get the same certificate as a paying student.</div>
-          <div class="hp-step3-pills"><span class="hp-step3-pill">Lifetime access</span><span class="hp-step3-pill">Certificate included</span></div>
-        </div>
+        ))}
+      </div>
+      <div style={{ textAlign: "center", marginTop: "3rem" }}>
+        <a href="/udemy-coupon-code" style={{ padding: "1rem 2.5rem", borderRadius: "12px", background: "var(--brand)", color: "#FFFFFF", textDecoration: "none", fontSize: "1rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>Grab a working code</a>
       </div>
     </div>
   </section>
 
-  <!-- WHY THE VERIFICATION MATTERS -->
-  <section class="hp-wrap" aria-label="Why the verification matters">
-    <h2 class="hp-sec-heading">Why the verification matters</h2>
-    <div class="hp-card" style="padding:0">
-      <div class="hp-trust-grid">
-        <div class="hp-trust-col other">
-          <div class="hp-trust-col-h">Typical coupon sites</div>
-          <div class="hp-trust-step"><span class="n">1</span><span class="hp-trust-step-text">Coupon is listed once — may already be dead by the time you see it.</span></div>
-          <div class="hp-trust-step"><span class="n">2</span><span class="hp-trust-step-text">No system checks if the code still works after publishing.</span></div>
-          <div class="hp-trust-step"><span class="n">3</span><span class="hp-trust-step-text">You click through and find out it's expired only at Udemy checkout.</span></div>
-        </div>
-        <div class="hp-trust-col">
-          <div class="hp-trust-col-h">CoursesWyn</div>
-          <div class="hp-trust-step"><span class="n">1</span><span class="hp-trust-step-text">Deal is added to the live tracking system with a first verification pass.</span></div>
-          <div class="hp-trust-step"><span class="n">2</span><span class="hp-trust-step-text">The system rechecks on a fixed schedule, day and night.</span></div>
-          <div class="hp-trust-step"><span class="n">3</span><span class="hp-trust-step-text">You only ever see codes confirmed working as of the last check.</span></div>
-        </div>
+  <!-- 11. FAQ -->
+  <section class="section-wrapper" aria-label="Frequently asked questions">
+    <div class="container">
+      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+        <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem" }}>Questions, <span style={{ color: "var(--brand)" }}>answered</span></h2>
+        <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "650px", margin: "0 auto", lineHeight: 1.65 }}>The six things newcomers ask before their first discounted enrollment.</p>
+      </div>
+      <div class="faq-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: "1.5rem" }}>
+        {faqs.map((faq) => (
+          <div itemscope itemtype="https://schema.org/Question" style={{ background: "var(--card)", padding: "1.75rem 2rem", borderRadius: "20px", border: "1px solid rgba(11,122,85,0.15)" }}>
+            <h3 itemprop="name" style={{ color: "var(--text)", fontSize: "1.1rem", margin: "0 0 0.75rem", fontWeight: 700, lineHeight: 1.4 }}>{faq.q}</h3>
+            <div itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><p itemprop="text" style={{ color: "var(--muted)", lineHeight: 1.75, fontSize: "0.95rem", margin: 0 }}>{faq.a}</p></div>
+          </div>
+        ))}
+      </div>
+      <div style={{ textAlign: "center", marginTop: "3rem" }}>
+        <p style={{ color: "var(--muted)", marginBottom: "1rem" }}>Still curious? The full library is one click away.</p>
+        <a href="/udemy-coupon-code" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.875rem 2rem", borderRadius: "12px", background: "rgba(11,122,85,0.1)", color: "var(--brand)", textDecoration: "none", fontWeight: 600, fontSize: "1rem", border: "1px solid rgba(11,122,85,0.3)" }}>Browse discounted courses</a>
       </div>
     </div>
   </section>
 
-  <!-- VALUE PROPS -->
-  <section class="hp-wrap" aria-label="No subscription, no paywall">
-    <h2 class="hp-sec-heading">No subscription, no paywall</h2>
-    <div class="hp-value-grid">
-      <div class="hp-value-card">
-        <div class="hp-value-badge">$0</div>
-        <div class="hp-value-title">Free access to verified working coupons</div>
-        <ul class="hp-value-list">
-          <li>Browse all {liveCount.toLocaleString()} active coupons, no account required</li>
-          <li>Filter by category, rating, or language</li>
-          <li>Live verification shown on every single deal</li>
-          <li>Get notified when a course drops to its lowest price</li>
-        </ul>
-      </div>
-      <div class="hp-value-card">
-        <div class="hp-value-badge">∞</div>
-        <div class="hp-value-title">Every feature, unlimited</div>
-        <ul class="hp-value-list">
-          <li>No premium tier, no locked deals</li>
-          <li>Unlimited coupon redemptions</li>
-          <li>Fresh verification on every code, every time</li>
-          <li>No credits, no usage caps</li>
-        </ul>
+  <!-- 12. COMMUNITY -->
+  <section class="section-wrapper" aria-label="Follow CoursesWyn">
+    <div class="container" style={{ textAlign: "center", maxWidth: "650px" }}>
+      <h2 style={{ fontSize: "clamp(1.6rem, 3vw, 2rem)", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem", lineHeight: 1.2 }}>Get daily <span style={{ color: "var(--brand)" }}>Udemy coupon alerts</span></h2>
+      <p style={{ color: "var(--muted)", fontSize: "1rem", lineHeight: 1.65, marginBottom: "2rem" }}>Follow CoursesWyn for the daily rotation of verified Udemy markdowns and study guides.</p>
+      <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+        <a href="https://facebook.com/CoursesWyn" target="_blank" rel="noopener noreferrer" class="community-btn" style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem", padding: "0.9rem 1.75rem", borderRadius: "12px", background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem", transition: "all 0.2s ease" }}>Facebook</a>
+        <a href="https://x.com/CoursesWyn" target="_blank" rel="noopener noreferrer" class="community-btn" style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem", padding: "0.9rem 1.75rem", borderRadius: "12px", background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem", transition: "all 0.2s ease" }}>X / Twitter</a>
+        <a href="https://medium.com/@coursewyn" target="_blank" rel="noopener noreferrer" class="community-btn" style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem", padding: "0.9rem 1.75rem", borderRadius: "12px", background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem", transition: "all 0.2s ease" }}>Medium</a>
       </div>
     </div>
   </section>
 
-  <!-- BROWSE BY CATEGORY -->
-  <section class="hp-wrap" aria-label="Browse by category">
-    <h2 class="hp-sec-heading">Browse by category</h2>
-    <div class="hp-cat-grid">
-      {topCats.map((c) => (
-        <a class="hp-cat-box" href={"/categories/" + c.slug}>
-          <div class="hp-cat-box-num">{c.count}</div>
-          <div class="hp-cat-box-label">{c.name}</div>
-          <div class="hp-cat-box-count">{cat90Off[c.name] || 0} at 90%+ off</div>
-        </a>
-      ))}
-      <a class="hp-cat-box" href="/categories">
-        <div class="hp-cat-box-num">{liveCount}</div>
-        <div class="hp-cat-box-label">All categories</div>
-        <div class="hp-cat-box-count">See full list</div>
-      </a>
-    </div>
-  </section>
-
-  <!-- PERSONAL PLAN CTA — dark high-conversion hero (sync with /udemy-coupons-today) -->
-  <section class="hp-wrap" aria-label="Udemy Personal Plan promotion">
-    <div class="hp-plan hp-plan-dark">
-      <div class="hp-plan-bg"></div>
-      <div class="hp-plan-inner">
-        <span class="hp-plan-badge">
-          <span class="hp-dot"></span> Sponsored — CoursesWyn readers exclusive
-        </span>
-        <h2>Stop chasing <span>single coupons</span> — unlock <span>26,000+</span> courses for $20/mo</h2>
-        <p class="hp-plan-desc">Today's coupons expire in ~7 hours / 100 redemptions. Personal Plan gives you unlimited access to 26,000+ curated courses with certificates — one flat price, cancel anytime. <strong>25% OFF your first year.</strong></p>
-        <div class="hp-plan-compare">
-          <div class="hp-compare-col"><span class="hp-compare-label">Buy individually</span><span class="hp-compare-price">$45</span><span class="hp-compare-sub">3 courses × $15</span></div>
-          <div class="hp-compare-vs">vs</div>
-          <div class="hp-compare-col highlight"><span class="hp-compare-label">Personal Plan</span><span class="hp-compare-price">$20<span>/mo</span></span><span class="hp-compare-sub">26,000+ unlimited</span></div>
+  <!-- PERSONAL PLAN -->
+  <section class="cta-section" aria-label="Udemy Personal Plan">
+    <div class="container">
+      <div class="cta-box">
+        <span class="cta-eyebrow">Udemy Personal Plan</span>
+        <h2>Want it all? <span style={{ color: "var(--brand)" }}>26,000+ courses</span><br />under one subscription</h2>
+        <p class="cta-subtext">If single coupons feel like whack-a-mole, the flat-rate plan is the calm alternative — learn across topics without counting codes.</p>
+        <div class="cta-actions">
+          <a href="https://trk.udemy.com/c/6564357/3775958/39854" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg" style="border-radius:999px;padding:1rem 2.5rem">Start free trial</a>
         </div>
-        <a class="hp-plan-btn" href="https://trk.udemy.com/c/6564357/3775958/39854" rel="nofollow sponsored noopener" target="_blank">
-          Yes, I Want 25% OFF Personal Plan
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </a>
-        <div class="hp-plan-trust">
-          <span>★ 4.8/5 rating</span><span>·</span><span>75k+ learners</span><span>·</span><span>7-day free trial</span>
-        </div>
-        <p class="hp-plan-subnote">Sponsored — We may earn a commission at no extra cost to you. <a href="/blog/udemy-personal-plan-review-2026/">Read 2026 review →</a> · <a href="/affiliate-disclosure">Affiliate Disclosure</a></p>
+        <div class="cta-features"><span><span class="cta-dot"></span>26,000+ courses</span><span><span class="cta-dot"></span>7-day free trial</span><span><span class="cta-dot"></span>Cancel anytime</span><span><span class="cta-dot"></span>From $20/month</span></div>
       </div>
     </div>
   </section>
-
-  <!-- FAQ -->
-  <section class="hp-wrap" aria-label="Udemy coupon code frequently asked questions">
-    <h2 class="hp-sec-heading">Udemy Coupon Code FAQs <span class="tag">{faqs.length} questions</span></h2>
-    <div class="hp-faq-grid">
-      {faqs.map((faq) => (
-        <div class="hp-faq-card">
-          <h3 class="hp-faq-q">{faq.q}</h3>
-          <p class="hp-faq-a">{faq.a}</p>
-        </div>
-      ))}
-    </div>
-  </section>
-
-  <div class="hp-wrap">
-    <div class="hp-footer-cta">
-      <a class="rd2-btn contained" href="/udemy-coupon-code">Browse {liveCount.toLocaleString()} verified coupons →</a>
-      <p>Updated continuously. No signup, no subscription, no hidden cost.</p>
-    </div>
-  </div>
-
-</div>
 
 <script>
   (function () {
-    const input = document.querySelector<HTMLInputElement>('#rd2Search input[data-typewriter]');
+    var input = document.querySelector('#hpSearchInput');
     if (!input) return;
-
-    const inputEl = input;
-    const raw = inputEl.getAttribute('data-typewriter');
+    var raw = input.getAttribute('data-typewriter');
     if (!raw) return;
-
-    let words: string[] = [];
-    try {
-      const parsed: unknown = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.every((item): item is string => typeof item === 'string')) {
-        words = parsed;
-      }
-    } catch (e) {
-      return;
-    }
-
+    var words = [];
+    try { words = JSON.parse(raw); } catch (e) { return; }
     if (!words.length) return;
-
-    let wordIndex = 0;
-    let charIndex = 0;
-    let deleting = false;
-
+    var wi = 0, ci = 0, del = false;
     function tick() {
-      const word = words[wordIndex];
-      if (!word) return;
-      if (!deleting) {
-        charIndex++;
-        inputEl.setAttribute('placeholder', word.substring(0, charIndex));
-        if (charIndex === word.length) { deleting = true; setTimeout(tick, 1500); return; }
-        setTimeout(tick, 25);
-      } else {
-        charIndex--;
-        inputEl.setAttribute('placeholder', word.substring(0, charIndex));
-        if (charIndex === 0) { deleting = false; wordIndex = (wordIndex + 1) % words.length; }
-        setTimeout(tick, 18);
-      }
+      var w = words[wi];
+      if (!w) return;
+      if (!del) { ci++; input.setAttribute('placeholder', w.substring(0, ci)); if (ci === w.length) { del = true; setTimeout(tick, 1500); return; } setTimeout(tick, 25); }
+      else { ci--; input.setAttribute('placeholder', w.substring(0, ci)); if (ci === 0) { del = false; wi = (wi + 1) % words.length; } setTimeout(tick, 18); }
     }
-
     setTimeout(tick, 400);
-  })();
-
-  (function () {
-    const bar = document.querySelector<HTMLElement>('.hp-catbar');
-    const count = document.querySelector<HTMLElement>('.hp-deal-count');
-    if (!bar) return;
-    const links = Array.from(bar.querySelectorAll<HTMLAnchorElement>('a'));
-    const rows = Array.from(document.querySelectorAll<HTMLElement>('.hp-grid-item'));
-    if (!links.length || !rows.length) return;
-
-    function currentFilter(): string {
-      const m = /#cat=([^&]+)/.exec(window.location.hash);
-      return m ? decodeURIComponent(m[1]) : 'all';
-    }
-
-    function apply(filter: string) {
-      let n = 0;
-      for (const row of rows) {
-        const show = filter === 'all' ? row.getAttribute('data-primary') === '1' : row.getAttribute('data-cat') === filter;
-        row.style.display = show ? '' : 'none';
-        if (show) n++;
-      }
-      for (const a of links) {
-        a.classList.toggle('active', a.getAttribute('data-filter') === filter);
-      }
-      if (count) count.textContent = 'Showing ' + n + ' of ' + rows.length + ' fresh coupons';
-    }
-
-    for (const a of links) {
-      a.addEventListener('click', (e) => {
-        e.preventDefault();
-        const filter = a.getAttribute('data-filter') || 'all';
-        apply(filter);
-        try { window.history.pushState(null, '', '#cat=' + encodeURIComponent(filter)); } catch (err) {}
-      });
-    }
-    window.addEventListener('popstate', () => apply(currentFilter()));
-    apply(currentFilter());
   })();
 </script>
 

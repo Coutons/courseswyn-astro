@@ -31,10 +31,10 @@ In the rapidly evolving landscape of artificial intelligence, agentic AI systems
 - **Duration:** 15 hours
 - **The Bottom Line:** Essential for devs transitioning from simple RAG to full agentic AI systems.
 
-<div style="text-align: center; margin: 20px 0; padding: 20px; border: 2px solid #007bff; border-radius: 10px; background-color: #0a0a0f;">
-  <h3 style="margin-bottom: 10px; color: #007bff;">Ready to Master Agentic AI?</h3>
-  <p style="margin-bottom: 15px;">Enroll now and get 90% off with our exclusive link!</p>
-  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6566789&u=https%3A%2F%2Fwww.udemy.com%2Fthe-complete-agentic-ai-engineering-course&intsrc=APIG_26324" class="inline-block bg-blue-600 hover:bg-blue-800 text-[hsl(222,47%,8%)] font-bold py-3 px-6 rounded-lg text-lg transition duration-300" target="_blank" rel="noopener sponsored">Enroll in Course Now 🚀</a>
+<div style="text-align: center; margin: 20px 0; padding: 20px; border: 1px solid rgba(111,191,155,0.35); border-radius: 14px; background: rgba(111,191,155,0.06);">
+  <h3 style="margin-bottom: 10px; color: #6FBF9B;">Ready to Master Agentic AI?</h3>
+  <p style="margin-bottom: 15px; color: #CBD5D2;">Enroll now and get 90% off with our exclusive link!</p>
+  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6566789&u=https%3A%2F%2Fwww.udemy.com%2Fthe-complete-agentic-ai-engineering-course&intsrc=APIG_26324" style="display:inline-block;background:#6FBF9B;color:#06281C;font-weight:700;padding:12px 28px;border-radius:10px;text-decoration:none" target="_blank" rel="noopener sponsored">Enroll in Course Now</a>
 </div>
 
 To get a firsthand perspective, check out this comprehensive YouTube review of the course:
@@ -112,9 +112,9 @@ Hands-on building of agents enhances learning. The customer service agent projec
 ### Community Support
 Active Udemy community for troubleshooting, far superior to scattered forum posts.
 
-<div style="text-align: center; margin: 25px 0; padding: 15px; border: 2px solid #ffc107; border-radius: 10px; background-color: #0a0a0f;">
-  <p style="margin-bottom: 10px; font-weight: bold; color: #fff;">Still deciding? 👀</p>
-  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6566789&u=https%3A%2F%2Fwww.udemy.com%2Fthe-complete-agentic-ai-engineering-course&intsrc=APIG_26324" class="inline-block bg-white-500 hover:bg-yellow-600 text-[whitesmoke] font-bold py-2 px-4 rounded" target="_blank" rel="noopener sponsored">Check Course Details on Udemy</a>
+<div style="text-align: center; margin: 25px 0; padding: 20px; border: 1px solid rgba(111,191,155,0.35); border-radius: 14px; background: rgba(111,191,155,0.06);">
+  <p style="margin-bottom: 12px; font-weight: bold; color: #E7F0EB;">Still deciding? Take a look inside the course</p>
+  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6566789&u=https%3A%2F%2Fwww.udemy.com%2Fthe-complete-agentic-ai-engineering-course&intsrc=APIG_26324" style="display:inline-block;background:#6FBF9B;color:#06281C;font-weight:700;padding:12px 28px;border-radius:10px;text-decoration:none" target="_blank" rel="noopener sponsored">Check Course Details on Udemy</a>
 </div>
 
 ## Potential Drawbacks for Beginners in Agentic AI
@@ -178,10 +178,10 @@ Intermediate Python, basic AI/ML concepts, and familiarity with APIs. Knowledge 
 
 **Ready to Enroll? Get the Course Now!**
 
-<div style="text-align: center; margin: 30px 0; padding: 25px; border: 3px solid #28a745; border-radius: 15px; background: #0a0a0f; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-  <h2 style="margin-bottom: 15px; color: #28a745; font-size: 1.5em;">🚀 Don't Miss Out: Limited-Time Discount!</h2>
-  <p style="margin-bottom: 20px; font-size: 1.1em;">Join thousands of developers mastering agentic AI. Lifetime access + certificate included.</p>
-  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6566789&u=https%3A%2F%2Fwww.udemy.com%2Fthe-complete-agentic-ai-engineering-course&intsrc=APIG_26324" class="inline-block bg-dark-600 hover:bg-green-800 text-[hsl(222,47%,8%)] font-bold py-4 px-8 rounded-lg text-xl transition duration-300 shadow-lg" target="_blank" rel="noopener sponsored">Enroll Now & Save 90% 💰</a>
+<div style="text-align: center; margin: 30px 0; padding: 25px; border: 1px solid rgba(111,191,155,0.35); border-radius: 14px; background: rgba(111,191,155,0.06);">
+  <h2 style="margin-bottom: 15px; color: #6FBF9B; font-size: 1.5em;">Don't Miss Out: Limited-Time Discount!</h2>
+  <p style="margin-bottom: 20px; font-size: 1.1em; color: #CBD5D2;">Join thousands of developers mastering agentic AI. Lifetime access + certificate included.</p>
+  <a href="https://trk.udemy.com/c/6564357/3227798/39854?prodsku=course.6566789&u=https%3A%2F%2Fwww.udemy.com%2Fthe-complete-agentic-ai-engineering-course&intsrc=APIG_26324" style="display:inline-block;background:#6FBF9B;color:#06281C;font-weight:700;padding:12px 28px;border-radius:10px;text-decoration:none" target="_blank" rel="noopener sponsored">Enroll Now & Save 90%</a>
 </div>
 
 *Disclosure: This is an affiliate link.*
