@@ -162,7 +162,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, cou
 
       <div className="container deal-layout" style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem 1rem", display: "grid", gridTemplateColumns: "1fr 340px", gap: "3rem" }}>
         <main>
-          <section aria-labelledby="key-facts-heading" style={{ border: "1px solid var(--border)", padding: "1.5rem", borderRadius: "2.5rem", background: "var(--bg)", marginBottom: "2rem" }}>
+          <section aria-labelledby="key-facts-heading" style={{ border: "1px solid var(--border)", padding: "1.5rem", borderRadius: "18px", background: "var(--card)", marginBottom: "2rem" }}>
             <h2 id="key-facts-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
               <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true"></span>
               Key Facts at a Glance
@@ -202,7 +202,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, cou
           </section>
 
           {learnPoints.length > 0 && (
-            <section aria-labelledby="learn-heading" style={{ border: "1px solid var(--border)", padding: "1.5rem", borderRadius: "2.5rem", background: "var(--bg)", marginBottom: "2rem" }}>
+            <section aria-labelledby="learn-heading" style={{ border: "1px solid var(--border)", padding: "1.5rem", borderRadius: "18px", background: "var(--card)", marginBottom: "2rem" }}>
               <h2 id="learn-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                 <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true"></span>
                 What You Will Learn
@@ -222,7 +222,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, cou
           )}
 
           {reqPoints.length > 0 && (
-            <section aria-labelledby="requirements-heading" style={{ border: "1px solid var(--border)", padding: "1.5rem", borderRadius: "2.5rem", background: "var(--bg)", marginBottom: "2rem" }}>
+            <section aria-labelledby="requirements-heading" style={{ border: "1px solid var(--border)", padding: "1.5rem", borderRadius: "18px", background: "var(--card)", marginBottom: "2rem" }}>
               <h2 id="requirements-heading" style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                 <span style={{ width: "6px", height: "32px", background: "var(--brand)", borderRadius: "9999px" }} aria-hidden="true"></span>
                 Requirements & Prerequisites
@@ -251,14 +251,14 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, cou
           </section>
 
           <div style={{ marginBottom: "2rem", padding: "1.25rem 1.5rem", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "12px", display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
-            <div style={{ width: "44px", height: "44px", borderRadius: "10px", background: "rgba(11, 122, 85, 0.12)", border: "1px solid rgba(11, 122, 85, 0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div style={{ width: "44px", height: "44px", borderRadius: "10px", background: "rgba(11, 107, 74, 0.12)", border: "1px solid rgba(11, 107, 74, 0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
             </div>
             <div style={{ flex: 1, minWidth: "180px" }}>
               <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text)", marginBottom: "2px" }}>New to Udemy coupons?</div>
               <div style={{ fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.5 }}>How codes, caps and expiries work — plus how to redeem in under two minutes.</div>
             </div>
-            <a href="/udemy-coupons-guide" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", padding: "0.5rem 1rem", background: "rgba(11, 122, 85, 0.1)", border: "1px solid rgba(11, 122, 85, 0.25)", borderRadius: "8px", color: "var(--brand)", textDecoration: "none", fontSize: "0.8rem", fontWeight: 600, flexShrink: 0 }}>Read Guide ↗</a>
+            <a href="/udemy-coupons-guide" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", padding: "0.5rem 1rem", background: "rgba(11, 107, 74, 0.1)", border: "1px solid rgba(11, 107, 74, 0.25)", borderRadius: "8px", color: "var(--brand)", textDecoration: "none", fontSize: "0.8rem", fontWeight: 600, flexShrink: 0 }}>Read Guide ↗</a>
             <a href="/how-to-redeem-coupon" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", padding: "0.5rem 1rem", background: "transparent", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--text)", textDecoration: "none", fontSize: "0.8rem", fontWeight: 600, flexShrink: 0 }}>Redeem Steps ↗</a>
           </div>
 
@@ -296,7 +296,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, cou
                   </p>
                 )}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.25rem" }}>
-                  <div style={{ background: "rgba(11, 122, 85, 0.06)", border: "1px solid rgba(11, 122, 85, 0.2)", borderRadius: "10px", padding: "1rem" }}>
+                  <div style={{ background: "rgba(11, 107, 74, 0.06)", border: "1px solid rgba(11, 107, 74, 0.2)", borderRadius: "10px", padding: "1rem" }}>
                     <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--brand)", margin: "0 0 0.6rem 0" }}>✓ Upsides</h3>
                     <ul style={{ margin: 0, padding: 0, listStyle: "none", color: "var(--text-secondary)", fontSize: "0.82rem", lineHeight: 1.65 }}>
                       <li style={{ padding: "3px 0" }}>✓ Verified{discountPct > 0 ? ` ${discountPct}%` : ""} price cut.</li>
@@ -316,30 +316,30 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, cou
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.25rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flex: 1, minWidth: "200px", padding: "0.75rem 1rem", background: "rgba(11, 122, 85, 0.06)", border: "1px solid rgba(11, 122, 85, 0.15)", borderRadius: "10px" }}>
-                    <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg, var(--brand), #0B7A55)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFFFFF", fontWeight: 700, fontSize: "0.9rem", flexShrink: 0 }}>AD</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flex: 1, minWidth: "200px", padding: "0.75rem 1rem", background: "rgba(11, 107, 74, 0.06)", border: "1px solid rgba(11, 107, 74, 0.15)", borderRadius: "10px" }}>
+                    <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg, var(--brand), #0B6B4A)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFFFFF", fontWeight: 700, fontSize: "0.9rem", flexShrink: 0 }}>AD</div>
                     <div>
                       <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "0.85rem" }}>Andrew Derek</div>
                       <div style={{ color: "var(--muted)", fontSize: "0.75rem" }}>Coupon Analyst</div>
                     </div>
                     <a href="/about" style={{ marginLeft: "auto", fontSize: "0.75rem", color: "var(--brand)", textDecoration: "underline", whiteSpace: "nowrap" }}>Profile →</a>
                   </div>
-                  <div style={{ flex: 2, minWidth: "250px", padding: "0.75rem 1rem", background: "rgba(11, 122, 85, 0.05)", border: "1px solid rgba(11, 122, 85, 0.15)", borderRadius: "10px" }}>
+                  <div style={{ flex: 2, minWidth: "250px", padding: "0.75rem 1rem", background: "rgba(11, 107, 74, 0.05)", border: "1px solid rgba(11, 107, 74, 0.15)", borderRadius: "10px" }}>
                     <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.6, fontStyle: "italic", margin: 0 }}>
                       "{costPerHour ? `About $${costPerHour.toFixed(2)} per video hour — ` : ""}<strong style={{ color: "var(--text)" }}>{deal.title}</strong> is fairly priced for its depth{learnPoints[0] ? `, starting with ${learnPoints[0].charAt(0).toLowerCase()}${learnPoints[0].slice(1)}` : ""}. If {deal.category || "this topic"} is on your list{typeof deal.rating === "number" ? `, the ${deal.rating.toFixed(1)}-star record backs it` : ""} — claim it while live."
                     </p>
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", padding: "0.75rem 1.25rem", background: "linear-gradient(135deg, #FFFFFF, #EDF2EF)", borderRadius: "10px", border: "1px solid rgba(11, 122, 85, 0.25)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", padding: "0.75rem 1.25rem", background: "linear-gradient(135deg, #FFFFFF, #EDF2EF)", borderRadius: "10px", border: "1px solid rgba(11, 107, 74, 0.25)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(11,122,85,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand)", fontSize: "1rem" }}>✓</div>
+                    <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(11,107,74,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand)", fontSize: "1rem" }}>✓</div>
                     <div>
                       <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text)" }}>Final Call: Worth Claiming</div>
                       <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{discountPct > 0 ? `Keeps $${savings.toFixed(2)} in your pocket vs list price` : "Free to enroll right now"}</div>
                     </div>
                   </div>
                 </div>
-                <div style={{ marginTop: "1rem", padding: "0.75rem 1rem", background: "rgba(11, 122, 85, 0.05)", border: "1px solid rgba(11, 122, 85, 0.15)", borderRadius: "8px", fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                <div style={{ marginTop: "1rem", padding: "0.75rem 1rem", background: "rgba(11, 107, 74, 0.05)", border: "1px solid rgba(11, 107, 74, 0.15)", borderRadius: "8px", fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
                   <strong style={{ color: "var(--brand)" }}>First coupon?</strong> Our <a href="/how-to-redeem-coupon" style={{ color: "var(--brand)", textDecoration: "underline" }}>redemption walkthrough</a> covers applying codes step by step.
                   <span style={{ display: "block", marginTop: "4px", color: "var(--muted)", fontSize: "0.78rem" }}>
                     Last checked {fmtDate(deal.updatedAt)}. {discountPct > 0 ? `At ${formatMoney(price)} you save ${formatMoney(savings)} vs ${formatMoney(originalPrice)} — ` : ""}codes are time-limited, so earlier is safer.
@@ -413,7 +413,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, cou
                       {idx === 0 && instructorImage ? (
                         <img src={instructorImage} alt={name} width={104} height={104} loading="lazy" style={{ width: "52px", height: "52px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
                       ) : (
-                        <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, var(--brand), #0B7A55)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, var(--brand), #0B6B4A)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           <span style={{ color: "#FFFFFF", fontSize: "1.1rem", fontWeight: 700 }}>{initials(name)}</span>
                         </div>
                       )}
@@ -421,7 +421,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, cou
                         <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>{name}</div>
                         <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{deal.provider || "Udemy"} Instructor</div>
                       </div>
-                      <a href={`/instructor/${createInstructorSlug(name)}`} style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", padding: "0.45rem 1rem", background: "rgba(11, 122, 85, 0.1)", border: "1px solid rgba(11, 122, 85, 0.25)", borderRadius: "8px", fontSize: "0.8rem", color: "var(--brand)", textDecoration: "none", fontWeight: 600 }}>Full Profile ↗</a>
+                      <a href={`/instructor/${createInstructorSlug(name)}`} style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", padding: "0.45rem 1rem", background: "rgba(11, 107, 74, 0.1)", border: "1px solid rgba(11, 107, 74, 0.25)", borderRadius: "8px", fontSize: "0.8rem", color: "var(--brand)", textDecoration: "none", fontWeight: 600 }}>Full Profile ↗</a>
                     </div>
                     <div style={{ borderTop: "1px solid var(--border)", padding: "1rem 1.5rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem", fontSize: "0.85rem" }}>
                       <div><span style={{ color: "var(--muted)", fontWeight: 500 }}>Teaches</span><div style={{ color: "var(--text-secondary)", marginTop: "2px" }}>{deal.category || "Development"}</div></div>
@@ -495,7 +495,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, cou
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--muted)"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
                   </a>
                   <a href="https://medium.com/@coursewyn" target="_blank" rel="noopener noreferrer" aria-label="Medium" style={{ width: "32px", height: "32px", borderRadius: "6px", background: "var(--border)", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", color: "var(--muted)", fontSize: "0.8rem", fontWeight: 800 }}>M</a>
-                  <a href="/udemy-coupon-code" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "0 0.75rem", height: "32px", borderRadius: "6px", background: "rgba(11, 122, 85, 0.1)", border: "1px solid rgba(11, 122, 85, 0.25)", color: "var(--brand)", textDecoration: "none", fontSize: "0.75rem", fontWeight: 600 }}>Fresh Drops →</a>
+                  <a href="/udemy-coupon-code" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "0 0.75rem", height: "32px", borderRadius: "6px", background: "rgba(11, 107, 74, 0.1)", border: "1px solid rgba(11, 107, 74, 0.25)", color: "var(--brand)", textDecoration: "none", fontSize: "0.75rem", fontWeight: 600 }}>Fresh Drops →</a>
                 </div>
               </div>
             </div>
@@ -553,19 +553,20 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, cou
         </main>
 
         <aside aria-label="Coupon claim panel" style={{ position: "relative" }}>
-          <div style={{ position: "sticky", top: "2rem", background: "linear-gradient(135deg, #FFFFFF 0%, #EDF2EF 100%)", border: "1px solid rgba(11,122,85,0.2)", borderRadius: "8px", overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.35)" }}>
+          <div style={{ position: "sticky", top: "2rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "16px", overflow: "hidden", boxShadow: "0 18px 36px -20px rgba(20,32,27,0.35)" }}>
             {deal.image && (
               <div style={{ position: "relative" }}>
                 <img src={deal.image} alt={`${deal.title} — ${deal.provider || "Udemy"} course`} width="400" height="190" loading="eager" decoding="async" style={{ width: "100%", height: "190px", objectFit: "cover", display: "block" }} />
               </div>
             )}
+            <div aria-hidden="true" style={{ height: "18px", margin: "0 8px", backgroundImage: "radial-gradient(circle 9px at 0px 50%, var(--bg) 9px, transparent 9.5px), radial-gradient(circle 9px at 100% 50%, var(--bg) 9px, transparent 9.5px), repeating-linear-gradient(90deg, var(--ledger) 0 8px, transparent 8px 14px)", backgroundSize: "18px 18px, 18px 18px, 100% 2px", backgroundPosition: "left center, right center, center", backgroundRepeat: "no-repeat" }} />
             <div style={{ padding: "1.25rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: discountPct > 0 ? "6px" : "1rem" }}>
-                <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text)" }}>{price === 0 ? "Free" : `$${price.toFixed(2)}`}</span>
-                {discountPct > 0 && (<><span style={{ fontSize: "0.9rem", color: "var(--muted)", textDecoration: "line-through" }}>${originalPrice.toFixed(2)}</span><span style={{ fontSize: "0.75rem", background: "var(--brand)", color: "#FFFFFF", padding: "2px 7px", borderRadius: "3px", fontWeight: 700 }}>{discountPct}% OFF</span></>)}
+                <span style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text)", fontFamily: "var(--font-mono)" }}>{price === 0 ? "Free" : `$${price.toFixed(2)}`}</span>
+                {discountPct > 0 && (<><span style={{ fontSize: "0.9rem", color: "var(--muted)", textDecoration: "line-through", fontFamily: "var(--font-mono)" }}>${originalPrice.toFixed(2)}</span><span style={{ fontSize: "0.75rem", background: "var(--brand)", color: "#FFFFFF", padding: "2px 7px", borderRadius: "3px", fontWeight: 700 }}>{discountPct}% OFF</span></>)}
               </div>
               {countdown && (
-                <div role="timer" aria-live="polite" style={{ background: "rgba(11,122,85,0.07)", color: "var(--text)", fontSize: "0.85rem", padding: "10px 12px", borderRadius: "6px", marginBottom: "1rem", border: "1px solid var(--border)" }}>
+                <div role="timer" aria-live="polite" style={{ background: "rgba(11,107,74,0.07)", color: "var(--text)", fontSize: "0.85rem", padding: "10px 12px", borderRadius: "6px", marginBottom: "1rem", border: "1px solid var(--border)" }}>
                   <div style={{ fontWeight: 700, fontSize: "0.75rem", marginBottom: "6px", display: "flex", alignItems: "center", gap: "5px", color: "var(--muted)" }}>
                     <svg style={{ width: "13px", height: "13px" }} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
                     OFFER ENDS IN
@@ -592,7 +593,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, cou
                 target="_blank"
                 rel="noopener noreferrer nofollow"
                 aria-label={`Claim coupon for ${deal.title} on ${deal.provider || "Udemy"}`}
-                style={{ display: "block", width: "100%", padding: "0.75rem", background: "linear-gradient(135deg, #0C6E4E 0%, #0B7A55 100%)", color: "#FFFFFF", textDecoration: "none", borderRadius: "8px", textAlign: "center", fontWeight: 700, fontSize: "0.9rem", border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(11, 122, 85, 0.25)" }}
+                style={{ display: "block", width: "100%", padding: "0.75rem", background: "linear-gradient(135deg, #0A5F40 0%, #0B6B4A 100%)", color: "#FFFFFF", textDecoration: "none", borderRadius: "8px", textAlign: "center", fontWeight: 700, fontSize: "0.9rem", border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(11, 107, 74, 0.25)" }}
               >
                 CLAIM COUPON
               </a>
@@ -619,7 +620,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, cou
                 </button>
                 <a href="/affiliate-disclosure" style={{ color: "var(--muted)", fontSize: "0.75rem" }}>Affiliate note</a>
               </div>
-              <div style={{ marginTop: "1rem", padding: "0.75rem", background: "rgba(11, 122, 85, 0.06)", border: "1px solid rgba(11, 122, 85, 0.15)", borderRadius: "6px", fontSize: "0.75rem", color: "var(--muted)", textAlign: "center", lineHeight: 1.4 }}>
+              <div style={{ marginTop: "1rem", padding: "0.75rem", background: "rgba(11, 107, 74, 0.06)", border: "1px solid rgba(11, 107, 74, 0.15)", borderRadius: "6px", fontSize: "0.75rem", color: "var(--muted)", textAlign: "center", lineHeight: 1.4 }}>
                 <span>Claiming through CoursesWyn may earn us a commission at no cost to you. </span>
                 <a href="/affiliate-disclosure" style={{ color: "var(--brand)", textDecoration: "none", fontWeight: 600 }}>Details</a>
               </div>
@@ -634,12 +635,12 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, cou
             <button onClick={() => setIsModalOpen(false)} aria-label="Close modal" style={{ position: "absolute", top: "1rem", right: "1rem", background: "none", border: "none", color: "var(--muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1 }}>✕</button>
             <h3 id="modal-title" style={{ color: "var(--text)", fontSize: "1.3rem", fontWeight: 700, marginBottom: "0.5rem", textAlign: "center" }}>Your Coupon Is Ready</h3>
             <p style={{ color: "var(--muted)", fontSize: "0.9rem", textAlign: "center", marginBottom: "1.5rem" }}>Continue to {deal.provider || "Udemy"} — the code below auto-applies at checkout.</p>
-            <div style={{ background: "linear-gradient(135deg, #0C6E4E, #0B7A55)", padding: "1.25rem", borderRadius: "8px", marginBottom: "1.25rem", textAlign: "center" }}>
+            <div style={{ background: "linear-gradient(135deg, #0A5F40, #0B6B4A)", padding: "1.25rem", borderRadius: "8px", marginBottom: "1.25rem", textAlign: "center" }}>
               <p style={{ color: "#FFFFFF", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px", fontWeight: 600 }}>Coupon Code</p>
               <code style={{ display: "block", fontSize: "1.15rem", fontWeight: 800, color: "#FFFFFF", letterSpacing: "1px", background: "rgba(0,0,0,0.2)", padding: "10px 16px", borderRadius: "6px", border: "1px dashed rgba(255,255,255,0.5)" }}>{masked}</code>
             </div>
             <div style={{ display: "flex", gap: "0.75rem", flexDirection: "column" }}>
-              <button onClick={copyMasked} style={{ background: copied ? "var(--brand)" : "rgba(11,122,85,0.12)", border: "1px solid rgba(11,122,85,0.25)", color: copied ? "#FFFFFF" : "var(--text)", padding: "0.75rem", borderRadius: "6px", fontWeight: 600, cursor: "pointer", fontSize: "0.95rem" }}>
+              <button onClick={copyMasked} style={{ background: copied ? "var(--brand)" : "rgba(11,107,74,0.12)", border: "1px solid rgba(11,107,74,0.25)", color: copied ? "#FFFFFF" : "var(--text)", padding: "0.75rem", borderRadius: "6px", fontWeight: 600, cursor: "pointer", fontSize: "0.95rem" }}>
                 {copied ? "✓ Copied!" : "📋 Copy Code"}
               </button>
               <a href={deal.url} target="_blank" rel="noopener noreferrer nofollow" style={{ background: "var(--brand)", border: "1px solid var(--brand)", color: "#FFFFFF", padding: "0.75rem", borderRadius: "6px", fontWeight: 700, textDecoration: "none", textAlign: "center", fontSize: "0.95rem" }}>
