@@ -58,15 +58,35 @@ if (import.meta.env.PROD) {
   deal = foundDeal;
 }
 
-const relatedDeals = allDeals
-  .filter((d) => {
-    if (d.slug === deal.slug) return false;
-    if (deal.subcategory && d.subcategory) {
-      return d.subcategory === deal.subcategory;
-    }
-    return d.category === deal.category;
-  })
-  .slice(0, 6);
+const pickedSlugs = new Set<string>([deal.slug]);
+const relatedDeals: Deal[] = [];
+// 1) same subcategory, 2) same category, 3) top-rated fallback — always fill to 6
+for (const d of allDeals) {
+  if (relatedDeals.length >= 6) break;
+  if (pickedSlugs.has(d.slug)) continue;
+  if (deal.subcategory && d.subcategory && d.subcategory === deal.subcategory) {
+    relatedDeals.push(d);
+    pickedSlugs.add(d.slug);
+  }
+}
+for (const d of allDeals) {
+  if (relatedDeals.length >= 6) break;
+  if (pickedSlugs.has(d.slug)) continue;
+  if (deal.category && d.category && d.category === deal.category) {
+    relatedDeals.push(d);
+    pickedSlugs.add(d.slug);
+  }
+}
+if (relatedDeals.length < 6) {
+  const topRated = [...allDeals]
+    .filter((d) => !pickedSlugs.has(d.slug) && (d.rating ?? 0) >= 4.5)
+    .sort((a, b) => ((b.rating ?? 0) - (a.rating ?? 0)) || ((b.students ?? 0) - (a.students ?? 0)));
+  for (const d of topRated) {
+    if (relatedDeals.length >= 6) break;
+    relatedDeals.push(d);
+    pickedSlugs.add(d.slug);
+  }
+}
 
 const discountPercentage = deal.originalPrice && deal.price && deal.originalPrice > deal.price
   ? Math.round(((deal.originalPrice - deal.price) / deal.originalPrice) * 100)
@@ -91,6 +111,14 @@ const primaryInstructorName = parseInstructors(deal.instructor)[0];
 const instructorImage = primaryInstructorName
   ? await getInstructorImage(createInstructorSlug(primaryInstructorName))
   : undefined;
+const instructorImages: Record<string, string> = {};
+for (const n of parseInstructors(deal.instructor)) {
+  const s = createInstructorSlug(n);
+  if (s && !instructorImages[s]) {
+    const img = await getInstructorImage(s);
+    if (img) instructorImages[s] = img;
+  }
+}
 
 const normalizedTitle = deal.title?.trim() || "Premium Course";
 const discountLabel = discountPercentage > 0 ? `${discountPercentage}% OFF` : "Discount";
@@ -308,6 +336,6 @@ delete clientDeal.coupon;
         })
     } />
 
-    <DealPage client:load deal={clientDeal} relatedDeals={relatedDeals} catStats={catStats} instructorImage={instructorImage} couponMask={couponMask} />
+    <DealPage client:load deal={clientDeal} relatedDeals={relatedDeals} catStats={catStats} instructorImage={instructorImage} instructorImages={instructorImages} couponMask={couponMask} />
 
 </Layout>

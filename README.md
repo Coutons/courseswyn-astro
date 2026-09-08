@@ -1,7 +1,7 @@
 # CoursesWyn — Verified Udemy Coupons & Expert Course Reviews
 
 > **1,355 Udemy coupons verified daily** — 100% OFF promo codes, expert reviews & savings guides. 69 in-depth course audits across AI, Web Dev, Cloud & more.
-> Built with Astro 7.2 + React 19 + Tailwind CSS. Featured in the Official Astro Showcase.
+> Built with Astro 7.3 + React 19 + Tailwind CSS. Featured in the Official Astro Showcase.
 
 <p align="center">
   <a href="https://courseswyn.com"><img src="https://img.shields.io/badge/CoursesWyn.com-Verified_Udemy_Coupons-FF5D01?style=for-the-badge&logo=udemy&logoColor=white" alt="Live Site"></a>
@@ -52,10 +52,10 @@
 
 [CoursesWyn](https://courseswyn.com) is an independent platform providing **verified Udemy promo codes**, **expert course reviews**, and **structured career roadmaps**. Every coupon is manually tested before publishing — expired deals are purged within 4 hours.
 
-- **1,355 active coupons** — manually verified, updated daily with 100% OFF and limited-time discounts
+- **1,398 active coupons** — manually verified, updated daily with 100% OFF and limited-time discounts
 - **69 in-depth expert reviews** — opinionated audits covering AI engineering, agentic AI, web development, cloud computing, data science, and business
-- **15 categories** — browse by topic at [courseswyn.com/categories](https://courseswyn.com/categories)
-- **183 instructor profiles** — top-rated educators with curated course collections at [courseswyn.com/instructors](https://courseswyn.com/instructors)
+- **14 categories** — browse by topic at [courseswyn.com/categories](https://courseswyn.com/categories)
+- **400 instructor profiles** — top-rated educators with curated course collections at [courseswyn.com/instructors](https://courseswyn.com/instructors)
 - **Real-time search** — Fuse.js powered instant search across all deals and reviews at [courseswyn.com/search](https://courseswyn.com/search)
 - **Featured** in the Official Astro Showcase for high-performance implementation
 
@@ -160,14 +160,14 @@ Browse all instructors at [courseswyn.com/instructors](https://courseswyn.com/in
 
 | Metric | Value |
 |---|---|
-| Active Coupons | 1,355 verified daily |
+| Active Coupons | 1,398 verified daily |
 | Expert Reviews | 69 in-depth audits |
-| Instructor Profiles | 183 |
-| Course Categories | 15 topics |
+| Instructor Profiles | 400 |
+| Course Categories | 14 topics |
 | Update Frequency | Daily (4-hour expiry purge) |
 | Learners Served | 150K+ worldwide |
 | Lighthouse Score | 95+ (All Categories) |
-| Tech Stack | Astro 7.2, React 19.2, Tailwind CSS |
+| Tech Stack | Astro 7.3, React 19.2, Tailwind CSS |
 
 ---
 
@@ -218,7 +218,7 @@ npm run mode:restore  # restore the last backup
 
 | Technology | Purpose |
 |---|---|
-| **Astro 7.2** | Islands Architecture — static-first with dynamic islands |
+| **Astro 7.3** | Islands Architecture — static-first with dynamic islands |
 | **React 19** | Interactive UI components (deal cards, search, comparison tables) |
 | **Tailwind CSS** | Neo-Brutalist design system |
 | **MDX + Content Layer** | Blog with schema-validated frontmatter |

@@ -127,8 +127,8 @@ const faqs = [
   { q: "How do you choose what to list?", a: "We rank candidates by rating depth, instructor track record and curriculum freshness before they go live — a steep cut alone is never enough to get listed." }
 ];
 
-const pageTitle = `CoursesWyn — Verified Udemy Coupons Up to ${maxDiscountPct}% Off (Checked Daily)`;
-const pageDescription = `Start at CoursesWyn: hand-picked verified Udemy coupons up to ${maxDiscountPct}% off for ${currentMonth} ${currentYear}. Browse today's top markdowns, top-rated picks and categories — every code re-checked daily.`;
+const pageTitle = `Udemy Coupons and Promo Codes for ${currentMonth} ${currentYear} — Save Up to ${maxDiscountPct}% | CoursesWyn`;
+const pageDescription = `Verified Udemy coupons and promo codes for ${currentMonth} ${currentYear}. Save up to ${maxDiscountPct}% on top courses — every code re-checked daily and dead codes are pulled before you see them.`;
 
 const jsonLd = {
   "@context": "https://schema.org", "@graph": [
@@ -150,6 +150,23 @@ const heroChips = [
   { name: "Design", q: "Design" },
   { name: "Business", q: "Business" },
 ];
+
+const feedDeals = sortedDeals.slice(0, 6).map((d) => {
+  const t = new Date(d.updatedAt ?? d.createdAt ?? 0).getTime();
+  const mins = Math.max(1, Math.round((now.getTime() - t) / 60000));
+  const timeLabel = mins < 60 ? mins + "m ago" : Math.round(mins / 60) + "h ago";
+  const pct = pctOf(d);
+  return {
+    title: clean(d.title),
+    slug: String(d.slug),
+    cat: (d.category || "Udemy").toLowerCase(),
+    pct,
+    rating: d.rating ?? 0,
+    students: d.students ?? 0,
+    timeLabel,
+  };
+});
+const feedJson = JSON.stringify(feedDeals);
 const typewriterWords = [
   "Search discounted Udemy courses...",
   `${last24h} fresh finds in the last 24 hours`,
@@ -194,7 +211,7 @@ const trustItems = [
   .prose-section h3 { font-size: 1.15rem; font-weight: 600; color: var(--text); margin: 1.5rem 0 0.5rem; }
   .prose-section p { color: var(--muted); line-height: 1.75; font-size: 1rem; margin-bottom: 1rem; }
   .prose-section a { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
-  .community-btn:hover { border-color: var(--brand) !important; background: var(--brand) !important; color: #FFFFFF !important; transform: translateY(-2px); }
+  .community-btn:hover { border-color: var(--brand) !important; background: var(--brand) !important; color: #121715 !important; transform: translateY(-2px); }
   @media (max-width: 768px) { h1 { font-size: 2.2rem !important; } .section-wrapper { padding: 2.25rem 1rem; } .stat-grid { grid-template-columns: repeat(2, 1fr) !important; } .lg-feature-grid { grid-template-columns: 1fr !important; } .lg-guide-grid { grid-template-columns: 1fr !important; gap: 1.5rem !important; } }
   html { scroll-behavior: smooth; }
 
@@ -213,6 +230,23 @@ const trustItems = [
   .lg-search svg { width: 20px; height: 20px; color: var(--muted); flex-shrink: 0; }
   .lg-search input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 0.95rem; font-family: inherit; min-width: 0; }
   .lg-search kbd { font-family: var(--font-mono); color: var(--muted); font-size: 0.7rem; border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; white-space: nowrap; background: var(--card); }
+  .lg-feed { margin-top: 26px; background: var(--bg); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .lg-feed-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--bg-secondary); }
+  .lg-feed-title { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text); }
+  .lg-feed-count { margin-left: auto; font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); }
+  .lg-feed-lines { padding: 6px 0; max-height: 252px; overflow: hidden; }
+  .lg-feed-line { display: flex; align-items: center; gap: 12px; padding: 9px 16px; border-top: 1px solid rgba(30, 36, 46, 0.6); font-family: var(--font-mono); font-size: 0.8rem; text-decoration: none; color: var(--text); transition: background 0.15s; }
+  .lg-feed-line:first-child { border-top: none; }
+  .lg-feed-line:hover { background: var(--brand-soft); }
+  .lg-feed-ok { color: var(--stamp); font-weight: 700; flex-shrink: 0; }
+  .lg-feed-title2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); flex: 1; }
+  .lg-feed-title2 b { color: var(--brand); font-weight: 700; }
+  .lg-feed-meta { color: var(--muted); font-size: 0.7rem; flex-shrink: 0; text-align: right; }
+  @media (max-width: 560px) { .lg-feed-meta { display: none; } }
+  @keyframes feedIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .feed-line-new { animation: feedIn 0.35s ease-out; }
+  @media (prefers-reduced-motion: reduce) { .feed-line-new, .caret { animation: none; } }
+  .caret { display: inline-block; width: 0.55ch; height: 1em; margin-left: 2px; background: var(--brand); vertical-align: text-bottom; animation: lgBlip 1.1s step-end infinite; }
   .lg-stats { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 26px; background: var(--bg); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
   .lg-stat { padding: 16px 12px; text-align: center; border-left: 1px dashed var(--ledger); }
   .lg-stat:first-child { border-left: none; }
@@ -265,278 +299,241 @@ const trustItems = [
   .lg-faq-a { font-size: 0.87rem; color: var(--muted); line-height: 1.65; margin: 0; }
   .lg-guide-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5rem; align-items: start; }
   .lg-cta-row { display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 22px; }
-  @media (prefers-reduced-motion: reduce) { .lg-blip { animation: none; } }
+  .dh-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 1.5rem; }
+  .dh-step { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; transition: border-color 0.2s, transform 0.2s; }
+  .dh-step:hover { border-color: var(--brand); transform: translateY(-2px); }
+  .dh-step-num { font-family: var(--font-mono); font-weight: 700; font-size: 0.78rem; color: var(--brand); letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+  .dh-step-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0 0 0.4rem; }
+  .dh-step-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin: 0; }
+  .dh-verify { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 1.5rem; }
+  .dh-verify-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; }
+  .dh-verify-mark { width: 32px; height: 32px; border-radius: 10px; background: var(--brand-soft); border: 1px solid var(--brand); display: flex; align-items: center; justify-content: center; color: var(--brand); font-weight: 800; font-size: 1rem; margin-bottom: 1rem; }
+  .dh-verify-card h3 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: var(--text); margin: 0 0 0.4rem; }
+  .dh-verify-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin: 0; }
+  .dh-cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0 1rem; }
+  .dh-cat { display: flex; flex-direction: column; gap: 2px; padding: 1rem 0.5rem; border-top: 1px solid var(--ledger); text-decoration: none; transition: background 0.15s, padding-left 0.2s; border-radius: 6px; }
+  .dh-cat:hover { background: var(--brand-soft); padding-left: 8px; }
+  .dh-cat-name { font-family: var(--font-display); font-weight: 600; font-size: 0.95rem; color: var(--text); }
+  .dh-cat-count { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); }
+  .dh-cat:hover .dh-cat-name { color: var(--brand); }
+  .dh-check { display: grid; grid-template-columns: 1fr 1fr; gap: 0 2.5rem; }
+  .dh-check-item { display: flex; gap: 12px; padding: 13px 4px; border-top: 1px solid var(--ledger); font-size: 0.88rem; line-height: 1.6; color: var(--muted); }
+  .dh-check-item:first-child, .dh-check-item:nth-child(2) { border-top: none; }
+  .dh-check-item b { color: var(--text); }
+  .dh-check-mark { font-family: var(--font-mono); font-weight: 700; color: var(--brand); flex-shrink: 0; }
+
+  .dh-hero { padding: 1.5rem 0 1rem; }
+  .dh-hero { padding: 1.5rem 0 1rem; }
+  .dh-hero-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; margin-bottom: 1.25rem; }
+  .dh-hero-title { font-size: clamp(2.1rem, 4.3vw, 3rem); font-weight: 800; letter-spacing: -0.02em; color: var(--text-bright, var(--text)); margin: 0 0 0.75rem; line-height: 1.12; }
+  .dh-hero-sub { color: var(--muted); font-size: 1rem; line-height: 1.7; margin: 0 0 1.5rem; max-width: 560px; }
+  .dh-hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 2.5rem; align-items: center; }
+  .dh-hero-stats { display: flex; gap: 2rem; }
+  .dh-stat { display: flex; flex-direction: column; }
+  .dh-stat-val { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--brand); }
+  .dh-stat-label { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); }
+  .dh-search-lg { display: flex; gap: 8px; max-width: 640px; margin-top: 2rem; }
+  .dh-search-input { flex: 1; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; }
+  .dh-search-input::placeholder { color: var(--muted); }
+  .dh-search-btn { font-family: var(--font-display); font-weight: 700; color: #0b0e14; background: var(--brand); border: none; border-radius: 10px; padding: 0 20px; cursor: pointer; }
+  .dh-terminal { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; text-align: left; }
+  .dh-term-head { display: flex; align-items: center; gap: 6px; padding: 10px 14px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
+  .dh-term-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dh-term-title { margin-left: 8px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
+  .dh-term-live { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; color: var(--stamp); text-transform: uppercase; letter-spacing: 0.06em; }
+  .dh-term-live .lg-blip { background: var(--stamp); }
+  .dh-term-body { padding: 4px 0; }
+  .dh-term-line { display: flex; align-items: center; gap: 10px; padding: 7px 16px; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text); text-decoration: none; }
+  .dh-term-line:hover { background: var(--brand-soft); }
+  .dh-term-time { color: var(--muted); flex-shrink: 0; font-size: 0.7rem; min-width: 42px; }
+  .dh-term-ok { color: var(--stamp); font-weight: 700; flex-shrink: 0; }
+  .dh-term-cat { color: var(--brand); flex-shrink: 0; font-size: 0.7rem; min-width: 64px; }
+  .dh-term-title2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .dh-term-save { color: var(--brand); font-weight: 700; flex-shrink: 0; }
+  .dh-term-foot { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--bg-secondary); font-family: var(--font-mono); font-size: 0.78rem; color: var(--text); }
+  .dh-term-foot b { color: var(--brand); }
+  .caret { display: inline-block; width: 0.55ch; height: 1em; margin-left: 4px; background: var(--brand); vertical-align: text-bottom; animation: lgBlip 1.1s step-end infinite; }
+  .dh-search { max-width: 640px; margin: 0 auto; }
+
+  /* Dealhack .tsec style: ## prefix + gold underline */
+  .dh-tsec { position: relative; padding-bottom: 0.55rem; margin: 0 0 0.8rem; font-size: clamp(1.12rem, 2vw, 1.4rem); font-weight: 800; letter-spacing: -0.01em; color: var(--text-bright, var(--text)); line-height: 1.25; display: block; }
+  .dh-tsec::before { content: "## "; color: var(--brand); font-family: var(--font-mono); font-weight: 700; }
+  .dh-tsec::after { content: ""; position: absolute; left: 0; bottom: -2px; width: 2.75rem; height: 3px; border-radius: 2px; background: var(--brand); }
+  .section-hd { margin-bottom: 1.75rem; }
+
+  /* FAQ accordion gaya Dealhack */
+  .dh-faq { display: flex; flex-direction: column; gap: 0.75rem; width: 100%; }
+  .dh-faq-item { border: 1px solid var(--border); border-radius: 12px; background: var(--card); overflow: hidden; }
+  .dh-faq-item[open] { border-color: var(--brand); }
+  .dh-faq-q { display: flex; align-items: center; gap: 12px; padding: 1rem 1.25rem; cursor: pointer; list-style: none; font-size: 0.98rem; font-weight: 700; color: var(--text); line-height: 1.4; user-select: none; }
+  .dh-faq-q::-webkit-details-marker { display: none; }
+  .dh-faq-caret { color: var(--brand); font-family: var(--font-mono); font-weight: 700; flex-shrink: 0; transition: transform 0.2s; }
+  .dh-faq-item[open] .dh-faq-caret { transform: rotate(90deg); }
+  .dh-faq-item[open] .dh-faq-q { color: var(--brand); }
+  .dh-faq-a { padding: 0 1.25rem 1.1rem 2.5rem; margin: 0; font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+  .dh-step-prompt { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; color: var(--brand); margin-bottom: 0.75rem; }
+  .dh-step-no { color: var(--muted); font-weight: 600; }
+
+  .dh-stores { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1.5rem; }
+  .dh-store { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.9rem; text-decoration: none; transition: border-color 0.2s, transform 0.2s; }
+  .dh-store:hover { border-color: var(--brand); transform: translateY(-2px); }
+  .dh-store-mark { width: 42px; height: 42px; border-radius: 10px; background: var(--brand-soft); border: 1px solid var(--brand); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; color: var(--brand); flex-shrink: 0; }
+  .dh-store-body { display: flex; flex-direction: column; min-width: 0; }
+  .dh-store-name { font-family: var(--font-display); font-weight: 600; font-size: 0.94rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dh-store-count { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); }
+  @media (max-width: 900px) { .dh-hero-grid { grid-template-columns: 1fr; gap: 1.75rem; } .dh-stepsp, .dh-steps, .dh-verify { grid-template-columns: 1fr; } .dh-stores { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 760px) { .dh-check { grid-template-columns: 1fr; } .dh-check-item:nth-child(2) { border-top: 1px solid var(--ledger); } .dh-stores { grid-template-columns: 1fr 1fr; } }
+  @media (prefers-reduced-motion: reduce) { .lg-blip, .caret { animation: none; } }
 </style>
-
-  <!-- 1. HERO — LEDGER SHEET -->
-  <section class="section-wrapper" aria-label="Verified Udemy coupon ledger" style="padding-top:2rem;">
+  <!-- ===================== HERO ===================== -->
+  <div class="dh-hero">
     <div class="container">
-      <div class="lg-sheet">
-        <div class="lg-folio"><span>Coupon ledger — {currentMonth} {currentYear}</span><span class="lg-folio-live"><span class="lg-blip"></span>№ {totalCount.toLocaleString()} tracked</span></div>
-        <div style={{ textAlign: "center", maxWidth: "780px", margin: "0 auto" }}>
-          <h1 style={{ margin: "0 0 12px" }}>
-            <span style="display:block;font-size:clamp(1.9rem,3.6vw,2.7rem);">Verified Udemy Coupons</span>
-            <span style="display:block;font-size:clamp(2.6rem,6vw,4.4rem);color:var(--brand);">{currentMonth} {currentYear}</span>
-            <span style="display:block;font-size:clamp(1.9rem,3.6vw,2.7rem);">Hand-Picked Daily by CoursesWyn</span>
-          </h1>
-          <p style={{ color: "var(--muted)", fontSize: "1.02rem", lineHeight: 1.7, margin: "0 auto 22px", maxWidth: "640px" }}>Today's top verified Udemy coupons and discount codes — up to {maxDiscountPct}% off development, IT, business, design and data. Open the <a href="/udemy-coupon-code" style={{ color: "var(--brand)", fontWeight: 600 }}>full coupon catalog</a> or claim a pick below.</p>
-          <form action="/search" method="GET" role="search" aria-label="Search discounted Udemy courses">
-            <div class="lg-search">
-              <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
-              <input type="search" name="q" id="hpSearchInput" data-typewriter={typewriterJson} placeholder="Try Python, Excel, AWS..." autocomplete="off" aria-label="Search discounted courses" />
-              <button type="submit" class="btn btn-primary" style={{ borderRadius: "9px", padding: "0.65rem 1.4rem", fontSize: "0.9rem" }}>Find deals</button>
-            </div>
-          </form>
-          <p style={{ fontSize: "0.78rem", color: "var(--muted)", margin: "10px 0 0", letterSpacing: "0.02em", fontWeight: 600 }}>{totalCount.toLocaleString()} coupons · up to {maxDiscountPct}% off · {uniqueInstructors.toLocaleString()} instructors tracked</p>
-          <div class="lg-cta-row">
-            <a href="/udemy-coupon-code" class="btn btn-primary btn-lg" style={{ borderRadius: "12px", padding: "0.95rem 2.2rem", fontSize: "1rem" }}>Explore today's drops</a>
-            <a href="/how-to-redeem-coupon" class="btn btn-ghost btn-lg" style={{ borderRadius: "12px", padding: "0.95rem 2.2rem", color: "var(--brand)", borderColor: "var(--brand)" }}>How claiming works</a>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "9px", justifyContent: "center", marginTop: "20px" }}>
-            {heroChips.map((c) => (<a href={"/search?q=" + encodeURIComponent(c.q)} class="lg-chip">{c.name}</a>))}
-          </div>
+      <div class="dh-hero-grid">
+      <div class="dh-hero-left">
+        <div class="dh-hero-badge"><span class="lg-blip"></span> Tested by CoursesWyn daily · dead codes pulled</div>
+        <h1 class="dh-hero-title">Udemy Coupons and Promo Codes for {currentMonth} {currentYear}</h1>
+        <p class="dh-hero-sub">Coupons, promo codes and deals for Udemy courses. Every code verified against the live price and dead codes are pulled before you see them.</p>
+        <div class="dh-hero-stats">
+          <div class="dh-stat"><b class="dh-stat-val"><span data-count={totalCount}>0</span><span class="lg-plus">+</span></b><span class="dh-stat-label">verified deals</span></div>
+          <div class="dh-stat"><b class="dh-stat-val"><span data-count={last24h}>0</span></b><span class="dh-stat-label">codes checked today</span></div>
+          <div class="dh-stat"><b class="dh-stat-val"><span data-count={avgDiscount}>0</span><span class="lg-plus">%</span></b><span class="dh-stat-label">avg discount</span></div>
         </div>
-        <div class="lg-stats">
-          <div class="lg-stat"><div class="lg-stat-num">{totalCount.toLocaleString()}</div><div class="lg-stat-lab">Total coupons</div></div>
-          <div class="lg-stat"><div class="lg-stat-num">{last24h.toLocaleString()}</div><div class="lg-stat-lab">Fresh in 24h</div></div>
-          <div class="lg-stat"><div class="lg-stat-num">{uniqueInstructors.toLocaleString()}</div><div class="lg-stat-lab">Instructors covered</div></div>
-          <div class="lg-stat"><div class="lg-stat-num">−{maxDiscountPct}%</div><div class="lg-stat-lab">Biggest cut</div></div>
+      </div>
+
+      <div class="dh-terminal">
+        <div class="dh-term-head">
+          <span class="dh-term-dot" style="background:#ff5f56"></span>
+          <span class="dh-term-dot" style="background:#ffbd2e"></span>
+          <span class="dh-term-dot" style="background:#27c93f"></span>
+          <span class="dh-term-title">agents@courseswyn: ~/verify --watch</span>
+          <span class="dh-term-live"><span class="lg-blip"></span> Live</span>
+        </div>
+        <div class="dh-term-body">
+          {feedDeals.map((d) => (
+            <a class="dh-term-line" href={"/coupon/" + d.slug}>
+              <span class="dh-term-time">{d.timeLabel}</span>
+              <span class="dh-term-ok">✓</span>
+              <span class="dh-term-cat">{d.cat}</span>
+              <span class="dh-term-title2">{d.title}</span>
+              <span class="dh-term-save">−{d.pct}%</span>
+            </a>
+          ))}
+          <div class="dh-term-line"><span class="dh-term-time">now</span><span class="dh-term-ok">✓</span><span class="dh-term-title2">codes checked by CoursesWyn<span class="caret"></span></span></div>
+        </div>
+        <div class="dh-term-foot">$ codes checked by CoursesWyn today <b>{last24h.toLocaleString()}</b></div>
+      </div>
+      </div>
+
+      <form action="/search" method="GET" role="search" aria-label="Search discounted Udemy courses" class="dh-search-lg">
+        <input class="dh-search-input" type="search" name="q" id="hpSearchInput" data-typewriter={typewriterJson} placeholder="Try Python, Excel, AWS..." autocomplete="off" aria-label="Search discounted courses" />
+        <button type="submit" class="dh-search-btn">Search</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== HOW IT WORKS ===================== -->
+  <section class="section-wrapper" aria-label="How CoursesWyn works" style="padding-top:2.5rem;">
+    <div class="container">
+      <div class="section-hd">
+        <h2 class="dh-tsec">How <span style={{ color: "var(--brand)" }}>It Works</span></h2>
+      </div>
+      <div class="dh-steps">
+        <div class="dh-step">
+          <div class="dh-step-prompt">&gt;_search <span class="dh-step-no">01</span></div>
+          <h3 class="dh-step-title">Name your skill</h3>
+          <p class="dh-step-desc">Type a skill — Python, AWS, Excel — and land on its live coupons. No pop-ups, no sign-up wall, no spinning a wheel.</p>
+        </div>
+        <div class="dh-step">
+          <div class="dh-step-prompt">&gt;_verify <span class="dh-step-no">02</span></div>
+          <h3 class="dh-step-title">The agents do the testing</h3>
+          <p class="dh-step-desc">Our checks run every coupon against the live Udemy price around the clock. Dead and expired codes get deleted before a human wastes a click.</p>
+        </div>
+        <div class="dh-step">
+          <div class="dh-step-prompt">&gt;_save <span class="dh-step-no">03</span></div>
+          <h3 class="dh-step-title">You keep the savings</h3>
+          <p class="dh-step-desc">Claim the code, paste it at Udemy checkout, pocket the discount. The course is yours — same certificate, lifetime access.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- TRENDING UDEMY TOPICS -->
-  <section class="section-wrapper" aria-label="Trending Udemy course topics" style="padding-top:0.5rem;">
+  <!-- ===================== TODAY'S TOP DEALS ===================== -->
+  <section class="section-wrapper" aria-label="Today's top Udemy deals" style="padding-top:2.5rem;">
     <div class="container">
-      <div class="lg-eyebrow">Trending now — by live count</div>
-      <h2 class="lg-h2">Trending <span style={{ color: "var(--brand)" }}>Udemy course topics</span></h2>
-      <p class="lg-sub">The most stocked topics in our verified Udemy coupon catalog — ranked by live coupon count.</p>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "9px" }}>
-        {trendingSkills.map((t) => (<a href={"/search?q=" + encodeURIComponent(t.name)} class="lg-chip" title={"Udemy coupons for " + t.name}>{t.name} <b>×{t.count}</b></a>))}
-      </div>
-    </div>
-  </section>
-
-  <!-- 2. LATEST DEALS -->
-  <section class="section-wrapper" aria-label="Latest Udemy coupons and discounts" style="padding-top:0.5rem;">
-    <div class="container">
-      <div class="lg-eyebrow">Fresh drops — {currentMonth}</div>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", marginBottom: "1.25rem" }}>
-        <div>
-          <h2 class="lg-h2" style={{ marginBottom: "0.25rem" }}>Latest <span style={{ color: "var(--brand)" }}>Udemy coupons</span></h2>
-          <p class="lg-sub" style={{ margin: 0 }}>Newly verified Udemy coupon codes. Open any ticket to claim the discount on Udemy.</p>
-        </div>
-        <a href="/udemy-coupon-code" class="lg-link">All {totalCount.toLocaleString()} coupons →</a>
+      <div class="section-hd">
+        <h2 class="dh-tsec">Today's <span style={{ color: "var(--brand)" }}>Top Deals</span></h2>
+        <p class="lg-sub">Newly verified Udemy coupon codes — claim one before the cap runs out.</p>
       </div>
       <div class="grid">
-        {latestSix.map((deal) => (<LedgerRow deal={deal} variant="grid" />))}
+        {latestSix.map((deal, i) => (<LedgerRow deal={deal} variant="grid" num={String(i + 1).padStart(2, "0")} />))}
       </div>
+      <div style={{ textAlign: "center", marginTop: "1.5rem" }}><a href="/udemy-coupon-code" class="lg-link">See all {totalCount.toLocaleString()} coupons →</a></div>
     </div>
   </section>
 
-  <!-- DEEPEST CUTS -->
-  <section class="section-wrapper" aria-label="90 percent off top-rated Udemy courses" style="padding-top:0.5rem;">
+  <!-- ===================== POPULAR CATEGORIES ===================== -->
+  <section class="section-wrapper" aria-label="Popular Udemy coupon categories" style="padding-top:2.5rem;">
     <div class="container">
-      <div class="lg-eyebrow">Maximum savings — 4.5★ and up</div>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", marginBottom: "1.25rem" }}>
-        <div>
-          <h2 class="lg-h2" style={{ marginBottom: "0.25rem" }}>90% off <span style={{ color: "var(--brand)" }}>top-rated Udemy courses</span></h2>
-          <p class="lg-sub" style={{ margin: 0 }}>{deepCutsCount.toLocaleString()} coupons cut 90% or more — below are the highest-rated ones.</p>
-        </div>
-        <a href="/udemy-coupon-code" class="lg-link">All {totalCount.toLocaleString()} Udemy coupons →</a>
+      <div class="section-hd">
+        <h2 class="dh-tsec">Popular <span style={{ color: "var(--brand)" }}>Categories</span></h2>
+        <p class="lg-sub">Pick a field and land on its live Udemy coupons.</p>
       </div>
-      <div class="grid">
-        {deepCuts.map((deal) => (<LedgerRow deal={deal} variant="grid" />))}
-      </div>
-    </div>
-  </section>
-
-  <!-- 3. SPOTLIGHT -->
-  {spotlight && (
-    <section class="section-wrapper" aria-label="Featured Udemy discount of the day" style="padding-top:0.5rem;">
-      <div class="container">
-        <div class="lg-sheet">
-          <div class="lg-folio"><span>Featured entry — best rating today</span><span class="lg-folio-live"><span class="lg-blip"></span>Checked {spotlight.updatedAt ? new Date(spotlight.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "recently"}</span></div>
-          <div class="lg-feature-grid">
-            <div>
-              <h2 class="lg-h2" style={{ fontSize: "clamp(1.5rem, 2.8vw, 2rem)" }}><a href={"/coupon/" + spotlight.slug} style={{ color: "inherit", textDecoration: "none" }}>{clean(spotlight.title)}</a></h2>
-              {spotlight.instructor && <p class="mono" style={{ fontSize: "0.75rem", color: "var(--muted)", margin: "6px 0 12px" }}>by {spotlight.instructor}{typeof spotlight.rating === "number" ? ` · ★ ${spotlight.rating.toFixed(1)}` : ""}</p>}
-              <p style={{ color: "var(--muted)", fontSize: "0.98rem", lineHeight: 1.7, margin: "0 0 4px" }}>{clean(spotlight.description)?.slice(0, 220) || "A standout course from the current verification batch — strong ratings, active instructor, and a working discount."}</p>
-              <div class="lg-price-row">
-                <span class="lg-price">${Number(spotlight.price ?? 0).toFixed(2)}</span>
-                {Number(spotlight.originalPrice ?? 0) > Number(spotlight.price ?? 0) && (<><span class="lg-was">${Number(spotlight.originalPrice).toFixed(2)}</span><span class="lg-save">−{pctOf(spotlight)}%</span></>)}
-              </div>
-              <a href={spotlight.url || ("/coupon/" + spotlight.slug)} target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg" style={{ borderRadius: "12px", padding: "0.9rem 1.9rem" }}>Claim this code →</a>
-            </div>
-            <div class="lg-feature-img">
-              {spotlight.image ? (<img src={spotlight.image} alt={clean(spotlight.title)} width={400} height={300} loading="lazy" decoding="async" />) : (<div style={{ width: "100%", height: "290px", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-secondary)", color: "var(--muted)" }}>CoursesWyn</div>)}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )}
-
-  <!-- 4. WHY COURSESWYN -->
-  <section class="section-wrapper" aria-label="Why use CoursesWyn for Udemy coupons" style="padding-top:0.5rem;">
-    <div class="container">
-      <div class="lg-eyebrow">Why CoursesWyn</div>
-      <h2 class="lg-h2">Why use CoursesWyn for <span style={{ color: "var(--brand)" }}>Udemy coupons?</span></h2>
-      <p class="lg-sub">Pay less for the same Udemy courses: verified coupon codes, no noise, certificate included.</p>
-      <div class="lg-index">
-        {whyItems.map((item, i) => (
-          <div class="lg-row">
-            <span class="lg-num">0{i + 1}</span>
-            <div class="lg-row-main">
-              <div class="lg-row-title">{item.t}</div>
-              <div class="lg-row-sub">{item.d}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- 6. CATEGORIES -->
-  <section class="section-wrapper" aria-label="Udemy coupons by category" style="padding-top:0.5rem;">
-    <div class="container">
-      <div class="lg-eyebrow">Udemy coupon categories</div>
-      <h2 class="lg-h2">Udemy coupons <span style={{ color: "var(--brand)" }}>by category</span></h2>
-      <p class="lg-sub">Eight stocked Udemy categories — pick your field and find the deepest verified coupon.</p>
-      <div class="lg-index" role="list">
-        {topCats.map((cat, i) => (
-          <a href={"/categories/" + cat.slug} title={"Browse " + cat.count + " " + cat.name + " courses"} class="lg-row" role="listitem">
-            <span class="lg-num">0{i + 1}</span>
-            <div class="lg-row-main">
-              <div class="lg-row-title">{cat.name}</div>
-              <div class="lg-row-sub">{cat.blurb}</div>
-            </div>
-            <div class="lg-row-meta">{cat.count}<small>coupons</small></div>
-            <span class="lg-row-arrow" aria-hidden="true">→</span>
+      <div class="dh-stores">
+        {topCats.map((cat) => (
+          <a href={"/categories/" + cat.slug} class="dh-store" title={"Browse " + cat.count + " " + cat.name + " courses"}>
+            <span class="dh-store-mark">{cat.name.charAt(0).toUpperCase()}</span>
+            <span class="dh-store-body">
+              <span class="dh-store-name">{cat.name}</span>
+              <span class="dh-store-count">{cat.count} coupons</span>
+            </span>
           </a>
         ))}
       </div>
-      <div style={{ marginTop: "1.5rem" }}><a href="/categories" class="lg-link">See every Udemy category →</a></div>
+      <div style={{ textAlign: "center", marginTop: "1.5rem" }}><a href="/categories" class="lg-link">All categories →</a></div>
     </div>
   </section>
 
-  <!-- TOP UDEMY INSTRUCTORS -->
-  <section class="section-wrapper" aria-label="Top Udemy instructors with active coupons" style="padding-top:0.5rem;">
+  <!-- ===================== HOW WE VERIFY ===================== -->
+  <section class="section-wrapper" aria-label="How CoursesWyn verifies coupons" style="padding-top:2.5rem;">
     <div class="container">
-      <div class="lg-eyebrow">Udemy instructors — by active count</div>
-      <h2 class="lg-h2">Top Udemy instructors <span style={{ color: "var(--brand)" }}>with active coupons</span></h2>
-      <p class="lg-sub">Creators with the most verified Udemy discounts live right now.</p>
-      <div class="lg-index" role="list">
-        {topInstructors.map((ins) => (
-          <a href={"/instructor/" + ins.slug} title={"Udemy coupons by " + ins.name} class="lg-row" role="listitem">
-            {instructorImages.get(ins.slug) ? (
-              <img src={instructorImages.get(ins.slug)} alt={ins.name} width={92} height={92} loading="lazy" class="lg-avatar" />
-            ) : (
-              <div class="lg-avatar-fallback" aria-hidden="true">{ins.name.charAt(0).toUpperCase()}</div>
-            )}
-            <div class="lg-row-main">
-              <div class="lg-row-title">{ins.name}</div>
-              <div class="lg-row-sub">Verified instructor catalog</div>
-            </div>
-            <div class="lg-row-meta">{ins.count}<small>coupons</small></div>
-            <span class="lg-row-arrow" aria-hidden="true">→</span>
-          </a>
-        ))}
+      <div class="section-hd">
+        <h2 class="dh-tsec">How We <span style={{ color: "var(--brand)" }}>Verify Codes</span></h2>
+        <p class="lg-sub">A code isn't "verified" just because it exists. Here's what actually happens before it goes live.</p>
       </div>
-      <div style={{ marginTop: "1.5rem" }}><a href="/instructors" class="lg-link">All Udemy instructors →</a></div>
-    </div>
-  </section>
-
-  <!-- 7. LANGUAGES / TOPICS -->
-  <section class="section-wrapper" aria-label="Udemy courses by language and topic" style="padding-top:0.5rem;">
-    <div class="container">
-      <div class="lg-eyebrow">Language & topic doors</div>
-      <h2 class="lg-h2">Learn in <span style={{ color: "var(--brand)" }}>your language</span></h2>
-      <p class="lg-sub">Most of the catalog is English-first with a growing Spanish shelf — or skip language entirely and browse by topic.</p>
-      <div class="lg-index">
-        <a href="/search?q=English" class="lg-row">
-          <span class="lg-num">EN</span>
-          <div class="lg-row-main"><div class="lg-row-title">English catalog</div><div class="lg-row-sub">The full {totalCount.toLocaleString()}-strong directory, fully searchable.</div></div>
-          <span class="lg-row-arrow" aria-hidden="true">→</span>
-        </a>
-        <a href="/search?q=Spanish" class="lg-row">
-          <span class="lg-num">ES</span>
-          <div class="lg-row-main"><div class="lg-row-title">Catálogo en español</div><div class="lg-row-sub">Descuentos verificados en cursos seleccionados en español.</div></div>
-          <span class="lg-row-arrow" aria-hidden="true">→</span>
-        </a>
-        <a href="/topics" class="lg-row">
-          <span class="lg-num">✦</span>
-          <div class="lg-row-main"><div class="lg-row-title">Browse by topic</div><div class="lg-row-sub">Python, AWS, Excel, design and 400+ narrower trails.</div></div>
-          <span class="lg-row-arrow" aria-hidden="true">→</span>
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- 8. GUIDE PROSE -->
-  <section class="section-wrapper prose-section" aria-label="How Udemy coupon codes work" style="padding-top:0.5rem;">
-    <div class="container">
-      <div class="lg-eyebrow">Field notes</div>
-      <h2 class="lg-h2">How Udemy <span style={{ color: "var(--brand)" }}>coupon codes work</span></h2>
-      <p class="lg-sub">Short version: instructors trade margin for momentum. Longer version below — or jump to our <a href="/udemy-coupons-guide">coupon guide</a>.</p>
-      <div class="lg-guide-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3.5rem", alignItems: "start" }}>
-        <div>
-          <h3>Where do these codes come from?</h3>
-          <p>Instructors generate coupon codes inside Udemy to push launches, seasonal sales and back-catalog titles. Each code carries its own expiry and redemption cap, which is why the same course can swing from $89 to $12 and back within days.</p>
-          <p>Claiming one is deliberately boring: open a CoursesWyn ticket, hit the claim link, and Udemy applies the code at checkout. The course then lives in your library permanently.</p>
-          <h3>Why would anyone discount 90%+?</h3>
-          <p>Volume beats margin early on. A flood of enrolled learners means more ratings, better search placement inside Udemy, and social proof the instructor reuses everywhere else. You get the cheap seat; they get the flywheel.</p>
+      <div class="dh-verify">
+        <div class="dh-verify-card">
+          <div class="dh-verify-mark">✓</div>
+          <h3>Quality gate first</h3>
+          <p>Ratings, review depth, instructor history and syllabus freshness decide what gets published — not how big the percentage looks.</p>
         </div>
-        <div>
-          <h3>How CoursesWyn keeps the list honest</h3>
-          <p>Every candidate goes through rating, review-depth and instructor-history checks before it surfaces here, then gets re-polled on a schedule. Worked yesterday is no guarantee for today — so stale entries are retired instead of left to rot.</p>
-          <ul style={{ color: "var(--muted)", lineHeight: 1.9, paddingLeft: "1.25rem", marginBottom: "1rem" }}>
-            <li>Discount math is recomputed from live price pairs</li>
-            <li>Thin, outdated or review-starved courses are filtered out</li>
-            <li>Recency is shown so you can triage what to grab first</li>
-          </ul>
-          <p>Prefer a path over a single course? Start with <a href="/topics">topics</a> for skills or <a href="/categories">categories</a> for departments.</p>
+        <div class="dh-verify-card">
+          <div class="dh-verify-mark">✓</div>
+          <h3>Re-checked on a loop</h3>
+          <p>Listings are re-polled on a schedule. Expired or capped-out coupons are pruned fast, so a dead code doesn't linger for weeks.</p>
+        </div>
+        <div class="dh-verify-card">
+          <div class="dh-verify-mark">✓</div>
+          <h3>Recency shown</h3>
+          <p>You see when each code was last confirmed working, so you can triage what to grab first instead of guessing.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 9. THREE DOORS -->
-  <section class="section-wrapper" aria-label="Where to find Udemy coupons on CoursesWyn" style="padding-top:0.5rem;">
+  <!-- ===================== FAQ ===================== -->
+  <section class="section-wrapper" aria-label="Udemy coupon code FAQs" style="padding-top:2.5rem;">
     <div class="container">
-      <div class="lg-eyebrow">Three doors, one engine</div>
-      <h2 class="lg-h2">Where to find <span style={{ color: "var(--brand)" }}>Udemy coupons</span> on CoursesWyn</h2>
-      <p class="lg-sub">Pick your hunting style — the same verification engine sits behind all three doors.</p>
-      <div class="lg-index">
-        <a href="/udemy-coupon-code" class="lg-row">
-          <span class="lg-num">01</span>
-          <div class="lg-row-main"><div class="lg-row-title">Full coupon directory</div><div class="lg-row-sub">Every live code in one filterable grid. Best when you know roughly what you want.</div></div>
-          <span class="lg-row-arrow" aria-hidden="true">→</span>
-        </a>
-        <a href="/udemy-coupons-today" class="lg-row">
-          <span class="lg-num">02</span>
-          <div class="lg-row-main"><div class="lg-row-title">Just landed today</div><div class="lg-row-sub">Only the freshest verifications from the last rotation.</div></div>
-          <span class="lg-row-arrow" aria-hidden="true">→</span>
-        </a>
-        <a href="/udemy-coupons-guide" class="lg-row">
-          <span class="lg-num">03</span>
-          <div class="lg-row-main"><div class="lg-row-title">Learn the playbook</div><div class="lg-row-sub">How caps, expiries and seasonal pushes work.</div></div>
-          <span class="lg-row-arrow" aria-hidden="true">→</span>
-        </a>
+      <div class="section-hd">
+        <h2 class="dh-tsec">Frequently Asked <span style={{ color: "var(--brand)" }}>Questions</span></h2>
+        <p class="lg-sub">The six things newcomers ask before their first discounted enrollment.</p>
       </div>
-    </div>
-  </section>
-
-  <!-- 10. TRUST -->
-  <section class="section-wrapper" aria-label="Why learners trust CoursesWyn" style="padding-top:0.5rem;">
-    <div class="container">
-      <div class="lg-eyebrow">House rules</div>
-      <h2 class="lg-h2">Built to be <span style={{ color: "var(--brand)" }}>boringly reliable</span></h2>
-      <p class="lg-sub">No mystery mechanics — just a directory that would rather show fewer working codes than many broken ones.</p>
-      <div class="lg-check">
-        {trustItems.map((item) => (
-          <div class="lg-check-item"><span class="lg-check-mark">✓</span><span><b>{item.t}.</b> {item.d}</span></div>
+      <div class="dh-faq">
+        {faqs.map((faq, i) => (
+          <details class="dh-faq-item" itemscope itemtype="https://schema.org/Question">
+            <summary class="dh-faq-q" itemprop="name"><span class="dh-faq-caret">›</span>{faq.q}</summary>
+            <div itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><p class="dh-faq-a" itemprop="text">{faq.a}</p></div>
+          </details>
         ))}
       </div>
       <div style={{ textAlign: "center", marginTop: "2rem" }}>
@@ -545,61 +542,35 @@ const trustItems = [
     </div>
   </section>
 
-  <!-- 11. FAQ -->
-  <section class="section-wrapper" aria-label="Udemy coupon code FAQs" style="padding-top:0.5rem;">
-    <div class="container">
-      <div class="lg-eyebrow">Questions — answered</div>
-      <h2 class="lg-h2">Udemy coupon code <span style={{ color: "var(--brand)" }}>FAQs</span></h2>
-      <p class="lg-sub">The six things newcomers ask before their first discounted enrollment.</p>
-      <div class="lg-faq">
-        {faqs.map((faq, i) => (
-          <div class="lg-faq-item" itemscope itemtype="https://schema.org/Question">
-            <span class="lg-faq-no">Q{String(i + 1).padStart(2, "0")}</span>
-            <div>
-              <h3 class="lg-faq-q" itemprop="name">{faq.q}</h3>
-              <div itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer"><p class="lg-faq-a" itemprop="text">{faq.a}</p></div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div style={{ textAlign: "center", marginTop: "2rem" }}>
-        <p style={{ color: "var(--muted)", marginBottom: "1rem", fontSize: "0.9rem" }}>Still curious? The full library is one click away.</p>
-        <a href="/udemy-coupon-code" class="lg-link">Browse discounted courses →</a>
-      </div>
-    </div>
-  </section>
 
-  <!-- 12. COMMUNITY -->
-  <section class="section-wrapper" aria-label="Get daily Udemy coupon alerts" style="padding-top:0.5rem;">
-    <div class="container" style={{ textAlign: "center", maxWidth: "650px" }}>
-      <div class="lg-eyebrow" style={{ justifyContent: "center" }}>Dispatches</div>
-      <h2 class="lg-h2">Get daily <span style={{ color: "var(--brand)" }}>Udemy coupon alerts</span></h2>
-      <p class="lg-sub" style={{ margin: "0 auto 2rem" }}>Follow CoursesWyn for the daily rotation of verified Udemy markdowns and study guides.</p>
-      <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-        <a href="https://facebook.com/CoursesWyn" target="_blank" rel="noopener noreferrer" class="community-btn" style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem", padding: "0.9rem 1.75rem", borderRadius: "12px", background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem", transition: "all 0.2s ease" }}>Facebook</a>
-        <a href="https://x.com/CoursesWyn" target="_blank" rel="noopener noreferrer" class="community-btn" style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem", padding: "0.9rem 1.75rem", borderRadius: "12px", background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem", transition: "all 0.2s ease" }}>X / Twitter</a>
-        <a href="https://medium.com/@coursewyn" target="_blank" rel="noopener noreferrer" class="community-btn" style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem", padding: "0.9rem 1.75rem", borderRadius: "12px", background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem", transition: "all 0.2s ease" }}>Medium</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- PERSONAL PLAN TICKET -->
-  <section class="section-wrapper" aria-label="Udemy Personal Plan" style="padding-top:0.5rem;">
-    <div class="container">
-      <div class="lg-sheet" style={{ textAlign: "center", overflow: "hidden", padding: "0 0 2.5rem" }}>
-        <div class="lg-perf" aria-hidden="true" style={{ margin: "14px 8px 0" }}></div>
-        <div style={{ padding: "2rem 1.5rem 0" }}>
-          <div class="lg-eyebrow" style={{ justifyContent: "center" }}>Udemy Personal Plan — sponsored</div>
-          <h2 class="lg-h2">One subscription, <span style={{ color: "var(--brand)" }}>26,000+ courses</span><br />zero coupon-hunting</h2>
-          <p class="lg-sub" style={{ margin: "0 auto 1.5rem" }}>If single coupons feel like whack-a-mole, the flat-rate plan is the calm alternative — learn across topics without counting codes.</p>
-          <a href="https://trk.udemy.com/c/6564357/3775958/39854" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg" style={{ borderRadius: "12px", padding: "0.95rem 2.4rem" }}>Start free trial</a>
-          <p class="mono" style={{ fontSize: "0.7rem", color: "var(--muted)", marginTop: "14px", letterSpacing: "0.04em" }}>26,000+ courses · 7-day free trial · cancel anytime · from $20/mo</p>
-        </div>
-      </div>
-    </div>
-  </section>
 
 <script>
+  (function () {
+    function animateCount(el) {
+      var target = parseInt(el.getAttribute('data-count') || '0', 10);
+      if (isNaN(target)) return;
+      var dur = 900, start = null;
+      function step(ts) {
+        if (!start) start = ts;
+        var p = Math.min(1, (ts - start) / dur);
+        el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    var counters = document.querySelectorAll('[data-count]');
+    if (!('IntersectionObserver' in window)) {
+      counters.forEach(animateCount);
+    } else {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { animateCount(e.target); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.3 });
+      counters.forEach(function (c) { io.observe(c); });
+    }
+  })();
+
   (function () {
     var input = document.querySelector('#hpSearchInput');
     if (!input) return;
