@@ -544,7 +544,7 @@ const currentPath = Astro.url.pathname;
     </div>
 
     <!-- Breadcrumb Navigation -->
-    {!hideBreadcrumbs && currentPath !== '/' && !currentPath.startsWith('/coupon/') && !currentPath.startsWith('/blog/') && currentPath !== '/blog' && (
+    {!hideBreadcrumbs && currentPath !== '/' && !currentPath.startsWith('/coupon/') && (!currentPath.startsWith('/blog/') || currentPath.startsWith('/blog/page/')) && (
       <nav
         aria-label="Breadcrumb"
         class="container"
@@ -565,7 +565,7 @@ const currentPath = Astro.url.pathname;
             <meta itemprop="position" content="1" />
           </li>
 
-          {currentPath === '/udemy-coupon-code' && (
+          {(currentPath === '/udemy-coupon-code' || currentPath.startsWith('/udemy-coupon-code/')) && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>All Deals</span><meta itemprop="position" content="2" /></li></>
           )}
@@ -588,6 +588,13 @@ const currentPath = Astro.url.pathname;
           )}
 
           {currentPath.startsWith('/topic/') && (
+            <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/topics" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Topics</span></a><meta itemprop="position" content="2" /></li>
+            <li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{currentPath.split('/')[2]?.replace(/-/g, ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Topic'}</span><meta itemprop="position" content="3" /></li></>
+          )}
+
+          {currentPath.startsWith('/topics/') && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/topics" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Topics</span></a><meta itemprop="position" content="2" /></li>
             <li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
@@ -621,11 +628,18 @@ const currentPath = Astro.url.pathname;
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Blog</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath.startsWith('/blog/') && (
+          {currentPath.startsWith('/blog/') && !currentPath.startsWith('/blog/page/') && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/blog" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Blog</span></a><meta itemprop="position" content="2" /></li>
             <li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Post</span><meta itemprop="position" content="3" /></li></>
+          )}
+
+          {currentPath.startsWith('/blog/page/') && (
+            <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/blog" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Blog</span></a><meta itemprop="position" content="2" /></li>
+            <li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Page {currentPath.split('/')[3]}</span><meta itemprop="position" content="3" /></li></>
           )}
 
           {currentPath === '/about' && (
@@ -675,9 +689,11 @@ const currentPath = Astro.url.pathname;
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{currentPath.split('/')[2]}</span><meta itemprop="position" content="3" /></li></>
           )}
 
-          {!['/udemy-coupon-code', '/categories', '/topics', '/popular', '/instructors', '/blog', '/about', '/contact', '/privacy', '/terms', '/sitemap', '/how-to-redeem-coupon', '/udemy-coupons-guide', '/udemy-coupons-today'].includes(currentPath) &&
+           {!['/udemy-coupon-code', '/categories', '/topics', '/popular', '/instructors', '/blog', '/about', '/contact', '/privacy', '/terms', '/sitemap', '/how-to-redeem-coupon', '/udemy-coupons-guide', '/udemy-coupons-today'].includes(currentPath) &&
+           !currentPath.startsWith('/udemy-coupon-code/') &&
            !currentPath.startsWith('/categories/') &&
            !currentPath.startsWith('/topic/') &&
+           !currentPath.startsWith('/topics/') &&
            !currentPath.startsWith('/instructor/') &&
            !currentPath.startsWith('/blog/') &&
            !currentPath.startsWith('/udemy-coupons-today/') && (
@@ -692,7 +708,7 @@ const currentPath = Astro.url.pathname;
       <slot />
     </main>
 
-    <style>.ft-wrap{display:grid;gap:32px;margin-bottom:48px}@media(min-width:900px){.ft-wrap{grid-template-columns:1.2fr 1fr 1fr 1fr}}.ft-label{color:var(--brand);margin-bottom:16px;font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.14em}.ft-links{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0}.ft-links li{margin-bottom:12px}.ft-links a{font-size:0.9rem;color:#a09888;text-decoration:none;font-weight:500;transition:all 0.3s ease}.ft-links a:hover{color:var(--brand)}</style>
+    <style>.ft-wrap{display:grid;gap:32px;margin-bottom:48px}@media(min-width:900px){.ft-wrap{grid-template-columns:1.2fr 1fr 1fr 1fr}}.ft-label{color:var(--brand);margin-bottom:16px;font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.14em}.ft-label::before{content:"## ";color:var(--brand);font-family:var(--font-mono)}.ft-links{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0}.ft-links li{margin-bottom:12px}.ft-links a{font-size:0.9rem;color:#a09888;text-decoration:none;font-weight:500;transition:all 0.3s ease}.ft-links a:hover{color:var(--brand)}.ft-term{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);margin:0 0 8px;max-width:340px}.ft-term-prompt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ft-live{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--stamp);text-transform:uppercase;letter-spacing:0.06em;flex-shrink:0;font-size:0.68rem}.ft-blip{width:7px;height:7px;border-radius:50%;background:var(--stamp);animation:ftBlip 1.6s infinite}.ft-term-sub{font-size:0.78rem;color:var(--muted);margin:0 0 16px;line-height:1.5}@keyframes ftBlip{0%,100%{opacity:1}50%{opacity:.3}}</style>
     <footer style="color:#8A877C;padding:80px 0 40px;margin-top:auto;position:relative;overflow:hidden;background:linear-gradient(135deg,#0b0e14 0%,#101412 100%)" role="contentinfo" itemscope itemtype="https://schema.org/WPFooter">
       <div style="max-width:1400px;margin:0 auto;padding:0 1rem">
         <hr style={{ border: "none", height: "3px", background: "linear-gradient(90deg, #0b0e14 0%, #FFC94D 25%, #FFC94D 50%, #FFC94D 75%, #0b0e14 100%)", marginBottom: "32px", borderRadius: "2px" }} />
@@ -701,14 +717,17 @@ const currentPath = Astro.url.pathname;
 
           <div>
             <h3 style={{ marginBottom: "12px", fontSize: "1.2rem", fontWeight: "700", lineHeight: "1.1", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <svg width="24" height="24" viewBox="0 0 48 48" fill="var(--brand)" style={{ flexShrink: 0 }}>
-                <path d="M24 5L4 16l20 11 16-8.8V33h4V16L24 5zm0 8.5c1.38 0 2.5 1.12 2.5 2.5s-1.12 2.5-2.5 2.5-2.5-1.12-2.5-2.5 1.12-2.5 2.5-2.5zM12.5 25.5L24 32l11.5-6.5V28L24 34.5 12.5 28v-2.5z"/>
-              </svg>
+              <span style={{ flexShrink: 0, display: "inline-flex" }}><BrandLogo size={30} /></span>
               <span style="color:var(--text);">CoursesWyn</span>
             </h3>
             <p style={{ fontSize: "0.9rem", lineHeight: "1.5", color: "#8A877C", marginBottom: "16px" }}>
               Free Udemy courses daily — verified coupons across 400+ topics. Learn without limits, zero cost.
             </p>
+            <div class="ft-term">
+              <span class="ft-term-prompt">agents@courseswyn: ~/status</span>
+              <span class="ft-live"><span class="ft-blip"></span> Live</span>
+            </div>
+            <p class="ft-term-sub">Verifying coupon codes around the clock — dead codes pulled automatically.</p>
             <div style={{ display: "flex", gap: "12px", marginTop: "16px", flexWrap: "wrap" }}>
               <a href="https://facebook.com/CoursesWyn" target="_blank" rel="me noopener noreferrer" aria-label="Facebook" style="width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:10px;color:var(--muted)">
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>

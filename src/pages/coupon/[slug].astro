@@ -1,7 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { readDeals } from "../../lib/store";
-import { slugifyCategory } from "../../lib/utils";
+import { slugifyCategory, slugifyTopic } from "../../lib/utils";
 import { maskCoupon } from "../../lib/couponMask";
 import { categoryStats, couponFAQs } from "../../lib/dealStats";
 import { parseInstructors, createInstructorSlug } from "../../lib/instructors";
@@ -121,7 +121,8 @@ for (const n of parseInstructors(deal.instructor)) {
 }
 
 const normalizedTitle = deal.title?.trim() || "Premium Course";
-const discountLabel = discountPercentage > 0 ? `${discountPercentage}% OFF` : "Discount";
+const isFreeCoupon = (deal.price ?? 0) === 0;
+const discountLabel = isFreeCoupon ? "FREE" : discountPercentage > 0 ? `${discountPercentage}% OFF` : "Discount";
 const seoTitle = `${normalizedTitle} - ${discountLabel} Udemy Coupon`;
 const seoDescription = generateSeoDescription(deal);
 
@@ -264,9 +265,11 @@ delete clientDeal.coupon;
                     "@type": "BreadcrumbList",
                     "itemListElement": [
                         { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
-                        { "@type": "ListItem", "position": 2, "name": "Deals", "item": siteUrl },
+                        { "@type": "ListItem", "position": 2, "name": "Coupons", "item": `${siteUrl}/udemy-coupon-code` },
                         ...(deal.category ? [{ "@type": "ListItem", "position": 3, "name": deal.category, "item": `${siteUrl}/categories/${slugifyCategory(deal.category)}` }] : []),
-                        { "@type": "ListItem", "position": deal.category ? 4 : 3, "name": deal.title, "item": dealUrl }
+                        ...(deal.subcategory && deal.subcategory !== deal.category
+                            ? [{ "@type": "ListItem", "position": deal.category ? 4 : 3, "name": deal.subcategory, "item": `${siteUrl}/topics/${slugifyTopic(deal.subcategory)}` }]
+                            : [{ "@type": "ListItem", "position": deal.category ? 4 : 3, "name": deal.title, "item": dealUrl }])
                     ]
                 },
                 ...(faqPageEntities.length ? [{

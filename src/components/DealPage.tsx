@@ -101,6 +101,22 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
   const discountPct = originalPrice > price && price >= 0 ? Math.round(100 - (price / originalPrice) * 100) : 0;
   const savings = Math.max(originalPrice - price, 0);
 
+  const starLevel = typeof deal.rating === "number" ? Math.max(0, Math.min(5, Math.round(deal.rating))) : 0;
+  const starsStr = "★".repeat(starLevel) + "☆".repeat(5 - starLevel);
+
+  const splitPcts = (() => {
+    if (typeof deal.rating !== "number") return [75, 15, 6, 2, 2];
+    const r = Math.min(5, Math.max(1, deal.rating));
+    let p5 = Math.min(92, Math.max(35, Math.round(60 + (r - 4) * 20)));
+    const p1 = Math.min(8, Math.max(1, Math.round(10 - (r - 3.5) * 6)));
+    const p2 = p1;
+    let p3 = Math.min(14, Math.max(2, Math.round(14 - (r - 3.5) * 5)));
+    let p4 = 100 - p5 - p1 - p2 - p3;
+    if (p4 < 0) { p3 = Math.max(0, p3 + p4); p4 = p4 - (p3 - Math.max(0, p3 + p4)); }
+    if (p4 < 0) { p5 = Math.max(0, p5 + p4); p4 = 0; }
+    return [p5, p4, p3, p2, p1];
+  })();
+
   const durationHours = (() => {
     if (!deal.duration) return null;
     const h = deal.duration.match(/(\d+(?:\.\d+)?)\s*h/);
@@ -116,6 +132,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
   const reqPoints = (deal.requirements || []).map((s) => s.replace(/\r/g, "").trim()).filter(Boolean);
   const easyStart = reqPoints.some((r) => /no |beginner|none|without|anyone|basic|no experience/i.test(r));
   const masked = couponMask || "AUTO-APPLY";
+  const personalPlanUrl = "https://trk.udemy.com/c/6564357/3775958/39854";
 
   const copyMasked = () => {
     try {
@@ -153,9 +170,6 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
   const monthYear = deal.updatedAt
     ? new Date(deal.updatedAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     : new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
-  const yearNum = deal.updatedAt && !isNaN(new Date(deal.updatedAt).getTime())
-    ? new Date(deal.updatedAt).getFullYear()
-    : new Date().getFullYear();
   const readMins = Math.max(
     1,
     Math.round(
@@ -184,8 +198,11 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
             <li aria-hidden="true" style={{ color: "var(--muted)" }}>›</li>
             <li><a href="/udemy-coupon-code" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>Coupons</a></li>
             {deal.category && (<><li aria-hidden="true" style={{ color: "var(--muted)" }}>›</li><li><a href={`/categories/${slugifyCategory(deal.category)}`} style={{ color: "var(--text-secondary)", textDecoration: "none" }}>{deal.category}</a></li></>)}
-            <li aria-hidden="true" style={{ color: "var(--muted)" }}>›</li>
-            <li aria-current="page" style={{ color: "var(--muted)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "280px" }}>{deal.title}</li>
+            {deal.subcategory && deal.subcategory !== deal.category ? (
+              <><li aria-hidden="true" style={{ color: "var(--muted)" }}>›</li><li><a href={`/topics/${slugifyTopic(deal.subcategory)}`} style={{ color: "var(--text-secondary)", textDecoration: "none" }}>{deal.subcategory}</a></li></>
+            ) : (
+              <><li aria-hidden="true" style={{ color: "var(--muted)" }}>›</li><li aria-current="page" style={{ color: "var(--muted)", fontWeight: 500 }}>{deal.title}</li></>
+            )}
           </ol>
         </nav>
 
@@ -207,7 +224,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
           <article className="article-col-main">
             <header className="article-hero">
               <h1 className="article-h1">
-                {price === 0 ? (<>{deal.title} Review {yearNum}: Honest Verdict — Is It Worth Your Time? </>) : (<>{deal.title} Coupon Review {yearNum}: Honest Verdict — Is the Course Worth It? </>)}<span className="article-h1-updated">(Updated {monthYear})</span>
+                {deal.title} — Udemy Coupon {price === 0 ? "100% Free" : discountPct > 0 ? `${discountPct}% OFF` : "Deal"}
               </h1>
               <div className="article-byline">
                 <span className="byline-avatar" aria-hidden="true">AD</span>
@@ -218,10 +235,6 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
                 <span className="reading-time" style={{ fontSize: "13px" }}>{readMins} min read</span>
               </div>
             </header>
-
-            <div className="article-verified">
-              <time dateTime={deal.updatedAt ? new Date(deal.updatedAt).toISOString() : undefined}>{updatedLong}</time>
-            </div>
 
             {deal.image && (
               <figure className="udemy-course-hero">
@@ -245,7 +258,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
               <div className="udemy-stat">
                 <div className="udemy-chip-kicker">Rating</div>
                 <div className="udemy-stat-val">
-                  <span className="udemy-stars" aria-hidden="true">★★★★★</span>{" "}
+                  <span className="udemy-stars" aria-hidden="true">{starsStr}</span>{" "}
                   <strong>{typeof deal.rating === "number" ? deal.rating.toFixed(1) : "—"}</strong>{" "}
                   <span className="udemy-stat-dim">{typeof deal.students === "number" ? `(${deal.students.toLocaleString()})` : ""}</span>
                 </div>
@@ -280,13 +293,8 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
               </a>
             </div>
 
-            <p className="lead">
-              Short answer: <strong>yes</strong> — this is a {deal.category ? `${deal.category} course teaching ` : "course covering "}{learnPoints.length > 0 ? learnPoints.slice(0, 2).map((s) => s.charAt(0).toLowerCase() + s.slice(1)).join(" and ") : "practical, job-ready skills"}
-              {typeof deal.students === "number" ? `, taken by ${deal.students.toLocaleString()} learners${typeof deal.rating === "number" ? ` at a ${deal.rating.toFixed(1)}-star average` : ""}` : ""}. {discountPct > 0 ? `The coupon drops it to $${price.toFixed(2)} (from $${originalPrice.toFixed(2)}), which removes the price risk.` : "It is currently listed free, so trying it costs nothing."}
-            </p>
-
             <section aria-labelledby="verdict-heading" id="entry-verdict">
-              <h2 id="verdict-heading" style={{ ...H2 }}>Quick Verdict: Is This {deal.subcategory && deal.subcategory !== deal.category ? deal.subcategory : (deal.category || "Udemy")} Coupon Worth It?</h2>
+              <h2 id="verdict-heading" style={{ ...H2 }}>Quick Verdict: Is This {deal.subcategory && deal.subcategory !== deal.category ? deal.subcategory : (deal.category || "Udemy")} Udemy Coupon Worth It?</h2>
               <div className="verdict-box">
                 <p className="verdict-answer">
                   <strong>Yes — </strong>
@@ -294,15 +302,15 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
                   {typeof deal.students === "number" ? ` to ${deal.students.toLocaleString()} learners` : ""}{typeof deal.rating === "number" ? ` at a ${deal.rating.toFixed(1)}-star average` : ""}. {discountPct > 0 ? `At $${price.toFixed(2)} instead of $${originalPrice.toFixed(2)}, the coupon removes the price risk.` : "Listed free right now, so trying it costs nothing."}
                 </p>
                 <dl className="verdict-facts">
-                  <div><dt>Rating</dt><dd>{typeof deal.rating === "number" ? `${deal.rating.toFixed(1)} / 5${typeof deal.students === "number" ? ` · ${deal.students.toLocaleString()} reviews` : ""}` : "Not yet rated"}</dd></div>
+                  <div><dt>Rating</dt><dd>{typeof deal.rating === "number" ? `${deal.rating.toFixed(1)} / 5${typeof deal.students === "number" ? ` · ${deal.students.toLocaleString()} learners` : ""}` : "Not yet rated"}</dd></div>
                   <div><dt>Best for</dt><dd>{deal.category || "Course"} learners{reqPoints.length > 0 && easyStart ? " starting from zero" : ""} · certificate included</dd></div>
                   <div><dt>Price</dt><dd>{discountPct > 0 ? `$${price.toFixed(2)} with coupon (list $${originalPrice.toFixed(2)})` : "Free enrollment"}</dd></div>
                 </dl>
               </div>
             </section>
 
-            <section aria-labelledby="facts-heading" id="entry-facts">
-              <h2 id="facts-heading" style={{ ...H2 }}>Course Facts & Live Coupon Details</h2>
+            <section aria-labelledby="facts-heading" id="entry-facts" className="panel-facts">
+              <h2 id="facts-heading" style={{ ...H2 }}>Udemy Course Facts & Live Coupon Details</h2>
               <dl className="fact-table">
                 {[
                   { label: "Course", value: deal.title },
@@ -333,7 +341,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
 
             {(learnPoints.length > 0 || reqPoints.length > 0) && (
               <section aria-labelledby="learn-heading" id="entry-learn">
-                <h2 id="learn-heading" style={{ ...H2 }}>What You Will Learn</h2>
+                <h2 id="learn-heading" style={{ ...H2 }}>What You'll Learn in This Udemy Online Course</h2>
                 {learnPoints.length > 0 ? (
                   <>
                     <p className="sec-intro">
@@ -360,19 +368,19 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
             )}
 
             <section aria-labelledby="about-heading" id="entry-about">
-              <h2 id="about-heading" style={{ ...H2 }}>Is {deal.title} Still Relevant in {yearNum}?</h2>
-              <p>
+              <h2 id="about-heading" style={{ ...H2 }}>Is {deal.title} Still Relevant?</h2>
+              <p className="body-p">
                 The {deal.updatedAt ? `last update landed ${fmtDate(deal.updatedAt)}` : "listing is current"} — and for a {deal.category || "skills"} course, freshness is the first thing to verify. An updated date means the instructor still maintains the material; a stale one means you learn last year's version of the tools.
               </p>
-              <p>
+              <p className="body-p">
                 {typeof deal.rating === "number" ? `The ${deal.rating.toFixed(1)} rating${typeof deal.students === "number" ? ` from ${deal.students.toLocaleString()} learners` : ""} suggests the content holds up in practice — ratings at that level rarely survive contact with outdated material.` : "There is no public rating to lean on here, so weigh the syllabus below against your goal instead."} {reqPoints.length > 0 && !easyStart ? "Note the prerequisites, though: this one assumes background, so beginners should treat the requirements list as mandatory reading." : "The entry bar looks low, which makes this a reasonable first course in the topic rather than a capstone."}
               </p>
               <h2 id="delivers-heading" style={{ ...H2, marginTop: "2rem" }}>What the Course Actually Delivers{deal.duration ? ` in ${deal.duration}` : ""}</h2>
-              <p>
+              <p className="body-p">
                 {learnPoints.length > 0 ? `The published syllabus lists ${learnPoints.length} outcomes — headlined by ${learnPoints.slice(0, 3).map((s) => s.charAt(0).toLowerCase() + s.slice(1)).join("; ")}.` : "The instructor hasn't published a detailed outcome list, so judge by the category syllabus on Udemy."} {deal.duration ? `Total runtime is ${deal.duration} of video, which you work through self-paced with lifetime access.` : "You work through it self-paced with lifetime access."} {typeof deal.students === "number" && deal.students > 10000 ? `With ${deal.students.toLocaleString()} learners enrolled, the pacing and explanations have been stress-tested at scale.` : ""}
               </p>
-              <h2 id="price-heading" style={{ ...H2, marginTop: "2rem" }}>Is the Price Fair{deal.duration ? ` in ${yearNum}` : ""}?</h2>
-              <p>
+              <h2 id="price-heading" style={{ ...H2, marginTop: "2rem" }}>Is the Udemy Price Fair After Your Coupon Discount?</h2>
+              <p className="body-p">
                 ${originalPrice.toFixed(2)} is the list price, but Udemy courses at this level almost never sell at list. {discountPct > 0 ? `This coupon brings it to $${price.toFixed(2)} — a ${discountPct}% cut worth $${savings.toFixed(2)}.` : "This listing is currently free, so the price question answers itself."}
                 {costPerHour ? ` Spread over the runtime, that is about $${costPerHour.toFixed(2)} per hour of instruction — cheaper than a coffee per study session.` : ""} The real comparison is not list versus coupon, but coupon versus the next-best course at the same sale price — and on ratings-per-dollar, {typeof deal.rating === "number" && deal.rating >= 4.5 ? "this one compares well." : "check the rating box above before deciding."}
               </p>
@@ -396,18 +404,18 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
 
             {typeof deal.rating === "number" && (
               <section aria-labelledby="ratings-heading" id="entry-rating">
-                <h2 id="ratings-heading" style={{ ...H2 }}>Learner Ratings: {typeof deal.rating === "number" ? `${deal.rating.toFixed(1)}★ From ${typeof deal.students === "number" ? deal.students.toLocaleString() : ""} Reviews`.trim() : "What Learners Say"}</h2>
+                <h2 id="ratings-heading" style={{ ...H2 }}>Learner Ratings: {typeof deal.rating === "number" ? `${deal.rating.toFixed(1)}★ From ${typeof deal.students === "number" ? deal.students.toLocaleString() : ""} Learners`.trim() : "What Learners Say"}</h2>
                 <p className="sec-intro">
-                  {deal.rating.toFixed(1)} out of 5{typeof deal.students === "number" ? ` from ${deal.students.toLocaleString()} verified learner reviews` : ""} on {deal.provider || "Udemy"}. Estimated split per star below.
+                  {deal.rating.toFixed(1)} out of 5{typeof deal.students === "number" ? ` from ${deal.students.toLocaleString()} learners` : ""} on {deal.provider || "Udemy"}. Estimated split per star below.
                 </p>
                 <div className="rating-summary">
                   <div className="rating-big">
                     <div className="rating-num">{deal.rating.toFixed(1)}</div>
-                    <div className="rating-stars" aria-hidden="true">★★★★★</div>
-                    <div className="rating-count">{typeof deal.students === "number" ? deal.students.toLocaleString() : "Many"} ratings</div>
+                    <div className="rating-stars" aria-hidden="true">{starsStr}</div>
+                    <div className="rating-count">{typeof deal.students === "number" ? deal.students.toLocaleString() : "Many"} learners</div>
                   </div>
                   <div className="rating-bars">
-                    {[{ star: 5, pct: 75 }, { star: 4, pct: 15 }, { star: 3, pct: 6 }, { star: 2, pct: 2 }, { star: 1, pct: 2 }].map(({ star, pct }) => (
+                    {[5,4,3,2,1].map((star, i) => { const pct = splitPcts[i]; return (
                       <div key={star} className="rating-row">
                         <span className="rating-star-lab">{star}★</span>
                         <div role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${star} stars: ${pct}%`} className="rating-track">
@@ -415,7 +423,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
                         </div>
                         <span className="mono rating-pct">{pct}%</span>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
                 <p className="fine-note">* Split estimated from the aggregate score. Source: {deal.provider || "Udemy"}. Checked {fmtDate(deal.updatedAt)}.</p>
@@ -423,7 +431,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
             )}
 
             <section aria-labelledby="proscons-heading" style={{ marginTop: "2.25rem" }}>
-              <h2 id="proscons-heading" style={{ ...H2 }}>The Honest Pros and Cons</h2>
+              <h2 id="proscons-heading" style={{ ...H2 }}>Pros and Cons of This Udemy Course</h2>
               <div className="pros-cons">
                 <div className="pros-col">
                   <h4>What works</h4>
@@ -446,8 +454,8 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
             </section>
 
             <section aria-labelledby="who-heading" style={{ marginTop: "2.25rem" }}>
-              <h2 id="who-heading" style={{ ...H2 }}>Who Should Enroll Right Now (And Who Should Wait)</h2>
-              <p><strong>Enroll now if:</strong></p>
+              <h2 id="who-heading" style={{ ...H2 }}>Who Should Enroll (And Who Should Wait)</h2>
+              <p className="body-p"><strong>Enroll now if:</strong></p>
               <ul>
                 <li>You want {deal.subcategory && deal.subcategory !== deal.category ? deal.subcategory : (deal.category || "these")} skills with a certificate at the end</li>
                 {easyStart && (<li>You're starting from zero — the entry bar on this one is low</li>)}
@@ -455,7 +463,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
                 {discountPct >= 90 && (<li>You want maximum cuts — this code takes {discountPct}% off</li>)}
                 <li>You'll actually finish — code seats are limited, collectors waste them</li>
               </ul>
-              <p><strong>Wait or look elsewhere if:</strong></p>
+              <p className="body-p"><strong>Wait or look elsewhere if:</strong></p>
               <ul>
                 {!easyStart && reqPoints.length > 0 ? (<li>You're an absolute beginner — the prerequisites above are real, start easier first</li>) : (<li>You already mastered this topic — the first hours will feel like review</li>)}
                 <li>You need a different language — this course is taught in {deal.language || "English"}</li>
@@ -494,8 +502,8 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
             )}
 
             {faqs.length > 0 && (
-              <section aria-labelledby="faq-heading" id="entry-faq">
-                <h2 id="faq-heading" style={{ ...H2 }}>{deal.subcategory && deal.subcategory !== deal.category ? deal.subcategory : (deal.category || "Udemy")} Coupon FAQs — Answered</h2>
+              <section aria-labelledby="faq-heading" id="entry-faq" className="panel-faq">
+                <h2 id="faq-heading" style={{ ...H2 }}>Udemy Coupon FAQs — Answered</h2>
                 <div className="faq-list">
                   {faqs.map((faq, idx) => (
                     <div key={idx} className="faq-item">
@@ -632,14 +640,19 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
               <button onClick={() => { copyMasked(); goEnroll(); }} className="btn btn-primary tl-verdict-cta">
                 {copied ? "✓ Copied — opening…" : "Reveal & Claim"}
               </button>
-              <a href={deal.url} target="_blank" rel="noopener noreferrer nofollow" className="tl-verdict-alt">
-                or enroll directly →
-              </a>
               <div className="tl-verdict-code">
                 <span>Code</span>
                 <code className="mono">{masked}</code>
               </div>
               <div className="tl-verdict-checked">✓ Checked {deal.updatedAt ? timeAgo(deal.updatedAt) : "recently"}</div>
+            </div>
+            <div className="pp-side" aria-label="Udemy Personal Plan alternative">
+              <div className="pp-side-top"><span className="pp-side-pill">Alternative</span><span className="pp-side-off">25% OFF</span></div>
+              <div className="pp-side-title">No working code? Get 26,000+ courses</div>
+              <p className="pp-side-sub">One flat price, certificates included, cancel anytime.</p>
+              <div className="pp-side-price"><span className="pp-side-now">$20/mo</span><span className="pp-side-trial">7-day free trial</span></div>
+              <a href={personalPlanUrl} target="_blank" rel="sponsored noopener noreferrer" className="btn btn-primary pp-side-btn">Try Personal Plan →</a>
+              <p className="pp-side-note">Sponsored</p>
             </div>
             <div className="share-card">
               <h5 className="toc-label">Share</h5>
@@ -695,7 +708,6 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
         .article-byline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-bottom: 1.4rem; }
         .byline-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--brand); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 0.72rem; flex-shrink: 0; }
         .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--muted); display: inline-block; }
-        .article-verified { font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-bottom: 1rem; }
         .udemy-course-hero { position: relative; aspect-ratio: 16/9; margin: 0 0 1.5rem; border-radius: 12px; overflow: hidden; background: var(--bg-secondary); border: 1px solid var(--border); }
         .udemy-course-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
         .udemy-course-chip { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin: 0 0 1.75rem; }
@@ -714,14 +726,18 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
         .udemy-price-now { color: var(--brand); }
         .udemy-chip-cta { display: inline-flex; align-items: center; justify-content: center; padding: 0.7rem 1.5rem; background: var(--brand); color: #fff; text-decoration: none; border-radius: 999px; font-weight: 700; font-size: 0.85rem; white-space: nowrap; margin-left: auto; }
         .udemy-chip-cta:hover { filter: brightness(1.07); }
-        .lead { font-size: 1.02rem; line-height: 1.8; color: var(--text-secondary); margin: 0 0 1rem; }
+        .body-p { font-size: 0.92rem; line-height: 1.75; color: var(--text-secondary); margin: 0 0 1rem; }
+        [role="dialog"] button { font-family: inherit; }
         .sec-intro { font-size: 0.88rem; color: var(--muted); margin: 0 0 1rem; line-height: 1.65; }
+        .article-col-main h3 { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 1.25rem 0 0.6rem; line-height: 1.4; }
         .sec-intro a, .prose a { color: var(--brand); }
         .check-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0.6rem; font-size: 0.88rem; color: var(--text-secondary); }
         .check-grid > div { display: flex; gap: 10px; align-items: flex-start; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.7rem 0.9rem; }
         .plain-list { margin: 0; padding-left: 1.2rem; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.8; }
-        .prose { line-height: 1.8; color: var(--text-secondary); font-size: 0.94rem; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.4rem 1.5rem; }
-        .prose h1, .prose h2, .prose h3 { color: var(--text); margin-top: 1.5em; margin-bottom: 0.5em; }
+        .prose { font-size: 0.92rem; line-height: 1.75; color: var(--text-secondary); background: transparent; border: none; border-radius: 0; padding: 0; }
+        .prose, .prose * { font-family: inherit !important; }
+        .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 { color: var(--text); margin-top: 1.5em; margin-bottom: 0.5em; font-size: 1em; line-height: 1.5; }
+        .prose pre { white-space: pre-wrap; font-family: var(--font-mono) !important; font-size: 0.82rem; background: var(--bg-secondary); padding: 0.9rem 1rem; border-radius: 10px; overflow-x: auto; }
         .prose p { margin-bottom: 1em; }
         .prose ul, .prose ol { margin-bottom: 1em; padding-left: 1.5em; }
         .prose li { margin-bottom: 0.5em; }
@@ -749,7 +765,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
         .profile-btn { padding: 0.45rem 1rem; background: var(--brand-soft); border: 1px solid var(--brand); border-radius: 8px; font-size: 0.8rem; color: var(--brand); text-decoration: none; font-weight: 700; }
         .faq-list { display: flex; flex-direction: column; gap: 0.7rem; }
         .faq-item { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--card); }
-        .faq-q { width: 100%; padding: 0.95rem 1.2rem; background: transparent; border: none; text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.92rem; font-weight: 700; color: var(--text); gap: 1rem; }
+        .faq-q { width: 100%; padding: 0.95rem 1.2rem; background: transparent; border: none; text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-family: inherit; font-size: 0.92rem; font-weight: 700; color: var(--text); gap: 1rem; }
         .faq-no { color: var(--brand); font-size: 0.75rem; margin-right: 8px; }
         .faq-caret { transition: transform 0.2s; flex-shrink: 0; color: var(--muted); }
         .faq-caret.open { transform: rotate(180deg); }
@@ -785,7 +801,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
         .pros-col h4 { color: var(--brand); }
         .cons-col h4 { color: #CF6F59; }
         .pros-cons ul { padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; list-style: none; }
-        .pros-cons li { display: flex; gap: 10px; align-items: flex-start; color: var(--text-secondary); font-size: 0.86rem; line-height: 1.6; }
+        .pros-cons li { display: flex; gap: 10px; align-items: flex-start; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6; }
         .pros-cons li > span:first-child { flex: none; width: 6px; height: 6px; border-radius: 50%; margin-top: 8px; }
         .pros-col li > span:first-child { background: var(--brand); }
         .cons-col li > span:first-child { background: #CF6F59; }
@@ -813,6 +829,17 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
         .tl-verdict-code { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; padding: 8px 10px; background: var(--bg); border: 1px dashed var(--border); border-radius: 8px; font-size: 0.72rem; color: var(--muted); }
         .tl-verdict-code code { font-weight: 700; color: var(--text); letter-spacing: 0.5px; }
         .tl-verdict-checked { font-size: 0.72rem; color: var(--brand); font-weight: 600; margin-top: 8px; }
+        .pp-side { background: linear-gradient(180deg, rgba(255,201,77,0.18), rgba(255,201,77,0.05)); border: 1px solid var(--brand); border-radius: 14px; padding: 1.05rem 1.1rem; }
+        .pp-side-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+        .pp-side-pill { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--brand); border: 1px solid var(--brand); border-radius: 999px; padding: 3px 9px; }
+        .pp-side-off { font-family: var(--font-display); font-size: 0.72rem; font-weight: 800; color: #0b0e14; background: var(--brand); border-radius: 999px; padding: 4px 10px; }
+        .pp-side-title { font-family: var(--font-display); font-size: 0.95rem; font-weight: 800; color: var(--text); line-height: 1.35; margin-bottom: 4px; }
+        .pp-side-sub { font-size: 0.78rem; color: var(--muted); line-height: 1.55; margin: 0 0 8px; }
+        .pp-side-price { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+        .pp-side-now { font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; color: var(--brand); }
+        .pp-side-trial { font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); }
+        .pp-side-btn { display: block; width: 100%; padding: 0.8rem; font-size: 0.9rem; }
+        .pp-side-note { font-size: 0.68rem; color: var(--muted); text-align: center; margin: 8px 0 0; }
         .share-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem 1.2rem; }
         .share-card .toc-label { margin-bottom: 0.6rem; }
         .share-btns { display: flex; gap: 8px; }
@@ -828,11 +855,16 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
         .verdict-answer { font-size: 1rem; line-height: 1.75; color: var(--text-secondary); margin: 0 0 1rem; }
         .verdict-answer strong { color: var(--text); }
         .verdict-facts { margin: 0; display: grid; gap: 0; border-top: 1px dashed var(--border); padding-top: 0.9rem; }
-        .verdict-facts > div { display: grid; grid-template-columns: 90px 1fr; gap: 10px; padding: 5px 0; font-size: 0.87rem; }
+        .verdict-facts > div { display: grid; grid-template-columns: 90px 1fr; gap: 10px; padding: 5px 0; font-size: 0.88rem; }
         .verdict-facts dt { color: var(--muted); font-weight: 600; }
         .verdict-facts dd { margin: 0; color: var(--text); font-weight: 500; }
         .check-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0.6rem; font-size: 0.88rem; color: var(--text-secondary); list-style: none; margin: 0; padding: 0; }
         .fact-table { margin: 0; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+        .panel-facts { background: linear-gradient(180deg, rgba(255,201,77,0.10), rgba(255,201,77,0.03)); border: 1px solid rgba(255,201,77,0.28); border-radius: 16px; padding: 1.4rem 1.5rem; margin-top: 2.25rem; }
+        .panel-facts .fact-table { background: transparent; border: none; border-radius: 0; }
+        .panel-facts .fact-row { border-top-color: rgba(255,201,77,0.18); padding-left: 0; padding-right: 0; }
+        .panel-faq { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 16px; padding: 1.4rem 1.5rem; }
+        .article-col-main h2::before { content: "## "; color: var(--brand); font-family: var(--font-mono); }
         .fact-row { display: grid; grid-template-columns: 130px 1fr; gap: 12px; padding: 0.7rem 1.2rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
         .fact-row:first-child { border-top: none; }
         .fact-row dt { color: var(--muted); font-weight: 600; }

@@ -6,6 +6,7 @@ import { readDeals } from '../../lib/store';
 import { parseInstructors, createInstructorSlug } from '../../lib/instructors';
 import { getInstructorImage } from '../../lib/instructorProfiles';
 import { toISODateWIB } from '../../lib/date';
+import { buildHeroFeed } from '../../lib/utils';
 
 const siteUrl = 'https://courseswyn.com';
 
@@ -107,6 +108,8 @@ const avgRating =
 const provider = instructorCourses[0]?.provider || 'Udemy';
 const maxDisc = getMaxDiscount(instructorCourses);
 const freeCount = hasFree(instructorCourses) ? instructorCourses.filter((c) => c.price === 0).length : 0;
+const now = new Date();
+const heroFeed = buildHeroFeed(instructorCourses, now, 3);
 const title = `${instructorName} — Udemy Coupons & Promo Codes ${currentMonth} ${currentYear} | CoursesWyn`;
 const description = `Verified ${instructorCourses.length} Udemy coupon${instructorCourses.length === 1 ? '' : 's'} from ${instructorName}. ${provider} deals updated daily — up to ${maxDisc}% off.`;
 const cleanName = instructorName.replace(/[^\x20-\x7E]/g, '').trim();
@@ -167,7 +170,7 @@ const benefitCards = [
 ];
 ---
 
-<Layout title={title} description={description} canonical={canonicalUrl} hideBreadcrumbs={true}>
+<Layout title={title} description={description} canonical={canonicalUrl}   hideBreadcrumbs={false}>
   <Fragment slot="head">
     <meta name="keywords" content={pageKeywords} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -240,31 +243,51 @@ const benefitCards = [
     <div class="cc-container">
 
       <header class="cc-header">
-        <div class="cc-register">
-          <div class="cc-instructor-head">
-            {instructorImage ? (
-              <div class="cc-avatar cc-avatar-img"><img src={instructorImage} alt={instructorName} loading="lazy" /></div>
-            ) : (
-              <div class="cc-avatar" style={`background:${getAvatarColor(instructorName)}`}>{getInitials(instructorName)}</div>
-            )}
-            <div class="cc-register-top">
-              <span class="cc-eyebrow"><span class="cc-blip"></span> {provider} &middot; {instructorCourses.length} Coupon{instructorCourses.length === 1 ? '' : 's'}</span>
-              <span class="cc-folio">Updated {currentDate}</span>
+        <div class="dh-hero-grid">
+          <div class="dh-hero-left">
+            <div class="cc-instructor-head">
+              {instructorImage ? (
+                <div class="cc-avatar cc-avatar-img"><img src={instructorImage} alt={instructorName} loading="lazy" /></div>
+              ) : (
+                <div class="cc-avatar" style={`background:${getAvatarColor(instructorName)}`}>{getInitials(instructorName)}</div>
+              )}
+              <div class="dh-hero-badge" style="margin-bottom:0;"><span class="lg-blip"></span> {provider} &middot; {instructorCourses.length} Coupon{instructorCourses.length === 1 ? '' : 's'}</div>
+            </div>
+            <h1 class="dh-hero-title"><span class="cc-accent">{cleanName}</span> — Udemy Coupons &amp; Promo Codes</h1>
+            <p class="dh-hero-sub">Verified <strong>{instructorCourses.length} coupon{instructorCourses.length === 1 ? '' : 's'} from {instructorName}</strong> on {provider} — checked against Udemy before listing, updated {currentMonth} {currentYear}.</p>
+            <div class="dh-hero-stats">
+              <div class="dh-stat"><b class="dh-stat-val"><span data-count={instructorCourses.length}>0</span></b><span class="dh-stat-label">courses</span></div>
+              <div class="dh-stat"><b class="dh-stat-val"><span data-count={maxDisc}>0</span><span class="lg-plus">%</span></b><span class="dh-stat-label">max discount</span></div>
+              <div class="dh-stat"><b class="dh-stat-val"><span data-count={totalStudents}>0</span><span class="lg-plus">+</span></b><span class="dh-stat-label">students</span></div>
             </div>
           </div>
-          <h1 class="cc-title"><span class="cc-accent">{cleanName}</span> — Udemy Coupons &amp; Promo Codes</h1>
-          <p class="cc-subtitle">Verified {instructorCourses.length} coupon{instructorCourses.length === 1 ? '' : 's'} from {instructorName} on {provider} — checked against Udemy before listing, updated {currentMonth} {currentYear}.</p>
-          <div class="cc-toolbar">
-            <a class="cc-hero-btn" href="#deals">View all {instructorCourses.length} courses</a>
-            <a class="cc-hero-btn ghost" href="/instructors">Browse all instructors</a>
-            <a class="cc-hero-btn ghost" href="/udemy-coupons-today">Today's new deals</a>
+          <div class="dh-terminal">
+            <div class="dh-term-head">
+              <span class="dh-term-dot" style="background:#ff5f56"></span>
+              <span class="dh-term-dot" style="background:#ffbd2e"></span>
+              <span class="dh-term-dot" style="background:#27c93f"></span>
+              <span class="dh-term-title">agents@courseswyn: ~/instructor</span>
+              <span class="dh-term-live"><span class="lg-blip"></span> Live</span>
+            </div>
+            <div class="dh-term-body">
+              {heroFeed.map((d) => (
+                <a class="dh-term-line" href={"/coupon/" + d.slug}>
+                  <span class="dh-term-time">{d.timeLabel}</span>
+                  <span class="dh-term-ok">✓</span>
+                  <span class="dh-term-cat">{d.cat}</span>
+                  <span class="dh-term-title2">{d.title}</span>
+                  <span class="dh-term-save">−{d.pct}%</span>
+                </a>
+              ))}
+              <div class="dh-term-line"><span class="dh-term-time">now</span><span class="dh-term-ok">✓</span><span class="dh-term-title2">codes checked by CoursesWyn<span class="caret"></span></span></div>
+            </div>
+            <div class="dh-term-foot">$ instructor codes verified <b>{instructorCourses.length}</b></div>
           </div>
-          <div class="cc-ledger">
-            <div class="cc-ledger-cell"><div class="cc-ledger-label">Courses</div><div class="cc-ledger-value">{instructorCourses.length}</div></div>
-            <div class="cc-ledger-cell"><div class="cc-ledger-label">Avg rating</div><div class="cc-ledger-value">{avgRating}{avgRating !== '—' ? '★' : ''}</div></div>
-            <div class="cc-ledger-cell"><div class="cc-ledger-label">Students</div><div class="cc-ledger-value">{totalStudents.toLocaleString()}</div></div>
-            <div class="cc-ledger-cell"><div class="cc-ledger-label">Max discount</div><div class="cc-ledger-value">{maxDisc}%</div></div>
-          </div>
+        </div>
+        <div class="cc-toolbar" style="margin-top:1.5rem;">
+          <a class="cc-hero-btn" href="#deals">View all {instructorCourses.length} courses</a>
+          <a class="cc-hero-btn ghost" href="/instructors">Browse all instructors</a>
+          <a class="cc-hero-btn ghost" href="/udemy-coupons-today">Today's new deals</a>
         </div>
       </header>
 
@@ -350,6 +373,36 @@ const benefitCards = [
   .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(76, 195, 138, 0.12); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 6px 13px; }
   .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #FFC94D; animation: ccBlip 1.6s infinite; }
   @keyframes ccBlip { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  .dh-hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 2.5rem; align-items: center; }
+  .dh-hero-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; margin-bottom: 1.25rem; }
+  .dh-hero-title { font-size: clamp(2rem, 4.3vw, 3rem); font-weight: 800; letter-spacing: -0.02em; color: var(--text-bright, var(--text)); margin: 0 0 0.75rem; line-height: 1.12; }
+  .dh-hero-title .cc-accent { color: var(--brand); }
+  .dh-hero-sub { color: var(--muted); font-size: 1rem; line-height: 1.7; margin: 0 0 1.5rem; max-width: 560px; }
+  .dh-hero-sub strong { color: var(--text); }
+  .dh-hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+  .dh-stat { display: flex; flex-direction: column; }
+  .dh-stat-val { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--brand); }
+  .dh-stat-label { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); }
+  .lg-blip { width: 7px; height: 7px; border-radius: 50%; background: var(--brand); animation: lgBlip 1.6s infinite; }
+  @keyframes lgBlip { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .caret { display: inline-block; width: 0.55ch; height: 1em; margin-left: 4px; background: var(--brand); vertical-align: text-bottom; animation: lgBlip 1.1s step-end infinite; }
+  .dh-terminal { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; text-align: left; }
+  .dh-term-head { display: flex; align-items: center; gap: 6px; padding: 10px 14px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
+  .dh-term-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dh-term-title { margin-left: 8px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
+  .dh-term-live { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; color: var(--stamp); text-transform: uppercase; letter-spacing: 0.06em; }
+  .dh-term-live .lg-blip { background: var(--stamp); }
+  .dh-term-body { padding: 4px 0; }
+  .dh-term-line { display: flex; align-items: center; gap: 10px; padding: 7px 16px; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text); text-decoration: none; }
+  a.dh-term-line:hover { background: var(--brand-soft); }
+  .dh-term-time { color: var(--muted); flex-shrink: 0; font-size: 0.7rem; min-width: 42px; }
+  .dh-term-ok { color: var(--stamp); font-weight: 700; flex-shrink: 0; }
+  .dh-term-cat { color: var(--brand); flex-shrink: 0; font-size: 0.7rem; min-width: 64px; }
+  .dh-term-title2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .dh-term-save { color: var(--brand); font-weight: 700; flex-shrink: 0; }
+  .dh-term-foot { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--bg-secondary); font-family: var(--font-mono); font-size: 0.78rem; color: var(--text); }
+  .dh-term-foot b { color: var(--brand); }
+  @media (max-width: 900px) { .dh-hero-grid { grid-template-columns: 1fr; gap: 1.75rem; } }
   .cc-folio { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--muted); border: 1px dashed var(--border); border-radius: 6px; padding: 5px 10px; letter-spacing: .05em; white-space: nowrap; }
   .cc-title { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 700; color: var(--text); line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 12px; }
   .cc-title .cc-accent { color: #CF6F59; }
@@ -426,5 +479,33 @@ const benefitCards = [
     .cc-hero-btn { padding: 11px 16px; font-size: 0.85rem; }
   }
 </style>
+
+<script>
+  (function () {
+    function animateCount(el) {
+      var target = parseInt(el.getAttribute('data-count') || '0', 10);
+      if (isNaN(target)) return;
+      var dur = 900, start = null;
+      function step(ts) {
+        if (!start) start = ts;
+        var p = Math.min(1, (ts - start) / dur);
+        el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    var counters = document.querySelectorAll('[data-count]');
+    if (!('IntersectionObserver' in window)) {
+      counters.forEach(animateCount);
+    } else {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { animateCount(e.target); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.3 });
+      counters.forEach(function (c) { io.observe(c); });
+    }
+  })();
+</script>
 
 </Layout>

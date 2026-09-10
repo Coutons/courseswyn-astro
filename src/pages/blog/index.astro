@@ -74,6 +74,13 @@ const topicChips = Object.entries(tagCounts)
   .map(([name, count]) => ({ name, slug: TOPIC_MAP[name], count }));
 
 const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
+const now = new Date();
+const heroFeed = posts.slice(0, 3).map((p: any) => {
+  const t = new Date(p.data.updatedAt ?? p.data.pubDate ?? 0).getTime();
+  const mins = Math.max(1, Math.round((now.getTime() - t) / 60000));
+  const timeLabel = mins < 60 ? mins + "m ago" : mins < 1440 ? Math.round(mins / 60) + "h ago" : Math.round(mins / 1440) + "d ago";
+  return { title: String(p.data.title || ""), href: "/blog/" + p.id, timeLabel };
+});
 
 const title = `Best Udemy Course Reviews & Coupon Guides ${currentYear} | CoursesWyn Blog`;
 const description = `Expert-reviewed guides to the best Udemy courses with verified coupon codes. Find programming, AI, data science, cloud certification courses and step-by-step career roadmaps. Updated daily with working deals.`;
@@ -163,7 +170,7 @@ const structuredData = {
 };
 ---
 
-<Layout title={title} description={description} canonical={canonical} image="/assets/images/og-default.svg" hideBreadcrumbs={true}>
+<Layout title={title} description={description} canonical={canonical} image="/assets/images/og-default.svg" hideBreadcrumbs={false}>
   <Fragment slot="head">
     <meta name="keywords" content={pageKeywords} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -177,25 +184,44 @@ const structuredData = {
     <div class="cc-container">
 
       <header class="cc-header">
-        <div class="cc-register">
-          <div class="cc-register-top">
-            <span class="cc-eyebrow"><span class="cc-blip"></span> Original research</span>
-            <span class="cc-folio">{posts.length} articles &middot; updated {currentYear}</span>
+        <div class="dh-hero-grid">
+          <div class="dh-hero-left">
+            <div class="dh-hero-badge"><span class="lg-blip"></span> Original research &middot; {posts.length} articles</div>
+            <h1 class="dh-hero-title">Udemy Course <span class="cc-accent">Reviews &amp; Guides</span></h1>
+            <p class="dh-hero-sub">Guides built from our coupon verification pipeline — every review links to a course we've actually checked against Udemy, with the working discount code at hand.</p>
+            <div class="dh-hero-stats">
+              <div class="dh-stat"><b class="dh-stat-val"><span data-count={posts.length}>0</span></b><span class="dh-stat-label">articles</span></div>
+              <div class="dh-stat"><b class="dh-stat-val"><span data-count={topicChips.length}>0</span></b><span class="dh-stat-label">topics covered</span></div>
+              <div class="dh-stat"><b class="dh-stat-val"><span data-count={1300}>0</span><span class="lg-plus">+</span></b><span class="dh-stat-label">courses reviewed</span></div>
+            </div>
           </div>
-          <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.14em;color:var(--brand);display:flex;align-items:center;gap:10px;margin-bottom:0.6rem;">Reviews & guides<span style="flex:1;border-top:1px solid var(--ledger);" aria-hidden="true"></span></div>
-          <h1 class="cc-title">Udemy Course <span class="cc-accent">Reviews &amp; Guides</span></h1>
-          <p class="cc-subtitle">Guides built from our coupon verification pipeline — every review links to a course we've actually checked against Udemy, with the working discount code at hand.</p>
-          <div class="cc-toolbar">
-            <a class="cc-hero-btn" href="#latest">Latest reviews &amp; guides</a>
-            <a class="cc-hero-btn ghost" href="/categories">Browse by category</a>
-            <a class="cc-hero-btn ghost" href="/udemy-coupons-today">Today's new deals</a>
+          <div class="dh-terminal">
+            <div class="dh-term-head">
+              <span class="dh-term-dot" style="background:#ff5f56"></span>
+              <span class="dh-term-dot" style="background:#ffbd2e"></span>
+              <span class="dh-term-dot" style="background:#27c93f"></span>
+              <span class="dh-term-title">agents@courseswyn: ~/blog</span>
+              <span class="dh-term-live"><span class="lg-blip"></span> Live</span>
+            </div>
+            <div class="dh-term-body">
+              {heroFeed.map((p) => (
+                <a class="dh-term-line" href={p.href}>
+                  <span class="dh-term-time">{p.timeLabel}</span>
+                  <span class="dh-term-ok">✓</span>
+                  <span class="dh-term-cat">guide</span>
+                  <span class="dh-term-title2">{p.title}</span>
+                  <span class="dh-term-save">→</span>
+                </a>
+              ))}
+              <div class="dh-term-line"><span class="dh-term-time">now</span><span class="dh-term-ok">✓</span><span class="dh-term-title2">reviews checked by CoursesWyn<span class="caret"></span></span></div>
+            </div>
+            <div class="dh-term-foot">$ fresh articles <b>{posts.length}</b></div>
           </div>
-          <div class="cc-ledger">
-            <div class="cc-ledger-cell"><div class="cc-ledger-label">Articles</div><div class="cc-ledger-value">{posts.length}</div></div>
-            <div class="cc-ledger-cell"><div class="cc-ledger-label">Courses reviewed</div><div class="cc-ledger-value">1,300+</div></div>
-            <div class="cc-ledger-cell"><div class="cc-ledger-label">Topics covered</div><div class="cc-ledger-value">{topicChips.length}</div></div>
-            <div class="cc-ledger-cell"><div class="cc-ledger-label">Updated</div><div class="cc-ledger-value">{currentYear}</div></div>
-          </div>
+        </div>
+        <div class="cc-toolbar" style="margin-top:1.5rem;">
+          <a class="cc-hero-btn" href="#latest">Latest reviews &amp; guides</a>
+          <a class="cc-hero-btn ghost" href="/categories">Browse by category</a>
+          <a class="cc-hero-btn ghost" href="/udemy-coupons-today">Today's new deals</a>
         </div>
       </header>
 
@@ -301,6 +327,35 @@ const structuredData = {
   .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(76, 195, 138, 0.12); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 6px 13px; }
   .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #FFC94D; animation: ccBlip 1.6s infinite; }
   @keyframes ccBlip { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  .dh-hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 2.5rem; align-items: center; }
+  .dh-hero-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; margin-bottom: 1.25rem; }
+  .dh-hero-title { font-size: clamp(2rem, 4.3vw, 3rem); font-weight: 800; letter-spacing: -0.02em; color: var(--text-bright, var(--text)); margin: 0 0 0.75rem; line-height: 1.12; }
+  .dh-hero-title .cc-accent { color: var(--brand); }
+  .dh-hero-sub { color: var(--muted); font-size: 1rem; line-height: 1.7; margin: 0 0 1.5rem; max-width: 560px; }
+  .dh-hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+  .dh-stat { display: flex; flex-direction: column; }
+  .dh-stat-val { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--brand); }
+  .dh-stat-label { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); }
+  .lg-blip { width: 7px; height: 7px; border-radius: 50%; background: var(--brand); animation: lgBlip 1.6s infinite; }
+  @keyframes lgBlip { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .caret { display: inline-block; width: 0.55ch; height: 1em; margin-left: 4px; background: var(--brand); vertical-align: text-bottom; animation: lgBlip 1.1s step-end infinite; }
+  .dh-terminal { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; text-align: left; }
+  .dh-term-head { display: flex; align-items: center; gap: 6px; padding: 10px 14px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
+  .dh-term-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dh-term-title { margin-left: 8px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
+  .dh-term-live { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; color: var(--stamp); text-transform: uppercase; letter-spacing: 0.06em; }
+  .dh-term-live .lg-blip { background: var(--stamp); }
+  .dh-term-body { padding: 4px 0; }
+  .dh-term-line { display: flex; align-items: center; gap: 10px; padding: 7px 16px; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text); text-decoration: none; }
+  a.dh-term-line:hover { background: var(--brand-soft); }
+  .dh-term-time { color: var(--muted); flex-shrink: 0; font-size: 0.7rem; min-width: 42px; }
+  .dh-term-ok { color: var(--stamp); font-weight: 700; flex-shrink: 0; }
+  .dh-term-cat { color: var(--brand); flex-shrink: 0; font-size: 0.7rem; min-width: 64px; }
+  .dh-term-title2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .dh-term-save { color: var(--brand); font-weight: 700; flex-shrink: 0; }
+  .dh-term-foot { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--bg-secondary); font-family: var(--font-mono); font-size: 0.78rem; color: var(--text); }
+  .dh-term-foot b { color: var(--brand); }
+  @media (max-width: 900px) { .dh-hero-grid { grid-template-columns: 1fr; gap: 1.75rem; } }
   .cc-folio { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--muted); border: 1px dashed var(--border); border-radius: 6px; padding: 5px 10px; letter-spacing: .05em; white-space: nowrap; }
   .cc-title { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 700; color: var(--text); line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 12px; }
   .cc-title .cc-accent { color: #CF6F59; }
@@ -397,5 +452,33 @@ const structuredData = {
     .cc-hero-btn { padding: 11px 16px; font-size: 0.85rem; }
   }
 </style>
+
+<script>
+  (function () {
+    function animateCount(el) {
+      var target = parseInt(el.getAttribute('data-count') || '0', 10);
+      if (isNaN(target)) return;
+      var dur = 900, start = null;
+      function step(ts) {
+        if (!start) start = ts;
+        var p = Math.min(1, (ts - start) / dur);
+        el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    var counters = document.querySelectorAll('[data-count]');
+    if (!('IntersectionObserver' in window)) {
+      counters.forEach(animateCount);
+    } else {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { animateCount(e.target); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.3 });
+      counters.forEach(function (c) { io.observe(c); });
+    }
+  })();
+</script>
 
 </Layout>

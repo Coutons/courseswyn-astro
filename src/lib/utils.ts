@@ -33,6 +33,19 @@ export function slugifyTopic(name: string): string {
   return String(name).toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
 }
 
+export function buildHeroFeed(deals: any[], now: Date, count = 3) {
+  return [...deals]
+    .sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime())
+    .slice(0, count)
+    .map((d) => {
+      const t = new Date((d as any).updatedAt ?? (d as any).createdAt ?? 0).getTime();
+      const mins = Math.max(1, Math.round((now.getTime() - t) / 60000));
+      const timeLabel = mins < 60 ? mins + "m ago" : Math.round(mins / 60) + "h ago";
+      const pct = d.price && d.originalPrice && d.originalPrice > d.price ? Math.round(100 - (d.price / d.originalPrice) * 100) : 0;
+      return { title: String(d.title || ""), slug: String(d.slug), cat: String(d.category || "Udemy").toLowerCase(), pct, timeLabel };
+    });
+}
+
 export function extractDifficultyLevel(title?: string, description?: string): "Beginner" | "Intermediate" | "Advanced" | "All Levels" {
   const text = `${title || ""} ${description || ""}`.toLowerCase();
 
