@@ -72,7 +72,6 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
-  const [visibleRelated, setVisibleRelated] = useState(6);
 
   const markdownRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -131,6 +130,76 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
   const learnPoints = (deal.learn || []).map((s) => s.replace(/\r/g, "").trim()).filter(Boolean);
   const reqPoints = (deal.requirements || []).map((s) => s.replace(/\r/g, "").trim()).filter(Boolean);
   const easyStart = reqPoints.some((r) => /no |beginner|none|without|anyone|basic|no experience/i.test(r));
+
+  // ── Programmatic copy variation: variant picked by slug hash (Fase 1),
+  // flavor clause per category group (Fase 2). Keeps body copy unique
+  // across thousands of coupon pages without manual writing.
+  const variantIdx = (salt: string): number => {
+    const s = `${deal.slug}#${salt}`;
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return h;
+  };
+  const pickV = <T,>(salt: string, arr: readonly T[]): T => arr[variantIdx(salt) % arr.length];
+
+  const catLc = (deal.category || "").toLowerCase();
+  const catGroup: "code" | "business" | "design" | "teach" | "general" =
+    /development|software|program|desarrollo|informática|informatica/.test(catLc) ? "code"
+    : /business|finance|office|marketing|productividad|management|accounting/.test(catLc) ? "business"
+    : /design|photo|music|video|art/.test(catLc) ? "design"
+    : /teach|academic|education|language/.test(catLc) ? "teach" : "general";
+  const flavor: string = {
+    code: "with hands-on labs and real-world projects",
+    business: "with reusable templates and real case studies",
+    design: "with project files you can add to a portfolio",
+    teach: "with classroom-ready examples and exercises",
+    general: "with lifetime access and a completion certificate",
+  }[catGroup];
+
+  const topicName = deal.subcategory || deal.category || "this subject";
+  const skillDuo = learnPoints.slice(0, 2).map((s) => s.charAt(0).toLowerCase() + s.slice(1)).join(" and ");
+  const skillTrio = learnPoints.slice(0, 3).map((s) => s.charAt(0).toLowerCase() + s.slice(1)).join("; ");
+  const socialProof = typeof deal.rating === "number"
+    ? `${deal.rating.toFixed(1)}-star average${typeof deal.students === "number" ? ` across ${deal.students.toLocaleString()} learners` : ""}`
+    : (typeof deal.students === "number" ? `${deal.students.toLocaleString()} learners enrolled` : "");
+  const priceLine = discountPct > 0
+    ? `At $${price.toFixed(2)} instead of $${originalPrice.toFixed(2)}, the coupon removes the price risk.`
+    : "Listed free right now, so trying it costs nothing.";
+
+  const verdictCopy: string = pickV("verdict", [
+    `Yes — ${deal.title} teaches ${skillDuo || "practical, job-ready skills"}${typeof deal.students === "number" ? ` to ${deal.students.toLocaleString()} learners` : ""}${typeof deal.rating === "number" ? ` at a ${deal.rating.toFixed(1)}-star average` : ""}. ${priceLine}`,
+    `${deal.title} is a ${deal.category || "self-paced"} course ${flavor}. ${socialProof ? `It holds a ${socialProof}.` : "It has no public rating yet, so the syllabus below matters most."} ${priceLine}`,
+    `Short answer: yes. ${deal.title} covers ${skillDuo || `the core ${topicName} workflow`} ${flavor}${socialProof ? `, and it carries a ${socialProof}` : ""}. ${priceLine}`,
+    `For ${deal.category || "self-paced"} learners, ${deal.title} is an easy yes ${flavor}: ${skillDuo || "practical skills"}${socialProof ? ` with a ${socialProof}` : ""}. ${priceLine}`,
+  ] as const);
+
+  const deliversHead = learnPoints.length > 0
+    ? `The published syllabus lists ${learnPoints.length} outcomes — headlined by ${skillTrio}.`
+    : "The instructor hasn't published a detailed outcome list, so judge by the category syllabus on Udemy.";
+  const deliversRuntime = deal.duration
+    ? `Total runtime is ${deal.duration} of video, which you work through self-paced with lifetime access.`
+    : "You work through it self-paced with lifetime access.";
+  const deliversScale = typeof deal.students === "number" && deal.students > 10000
+    ? `With ${deal.students.toLocaleString()} learners enrolled, the pacing and explanations have been stress-tested at scale.`
+    : "";
+  const deliversCopy: string = pickV("delivers", [
+    `${deliversHead} ${deliversRuntime} ${deliversScale}`,
+    `${deliversRuntime} ${deliversHead} ${deliversScale}`,
+    `${deal.duration ? `Across ${deal.duration} of video, ` : ""}${learnPoints.length > 0 ? `you'll work through ${learnPoints.length} published outcomes — first up: ${skillTrio}.` : "the syllabus is what the instructor published on Udemy — no padded outcome list."} ${deal.duration ? "Self-paced with lifetime access." : ""} ${deliversScale}`,
+    `${deliversHead} ${flavor.charAt(0).toUpperCase() + flavor.slice(1)}, self-paced with lifetime access. ${deliversScale}`,
+  ] as const).replace(/\s+/g, " ").trim();
+
+  const priceListBit = `$${originalPrice.toFixed(2)} is the list price, but Udemy courses at this level almost never sell at list.`;
+  const priceCutBit = discountPct > 0
+    ? `This coupon brings it to $${price.toFixed(2)} — a ${discountPct}% cut worth $${savings.toFixed(2)}.`
+    : "This listing is currently free, so the price question answers itself.";
+  const priceCphBit = costPerHour ? ` Spread over the runtime, that is about $${costPerHour.toFixed(2)} per hour of instruction — cheaper than a coffee per study session.` : "";
+  const priceCmpBit = ` The real comparison is not list versus coupon, but coupon versus the next-best course at the same sale price — and on ratings-per-dollar, ${typeof deal.rating === "number" && deal.rating >= 4.5 ? "this one compares well." : "check the rating box above before deciding."}`;
+  const priceCopy: string = pickV("price", [
+    `${priceListBit} ${priceCutBit}${priceCphBit}${priceCmpBit}`,
+    `${priceCutBit} ${priceListBit}${priceCphBit}${priceCmpBit}`,
+    `${priceCmpBit.trim()} ${priceListBit} ${priceCutBit}${priceCphBit}`,
+  ] as const).replace(/\s+/g, " ").trim();
   const masked = couponMask || "AUTO-APPLY";
   const personalPlanUrl = "https://trk.udemy.com/c/6564357/3775958/39854";
 
@@ -162,7 +231,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
   };
 
   const related = relatedDeals.filter((d) => d.slug !== deal.slug);
-  const shownRelated = related.slice(0, visibleRelated);
+  const shownRelated = related.slice(0, 4);
   const updatedLong = fmtDate(deal.updatedAt);
   const updatedShort = deal.updatedAt
     ? new Date(deal.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -183,7 +252,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
     ["entry-relevance", "Still relevant?"],
     ["entry-delivers", "What it delivers"],
     ["entry-price", "Is the price fair?"],
-    ["entry-about", "About this course"],
+    ["entry-about-official", "About this course"],
     ["entry-rating", "Rating breakdown"],
     ["entry-instructor", "Instructor"],
     ["entry-faq", "Coupon FAQs"],
@@ -294,12 +363,10 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
             </div>
 
             <section aria-labelledby="verdict-heading" id="entry-verdict">
-              <h2 id="verdict-heading" style={{ ...H2 }}>Quick Verdict: Is This {deal.subcategory && deal.subcategory !== deal.category ? deal.subcategory : (deal.category || "Udemy")} Udemy Coupon Worth It?</h2>
+              <h2 id="verdict-heading" style={{ ...H2 }}>Quick Verdict: Is This {deal.subcategory && deal.subcategory !== deal.category ? deal.subcategory : (deal.category || "Udemy")} Coupon Worth It?</h2>
               <div className="verdict-box">
                 <p className="verdict-answer">
-                  <strong>Yes — </strong>
-                  {deal.title} teaches {learnPoints.length > 0 ? learnPoints.slice(0, 2).map((s) => s.charAt(0).toLowerCase() + s.slice(1)).join(" and ") : "practical, job-ready skills"}
-                  {typeof deal.students === "number" ? ` to ${deal.students.toLocaleString()} learners` : ""}{typeof deal.rating === "number" ? ` at a ${deal.rating.toFixed(1)}-star average` : ""}. {discountPct > 0 ? `At $${price.toFixed(2)} instead of $${originalPrice.toFixed(2)}, the coupon removes the price risk.` : "Listed free right now, so trying it costs nothing."}
+                  {verdictCopy.startsWith("Yes — ") ? (<><strong>Yes — </strong>{verdictCopy.slice("Yes — ".length)}</>) : verdictCopy}
                 </p>
                 <dl className="verdict-facts">
                   <div><dt>Rating</dt><dd>{typeof deal.rating === "number" ? `${deal.rating.toFixed(1)} / 5${typeof deal.students === "number" ? ` · ${deal.students.toLocaleString()} learners` : ""}` : "Not yet rated"}</dd></div>
@@ -307,10 +374,16 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
                   <div><dt>Price</dt><dd>{discountPct > 0 ? `$${price.toFixed(2)} with coupon (list $${originalPrice.toFixed(2)})` : "Free enrollment"}</dd></div>
                 </dl>
               </div>
+              {deal.editorNote && deal.editorNote.trim() && (
+                <aside className="editor-note" aria-label="Editor's take">
+                  <div className="editor-note-label">Editor's take</div>
+                  <p>{deal.editorNote.trim()}</p>
+                </aside>
+              )}
             </section>
 
             <section aria-labelledby="facts-heading" id="entry-facts" className="panel-facts">
-              <h2 id="facts-heading" style={{ ...H2 }}>Udemy Course Facts & Live Coupon Details</h2>
+              <h2 id="facts-heading" style={{ ...H2 }}>Course Facts & Live Coupon Details</h2>
               <dl className="fact-table">
                 {[
                   { label: "Course", value: deal.title },
@@ -341,15 +414,15 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
 
             {(learnPoints.length > 0 || reqPoints.length > 0) && (
               <section aria-labelledby="learn-heading" id="entry-learn">
-                <h2 id="learn-heading" style={{ ...H2 }}>What You'll Learn in This Udemy Online Course</h2>
+                <h2 id="learn-heading" style={{ ...H2 }}>What You'll Learn</h2>
                 {learnPoints.length > 0 ? (
                   <>
                     <p className="sec-intro">
                       Practical takeaways waiting inside this <a href={`/categories/${slugifyCategory(deal.category || "")}`}>{deal.category}</a> course:
                     </p>
-                    <ul className="check-grid">
+                    <ul className="plain-list">
                       {learnPoints.map((point, idx) => (
-                        <li key={idx}><span aria-hidden="true">✓</span><span>{point.endsWith(".") ? point : point + "."}</span></li>
+                        <li key={idx}>{point.endsWith(".") ? point : point + "."}</li>
                       ))}
                     </ul>
                   </>
@@ -367,7 +440,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
               </section>
             )}
 
-            <section aria-labelledby="about-heading" id="entry-about">
+            <section aria-labelledby="about-heading" id="entry-relevance">
               <h2 id="about-heading" style={{ ...H2 }}>Is {deal.title} Still Relevant?</h2>
               <p className="body-p">
                 The {deal.updatedAt ? `last update landed ${fmtDate(deal.updatedAt)}` : "listing is current"} — and for a {deal.category || "skills"} course, freshness is the first thing to verify. An updated date means the instructor still maintains the material; a stale one means you learn last year's version of the tools.
@@ -375,14 +448,19 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
               <p className="body-p">
                 {typeof deal.rating === "number" ? `The ${deal.rating.toFixed(1)} rating${typeof deal.students === "number" ? ` from ${deal.students.toLocaleString()} learners` : ""} suggests the content holds up in practice — ratings at that level rarely survive contact with outdated material.` : "There is no public rating to lean on here, so weigh the syllabus below against your goal instead."} {reqPoints.length > 0 && !easyStart ? "Note the prerequisites, though: this one assumes background, so beginners should treat the requirements list as mandatory reading." : "The entry bar looks low, which makes this a reasonable first course in the topic rather than a capstone."}
               </p>
-              <h2 id="delivers-heading" style={{ ...H2, marginTop: "2rem" }}>What the Course Actually Delivers{deal.duration ? ` in ${deal.duration}` : ""}</h2>
+            </section>
+
+            <section aria-labelledby="delivers-heading" id="entry-delivers">
+              <h2 id="delivers-heading" style={{ ...H2 }}>What the Course Actually Delivers{deal.duration ? ` in ${deal.duration}` : ""}</h2>
               <p className="body-p">
-                {learnPoints.length > 0 ? `The published syllabus lists ${learnPoints.length} outcomes — headlined by ${learnPoints.slice(0, 3).map((s) => s.charAt(0).toLowerCase() + s.slice(1)).join("; ")}.` : "The instructor hasn't published a detailed outcome list, so judge by the category syllabus on Udemy."} {deal.duration ? `Total runtime is ${deal.duration} of video, which you work through self-paced with lifetime access.` : "You work through it self-paced with lifetime access."} {typeof deal.students === "number" && deal.students > 10000 ? `With ${deal.students.toLocaleString()} learners enrolled, the pacing and explanations have been stress-tested at scale.` : ""}
+                {deliversCopy}
               </p>
-              <h2 id="price-heading" style={{ ...H2, marginTop: "2rem" }}>Is the Udemy Price Fair After Your Coupon Discount?</h2>
+            </section>
+
+            <section aria-labelledby="price-heading" id="entry-price">
+              <h2 id="price-heading" style={{ ...H2 }}>Is the Price Fair After the Coupon Discount?</h2>
               <p className="body-p">
-                ${originalPrice.toFixed(2)} is the list price, but Udemy courses at this level almost never sell at list. {discountPct > 0 ? `This coupon brings it to $${price.toFixed(2)} — a ${discountPct}% cut worth $${savings.toFixed(2)}.` : "This listing is currently free, so the price question answers itself."}
-                {costPerHour ? ` Spread over the runtime, that is about $${costPerHour.toFixed(2)} per hour of instruction — cheaper than a coffee per study session.` : ""} The real comparison is not list versus coupon, but coupon versus the next-best course at the same sale price — and on ratings-per-dollar, {typeof deal.rating === "number" && deal.rating >= 4.5 ? "this one compares well." : "check the rating box above before deciding."}
+                {priceCopy}
               </p>
             </section>
 
@@ -431,10 +509,10 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
             )}
 
             <section aria-labelledby="proscons-heading" style={{ marginTop: "2.25rem" }}>
-              <h2 id="proscons-heading" style={{ ...H2 }}>Pros and Cons of This Udemy Course</h2>
+              <h2 id="proscons-heading" style={{ ...H2 }}>Pros and Cons of This Course</h2>
               <div className="pros-cons">
                 <div className="pros-col">
-                  <h4>What works</h4>
+                  <h3>What works</h3>
                   <ul>
                     <li><span aria-hidden="true"></span><span>Verified{discountPct > 0 ? ` ${discountPct}%` : ""} price cut, checked {deal.updatedAt ? timeAgo(deal.updatedAt) : "recently"} — not a fake anchor price</span></li>
                     {typeof deal.rating === "number" && (<li><span aria-hidden="true"></span><span>Learner record of {deal.rating.toFixed(1)}/5{typeof deal.students === "number" ? ` across ${deal.students.toLocaleString()} enrollments` : ""} — consistent satisfaction signal</span></li>)}
@@ -443,7 +521,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
                   </ul>
                 </div>
                 <div className="cons-col">
-                  <h4>What's weaker</h4>
+                  <h3>What's weaker</h3>
                   <ul>
                     {discountPct > 0 && (<li><span aria-hidden="true"></span><span>Back to ${originalPrice.toFixed(2)} the moment the code dies — no grace period</span></li>)}
                     {deal.duration && (<li><span aria-hidden="true"></span><span>Plan real time beyond {deal.duration} of video — exercises and quizzes add up</span></li>)}
@@ -614,11 +692,6 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
                     );
                   })}
                 </div>
-                {related.length > visibleRelated && (
-                  <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
-                    <button className="pill" onClick={() => setVisibleRelated(related.length)}>Show more</button>
-                  </div>
-                )}
               </section>
             )}
           </article>
@@ -731,8 +804,6 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
         .sec-intro { font-size: 0.88rem; color: var(--muted); margin: 0 0 1rem; line-height: 1.65; }
         .article-col-main h3 { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 1.25rem 0 0.6rem; line-height: 1.4; }
         .sec-intro a, .prose a { color: var(--brand); }
-        .check-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0.6rem; font-size: 0.88rem; color: var(--text-secondary); }
-        .check-grid > div { display: flex; gap: 10px; align-items: flex-start; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.7rem 0.9rem; }
         .plain-list { margin: 0; padding-left: 1.2rem; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.8; }
         .prose { font-size: 0.92rem; line-height: 1.75; color: var(--text-secondary); background: transparent; border: none; border-radius: 0; padding: 0; }
         .prose, .prose * { font-family: inherit !important; }
@@ -783,7 +854,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
         .copy-link-btn { height: 30px; padding: 0 12px; border-radius: 7px; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.75rem; font-weight: 700; cursor: pointer; font-family: inherit; }
         .related-sec { margin-top: 2.5rem; }
         .related-title { font-size: 1.15rem; font-weight: 800; color: var(--text); margin: 0 0 1.1rem; }
-        .keep-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        .keep-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
         .keep-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
         .keep-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; border-bottom: 1px solid var(--border); }
         .keep-cat { font-size: 11px; font-weight: 700; color: var(--brand); text-transform: uppercase; letter-spacing: 0.06em; padding: 12px 14px 0; }
@@ -797,15 +868,15 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
         .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 2rem 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
         .pros-col { padding: 1.25rem 1.4rem; border-right: 1px solid var(--border); }
         .cons-col { padding: 1.25rem 1.4rem; }
-        .pros-cons h4 { margin: 0 0 0.75rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.14em; }
-        .pros-col h4 { color: var(--brand); }
-        .cons-col h4 { color: #CF6F59; }
+        .pros-cons h3 { margin: 0 0 0.75rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.14em; }
+        .pros-col h3 { color: var(--brand); }
+        .cons-col h3 { color: #CF6F59; }
         .pros-cons ul { padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; list-style: none; }
         .pros-cons li { display: flex; gap: 10px; align-items: flex-start; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6; }
         .pros-cons li > span:first-child { flex: none; width: 6px; height: 6px; border-radius: 50%; margin-top: 8px; }
         .pros-col li > span:first-child { background: var(--brand); }
         .cons-col li > span:first-child { background: #CF6F59; }
-        @media (max-width: 640px) { .pros-cons { grid-template-columns: 1fr; } .pros-col { border-right: none; border-bottom: 1px solid var(--border); } }
+        @media (max-width: 640px) { .pros-cons { grid-template-columns: 1fr; } .pros-col { border-right: none; border-bottom: 1px solid var(--border); } .keep-grid { grid-template-columns: 1fr; } }
         .final-verdict { margin-top: 2.5rem; background: var(--card); border: 1px solid var(--brand); border-radius: 16px; padding: 1.75rem; text-align: center; }
         .claim-strip { margin-top: 2.5rem; background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--brand); border-radius: 14px; padding: 1.1rem 1.25rem; display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap; }
         .claim-thumb { width: 120px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); flex-shrink: 0; }
@@ -858,7 +929,9 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
         .verdict-facts > div { display: grid; grid-template-columns: 90px 1fr; gap: 10px; padding: 5px 0; font-size: 0.88rem; }
         .verdict-facts dt { color: var(--muted); font-weight: 600; }
         .verdict-facts dd { margin: 0; color: var(--text); font-weight: 500; }
-        .check-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0.6rem; font-size: 0.88rem; color: var(--text-secondary); list-style: none; margin: 0; padding: 0; }
+        .editor-note { margin-top: 1rem; background: linear-gradient(180deg, rgba(255,201,77,0.08), transparent); border: 1px solid rgba(255,201,77,0.25); border-radius: 12px; padding: 1rem 1.2rem; }
+        .editor-note-label { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--brand); margin-bottom: 0.4rem; }
+        .editor-note p { margin: 0; font-size: 0.92rem; line-height: 1.75; color: var(--text-secondary); white-space: pre-line; }
         .fact-table { margin: 0; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
         .panel-facts { background: linear-gradient(180deg, rgba(255,201,77,0.10), rgba(255,201,77,0.03)); border: 1px solid rgba(255,201,77,0.28); border-radius: 16px; padding: 1.4rem 1.5rem; margin-top: 2.25rem; }
         .panel-facts .fact-table { background: transparent; border: none; border-radius: 0; }

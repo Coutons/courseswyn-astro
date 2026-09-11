@@ -3,7 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import { readDeals } from "../../lib/store";
 import { slugifyCategory, slugifyTopic } from "../../lib/utils";
 import { maskCoupon } from "../../lib/couponMask";
-import { categoryStats, couponFAQs } from "../../lib/dealStats";
+import { categoryStats, couponFAQs, isDealExpired } from "../../lib/dealStats";
 import { parseInstructors, createInstructorSlug } from "../../lib/instructors";
 import { getInstructorImage } from "../../lib/instructorProfiles";
 import { generateSeoDescription } from "../../lib/seo";
@@ -133,6 +133,34 @@ const orgName = "CoursesWyn";
 const couponMask = maskCoupon(deal.coupon);
 const clientDeal: Deal = { ...deal };
 delete clientDeal.coupon;
+
+// Expired pages stay published for users (affiliate), but machine-readable
+// markup must not claim a dead coupon is in stock.
+const dealExpired = isDealExpired(deal);
+const offerAvailability = dealExpired ? "https://schema.org/OutOfStock" : "https://schema.org/InStock";
+
+// Robust ISO 8601 duration: "18.5 hours" -> PT18H30M (a naive digit-strip
+// would wrongly produce PT185H). Returns undefined when unparseable.
+function toISO8601Duration(input?: string): string | undefined {
+  if (!input) return undefined;
+  const m = input.match(/(\d+(?:[.,]\d+)?)\s*(hours?|hrs?|minutes?|mins?)/i);
+  if (!m) return undefined;
+  const val = parseFloat(m[1].replace(",", "."));
+  if (isNaN(val)) return undefined;
+  if (/^min/i.test(m[2])) {
+    const h = Math.floor(val / 60);
+    const min = Math.round(val % 60);
+    if (!h && !min) return undefined;
+    return `PT${h > 0 ? `${h}H` : ""}${min > 0 ? `${min}M` : ""}`;
+  }
+  const h = Math.floor(val);
+  const min = Math.round((val - h) * 60);
+  return `PT${h}H${min > 0 ? `${min}M` : ""}`;
+}
+
+// Stable dates: never fall back to build time (it would shift every deploy).
+const datePublished = deal.createdAt ? new Date(deal.createdAt).toISOString() : undefined;
+const dateModified = deal.updatedAt ? new Date(deal.updatedAt).toISOString() : datePublished;
 ---
 
 <Layout
@@ -140,13 +168,12 @@ delete clientDeal.coupon;
     description={seoDescription}
     image={deal.seoOgImage || deal.image}
     canonical={dealUrl}
-    type="product"
+    type="website"
 >
     <Fragment slot="head">
         <meta property="product:retailer_item_id" content={deal.slug} />
         <meta property="product:price:amount" content={String(deal.price ?? 0)} />
         <meta property="product:price:currency" content="USD" />
-        <meta name="keywords" content={`${deal.title}, ${deal.category || "Udemy"} coupon, Udemy coupon code, Udemy discount, ${deal.provider || "Udemy"} coupon, ${normalizedTitle} coupon`} />
     </Fragment>
     <script type="application/ld+json" set:html={
         JSON.stringify({
@@ -208,7 +235,7 @@ delete clientDeal.coupon;
                         "@type": "Offer",
                         "price": deal.price || 0,
                         "priceCurrency": "USD",
-                        "availability": "https://schema.org/InStock",
+                        "availability": offerAvailability,
                         "validThrough": deal.expiresAt || undefined,
                         "url": deal.url || dealUrl,
                         "seller": { "@id": `${siteUrl}/#organization` },
@@ -218,13 +245,13 @@ delete clientDeal.coupon;
                                 "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow"
                             }
                         },
-                        "timeRequired": deal.duration ? `PT${deal.duration.replace(/[^\d]/g, '')}H` : undefined,
+                        "timeRequired": toISO8601Duration(deal.duration),
                     "inLanguage": deal.language || "en",
                     "teaches": deal.learn ? deal.learn.map((l) => l.replace(/\r$/, '')).join(", ") : (deal.skills?.length ? deal.skills.join(", ") : undefined),
                     "educationalLevel": deal.level || "Beginner to Advanced",
                     "educationalUse": "Professional Development",
-                    "datePublished": deal.createdAt ? new Date(deal.createdAt).toISOString() : new Date().toISOString(),
-                    "dateModified": deal.updatedAt ? new Date(deal.updatedAt).toISOString() : new Date().toISOString(),
+                    "datePublished": datePublished,
+                    "dateModified": dateModified,
                     "hasCourseInstance": {
                         "@type": "CourseInstance",
                         "courseMode": "online",
@@ -250,7 +277,7 @@ delete clientDeal.coupon;
                         "price": deal.price || 0,
                         "priceCurrency": "USD",
                         "priceValidUntil": deal.expiresAt || undefined,
-                        "availability": "https://schema.org/InStock",
+                        "availability": offerAvailability,
                         "url": deal.url || dealUrl,
                         "seller": { "@id": `${siteUrl}/#organization` },
                         "hasMerchantReturnPolicy": {
@@ -285,8 +312,8 @@ delete clientDeal.coupon;
                     "description": `${seoDescription} ${deal.students ? `${deal.students.toLocaleString()} students enrolled.` : ''} Limited time offer.`,
                     "inLanguage": "en-US",
                     "isPartOf": { "@id": `${siteUrl}/#website` },
-                    "datePublished": deal.createdAt ? new Date(deal.createdAt).toISOString() : new Date().toISOString(),
-                    "dateModified": deal.updatedAt ? new Date(deal.updatedAt).toISOString() : new Date().toISOString(),
+                    "datePublished": datePublished,
+                    "dateModified": dateModified,
                     "publisher": { "@id": `${siteUrl}/#organization` },
                     "speakable": {
                         "@type": "SpeakableSpecification",

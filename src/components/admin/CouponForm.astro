@@ -32,10 +32,10 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
 
 <form id="couponForm" class="adm-form" data-is-edit={String(isEdit)} data-deal-id={deal?.slug ?? ""} novalidate>
   <div class="adm-tabs">
-    <button type="button" class="adm-tab active" data-tab="basic">📝 Basic Info</button>
-    <button type="button" class="adm-tab" data-tab="pricing">💰 Pricing & Stats</button>
-    <button type="button" class="adm-tab" data-tab="tracking">🕐 Coupon & Tracking</button>
-    <button type="button" class="adm-tab" data-tab="content">📖 Content</button>
+    <button type="button" class="adm-tab active" data-tab="basic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Basic Info</button>
+    <button type="button" class="adm-tab" data-tab="pricing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Pricing & Stats</button>
+    <button type="button" class="adm-tab" data-tab="tracking"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Coupon & Tracking</button>
+    <button type="button" class="adm-tab" data-tab="content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Content</button>
   </div>
 
   <!-- ======================= BASIC ======================= -->
@@ -156,7 +156,7 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
         <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
           <label class="adm-label" style="margin-bottom:0;">Price History (real tracking data)</label>
           {isEdit && (
-            <button class="adm-btn adm-btn-ghost adm-btn-sm" type="button" id="recordCheck">✓ Record check now</button>
+            <button class="adm-btn adm-btn-ghost adm-btn-sm" type="button" id="recordCheck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Record check now</button>
           )}
         </div>
         {isEdit ? (
@@ -170,7 +170,7 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
                   <tr>
                     <td>{fmtDT(row.checkedAt)}</td>
                     <td class="adm-price">${row.price.toFixed(2)}</td>
-                    <td>{i === 0 && <span class="adm-chip" style="color:#1f7a4d;background:rgba(31,122,77,.15);border-color:rgba(31,122,77,.35);">latest</span>}</td>
+                    <td>{i === 0 && <span class="adm-chip adm-chip-ok">latest</span>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -191,13 +191,12 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
       <h3 class="adm-subhead"><span class="bar"></span>Course Content</h3>
       <div class="adm-grid">
         <div>
-          <label class="adm-label" for="description">Short Description</label>
-          <textarea class="adm-textarea" id="description" name="description" rows="3" placeholder="One-two sentence summary shown in listings.">{deal?.description ?? ""}</textarea>
-        </div>
-        <div>
-          <label class="adm-label" for="contentNotes">Content details (optional)</label>
-          <input class="adm-input" id="contentNotes" name="contentNotes" type="text" placeholder="5 downloadable resources, 10 articles, exercises…" value={deal?.contentNotes ?? ""} />
-          <span class="adm-hint">Shown next to the duration on the deal page, e.g. "10h · 5 downloadable resources". Leave blank to show duration only.</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <label class="adm-label" for="description" style="margin-bottom:0;">Short Description</label>
+            <button class="adm-btn adm-btn-ghost adm-btn-sm" type="button" id="genDesc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Generate</button>
+          </div>
+          <textarea class="adm-textarea" id="description" name="description" rows="3" placeholder="One-two sentence summary shown in listings — or click Generate." style="margin-top:.45rem;">{deal?.description ?? ""}</textarea>
+          <span class="adm-hint">Klik Generate untuk membuat ringkasan otomatis dari data di form — tidak perlu copy-paste dari Udemy.</span>
         </div>
         <div>
           <label class="adm-label" for="learn">What you'll learn (one per line)</label>
@@ -209,16 +208,26 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
           <span class="adm-hint">Real Udemy topics. Shown as chips on the deal page and power the /topics pages (fallback: subcategory).</span>
         </div>
         <div>
+          <label class="adm-label" for="keywords">Focus Keywords (one per line)</label>
+          <textarea class="adm-textarea" id="keywords" name="keywords" rows="3" placeholder={"react hooks course\nlearn react hooks"}>{deal?.keywords?.join("\n") ?? ""}</textarea>
+          <span class="adm-hint">Kata kunci Udemy + turunannya (mis. "react hooks course"). Disisipkan otomatis oleh tombol Generate ke dalam deskripsi.</span>
+        </div>
+        <div>
           <label class="adm-label" for="requirements">Requirements (one per line)</label>
           <textarea class="adm-textarea" id="requirements" name="requirements" rows="4" placeholder={"Basic JavaScript knowledge\nA computer with internet"}>{deal?.requirements?.join("\n") ?? ""}</textarea>
+        </div>
+        <div>
+          <label class="adm-label" for="editorNote">Editor's take (optional)</label>
+          <textarea class="adm-textarea" id="editorNote" name="editorNote" rows="3" placeholder="2–3 kalimat opini redaksi: kenapa kursus ini layak diambil.">{deal?.editorNote ?? ""}</textarea>
+          <span class="adm-hint">Tampil di halaman deal sebagai box "Editor's take". Tulis dengan kata-katamu sendiri — ini konten unik yang paling ampuh untuk SEO. Kosongkan jika belum sempat.</span>
         </div>
         <p class="adm-note" style="margin:0;">FAQs halaman deal dibuat otomatis dari data (harga, rating, durasi, garansi) — tidak perlu diisi manual.</p>
       </div>
     </div>
   </div>
 
-  <div style="display:flex;gap:1rem;justify-content:flex-end;align-items:center;padding-top:1rem;border-top:1px solid #e2e6ec;">
-    <span id="formStatus" style="color:#6e7686;font-size:.85rem;"></span>
+  <div class="adm-form-foot">
+    <span id="formStatus" class="adm-form-status"></span>
     <a class="adm-btn adm-btn-outline" href="/admin">Cancel</a>
     <button class="adm-btn adm-btn-primary" type="submit">{submitLabel}</button>
   </div>
@@ -233,7 +242,8 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
   function setStatus(text: string, kind = "") {
     if (statusEl) {
       statusEl.textContent = text;
-      statusEl.className = kind;
+      statusEl.className = `adm-form-status ${kind}`.trim();
+      statusEl.style.color = kind === "adm-ok" ? "var(--adm-ok)" : kind === "adm-err" ? "var(--adm-danger)" : "";
     }
   }
 
@@ -247,8 +257,7 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
   });
 
   const slugSource = document.querySelector<HTMLInputElement>('[data-slug-source]');
-  const slugTarget = document.querySelector<HTMLInputElement>('[data-slug-target]');
-  if (slugSource && slugTarget) {
+  const slugTarget = document.querySelector<HTMLInputElement>('[data-slug-target]');  if (slugSource && slugTarget) {
     slugSource.addEventListener("blur", () => {
       if (!slugTarget.value.trim()) {
         slugTarget.value = slugify(slugSource.value);
@@ -265,6 +274,82 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "");
   }
+
+  const descInput = document.getElementById("description") as HTMLTextAreaElement | null;
+  const genDescBtn = document.getElementById("genDesc") as HTMLButtonElement | null;
+
+  function pick<T>(arr: T[], seed: string): T {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    return arr[h % arr.length];
+  }
+
+  function cleanTitle(t: string): string {
+    return t.replace(/\s*[_\-|:–—]\s*(udemy|course|coupon|free|202\d.*)?$/i, "").trim() || t.trim();
+  }
+
+  genDescBtn?.addEventListener("click", () => {
+    const val = (id: string) => (document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null)?.value.trim() || "";
+    const title = cleanTitle(val("title"));
+    if (!title) {
+      setStatus("Fill Course Title first, then click Generate.", "adm-err");
+      return;
+    }
+    const topic = val("subcategory") || val("category") || "this field";
+    const rawLevel = val("level");
+    const level = rawLevel && rawLevel !== "All Levels" ? `${rawLevel.toLowerCase()} learners` : "learners of all levels";
+    const audience = /^beginner/i.test(rawLevel) ? "beginners" : /^intermediate/i.test(rawLevel) ? "intermediate learners" : /^advanced/i.test(rawLevel) ? "advanced learners" : "";
+    const learnLines = val("learn").split("\n").map((l) => l.trim()).filter(Boolean);
+    const skills = learnLines.slice(0, 2).map((s) => s.charAt(0).toLowerCase() + s.slice(1).replace(/[.。]$/, "")).join(" and ");
+    const duration = val("duration");
+
+    // Focus keywords + auto derivatives ("turunan"): "{keyword} for {audience}"
+    // A keyword is dropped when it merely repeats the title/topic (>=2
+    // significant words already present) so the output stays natural.
+    const STOPWORDS = new Set(["the", "and", "for", "with", "from", "into", "learn", "learning", "course", "courses", "guide", "complete", "ultimate", "masterclass", "bootcamp", "class", "training", "tutorial", "tutorials", "practical", "hands", "step", "steps", "beginner", "beginners"]);
+    function sigWords(s: string): string[] {
+      return (s.toLowerCase().match(/[a-z0-9]+(?:-[a-z0-9]+)?/g) || []).filter((w) => w.replace(/-/g, "").length >= 3 && !STOPWORDS.has(w));
+    }
+    const kwRaw = val("keywords").split("\n").map((l) => l.trim()).filter(Boolean);
+    const titleLc = title.toLowerCase();
+    const topicLc = topic.toLowerCase();
+    const haystack = `${title} ${topic}`.toLowerCase();
+    const freshKw = kwRaw.filter((k) => {
+      if (!k || titleLc.includes(k.toLowerCase()) || k.toLowerCase() === topicLc) return false;
+      const overlap = sigWords(k).filter((w) => haystack.includes(w)).length;
+      return overlap < 2;
+    }).slice(0, 3);
+    const kwPool = [...freshKw];
+    if (freshKw.length && audience) {
+      const deriv = `${freshKw[0]} for ${audience}`;
+      if (!kwPool.some((k) => k.toLowerCase() === deriv.toLowerCase())) kwPool.push(deriv);
+    }
+    const kwList = kwPool.slice(0, 3);
+    const kwClause = kwList.length ? ` Key topics include ${kwList.join(", ")}.` : "";
+
+    const base = (withSkills: boolean, withDur: boolean) => pick([
+      `${title} — a hands-on course on ${topic} for ${level}${withSkills && skills ? `, covering ${skills}` : ""}${withDur && duration ? ` across ${duration} of video` : ""}.`,
+      `Learn ${topic} with ${title}, built for ${level}${withSkills && skills ? ` — you'll ${skills}` : ""}${withDur && duration ? ` in ${duration} of practical lessons` : ""}.`,
+      `${title} teaches ${topic} step by step for ${level}${withSkills && skills ? `, including ${skills}` : ""}${withDur && duration ? `. Total runtime: ${duration}` : "."}`,
+    ], title).replace(/\s+/g, " ").trim();
+
+    const BUDGET = 350;
+    const candidates = [
+      base(true, true) + kwClause,
+      base(true, false) + kwClause,
+      base(false, false) + kwClause,
+      base(false, false),
+    ];
+    let text = candidates[candidates.length - 1];
+    for (const c of candidates) {
+      if (c.length <= BUDGET) { text = c; break; }
+    }
+    if (descInput) {
+      descInput.value = text;
+      descInput.focus();
+      setStatus("Description generated — review and edit if needed.", "adm-ok");
+    }
+  });
 
   const recordCheckBtn = document.getElementById("recordCheck") as HTMLButtonElement | null;
   recordCheckBtn?.addEventListener("click", async () => {
@@ -286,7 +371,7 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
   });
 
   const NUMERIC = new Set(["price", "originalPrice", "rating", "students"]);
-  const ARRAYS = new Set(["learn", "requirements", "tags"]);
+  const ARRAYS = new Set(["learn", "requirements", "tags", "keywords"]);
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

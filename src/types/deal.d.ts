@@ -22,6 +22,8 @@ export interface Deal {
   requirements?: string[];
   skills?: string[];
   tags?: string[];
+  keywords?: string[];
+  editorNote?: string;
   seoOgImage?: string;
   expiresAt?: string;
   createdAt?: string;
