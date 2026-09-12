@@ -90,7 +90,7 @@ const articleSchema = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "Article",
+      "@type": "BlogPosting",
       "@id": `${canonical}#article`,
       "headline": title,
       "description": description,
@@ -158,6 +158,25 @@ if (faqSchema.length > 0) {
     ]
   };
 }
+
+const itemListData = (data as any).itemList || [];
+if (itemListData.length > 0) {
+  structuredData["@graph"] = [
+    ...structuredData["@graph"],
+    {
+      "@type": "ItemList",
+      "@id": `${canonical}#ranking`,
+      "name": title,
+      "numberOfItems": itemListData.length,
+      "itemListElement": itemListData.map((item: { name: string; url: string }, i: number) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "name": item.name,
+        "url": item.url.startsWith("http") ? item.url : `https://courseswyn.com${item.url}`,
+      })),
+    },
+  ];
+}
 ---
 
 <Layout
@@ -170,6 +189,7 @@ if (faqSchema.length > 0) {
   updatedDate={data.updatedAt || data.pubDate}
 >
   <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
     <meta name="keywords" content="udemy course review, best udemy courses, udemy coupon code, udemy course guide" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -373,6 +393,8 @@ if (faqSchema.length > 0) {
       .cc-article-content h2 { font-size: 1.45rem; }
       .cc-article-content h3 { font-size: 1.15rem; }
       .cc-article-content p { font-size: 1rem; }
+      .cc-article-content table { font-size: 0.8rem; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .cc-article-content th, .cc-article-content td { padding: 0.5rem 0.6rem; white-space: nowrap; }
       .cc-related-grid { grid-template-columns: 1fr; }
     }
     @media (min-width: 769px) and (max-width: 1023px) {

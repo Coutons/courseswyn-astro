@@ -12,6 +12,17 @@ tags:
   - Machine Learning
   - Data Science
 image: ../../../assets/images/review-course-ai-engineer-agentic-track-udemy.jpg
+faqs:
+- q: How long does it take to complete the AI Engineer Agentic Track course?
+  a: The course is designed for 15 hours of content, but with projects and practice, expect 20-30 hours total. Many students complete it in 1-2 weeks depending on their schedule.
+- q: Is this course enough to become an AI engineer?
+  a: It's a strong foundation for agentic AI, but for full AI engineering, supplement with courses in deep learning and MLOps. This focuses on autonomous agents.
+- q: Is the AI Engineer Agentic Track suitable for beginners?
+  a: Not ideal for complete beginners. It assumes intermediate Python and basic AI knowledge. Start with Python fundamentals if needed.
+- q: Is this course up-to-date in 2026?
+  a: Ed Donner and Ligency actively update content. The course covers current MCP and agent frameworks, but check for recent updates on Udemy.
+- q: What prerequisites do I need?
+  a: Intermediate Python, basic AI/ML concepts, and familiarity with APIs. Knowledge of LangChain helps but isn't required.
 ---
 
 ## Is AI Engineer Agentic Track: The Complete Agent & MCP Course Course Still Relevant for AI Careers in 2026?
