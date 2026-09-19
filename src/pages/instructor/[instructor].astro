@@ -74,6 +74,11 @@ const canonicalUrl = `${siteUrl}/instructor/${slugParam}`;
 
 const instructorImage = await getInstructorImage(slugParam);
 
+// og:image untuk share sosial: utamakan foto instructor, fallback ke gambar course pertama
+// (jangan sampai jatuh ke og-default.svg yang tidak bisa dirender FB/X/WA).
+const ogImage = instructorImage ?? instructorCourses[0]?.seoOgImage ?? instructorCourses[0]?.image;
+const isInstructorAvatar = Boolean(instructorImage && ogImage === instructorImage);
+
 function getInitials(name: string): string {
   return name.split(' ').filter(Boolean).map((n) => n[0]).join('').toUpperCase().slice(0, 2);
 }
@@ -170,7 +175,7 @@ const benefitCards = [
 ];
 ---
 
-<Layout title={title} description={description} canonical={canonicalUrl}   hideBreadcrumbs={false}>
+<Layout title={title} description={description} canonical={canonicalUrl} image={ogImage} imageWidth={isInstructorAvatar ? 200 : 1200} imageHeight={isInstructorAvatar ? 200 : 630} twitterCard={isInstructorAvatar ? "summary" : "summary_large_image"} hideBreadcrumbs={false}>
   <Fragment slot="head">
     <meta name="keywords" content={pageKeywords} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
