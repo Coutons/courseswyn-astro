@@ -1,0 +1,70 @@
+---
+import { voucherAffUrl } from "../lib/vouchers.js";
+import type { VoucherGroup } from "../lib/vouchers.js";
+
+interface Props {
+  groups: VoucherGroup[];
+}
+
+const { groups } = Astro.props as Props;
+---
+
+<div class="vg">
+  {
+    groups.map((g) => (
+      <section class="vg-group" aria-label={g.title}>
+        <h3 class="vg-group-title">{g.title}</h3>
+        <div class="vg-grid">
+          {
+            g.items.map((v) => (
+              <article class="vg-card">
+                <a
+                  href={voucherAffUrl(v.slug)}
+                  target="_blank"
+                  rel="sponsored noopener noreferrer"
+                  aria-label={`${v.name} Exam Voucher`}
+                >
+                  <img
+                    class="vg-img"
+                    src={`/assets/images/vouchers/${v.slug}.svg`}
+                    alt={`${v.name} exam voucher`}
+                    width="480"
+                    height="270"
+                    loading="lazy"
+                  />
+                </a>
+                <span class="vg-tag">{v.code ?? v.tag}</span>
+                <h4 class="vg-name">{v.name} Exam Voucher</h4>
+                <p class="vg-note">{v.note}</p>
+                {v.priceNote && <p class="vg-price">{v.priceNote}</p>}
+                <a
+                  class="vg-btn"
+                  href={voucherAffUrl(v.slug)}
+                  target="_blank"
+                  rel="sponsored noopener noreferrer"
+                >
+                  Get Voucher →
+                </a>
+              </article>
+            ))
+          }
+        </div>
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  .vg-group { margin-top: 26px; }
+  .vg-group-title { font-size: 1.1rem; margin: 0 0 12px; letter-spacing: -0.01em; }
+  .vg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+  @media (max-width: 900px) { .vg-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .vg-grid { grid-template-columns: 1fr; } }
+  .vg-card { border: 1px solid var(--border, #e5e7eb); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: var(--card-bg, transparent); overflow: hidden; }
+  .vg-img { width: 100%; height: auto; border-radius: 10px; display: block; }
+  .vg-tag { align-self: flex-start; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #0a2540; background: #ffc94d; border-radius: 999px; padding: 3px 10px; }
+  .vg-name { margin: 0; font-size: 1rem; line-height: 1.35; }
+  .vg-note { margin: 0; font-size: 0.88rem; line-height: 1.6; color: var(--text); opacity: 0.85; }
+  .vg-price { margin: 0; font-size: 0.85rem; font-weight: 700; }
+  .vg-btn { margin-top: auto; display: inline-block; text-align: center; background: var(--brand); color: #0b0e14; font-weight: 700; border-radius: 999px; padding: 0.65rem 1.4rem; text-decoration: none; }
+</style>

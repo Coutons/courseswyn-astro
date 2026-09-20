@@ -71,7 +71,7 @@ Udemy Personal Plan lists at $35/month monthly or $240/year annual (equivalent t
 
 **Important Note**: Pricing and free trial availability vary by region — always verify the current price on [Udemy's official site](https://www.udemy.com/) before subscribing, as Udemy adjusts pricing several times a year. If you don't see a trial option in your country, Udemy continues expanding access globally.
 
-Ready to start your learning journey? **[Get Udemy Personal Plan with 25% OFF →](https://trk.udemy.com/c/6564357/3775958/39854)**
+Ready to start your learning journey? **[Get Udemy Personal Plan with 25% OFF →](https://trk.udemy.com/c/6564357/4039145/39854)**
 
 ## What's Included in Udemy Personal Plan?
 
@@ -188,7 +188,7 @@ Stick with one-time course purchases if you:
 
 **Smart Strategy**: Many successful learners use a hybrid approach - maintaining Personal Plan during active learning periods, then purchasing individual courses during sales for permanent reference material.
 
-**[Start Your Udemy Personal Plan Journey →](https://trk.udemy.com/c/6564357/3775958/39854)**
+**[Start Your Udemy Personal Plan Journey →](https://trk.udemy.com/c/6564357/4039145/39854)**
 
 ## Udemy Personal Plan vs Coursera Plus: Head-to-Head
 
@@ -317,7 +317,7 @@ Recurring themes from public subscriber reviews on Trustpilot and Reddit:
 - Existing course backlog holders
 - Casual learners without completion consistency
 
-**[Evaluate Personal Plan with Free Trial →](https://trk.udemy.com/c/6564357/3775958/39854)**
+**[Evaluate Personal Plan with Free Trial →](https://trk.udemy.com/c/6564357/4039145/39854)**
 
 ## Maximizing Your Personal Plan Investment
 
@@ -547,7 +547,7 @@ Ready to accelerate your learning journey and transform your career?
 
 **Next Steps:**
 
-1. **[Visit Udemy Personal Plan Page](https://trk.udemy.com/c/6564357/3775958/39854)** to check current promotional pricing
+1. **[Visit Udemy Personal Plan Page](https://trk.udemy.com/c/6564357/4039145/39854)** to check current promotional pricing
 2. **Browse course catalog** to validate content matches your learning goals
 3. **Sign up for 7-day free trial** (if available in your region)
 4. **Create learning roadmap** with specific skill targets and timelines

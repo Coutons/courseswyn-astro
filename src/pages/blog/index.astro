@@ -204,7 +204,7 @@ const structuredData = {
               <span class="dh-term-live"><span class="lg-blip"></span> Live</span>
             </div>
             <div class="dh-term-body">
-              {heroFeed.map((p) => (
+              {heroFeed.map((p: { title: string; href: string; timeLabel: string }) => (
                 <a class="dh-term-line" href={p.href}>
                   <span class="dh-term-time">{p.timeLabel}</span>
                   <span class="dh-term-ok">✓</span>
@@ -455,14 +455,15 @@ const structuredData = {
 
 <script>
   (function () {
-    function animateCount(el) {
-      var target = parseInt(el.getAttribute('data-count') || '0', 10);
+    function animateCount(el: Element): void {
+      const target = parseInt(el.getAttribute('data-count') || '0', 10);
       if (isNaN(target)) return;
-      var dur = 900, start = null;
-      function step(ts) {
+      const dur = 900;
+      let start: number | null = null;
+      function step(ts: number): void {
         if (!start) start = ts;
-        var p = Math.min(1, (ts - start) / dur);
-        el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+        const p = Math.min(1, (ts - start) / dur);
+        el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
         if (p < 1) requestAnimationFrame(step);
       }
       requestAnimationFrame(step);

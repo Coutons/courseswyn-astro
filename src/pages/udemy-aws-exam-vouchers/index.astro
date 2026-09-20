@@ -1,0 +1,236 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import LedgerRow from "../../components/LedgerRow.astro";
+import AuthorBox from "../../components/AuthorBox.astro";
+import VoucherHero from "../../components/VoucherHero.astro";
+import VoucherGrid from "../../components/VoucherGrid.astro";
+import { getDeals } from "../../lib/store.js";
+import { formatDateWIB, toISODateWIB } from "../../lib/date";
+import { AWS_GROUPS, countVouchers, voucherAffUrl, voucherCatalogAffUrl } from "../../lib/vouchers.js";
+
+const canonicalUrl = "https://courseswyn.com/udemy-aws-exam-vouchers/";
+const pageTitle = "Udemy AWS Exam Vouchers 2026: Cloud Practitioner, SAA, Developer Discounts | CoursesWyn";
+const pageDescription =
+  "All 12 official AWS exam vouchers on Udemy — Cloud Practitioner (CLF-C02), Solutions Architect Associate (SAA-C03), Developer, DevOps, Security & more. Valid ≥9 months with Second Chance retake option.";
+const lastModified = toISODateWIB();
+const now = new Date();
+const dateFull = formatDateWIB(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+const catalogUrl = voucherCatalogAffUrl();
+const total = countVouchers(AWS_GROUPS);
+
+const allDeals = await getDeals();
+const awsRe = /(aws|amazon web services|solutions architect|cloud practitioner|sysops|cloudops|devops engineer)/i;
+const starRe = /(stephane maarek)/i;
+const prepDeals = allDeals
+  .filter((d: any) => awsRe.test(`${d.title || ""} ${d.subcategory || ""} ${d.category || ""}`))
+  .sort((a: any, b: any) => {
+    const sa = starRe.test(`${a.instructor || ""}`) ? 0 : 1;
+    const sb = starRe.test(`${b.instructor || ""}`) ? 0 : 1;
+    if (sa !== sb) return sa - sb;
+    return new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime();
+  })
+  .slice(0, 3);
+
+const faqs = [
+  {
+    q: "Which AWS exam vouchers are available on Udemy?",
+    a: `Udemy lists ${total} official AWS vouchers across all levels — Foundational (Cloud Practitioner CLF-C02, AI Practitioner AIF-C01), Associate (Solutions Architect SAA-C03, Developer, Data Engineer, CloudOps, ML Engineer), Professional (Solutions Architect, DevOps Engineer) and Specialty (Security, Machine Learning, Advanced Networking). Pricing varies by region.`,
+  },
+  {
+    q: "How does Second Chance work for AWS exams?",
+    a: "Buy the voucher + Second Chance bundle, take your exam via Pearson VUE, and if you fail, report it from My learning → Certifications. Udemy verifies your result and issues a brand-new voucher code (usually within 7 days). You have 9 months to report, and the new voucher is valid for at least 9 more months.",
+  },
+  {
+    q: "Are there deadlines on the SAA retake bundle?",
+    a: "Yes — the Solutions Architect Associate + Retake bundle carried promo deadlines (first attempt by Dec 31, 2026, retake by Jan 31, 2027). Always verify the current terms on the voucher page before buying, as these windows change.",
+  },
+  {
+    q: "How do I schedule my AWS exam with a voucher?",
+    a: "Log in to your AWS account, get directed to Pearson VUE, and paste the voucher code from My learning → Certifications at checkout. Exams run online proctored or in-person. Vouchers are only valid in the country of purchase.",
+  },
+  {
+    q: "Can I use a Udemy coupon on an AWS voucher?",
+    a: "No. Coupons never apply to exam vouchers — but they do apply to the AWS prep courses below, which is the cheapest way to get exam-ready.",
+  },
+  {
+    q: "Can I get a refund if my AWS voucher expires?",
+    a: "No. Vouchers and Second Chance are non-refundable, non-transferable, and an expired voucher's value is forfeited. Schedule early and double-check the expiry date.",
+  },
+];
+---
+
+<Layout title={pageTitle} description={pageDescription} canonical={canonicalUrl}>
+  <meta property="og:title" content={pageTitle} slot="head" />
+  <meta property="og:description" content={pageDescription} slot="head" />
+  <meta property="og:url" content={canonicalUrl} slot="head" />
+  <meta property="og:type" content="article" slot="head" />
+  <meta name="twitter:card" content="summary_large_image" slot="head" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" slot="head" />
+  <meta name="author" content="Andrew Derek" slot="head" />
+  <meta name="keywords" content="aws exam voucher, udemy aws voucher, aws cloud practitioner voucher clf-c02, saa-c03 voucher, aws developer associate voucher, udemy second chance aws, pearson vue aws" slot="head" />
+
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Article",
+          "@id": `${canonicalUrl}#article`,
+          url: canonicalUrl,
+          headline: pageTitle,
+          description: pageDescription,
+          datePublished: "2026-09-20",
+          dateModified: lastModified,
+          inLanguage: "en-US",
+          author: { "@type": "Person", name: "Andrew Derek", url: "https://courseswyn.com" },
+          publisher: {
+            "@type": "Organization",
+            "@id": "https://courseswyn.com/#organization",
+            name: "CoursesWyn",
+            url: "https://courseswyn.com",
+            logo: { "@type": "ImageObject", url: "https://courseswyn.com/logo.svg" },
+          },
+          breadcrumb: {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://courseswyn.com" },
+              { "@type": "ListItem", position: 2, name: "Certification Vouchers", item: "https://courseswyn.com/udemy-certification-vouchers/" },
+              { "@type": "ListItem", position: 3, name: "AWS Exam Vouchers", item: canonicalUrl },
+            ],
+          },
+        },
+        {
+          "@type": "ItemList",
+          "@id": `${canonicalUrl}#vouchers`,
+          "name": "AWS Exam Vouchers on Udemy",
+          "numberOfItems": total,
+          "itemListElement": AWS_GROUPS.flatMap((g) => g.items).map((v, i) => ({
+            "@type": "ListItem",
+            "position": i + 1,
+            "url": `https://www.udemy.com/certification-vouchers/${v.slug}/`,
+            "name": `${v.name} Exam Voucher`,
+          })),
+        },
+        {
+          "@type": "FAQPage",
+          "@id": `${canonicalUrl}#faq`,
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        },
+      ],
+    })}
+  />
+
+  <main class="cv-wrap">
+    <VoucherHero
+      badgeHref="/how-we-test-and-verify-udemy-coupons"
+      badgeText={`Live · ${total} AWS vouchers`}
+      titleA="AWS"
+      titleAccent="Exam Vouchers"
+      titleB="2026"
+      subHtml={`All <strong>${total} official AWS vouchers</strong> on Udemy — Cloud Practitioner (CLF-C02), Solutions Architect Associate (SAA-C03) through Professional and Specialty. Pearson VUE scheduling, Second Chance included. Updated ${dateFull}.`}
+      stats={[{ val: `${total}`, label: "official vouchers" }, { val: "≥9 mo", label: "validity" }, { val: "Pearson", label: "VUE scheduling" }]}
+      primary={{ href: catalogUrl, text: "Browse All AWS Vouchers →", external: true }}
+      secondary={{ href: "/udemy-certification-vouchers/", text: "All Providers" }}
+      noteHtml={`Sponsored — CoursesWyn may earn a commission at no extra cost to you. <a href="/affiliate-disclosure">Affiliate Disclosure</a>`}
+      termTitle="agents@courseswyn: ~/vouchers --aws"
+      termLines={AWS_GROUPS.flatMap((g) => g.items).slice(0, 6).map((v) => ({ href: voucherAffUrl(v.slug), code: v.code ?? v.tag, name: `${v.name} Voucher` }))}
+      termFootHtml={`<b>${total}</b>&nbsp;AWS vouchers · <a href="${catalogUrl}" target="_blank" rel="sponsored noopener noreferrer">browse all →</a>`}
+    />
+
+    <section class="cv-block" aria-label="AWS voucher catalog">
+      <h2>All {total} AWS Exam Vouchers</h2>
+      <p>
+        Associate vouchers work across all Associate exams; Professional &amp; Specialty vouchers across all
+        Professional &amp; Specialty exams. Prices vary by region — confirm the live price before buying.
+      </p>
+      <VoucherGrid groups={AWS_GROUPS} />
+    </section>
+
+    <section class="cv-block cv-warn" aria-label="Second Chance">
+      <h2>Second Chance: Test With Confidence</h2>
+      <p>
+        Every AWS voucher page offers a <strong>Voucher + Second Chance</strong> bundle: fail once and Udemy verifies
+        your result, then sends a new voucher code (usually within 7 days). Report within 9 months; the replacement
+        is valid ≥9 months. One extra attempt only, non-refundable, and it must be bought with the original voucher.
+      </p>
+    </section>
+
+    {
+      prepDeals.length > 0 && (
+        <section class="cv-block" aria-label="AWS prep courses">
+          <h2>Pair It With a Discounted Prep Course</h2>
+          <p>
+            Coupons don't work on vouchers — but they <em>do</em> work on prep courses. These verified AWS deals are
+            the cheapest way to get exam-ready:
+          </p>
+          <div class="cv-grid">
+            {prepDeals.map((d: any, i: number) => (
+              <LedgerRow deal={d} variant="grid" num={String(i + 1).padStart(2, "0")} />
+            ))}
+          </div>
+          <p class="cv-note">
+            <a href="/udemy-coupon-code/">Browse all verified coupons →</a> ·{" "}
+            <a href="/blog/best-aws-certification-courses-2026/">AWS certification guide →</a> ·{" "}
+            <a href="/udemy-comptia-exam-vouchers/">CompTIA vouchers →</a> ·{" "}
+            <a href="/udemy-microsoft-exam-vouchers/">Microsoft vouchers →</a>
+          </p>
+        </section>
+      )
+    }
+
+    <section class="cv-block" aria-label="Frequently asked questions">
+      <h2>Frequently Asked Questions</h2>
+      <div class="cv-faq">
+        {faqs.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="cv-block cv-final" aria-label="Final call to action">
+      <h2>Commit to Your AWS Goal Today</h2>
+      <p>Prep, practice &amp; purchase in one place — with Second Chance as your safety net.</p>
+      <a class="cv-btn big" href={catalogUrl} target="_blank" rel="sponsored noopener noreferrer">
+        Get AWS Exam Vouchers →
+      </a>
+      <p class="cv-note">Sponsored — we may earn a commission at no extra cost to you.</p>
+    </section>
+
+    <div style="margin-top:48px"><AuthorBox image="/images/author.jpg" /></div>
+  </main>
+
+  <style>
+    .cv-wrap { max-width: 1280px; margin: 0 auto; padding: 24px 1.5rem 64px; }
+    .cv-crumb { font-size: 0.8rem; color: var(--muted); margin-bottom: 14px; }
+    .cv-crumb a { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .cv-hero h1 { font-size: clamp(1.7rem, 4.5vw, 2.5rem); line-height: 1.15; margin: 10px 0 12px; letter-spacing: -0.02em; }
+    .cv-pill { display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #0a2540; background: #ffc94d; border-radius: 999px; padding: 5px 12px; }
+    .cv-sub { font-size: 1.05rem; color: var(--text); opacity: 0.9; line-height: 1.65; }
+    .cv-cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 14px 0 8px; }
+    .cv-btn { display: inline-block; background: var(--brand); color: #0b0e14; font-weight: 700; border-radius: 999px; padding: 0.85rem 1.9rem; text-decoration: none; }
+    .cv-btn.ghost { background: transparent; color: var(--brand); border: 2px solid var(--brand); }
+    .cv-btn.big { font-size: 1.05rem; padding: 1rem 2.4rem; }
+    .cv-note { font-size: 0.8rem; color: var(--muted); }
+    .cv-note a { color: var(--brand); font-weight: 600; }
+    .cv-trust { list-style: none; padding: 0; margin: 14px 0 0; display: flex; gap: 8px 18px; flex-wrap: wrap; font-size: 0.9rem; font-weight: 600; }
+    .cv-block { margin-top: 40px; }
+    .cv-block h2 { font-size: 1.35rem; letter-spacing: -0.01em; margin-bottom: 10px; }
+    .cv-block p, .cv-block li { line-height: 1.7; }
+    .cv-warn { background: rgba(255, 201, 77, 0.12); border: 1px solid rgba(255, 201, 77, 0.55); border-radius: 14px; padding: 18px 20px; }
+    .cv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin: 16px 0; }
+    @media (max-width: 900px) { .cv-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .cv-grid { grid-template-columns: 1fr; } }
+    .cv-faq details { border: 1px solid var(--border, #e5e7eb); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; }
+    .cv-faq summary { font-weight: 700; cursor: pointer; }
+    .cv-faq p { margin: 8px 0 2px; color: var(--text); opacity: 0.9; }
+    .cv-final { text-align: center; background: var(--card, #0e1526); border-radius: 18px; padding: 32px 22px; }
+  </style>
+</Layout>

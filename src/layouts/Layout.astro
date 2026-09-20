@@ -2,7 +2,6 @@
 import "../styles/globals.css";
 
 import BrandLogo from "../components/BrandLogo.astro";
-import { readDeals } from "../lib/store";
 import { currentYearWIB } from "../lib/date";
 
 interface Props {
@@ -19,18 +18,7 @@ interface Props {
   updatedDate?: Date;
 }
 
-const allDeals = await readDeals();
 const activeCouponCount = "679990";
-
-// Popular topics for footer (dynamic from data)
-const subcatCounts = allDeals.reduce<Record<string, number>>((acc, d) => { const s = (d.subcategory || "").trim(); if (s) acc[s] = (acc[s] || 0) + 1; return acc; }, {});
-const popularTopics = Object.entries(subcatCounts)
-  .sort((a, b) => b[1] - a[1])
-  .slice(0, 6)
-  .map(([name]) => ({
-    name,
-    slug: name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')
-  }));
 
 const siteUrl = import.meta.env.SITE || "https://courseswyn.com";
 const currentYear = currentYearWIB();
@@ -709,6 +697,17 @@ const currentPath = Astro.url.pathname;
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Coupons Today</span><meta itemprop="position" content="2" /></li></>
           )}
 
+          {['/udemy-certification-vouchers', '/udemy-comptia-exam-vouchers', '/udemy-aws-exam-vouchers', '/udemy-microsoft-exam-vouchers'].includes(currentPath) && (
+            <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
+            {currentPath === '/udemy-certification-vouchers' ? (
+              <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Certification Vouchers</span><meta itemprop="position" content="2" /></li>
+            ) : (
+              <><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/udemy-certification-vouchers" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Certification Vouchers</span></a><meta itemprop="position" content="2" /></li>
+              <li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
+              <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{currentPath.includes('comptia') ? 'CompTIA Vouchers' : currentPath.includes('aws') ? 'AWS Vouchers' : 'Microsoft Vouchers'}</span><meta itemprop="position" content="3" /></li></>
+            )}</>
+          )}
+
           {currentPath.startsWith('/udemy-coupons-today/') && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/udemy-coupons-today" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Coupons Today</span></a><meta itemprop="position" content="2" /></li>
@@ -716,7 +715,7 @@ const currentPath = Astro.url.pathname;
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{currentPath.split('/')[2]}</span><meta itemprop="position" content="3" /></li></>
           )}
 
-           {!['/udemy-coupon-code', '/categories', '/topics', '/popular', '/instructors', '/blog', '/about', '/contact', '/privacy', '/terms', '/sitemap', '/how-to-redeem-coupon', '/udemy-coupons-guide', '/udemy-coupons-today'].includes(currentPath) &&
+           {!['/udemy-coupon-code', '/categories', '/topics', '/popular', '/instructors', '/blog', '/about', '/contact', '/privacy', '/terms', '/sitemap', '/how-to-redeem-coupon', '/udemy-coupons-guide', '/udemy-coupons-today', '/udemy-certification-vouchers', '/udemy-comptia-exam-vouchers', '/udemy-aws-exam-vouchers', '/udemy-microsoft-exam-vouchers'].includes(currentPath) &&
            !currentPath.startsWith('/udemy-coupon-code/') &&
            !currentPath.startsWith('/categories/') &&
            !currentPath.startsWith('/topic/') &&
@@ -781,11 +780,13 @@ const currentPath = Astro.url.pathname;
           </div>
 
           <div>
-            <p class="ft-label">Popular Topics</p>
+            <p class="ft-label">Exam Vouchers</p>
             <ul class="ft-links">
-              {popularTopics.map(t => (
-                <li><a href={"/topics/" + t.slug}>{t.name} Courses</a></li>
-              ))}
+              <li><a href="/udemy-certification-vouchers">All Certification Vouchers</a></li>
+              <li><a href="/udemy-comptia-exam-vouchers">CompTIA Exam Vouchers</a></li>
+              <li><a href="/udemy-aws-exam-vouchers">AWS Exam Vouchers</a></li>
+              <li><a href="/udemy-microsoft-exam-vouchers">Microsoft Exam Vouchers</a></li>
+              <li><a href="/blog/udemy-personal-plan-review-2026/">Udemy Personal Plan</a></li>
             </ul>
           </div>
 

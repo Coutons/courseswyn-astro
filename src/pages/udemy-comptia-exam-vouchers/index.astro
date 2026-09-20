@@ -1,0 +1,240 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import LedgerRow from "../../components/LedgerRow.astro";
+import AuthorBox from "../../components/AuthorBox.astro";
+import VoucherHero from "../../components/VoucherHero.astro";
+import VoucherGrid from "../../components/VoucherGrid.astro";
+import { getDeals } from "../../lib/store.js";
+import { formatDateWIB, toISODateWIB } from "../../lib/date";
+import { COMPTIA_GROUPS, countVouchers, voucherAffUrl, voucherCatalogAffUrl } from "../../lib/vouchers.js";
+
+const canonicalUrl = "https://courseswyn.com/udemy-comptia-exam-vouchers/";
+const pageTitle = "Udemy CompTIA Exam Vouchers 2026: Security+, A+, Network+ Discounts | CoursesWyn";
+const pageDescription =
+  "All 15 official CompTIA exam vouchers on Udemy — Security+ (SY0-701), A+, Network+ (N10-009), CySA+, PenTest+, Linux+ and more. Valid ≥9 months, Second Chance retake option, online or in-person.";
+const lastModified = toISODateWIB();
+const now = new Date();
+const dateFull = formatDateWIB(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+const catalogUrl = voucherCatalogAffUrl();
+const total = countVouchers(COMPTIA_GROUPS);
+
+const allDeals = await getDeals();
+const comptiaRe = /(comptia|security\+|network\+|cysa|pentest|linux\+|server\+|project\+|cloud\+|cloudnetx|datasys|a\+|tech\+)/i;
+const starRe = /(jason dion|dion training)/i;
+const prepDeals = allDeals
+  .filter((d: any) => comptiaRe.test(`${d.title || ""} ${d.subcategory || ""} ${d.category || ""}`))
+  .sort((a: any, b: any) => {
+    const sa = starRe.test(`${a.instructor || ""}`) ? 0 : 1;
+    const sb = starRe.test(`${b.instructor || ""}`) ? 0 : 1;
+    if (sa !== sb) return sa - sb;
+    return new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime();
+  })
+  .slice(0, 3);
+
+const faqs = [
+  {
+    q: "Which CompTIA exam vouchers are available on Udemy?",
+    a: `Udemy lists ${total} official CompTIA vouchers: Security+ (SY0-701), A+ (Core 1 & Core 2), Network+ (N10-009), CySA+, PenTest+, Linux+, Cloud+, Server+, Project+, Data+, DataSys+, DataAI, CloudNetX, SecurityX and Tech+. Availability and pricing vary by region — confirm on the live voucher page.`,
+  },
+  {
+    q: "How long is a CompTIA voucher valid?",
+    a: "CompTIA vouchers bought through Udemy are valid for at least 9 months from the date of purchase, including any Second Chance retake. They can be used for online proctored exams or in-person at authorized test centers.",
+  },
+  {
+    q: "Does one A+ voucher cover both Core exams?",
+    a: "No. The CompTIA A+ voucher can be used for either the Core 1 or the Core 2 exam — you need a separate voucher for each half of the certification.",
+  },
+  {
+    q: "What is Second Chance on a CompTIA voucher?",
+    a: "Second Chance is Udemy's retake option: if you fail, report it from My learning → Certifications and Udemy issues a brand-new voucher code (usually within 7 days) after verifying your result. It must be bought together with the voucher and can't be added later.",
+  },
+  {
+    q: "Can I use a Udemy coupon on a CompTIA voucher?",
+    a: "No. Coupons and promo codes never apply to exam vouchers — but they do apply to the CompTIA prep courses below, which is the cheapest way to get exam-ready.",
+  },
+  {
+    q: "How do I schedule my CompTIA exam?",
+    a: "After payment, copy your code from My learning → Certifications, then schedule at CompTIA (Pearson VUE) and paste the code at checkout. Udemy can't help with scheduling — contact the exam provider directly.",
+  },
+];
+---
+
+<Layout title={pageTitle} description={pageDescription} canonical={canonicalUrl}>
+  <meta property="og:title" content={pageTitle} slot="head" />
+  <meta property="og:description" content={pageDescription} slot="head" />
+  <meta property="og:url" content={canonicalUrl} slot="head" />
+  <meta property="og:type" content="article" slot="head" />
+  <meta name="twitter:card" content="summary_large_image" slot="head" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" slot="head" />
+  <meta name="author" content="Andrew Derek" slot="head" />
+  <meta name="keywords" content="comptia exam voucher, udemy comptia voucher, security+ voucher sy0-701, comptia a+ voucher core 1 core 2, network+ n10-009 voucher, udemy second chance comptia" slot="head" />
+
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Article",
+          "@id": `${canonicalUrl}#article`,
+          url: canonicalUrl,
+          headline: pageTitle,
+          description: pageDescription,
+          datePublished: "2026-09-20",
+          dateModified: lastModified,
+          inLanguage: "en-US",
+          author: { "@type": "Person", name: "Andrew Derek", url: "https://courseswyn.com" },
+          publisher: {
+            "@type": "Organization",
+            "@id": "https://courseswyn.com/#organization",
+            name: "CoursesWyn",
+            url: "https://courseswyn.com",
+            logo: { "@type": "ImageObject", url: "https://courseswyn.com/logo.svg" },
+          },
+          breadcrumb: {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://courseswyn.com" },
+              { "@type": "ListItem", position: 2, name: "Certification Vouchers", item: "https://courseswyn.com/udemy-certification-vouchers/" },
+              { "@type": "ListItem", position: 3, name: "CompTIA Exam Vouchers", item: canonicalUrl },
+            ],
+          },
+        },
+        {
+          "@type": "ItemList",
+          "@id": `${canonicalUrl}#vouchers`,
+          "name": "CompTIA Exam Vouchers on Udemy",
+          "numberOfItems": total,
+          "itemListElement": COMPTIA_GROUPS.flatMap((g) => g.items).map((v, i) => ({
+            "@type": "ListItem",
+            "position": i + 1,
+            "url": `https://www.udemy.com/certification-vouchers/${v.slug}/`,
+            "name": `${v.name} Exam Voucher`,
+          })),
+        },
+        {
+          "@type": "FAQPage",
+          "@id": `${canonicalUrl}#faq`,
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        },
+      ],
+    })}
+  />
+
+  <main class="cv-wrap">
+    <VoucherHero
+      badgeHref="/how-we-test-and-verify-udemy-coupons"
+      badgeText={`Live · ${total} CompTIA vouchers`}
+      titleA="CompTIA"
+      titleAccent="Exam Vouchers"
+      titleB="2026"
+      subHtml={`All <strong>${total} official CompTIA vouchers</strong> on Udemy — Security+ (SY0-701), A+, Network+ (N10-009), CySA+, PenTest+ and the new CloudNetX. Valid ≥9 months, online or in-person. Updated ${dateFull}.`}
+      stats={[{ val: `${total}`, label: "official vouchers" }, { val: "≥9 mo", label: "validity" }, { val: "2nd", label: "chance retake" }]}
+      primary={{ href: catalogUrl, text: "Browse All CompTIA Vouchers →", external: true }}
+      secondary={{ href: "/udemy-certification-vouchers/", text: "All Providers" }}
+      noteHtml={`Sponsored — CoursesWyn may earn a commission at no extra cost to you. <a href="/affiliate-disclosure">Affiliate Disclosure</a>`}
+      termTitle="agents@courseswyn: ~/vouchers --comptia"
+      termLines={COMPTIA_GROUPS.flatMap((g) => g.items).slice(0, 6).map((v) => ({ href: voucherAffUrl(v.slug), code: v.code ?? v.tag, name: `${v.name} Voucher` }))}
+      termFootHtml={`<b>${total}</b>&nbsp;CompTIA vouchers · <a href="${catalogUrl}" target="_blank" rel="sponsored noopener noreferrer">browse all →</a>`}
+    />
+
+    <section class="cv-block" aria-label="CompTIA voucher catalog">
+      <h2>All {total} CompTIA Exam Vouchers</h2>
+      <p>
+        Prices and availability vary by region — Udemy guarantees savings versus booking direct. Vouchers are bought
+        inside eligible prep courses or from each voucher page below.
+      </p>
+      <VoucherGrid groups={COMPTIA_GROUPS} />
+    </section>
+
+    <section class="cv-block cv-warn" aria-label="Second Chance">
+      <h2>Second Chance: Don't Fear the First Attempt</h2>
+      <p>
+        Add Second Chance at checkout and a failed attempt isn't wasted money: report it from{" "}
+        <em>My learning → Certifications → Claim Second Chance</em> and Udemy issues a new voucher code (usually
+        within 7 days) after verifying your result. Rules: must be bought with the voucher, one extra attempt only,
+        no refund if you pass first try, and vouchers are non-refundable and expire as stated.
+      </p>
+    </section>
+
+    {
+      prepDeals.length > 0 && (
+        <section class="cv-block" aria-label="CompTIA prep courses">
+          <h2>Pair It With a Discounted Prep Course</h2>
+          <p>
+            Coupons don't work on vouchers — but they <em>do</em> work on prep courses. These verified CompTIA deals
+            are the cheapest way to get exam-ready:
+          </p>
+          <p>
+            Prefer <strong>Jason Dion</strong>, CompTIA's best-selling instructor?{" "}
+            <a href="/instructor/jason-dion">Browse all his courses →</a>
+          </p>
+          <div class="cv-grid">
+            {prepDeals.map((d: any, i: number) => (
+              <LedgerRow deal={d} variant="grid" num={String(i + 1).padStart(2, "0")} />
+            ))}
+          </div>
+          <p class="cv-note">
+            <a href="/udemy-coupon-code/">Browse all verified coupons →</a> ·{" "}
+            <a href="/udemy-aws-exam-vouchers/">AWS vouchers →</a> ·{" "}
+            <a href="/udemy-microsoft-exam-vouchers/">Microsoft vouchers →</a>
+          </p>
+        </section>
+      )
+    }
+
+    <section class="cv-block" aria-label="Frequently asked questions">
+      <h2>Frequently Asked Questions</h2>
+      <div class="cv-faq">
+        {faqs.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="cv-block cv-final" aria-label="Final call to action">
+      <h2>Commit to Your CompTIA Goal Today</h2>
+      <p>Prep, practice &amp; purchase in one place — valid ≥9 months, online or in-person.</p>
+      <a class="cv-btn big" href={catalogUrl} target="_blank" rel="sponsored noopener noreferrer">
+        Get CompTIA Exam Vouchers →
+      </a>
+      <p class="cv-note">Sponsored — we may earn a commission at no extra cost to you.</p>
+    </section>
+
+    <div style="margin-top:48px"><AuthorBox image="/images/author.jpg" /></div>
+  </main>
+
+  <style>
+    .cv-wrap { max-width: 1280px; margin: 0 auto; padding: 24px 1.5rem 64px; }
+    .cv-crumb { font-size: 0.8rem; color: var(--muted); margin-bottom: 14px; }
+    .cv-crumb a { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .cv-hero h1 { font-size: clamp(1.7rem, 4.5vw, 2.5rem); line-height: 1.15; margin: 10px 0 12px; letter-spacing: -0.02em; }
+    .cv-pill { display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #0a2540; background: #ffc94d; border-radius: 999px; padding: 5px 12px; }
+    .cv-sub { font-size: 1.05rem; color: var(--text); opacity: 0.9; line-height: 1.65; }
+    .cv-cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 14px 0 8px; }
+    .cv-btn { display: inline-block; background: var(--brand); color: #0b0e14; font-weight: 700; border-radius: 999px; padding: 0.85rem 1.9rem; text-decoration: none; }
+    .cv-btn.ghost { background: transparent; color: var(--brand); border: 2px solid var(--brand); }
+    .cv-btn.big { font-size: 1.05rem; padding: 1rem 2.4rem; }
+    .cv-note { font-size: 0.8rem; color: var(--muted); }
+    .cv-note a { color: var(--brand); font-weight: 600; }
+    .cv-trust { list-style: none; padding: 0; margin: 14px 0 0; display: flex; gap: 8px 18px; flex-wrap: wrap; font-size: 0.9rem; font-weight: 600; }
+    .cv-block { margin-top: 40px; }
+    .cv-block h2 { font-size: 1.35rem; letter-spacing: -0.01em; margin-bottom: 10px; }
+    .cv-block p, .cv-block li { line-height: 1.7; }
+    .cv-warn { background: rgba(255, 201, 77, 0.12); border: 1px solid rgba(255, 201, 77, 0.55); border-radius: 14px; padding: 18px 20px; }
+    .cv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin: 16px 0; }
+    @media (max-width: 900px) { .cv-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .cv-grid { grid-template-columns: 1fr; } }
+    .cv-faq details { border: 1px solid var(--border, #e5e7eb); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; }
+    .cv-faq summary { font-weight: 700; cursor: pointer; }
+    .cv-faq p { margin: 8px 0 2px; color: var(--text); opacity: 0.9; }
+    .cv-final { text-align: center; background: var(--card, #0e1526); border-radius: 18px; padding: 32px 22px; }
+  </style>
+</Layout>

@@ -546,14 +546,15 @@ const trustItems = [
 
 <script>
   (function () {
-    function animateCount(el) {
-      var target = parseInt(el.getAttribute('data-count') || '0', 10);
+    function animateCount(el: Element): void {
+      const target = parseInt(el.getAttribute('data-count') || '0', 10);
       if (isNaN(target)) return;
-      var dur = 900, start = null;
-      function step(ts) {
+      const dur = 900;
+      let start: number | null = null;
+      function step(ts: number): void {
         if (!start) start = ts;
-        var p = Math.min(1, (ts - start) / dur);
-        el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+        const p = Math.min(1, (ts - start) / dur);
+        el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
         if (p < 1) requestAnimationFrame(step);
       }
       requestAnimationFrame(step);
@@ -572,15 +573,17 @@ const trustItems = [
   })();
 
   (function () {
-    var input = document.querySelector('#hpSearchInput');
-    if (!input) return;
-    var raw = input.getAttribute('data-typewriter');
+    const inputEl = document.querySelector('#hpSearchInput');
+    if (!(inputEl instanceof Element)) return;
+    const input: Element = inputEl;
+    const raw = input.getAttribute('data-typewriter');
     if (!raw) return;
-    var words = [];
+    let words: string[] = [];
     try { words = JSON.parse(raw); } catch (e) { return; }
     if (!words.length) return;
-    var wi = 0, ci = 0, del = false;
-    function tick() {
+    let wi = 0, ci = 0;
+    let del = false;
+    function tick(): void {
       var w = words[wi];
       if (!w) return;
       if (!del) { ci++; input.setAttribute('placeholder', w.substring(0, ci)); if (ci === w.length) { del = true; setTimeout(tick, 1500); return; } setTimeout(tick, 25); }

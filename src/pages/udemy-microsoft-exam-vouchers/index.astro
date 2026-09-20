@@ -1,0 +1,235 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import LedgerRow from "../../components/LedgerRow.astro";
+import AuthorBox from "../../components/AuthorBox.astro";
+import VoucherHero from "../../components/VoucherHero.astro";
+import VoucherGrid from "../../components/VoucherGrid.astro";
+import { getDeals } from "../../lib/store.js";
+import { formatDateWIB, toISODateWIB } from "../../lib/date";
+import { MICROSOFT_GROUPS, countVouchers, voucherAffUrl, voucherCatalogAffUrl } from "../../lib/vouchers.js";
+
+const canonicalUrl = "https://courseswyn.com/udemy-microsoft-exam-vouchers/";
+const pageTitle = "Udemy Microsoft Exam Vouchers 2026: AZ-900, AZ-104, AZ-500 Discounts | CoursesWyn";
+const pageDescription =
+  "All 8 official Microsoft exam vouchers on Udemy — AZ-900, DP-900, AZ-104, AZ-500, AI-102, AZ-305 and more. Save 10%, valid ≥9 months, Retake Assurance available, Pearson VUE scheduling.";
+const lastModified = toISODateWIB();
+const now = new Date();
+const dateFull = formatDateWIB(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+const catalogUrl = voucherCatalogAffUrl();
+const total = countVouchers(MICROSOFT_GROUPS);
+
+const allDeals = await getDeals();
+const msRe = /(azure|microsoft|az-900|az-104|az-500|microsoft 365|intune|windows server)/i;
+const starRe = /(scott duffy)/i;
+const prepDeals = allDeals
+  .filter((d: any) => msRe.test(`${d.title || ""} ${d.subcategory || ""} ${d.category || ""}`))
+  .sort((a: any, b: any) => {
+    const sa = starRe.test(`${a.instructor || ""}`) ? 0 : 1;
+    const sb = starRe.test(`${b.instructor || ""}`) ? 0 : 1;
+    if (sa !== sb) return sa - sb;
+    return new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime();
+  })
+  .slice(0, 3);
+
+const faqs = [
+  {
+    q: "Which Microsoft exam vouchers are available on Udemy?",
+    a: `Udemy lists ${total} official Microsoft vouchers: AZ-900 (Azure Fundamentals), DP-900 (Azure Data Fundamentals), AZ-104 (Administrator), AZ-500 (Security Engineer), AI-102 (AI Engineer), AZ-305 (Solutions Architect Expert), AZ-800 (Windows Server Hybrid Admin) and MD-102 (Endpoint Administrator). Each saves 10% off the exam fee.`,
+  },
+  {
+    q: "What is Retake Assurance on a Microsoft voucher?",
+    a: "Retake Assurance is Microsoft's version of the retake safety net: buy the Exam Voucher + Retake bundle and you can re-sit the same exam if you fail, subject to Microsoft's certification exam policies. It must be bought with the voucher — never separately — and there's no refund if you pass first try.",
+  },
+  {
+    q: "How do I schedule my Microsoft exam with a voucher?",
+    a: "Log in to your Microsoft account, get directed to Pearson VUE (Microsoft's testing provider), and paste the voucher code from My learning → Certifications at checkout. Exams run online proctored or in-person. Vouchers are only valid in the country of purchase.",
+  },
+  {
+    q: "How long is a Microsoft voucher valid?",
+    a: "At least 9 months from the date of purchase. Vouchers are non-refundable, non-transferable, and an expired voucher's value is forfeited — schedule early.",
+  },
+  {
+    q: "Can I use a Udemy coupon on a Microsoft voucher?",
+    a: "No. Coupons never apply to exam vouchers — but they do apply to the Azure prep courses below, which is the cheapest way to get exam-ready.",
+  },
+  {
+    q: "Do I need a prep course if I buy the voucher?",
+    a: "The voucher only pays for the exam seat. Pair it with an expert-led prep course and practice tests — Microsoft exams are scenario-heavy, and most candidates fail at least once without structured preparation.",
+  },
+];
+---
+
+<Layout title={pageTitle} description={pageDescription} canonical={canonicalUrl}>
+  <meta property="og:title" content={pageTitle} slot="head" />
+  <meta property="og:description" content={pageDescription} slot="head" />
+  <meta property="og:url" content={canonicalUrl} slot="head" />
+  <meta property="og:type" content="article" slot="head" />
+  <meta name="twitter:card" content="summary_large_image" slot="head" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" slot="head" />
+  <meta name="author" content="Andrew Derek" slot="head" />
+  <meta name="keywords" content="microsoft exam voucher, udemy microsoft voucher, az-900 voucher discount, az-104 voucher, azure exam voucher 10% off, retake assurance microsoft, pearson vue microsoft" slot="head" />
+
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Article",
+          "@id": `${canonicalUrl}#article`,
+          url: canonicalUrl,
+          headline: pageTitle,
+          description: pageDescription,
+          datePublished: "2026-09-20",
+          dateModified: lastModified,
+          inLanguage: "en-US",
+          author: { "@type": "Person", name: "Andrew Derek", url: "https://courseswyn.com" },
+          publisher: {
+            "@type": "Organization",
+            "@id": "https://courseswyn.com/#organization",
+            name: "CoursesWyn",
+            url: "https://courseswyn.com",
+            logo: { "@type": "ImageObject", url: "https://courseswyn.com/logo.svg" },
+          },
+          breadcrumb: {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://courseswyn.com" },
+              { "@type": "ListItem", position: 2, name: "Certification Vouchers", item: "https://courseswyn.com/udemy-certification-vouchers/" },
+              { "@type": "ListItem", position: 3, name: "Microsoft Exam Vouchers", item: canonicalUrl },
+            ],
+          },
+        },
+        {
+          "@type": "ItemList",
+          "@id": `${canonicalUrl}#vouchers`,
+          "name": "Microsoft Exam Vouchers on Udemy",
+          "numberOfItems": total,
+          "itemListElement": MICROSOFT_GROUPS.flatMap((g) => g.items).map((v, i) => ({
+            "@type": "ListItem",
+            "position": i + 1,
+            "url": `https://www.udemy.com/certification-vouchers/${v.slug}/`,
+            "name": `${v.name} Exam Voucher`,
+          })),
+        },
+        {
+          "@type": "FAQPage",
+          "@id": `${canonicalUrl}#faq`,
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        },
+      ],
+    })}
+  />
+
+  <main class="cv-wrap">
+    <VoucherHero
+      badgeHref="/how-we-test-and-verify-udemy-coupons"
+      badgeText={`Live · ${total} Microsoft vouchers`}
+      titleA="Microsoft"
+      titleAccent="Exam Vouchers"
+      titleB="2026"
+      subHtml={`All <strong>${total} official Microsoft vouchers</strong> on Udemy — AZ-900, AZ-104, AZ-500, AI-102 and more. Flat <strong>10% off</strong> every exam, valid ≥9 months, Retake Assurance available. Updated ${dateFull}.`}
+      stats={[{ val: `${total}`, label: "official vouchers" }, { val: "10%", label: "off every exam" }, { val: "≥9 mo", label: "validity" }]}
+      primary={{ href: catalogUrl, text: "Browse All Microsoft Vouchers →", external: true }}
+      secondary={{ href: "/udemy-certification-vouchers/", text: "All Providers" }}
+      noteHtml={`Sponsored — CoursesWyn may earn a commission at no extra cost to you. <a href="/affiliate-disclosure">Affiliate Disclosure</a>`}
+      termTitle="agents@courseswyn: ~/vouchers --microsoft"
+      termLines={MICROSOFT_GROUPS.flatMap((g) => g.items).slice(0, 6).map((v) => ({ href: voucherAffUrl(v.slug), code: v.code ?? v.tag, name: `${v.name} Voucher` }))}
+      termFootHtml={`<b>${total}</b>&nbsp;Microsoft vouchers · <a href="${catalogUrl}" target="_blank" rel="sponsored noopener noreferrer">browse all →</a>`}
+    />
+
+    <section class="cv-block" aria-label="Microsoft voucher catalog">
+      <h2>All {total} Microsoft Exam Vouchers</h2>
+      <p>
+        Every Microsoft voucher saves a flat 10% and is valid for at least 9 months. Prices vary by region — confirm
+        the live price before buying.
+      </p>
+      <VoucherGrid groups={MICROSOFT_GROUPS} />
+    </section>
+
+    <section class="cv-block cv-warn" aria-label="Retake Assurance">
+      <h2>Retake Assurance: Microsoft's Safety Net</h2>
+      <p>
+        Every Microsoft voucher page offers an <strong>Exam Voucher + Retake</strong> bundle under Microsoft's
+        certification exam policies: fail once and you can re-sit. It must be bought with the voucher (never
+        separately), covers one extra attempt only, and is non-refundable — including when you pass first try.
+      </p>
+    </section>
+
+    {
+      prepDeals.length > 0 && (
+        <section class="cv-block" aria-label="Microsoft prep courses">
+          <h2>Pair It With a Discounted Prep Course</h2>
+          <p>
+            Coupons don't work on vouchers — but they <em>do</em> work on prep courses. These verified Azure and
+            Microsoft 365 deals are the cheapest way to get exam-ready:
+          </p>
+          <div class="cv-grid">
+            {prepDeals.map((d: any, i: number) => (
+              <LedgerRow deal={d} variant="grid" num={String(i + 1).padStart(2, "0")} />
+            ))}
+          </div>
+          <p class="cv-note">
+            <a href="/udemy-coupon-code/">Browse all verified coupons →</a> ·{" "}
+            <a href="/udemy-aws-exam-vouchers/">AWS vouchers →</a> ·{" "}
+            <a href="/udemy-comptia-exam-vouchers/">CompTIA vouchers →</a>
+          </p>
+        </section>
+      )
+    }
+
+    <section class="cv-block" aria-label="Frequently asked questions">
+      <h2>Frequently Asked Questions</h2>
+      <div class="cv-faq">
+        {faqs.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="cv-block cv-final" aria-label="Final call to action">
+      <h2>Commit to Your Microsoft Goal Today</h2>
+      <p>Prep, practice &amp; purchase in one place — save 10% with Retake Assurance.</p>
+      <a class="cv-btn big" href={catalogUrl} target="_blank" rel="sponsored noopener noreferrer">
+        Get Microsoft Exam Vouchers →
+      </a>
+      <p class="cv-note">Sponsored — we may earn a commission at no extra cost to you.</p>
+    </section>
+
+    <div style="margin-top:48px"><AuthorBox image="/images/author.jpg" /></div>
+  </main>
+
+  <style>
+    .cv-wrap { max-width: 1280px; margin: 0 auto; padding: 24px 1.5rem 64px; }
+    .cv-crumb { font-size: 0.8rem; color: var(--muted); margin-bottom: 14px; }
+    .cv-crumb a { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .cv-hero h1 { font-size: clamp(1.7rem, 4.5vw, 2.5rem); line-height: 1.15; margin: 10px 0 12px; letter-spacing: -0.02em; }
+    .cv-pill { display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #0a2540; background: #ffc94d; border-radius: 999px; padding: 5px 12px; }
+    .cv-sub { font-size: 1.05rem; color: var(--text); opacity: 0.9; line-height: 1.65; }
+    .cv-cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 14px 0 8px; }
+    .cv-btn { display: inline-block; background: var(--brand); color: #0b0e14; font-weight: 700; border-radius: 999px; padding: 0.85rem 1.9rem; text-decoration: none; }
+    .cv-btn.ghost { background: transparent; color: var(--brand); border: 2px solid var(--brand); }
+    .cv-btn.big { font-size: 1.05rem; padding: 1rem 2.4rem; }
+    .cv-note { font-size: 0.8rem; color: var(--muted); }
+    .cv-note a { color: var(--brand); font-weight: 600; }
+    .cv-trust { list-style: none; padding: 0; margin: 14px 0 0; display: flex; gap: 8px 18px; flex-wrap: wrap; font-size: 0.9rem; font-weight: 600; }
+    .cv-block { margin-top: 40px; }
+    .cv-block h2 { font-size: 1.35rem; letter-spacing: -0.01em; margin-bottom: 10px; }
+    .cv-block p, .cv-block li { line-height: 1.7; }
+    .cv-warn { background: rgba(255, 201, 77, 0.12); border: 1px solid rgba(255, 201, 77, 0.55); border-radius: 14px; padding: 18px 20px; }
+    .cv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin: 16px 0; }
+    @media (max-width: 900px) { .cv-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .cv-grid { grid-template-columns: 1fr; } }
+    .cv-faq details { border: 1px solid var(--border, #e5e7eb); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; }
+    .cv-faq summary { font-weight: 700; cursor: pointer; }
+    .cv-faq p { margin: 8px 0 2px; color: var(--text); opacity: 0.9; }
+    .cv-final { text-align: center; background: var(--card, #0e1526); border-radius: 18px; padding: 32px 22px; }
+  </style>
+</Layout>

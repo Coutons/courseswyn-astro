@@ -201,7 +201,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImage, ins
     `${priceCmpBit.trim()} ${priceListBit} ${priceCutBit}${priceCphBit}`,
   ] as const).replace(/\s+/g, " ").trim();
   const masked = couponMask || "AUTO-APPLY";
-  const personalPlanUrl = "https://trk.udemy.com/c/6564357/3775958/39854";
+  const personalPlanUrl = "https://trk.udemy.com/c/6564357/4039145/39854";
 
   const copyMasked = () => {
     try {

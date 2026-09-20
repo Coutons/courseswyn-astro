@@ -68,7 +68,7 @@ Udemy offers a **7-day free trial** for new subscribers to its Personal Plan. Du
 
 **How to claim the free trial:**
 
-1. Go to [udemy.com/personal-plan](https://trk.udemy.com/c/6564357/3775958/39854).
+1. Go to [udemy.com/personal-plan](https://trk.udemy.com/c/6564357/4039145/39854).
 2. Click "Start free trial."
 3. Enter your payment details (required, but you won't be charged if you cancel before day 7).
 4. Learn as much as possible — then cancel before the trial ends.

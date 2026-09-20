@@ -1,0 +1,124 @@
+---
+// Shared hero for voucher pages — mirrors the today-coupon dh-hero pattern:
+// badge, big title with brand accent, sub, stats, CTA row + live terminal card.
+interface Stat {
+  val: string;
+  label: string;
+}
+interface TermLine {
+  href: string;
+  code: string;
+  name: string;
+}
+interface Props {
+  badgeHref: string;
+  badgeText: string;
+  titleA: string;
+  titleAccent: string;
+  titleB?: string;
+  subHtml: string;
+  stats: Stat[];
+  primary: { href: string; text: string; external?: boolean };
+  secondary?: { href: string; text: string };
+  noteHtml?: string;
+  termTitle: string;
+  termLines: TermLine[];
+  termFootHtml: string;
+}
+
+const {
+  badgeHref,
+  badgeText,
+  titleA,
+  titleAccent,
+  titleB = "",
+  subHtml,
+  stats,
+  primary,
+  secondary,
+  noteHtml = "",
+  termTitle,
+  termLines,
+  termFootHtml,
+} = Astro.props as Props;
+---
+
+<header class="vh-hero">
+  <div class="vh-grid">
+    <div>
+      <a class="vh-badge" href={badgeHref}><span class="vh-blip"></span> {badgeText}</a>
+      <h1 class="vh-title">{titleA} <span style="color: var(--brand)">{titleAccent}</span>{titleB ? ` ${titleB}` : ""}</h1>
+      <p class="vh-sub" set:html={subHtml} />
+      <div class="vh-stats">
+        {stats.map((s) => (
+          <div class="vh-stat"><b class="vh-stat-val">{s.val}</b><span class="vh-stat-label">{s.label}</span></div>
+        ))}
+      </div>
+      <div class="vh-cta-row">
+        {primary.external ? (
+          <a class="vh-btn" href={primary.href} target="_blank" rel="sponsored noopener noreferrer">{primary.text}</a>
+        ) : (
+          <a class="vh-btn" href={primary.href}>{primary.text}</a>
+        )}
+        {secondary && <a class="vh-btn ghost" href={secondary.href}>{secondary.text}</a>}
+      </div>
+      {noteHtml && <p class="vh-note" set:html={noteHtml} />}
+    </div>
+
+    <div class="vh-terminal">
+      <div class="vh-term-head">
+        <span class="vh-term-dot" style="background:#ff5f56"></span>
+        <span class="vh-term-dot" style="background:#ffbd2e"></span>
+        <span class="vh-term-dot" style="background:#27c93f"></span>
+        <span class="vh-term-title">{termTitle}</span>
+        <span class="vh-term-live"><span class="vh-blip"></span> Live</span>
+      </div>
+      <div class="vh-term-body">
+        {termLines.map((l) => (
+          <a class="vh-term-line" href={l.href} target="_blank" rel="sponsored noopener noreferrer">
+            <span class="vh-term-code">{l.code}</span>
+            <span class="vh-term-ok">✓</span>
+            <span class="vh-term-name">{l.name}</span>
+          </a>
+        ))}
+      </div>
+      <div class="vh-term-foot" set:html={termFootHtml} />
+    </div>
+  </div>
+</header>
+
+<style>
+  .vh-hero { padding: 1.5rem 0 1rem; }
+  .vh-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 2.5rem; align-items: center; }
+  @media (max-width: 900px) { .vh-grid { grid-template-columns: 1fr; } }
+  .vh-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; margin-bottom: 1.25rem; text-decoration: none; }
+  .vh-badge:hover { border-color: var(--brand); color: var(--brand); }
+  .vh-blip { width: 7px; height: 7px; border-radius: 50%; background: var(--brand); animation: vhBlip 1.6s infinite; }
+  @keyframes vhBlip { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .vh-title { font-size: clamp(2.1rem, 4.3vw, 3rem); font-weight: 800; letter-spacing: -0.02em; color: var(--text-bright, var(--text)); margin: 0 0 0.75rem; line-height: 1.12; }
+  .vh-sub { color: var(--muted); font-size: 1rem; line-height: 1.7; margin: 0 0 1.5rem; max-width: 560px; }
+  .vh-sub strong { color: var(--text); }
+  .vh-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+  .vh-stat { display: flex; flex-direction: column; }
+  .vh-stat-val { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--brand); }
+  .vh-stat-label { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); }
+  .vh-cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 1.5rem 0 0.5rem; }
+  .vh-btn { display: inline-block; background: var(--brand); color: #0b0e14; font-weight: 700; border-radius: 999px; padding: 0.85rem 1.9rem; text-decoration: none; }
+  .vh-btn.ghost { background: transparent; color: var(--brand); border: 2px solid var(--brand); }
+  .vh-note { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--muted); margin: 0.5rem 0 0; line-height: 1.5; }
+  .vh-note a { color: var(--brand); font-weight: 600; text-decoration: none; }
+  .vh-terminal { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; text-align: left; }
+  .vh-term-head { display: flex; align-items: center; gap: 6px; padding: 10px 14px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
+  .vh-term-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .vh-term-title { margin-left: 8px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .vh-term-live { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; color: var(--stamp); text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0; }
+  .vh-term-live .vh-blip { background: var(--stamp); }
+  .vh-term-body { padding: 4px 0; }
+  .vh-term-line { display: flex; align-items: center; gap: 10px; padding: 7px 16px; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text); text-decoration: none; }
+  .vh-term-line:hover { background: var(--brand-soft); }
+  .vh-term-code { color: var(--brand); font-weight: 700; flex-shrink: 0; font-size: 0.72rem; min-width: 74px; }
+  .vh-term-ok { color: var(--stamp); font-weight: 700; flex-shrink: 0; }
+  .vh-term-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .vh-term-foot { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--bg-secondary); font-family: var(--font-mono); font-size: 0.78rem; color: var(--text); }
+  .vh-term-foot a, .vh-term-foot b { color: var(--brand); }
+</style>

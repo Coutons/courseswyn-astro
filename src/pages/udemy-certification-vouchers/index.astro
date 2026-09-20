@@ -1,0 +1,356 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import LedgerRow from "../../components/LedgerRow.astro";
+import AuthorBox from "../../components/AuthorBox.astro";
+import VoucherHero from "../../components/VoucherHero.astro";
+import { getDeals } from "../../lib/store.js";
+import { formatDateWIB, toISODateWIB } from "../../lib/date";
+import {
+  COMPTIA_GROUPS,
+  AWS_GROUPS,
+  MICROSOFT_GROUPS,
+  countVouchers,
+  voucherAffUrl,
+  voucherCatalogAffUrl,
+} from "../../lib/vouchers.js";
+
+const canonicalUrl = "https://courseswyn.com/udemy-certification-vouchers/";
+const pageTitle = "Udemy Certification Exam Vouchers 2026: AWS, CompTIA & Microsoft | CoursesWyn";
+const pageDescription =
+  "All 35 official Udemy exam vouchers — 15 CompTIA, 12 AWS, 8 Microsoft. Save 10%+, valid ≥9 months, Second Chance & Retake Assurance explained, plus verified prep courses.";
+const lastModified = toISODateWIB();
+const now = new Date();
+const dateFull = formatDateWIB(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+// Official Impact tracking link + impression pixel (campaign 4028133). Do not alter.
+const voucherUrl = "https://trk.udemy.com/c/6564357/4028133/39854";
+const catalogUrl = voucherCatalogAffUrl();
+const totalAll = countVouchers(COMPTIA_GROUPS) + countVouchers(AWS_GROUPS) + countVouchers(MICROSOFT_GROUPS);
+
+const providers = [
+  {
+    href: "/udemy-comptia-exam-vouchers/",
+    pill: `${countVouchers(COMPTIA_GROUPS)} vouchers`,
+    name: "CompTIA Exam Vouchers",
+    desc: "Security+ (SY0-701), A+, Network+ (N10-009), CySA+, PenTest+, Linux+, CloudNetX, DataAI, SecurityX and 6 more. Valid ≥9 months.",
+    img: "/assets/images/vouchers/provider-comptia.svg",
+  },
+  {
+    href: "/udemy-aws-exam-vouchers/",
+    pill: `${countVouchers(AWS_GROUPS)} vouchers`,
+    name: "AWS Exam Vouchers",
+    desc: "Cloud Practitioner (CLF-C02), Solutions Architect Associate (SAA-C03), Developer, DevOps, Security & ML Specialty. Pearson VUE.",
+    img: "/assets/images/vouchers/provider-aws.svg",
+  },
+  {
+    href: "/udemy-microsoft-exam-vouchers/",
+    pill: `${countVouchers(MICROSOFT_GROUPS)} vouchers · Save 10%`,
+    name: "Microsoft Exam Vouchers",
+    desc: "AZ-900, DP-900, AZ-104, AZ-500, AI-102, AZ-305, AZ-800, MD-102. Flat 10% off with Retake Assurance.",
+    img: "/assets/images/vouchers/provider-microsoft.svg",
+  },
+];
+
+const allDeals = await getDeals();
+const byDateDesc = (a: any, b: any) =>
+  new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime();
+const starFirst = (starRe: RegExp) => (a: any, b: any) => {
+  const sa = starRe.test(`${a.instructor || ""}`) ? 0 : 1;
+  const sb = starRe.test(`${b.instructor || ""}`) ? 0 : 1;
+  if (sa !== sb) return sa - sb;
+  return byDateDesc(a, b);
+};
+const topPrep = (rx: RegExp, starRx: RegExp) =>
+  allDeals
+    .filter((d: any) => rx.test(`${d.title || ""} ${d.subcategory || ""} ${d.category || ""}`))
+    .sort(starFirst(starRx))
+    .slice(0, 3);
+const awsPrep = topPrep(
+  /(aws|amazon web services|solutions architect|cloud practitioner|sysops|cloudops|devops engineer)/i,
+  /(stephane maarek)/i
+);
+const comptiaPrep = topPrep(
+  /(comptia|security\+|network\+|cysa|pentest|linux\+|server\+|project\+|cloud\+|cloudnetx|datasys|a\+|tech\+)/i,
+  /(jason dion|dion training)/i
+);
+const msPrep = topPrep(
+  /(azure|microsoft|az-900|az-104|az-500|microsoft 365|intune|windows server)/i,
+  /(scott duffy)/i
+);
+
+const faqs = [
+  {
+    q: "What are certification exam vouchers on Udemy?",
+    a: "Exam vouchers are pre-purchases for certification exams: you pay Udemy (saving 10% or more off retail), receive a voucher code, and paste it when scheduling the exam on the provider's site — Pearson VUE for AWS and Microsoft, CompTIA/Pearson VUE for CompTIA. Your code lives in My learning → Certifications.",
+  },
+  {
+    q: "Which vouchers are available?",
+    a: `We track ${totalAll} official vouchers: ${countVouchers(COMPTIA_GROUPS)} CompTIA, ${countVouchers(AWS_GROUPS)} AWS and ${countVouchers(MICROSOFT_GROUPS)} Microsoft. See each provider page for the full per-exam list.`,
+  },
+  {
+    q: "Second Chance vs Retake Assurance — what's the difference?",
+    a: "Both are retake safety nets bought with the voucher. Second Chance (AWS, CompTIA): fail once and Udemy issues a brand-new voucher code after verifying your result. Retake Assurance (Microsoft and some CompTIA exams): you re-sit using the same code under the provider's exam policies. Neither is sold separately, each covers one extra attempt, and neither is refunded if you pass first try.",
+  },
+  {
+    q: "Can I use Udemy coupons or credits on vouchers?",
+    a: "Coupons and promo codes never apply to vouchers — but Udemy credits can, and coupons do apply to prep courses. The cheapest path is a discounted prep course + voucher bundle.",
+  },
+  {
+    q: "Are vouchers refundable? How long are they valid?",
+    a: "Vouchers, Second Chance and Retake Assurance are non-refundable, non-transferable, and expire as stated — typically at least 9 months. Expired value is forfeited, and vouchers are only valid in the country of purchase.",
+  },
+  {
+    q: "What if my voucher is out of stock?",
+    a: "Stock is limited and vouchers sell out. Check back in your course's Overview tab regularly — and use the wait to finish the prep course so you're ready the moment stock returns.",
+  },
+  {
+    q: "How do I schedule or reschedule my exam?",
+    a: "Udemy doesn't handle scheduling. Book and manage your exam on the provider's site (AWS/Microsoft via Pearson VUE, CompTIA via its scheduler) and contact them for any scheduling issues.",
+  },
+];
+---
+
+<Layout title={pageTitle} description={pageDescription} canonical={canonicalUrl}>
+  <meta property="og:title" content={pageTitle} slot="head" />
+  <meta property="og:description" content={pageDescription} slot="head" />
+  <meta property="og:url" content={canonicalUrl} slot="head" />
+  <meta property="og:type" content="article" slot="head" />
+  <meta name="twitter:card" content="summary_large_image" slot="head" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" slot="head" />
+  <meta name="author" content="Andrew Derek" slot="head" />
+  <meta name="keywords" content="udemy certification vouchers, udemy exam voucher discount, comptia voucher udemy, aws exam voucher discount, microsoft exam voucher az-900, udemy second chance, retake assurance udemy" slot="head" />
+
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Article",
+          "@id": `${canonicalUrl}#article`,
+          url: canonicalUrl,
+          headline: pageTitle,
+          description: pageDescription,
+          datePublished: "2026-09-20",
+          dateModified: lastModified,
+          inLanguage: "en-US",
+          author: { "@type": "Person", name: "Andrew Derek", url: "https://courseswyn.com" },
+          publisher: {
+            "@type": "Organization",
+            "@id": "https://courseswyn.com/#organization",
+            name: "CoursesWyn",
+            url: "https://courseswyn.com",
+            logo: { "@type": "ImageObject", url: "https://courseswyn.com/logo.svg" },
+          },
+          breadcrumb: {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://courseswyn.com" },
+              { "@type": "ListItem", position: 2, name: "Certification Vouchers", item: canonicalUrl },
+            ],
+          },
+        },
+        {
+          "@type": "FAQPage",
+          "@id": `${canonicalUrl}#faq`,
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        },
+      ],
+    })}
+  />
+
+  <main class="cv-wrap">
+    <VoucherHero
+      badgeHref="/how-we-test-and-verify-udemy-coupons"
+      badgeText={`Live · ${totalAll} vouchers verified`}
+      titleA="Save on"
+      titleAccent="Certification Exam Vouchers"
+      titleB="2026"
+      subHtml={`Prep, practice & purchase — all in one place. <strong>${totalAll} official vouchers</strong> across CompTIA, AWS and Microsoft: save 10% or more, valid ≥9 months, with a retake safety net. Updated ${dateFull}.`}
+      stats={[{ val: `${totalAll}`, label: "official vouchers" }, { val: "3", label: "providers" }, { val: "≥9 mo", label: "validity" }]}
+      primary={{ href: catalogUrl, text: `Browse All ${totalAll} Vouchers →`, external: true }}
+      noteHtml={`Sponsored — CoursesWyn may earn a commission at no extra cost to you. <a href="/affiliate-disclosure">Affiliate Disclosure</a>`}
+      termTitle="agents@courseswyn: ~/vouchers --all"
+      termLines={[
+        { slug: "comptia-security-plus", code: "SY0-701", name: "Security+" },
+        { slug: "comptia-a-plus", code: "A+", name: "A+ Core 1 & 2" },
+        { slug: "aws-certified-solutions-architect-associate", code: "SAA-C03", name: "Solutions Architect" },
+        { slug: "aws-certified-cloud-practitioner", code: "CLF-C02", name: "Cloud Practitioner" },
+        { slug: "microsoft-az-900", code: "AZ-900", name: "Azure Fundamentals" },
+        { slug: "microsoft-az-104", code: "AZ-104", name: "Azure Administrator" },
+      ].map((v) => ({ href: voucherAffUrl(v.slug), code: v.code, name: `${v.name} Voucher` }))}
+      termFootHtml={`<b>${totalAll}</b>&nbsp;vouchers · <a href="${catalogUrl}" target="_blank" rel="sponsored noopener noreferrer">browse all →</a>`}
+    />
+
+    {/* Official affiliate creative — keep href + pixel intact */}
+    <h3 id="4028133">
+      <a rel="sponsored" href="https://trk.udemy.com/c/6564357/4028133/39854">Save on Certification Exam Vouchers</a>
+    </h3>
+    <img
+      height={0}
+      width={0}
+      src="https://imp.pxf.io/i/6564357/4028133/39854"
+      style="position:absolute;visibility:hidden;"
+      alt=""
+      aria-hidden="true"
+    />
+
+    <section class="cv-block" aria-label="Voucher providers">
+      <h2>Browse Vouchers by Provider</h2>
+      <p>
+        Every voucher below is official, bought through Udemy with savings versus booking direct. Pick your track —
+        <a href="/udemy-comptia-exam-vouchers/">CompTIA vouchers</a> for IT and cybersecurity careers,{" "}
+        <a href="/udemy-aws-exam-vouchers/">AWS vouchers</a> for cloud roles, or{" "}
+        <a href="/udemy-microsoft-exam-vouchers/">Microsoft vouchers</a> for Azure and Microsoft 365 paths.
+      </p>
+      <div class="cv-prov-grid">
+        {providers.map((p) => (
+          <a class="cv-prov-card" href={p.href}>
+            <img class="cv-prov-img" src={p.img} alt={p.name} width="480" height="270" loading="lazy" />
+            <span class="cv-prov-pill">{p.pill}</span>
+            <h3>{p.name}</h3>
+            <p>{p.desc}</p>
+            <span class="cv-prov-link">View all →</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="cv-block" aria-label="How to purchase">
+      <h2>How to Purchase a Voucher</h2>
+      <p>
+        Buying takes minutes: vouchers are sold inside eligible prep courses and on each voucher page. Udemy credits
+        work at checkout, the code lands in <em>My learning → Certifications</em>, and you schedule with the exam
+        provider. Coupons never apply to vouchers themselves.
+      </p>
+      <ol class="cv-steps">
+        <li><strong>Pick your exam's voucher page</strong> (or open an eligible prep course → <em>Overview</em> tab under the player).</li>
+        <li><strong>Choose voucher-only or + Second Chance / Retake Assurance</strong> — the safety net can't be added later.</li>
+        <li><strong>Check out</strong> with any Udemy-accepted method (Udemy credits work; coupons don't apply to vouchers).</li>
+        <li><strong>Copy your code</strong> from <em>My learning → Certifications</em>.</li>
+        <li><strong>Schedule on the provider's site</strong> — Pearson VUE for AWS/Microsoft, CompTIA's scheduler — and paste the code at checkout.</li>
+      </ol>
+      <a class="cv-btn" href={voucherUrl} target="_blank" rel="sponsored noopener noreferrer">Start — Browse Vouchers →</a>
+    </section>
+
+    <section class="cv-block cv-warn" aria-label="Second Chance versus Retake Assurance">
+      <h2>Second Chance vs Retake Assurance</h2>
+      <ul>
+        <li><strong>Second Chance (AWS, CompTIA):</strong> fail → report in Certifications → Udemy verifies → new code, usually within 7 days. Report within 9 months; replacement valid ≥9 months.</li>
+        <li><strong>Retake Assurance (Microsoft, select CompTIA):</strong> fail → re-sit under the provider's exam policies.</li>
+        <li><strong>Both:</strong> bought only with the voucher, one extra attempt each, non-refundable, void if you pass first try.</li>
+      </ul>
+    </section>
+
+    {
+      (awsPrep.length > 0 || comptiaPrep.length > 0 || msPrep.length > 0) && (
+        <section class="cv-block" aria-label="Certification prep courses">
+          <h2>Recommended Prep Courses by Instructor</h2>
+          <p>
+            The same star instructors Udemy features on its voucher pages — only verified active coupons shown:
+          </p>
+          {awsPrep.length > 0 && (
+            <>
+              <h3 style="margin:22px 0 4px;font-size:1.1rem">AWS Courses — Stephane Maarek</h3>
+              <div class="cv-grid">
+                {awsPrep.map((d: any, i: number) => (
+                  <LedgerRow deal={d} variant="grid" num={String(i + 1).padStart(2, "0")} />
+                ))}
+              </div>
+            </>
+          )}
+          {comptiaPrep.length > 0 && (
+            <>
+              <h3 style="margin:22px 0 4px;font-size:1.1rem">CompTIA Courses — Top Rated</h3>
+              <div class="cv-grid">
+                {comptiaPrep.map((d: any, i: number) => (
+                  <LedgerRow deal={d} variant="grid" num={String(i + 1).padStart(2, "0")} />
+                ))}
+              </div>
+            </>
+          )}
+          {msPrep.length > 0 && (
+            <>
+              <h3 style="margin:22px 0 4px;font-size:1.1rem">Microsoft Courses — Scott Duffy</h3>
+              <div class="cv-grid">
+                {msPrep.map((d: any, i: number) => (
+                  <LedgerRow deal={d} variant="grid" num={String(i + 1).padStart(2, "0")} />
+                ))}
+              </div>
+            </>
+          )}
+          <p class="cv-note">
+            <a href="/udemy-coupon-code/">Browse all verified coupons →</a> ·{" "}
+            <a href="/blog/best-aws-certification-courses-2026/">AWS certification guide →</a> ·{" "}
+            <a href="/blog/best-ai-certification-courses-udemy/">AI certification guide →</a>
+          </p>
+        </section>
+      )
+    }
+
+    <section class="cv-block" aria-label="Frequently asked questions">
+      <h2>Frequently Asked Questions</h2>
+      <div class="cv-faq">
+        {faqs.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="cv-block cv-final" aria-label="Final call to action">
+      <h2>Commit to Your Certification Goal Today</h2>
+      <p>Prep, practice &amp; purchase in one place — and save 10%+ on the exam fee.</p>
+      <a class="cv-btn big" href={catalogUrl} target="_blank" rel="sponsored noopener noreferrer">
+        Save on Certification Exam Vouchers →
+      </a>
+      <p class="cv-note">Sponsored — we may earn a commission at no extra cost to you.</p>
+    </section>
+
+    <div style="margin-top:48px"><AuthorBox image="/images/author.jpg" /></div>
+  </main>
+
+  <style>
+    .cv-wrap { max-width: 1280px; margin: 0 auto; padding: 24px 1.5rem 64px; }
+    .cv-crumb { font-size: 0.8rem; color: var(--muted); margin-bottom: 14px; }
+    .cv-crumb a { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .cv-hero h1 { font-size: clamp(1.7rem, 4.5vw, 2.5rem); line-height: 1.15; margin: 10px 0 12px; letter-spacing: -0.02em; }
+    .cv-pill { display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #0a2540; background: #ffc94d; border-radius: 999px; padding: 5px 12px; }
+    .cv-sub { font-size: 1.05rem; color: var(--text); opacity: 0.9; line-height: 1.65; }
+    h3[id="4028133"] { margin: 18px 0 4px; font-size: 1.15rem; }
+    h3[id="4028133"] a { color: var(--brand); }
+    .cv-cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 14px 0 8px; }
+    .cv-btn { display: inline-block; background: var(--brand); color: #0b0e14; font-weight: 700; border-radius: 999px; padding: 0.85rem 1.9rem; text-decoration: none; }
+    .cv-btn.ghost { background: transparent; color: var(--brand); border: 2px solid var(--brand); }
+    .cv-btn.big { font-size: 1.05rem; padding: 1rem 2.4rem; }
+    .cv-note { font-size: 0.8rem; color: var(--muted); }
+    .cv-note a { color: var(--brand); font-weight: 600; }
+    .cv-trust { list-style: none; padding: 0; margin: 14px 0 0; display: flex; gap: 8px 18px; flex-wrap: wrap; font-size: 0.9rem; font-weight: 600; }
+    .cv-block { margin-top: 40px; }
+    .cv-block h2 { font-size: 1.35rem; letter-spacing: -0.01em; margin-bottom: 10px; }
+    .cv-block p, .cv-block li { line-height: 1.7; }
+    .cv-prov-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 14px; }
+    .cv-prov-card { display: block; border: 1px solid var(--border, #e5e7eb); border-radius: 14px; padding: 18px; text-decoration: none; color: inherit; }
+    .cv-prov-img { width: 100%; height: auto; border-radius: 10px; display: block; margin-bottom: 12px; }
+    .cv-prov-card h3 { margin: 8px 0 6px; font-size: 1.05rem; }
+    .cv-prov-card p { margin: 0 0 8px; font-size: 0.9rem; opacity: 0.85; }
+    .cv-prov-pill { display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #0a2540; background: #ffc94d; border-radius: 999px; padding: 3px 10px; }
+    .cv-prov-link { color: var(--brand); font-weight: 700; font-size: 0.9rem; }
+    .cv-steps { padding-left: 20px; display: grid; gap: 10px; }
+    .cv-warn { background: rgba(255, 201, 77, 0.12); border: 1px solid rgba(255, 201, 77, 0.55); border-radius: 14px; padding: 18px 20px; }
+    .cv-warn ul { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 8px; }
+    .cv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin: 16px 0; }
+    @media (max-width: 900px) { .cv-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .cv-grid { grid-template-columns: 1fr; } }
+    .cv-faq details { border: 1px solid var(--border, #e5e7eb); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; }
+    .cv-faq summary { font-weight: 700; cursor: pointer; }
+    .cv-faq p { margin: 8px 0 2px; color: var(--text); opacity: 0.9; }
+    .cv-final { text-align: center; background: var(--card, #0e1526); border-radius: 18px; padding: 32px 22px; }
+  </style>
+</Layout>
