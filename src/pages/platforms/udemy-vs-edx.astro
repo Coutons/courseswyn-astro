@@ -1,0 +1,109 @@
+---
+import CompareLayout from '../../components/CompareLayout.astro';
+import { readDeals } from '../../lib/store';
+import { buildHeroFeed } from '../../lib/utils';
+
+const allDeals = await readDeals();
+const totalCoupons = allDeals.length;
+const freeCount = allDeals.filter((d: any) => d.price === 0).length;
+const avgDiscount = totalCoupons > 0
+  ? Math.round(allDeals.reduce((s: number, d: any) => (d.originalPrice && d.price !== undefined && d.originalPrice > 0 ? s + ((d.originalPrice - d.price) / d.originalPrice) * 100 : s), 0) / totalCoupons)
+  : 0;
+const heroFeed = buildHeroFeed(allDeals, new Date(), 3);
+const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
+
+const related = [
+  { href: '/platforms/udemy-vs-coursera', label: 'Udemy vs Coursera', desc: 'credentials compared' },
+  { href: '/platforms/udemy-vs-skillshare', label: 'Udemy vs Skillshare', desc: 'depth vs subscription' },
+  { href: '/platforms/udemy-vs-pluralsight', label: 'Udemy vs Pluralsight', desc: 'tech training compared' },
+  { href: '/platforms/udemy-vs-linkedin-learning', label: 'Udemy vs LinkedIn Learning', desc: 'certificates compared' },
+  { href: '/platforms/udemy-alternatives', label: 'Udemy Alternatives', desc: 'all free & paid options' },
+];
+
+const faqs = [
+  { q: 'Is edX better than Udemy?', a: 'For academic rigor, yes — edX courses come from universities like Harvard and MIT. For affordable practical skills, Udemy wins: courses are often free with coupons and you keep lifetime access.' },
+  { q: 'Can I audit edX courses for free?', a: 'Yes, most edX courses offer free audit access to videos and readings. But graded assignments and verified certificates cost $50–$300 per course — while a Udemy coupon can make an entire course free.' },
+  { q: 'What is a MicroMasters, and is it worth it?', a: 'A MicroMasters is a graduate-level edX credential that can count toward a real master\u2019s degree. It is genuinely valuable but costs hundreds to over a thousand dollars — only pursue it if you plan to continue to the full degree.' },
+  { q: 'Which platform is cheaper?', a: `Udemy, overwhelmingly. We track ${totalCoupons.toLocaleString()}+ Udemy coupons averaging ${avgDiscount}% off, with ${freeCount.toLocaleString()}+ fully free courses. edX verified tracks start where Udemy sale prices end.` },
+  { q: 'Should I use edX and Udemy together?', a: 'That combination works well: use edX audits for theory-heavy foundations, then build hands-on skill with discounted Udemy courses in the same subject.' },
+];
+---
+
+<CompareLayout
+  title={`Udemy vs edX ${currentYear}: Pricing, Certificates & Free Audit Compared | CoursesWyn`}
+  description={`Udemy vs edX compared on pricing, verified certificates, MicroMasters, free audit and course depth — with live data from ${totalCoupons.toLocaleString()}+ verified Udemy coupons.`}
+  keywords="udemy vs edx, edx vs udemy, udemy or edx, edx micromasters worth it, edx verified certificate cost, udemy coupon code"
+  canonical="https://courseswyn.com/platforms/udemy-vs-edx"
+  crumbs={[{ name: 'Compare Platforms', href: '/platforms' }, { name: 'Udemy vs edX' }]}
+  badge={`Head-to-head · ${currentYear} data`}
+  h1Accent="Udemy vs edX:"
+  h1Rest={`which should you pick in ${currentYear}?`}
+  heroSub={`edX brings Harvard-and-MIT-backed rigor; Udemy brings bargain practical skills with lifetime access. Here's how they compare — backed by`}
+  heroSubStrong={`${totalCoupons.toLocaleString()}+ verified Udemy coupons we track daily.`}
+  stats={[{ val: freeCount, label: 'free udemy deals', plus: true }, { val: avgDiscount, label: 'avg discount', plus: true }, { val: totalCoupons, label: 'coupons tracked', plus: true }]}
+  heroFeed={heroFeed}
+  termTitle="agents@courseswyn: ~/udemy-vs-edx"
+  termFoot="$ verdict computed from live coupon data"
+  faqs={faqs}
+  related={related}
+>
+  <div class="vs-verdict"><strong>Quick verdict:</strong> Choose <strong>edX</strong> for university-grade theory and credentials that can ladder into real degrees. Choose <strong>Udemy</strong> for hands-on, job-ready skills at a fraction of the cost — frequently free with coupons. Theory on edX, practice on Udemy is the classic combo.</div>
+
+  <section class="vs-section" aria-label="At a glance">
+    <h2 class="vs-h2">At a glance</h2>
+    <div class="vs-table-wrap"><table class="vs-table">
+      <thead><tr><th>Feature</th><th>Udemy</th><th>edX</th></tr></thead>
+      <tbody>
+        <tr><td>Pricing model</td><td>Pay once per course</td><td>Free audit; pay for verified track</td></tr>
+        <tr><td>Typical cost</td><td>$0 with coupons; ~$10–$20 on sale</td><td>$50–$300 per verified course</td></tr>
+        <tr><td>Free options</td><td>Full courses free, certificate included</td><td>Audit videos free; no certificate</td></tr>
+        <tr><td>Certificates</td><td>Completion only</td><td>Verified; MicroMasters &amp; degrees</td></tr>
+        <tr><td>Library size</td><td>200,000+ courses</td><td>4,000+ university courses</td></tr>
+        <tr><td>Style</td><td>Practical, instructor-led</td><td>Academic, lecture-driven</td></tr>
+        <tr><td>Best for</td><td>Doing the work</td><td>Understanding the theory</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="vs-section" aria-label="Pricing">
+    <h2 class="vs-h2">1. Pricing compared</h2>
+    <p class="vs-p">Udemy's street price is <strong>$10–$20</strong> on sale and <strong>$0</strong> with the instructor coupons we verify in <a href="/udemy-coupon-code">the coupon catalog</a>. edX charges nothing to watch but <strong>$50–$300 per course</strong> the moment you want grades and proof — and MicroMasters programs climb past $1,000.</p>
+    <p class="vs-p">One verified edX course can therefore cost more than fifty discounted Udemy courses. Unless the credential itself is the goal, that math rarely favors edX.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Certificates">
+    <h2 class="vs-h2">2. Certificates &amp; credentials</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Udemy</h3><ul><li><strong>Completion certificate</strong> per course</li><li>No verification, no degree path</li><li>Signals initiative, not qualification</li></ul></div>
+      <div class="vs-card"><h3>edX</h3><ul><li><strong>Verified certificates</strong> with ID check</li><li><strong>MicroMasters</strong> count toward real degrees</li><li>University brands employers recognize</li></ul></div>
+    </div>
+  </section>
+
+  <section class="vs-section" aria-label="Free options">
+    <h2 class="vs-h2">3. Free options</h2>
+    <p class="vs-p">Both platforms let you learn free, but differently. edX audit unlocks lectures while withholding assessment and certification. A Udemy 100% off coupon unlocks <strong>everything, permanently</strong> — the trade-off is speed, since popular coupons exhaust redemptions. <a href="/udemy-coupons-today">Today's fresh list</a> is where to start.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Quality">
+    <h2 class="vs-h2">4. Course quality &amp; depth</h2>
+    <p class="vs-p">edX wins on academic depth: real syllabi, real problem sets, university pacing. Udemy wins on applied breadth: tools, workflows and portfolios taught by working practitioners. Audit the edX theory, then drill the Udemy practice — filter by <a href="/topics">topic ratings</a> to dodge weak courses.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Pros and cons">
+    <h2 class="vs-h2">5. Pros and cons</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Udemy strengths / weaknesses</h3><ul><li><strong>+</strong> Cheapest path to real skills</li><li><strong>+</strong> Lifetime access, huge catalog</li><li><strong>−</strong> No accredited credentials</li><li><strong>−</strong> Variable quality</li></ul></div>
+      <div class="vs-card"><h3>edX strengths / weaknesses</h3><ul><li><strong>+</strong> University rigor + degree pathways</li><li><strong>+</strong> Free high-quality audits</li><li><strong>−</strong> Verified tracks are pricey</li><li><strong>−</strong> Narrow, academic catalog</li></ul></div>
+    </div>
+  </section>
+
+  <section class="vs-section" aria-label="Which for your goal">
+    <h2 class="vs-h2">6. Which one for your goal?</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Degree credit or prestige credential</h3><p>edX verified / MicroMasters — no substitute.</p></div>
+      <div class="vs-card"><h3>Portfolio &amp; practical skill</h3><p>Udemy coupons — free beats $200 every time.</p></div>
+      <div class="vs-card"><h3>Learn theory free</h3><p>edX audit mode, zero spend.</p></div>
+      <div class="vs-card"><h3>Best of both</h3><p>Audit edX, practice on Udemy, pay for one credential.</p></div>
+    </div>
+  </section>
+</CompareLayout>

@@ -1,0 +1,437 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { readDeals } from '../../lib/store';
+import { toISODateWIB } from '../../lib/date';
+import { buildHeroFeed } from '../../lib/utils';
+
+const allDeals = await readDeals();
+const totalCoupons = allDeals.length;
+const freeCount = allDeals.filter((d: any) => d.price === 0).length;
+const avgDiscount = totalCoupons > 0
+  ? Math.round(allDeals.reduce((s: number, d: any) => {
+      if (d.originalPrice && d.price !== undefined && d.originalPrice > 0) {
+        return s + ((d.originalPrice - d.price) / d.originalPrice) * 100;
+      }
+      return s;
+    }, 0) / totalCoupons)
+  : 0;
+
+const now = new Date();
+const heroFeed = buildHeroFeed(allDeals, now, 3);
+const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
+const currentDate = toISODateWIB();
+const siteUrl = 'https://courseswyn.com';
+const canonicalUrl = `${siteUrl}/platforms`;
+
+const title = `Udemy vs Coursera vs edX vs Skillshare Compared ${currentYear} | CoursesWyn`;
+const description = `Udemy vs Coursera, edX, Skillshare, Pluralsight & LinkedIn Learning compared on pricing, certificates & free options — backed by ${totalCoupons.toLocaleString()}+ verified Udemy coupons tracked daily on CoursesWyn.`;
+const pageKeywords = [
+  'udemy vs coursera',
+  'udemy vs edx',
+  'udemy vs skillshare',
+  'udemy vs pluralsight',
+  'udemy vs linkedin learning',
+  'best online learning platform',
+  'udemy alternatives',
+  'udemy coupon code',
+].join(', ');
+
+const rows = [
+  {
+    name: 'Udemy',
+    bestFor: 'Job-ready skills at the lowest price',
+    pricing: 'Pay per course, often $10–$20 on sale',
+    certs: 'Completion certificates',
+    free: `${freeCount.toLocaleString()}+ free coupons on CoursesWyn`,
+    take: 'Cheapest way to learn — many courses drop to free with verified coupons.',
+    accent: '#A435F0',
+  },
+  {
+    name: 'Coursera',
+    bestFor: 'University-backed certificates & degrees',
+    pricing: 'Free audit; $39–$79/mo specializations',
+    certs: 'Verified, shareable certificates',
+    free: 'Free audit on many courses',
+    take: 'Pick it when a credentialed certificate matters more than price.',
+    accent: '#0056D2',
+  },
+  {
+    name: 'edX',
+    bestFor: 'Academic depth from top universities',
+    pricing: 'Free audit; $50–$300 verified track',
+    certs: 'Verified certificates, MicroMasters',
+    free: 'Free audit on most courses',
+    take: 'Best for rigorous, university-style study — not for bargains.',
+    accent: '#02A08B',
+  },
+  {
+    name: 'Skillshare',
+    bestFor: 'Creative hobbies & short projects',
+    pricing: '~$168/year subscription',
+    certs: 'No certificates',
+    free: 'Limited free classes',
+    take: 'Great for creatives who watch monthly; wasteful if you binge once.',
+    accent: '#00FF84',
+  },
+  {
+    name: 'Pluralsight',
+    bestFor: 'Developers & IT certification paths',
+    pricing: 'From ~$29/mo subscription',
+    certs: 'Skill assessments & cert prep',
+    free: 'Short free trial',
+    take: 'Worth it for tech teams; overkill for casual learners.',
+    accent: '#F05A28',
+  },
+  {
+    name: 'LinkedIn Learning',
+    bestFor: 'Professional skills on your profile',
+    pricing: 'From ~$30/mo, free trial included',
+    certs: 'Shows directly on LinkedIn profile',
+    free: '1-month free trial',
+    take: 'Best visibility for recruiters; shallow on technical depth.',
+    accent: '#0A66C2',
+  },
+];
+
+const faqs = [
+  {
+    q: 'Which is better, Udemy or Coursera?',
+    a: 'It depends on your goal. Udemy is cheaper — courses often drop to $10–$20 or even free with verified coupons — and you keep lifetime access. Coursera wins when you need a university-backed certificate for your resume. For pure skill-building on a budget, Udemy is hard to beat.',
+  },
+  {
+    q: 'Is Udemy really the cheapest learning platform?',
+    a: `Yes, in practice. We track ${totalCoupons.toLocaleString()}+ Udemy coupons with an average discount of ${avgDiscount}%, including ${freeCount.toLocaleString()}+ fully free courses. No subscription platform can match free — as long as you grab coupons before they hit redemption limits.`,
+  },
+  {
+    q: 'Do certificates from these platforms matter to employers?',
+    a: 'University-verified certificates (Coursera, edX) carry the most weight with recruiters. LinkedIn Learning certificates get visibility on your profile. Udemy certificates prove skills but carry less formal weight — pair cheap Udemy skills with one credentialed certificate for the best ROI.',
+  },
+  {
+    q: 'Udemy vs Skillshare — which should I pick?',
+    a: 'Pick Udemy for deep, structured courses you keep forever, often at huge discounts. Pick Skillshare if you want short creative classes and will genuinely watch every month — an unused subscription is the most expensive option of all.',
+  },
+  {
+    q: 'Can I learn for free without paying any subscription?',
+    a: 'Yes. Combine free-audit courses on Coursera/edX with 100% off Udemy coupons — CoursesWyn verifies new free deals daily. That covers most beginner-to-intermediate skills at zero cost.',
+  },
+  {
+    q: 'How is this comparison kept up to date?',
+    a: `Our Udemy pricing data refreshes daily from ${totalCoupons.toLocaleString()}+ tracked coupons (last check ${currentDate}). Competitor pricing is reviewed regularly — but always confirm the current price on the platform before paying.`,
+  },
+];
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+        { '@type': 'ListItem', position: 2, name: 'Compare Platforms', item: canonicalUrl },
+      ],
+    },
+    {
+      '@type': ['WebPage', 'CollectionPage'],
+      '@id': canonicalUrl,
+      url: canonicalUrl,
+      name: title,
+      description,
+      keywords: pageKeywords,
+      inLanguage: 'en-US',
+      dateModified: currentDate,
+      isPartOf: { '@id': `${siteUrl}#website` },
+    },
+    {
+      '@type': 'ItemList',
+      '@id': `${canonicalUrl}#platforms`,
+      name: 'Online learning platforms compared',
+      numberOfItems: rows.length,
+      itemListElement: rows.map((r, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: r.name,
+      })),
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonicalUrl} hideBreadcrumbs={false}>
+  <Fragment slot="head">
+    <meta name="keywords" content={pageKeywords} />
+  </Fragment>
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+
+  <main class="cc-root">
+    <div class="cc-container">
+
+      <header class="cc-header">
+        <div class="dh-hero-grid">
+          <div class="dh-hero-left">
+            <div class="dh-hero-badge"><span class="lg-blip"></span> Platform comparison &middot; {currentYear} data</div>
+            <h1 class="dh-hero-title"><span class="cc-accent">Udemy vs Coursera vs edX vs Skillshare</span> Compared</h1>
+            <p class="dh-hero-sub">Udemy, Coursera, edX, Skillshare, Pluralsight &amp; LinkedIn Learning — judged on <strong>price, certificates &amp; free options</strong>, backed by <strong>{totalCoupons.toLocaleString()}+ verified Udemy coupons</strong> we track every day.</p>
+            <div class="dh-hero-stats">
+              <div class="dh-stat"><b class="dh-stat-val"><span data-count={rows.length}>0</span></b><span class="dh-stat-label">platforms</span></div>
+              <div class="dh-stat"><b class="dh-stat-val"><span data-count={freeCount}>0</span><span class="lg-plus">+</span></b><span class="dh-stat-label">free udemy deals</span></div>
+              <div class="dh-stat"><b class="dh-stat-val"><span data-count={avgDiscount}>0</span><span class="lg-plus">%</span></b><span class="dh-stat-label">avg discount</span></div>
+            </div>
+          </div>
+          <div class="dh-terminal">
+            <div class="dh-term-head">
+              <span class="dh-term-dot" style="background:#ff5f56"></span>
+              <span class="dh-term-dot" style="background:#ffbd2e"></span>
+              <span class="dh-term-dot" style="background:#27c93f"></span>
+              <span class="dh-term-title">agents@courseswyn: ~/platforms</span>
+              <span class="dh-term-live"><span class="lg-blip"></span> Live</span>
+            </div>
+            <div class="dh-term-body">
+              {heroFeed.map((d) => (
+                <a class="dh-term-line" href={'/coupon/' + d.slug}>
+                  <span class="dh-term-time">{d.timeLabel}</span>
+                  <span class="dh-term-ok">✓</span>
+                  <span class="dh-term-cat">{d.cat}</span>
+                  <span class="dh-term-title2">{d.title}</span>
+                  <span class="dh-term-save">−{d.pct}%</span>
+                </a>
+              ))}
+              <div class="dh-term-line"><span class="dh-term-time">now</span><span class="dh-term-ok">✓</span><span class="dh-term-title2">codes checked by CoursesWyn<span class="caret"></span></span></div>
+            </div>
+            <div class="dh-term-foot">$ platforms compared <b>{rows.length}</b></div>
+          </div>
+        </div>
+        <div class="cc-toolbar" style="margin-top:1.5rem;">
+          <a class="cc-hero-btn" href="#compare-table">See the comparison</a>
+          <a class="cc-hero-btn ghost" href="#verdict">Skip to verdicts</a>
+          <a class="cc-hero-btn ghost" href="/udemy-coupon-code">Browse Udemy coupons</a>
+        </div>
+      </header>
+
+      <section class="cc-deals-section" id="compare-table" aria-label="Platform comparison table" style="scroll-margin-top:1.5rem;">
+        <div class="cc-sec-head">
+          <h2 class="cc-sec-title">Side-by-side: 6 platforms <span class="cc-tag">{rows.length} compared</span></h2>
+          <p class="cc-sec-desc">The short version — price model, certificates and the cheapest free route on each platform.</p>
+        </div>
+        <div class="cc-table-wrap">
+          <table class="cc-compare-table">
+            <thead><tr><th>Platform</th><th>Best for</th><th>Pricing</th><th>Certificates</th><th>Free route</th></tr></thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr>
+                  <td><span class="cc-plat"><span class="cc-dot" style={`background:${r.accent}`}></span><strong>{r.name}</strong></span></td>
+                  <td>{r.bestFor}</td>
+                  <td>{r.pricing}</td>
+                  <td>{r.certs}</td>
+                  <td>{r.free}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="cc-section" id="verdict" aria-label="Platform verdicts" style="scroll-margin-top:1.5rem;">
+        <div class="cc-sec-head">
+          <h2 class="cc-sec-title">Our verdict per platform <span class="cc-tag">honest takes</span></h2>
+          <p class="cc-sec-desc">No sponsored rankings — just where each platform actually wins.</p>
+        </div>
+        <div class="cc-adv-grid">
+          {rows.map((r) => (
+            <div class="cc-adv-card">
+              <div class="cc-adv-icon" style={{ color: r.accent }}>
+                <span class="cc-dot" style={`background:${r.accent}`}></span>
+              </div>
+              <h3>{r.name}</h3>
+              <p>{r.take}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="cc-section" aria-labelledby="pick-title">
+        <div class="cc-sec-head">
+          <h2 id="pick-title" class="cc-sec-title">Pick by your goal</h2>
+          <p class="cc-sec-desc">Match the platform to what you actually need.</p>
+        </div>
+        <div class="cc-faq-grid">
+          <div class="cc-faq-card"><h3 class="cc-faq-q">Lowest cost, real skills</h3><p class="cc-faq-a">Udemy with verified coupons — {freeCount.toLocaleString()}+ courses currently free, average discount {avgDiscount}%. Start at <a href="/udemy-coupons-today">today's deals</a>.</p></div>
+          <div class="cc-faq-card"><h3 class="cc-faq-q">Resume-grade credential</h3><p class="cc-faq-a">Coursera or edX verified track. Learn the skill cheap on Udemy first, then pay once for the certificate.</p></div>
+          <div class="cc-faq-card"><h3 class="cc-faq-q">Creative hobby</h3><p class="cc-faq-a">Skillshare — but only if you watch every month. Otherwise grab a discounted Udemy creative course in <a href="/categories">categories</a>.</p></div>
+          <div class="cc-faq-card"><h3 class="cc-faq-q">Dev / IT team upskilling</h3><p class="cc-faq-a">Pluralsight paths + skill assessments. Individuals can still cover most topics via <a href="/topics">topics</a> coupons.</p></div>
+        </div>
+      </section>
+
+      <section class="cc-seo-section" aria-label="How we compare">
+        <h2 class="cc-section-title">How this comparison stays honest</h2>
+        <p>Most "versus" pages quote marketing pages. Ours is anchored in live data: <strong>{totalCoupons.toLocaleString()} Udemy coupons</strong> re-checked daily, averaging <strong>{avgDiscount}% off</strong> with <strong>{freeCount.toLocaleString()} free deals</strong> right now (last check {currentDate}). Competitor pricing is reviewed regularly against public plans. Read <a href="/how-we-test-and-verify-udemy-coupons">how we verify coupons</a> for the full method.</p>
+        <p>Bottom line: no subscription beats free. If a verified coupon covers your topic, take it — if you need a formal credential, pay for exactly one verified certificate instead of a year of subscriptions.</p>
+      </section>
+
+      <section class="cc-section" aria-label="In-depth comparisons">
+        <div class="cc-sec-head">
+          <h2 class="cc-sec-title">In-depth head-to-head guides <span class="cc-tag">6 guides</span></h2>
+          <p class="cc-sec-desc">Full breakdowns — pricing, certificates, free options, verdicts and FAQs.</p>
+        </div>
+        <nav class="cc-cat-grid" aria-label="In-depth comparisons">
+          <a href="/platforms/udemy-vs-coursera" class="cc-cat"><div class="cc-cat-label">Udemy vs Coursera</div><div class="cc-cat-count">price vs credentials →</div></a>
+          <a href="/platforms/udemy-vs-edx" class="cc-cat"><div class="cc-cat-label">Udemy vs edX</div><div class="cc-cat-count">practice vs rigor →</div></a>
+          <a href="/platforms/udemy-vs-skillshare" class="cc-cat"><div class="cc-cat-label">Udemy vs Skillshare</div><div class="cc-cat-count">own vs subscribe →</div></a>
+          <a href="/platforms/udemy-vs-pluralsight" class="cc-cat"><div class="cc-cat-label">Udemy vs Pluralsight</div><div class="cc-cat-count">for developers →</div></a>
+          <a href="/platforms/udemy-vs-linkedin-learning" class="cc-cat"><div class="cc-cat-label">Udemy vs LinkedIn Learning</div><div class="cc-cat-count">skill vs visibility →</div></a>
+          <a href="/platforms/udemy-alternatives" class="cc-cat"><div class="cc-cat-label">Udemy Alternatives</div><div class="cc-cat-count">10 free &amp; paid →</div></a>
+        </nav>
+      </section>
+
+      <section class="cc-section cc-faq" id="faq" aria-labelledby="faq-title" style="scroll-margin-top:1.5rem;">
+        <h2 id="faq-title" class="cc-section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Platform comparison FAQs
+          <span class="cc-tag">{faqs.length} questions</span>
+        </h2>
+        <div class="cc-faq-grid">
+          {faqs.map((faq) => (
+            <div class="cc-faq-card">
+              <h3 class="cc-faq-q">{faq.q}</h3>
+              <p class="cc-faq-a">{faq.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="cc-cta">
+        <p class="cc-cta-eyebrow">Cheapest seat in the house</p>
+        <p class="cc-cta-text">Why pay subscriptions? {freeCount.toLocaleString()}+ Udemy courses are free right now with verified coupons.</p>
+        <a class="cc-hero-btn" href="/udemy-coupon-code">Browse All Coupons →</a>
+      </section>
+
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .cc-root { background: var(--bg); padding: 2rem 1rem 4rem; }
+  .cc-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+  .dh-hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 2.5rem; align-items: center; }
+  .dh-hero-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; margin-bottom: 1.25rem; }
+  .dh-hero-title { font-size: clamp(2rem, 4.3vw, 3rem); font-weight: 800; letter-spacing: -0.02em; color: var(--text-bright, var(--text)); margin: 0 0 0.75rem; line-height: 1.12; }
+  .dh-hero-title .cc-accent { color: var(--brand); }
+  .dh-hero-sub { color: var(--muted); font-size: 1rem; line-height: 1.7; margin: 0 0 1.5rem; max-width: 560px; }
+  .dh-hero-sub strong { color: var(--text); }
+  .dh-hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+  .dh-stat { display: flex; flex-direction: column; }
+  .dh-stat-val { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--brand); }
+  .dh-stat-label { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); }
+  .lg-blip { width: 7px; height: 7px; border-radius: 50%; background: var(--brand); animation: lgBlip 1.6s infinite; }
+  @keyframes lgBlip { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .caret { display: inline-block; width: 0.55ch; height: 1em; margin-left: 4px; background: var(--brand); vertical-align: text-bottom; animation: lgBlip 1.1s step-end infinite; }
+  .dh-terminal { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; text-align: left; }
+  .dh-term-head { display: flex; align-items: center; gap: 6px; padding: 10px 14px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
+  .dh-term-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dh-term-title { margin-left: 8px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
+  .dh-term-live { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; color: var(--stamp); text-transform: uppercase; letter-spacing: 0.06em; }
+  .dh-term-live .lg-blip { background: var(--stamp); }
+  .dh-term-body { padding: 4px 0; }
+  .dh-term-line { display: flex; align-items: center; gap: 10px; padding: 7px 16px; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text); text-decoration: none; }
+  a.dh-term-line:hover { background: var(--brand-soft); }
+  .dh-term-time { color: var(--muted); flex-shrink: 0; font-size: 0.7rem; min-width: 42px; }
+  .dh-term-ok { color: var(--stamp); font-weight: 700; flex-shrink: 0; }
+  .dh-term-cat { color: var(--brand); flex-shrink: 0; font-size: 0.7rem; min-width: 64px; }
+  .dh-term-title2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .dh-term-save { color: var(--brand); font-weight: 700; flex-shrink: 0; }
+  .dh-term-foot { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--bg-secondary); font-family: var(--font-mono); font-size: 0.78rem; color: var(--text); }
+  .dh-term-foot b { color: var(--brand); }
+  @media (max-width: 900px) { .dh-hero-grid { grid-template-columns: 1fr; gap: 1.75rem; } }
+  .cc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .cc-hero-btn { font-family: var(--font-display); font-size: 0.9rem; font-weight: 600; text-decoration: none; padding: 12px 20px; border-radius: 9px; background: #FFC94D; color: #0b0e14; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35); transition: background 0.2s, transform 0.2s; white-space: nowrap; }
+  .cc-hero-btn:hover { background: #FFC94D; transform: translateY(-1px); }
+  .cc-hero-btn.ghost { background: transparent; color: var(--brand); border: 1px solid #FFC94D; box-shadow: none; }
+  .cc-hero-btn.ghost:hover { background: #FFC94D; color: #0b0e14; }
+  .cc-section { margin-top: 3.25rem; }
+  .cc-deals-section { margin-top: 3.25rem; scroll-margin-top: 1.5rem; }
+  .cc-sec-head { margin-bottom: 0.9rem; }
+  .cc-sec-title { font-size: 1.2rem; font-weight: 700; color: var(--text); margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; letter-spacing: -0.01em; }
+  .cc-sec-title .cc-tag { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; color: var(--muted); border: 1px solid #232B26; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+  .cc-sec-desc { font-size: 0.85rem; color: var(--muted); margin: 0; }
+  .cc-table-wrap { overflow-x: auto; margin-top: 16px; border: 1px solid #232B26; border-radius: 16px; background: var(--card); }
+  table.cc-compare-table { width: 100%; border-collapse: collapse; min-width: 720px; }
+  .cc-compare-table thead th { font-family: var(--font-mono); font-size: 0.625rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); text-align: left; padding: 12px 14px; border-bottom: 1px solid #232B26; background: var(--bg-secondary); white-space: nowrap; }
+  .cc-compare-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+  .cc-compare-table tr:last-child td { border-bottom: none; }
+  .cc-compare-table tbody tr:hover td { background: var(--card-hover); }
+  .cc-plat { display: inline-flex; align-items: center; gap: 8px; color: var(--text); white-space: nowrap; }
+  .cc-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .cc-adv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 16px; }
+  .cc-adv-card { background: var(--card); border: 1px solid #232B26; border-radius: 12px; padding: 18px 16px; transition: all 0.2s; }
+  .cc-adv-card:hover { border-color: #FFC94D; transform: translateY(-2px); box-shadow: 0 10px 28px -16px rgba(0, 0, 0, 0.35); }
+  .cc-adv-icon { width: 36px; height: 36px; border-radius: 9px; background: var(--card); border: 1px solid #232B26; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+  .cc-adv-card h3 { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0 0 0.35rem; }
+  .cc-adv-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.55; margin: 0; }
+  .cc-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-top: 16px; }
+  .cc-cat { background: var(--card); border: 1px solid #232B26; border-radius: 12px; padding: 16px; text-align: left; text-decoration: none; display: block; transition: all 0.2s; }
+  .cc-cat:hover { transform: translateY(-2px); border-color: #FFC94D; box-shadow: 0 10px 28px -16px rgba(0, 0, 0, 0.35); }
+  .cc-cat-label { font-size: 0.85rem; color: var(--text); font-weight: 700; }
+  .cc-cat-count { font-family: var(--font-mono); font-size: 0.65625rem; color: var(--brand); margin-top: 6px; font-weight: 500; }
+  .cc-section-title { font-size: 1.2rem; font-weight: 700; color: var(--text); margin: 0 0 0.3rem; display: flex; align-items: center; gap: 0.6rem; letter-spacing: -0.01em; flex-wrap: wrap; }
+  .cc-section-title svg { color: var(--brand); flex-shrink: 0; }
+  .cc-section-title .cc-tag { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; color: var(--muted); border: 1px solid #232B26; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+  .cc-seo-section { background: var(--card); border: 1px solid #232B26; border-radius: 14px; padding: 1.5rem; margin: 3.25rem 0 0; }
+  .cc-seo-section .cc-section-title { font-size: 1.15rem; margin-bottom: 0.75rem; }
+  .cc-seo-section p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.75rem; }
+  .cc-seo-section p:last-child { margin-bottom: 0; }
+  .cc-seo-section strong { color: var(--text); font-weight: 700; }
+  .cc-seo-section a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  .cc-seo-section a:hover { text-decoration: underline; }
+  .cc-faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  @media (max-width: 768px) { .cc-faq-grid { grid-template-columns: 1fr; } }
+  .cc-faq-card { background: var(--card); border: 1px solid #232B26; border-radius: 12px; padding: 1.1rem 1.15rem; }
+  .cc-faq-card:hover { border-color: #8A877C; }
+  .cc-faq-q { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0 0 0.4rem; line-height: 1.4; }
+  .cc-faq-a { font-size: 0.85rem; color: var(--muted); line-height: 1.55; margin: 0; }
+  .cc-faq-a a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  .cc-faq-a a:hover { text-decoration: underline; }
+  .cc-cta { background: var(--card); border: 1px solid #232B26; color: var(--text); border-radius: 16px; padding: 30px 32px; text-align: center; margin: 3.25rem 0 0; }
+  .cc-cta-eyebrow { font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: .07em; text-transform: uppercase; color: var(--brand); margin: 0 0 8px; }
+  .cc-cta-text { font-size: 0.95rem; line-height: 1.6; margin: 0 auto 18px; max-width: 480px; color: var(--muted); }
+  .cc-cta .cc-hero-btn { background: #FFC94D; color: #0b0e14; box-shadow: 0 12px 28px -12px rgba(0, 0, 0, 0.5); }
+  .cc-cta .cc-hero-btn:hover { background: #FFC94D; transform: translateY(-1px); }
+  @media (max-width: 480px) { .cc-hero-btn { padding: 11px 16px; font-size: 0.85rem; } }
+</style>
+
+<script>
+  (function () {
+    function animateCount(el: Element): void {
+      const target = parseInt(el.getAttribute('data-count') || '0', 10);
+      if (isNaN(target)) return;
+      const dur = 900;
+      let start: number | null = null;
+      function step(ts: number): void {
+        if (!start) start = ts;
+        const p = Math.min(1, (ts - start) / dur);
+        el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    var counters = document.querySelectorAll('[data-count]');
+    if (!('IntersectionObserver' in window)) {
+      counters.forEach(animateCount);
+    } else {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { animateCount(e.target); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.3 });
+      counters.forEach(function (c) { io.observe(c); });
+    }
+  })();
+</script>
+
+</Layout>

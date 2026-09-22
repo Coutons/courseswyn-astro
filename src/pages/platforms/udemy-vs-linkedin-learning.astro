@@ -1,0 +1,104 @@
+---
+import CompareLayout from '../../components/CompareLayout.astro';
+import { readDeals } from '../../lib/store';
+import { buildHeroFeed } from '../../lib/utils';
+
+const allDeals = await readDeals();
+const totalCoupons = allDeals.length;
+const freeCount = allDeals.filter((d: any) => d.price === 0).length;
+const avgDiscount = totalCoupons > 0
+  ? Math.round(allDeals.reduce((s: number, d: any) => (d.originalPrice && d.price !== undefined && d.originalPrice > 0 ? s + ((d.originalPrice - d.price) / d.originalPrice) * 100 : s), 0) / totalCoupons)
+  : 0;
+const heroFeed = buildHeroFeed(allDeals, new Date(), 3);
+const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
+
+const related = [
+  { href: '/platforms/udemy-vs-coursera', label: 'Udemy vs Coursera', desc: 'credentials compared' },
+  { href: '/platforms/udemy-vs-edx', label: 'Udemy vs edX', desc: 'academic depth compared' },
+  { href: '/platforms/udemy-vs-skillshare', label: 'Udemy vs Skillshare', desc: 'depth vs subscription' },
+  { href: '/platforms/udemy-vs-pluralsight', label: 'Udemy vs Pluralsight', desc: 'tech training compared' },
+  { href: '/platforms/udemy-alternatives', label: 'Udemy Alternatives', desc: 'all free & paid options' },
+];
+
+const faqs = [
+  { q: 'Is LinkedIn Learning better than Udemy?', a: 'For recruiter visibility, yes — certificates publish straight to your LinkedIn profile. For depth and price, Udemy wins: longer courses, lifetime access, and frequent free coupons.' },
+  { q: 'Are LinkedIn Learning certificates worth it?', a: 'They help recruiters notice you, especially for business and soft skills. But they rarely substitute for accredited credentials or a portfolio — pair profile visibility with real Udemy-built skills.' },
+  { q: 'How much does LinkedIn Learning cost?', a: 'Around $30–$40 per month, often bundled with LinkedIn Premium, plus a one-month free trial. One year costs roughly ten times a discounted Udemy flagship course.' },
+  { q: 'Can I get LinkedIn Learning for free?', a: 'Many public libraries provide free LinkedIn Learning access with a library card — check yours first. For Udemy, verified 100% off coupons play the same role with no card required.' },
+  { q: 'Which is better for technical skills?', a: `Udemy, clearly. LinkedIn Learning skews toward short professional content; deep technical training lives on Udemy, where we track ${totalCoupons.toLocaleString()}+ coupons averaging ${avgDiscount}% off.` },
+];
+---
+
+<CompareLayout
+  title={`Udemy vs LinkedIn Learning ${currentYear}: Certificates & Price Compared | CoursesWyn`}
+  description={`Udemy vs LinkedIn Learning compared on pricing, profile certificates, course depth and free trials — with live data from ${totalCoupons.toLocaleString()}+ verified Udemy coupons.`}
+  keywords="udemy vs linkedin learning, linkedin learning vs udemy, linkedin learning worth it, linkedin certificates value, udemy coupon code"
+  canonical="https://courseswyn.com/platforms/udemy-vs-linkedin-learning"
+  crumbs={[{ name: 'Compare Platforms', href: '/platforms' }, { name: 'Udemy vs LinkedIn Learning' }]}
+  badge={`Head-to-head · ${currentYear} data`}
+  h1Accent="Udemy vs LinkedIn Learning:"
+  h1Rest={`which should you pick in ${currentYear}?`}
+  heroSub={`LinkedIn Learning optimizes for recruiter visibility; Udemy optimizes for actual skill depth at bargain prices. Which matters more for you? Analysis backed by`}
+  heroSubStrong={`${totalCoupons.toLocaleString()}+ verified Udemy coupons we track daily.`}
+  stats={[{ val: freeCount, label: 'free udemy deals', plus: true }, { val: avgDiscount, label: 'avg discount', plus: true }, { val: totalCoupons, label: 'coupons tracked', plus: true }]}
+  heroFeed={heroFeed}
+  termTitle="agents@courseswyn: ~/udemy-vs-linkedin"
+  termFoot="$ verdict computed from live coupon data"
+  faqs={faqs}
+  related={related}
+>
+  <div class="vs-verdict"><strong>Quick verdict:</strong> Choose <strong>LinkedIn Learning</strong> when you want fast professional polish that recruiters can see on your profile. Choose <strong>Udemy</strong> when you want deep skills that survive interview questions — at a tenth of the price, often free.</div>
+
+  <section class="vs-section" aria-label="At a glance">
+    <h2 class="vs-h2">At a glance</h2>
+    <div class="vs-table-wrap"><table class="vs-table">
+      <thead><tr><th>Feature</th><th>Udemy</th><th>LinkedIn Learning</th></tr></thead>
+      <tbody>
+        <tr><td>Pricing model</td><td>Pay once per course</td><td>Subscription (~$30–$40/mo)</td></tr>
+        <tr><td>Typical cost</td><td>$0 with coupons; ~$10–$20 on sale</td><td>~$240–$480/yr or Premium bundle</td></tr>
+        <tr><td>Free options</td><td>Full courses free via coupons</td><td>1-month trial; free via libraries</td></tr>
+        <tr><td>Certificates</td><td>Completion, kept privately</td><td>Auto-displayed on LinkedIn profile</td></tr>
+        <tr><td>Course length</td><td>Deep: hours to 40+ hours</td><td>Short: mostly 1–3 hours</td></tr>
+        <tr><td>Strength</td><td>Technical &amp; practical depth</td><td>Business, leadership, soft skills</td></tr>
+        <tr><td>Best for</td><td>Getting good</td><td>Looking good</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="vs-section" aria-label="Pricing">
+    <h2 class="vs-h2">1. Pricing compared</h2>
+    <p class="vs-p">LinkedIn Learning runs roughly <strong>$30–$40 monthly</strong> — a year funds a small library of Udemy flagships at <strong>$10–$20</strong> each, or costs infinitely more than <a href="/udemy-coupon-code">coupon-free</a> enrollments. Before subscribing, check whether your library card already unlocks LinkedIn Learning gratis.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Certificates and visibility">
+    <h2 class="vs-h2">2. Certificates &amp; recruiter visibility</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Udemy</h3><ul><li><strong>Private completion certificates</strong></li><li>You attach them manually anywhere</li><li>Depth impresses in interviews, not filters</li></ul></div>
+      <div class="vs-card"><h3>LinkedIn Learning</h3><ul><li><strong>One-click profile display</strong> recruiters browse</li><li>Skill badges surface in search</li><li>Shallow signal — easy to earn, easy to discount</li></ul></div>
+    </div>
+    <p class="vs-p" style="margin-top:0.75rem;">Strongest play: Udemy-built skills validated by interview performance, plus LinkedIn-visible certificates for discoverability.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Depth">
+    <h2 class="vs-h2">3. Depth: 2-hour overview vs 20-hour mastery</h2>
+    <p class="vs-p">LinkedIn Learning courses are deliberately snackable — fine for Excel refreshers or management frameworks. They rarely survive contact with hard technical interviews. For Python, cloud or data roles, a 20-hour Udemy course with projects (filtered via <a href="/topics">topic rankings</a>) builds what short videos can\u2019t.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Pros and cons">
+    <h2 class="vs-h2">4. Pros and cons</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Udemy strengths / weaknesses</h3><ul><li><strong>+</strong> Deep courses at coupon prices</li><li><strong>+</strong> Lifetime access + certificates</li><li><strong>−</strong> No native recruiter visibility</li><li><strong>−</strong> Quality varies by course</li></ul></div>
+      <div class="vs-card"><h3>LinkedIn Learning strengths / weaknesses</h3><ul><li><strong>+</strong> Instant profile credibility signals</li><li><strong>+</strong> Polished short business content</li><li><strong>−</strong> Subscription cost compounds</li><li><strong>−</strong> Thin on technical depth</li></ul></div>
+    </div>
+  </section>
+
+  <section class="vs-section" aria-label="Which for your goal">
+    <h2 class="vs-h2">5. Which one for your goal?</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Get noticed by recruiters</h3><p>LinkedIn Learning + visible certificates.</p></div>
+      <div class="vs-card"><h3>Pass technical interviews</h3><p>Udemy depth + portfolio projects.</p></div>
+      <div class="vs-card"><h3>Leadership &amp; soft skills</h3><p>LinkedIn Learning shorts (or library free).</p></div>
+      <div class="vs-card"><h3>Minimum spend</h3><p>Udemy coupons + library LinkedIn access.</p></div>
+    </div>
+  </section>
+</CompareLayout>

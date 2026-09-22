@@ -1,0 +1,105 @@
+---
+import CompareLayout from '../../components/CompareLayout.astro';
+import { readDeals } from '../../lib/store';
+import { buildHeroFeed } from '../../lib/utils';
+
+const allDeals = await readDeals();
+const totalCoupons = allDeals.length;
+const freeCount = allDeals.filter((d: any) => d.price === 0).length;
+const avgDiscount = totalCoupons > 0
+  ? Math.round(allDeals.reduce((s: number, d: any) => (d.originalPrice && d.price !== undefined && d.originalPrice > 0 ? s + ((d.originalPrice - d.price) / d.originalPrice) * 100 : s), 0) / totalCoupons)
+  : 0;
+const heroFeed = buildHeroFeed(allDeals, new Date(), 3);
+const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
+
+const related = [
+  { href: '/platforms/udemy-vs-coursera', label: 'Udemy vs Coursera', desc: 'credentials compared' },
+  { href: '/platforms/udemy-vs-edx', label: 'Udemy vs edX', desc: 'academic depth compared' },
+  { href: '/platforms/udemy-vs-skillshare', label: 'Udemy vs Skillshare', desc: 'depth vs subscription' },
+  { href: '/platforms/udemy-vs-linkedin-learning', label: 'Udemy vs LinkedIn Learning', desc: 'certificates compared' },
+  { href: '/platforms/udemy-alternatives', label: 'Udemy Alternatives', desc: 'all free & paid options' },
+];
+
+const faqs = [
+  { q: 'Is Pluralsight better than Udemy for programmers?', a: 'For structured team upskilling with skill assessments and hands-on labs, yes. For individual developers learning a specific stack cheaply, Udemy\u2019s discounted courses usually deliver more value per dollar.' },
+  { q: 'What is Pluralsight Skill IQ?', a: 'Short adaptive tests that benchmark your ability in a technology and recommend a learning path. Udemy has no equivalent diagnostic — you pick courses by ratings and reviews instead.' },
+  { q: 'Does Pluralsight offer certificates?', a: 'Pluralsight offers completion records plus certification-prep paths for exams like AWS and Azure. Udemy\u2019s own certificates are unaccredited, but its exam-prep courses with coupons are a cheap way to study for the same exams.' },
+  { q: 'How much does Pluralsight cost?', a: 'Paid plans start around $29/month for individuals, with higher tiers unlocking labs and certification practice. Compare that against Udemy courses at $0–$20 with coupons before committing.' },
+  { q: 'Should a beginner start with Pluralsight?', a: 'Usually not. Beginners benefit more from one focused Udemy course with lifetime access. Move to Pluralsight when you need guided paths, team analytics, or exam-day readiness.' },
+];
+---
+
+<CompareLayout
+  title={`Udemy vs Pluralsight ${currentYear}: Which Is Better for Developers & IT? | CoursesWyn`}
+  description={`Udemy vs Pluralsight for developers and IT pros: pricing, skill assessments, labs, certification prep and free options — with live data from ${totalCoupons.toLocaleString()}+ verified Udemy coupons.`}
+  keywords="udemy vs pluralsight, pluralsight vs udemy, pluralsight worth it, best platform for developers, it certification prep cheap, udemy coupon code"
+  canonical="https://courseswyn.com/platforms/udemy-vs-pluralsight"
+  crumbs={[{ name: 'Compare Platforms', href: '/platforms' }, { name: 'Udemy vs Pluralsight' }]}
+  badge={`Head-to-head · ${currentYear} data`}
+  h1Accent="Udemy vs Pluralsight:"
+  h1Rest={`which is better for developers in ${currentYear}?`}
+  heroSub={`Pluralsight sells guided tech careers with assessments and labs; Udemy sells individual tech courses at pocket-change prices. For developers, the answer depends on one thing — backed by`}
+  heroSubStrong={`${totalCoupons.toLocaleString()}+ verified Udemy coupons we track daily.`}
+  stats={[{ val: freeCount, label: 'free udemy deals', plus: true }, { val: avgDiscount, label: 'avg discount', plus: true }, { val: totalCoupons, label: 'coupons tracked', plus: true }]}
+  heroFeed={heroFeed}
+  termTitle="agents@courseswyn: ~/udemy-vs-pluralsight"
+  termFoot="$ verdict computed from live coupon data"
+  faqs={faqs}
+  related={related}
+>
+  <div class="vs-verdict"><strong>Quick verdict:</strong> Choose <strong>Pluralsight</strong> when you need measured progress — skill tests, guided paths and exam labs, ideally paid by an employer. Choose <strong>Udemy</strong> when you need one technology learned well for almost nothing, with lifetime reference access.</div>
+
+  <section class="vs-section" aria-label="At a glance">
+    <h2 class="vs-h2">At a glance</h2>
+    <div class="vs-table-wrap"><table class="vs-table">
+      <thead><tr><th>Feature</th><th>Udemy</th><th>Pluralsight</th></tr></thead>
+      <tbody>
+        <tr><td>Pricing model</td><td>Pay once per course</td><td>Monthly/annual subscription</td></tr>
+        <tr><td>Typical cost</td><td>$0 with coupons; ~$10–$20 on sale</td><td>From ~$29/mo individual plans</td></tr>
+        <tr><td>Free options</td><td>Full courses free via coupons</td><td>Short trial only</td></tr>
+        <tr><td>Assessments</td><td>None built in</td><td>Skill IQ tests + paths</td></tr>
+        <tr><td>Hands-on labs</td><td>Rare (video + resources)</td><td>Cloud labs on higher tiers</td></tr>
+        <tr><td>Scope</td><td>Every topic imaginable</td><td>Tech, cloud, security, data</td></tr>
+        <tr><td>Best for</td><td>Learning one stack cheap</td><td>Measured team upskilling</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="vs-section" aria-label="Pricing">
+    <h2 class="vs-h2">1. Pricing compared</h2>
+    <p class="vs-p">A year of Pluralsight costs roughly what <strong>twenty to thirty</strong> discounted Udemy courses cost — and <a href="/udemy-coupon-code">coupon enrollments</a> are often free. The subscription only pays off if you train continuously or expense it through work.</p>
+    <p class="vs-p">Self-funding developers: buy target courses on coupon, keep them forever as reference. Let employers fund Pluralsight seats.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Assessments and labs">
+    <h2 class="vs-h2">2. Assessments, paths &amp; labs</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Udemy</h3><ul><li><strong>Course-level learning</strong> — you choose the curriculum</li><li>Q&amp;A and reviews as quality signals</li><li>No skill measurement or labs</li></ul></div>
+      <div class="vs-card"><h3>Pluralsight</h3><ul><li><strong>Skill IQ diagnostics</strong> route you to gaps</li><li>Guided paths toward roles &amp; certs</li><li>Hands-on labs on premium tiers</li></ul></div>
+    </div>
+    <p class="vs-p" style="margin-top:0.75rem;">If your manager asks "how do we know the team leveled up?", that reporting is Pluralsight\u2019s product — videos alone can\u2019t answer it.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Certification prep">
+    <h2 class="vs-h2">3. Certification prep (AWS, Azure, Security+)</h2>
+    <p class="vs-p">Both platforms prep you for the same exams, differently. Pluralsight wraps prep in paths with practice environments. Udemy\u2019s top exam-prep courses — many with thousands of ratings — pair video with practice tests for the price of lunch. Check <a href="/udemy-certification-vouchers">certification vouchers</a> and grab the prep course on coupon before booking the exam.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Pros and cons">
+    <h2 class="vs-h2">4. Pros and cons</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Udemy strengths / weaknesses</h3><ul><li><strong>+</strong> Unbeatable price, lifetime reference</li><li><strong>+</strong> Newest stacks appear fast</li><li><strong>−</strong> No skill verification</li><li><strong>−</strong> You design your own path</li></ul></div>
+      <div class="vs-card"><h3>Pluralsight strengths / weaknesses</h3><ul><li><strong>+</strong> Measured, reportable progress</li><li><strong>+</strong> Labs + cert paths in one place</li><li><strong>−</strong> Subscription meter always runs</li><li><strong>−</strong> Tech-only catalog</li></ul></div>
+    </div>
+  </section>
+
+  <section class="vs-section" aria-label="Which for your goal">
+    <h2 class="vs-h2">5. Which one for your goal?</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Learn one stack (React, AWS, Python)</h3><p>Udemy course on coupon — targeted and permanent.</p></div>
+      <div class="vs-card"><h3>Prove skills to a manager</h3><p>Pluralsight Skill IQ + paths.</p></div>
+      <div class="vs-card"><h3>Pass a cert exam cheap</h3><p>Udemy prep course + practice tests.</p></div>
+      <div class="vs-card"><h3>Upskill a whole team</h3><p>Pluralsight seats + analytics.</p></div>
+    </div>
+  </section>
+</CompareLayout>

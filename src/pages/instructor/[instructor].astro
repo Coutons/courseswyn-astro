@@ -7,6 +7,7 @@ import { parseInstructors, createInstructorSlug } from '../../lib/instructors';
 import { getInstructorImage } from '../../lib/instructorProfiles';
 import { toISODateWIB } from '../../lib/date';
 import { buildHeroFeed } from '../../lib/utils';
+import { dealTopicNames } from '../../lib/dealStats';
 
 const siteUrl = 'https://courseswyn.com';
 
@@ -115,16 +116,48 @@ const maxDisc = getMaxDiscount(instructorCourses);
 const freeCount = hasFree(instructorCourses) ? instructorCourses.filter((c) => c.price === 0).length : 0;
 const now = new Date();
 const heroFeed = buildHeroFeed(instructorCourses, now, 3);
-const title = `${instructorName} — Udemy Coupons & Promo Codes ${currentMonth} ${currentYear} | CoursesWyn`;
-const description = `Verified ${instructorCourses.length} Udemy coupon${instructorCourses.length === 1 ? '' : 's'} from ${instructorName}. ${provider} deals updated daily — up to ${maxDisc}% off.`;
+
+// Topik instructor dari subcategory (spesifik) — fallback ke tags bila kosong.
+// dipakai untuk title format: "Memi Lavi [Topics] Courses"
+const _topicCounts = new Map<string, number>();
+for (const c of instructorCourses) {
+  const subs = (c.subcategory ? [String(c.subcategory)] : []).map((s) =>
+    s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim()
+  ).filter(Boolean);
+  const names = subs.length ? subs : dealTopicNames(c);
+  for (const n of names) {
+    const t = String(n).trim();
+    if (!t) continue;
+    // skip label generik kategori agar title tetap spesifik
+    if (/^(other\s+.+|it\s*&\s*software|development|business|design)$/i.test(t)) continue;
+    _topicCounts.set(t, (_topicCounts.get(t) ?? 0) + 1);
+  }
+}
+function shortTopic(t: string): string {
+  // "Certified Information Systems Security Professional (CISSP)" -> "CISSP"
+  const m = t.match(/\(([A-Za-z0-9+\- ]{2,12})\)\s*$/);
+  if (m) return m[1].trim();
+  return t;
+}
+let instructorTopics = [..._topicCounts.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .map(([name]) => shortTopic(name))
+  .slice(0, 2);
+// guard: kalau gabungan masih kepanjangan, pakai 1 topik saja
+if (instructorTopics.join(', ').length > 32) instructorTopics = instructorTopics.slice(0, 1);
+const topicsLabel = instructorTopics.join(', ');
+const topicsSuffix = topicsLabel ? ` ${topicsLabel}` : '';
+const title = `${instructorName}${topicsSuffix} Courses | CoursesWyn`;
+const description = `Verified ${instructorCourses.length} ${instructorName}${topicsSuffix} course${instructorCourses.length === 1 ? '' : 's'} with Udemy coupon${instructorCourses.length === 1 ? '' : 's'}. ${provider} deals updated daily — up to ${maxDisc}% off.`;
 const cleanName = instructorName.replace(/[^\x20-\x7E]/g, '').trim();
 
 const pageKeywords = [
-  `${instructorName.toLowerCase()} udemy`,
+  `${instructorName.toLowerCase()} ${instructorTopics[0]?.toLowerCase() ?? 'udemy'}`,
   `${instructorName.toLowerCase()} coupons`,
   `${instructorName.toLowerCase()} promo codes`,
   `${instructorName.toLowerCase()} courses free`,
   `best ${instructorName.toLowerCase()} courses`,
+  ...(instructorTopics.map((t) => `${instructorName.toLowerCase()} ${t.toLowerCase()} course`)),
   "udemy coupon code"
 ].join(", ");
 
@@ -211,7 +244,7 @@ const benefitCards = [
         {
           '@type': 'ItemList',
           '@id': `${canonicalUrl}#itemlist`,
-          name: `${instructorName}'s Courses`,
+          name: `${instructorName}${topicsSuffix} Courses`,
           numberOfItems: instructorCourses.length,
           itemListElement: instructorCourses.slice(0, 20).map((c, i) => ({
             '@type': 'ListItem',
@@ -258,8 +291,8 @@ const benefitCards = [
               )}
               <div class="dh-hero-badge" style="margin-bottom:0;"><span class="lg-blip"></span> {provider} &middot; {instructorCourses.length} Coupon{instructorCourses.length === 1 ? '' : 's'}</div>
             </div>
-            <h1 class="dh-hero-title"><span class="cc-accent">{cleanName}</span> — Udemy Coupons &amp; Promo Codes</h1>
-            <p class="dh-hero-sub">Verified <strong>{instructorCourses.length} coupon{instructorCourses.length === 1 ? '' : 's'} from {instructorName}</strong> on {provider} — checked against Udemy before listing, updated {currentMonth} {currentYear}.</p>
+            <h1 class="dh-hero-title"><span class="cc-accent">{cleanName}</span>{topicsSuffix} Courses</h1>
+            <p class="dh-hero-sub">Verified <strong>{instructorCourses.length} {topicsLabel ? `${topicsLabel} ` : ''}course{instructorCourses.length === 1 ? '' : 's'} from {instructorName}</strong> on {provider} — checked against Udemy before listing, updated {currentMonth} {currentYear}.</p>
             <div class="dh-hero-stats">
               <div class="dh-stat"><b class="dh-stat-val"><span data-count={instructorCourses.length}>0</span></b><span class="dh-stat-label">courses</span></div>
               <div class="dh-stat"><b class="dh-stat-val"><span data-count={maxDisc}>0</span><span class="lg-plus">%</span></b><span class="dh-stat-label">max discount</span></div>
@@ -314,22 +347,19 @@ const benefitCards = [
         </div>
       </section>
 
-      <section class="cc-deals-section" id="deals" aria-label={`${instructorName}'s courses`}>
+      <section class="cc-deals-section" id="deals" aria-label={`${instructorName}${topicsSuffix} courses`}>
         <div class="cc-sec-head">
-          <h2 class="cc-sec-title">All {instructorName} Courses with Verified Coupons <span class="cc-tag">{instructorCourses.length} courses</span></h2>
+          <h2 class="cc-sec-title">All {instructorName}{topicsSuffix} Courses with Verified Coupons <span class="cc-tag">{instructorCourses.length} courses</span></h2>
           <p class="cc-sec-desc">Sorted by enrollment — every code checked against Udemy before listing.</p>
         </div>
 
         {instructorCourses.length > 0 ? (
-          <div class="cc-ledger-wrap">
-            <table class="cc-ledger-table">
-              <thead><tr><th>Course</th><th>Price</th><th class="cc-col-hide">Status</th><th>Checked</th></tr></thead>
-              <tbody>
-                {instructorCourses.map((deal) => <LedgerRow deal={deal} />)}
-              </tbody>
-            </table>
+          <>
+            <div class="cc-grid">
+              {instructorCourses.map((deal, i) => <LedgerRow deal={deal} variant="grid" num={String(i + 1).padStart(2, '0')} />)}
+            </div>
             <div class="cc-deal-more"><span class="cc-deal-count">{instructorCourses.length} courses from {instructorName} — verified before listing</span><a href="/udemy-coupons-today">See today's new coupons →</a></div>
-          </div>
+          </>
         ) : (
           <div class="cc-empty">
             <h3>No courses from {instructorName}</h3>
@@ -442,12 +472,14 @@ const benefitCards = [
   .cc-adv-card h3 { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0 0 0.35rem; }
   .cc-adv-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.55; margin: 0; }
 
-  /* ===== LEDGER TABLE ===== */
+  /* ===== LEDGER TABLE + GRID ===== */
   .cc-deals-section { margin-top: 3.25rem; scroll-margin-top: 1.5rem; }
   .cc-ledger-wrap { background: var(--card); border: 1px solid #232B26; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.16); margin-top: 16px; }
   table.cc-ledger-table { width: 100%; border-collapse: collapse; }
   .cc-ledger-table thead th { font-family: var(--font-mono); font-size: 0.625rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); text-align: left; padding: 12px 14px; border-bottom: 1px solid #232B26; background: var(--bg-secondary); white-space: nowrap; }
-  .cc-deal-more { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px; background: var(--bg-secondary); border-top: 1px solid #232B26; }
+  .cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; margin-top: 16px; }
+  @media (max-width: 640px) { .cc-grid { grid-template-columns: 1fr; } }
+  .cc-deal-more { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px; background: var(--bg-secondary); border: 1px solid #232B26; border-radius: 12px; margin-top: 16px; }
   .cc-deal-more a { font-family: var(--font-mono); font-size: 0.78125rem; font-weight: 600; color: var(--brand); text-decoration: none; }
   .cc-deal-more a:hover { text-decoration: underline; }
   .cc-deal-count { font-family: var(--font-mono); font-size: 0.71875rem; color: var(--muted); }

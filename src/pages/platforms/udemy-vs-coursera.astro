@@ -1,0 +1,113 @@
+---
+import CompareLayout from '../../components/CompareLayout.astro';
+import { readDeals } from '../../lib/store';
+import { buildHeroFeed } from '../../lib/utils';
+
+const allDeals = await readDeals();
+const totalCoupons = allDeals.length;
+const freeCount = allDeals.filter((d: any) => d.price === 0).length;
+const avgDiscount = totalCoupons > 0
+  ? Math.round(allDeals.reduce((s: number, d: any) => (d.originalPrice && d.price !== undefined && d.originalPrice > 0 ? s + ((d.originalPrice - d.price) / d.originalPrice) * 100 : s), 0) / totalCoupons)
+  : 0;
+const heroFeed = buildHeroFeed(allDeals, new Date(), 3);
+const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
+
+const related = [
+  { href: '/platforms/udemy-vs-edx', label: 'Udemy vs edX', desc: 'academic depth compared' },
+  { href: '/platforms/udemy-vs-skillshare', label: 'Udemy vs Skillshare', desc: 'depth vs subscription' },
+  { href: '/platforms/udemy-vs-pluralsight', label: 'Udemy vs Pluralsight', desc: 'tech training compared' },
+  { href: '/platforms/udemy-vs-linkedin-learning', label: 'Udemy vs LinkedIn Learning', desc: 'certificates compared' },
+  { href: '/platforms/udemy-alternatives', label: 'Udemy Alternatives', desc: 'all free & paid options' },
+];
+
+const faqs = [
+  { q: 'Is Udemy or Coursera better for beginners?', a: 'Udemy is friendlier for beginners on a budget — courses are self-paced, frequently discounted, and often free with coupons. Coursera suits beginners who want a fixed weekly schedule and a certificate at the end.' },
+  { q: 'Can I get Coursera certificates for free?', a: 'You can audit many Coursera courses for free, but graded work and certificates require payment or approved financial aid. On Udemy, a 100% off coupon gives you the full course plus certificate of completion at zero cost.' },
+  { q: 'Do employers respect Udemy certificates?', a: 'Less than university-branded Coursera certificates. Treat Udemy as the skills engine and Coursera as the credential layer — learn cheap, then certify once where it counts.' },
+  { q: 'Which is cheaper long-term?', a: `Udemy, by far. With ${freeCount.toLocaleString()}+ free deals and an average discount of ${avgDiscount}% in our tracked catalog, most learners never pay full price. Coursera subscriptions keep billing whether you study or not.` },
+  { q: 'Can I use both platforms together?', a: 'Yes — that is the highest-value strategy. Build skills with free or $10 Udemy courses, then earn one verified Coursera certificate in your target field.' },
+];
+---
+
+<CompareLayout
+  title={`Udemy vs Coursera ${currentYear}: Price, Certificates & Free Options Compared | CoursesWyn`}
+  description={`Udemy vs Coursera compared on pricing, certificates, free audits and course quality — with live data from ${totalCoupons.toLocaleString()}+ verified Udemy coupons. Find which fits your goal and budget.`}
+  keywords="udemy vs coursera, coursera vs udemy, udemy or coursera, coursera certificates vs udemy, best online learning platform, udemy coupon code"
+  canonical="https://courseswyn.com/platforms/udemy-vs-coursera"
+  crumbs={[{ name: 'Compare Platforms', href: '/platforms' }, { name: 'Udemy vs Coursera' }]}
+  badge={`Head-to-head · ${currentYear} data`}
+  h1Accent="Udemy vs Coursera:"
+  h1Rest={`which should you pick in ${currentYear}?`}
+  heroSub={`Two giants, opposite philosophies: Udemy sells lifetime skills at bargain prices, Coursera sells accredited credentials on subscription. Here's the honest split — backed by`}
+  heroSubStrong={`${totalCoupons.toLocaleString()}+ verified Udemy coupons we track daily.`}
+  stats={[{ val: freeCount, label: 'free udemy deals', plus: true }, { val: avgDiscount, label: 'avg discount', plus: true }, { val: totalCoupons, label: 'coupons tracked', plus: true }]}
+  heroFeed={heroFeed}
+  termTitle="agents@courseswyn: ~/udemy-vs-coursera"
+  termFoot="$ verdict computed from live coupon data"
+  faqs={faqs}
+  related={related}
+>
+  <div class="vs-verdict"><strong>Quick verdict:</strong> Choose <strong>Udemy</strong> when you want a concrete skill fast and cheap — coupons regularly make premium courses free, and access never expires. Choose <strong>Coursera</strong> when the certificate itself is the product: accredited, identity-verified proof for employers. Most budget-smart learners use both.</div>
+  <p class="vs-p" style="margin-top:1rem;"><strong>{currentYear} update:</strong> Coursera completed its combination with Udemy in May 2026, but both platforms still operate separately — separate catalogs, pricing and subscriptions. This comparison covers them as you experience them today.</p>
+
+  <section class="vs-section" aria-label="At a glance">
+    <h2 class="vs-h2">At a glance</h2>
+    <div class="vs-table-wrap"><table class="vs-table">
+      <thead><tr><th>Feature</th><th>Udemy</th><th>Coursera</th></tr></thead>
+      <tbody>
+        <tr><td>Pricing model</td><td>Pay once per course</td><td>Subscription or per-program fee</td></tr>
+        <tr><td>Typical cost</td><td>$0 with coupons; ~$10–$20 on sale</td><td>~$39–$79/mo specializations; ~$399/yr Plus</td></tr>
+        <tr><td>Free options</td><td>Full courses free via coupons, lifetime access</td><td>Free audit (no grades, no certificate)</td></tr>
+        <tr><td>Certificates</td><td>Completion only, unaccredited</td><td>University &amp; company branded, verified</td></tr>
+        <tr><td>Library size</td><td>200,000+ courses, every niche</td><td>7,000+ courses, specializations, degrees</td></tr>
+        <tr><td>Pacing</td><td>Fully self-paced, lifetime access</td><td>Weekly schedules; access ends with subscription</td></tr>
+        <tr><td>Best for</td><td>Cheap, practical skill-building</td><td>Recognized credentials &amp; structure</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="vs-section" aria-label="Pricing">
+    <h2 class="vs-h2">1. Pricing compared</h2>
+    <p class="vs-p">Udemy lists courses up to $199.99 but almost never charges that — sale prices hover around <strong>$10–$20</strong>, and instructor coupons cut them to <strong>$0</strong>. That is the entire premise of <a href="/udemy-coupon-code">our verified coupon catalog</a>: premium content at zero marginal cost.</p>
+    <p class="vs-p">Coursera charges for outcomes, not videos. Auditing is free, but anything graded costs roughly <strong>$39–$79 per month</strong> per specialization until you finish, with Plus at about <strong>$399/year</strong> and degrees in the thousands. Pause studying and the meter keeps running — the opposite of Udemy's pay-once model.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Certificates">
+    <h2 class="vs-h2">2. Certificates &amp; credentials</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Udemy</h3><ul><li><strong>Completion certificate</strong> — proves you finished</li><li>Not accredited, no identity verification</li><li>Good for showing initiative, weak for HR filters</li></ul></div>
+      <div class="vs-card"><h3>Coursera</h3><ul><li><strong>Verified certificates</strong> from universities &amp; firms like Google and IBM</li><li>Full online degrees available</li><li>Shareable, recognized by recruiters</li></ul></div>
+    </div>
+    <p class="vs-p" style="margin-top:0.75rem;">Rule of thumb: if a job post says "certification preferred", that means Coursera-style — not Udemy.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Free options">
+    <h2 class="vs-h2">3. Free options</h2>
+    <p class="vs-p">Udemy's free route is complete: a 100% off coupon unlocks the <strong>entire course, certificate included, forever</strong>. The catch is timing — coupons cap redemptions, so grab them from <a href="/udemy-coupons-today">today's fresh deals</a> fast.</p>
+    <p class="vs-p">Coursera's free route is partial: audit mode lets you watch, but locks assignments and certificates. Financial aid exists yet takes weeks to approve. For zero-cost learning with proof of completion, Udemy coupons win outright.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Quality">
+    <h2 class="vs-h2">4. Course quality &amp; instructors</h2>
+    <p class="vs-p">Coursera content comes from vetted university and industry partners, so baseline quality is consistent — but the catalog is narrow and academic in tone. Udemy is a marketplace: anyone can publish, which means more duds <strong>and</strong> more gems, including practitioner-taught courses universities never offer.</p>
+    <p class="vs-p">Our filter for Udemy is simple: high rating plus high enrollment, with a working coupon attached. Browse by <a href="/topics">topic</a> or <a href="/instructors">instructor track record</a> instead of guessing.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Pros and cons">
+    <h2 class="vs-h2">5. Pros and cons</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Udemy strengths / weaknesses</h3><ul><li><strong>+</strong> Often free; lifetime access</li><li><strong>+</strong> Huge catalog, practical topics</li><li><strong>−</strong> Certificates carry little formal weight</li><li><strong>−</strong> Quality varies — check ratings</li></ul></div>
+      <div class="vs-card"><h3>Coursera strengths / weaknesses</h3><ul><li><strong>+</strong> Accredited, employer-recognized credentials</li><li><strong>+</strong> Structured paths and degrees</li><li><strong>−</strong> Ongoing cost even when you pause</li><li><strong>−</strong> Free tier excludes certificates</li></ul></div>
+    </div>
+  </section>
+
+  <section class="vs-section" aria-label="Which for your goal">
+    <h2 class="vs-h2">6. Which one for your goal?</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Learn a skill this month, spend ~$0</h3><p>Udemy + verified coupons. Check <a href="/udemy-coupons-today">today's deals</a>.</p></div>
+      <div class="vs-card"><h3>Certificate for your resume</h3><p>Coursera verified track — one program, then cancel.</p></div>
+      <div class="vs-card"><h3>Career switch with structure</h3><p>Coursera professional certificate, supplemented by cheap Udemy practice courses.</p></div>
+      <div class="vs-card"><h3>Maximum value per dollar</h3><p>Both: skills on Udemy, one credential on Coursera.</p></div>
+    </div>
+  </section>
+</CompareLayout>

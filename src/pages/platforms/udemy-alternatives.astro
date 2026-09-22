@@ -1,0 +1,82 @@
+---
+import CompareLayout from '../../components/CompareLayout.astro';
+import { readDeals } from '../../lib/store';
+import { buildHeroFeed } from '../../lib/utils';
+
+const allDeals = await readDeals();
+const totalCoupons = allDeals.length;
+const freeCount = allDeals.filter((d: any) => d.price === 0).length;
+const avgDiscount = totalCoupons > 0
+  ? Math.round(allDeals.reduce((s: number, d: any) => (d.originalPrice && d.price !== undefined && d.originalPrice > 0 ? s + ((d.originalPrice - d.price) / d.originalPrice) * 100 : s), 0) / totalCoupons)
+  : 0;
+const heroFeed = buildHeroFeed(allDeals, new Date(), 3);
+const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
+
+const related = [
+  { href: '/platforms/udemy-vs-coursera', label: 'Udemy vs Coursera', desc: 'credentials compared' },
+  { href: '/platforms/udemy-vs-edx', label: 'Udemy vs edX', desc: 'academic depth compared' },
+  { href: '/platforms/udemy-vs-skillshare', label: 'Udemy vs Skillshare', desc: 'depth vs subscription' },
+  { href: '/platforms/udemy-vs-pluralsight', label: 'Udemy vs Pluralsight', desc: 'tech training compared' },
+  { href: '/platforms/udemy-vs-linkedin-learning', label: 'Udemy vs LinkedIn Learning', desc: 'certificates compared' },
+];
+
+const faqs = [
+  { q: 'What is the best free Udemy alternative?', a: 'For pure zero-cost learning, freeCodeCamp (coding) and Khan Academy (academics) are unbeatable — and a verified 100% off Udemy coupon makes premium courses free too. Combine all three and most subjects cost nothing.' },
+  { q: 'Is there anything cheaper than Udemy?', a: `Rarely. With ${freeCount.toLocaleString()}+ free courses and ${avgDiscount}% average discount across ${totalCoupons.toLocaleString()}+ tracked coupons, discounted Udemy is usually the price floor — free is free.` },
+  { q: 'Should I replace Udemy with free platforms?', a: 'Use them together: freeCodeCamp or Khan Academy for foundations, Udemy coupons for structured depth and certificates of completion. They complement rather than replace each other.' },
+  { q: 'Which alternative gives accredited certificates?', a: 'Coursera and edX verified tracks. Budget play: learn free everywhere, then pay for exactly one credential that employers recognize.' },
+  { q: 'Are freeCodeCamp certifications respected?', a: 'In web development, yes — its project-based certifications plus your portfolio carry real weight with hiring managers, especially for junior roles.' },
+];
+---
+
+<CompareLayout
+  title={`10 Best Udemy Alternatives ${currentYear}: Free & Paid Compared | CoursesWyn`}
+  description={`The 10 best Udemy alternatives compared: Coursera, edX, Skillshare, Pluralsight, LinkedIn Learning plus free options like freeCodeCamp — with live data from ${totalCoupons.toLocaleString()}+ verified Udemy coupons.`}
+  keywords="udemy alternatives, best udemy alternatives free, sites like udemy, free online courses with certificates, udemy coupon code"
+  canonical="https://courseswyn.com/platforms/udemy-alternatives"
+  crumbs={[{ name: 'Compare Platforms', href: '/platforms' }, { name: 'Udemy Alternatives' }]}
+  badge={`Roundup · ${currentYear} data`}
+  h1Accent="10 Best Udemy Alternatives"
+  h1Rest={`free & paid, compared for ${currentYear}`}
+  heroSub={`From accredited universities to 100% free coding bootcamps — every serious Udemy substitute, ranked by value. Priced against`}
+  heroSubStrong={`${totalCoupons.toLocaleString()}+ verified Udemy coupons we track daily.`}
+  stats={[{ val: freeCount, label: 'free udemy deals', plus: true }, { val: avgDiscount, label: 'avg discount', plus: true }, { val: totalCoupons, label: 'coupons tracked', plus: true }]}
+  heroFeed={heroFeed}
+  termTitle="agents@courseswyn: ~/udemy-alternatives"
+  termFoot="$ 10 alternatives ranked by value"
+  faqs={faqs}
+  related={related}
+>
+  <div class="vs-verdict"><strong>Bottom line:</strong> Nothing consistently beats coupon-priced Udemy on value — but the smartest setup mixes platforms: <strong>free foundations</strong> (freeCodeCamp, Khan Academy), <strong>cheap depth</strong> (Udemy coupons), and <strong>one paid credential</strong> (Coursera/edX) where it counts.</div>
+
+  <section class="vs-section" aria-label="Paid alternatives">
+    <h2 class="vs-h2">Paid alternatives worth knowing</h2>
+    <div class="vs-table-wrap"><table class="vs-table">
+      <thead><tr><th>#</th><th>Platform</th><th>Why consider it</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Coursera</td><td>University &amp; Google/IBM certificates employers trust. Full face-off: <a href="/platforms/udemy-vs-coursera">Udemy vs Coursera</a>.</td></tr>
+        <tr><td>2</td><td>edX</td><td>Harvard/MIT rigor plus MicroMasters degree paths. See <a href="/platforms/udemy-vs-edx">Udemy vs edX</a>.</td></tr>
+        <tr><td>3</td><td>Pluralsight</td><td>Skill tests, paths and labs for developers. See <a href="/platforms/udemy-vs-pluralsight">Udemy vs Pluralsight</a>.</td></tr>
+        <tr><td>4</td><td>LinkedIn Learning</td><td>Certificates recruiters see on your profile. See <a href="/platforms/udemy-vs-linkedin-learning">Udemy vs LinkedIn Learning</a>.</td></tr>
+        <tr><td>5</td><td>Skillshare</td><td>Short creative classes for monthly hobbyists. See <a href="/platforms/udemy-vs-skillshare">Udemy vs Skillshare</a>.</td></tr>
+        <tr><td>6</td><td>Udacity</td><td>Nanodegrees with mentor reviews — strong but pricey; try Udemy's version of the topic first.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="vs-section" aria-label="Free alternatives">
+    <h2 class="vs-h2">Free alternatives (genuinely $0)</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>7. freeCodeCamp</h3><p>Full coding curriculum plus project certifications, donations-funded. The best free route into web development — pair with a discounted Udemy framework course.</p></div>
+      <div class="vs-card"><h3>8. Khan Academy</h3><p>Superb math, science and computing foundations. Ideal prep before tackling a technical Udemy course.</p></div>
+      <div class="vs-card"><h3>9. YouTube + docs</h3><p>Unmatched for troubleshooting and updates, terrible for structure. Use for gaps, not curricula.</p></div>
+      <div class="vs-card"><h3>10. Coupon-priced Udemy</h3><p>{freeCount.toLocaleString()}+ courses free right now via <a href="/udemy-coupons-today">verified coupons</a> — premium structure at free-platform prices.</p></div>
+    </div>
+  </section>
+
+  <section class="vs-section" aria-label="Best setup">
+    <h2 class="vs-h2">The highest-value setup</h2>
+    <p class="vs-p"><strong>Foundations free, depth cheap, credentials selective.</strong> Learn basics on freeCodeCamp or Khan Academy, master topics with $0–$20 Udemy courses, and buy a single Coursera/edX certificate only when a job post demands it. That stack beats any all-in subscription on both cost and outcomes.</p>
+    <p class="vs-p">Start with <a href="/categories">categories</a> or <a href="/topics">topics</a> to find your first coupon-covered course.</p>
+  </section>
+</CompareLayout>

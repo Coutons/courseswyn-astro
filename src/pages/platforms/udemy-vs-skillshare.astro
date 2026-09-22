@@ -1,0 +1,105 @@
+---
+import CompareLayout from '../../components/CompareLayout.astro';
+import { readDeals } from '../../lib/store';
+import { buildHeroFeed } from '../../lib/utils';
+
+const allDeals = await readDeals();
+const totalCoupons = allDeals.length;
+const freeCount = allDeals.filter((d: any) => d.price === 0).length;
+const avgDiscount = totalCoupons > 0
+  ? Math.round(allDeals.reduce((s: number, d: any) => (d.originalPrice && d.price !== undefined && d.originalPrice > 0 ? s + ((d.originalPrice - d.price) / d.originalPrice) * 100 : s), 0) / totalCoupons)
+  : 0;
+const heroFeed = buildHeroFeed(allDeals, new Date(), 3);
+const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
+
+const related = [
+  { href: '/platforms/udemy-vs-coursera', label: 'Udemy vs Coursera', desc: 'credentials compared' },
+  { href: '/platforms/udemy-vs-edx', label: 'Udemy vs edX', desc: 'academic depth compared' },
+  { href: '/platforms/udemy-vs-pluralsight', label: 'Udemy vs Pluralsight', desc: 'tech training compared' },
+  { href: '/platforms/udemy-vs-linkedin-learning', label: 'Udemy vs LinkedIn Learning', desc: 'certificates compared' },
+  { href: '/platforms/udemy-alternatives', label: 'Udemy Alternatives', desc: 'all free & paid options' },
+];
+
+const faqs = [
+  { q: 'Is Skillshare or Udemy better for creatives?', a: 'Skillshare\u2019s short project classes suit dabbling across illustration, photo or video. But if you want one deep flagship course — say complete Blender or Premiere mastery — a discounted Udemy course goes further and never expires.' },
+  { q: 'Is Skillshare worth paying yearly?', a: 'Only with honest monthly use. At roughly $168/year, skipping two months makes it pricier than buying two $15 Udemy courses outright. Audit your watch history before renewing.' },
+  { q: 'Does Skillshare give certificates?', a: 'No. Skillshare offers no certificates at all, while even a free Udemy coupon includes a completion certificate. If proof matters, Udemy wins by default.' },
+  { q: 'Which is cheaper overall?', a: `Udemy. We track ${totalCoupons.toLocaleString()}+ coupons averaging ${avgDiscount}% off with ${freeCount.toLocaleString()}+ free courses. Skillshare has no equivalent free tier — the trial ends and billing begins.` },
+  { q: 'Can I cancel Skillshare easily?', a: 'Yes, but the classic trap applies: subscriptions keep charging quiet months. Udemy\u2019s pay-per-course model has no cancellation to forget.' },
+];
+---
+
+<CompareLayout
+  title={`Udemy vs Skillshare ${currentYear}: Subscription vs Pay-Per-Course Compared | CoursesWyn`}
+  description={`Udemy vs Skillshare compared on pricing, course depth, certificates and creative focus — with live data from ${totalCoupons.toLocaleString()}+ verified Udemy coupons.`}
+  keywords="udemy vs skillshare, skillshare vs udemy, skillshare worth it, skillshare vs udemy for art, udemy coupon code"
+  canonical="https://courseswyn.com/platforms/udemy-vs-skillshare"
+  crumbs={[{ name: 'Compare Platforms', href: '/platforms' }, { name: 'Udemy vs Skillshare' }]}
+  badge={`Head-to-head · ${currentYear} data`}
+  h1Accent="Udemy vs Skillshare:"
+  h1Rest={`which should you pick in ${currentYear}?`}
+  heroSub={`Subscription grazing versus owning courses forever: Skillshare rents you short creative classes monthly, Udemy sells deep courses once — often free. The breakdown, backed by`}
+  heroSubStrong={`${totalCoupons.toLocaleString()}+ verified Udemy coupons we track daily.`}
+  stats={[{ val: freeCount, label: 'free udemy deals', plus: true }, { val: avgDiscount, label: 'avg discount', plus: true }, { val: totalCoupons, label: 'coupons tracked', plus: true }]}
+  heroFeed={heroFeed}
+  termTitle="agents@courseswyn: ~/udemy-vs-skillshare"
+  termFoot="$ verdict computed from live coupon data"
+  faqs={faqs}
+  related={related}
+>
+  <div class="vs-verdict"><strong>Quick verdict:</strong> Choose <strong>Skillshare</strong> if you genuinely watch creative classes every month and love bite-size projects. Choose <strong>Udemy</strong> for deep flagship courses you keep for life — usually cheaper than two months of subscription, and often free with coupons.</div>
+
+  <section class="vs-section" aria-label="At a glance">
+    <h2 class="vs-h2">At a glance</h2>
+    <div class="vs-table-wrap"><table class="vs-table">
+      <thead><tr><th>Feature</th><th>Udemy</th><th>Skillshare</th></tr></thead>
+      <tbody>
+        <tr><td>Pricing model</td><td>Pay once per course</td><td>Yearly subscription (~$168/yr)</td></tr>
+        <tr><td>Typical cost</td><td>$0 with coupons; ~$10–$20 on sale</td><td>~$14/mo billed annually</td></tr>
+        <tr><td>Free options</td><td>Full courses free via coupons</td><td>Handful of free classes + trial</td></tr>
+        <tr><td>Certificates</td><td>Completion certificates included</td><td>None at all</td></tr>
+        <tr><td>Course length</td><td>Deep: hours to 40+ hours</td><td>Short: mostly under 2 hours</td></tr>
+        <tr><td>Focus</td><td>Everything, incl. technical</td><td>Creative: design, art, video</td></tr>
+        <tr><td>Best for</td><td>Mastery that stays yours</td><td>Monthly creative grazing</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="vs-section" aria-label="Pricing">
+    <h2 class="vs-h2">1. Pricing compared</h2>
+    <p class="vs-p">Skillshare costs around <strong>$168 per year</strong> whether you watch daily or forget it exists. Two idle months already exceed the price of a <strong>$10–$20</strong> Udemy flagship — and <a href="/udemy-coupon-code">verified coupons</a> frequently make that flagship <strong>$0</strong>.</p>
+    <p class="vs-p">Subscriptions only win for heavy grazers: if you finish several classes monthly, $14/month is fair. Everyone else subsidizes someone else\u2019s hobby.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Depth versus breadth">
+    <h2 class="vs-h2">2. Depth versus breadth</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Udemy</h3><ul><li><strong>Deep dives</strong> — 10–40 hour structured courses</li><li>Technical topics Skillshare barely covers</li><li>Yours forever, revisit anytime</li></ul></div>
+      <div class="vs-card"><h3>Skillshare</h3><ul><li><strong>Short projects</strong> — finish in an evening</li><li>Strong creative community &amp; prompts</li><li>Access ends when billing does</li></ul></div>
+    </div>
+    <p class="vs-p" style="margin-top:0.75rem;">Learning watercolor basics? Skillshare. Becoming hireable at motion design? A discounted Udemy mega-course in <a href="/categories">categories</a>.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Certificates and free options">
+    <h2 class="vs-h2">3. Certificates &amp; free options</h2>
+    <p class="vs-p">This round isn\u2019t close. Skillshare issues <strong>no certificates</strong> and its free shelf is thin. Every Udemy course — even a 100% off coupon enrollment from <a href="/udemy-coupons-today">today\u2019s deals</a> — includes a completion certificate and lifetime access.</p>
+  </section>
+
+  <section class="vs-section" aria-label="Pros and cons">
+    <h2 class="vs-h2">4. Pros and cons</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Udemy strengths / weaknesses</h3><ul><li><strong>+</strong> Deep courses, often free</li><li><strong>+</strong> Certificates + lifetime access</li><li><strong>−</strong> Weaker creative community feel</li><li><strong>−</strong> Coupons need quick timing</li></ul></div>
+      <div class="vs-card"><h3>Skillshare strengths / weaknesses</h3><ul><li><strong>+</strong> Great short creative classes</li><li><strong>+</strong> One price, unlimited browsing</li><li><strong>−</strong> No certificates</li><li><strong>−</strong> Paying for months you skip</li></ul></div>
+    </div>
+  </section>
+
+  <section class="vs-section" aria-label="Which for your goal">
+    <h2 class="vs-h2">5. Which one for your goal?</h2>
+    <div class="vs-grid">
+      <div class="vs-card"><h3>Explore a creative hobby monthly</h3><p>Skillshare — if the calendar proves you watch.</p></div>
+      <div class="vs-card"><h3>Master one creative skill</h3><p>Udemy flagship on coupon — deeper, yours forever.</p></div>
+      <div class="vs-card"><h3>Technical skills (code, data, IT)</h3><p>Udemy by default — Skillshare barely plays here.</p></div>
+      <div class="vs-card"><h3>Spend nearly nothing</h3><p>Udemy free coupons, no subscription required.</p></div>
+    </div>
+  </section>
+</CompareLayout>

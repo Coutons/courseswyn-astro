@@ -55,11 +55,6 @@ const categoryName = displayName;
 // Get related categories for internal linking
 const allCategories = [...new Set(allDeals.map(deal => normName(deal.category)).filter(Boolean))].filter(cat => cat !== categoryName);
 
-// Create dynamic meta description with keywords
-const langSuffix = selectedLanguage ? ` in ${selectedLanguage}` : "";
-const categoryKeywords = `${categoryName.toLowerCase()}, ${categoryName.toLowerCase()} courses, ${categoryName.toLowerCase()} certification, learn ${categoryName.toLowerCase()}, ${categoryName.toLowerCase()} tutorial`;
-const metaDescription = `Browse ${categoryDeals.length}+ verified ${categoryName.toLowerCase()} courses${langSuffix} with massive discounts up to 90% off. Learn ${categoryKeywords} from industry experts. Udemy coupons updated daily.`;
-
 const currentDate = toISODateWIB();
 const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
 
@@ -73,6 +68,10 @@ const avgDiscount = categoryDeals.length > 0
   : 90;
 
 const freeCourses = categoryDeals.filter((deal: any) => deal.price === 0 || deal.price === null).length;
+
+// Create dynamic meta description with keywords (after avgDiscount agar angkanya real)
+const langSuffix = selectedLanguage ? ` in ${selectedLanguage}` : "";
+const metaDescription = `Looking for the best ${categoryName.toLowerCase()} courses on Udemy? We ranked ${categoryDeals.length}+ verified ${categoryName.toLowerCase()} courses${langSuffix} by student rating and coupon availability — save up to ${avgDiscount}% with working codes updated daily.`;
 const now = new Date();
 const heroFeed = buildHeroFeed(categoryDeals, now, 3);
 
@@ -100,7 +99,7 @@ const faqs = [
 ---
 
 <Layout
-  title={`Get Premium ${categoryName} Courses for Less - Udemy Coupon Codes | CoursesWyn`}
+  title={`Best ${categoryName} Courses on Udemy for ${currentYear} — Ranked & Verified | CoursesWyn`}
   description={metaDescription}
   canonical={currentUrl}
   hideBreadcrumbs={false}
@@ -125,7 +124,7 @@ const faqs = [
       "@type": ["WebPage", "CollectionPage"],
       "@id": baseUrl,
       "url": baseUrl,
-      "name": `${categoryName} Courses`,
+      "name": `Best ${categoryName} Courses on Udemy for ${currentYear}`,
       "description": metaDescription,
       "keywords": pageKeywords,
       "dateModified": currentDate,
@@ -185,8 +184,8 @@ const faqs = [
         <div class="dh-hero-grid">
           <div class="dh-hero-left">
             <div class="dh-hero-badge"><span class="lg-blip"></span> Verified coupon codes &middot; updated {currentDate}</div>
-            <h1 class="dh-hero-title">{categoryName}{selectedLanguage && <span> in {selectedLanguage}</span>} <span class="cc-accent">Courses for Less</span></h1>
-            <p class="dh-hero-sub">Discover <strong>{categoryDeals.length}+ verified {categoryName.toLowerCase()} courses</strong>{langSuffix} with massive discounts. Learn from industry experts and advance your career today.</p>
+            <h1 class="dh-hero-title">Best <span class="cc-accent">{categoryName}</span> Courses on Udemy for {currentYear}{selectedLanguage && <span> in {selectedLanguage}</span>}</h1>
+            <p class="dh-hero-sub">Ranked by student rating and coupon availability — <strong>{categoryDeals.length}+ verified {categoryName.toLowerCase()} courses</strong>{langSuffix} with working codes, checked against Udemy before listing.</p>
             <div class="dh-hero-stats">
               <div class="dh-stat"><b class="dh-stat-val"><span data-count={categoryDeals.length}>0</span><span class="lg-plus">+</span></b><span class="dh-stat-label">courses</span></div>
               <div class="dh-stat"><b class="dh-stat-val"><span data-count={avgDiscount}>0</span><span class="lg-plus">%</span></b><span class="dh-stat-label">avg discount</span></div>
@@ -232,7 +231,7 @@ const faqs = [
         {currentItems.length > 0 ? (
           <>
             <div class="cc-grid">
-              {currentItems.map((deal) => <LedgerRow deal={deal} variant="grid" />)}
+              {currentItems.map((deal, idx) => <LedgerRow deal={deal} variant="grid" num={String(startIndex + idx + 1).padStart(2, "0")} />)}
             </div>
             <div class="cc-deal-more"><span class="cc-deal-count">Showing {startIndex + 1}-{Math.min(endIndex, categoryDeals.length)} of {categoryDeals.length} courses</span><a href="/udemy-coupons-today">See today's new coupons →</a></div>
           </>
