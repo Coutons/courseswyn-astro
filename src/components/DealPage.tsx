@@ -596,11 +596,10 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
       )}
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Encode+Sans:wght@500;700;800;900&family=Encode+Sans+Condensed:wght@400;600;700&family=Cabin+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
-        .clx { background: #ffffff; color: #333333; font-size: 17px; line-height: 1.7; font-family: 'Encode Sans Condensed', sans-serif; min-height: 100vh; padding-bottom: 3rem; box-sizing: border-box; }
+        .clx { background: #ffffff; color: #333333; font-size: 17px; line-height: 1.7; font-family: sans-serif; min-height: 100vh; padding-bottom: 3rem; box-sizing: border-box; }
         .clx [id] { scroll-margin-top: 80px; }
         .clx-wrap { max-width: 1140px; width: 100%; margin: 0 auto; padding: 0 1rem; box-sizing: border-box; }
-        .clx h1, .clx h2, .clx h3 { font-family: 'Encode Sans', sans-serif; border: none; background: none; padding: 0; }
+        .clx h1, .clx h2, .clx h3 { font-family: sans-serif; border: none; background: none; padding: 0; }
         .clx-crumb { white-space: nowrap; overflow-x: auto; scrollbar-width: none; padding: 1rem 0; margin-bottom: 0; }
         .clx-crumb::-webkit-scrollbar { display: none; }
         .clx-crumb p { margin: 0; white-space: nowrap; font-size: 15px; color: #555555; }
@@ -608,7 +607,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         .clx-hero { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
         .clx-media { flex: 0 1 380px; min-width: 0; }
         .clx-poster { width: 100%; height: auto; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; display: block; }
-        .clx-enroll { display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; box-sizing: border-box; background: #773BFF; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid #5D61DC24; border-radius: 7px; padding: 17px 17px 16px 14px; margin-top: 14px; cursor: pointer; text-decoration: none; text-align: center; }
+        .clx-enroll { display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; box-sizing: border-box; background: #773BFF; color: #fff; font-family: sans-serif; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid #5D61DC24; border-radius: 7px; padding: 17px 17px 16px 14px; margin-top: 14px; cursor: pointer; text-decoration: none; text-align: center; }
         .clx-enroll:hover { filter: brightness(1.07); }
         .clx-enroll-text { flex: 1; }
         .clx-enroll-icon { display: inline-flex; flex-shrink: 0; }
@@ -618,14 +617,14 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         .clx-card-provider .clx-provider-fallback { font-size: 20px; }
         .clx-h1 { font-size: 37px; font-weight: 700; text-transform: capitalize; line-height: 48px; color: #000000; margin: -12px 0 0 0; }
         .clx-desc { font-size: 17px; line-height: 1.6; color: #444444; margin: 0.75rem 0 0; max-width: 800px; }
-        .clx-taught { font-family: 'Cabin Condensed', sans-serif; font-size: 18px; font-weight: 400; text-transform: capitalize; color: #1E1E82; margin: 10px 5px 10px 0; }
+        .clx-taught { font-family: sans-serif; font-size: 18px; font-weight: 400; text-transform: capitalize; color: #1E1E82; margin: 10px 5px 10px 0; }
         .clx-taught a { color: inherit; font-weight: 600; }
         .clx-qmark { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #1E1E82; background: #fff; color: #1E1E82; cursor: pointer; vertical-align: middle; margin-left: 6px; font-family: inherit; padding: 0; }
         .clx-qmark:hover { background: #1E1E82; }
         .clx-qmark:hover .clx-qmark-text { color: #fff; }
         .clx-qmark-text { font-size: 13px; font-weight: 700; line-height: 1; }
         .clx-pills { display: flex; gap: 10px; flex-wrap: wrap; padding: 5px 0 10px 0; }
-        .clx-pill { background: #2B262B12; padding: 3px 10px 2px 10px; border-radius: 5px; font-family: 'Encode Sans', sans-serif; font-size: 15px; font-weight: 500; color: #000000; }
+        .clx-pill { background: #2B262B12; padding: 3px 10px 2px 10px; border-radius: 5px; font-family: sans-serif; font-size: 15px; font-weight: 500; color: #000000; }
         .clx-pill-link { background: #2B262B05; border: 1px solid #0201011A; }
         .clx-provider-img { object-fit: contain; display: block; }
         .clx-pill a { color: inherit; }
@@ -661,7 +660,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         .clx-sidecard { border: 1px solid #D9D9D9; border-radius: 10px; padding: 15px; background: #fff; }
         .clx-side-h2 { font-size: 22px; font-weight: 700; color: #111111; margin: 0 0 0.75rem 0; }
         .clx-iconbox { display: flex; gap: 11px; align-items: start; margin-bottom: 0.9rem; }
-        .clx-iconbox-title { font-family: 'Encode Sans', sans-serif; font-size: 17px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: #111111; }
+        .clx-iconbox-title { font-family: sans-serif; font-size: 17px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: #111111; }
         .clx-iconbox-desc { font-size: 15px; color: #555555; margin: 2px 0 0 0; }
         .clx-providerline { display: flex; align-items: center; gap: 12px; margin: 0.2rem 0 0.6rem 0; flex-wrap: wrap; }
         .clx-pl-item { display: inline-flex; align-items: center; gap: 7px; font-size: 17px; font-weight: 700; color: #292EC9; }
@@ -720,34 +719,34 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         .clx-cta { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 1.75rem 1.5rem; display: flex; flex-direction: column; align-items: flex-start; gap: 1rem; }
         .clx-cta-title { font-size: 1.3rem; font-weight: 700; color: #111111; margin: 0; line-height: 1.3; }
         .clx-cta-btn { width: auto; margin-top: 0; }
-        .clx-banner { font-family: 'DM Sans', system-ui, sans-serif; background: #3D28E8; border-radius: 20px; padding: 36px 40px; color: #fff; display: flex; align-items: center; gap: 40px; width: 100%; box-sizing: border-box; position: relative; overflow: hidden; margin-top: 2.5rem; }
+        .clx-banner { font-family: system-ui, sans-serif; background: #3D28E8; border-radius: 20px; padding: 36px 40px; color: #fff; display: flex; align-items: center; gap: 40px; width: 100%; box-sizing: border-box; position: relative; overflow: hidden; margin-top: 2.5rem; }
         .clx-banner::before { content: ''; position: absolute; top: -60px; right: -60px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(255,255,255,.08) 0%, transparent 65%); pointer-events: none; }
         .clx-banner-left { flex: 1; min-width: 0; position: relative; z-index: 1; }
         .clx-banner-label { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); border-radius: 100px; padding: 3px 11px 3px 8px; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 12px; }
         .clx-banner-dot { width: 6px; height: 6px; border-radius: 50%; background: #F2C94C; flex-shrink: 0; }
-        .clx-banner-heading { font-family: 'Encode Sans', system-ui, sans-serif; font-size: clamp(18px, 2.2vw, 24px); font-weight: 900; line-height: 1.2; letter-spacing: -.025em; color: #fff; margin: 0 0 8px; padding: 0; }
+        .clx-banner-heading { font-family: system-ui, sans-serif; font-size: clamp(18px, 2.2vw, 24px); font-weight: 900; line-height: 1.2; letter-spacing: -.025em; color: #fff; margin: 0 0 8px; padding: 0; }
         .clx-banner-heading em { font-style: normal; color: #F2C94C; }
         .clx-banner-sub { font-size: 14px; font-weight: 400; line-height: 1.6; color: rgba(255,255,255,.8); margin: 0; padding: 0; }
         .clx-banner-right { flex: 0 0 380px; max-width: 100%; position: relative; z-index: 1; }
         .clx-banner-row { display: flex; gap: 8px; }
-        .clx-nl-email { flex: 1; min-width: 0; padding: 13px 16px; font-family: 'DM Sans', system-ui, sans-serif; font-size: 14px; font-weight: 500; color: #1a1040; background: #fff; border: 2px solid transparent; border-radius: 11px; outline: none; }
+        .clx-nl-email { flex: 1; min-width: 0; padding: 13px 16px; font-family: system-ui, sans-serif; font-size: 14px; font-weight: 500; color: #1a1040; background: #fff; border: 2px solid transparent; border-radius: 11px; outline: none; }
         .clx-nl-email::placeholder { color: #a09cbe; }
         .clx-nl-email:focus { border-color: #F2C94C; box-shadow: 0 0 0 3px rgba(242,201,76,.2); }
-        .clx-nl-submit { padding: 13px 22px; font-family: 'Encode Sans', system-ui, sans-serif; font-size: 14px; font-weight: 800; color: #2E1FBE; background: #fff; border: none; border-radius: 11px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+        .clx-nl-submit { padding: 13px 22px; font-family: system-ui, sans-serif; font-size: 14px; font-weight: 800; color: #2E1FBE; background: #fff; border: none; border-radius: 11px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
         .clx-nl-submit:hover { background: #F2C94C; color: #1a1040; }
         .clx-nl-trust { font-size: 11.5px; font-weight: 500; color: rgba(255,255,255,.55); margin: 8px 0 0 0; padding: 0; }
         .clx-nl-trust a { color: rgba(255,255,255,.7); text-decoration: underline; }
         .clx-nl-error { font-size: 12.5px; font-weight: 600; color: #ffb3b3; background: rgba(255,50,50,.18); border: 1px solid rgba(255,80,80,.22); border-radius: 8px; padding: 8px 12px; text-align: center; margin: 8px 0 0 0; }
         .clx-nl-success { display: flex; align-items: center; gap: 14px; text-align: left; padding: 4px 0; }
         .clx-nl-ok { width: 44px; height: 44px; border-radius: 12px; background: rgba(242,201,76,.18); border: 1px solid rgba(242,201,76,.35); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .clx-nl-success strong { display: block; font-family: 'Encode Sans', sans-serif; font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 3px; }
+        .clx-nl-success strong { display: block; font-family: sans-serif; font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 3px; }
         .clx-nl-success p { font-size: 13px; color: rgba(255,255,255,.75); margin: 0; padding: 0; line-height: 1.5; }
         .clx-card { border-radius: 10px; padding: 10px; background: #ffffff; border: 1px solid #e0e0e0; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; flex-direction: column; text-decoration: none; transition: transform 0.2s ease; }
         .clx-card:hover { transform: translateY(-5px); }
         .clx-card-media { position: relative; display: block; }
         .clx-card-media img { width: 100%; height: 205px; object-fit: cover; border-radius: 7px; display: block; }
         .clx-card-flag { position: absolute; left: 0; bottom: 10px; background: #040803DE; color: #D4D7CE; font-size: 13px; font-weight: 500; letter-spacing: 0.3px; padding: 3px 10px 2px 10px; border-radius: 0 4px 0 4px; }
-        .clx-card-provider { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; color: #111111; margin-top: 10px; font-family: 'Encode Sans', sans-serif; }
+        .clx-card-provider { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; color: #111111; margin-top: 10px; font-family: sans-serif; }
         .clx-card-title { font-size: 20px; font-weight: 700; line-height: 1.4; color: #111111; margin: 2px 0 6px 0; }
         .clx-card-cert { display: inline-block; background: #75DC5D1F; color: #222B10; font-size: 13px; font-weight: 500; padding: 0 10px; border-radius: 4px; width: fit-content; }
         .clx-card-meta { display: inline-block; background: #2323261A; color: #1F1F30; font-size: 14px; font-weight: 500; padding: 3px 8px; border-radius: 8px; width: fit-content; margin-top: 6px; }
