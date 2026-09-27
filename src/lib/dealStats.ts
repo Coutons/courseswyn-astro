@@ -132,6 +132,87 @@ export function couponFAQs(deal: Deal): Faq[] {
   ];
 }
 
+/**
+ * Data-driven FAQs for the coupon detail page.
+ *
+ * Uses the deal's own hand-written `faqs` when present; otherwise builds
+ * answers from recorded fields (verified date, real expiry, duration,
+ * learn outcomes, prerequisites). Shared by the visible FAQ section and
+ * the FAQPage structured data in `coupon/[slug].astro` so both stay in
+ * sync — mirroring the coursespeak `buildFAQs` approach.
+ */
+export function buildCouponFAQs(deal: Deal): Faq[] {
+  if (Array.isArray(deal.faqs) && deal.faqs.length > 0) {
+    return deal.faqs;
+  }
+
+  const generated: Faq[] = [];
+  const provider = deal.provider || "the course platform";
+  const courseTitle = (deal.title || "this course").trim();
+  const { checkedLong } = dealSnapshot(deal);
+  const price = deal.price ?? 0;
+  const original = deal.originalPrice ?? 0;
+  const discount = original > price && price >= 0 ? Math.round(100 - (price / original) * 100) : 0;
+
+  generated.push({
+    q: `Is the coupon code for "${courseTitle}" still valid?`,
+    a:
+      `The coupon code on this page was last checked on ${checkedLong} and worked at that time` +
+      (discount > 0 ? `, bringing the price to ${formatMoney(price)} (${discount}% off the ${formatMoney(original)} standard price)` : ` (free enrollment)`) +
+      (deal.expiresAt
+        ? `, with our record showing it valid through ${fmtDateLong(deal.expiresAt)}.`
+        : `.`) +
+      ` Coupon codes can expire or run out of redemptions at any time — the price on the ${provider} checkout page is the source of truth.`,
+  });
+
+  if (deal.duration) {
+    generated.push({
+      q: `How long is the "${courseTitle}" course?`,
+      a: `The course is approximately ${deal.duration} of on-demand video. ${provider} courses include lifetime access, so you can study at your own pace.`,
+    });
+  }
+
+  const learn = (deal.learn || []).map((s) => s.replace(/\r/g, "").trim()).filter(Boolean);
+  if (learn.length > 0) {
+    generated.push({
+      q: `What will I learn in "${courseTitle}"?`,
+      a: `The published syllabus lists outcomes including: ${learn.slice(0, 5).join("; ")}. See the full curriculum on the ${provider} course page for the complete breakdown.`,
+    });
+  }
+
+  const reqs = (deal.requirements || []).map((s) => s.replace(/\r/g, "").trim()).filter(Boolean);
+  if (reqs.length > 0) {
+    generated.push({
+      q: `Do I need any prior knowledge to take this course?`,
+      a: `The instructor lists these prerequisites: ${reqs.slice(0, 3).join("; ")}.`,
+    });
+  }
+
+  generated.push({
+    q: `Will I get a certificate if I enroll with a discount coupon?`,
+    a: `Yes. Enrolling with a discount coupon gives you the same completion certificate as a full-price seat. ${provider} issues the certificate once you finish the course, and you can share it on LinkedIn or add it to your resume.`,
+  });
+
+  generated.push({
+    q: `Is "${courseTitle}" available as a free download?`,
+    a: `No. ${provider} courses cannot be downloaded as files from the website. However, the ${provider} mobile app for iOS and Android lets you download lessons for offline viewing inside the app — and enrollment through this coupon code includes the same lifetime access.`,
+  });
+
+  generated.push({
+    q: `Does CoursesWyn review or grade the course content?`,
+    a: `No. CoursesWyn records coupon validity, price, and public catalog data only. Rating and student counts shown are ${provider}'s own published figures, not CoursesWyn's opinion.`,
+  });
+
+  return generated.slice(0, 8);
+}
+
+function fmtDateLong(iso?: string): string {
+  if (!iso) return "recently";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "recently";
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+}
+
 /* --------------------------------- Deal score ----------------------------- */
 
 export interface DealScoreRow {

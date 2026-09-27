@@ -191,35 +191,25 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
       <h3 class="adm-subhead"><span class="bar"></span>Course Content</h3>
       <div class="adm-grid">
         <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
-            <label class="adm-label" for="description" style="margin-bottom:0;">Short Description</label>
-            <button class="adm-btn adm-btn-ghost adm-btn-sm" type="button" id="genDesc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Generate</button>
-          </div>
-          <textarea class="adm-textarea" id="description" name="description" rows="3" placeholder="One-two sentence summary shown in listings — or click Generate." style="margin-top:.45rem;">{deal?.description ?? ""}</textarea>
-          <span class="adm-hint">Klik Generate untuk membuat ringkasan otomatis dari data di form — tidak perlu copy-paste dari Udemy.</span>
+          <label class="adm-label" for="description">Short Description</label>
+          <textarea class="adm-textarea" id="description" name="description" rows="3" placeholder="One-two sentence summary shown in listings." style="margin-top:.45rem;">{deal?.description ?? ""}</textarea>
+          <span class="adm-hint">Ringkasan 1–2 kalimat untuk listing. Untuk teks panjang resmi gunakan kolom Full Description di bawah.</span>
+        </div>
+        <div>
+          <label class="adm-label" for="contentRaw">Full Description (official)</label>
+          <div class="rte-paste" id="contentRaw" contenteditable="true" spellcheck="false" aria-label="Paste description here"></div>
+          <span class="adm-hint">Copy langsung dari halaman Udemy (blok teksnya, bukan view-source) — bold, bullet &amp; link ikut persis. Atau tempel HTML mentah. Tidak perlu edit manual.</span>
+          <div class="adm-label" style="margin-top:.9rem;">Live Preview (hasil tersimpan)</div>
+          <div class="rte-preview" id="rtePreview" aria-live="polite"></div>
+          <textarea id="content" name="content" hidden>{deal?.content ?? ""}</textarea>
         </div>
         <div>
           <label class="adm-label" for="learn">What you'll learn (one per line)</label>
           <textarea class="adm-textarea" id="learn" name="learn" rows="6" placeholder={"Build production-ready React apps\nOptimize render performance"}>{deal?.learn?.join("\n") ?? ""}</textarea>
         </div>
         <div>
-          <label class="adm-label" for="tags">Topics / Tags (one per line)</label>
-          <textarea class="adm-textarea" id="tags" name="tags" rows="4" placeholder={"React Hooks\nPerformance Optimization\nFrontend"}>{deal?.tags?.join("\n") ?? ""}</textarea>
-          <span class="adm-hint">Real Udemy topics. Shown as chips on the deal page and power the /topics pages (fallback: subcategory).</span>
-        </div>
-        <div>
-          <label class="adm-label" for="keywords">Focus Keywords (one per line)</label>
-          <textarea class="adm-textarea" id="keywords" name="keywords" rows="3" placeholder={"react hooks course\nlearn react hooks"}>{deal?.keywords?.join("\n") ?? ""}</textarea>
-          <span class="adm-hint">Kata kunci Udemy + turunannya (mis. "react hooks course"). Disisipkan otomatis oleh tombol Generate ke dalam deskripsi.</span>
-        </div>
-        <div>
           <label class="adm-label" for="requirements">Requirements (one per line)</label>
           <textarea class="adm-textarea" id="requirements" name="requirements" rows="4" placeholder={"Basic JavaScript knowledge\nA computer with internet"}>{deal?.requirements?.join("\n") ?? ""}</textarea>
-        </div>
-        <div>
-          <label class="adm-label" for="editorNote">Editor's take (optional)</label>
-          <textarea class="adm-textarea" id="editorNote" name="editorNote" rows="3" placeholder="2–3 kalimat opini redaksi: kenapa kursus ini layak diambil.">{deal?.editorNote ?? ""}</textarea>
-          <span class="adm-hint">Tampil di halaman deal sebagai box "Editor's take". Tulis dengan kata-katamu sendiri — ini konten unik yang paling ampuh untuk SEO. Kosongkan jika belum sempat.</span>
         </div>
         <p class="adm-note" style="margin:0;">FAQs halaman deal dibuat otomatis dari data (harga, rating, durasi, garansi) — tidak perlu diisi manual.</p>
       </div>
@@ -232,6 +222,22 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
     <button class="adm-btn adm-btn-primary" type="submit">{submitLabel}</button>
   </div>
 </form>
+
+<style>
+  .rte-paste { min-height: 160px; max-height: 420px; overflow-y: auto; background: var(--adm-surface); border: 1px solid var(--adm-border); border-radius: 8px; padding: 12px 14px; color: var(--adm-text); line-height: 1.7; font-size: 0.92rem; }
+  .rte-paste:focus { outline: none; border-color: var(--adm-accent-border); }
+  .rte-paste:empty::before { content: "Copy langsung dari halaman Udemy ke sini — bold, bullet & link ikut persis…"; color: var(--adm-faint); }
+  .rte-paste ul, .rte-paste ol { padding-left: 1.5rem; margin: 0 0 0.9em; }
+  .rte-paste p { margin: 0 0 0.9em; }
+  .rte-preview { min-height: 120px; max-height: 420px; overflow-y: auto; background: var(--adm-surface); border: 1px solid var(--adm-border); border-radius: 8px; padding: 12px 14px; color: var(--adm-text); line-height: 1.7; font-size: 0.92rem; }
+  .rte-preview h2 { font-size: 1.25rem; margin: 1em 0 0.5em; }
+  .rte-preview h3 { font-size: 1.1rem; margin: 1em 0 0.5em; }
+  .rte-preview p { margin: 0 0 0.9em; }
+  .rte-preview ul, .rte-preview ol { margin: 0 0 0.9em; padding-left: 1.5rem; }
+  .rte-preview li { margin-bottom: 0.3em; }
+  .rte-preview a { color: var(--adm-accent); }
+  .rte-empty { color: var(--adm-faint); }
+</style>
 
 <script>
   const form = document.getElementById("couponForm") as HTMLFormElement;
@@ -275,81 +281,101 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
       .replace(/^-|-$/g, "");
   }
 
-  const descInput = document.getElementById("description") as HTMLTextAreaElement | null;
-  const genDescBtn = document.getElementById("genDesc") as HTMLButtonElement | null;
+  const rawBox = document.getElementById("contentRaw") as HTMLElement | null;
+  const outBox = document.getElementById("content") as HTMLTextAreaElement | null;
+  const previewBox = document.getElementById("rtePreview") as HTMLElement | null;
 
-  function pick<T>(arr: T[], seed: string): T {
-    let h = 0;
-    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-    return arr[h % arr.length];
+  function escHtml(s: string): string {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
-  function cleanTitle(t: string): string {
-    return t.replace(/\s*[_\-|:–—]\s*(udemy|course|coupon|free|202\d.*)?$/i, "").trim() || t.trim();
+  // Bersihkan atribut kotor langsung di dalam box (style/class/data-*, script).
+  function sanitizeBox() {
+    if (!rawBox) return;
+    rawBox.querySelectorAll("script, style, iframe, form, button, input, select").forEach((n) => n.remove());
+    rawBox.querySelectorAll("*").forEach((n) => {
+      Array.from(n.attributes).forEach((a) => {
+        const k = a.name.toLowerCase();
+        const keep =
+          (n.tagName === "A" && k === "href") ||
+          (n.tagName === "IMG" && (k === "src" || k === "alt"));
+        if (!keep) n.removeAttribute(a.name);
+      });
+    });
   }
 
-  genDescBtn?.addEventListener("click", () => {
-    const val = (id: string) => (document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null)?.value.trim() || "";
-    const title = cleanTitle(val("title"));
-    if (!title) {
-      setStatus("Fill Course Title first, then click Generate.", "adm-err");
-      return;
-    }
-    const topic = val("subcategory") || val("category") || "this field";
-    const rawLevel = val("level");
-    const level = rawLevel && rawLevel !== "All Levels" ? `${rawLevel.toLowerCase()} learners` : "learners of all levels";
-    const audience = /^beginner/i.test(rawLevel) ? "beginners" : /^intermediate/i.test(rawLevel) ? "intermediate learners" : /^advanced/i.test(rawLevel) ? "advanced learners" : "";
-    const learnLines = val("learn").split("\n").map((l) => l.trim()).filter(Boolean);
-    const skills = learnLines.slice(0, 2).map((s) => s.charAt(0).toLowerCase() + s.slice(1).replace(/[.。]$/, "")).join(" and ");
-    const duration = val("duration");
+  function sanitizeHtml(dirty: string): string {
+    const doc = new DOMParser().parseFromString(dirty, "text/html");
+    doc.querySelectorAll("script, style, iframe, form, button, input, select").forEach((n) => n.remove());
+    doc.querySelectorAll("*").forEach((n) => {
+      Array.from(n.attributes).forEach((a) => {
+        const k = a.name.toLowerCase();
+        const keep =
+          (n.tagName === "A" && k === "href") ||
+          (n.tagName === "IMG" && (k === "src" || k === "alt"));
+        if (!keep) n.removeAttribute(a.name);
+      });
+    });
+    return doc.body.innerHTML.trim();
+  }
 
-    // Focus keywords + auto derivatives ("turunan"): "{keyword} for {audience}"
-    // A keyword is dropped when it merely repeats the title/topic (>=2
-    // significant words already present) so the output stays natural.
-    const STOPWORDS = new Set(["the", "and", "for", "with", "from", "into", "learn", "learning", "course", "courses", "guide", "complete", "ultimate", "masterclass", "bootcamp", "class", "training", "tutorial", "tutorials", "practical", "hands", "step", "steps", "beginner", "beginners"]);
-    function sigWords(s: string): string[] {
-      return (s.toLowerCase().match(/[a-z0-9]+(?:-[a-z0-9]+)?/g) || []).filter((w) => w.replace(/-/g, "").length >= 3 && !STOPWORDS.has(w));
+  // Teks biasa → struktur HTML (baris -, *, •, 1. menjadi list).
+  function formatContent(raw: string): string {
+    const t = raw.trim();
+    if (!t) return "";
+    if (/<(p|div|ul|ol|li|h[1-4]|br|strong|em|b|i|u|a|span)[\s>]/i.test(t)) {
+      return sanitizeHtml(t);
     }
-    const kwRaw = val("keywords").split("\n").map((l) => l.trim()).filter(Boolean);
-    const titleLc = title.toLowerCase();
-    const topicLc = topic.toLowerCase();
-    const haystack = `${title} ${topic}`.toLowerCase();
-    const freshKw = kwRaw.filter((k) => {
-      if (!k || titleLc.includes(k.toLowerCase()) || k.toLowerCase() === topicLc) return false;
-      const overlap = sigWords(k).filter((w) => haystack.includes(w)).length;
-      return overlap < 2;
-    }).slice(0, 3);
-    const kwPool = [...freshKw];
-    if (freshKw.length && audience) {
-      const deriv = `${freshKw[0]} for ${audience}`;
-      if (!kwPool.some((k) => k.toLowerCase() === deriv.toLowerCase())) kwPool.push(deriv);
+    let html = "";
+    let list: string | null = null;
+    let para: string[] = [];
+    const closeList = () => { if (list) { html += `</${list}>`; list = null; } };
+    const flushPara = () => { if (para.length) { html += `<p>${para.join("<br>")}</p>`; para = []; } };
+    for (const rawLine of t.split("\n")) {
+      const line = rawLine.trim();
+      if (!line) { closeList(); flushPara(); continue; }
+      const ulm = line.match(/^([\-*•·▪▶+])\s+(.*)$/);
+      const olm = line.match(/^(\d+)[\.\)]\s+(.*)$/);
+      if (ulm) {
+        if (list !== "ul") { closeList(); flushPara(); html += "<ul>"; list = "ul"; }
+        html += `<li>${escHtml(ulm[2])}</li>`;
+        continue;
+      }
+      if (olm) {
+        if (list !== "ol") { closeList(); flushPara(); html += "<ol>"; list = "ol"; }
+        html += `<li>${escHtml(olm[2])}</li>`;
+        continue;
+      }
+      closeList();
+      para.push(escHtml(line));
     }
-    const kwList = kwPool.slice(0, 3);
-    const kwClause = kwList.length ? ` Key topics include ${kwList.join(", ")}.` : "";
+    closeList();
+    flushPara();
+    return html;
+  }
 
-    const base = (withSkills: boolean, withDur: boolean) => pick([
-      `${title} — a hands-on course on ${topic} for ${level}${withSkills && skills ? `, covering ${skills}` : ""}${withDur && duration ? ` across ${duration} of video` : ""}.`,
-      `Learn ${topic} with ${title}, built for ${level}${withSkills && skills ? ` — you'll ${skills}` : ""}${withDur && duration ? ` in ${duration} of practical lessons` : ""}.`,
-      `${title} teaches ${topic} step by step for ${level}${withSkills && skills ? `, including ${skills}` : ""}${withDur && duration ? `. Total runtime: ${duration}` : "."}`,
-    ], title).replace(/\s+/g, " ").trim();
+  function refreshPreview() {
+    if (!rawBox || !outBox || !previewBox) return;
+    const hasNew = (rawBox.textContent || "").trim().length > 0;
+    let html: string;
+    if (hasNew) {
+      html = rawBox.querySelector("li, ul, ol, a, strong, b, em, i, h1, h2, h3")
+        ? sanitizeHtml(rawBox.innerHTML)
+        : formatContent(rawBox.innerText || "");
+      outBox.value = html;
+    } else {
+      html = outBox.value;
+    }
+    previewBox.innerHTML = html || '<span class="rte-empty">Pratinjau kosong — tempel deskripsi di atas.</span>';
+  }
 
-    const BUDGET = 350;
-    const candidates = [
-      base(true, true) + kwClause,
-      base(true, false) + kwClause,
-      base(false, false) + kwClause,
-      base(false, false),
-    ];
-    let text = candidates[candidates.length - 1];
-    for (const c of candidates) {
-      if (c.length <= BUDGET) { text = c; break; }
-    }
-    if (descInput) {
-      descInput.value = text;
-      descInput.focus();
-      setStatus("Description generated — review and edit if needed.", "adm-ok");
-    }
+  rawBox?.addEventListener("paste", () => {
+    // Biarkan browser menempel format asli (bold/bullet/link),
+    // lalu bersihkan atribut kotor setelahnya.
+    setTimeout(() => { sanitizeBox(); refreshPreview(); }, 0);
   });
+  rawBox?.addEventListener("input", refreshPreview);
+  refreshPreview();
 
   const recordCheckBtn = document.getElementById("recordCheck") as HTMLButtonElement | null;
   recordCheckBtn?.addEventListener("click", async () => {
@@ -371,10 +397,11 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
   });
 
   const NUMERIC = new Set(["price", "originalPrice", "rating", "students"]);
-  const ARRAYS = new Set(["learn", "requirements", "tags", "keywords"]);
+  const ARRAYS = new Set(["learn", "requirements"]);
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    refreshPreview();
     const payload: Record<string, unknown> = {};
 
     for (const [key, value] of new FormData(form).entries()) {

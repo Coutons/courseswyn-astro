@@ -18,7 +18,9 @@ interface Props {
   updatedDate?: Date;
 }
 
-const activeCouponCount = "679990";
+// Affiliate publisher ID — displayed as-is in the header.
+// NOTE: This is NOT a coupon count. Do NOT reformat, do NOT replace with data.
+const affiliateNumber = "679990";
 
 const siteUrl = import.meta.env.SITE || "https://courseswyn.com";
 const currentYear = currentYearWIB();
@@ -95,7 +97,7 @@ const jsonLdGraph = {
     "name": "Main Navigation",
     "hasPart": [
       { "@type": "SiteNavigationElement", "name": "Udemy Coupons", "url": "https://courseswyn.com/udemy-coupon-code" },
-      { "@type": "SiteNavigationElement", "name": "Today's Deals", "url": "https://courseswyn.com/udemy-coupons-today" },
+      { "@type": "SiteNavigationElement", "name": "Today's Coupons", "url": "https://courseswyn.com/udemy-coupons-today" },
       { "@type": "SiteNavigationElement", "name": "Categories", "url": "https://courseswyn.com/categories" },
       { "@type": "SiteNavigationElement", "name": "Topics", "url": "https://courseswyn.com/topics" },
       { "@type": "SiteNavigationElement", "name": "Instructors", "url": "https://courseswyn.com/instructors" },
@@ -122,8 +124,8 @@ const currentPath = Astro.url.pathname;
     <meta name="google-site-verification" content="440e92a0ff41e1b5" />
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8220442576502761" crossorigin="anonymous"></script>
 
-        <meta name="theme-color" content="#0b0e14" />
-    <meta name="msapplication-TileColor" content="#0b0e14" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="msapplication-TileColor" content="#ffffff" />
     <meta name="referrer" content="no-referrer-when-downgrade" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.ampproject.org https://pagead2.googlesyndication.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' https: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://ipapi.co https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; object-src 'none'; base-uri 'self'" />
     <meta name="format-detection" content="telephone=no" />
@@ -138,6 +140,10 @@ const currentPath = Astro.url.pathname;
 
     <link rel="preload" href="/favicon.svg" as="image" type="image/svg+xml" />
 
+    <link
+      href="https://fonts.googleapis.com/css2?family=Encode+Sans:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <meta name="generator" content={Astro.generator} />
     <link rel="canonical" href={canonicalURL} />
 
@@ -217,7 +223,7 @@ const currentPath = Astro.url.pathname;
         top: 0;
         z-index: 100;
       }
-      .skip-link { position: absolute; top: -100%; left: 8px; background: var(--brand); color: #121715; padding: 8px 16px; border-radius: 0 0 8px 8px; z-index: 9999; font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: top 0.2s; }
+      .skip-link { position: absolute; top: -100%; left: 8px; background: var(--brand); color: #fff; padding: 8px 16px; border-radius: 0 0 8px 8px; z-index: 9999; font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: top 0.2s; }
       .skip-link:focus { top: 0; }
       body {
         margin: 0;
@@ -444,12 +450,59 @@ const currentPath = Astro.url.pathname;
         .nav-mobile-link:hover, .nav-mobile-link.active { border-color: var(--brand); color: var(--brand); }
       }
 
+      /* ── CourseLegend light chrome (overrides dark defaults above) ── */
+      .site-header { background: #fff; border-bottom: 1px solid #e5e5e5; }
+      .brand-name { color: #111; }
+      .brand-tagline { color: #666; }
+      .nav-item { color: #111; border-color: transparent; background: transparent; }
+      .nav-item::after { background: linear-gradient(90deg, #fff, #550E71, #550E71); }
+      .nav-item:hover { background: #faf5ff; border-color: #e9d5ff; }
+      .nav-item.active { background: #faf5ff; border-color: #550E71; }
+      .nav-more-menu { background: #fff; border-color: #e5e5e5; box-shadow: 0 18px 40px -12px rgba(0,0,0,0.15); }
+      .nav-more-menu a { color: #111; }
+      .nav-more-menu a:hover { background: #faf5ff; color: #550E71; }
+      .search-form { background: #f5f5f5; border-color: #e5e5e5; }
+      .search-form:hover { border-color: #550E71; background: #fff; }
+      .search-form:focus-within { border-color: #550E71; background: #fff; box-shadow: 0 0 0 3px rgba(85,14,113,0.12); }
+      .nav-count { color: #666; white-space: nowrap; flex-shrink: 0; }
+      .site-header .container { width: 100%; gap: 1rem; }
+      .nav-links { min-width: 0; }
+      .search-form { width: 210px; flex-shrink: 0; }
+      @media (max-width: 1250px) { .nav-count { display: none; } }
+      .nav-hamburger { border-color: #e5e5e5; }
+      .nav-hamburger span { background: #111; }
+      .nav-mobile { background: #fff; border-bottom: 1px solid #e5e5e5; box-shadow: 0 18px 40px -12px rgba(0,0,0,0.15); }
+      .nav-mobile-link { background: #f9f9f9; border-color: #e5e5e5; color: #111; }
+      .nav-mobile-link:hover, .nav-mobile-link.active { border-color: #550E71; color: #550E71; }
+      .fresh-btn { display: inline-flex; align-items: center; gap: 8px; background: #773BFF; color: #fff; font-size: 0.82rem; font-weight: 700; padding: 9px 18px; border-radius: 7px; text-decoration: none; white-space: nowrap; }
+      .fresh-btn:hover { filter: brightness(1.07); }
+      .top-alert { display: flex; flex-wrap: wrap; align-items: center; background: linear-gradient(90deg, #6600FF 0%, #267EDB 100%); color: #fff; font-size: 15px; padding: 12px 20px; gap: 12px; }
+      .top-alert .alert-message { flex: 1 1 auto; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 120px; }
+      .top-alert .alert-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+      .top-alert .alert-button { background: #fff; color: #6600FF; font-weight: 600; padding: 8px 18px; border-radius: 999px; text-decoration: none; font-size: 14px; white-space: nowrap; }
+      .top-alert .alert-button:hover { background: #F1F1F1; }
+      .top-alert .close-btn { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; padding: 0; line-height: 1; }
+      @media (max-width: 1024px) { .fresh-btn { display: none; } }
+      @media (max-width: 600px) {
+        .top-alert { flex-direction: column; align-items: stretch; padding: 14px; gap: 10px; }
+        .top-alert .alert-message { white-space: normal; width: 100%; }
+        .top-alert .alert-actions { justify-content: space-between; width: 100%; }
+        .top-alert .alert-button { flex: 1; text-align: center; }
+      }
+
 
     </style>
     <slot name="head" />
   </head>
   <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div class="top-alert" id="siteAlert">
+      <span class="alert-message">🔥 100% OFF Udemy Coupons — Fresh Verified Drops Daily!</span>
+      <span class="alert-actions">
+        <a href="/udemy-coupons-today" class="alert-button">Today's Coupons</a>
+        <button class="close-btn" id="siteAlertClose" aria-label="Dismiss">✕</button>
+      </span>
+    </div>
     <header role="banner" class="site-header">
       <nav
         itemscope
@@ -485,7 +538,7 @@ const currentPath = Astro.url.pathname;
             class:list={['nav-item', { active: currentPath === '/udemy-coupons-today' }]}
             aria-current={currentPath === '/udemy-coupons-today' ? 'page' : undefined}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span itemprop="name">Today's Deals</span>
+            <span itemprop="name">Today's Coupons</span>
           </a>
           <a href="/categories" itemprop="url"
             class:list={['nav-item', { active: currentPath === '/categories' || currentPath.startsWith('/categories/') }]}
@@ -493,24 +546,10 @@ const currentPath = Astro.url.pathname;
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
             <span itemprop="name">Categories</span>
           </a>
-          <a href="/topics" itemprop="url"
-            class:list={['nav-item', { active: currentPath === '/topics' || currentPath.startsWith('/topics/') }]}
-            aria-current={currentPath === '/topics' || currentPath.startsWith('/topics/') ? 'page' : undefined}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            <span itemprop="name">Topics</span>
+          <a href="/udemy-certification-vouchers" class="fresh-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2.5 2.5 0 0 0 0 5v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2.5 2.5 0 0 0 0-5z"/><path d="M13 5v2"/><path d="M13 11v2"/><path d="M13 17v2"/></svg>
+            <span>Exam Vouchers</span>
           </a>
-          <details class="nav-more" itemscope>
-            <summary class:list={['nav-item', 'nav-more-toggle', { active: currentPath === '/instructors' || currentPath.startsWith('/instructor/') || currentPath === '/popular' || currentPath === '/blog' || currentPath.startsWith('/blog/') || currentPath === '/udemy-coupons-guide' }]} aria-haspopup="true">
-              <span itemprop="name">More</span>
-              <svg class="nav-more-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-            </summary>
-            <div class="nav-more-menu" role="menu" aria-label="More links">
-              <a href="/instructors" itemprop="url" role="menuitem"><span itemprop="name">Instructors</span></a>
-              <a href="/popular" itemprop="url" role="menuitem"><span itemprop="name">Popular Courses</span></a>
-              <a href="/blog" itemprop="url" role="menuitem"><span itemprop="name">Blog</span></a>
-              <a href="/udemy-coupons-guide" itemprop="url" role="menuitem"><span itemprop="name">Coupon Guide</span></a>
-            </div>
-          </details>
         </div>
 
         <div class="nav-right">
@@ -518,7 +557,7 @@ const currentPath = Astro.url.pathname;
             <span></span><span></span><span></span>
           </button>
           <form action="/search" method="get" class="search-form" role="search">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC94D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#550E71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
             <input
@@ -536,23 +575,22 @@ const currentPath = Astro.url.pathname;
                 }}
             />
           </form>
-          <span class="nav-count">{activeCouponCount}</span>
+           <span class="nav-count" title="Affiliate ID">{affiliateNumber}</span>
         </div>
       </nav>
     </header>
 
     <div class="nav-mobile" id="navMobile" hidden>
       <form action="/search" method="get" class="search-form nav-mobile-search" role="search">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC94D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#550E71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
         <input type="text" name="q" placeholder="Search courses..." style={{ background: 'transparent', color: 'var(--text)', border: 'none', fontSize: '0.82rem', width: '100%', outline: 'none', padding: 0 }} />
       </form>
       <nav aria-label="Mobile navigation">
         <a href="/udemy-coupon-code" class:list={['nav-mobile-link', { active: currentPath === '/udemy-coupon-code' }]}>Udemy Coupons</a>
-        <a href="/udemy-coupons-today" class:list={['nav-mobile-link', { active: currentPath === '/udemy-coupons-today' }]}>Today's Deals</a>
+        <a href="/udemy-coupons-today" class:list={['nav-mobile-link', { active: currentPath === '/udemy-coupons-today' }]}>Today's Coupons</a>
         <a href="/categories" class:list={['nav-mobile-link', { active: currentPath === '/categories' || currentPath.startsWith('/categories/') }]}>Categories</a>
-        <a href="/topics" class:list={['nav-mobile-link', { active: currentPath === '/topics' || currentPath.startsWith('/topics/') }]}>Topics</a>
         <a href="/instructors" class:list={['nav-mobile-link', { active: currentPath === '/instructors' || currentPath.startsWith('/instructor/') }]}>Instructors</a>
         <a href="/popular" class:list={['nav-mobile-link', { active: currentPath === '/popular' }]}>Popular Courses</a>
         <a href="/blog" class:list={['nav-mobile-link', { active: currentPath === '/blog' || currentPath.startsWith('/blog/') }]}>Blog</a>
@@ -749,98 +787,83 @@ const currentPath = Astro.url.pathname;
       <slot />
     </main>
 
-    <style>.ft-wrap{display:grid;gap:32px;margin-bottom:48px}@media(min-width:900px){.ft-wrap{grid-template-columns:1.2fr 1fr 1fr 1fr}}.ft-label{color:var(--brand);margin-bottom:16px;font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.14em}.ft-label::before{content:"## ";color:var(--brand);font-family:var(--font-mono)}.ft-links{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0}.ft-links li{margin-bottom:12px}.ft-links a{font-size:0.9rem;color:#a09888;text-decoration:none;font-weight:500;transition:all 0.3s ease}.ft-links a:hover{color:var(--brand)}.ft-term{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);margin:0 0 8px;max-width:340px}.ft-term-prompt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ft-live{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--stamp);text-transform:uppercase;letter-spacing:0.06em;flex-shrink:0;font-size:0.68rem}.ft-blip{width:7px;height:7px;border-radius:50%;background:var(--stamp);animation:ftBlip 1.6s infinite}.ft-term-sub{font-size:0.78rem;color:var(--muted);margin:0 0 16px;line-height:1.5}@keyframes ftBlip{0%,100%{opacity:1}50%{opacity:.3}}</style>
-    <footer style="color:#8A877C;padding:80px 0 40px;margin-top:auto;position:relative;overflow:hidden;background:linear-gradient(135deg,#0b0e14 0%,#101412 100%)" role="contentinfo" itemscope itemtype="https://schema.org/WPFooter">
-      <div style="max-width:1400px;margin:0 auto;padding:0 1rem">
-        <hr style={{ border: "none", height: "3px", background: "linear-gradient(90deg, #0b0e14 0%, #FFC94D 25%, #FFC94D 50%, #FFC94D 75%, #0b0e14 100%)", marginBottom: "32px", borderRadius: "2px" }} />
+    <style>.cw-foot{background:#fff}.cw-foot-cards{max-width:1400px;margin:0 auto;padding:0 1rem;display:grid;gap:26px;position:relative;z-index:1}@media(min-width:900px){.cw-foot-cards{grid-template-columns:1fr 1fr}}.cw-foot-card{background:#fff;border-radius:20px;box-shadow:0 0 2px rgba(0,0,0,.3);padding:40px;text-align:center;margin-bottom:-50px}.cw-foot-ico{display:inline-flex;line-height:0}.cw-foot-card h3{font-family:'Encode Sans',sans-serif;font-size:28px;font-weight:800;color:#111;margin:12px 0 18px;line-height:1.25}.cw-foot-card a{display:inline-block;background:#773BFF;color:#fff;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:500;padding:13px 24px;border-radius:7px;text-decoration:none}.cw-foot-card a:hover{filter:brightness(1.07)}.cw-foot-main{background:linear-gradient(180deg,#1B0B33 0%,#5D61DC 140%);padding:100px 0 24px}.cw-foot-grid{max-width:1400px;margin:0 auto;padding:0 1rem;display:grid;gap:26px}@media(min-width:900px){.cw-foot-grid{grid-template-columns:1.4fr 1fr 1fr 1fr}}.cw-foot-brand h3{font-family:'Encode Sans',sans-serif;font-size:30px;font-weight:800;color:#fff;margin:14px 0 8px;line-height:1.2}.cw-foot-brand p{font-family:'DM Sans',sans-serif;font-size:16px;color:#FFFFFFBF;margin:0}.cw-foot-social{display:flex;gap:13px;margin-top:20px}.cw-foot-social a{width:38px;height:38px;border-radius:50%;background:#1B0B33;display:inline-flex;align-items:center;justify-content:center}.cw-foot-social a:hover{background:#fff}.cw-foot-social svg{fill:#fff}.cw-foot-social a:hover svg{fill:#267EDB}.cw-foot-col h4{font-family:'Encode Sans',sans-serif;font-size:22px;font-weight:700;color:#fff;margin:0 0 4px;padding-bottom:10px;border-bottom:2px solid #EFEFEF8F}.cw-foot-col a{display:block;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;color:#EDEDEDD4;text-decoration:none;padding:7px 4px}.cw-foot-col a:hover{color:#fff}@media(min-width:900px){.cw-foot-col.mid{border-left:1px solid #EDEDED26;border-right:1px solid #EDEDED26;padding:0 26px}}.cw-foot-legal{display:flex;gap:8px 20px;flex-wrap:wrap;justify-content:center;margin:28px 0 0;padding:0 1rem}.cw-foot-legal a{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;color:#DCDCDCBA;text-decoration:none}.cw-foot-legal a:hover{color:#fff}.cw-foot-copy{text-align:center;font-size:13px;color:#FFFFFFC9;margin:10px 0 0}.cw-foot-ico{display:inline-flex;line-height:0}.cw-foot-social a{width:38px !important;height:38px !important;border-radius:50% !important;background:#1B0B33 !important;border:none !important;color:#fff !important}.cw-foot-social a:hover{background:#fff !important;color:#267EDB !important}</style>
+    <footer class="cw-foot" role="contentinfo" itemscope itemtype="https://schema.org/WPFooter">
+      <div class="cw-foot-cards">
+        <div class="cw-foot-card">
+          <span class="cw-foot-ico" aria-hidden="true">
+            <svg width="56" height="56" viewBox="0 0 640 512" fill="#1B0B33"><path d="M622.34 153.2L343.4 67.5c-15.2-4.67-31.6-4.67-46.79 0L17.66 153.2c-23.54 7.23-23.54 38.36 0 45.59l48.63 14.94c-10.67 13.19-17.23 29.28-17.88 46.9C38.78 266.15 32 276.11 32 288c0 10.78 5.68 19.85 13.86 25.65L20.33 428.53C18.11 438.52 25.71 448 35.94 448h56.11c10.24 0 17.84-9.48 15.62-19.47L82.14 313.65C90.32 307.85 96 298.78 96 288c0-11.57-6.47-21.25-15.66-26.87.76-15.02 8.44-28.3 20.69-36.72L296.6 284.5c9.06 2.78 26.44 6.25 46.79 0l278.95-85.7c23.55-7.24 23.55-38.36 0-45.6zM352.79 315.09c-28.53 8.76-52.84 3.92-65.59 0l-145.02-44.55L128 384c0 35.35 85.96 64 192 64s192-28.65 192-64l-14.18-113.47-145.03 44.56z" /></svg>
+          </span>
+          <h3>Find the Right<br />Course for You</h3>
+          <a href="/udemy-coupon-code">Explore Courses</a>
+        </div>
+        <div class="cw-foot-card">
+          <span class="cw-foot-ico" aria-hidden="true">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#1B0B33" stroke-width="1.6"><circle cx="9" cy="8" r="3.2" /><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5" /><circle cx="16.5" cy="9" r="2.6" /><path d="M15.5 13.6c2.3.3 4.2 1.9 4.9 4.4" /></svg>
+          </span>
+          <h3>Who We Are &amp;<br />Why It Matters</h3>
+          <a href="/about">About CoursesWyn</a>
+        </div>
+      </div>
+      <div class="cw-foot-main">
+        <div class="cw-foot-grid">
 
-        <div class="ft-wrap">
-
-          <div>
-            <h3 style={{ marginBottom: "12px", fontSize: "1.2rem", fontWeight: "700", lineHeight: "1.1", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <span style={{ flexShrink: 0, display: "inline-flex" }}><BrandLogo size={30} /></span>
-              <span style="color:var(--text);">CoursesWyn</span>
-            </h3>
-            <p style={{ fontSize: "0.9rem", lineHeight: "1.5", color: "#8A877C", marginBottom: "16px" }}>
-              Free Udemy courses daily — verified coupons across 400+ topics. Learn without limits, zero cost.
-            </p>
-            <div class="ft-term">
-              <span class="ft-term-prompt">agents@courseswyn: ~/status</span>
-              <span class="ft-live"><span class="ft-blip"></span> Live</span>
-            </div>
-            <p class="ft-term-sub">Verifying coupon codes around the clock — dead codes pulled automatically.</p>
-            <div style={{ display: "flex", gap: "12px", marginTop: "16px", flexWrap: "wrap" }}>
-              <a href="https://facebook.com/CoursesWyn" target="_blank" rel="me noopener noreferrer" aria-label="Facebook" style="width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:10px;color:var(--muted)">
+          <div class="cw-foot-brand">
+            <BrandLogo size={34} />
+            <h3>Discover Better Coupons</h3>
+            <p>Find verified Udemy coupon codes, learning paths, and free alternatives designed for real-world skill growth.</p>
+            <div class="cw-foot-social">
+              <a href="https://facebook.com/CoursesWyn" target="_blank" rel="me noopener noreferrer" aria-label="Facebook" style="width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e5e5;border-radius:10px;color:#555">
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
               </a>
-              <a href="https://x.com/CoursesWyn" target="_blank" rel="me noopener noreferrer" aria-label="Twitter" style="width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:10px;color:var(--muted)">
+              <a href="https://x.com/CoursesWyn" target="_blank" rel="me noopener noreferrer" aria-label="Twitter" style="width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e5e5;border-radius:10px;color:#555">
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
               </a>
-              <a href="https://medium.com/@coursewyn" target="_blank" rel="me noopener noreferrer" aria-label="Medium" style="width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:10px;color:var(--muted)">
+              <a href="https://medium.com/@coursewyn" target="_blank" rel="me noopener noreferrer" aria-label="Medium" style="width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e5e5;border-radius:10px;color:#555">
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 12c0 3.04-2.46 5.5-5.5 5.5S2.5 15.04 2.5 12 4.96 6.5 8 6.5s5.5 2.46 5.5 5.5zm7 0c0 2.76-1.12 5-2.5 5s-2.5-2.24-2.5-5 1.12-5 2.5-5 2.5 2.24 2.5 5zM22 12c0 2.21-.45 4-1 4s-1-1.79-1-4 .45-4 1-4 1 1.79 1 4z"/></svg>
               </a>
             </div>
           </div>
 
-          <div>
-            <p class="ft-label">Browse Courses</p>
-            <ul class="ft-links">
-              <li><a href="/">Home</a></li>
-              <li><a href="/udemy-coupon-code">Udemy Deals</a></li>
-              <li><a href="/udemy-coupons-today">Today's Coupons</a></li>
-              <li><a href="/popular">Popular Courses</a></li>
-              <li><a href="/udemy-coupons-guide">How to Get Free Udemy Coupons</a></li>
-              <li><a href="/how-to-redeem-coupon">Redeem Coupon Guide</a></li>
-            </ul>
-          </div>
+          <nav class="cw-foot-col" aria-label="Browse">
+            <h4>Browse</h4>
+            <a href="/udemy-coupon-code">All Coupons</a>
+            <a href="/udemy-coupons-today">Today&apos;s Deals</a>
+            <a href="/categories">Categories</a>
+            <a href="/topics">Topics</a>
+            <a href="/popular">Popular Courses</a>
+            <a href="/instructors">Instructors</a>
+          </nav>
 
-          <div>
-            <p class="ft-label">Exam Vouchers</p>
-            <ul class="ft-links">
-              <li><a href="/udemy-certification-vouchers">All Certification Vouchers</a></li>
-              <li><a href="/udemy-comptia-exam-vouchers">CompTIA Exam Vouchers</a></li>
-              <li><a href="/udemy-aws-exam-vouchers">AWS Exam Vouchers</a></li>
-              <li><a href="/udemy-microsoft-exam-vouchers">Microsoft Exam Vouchers</a></li>
-              <li><a href="/blog/udemy-personal-plan-review-2026/">Udemy Personal Plan</a></li>
-            </ul>
-          </div>
+          <nav class="cw-foot-col mid" aria-label="Resources">
+            <h4>Resources</h4>
+            <a href="/udemy-coupons-guide">Coupon Guide</a>
+            <a href="/how-to-redeem-coupon">How to Redeem</a>
+            <a href="/how-we-test-and-verify-udemy-coupons">How We Verify</a>
+            <a href="/blog">Blog</a>
+            <a href="/about">About Us</a>
+            <a href="/contact">Contact Us</a>
+          </nav>
 
-          <div>
-            <p class="ft-label">Compare</p>
-            <ul class="ft-links">
-              <li><a href="/platforms">Platform Comparison Guide</a></li>
-              <li><a href="/platforms/udemy-vs-coursera">Udemy vs Coursera</a></li>
-              <li><a href="/platforms/udemy-vs-edx">Udemy vs edX</a></li>
-              <li><a href="/platforms/udemy-vs-skillshare">Udemy vs Skillshare</a></li>
-              <li><a href="/platforms/udemy-vs-pluralsight">Udemy vs Pluralsight</a></li>
-              <li><a href="/platforms/udemy-vs-linkedin-learning">Udemy vs LinkedIn Learning</a></li>
-              <li><a href="/platforms/udemy-alternatives">Udemy Alternatives</a></li>
-            </ul>
-          </div>
-
+          <nav class="cw-foot-col" aria-label="Compare">
+            <h4>Compare</h4>
+            <a href="/platforms">All Platforms</a>
+            <a href="/platforms/udemy-vs-coursera">Udemy vs Coursera</a>
+            <a href="/platforms/udemy-vs-edx">Udemy vs edX</a>
+            <a href="/platforms/udemy-vs-skillshare">Udemy vs Skillshare</a>
+            <a href="/platforms/udemy-vs-linkedin-learning">Udemy vs LinkedIn</a>
+            <a href="/platforms/udemy-alternatives">Udemy Alternatives</a>
+          </nav>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:0.5rem 1.5rem;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding:1.5rem 0 0">
-          <div>
-            <p style="margin:0;color:#8A877C;font-size:0.9rem">&copy; 2024&ndash;{currentYear} CoursesWyn. All rights reserved.</p>
-            <p style="margin:0.25rem 0 0;font-size:0.8rem;opacity:0.5">Free Udemy course deals updated daily — coupons across 400+ topics.</p>
-            <nav aria-label="Legal" style={{ display: "flex", gap: "0.35rem 0.9rem", flexWrap: "wrap", marginTop: "0.6rem", fontSize: "0.78rem" }}>
-              <a href="/about" style={{ color: "#a09888", textDecoration: "none" }}>About</a>
-              <a href="/contact" style={{ color: "#a09888", textDecoration: "none" }}>Contact</a>
-              <a href="/privacy" style={{ color: "#a09888", textDecoration: "none" }}>Privacy</a>
-              <a href="/terms" style={{ color: "#a09888", textDecoration: "none" }}>Terms</a>
-              <a href="/affiliate-disclosure" style={{ color: "#a09888", textDecoration: "none" }}>Affiliate Disclosure</a>
-              <a href="/how-we-test-and-verify-udemy-coupons" style={{ color: "#a09888", textDecoration: "none" }}>How We Verify</a>
-              <a href="/sitemap" style={{ color: "#a09888", textDecoration: "none" }}>Sitemap</a>
-            </nav>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-            {["Verified Coupons", "Update Daily", "4.8★ Rating", "24/7 Support"].map((text) => (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 0.85rem", borderRadius: "9999px", background: "rgba(255,201,77,0.08)", border: "1px solid rgba(255,201,77,0.15)", color: "var(--brand)", fontSize: "0.75rem", fontWeight: 600, whiteSpace: "nowrap" }}>
-                {text}
-              </span>
-            ))}
-          </div>
-        </div>
+        <nav class="cw-foot-legal" aria-label="Legal">
+          <a href="/terms">Terms &amp; Condition</a>
+          <a href="/affiliate-disclosure">Affiliate Disclosure</a>
+          <a href="/privacy">Privacy Policy</a>
+          <a href="/contact">Contact Us</a>
+          <a href="/about">About Us</a>
+          <a href="/sitemap">Sitemap</a>
+        </nav>
+        <p class="cw-foot-copy">&copy; 2024&ndash;{currentYear}, All Rights Reserved by CoursesWyn</p>
       </div>
     </footer>
 
@@ -854,7 +877,7 @@ const currentPath = Astro.url.pathname;
         height: "44px",
         borderRadius: "50%",
         background: "var(--brand)",
-        color: "#0b0e14",
+        color: "#fff",
         border: "none",
         cursor: "pointer",
         display: "none",
@@ -905,6 +928,15 @@ const currentPath = Astro.url.pathname;
           navHamburger.setAttribute('aria-expanded', 'false');
         }));
       }
+      try {
+        const siteAlert = document.getElementById('siteAlert');
+        const siteAlertClose = document.getElementById('siteAlertClose');
+        if (siteAlert && localStorage.getItem('cw-alert-hidden') === '1') siteAlert.style.display = 'none';
+        if (siteAlertClose) siteAlertClose.addEventListener('click', () => {
+          if (siteAlert) siteAlert.style.display = 'none';
+          try { localStorage.setItem('cw-alert-hidden', '1'); } catch {}
+        });
+      } catch {}
     </script>
   </body>
 </html>

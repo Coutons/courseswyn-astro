@@ -1,0 +1,142 @@
+---
+/**
+ * Shared dark premium hero — mirrors the homepage hero.
+ * Props carry each page's copy/stats/feed; toolbar buttons go in the slot.
+ */
+interface Stat {
+  val: number;
+  label: string;
+  suffix?: string;
+}
+interface FeedLine {
+  href: string;
+  time: string;
+  cat: string;
+  title: string;
+  save: string;
+}
+interface Props {
+  eyebrow: string;
+  titleHtml: string;
+  subHtml: string;
+  stats: Stat[];
+  feedLines: FeedLine[];
+  feedFootHtml: string;
+  searchPlaceholder?: string;
+}
+
+const { eyebrow, titleHtml, subHtml, stats, feedLines, feedFootHtml, searchPlaceholder } = Astro.props as Props;
+---
+
+<div class="ph-hero">
+  <div class="ph-grid">
+    <div class="ph-copy">
+      <slot name="top" />
+      <p class="ph-eyebrow"><span class="ph-blink" aria-hidden="true"></span> {eyebrow}</p>
+      <h1 set:html={titleHtml} />
+      <p class="ph-sub" set:html={subHtml} />
+      <div class="ph-stats">
+        {stats.map((s) => (
+          <div class="ph-stat">
+            <div class="ph-stat-num"><span data-ph-count={s.val}>0</span>{s.suffix || ""}</div>
+            <div class="ph-stat-lab">{s.label}</div>
+          </div>
+        ))}
+      </div>
+      {searchPlaceholder && (
+        <form action="/search" method="GET" role="search" class="ph-search">
+          <input type="search" name="q" placeholder={searchPlaceholder} autocomplete="off" aria-label="Search courses" />
+          <button type="submit">Search</button>
+        </form>
+      )}
+      <slot />
+    </div>
+    <div class="ph-feed">
+      <div class="ph-feed-head"><span>Freshly verified</span><a href="/udemy-coupons-today">Today&apos;s batch →</a></div>
+      <div class="ph-feed-body">
+        {feedLines.map((d) => (
+          <a class="ph-feed-line" href={d.href}>
+            <span class="ph-feed-time">{d.time}</span>
+            <span class="ph-feed-ok">✓</span>
+            <span class="ph-feed-cat">{d.cat}</span>
+            <span class="ph-feed-title">{d.title}</span>
+            <span class="ph-feed-save">{d.save}</span>
+          </a>
+        ))}
+      </div>
+      <div class="ph-feed-foot" set:html={feedFootHtml} />
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    function animate(el: Element): void {
+      const target = parseInt(el.getAttribute('data-ph-count') || '0', 10);
+      if (isNaN(target)) return;
+      const dur = 900;
+      let start: number | null = null;
+      function step(ts: number): void {
+        if (!start) start = ts;
+        const p = Math.min(1, (ts - start) / dur);
+        el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    function init(): void {
+      document.querySelectorAll('[data-ph-count]').forEach((el) => {
+        if (!('IntersectionObserver' in window)) { animate(el); return; }
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach((e) => { if (e.isIntersecting) { animate(e.target); io.unobserve(e.target); } });
+        }, { threshold: 0.3 });
+        io.observe(el);
+      });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+  })();
+</script>
+
+<style>
+  .ph-hero { background: linear-gradient(160deg, #14082b 0%, #2b1152 55%, #3b1d8f 100%); padding: 3.5rem 0 3rem; position: relative; overflow: hidden; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
+  .ph-hero::before { content: ''; position: absolute; top: -100px; left: 12%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(119,59,255,0.35) 0%, transparent 65%); pointer-events: none; }
+  .ph-hero::after { content: ''; position: absolute; bottom: -120px; right: 8%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(242,201,76,0.13) 0%, transparent 65%); pointer-events: none; }
+  .ph-grid { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 1rem; display: grid; grid-template-columns: 1.05fr 1fr; gap: 2.5rem; align-items: center; }
+  .ph-copy { min-width: 0; }
+  .ph-toprow { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }
+  .ph-avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.35); }
+  .ph-avatar-fb { width: 52px; height: 52px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: #fff; flex-shrink: 0; }
+  .ph-topbadge { display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #F2C94C; background: rgba(242,201,76,0.1); border: 1px solid rgba(242,201,76,0.35); border-radius: 999px; padding: 7px 16px; }
+  .ph-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #F2C94C; background: rgba(242,201,76,0.1); border: 1px solid rgba(242,201,76,0.35); border-radius: 999px; padding: 7px 16px; margin: 0 0 1.1rem; }
+  .ph-blink { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
+  .ph-hero h1 { font-family: 'Encode Sans', sans-serif; font-size: clamp(1.9rem, 4vw, 2.9rem); font-weight: 800; line-height: 1.12; color: #ffffff; margin: 0 0 0.75rem; letter-spacing: -0.02em; }
+  .ph-hero h1 span { color: #F2C94C; }
+  .ph-hero h1 a { color: inherit; text-decoration: none; }
+  .ph-sub { font-size: 1.05rem; color: rgba(255,255,255,0.82); max-width: 560px; margin: 0 0 1.5rem; line-height: 1.6; }
+  .ph-sub strong, .ph-sub b { color: #fff; }
+  .ph-sub a { color: #F2C94C; font-weight: 600; }
+  .ph-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+  .ph-stat { display: flex; flex-direction: column; }
+  .ph-stat-num { font-size: 1.5rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
+  .ph-stat-lab { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #F2C94C; }
+  .ph-search { display: flex; gap: 8px; max-width: 560px; margin-top: 1.5rem; background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.45); }
+  .ph-search input { flex: 1; border: none; outline: none; font-size: 0.9rem; padding: 10px 14px; min-width: 0; color: #111; background: transparent; font-family: inherit; }
+  .ph-search button { font-weight: 800; color: #fff; background: #773BFF; border: none; border-radius: 9px; padding: 0 24px; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
+  .ph-search button:hover { filter: brightness(1.1); }
+  .ph-feed { background: #fff; border-radius: 14px; overflow: hidden; min-width: 0; box-shadow: 0 24px 60px -20px rgba(0,0,0,0.5); }
+  .ph-feed-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #f7f7f8; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #111111; }
+  .ph-feed-head a { margin-left: auto; font-size: 0.8rem; font-weight: 700; color: #550E71; text-decoration: none; text-transform: none; letter-spacing: 0; }
+  .ph-feed-head a:hover { text-decoration: underline; }
+  .ph-feed-body { padding: 4px 0; }
+  .ph-feed-line { display: flex; align-items: center; gap: 10px; padding: 8px 16px; font-size: 0.85rem; color: #111111; text-decoration: none; }
+  .ph-feed-line:hover { background: #faf5ff; }
+  .ph-feed-time { color: #666666; font-size: 0.75rem; flex-shrink: 0; min-width: 52px; font-variant-numeric: tabular-nums; }
+  .ph-feed-ok { color: #16a34a; font-weight: 800; flex-shrink: 0; }
+  .ph-feed-cat { color: #550E71; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+  .ph-feed-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .ph-feed-save { color: #550E71; font-weight: 800; flex-shrink: 0; }
+  .ph-feed-foot { padding: 10px 16px; background: #f7f7f8; font-size: 0.8rem; color: #555555; }
+  .ph-feed-foot b { color: #550E71; }
+  @media (max-width: 900px) { .ph-grid { grid-template-columns: 1fr; gap: 1.75rem; } }
+</style>

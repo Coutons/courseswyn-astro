@@ -33,6 +33,7 @@ const dealSchema = z
     slug: z.string().min(1),
     title: z.string().min(1),
     description: z.string().optional(),
+    content: z.string().optional(),
     price: z.number().min(0),
     originalPrice: z.number().optional(),
     discount: z.number().optional(),

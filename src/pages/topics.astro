@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import PageHero from "@/components/PageHero.astro";
 import { readDeals } from '../lib/store';
 import { dealTopicNames } from '../lib/dealStats';
 import { toISODateWIB } from '../lib/date';
@@ -98,40 +99,14 @@ const structuredData = {
     <div class="cc-container">
 
       <header class="cc-header">
-        <div class="dh-hero-grid">
-          <div class="dh-hero-left">
-            <div class="dh-hero-badge"><span class="lg-blip"></span> Course taxonomy &middot; {totalTopics.toLocaleString()} topics</div>
-            <h1 class="dh-hero-title">Browse Udemy <span class="cc-accent">Course Topics</span></h1>
-            <p class="dh-hero-sub">An independent taxonomy built from what courses actually teach, not their marketing tags. Open any topic to see its courses and their current coupon availability.</p>
-            <div class="dh-hero-stats">
-              <div class="dh-stat"><b class="dh-stat-val"><span data-count={totalTopics}>0</span><span class="lg-plus">+</span></b><span class="dh-stat-label">curated topics</span></div>
-              <div class="dh-stat"><b class="dh-stat-val"><span data-count={totalCourses}>0</span><span class="lg-plus">+</span></b><span class="dh-stat-label">tracked coupons</span></div>
-              <div class="dh-stat"><b class="dh-stat-val"><span data-count={avgDiscount}>0</span><span class="lg-plus">%</span></b><span class="dh-stat-label">avg discount</span></div>
-            </div>
-          </div>
-          <div class="dh-terminal">
-            <div class="dh-term-head">
-              <span class="dh-term-dot" style="background:#ff5f56"></span>
-              <span class="dh-term-dot" style="background:#ffbd2e"></span>
-              <span class="dh-term-dot" style="background:#27c93f"></span>
-              <span class="dh-term-title">agents@courseswyn: ~/topics</span>
-              <span class="dh-term-live"><span class="lg-blip"></span> Live</span>
-            </div>
-            <div class="dh-term-body">
-              {heroFeed.map((d) => (
-                <a class="dh-term-line" href={"/coupon/" + d.slug}>
-                  <span class="dh-term-time">{d.timeLabel}</span>
-                  <span class="dh-term-ok">✓</span>
-                  <span class="dh-term-cat">{d.cat}</span>
-                  <span class="dh-term-title2">{d.title}</span>
-                  <span class="dh-term-save">−{d.pct}%</span>
-                </a>
-              ))}
-              <div class="dh-term-line"><span class="dh-term-time">now</span><span class="dh-term-ok">✓</span><span class="dh-term-title2">codes checked by CoursesWyn<span class="caret"></span></span></div>
-            </div>
-            <div class="dh-term-foot">$ topics tracked <b>{totalTopics}</b></div>
-          </div>
-        </div>
+        <PageHero
+  eyebrow={`Course taxonomy · ${totalTopics.toLocaleString()} topics`}
+  titleHtml={`Browse Udemy <span>Course Topics</span>`}
+  subHtml="An independent taxonomy built from what courses actually teach, not their marketing tags. Open any topic to see its courses and their current coupon availability."
+  stats={[{ val: totalTopics, label: "curated topics", suffix: "+" }, { val: totalCourses, label: "tracked coupons", suffix: "+" }, { val: avgDiscount, label: "avg discount", suffix: "%" }]}
+  feedLines={heroFeed.map((d) => ({ href: "/coupon/" + d.slug, time: d.timeLabel, cat: d.cat, title: d.title, save: "−" + d.pct + "%" }))}
+  feedFootHtml={`$ topics tracked <b>${totalTopics}</b>`}
+/>
         <div class="cc-toolbar" style="margin-top:1.5rem;">
           {catGroups.length > 0 && <a class="cc-hero-btn" href={`#cat-${catGroups[0].slug}`}>Explore topics</a>}
           <a class="cc-hero-btn ghost" href="/categories">Browse by category</a>
@@ -317,6 +292,15 @@ const structuredData = {
     .cc-title { font-size: 1.7rem; }
     .cc-hero-btn { padding: 11px 16px; font-size: 0.85rem; }
   }
+  .dh-terminal { background: #fff; }
+  .dh-term-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #f7f7f8; border-bottom: 1px solid var(--border); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #111111; }
+  .dh-term-head a { margin-left: auto; font-size: 0.8rem; font-weight: 700; color: #550E71; text-decoration: none; text-transform: none; letter-spacing: 0; }
+  .dh-term-head a:hover { text-decoration: underline; }
+  .dh-term-dot, .dh-term-title, .dh-term-live { display: none; }
+  .dh-term-line { font-family: inherit; font-size: 0.85rem; color: #111111; }
+  .dh-term-ok { color: #16a34a; }
+  .dh-term-cat, .dh-term-save { color: #550E71; }
+  .dh-term-foot { background: #f7f7f8; color: #555555; font-family: inherit; }
 </style>
 
 <script>

@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import PageHero from "@/components/PageHero.astro";
 import LedgerRow from '../../components/LedgerRow.astro';
 import type { Deal } from '../../types/deal.d.ts';
 import { readDeals } from '../../lib/store';
@@ -281,47 +282,23 @@ const benefitCards = [
     <div class="cc-container">
 
       <header class="cc-header">
-        <div class="dh-hero-grid">
-          <div class="dh-hero-left">
-            <div class="cc-instructor-head">
-              {instructorImage ? (
-                <div class="cc-avatar cc-avatar-img"><img src={instructorImage} alt={instructorName} loading="lazy" /></div>
-              ) : (
-                <div class="cc-avatar" style={`background:${getAvatarColor(instructorName)}`}>{getInitials(instructorName)}</div>
-              )}
-              <div class="dh-hero-badge" style="margin-bottom:0;"><span class="lg-blip"></span> {provider} &middot; {instructorCourses.length} Coupon{instructorCourses.length === 1 ? '' : 's'}</div>
-            </div>
-            <h1 class="dh-hero-title"><span class="cc-accent">{cleanName}</span>{topicsSuffix} Courses</h1>
-            <p class="dh-hero-sub">Verified <strong>{instructorCourses.length} {topicsLabel ? `${topicsLabel} ` : ''}course{instructorCourses.length === 1 ? '' : 's'} from {instructorName}</strong> on {provider} — checked against Udemy before listing, updated {currentMonth} {currentYear}.</p>
-            <div class="dh-hero-stats">
-              <div class="dh-stat"><b class="dh-stat-val"><span data-count={instructorCourses.length}>0</span></b><span class="dh-stat-label">courses</span></div>
-              <div class="dh-stat"><b class="dh-stat-val"><span data-count={maxDisc}>0</span><span class="lg-plus">%</span></b><span class="dh-stat-label">max discount</span></div>
-              <div class="dh-stat"><b class="dh-stat-val"><span data-count={totalStudents}>0</span><span class="lg-plus">+</span></b><span class="dh-stat-label">students</span></div>
-            </div>
-          </div>
-          <div class="dh-terminal">
-            <div class="dh-term-head">
-              <span class="dh-term-dot" style="background:#ff5f56"></span>
-              <span class="dh-term-dot" style="background:#ffbd2e"></span>
-              <span class="dh-term-dot" style="background:#27c93f"></span>
-              <span class="dh-term-title">agents@courseswyn: ~/instructor</span>
-              <span class="dh-term-live"><span class="lg-blip"></span> Live</span>
-            </div>
-            <div class="dh-term-body">
-              {heroFeed.map((d) => (
-                <a class="dh-term-line" href={"/coupon/" + d.slug}>
-                  <span class="dh-term-time">{d.timeLabel}</span>
-                  <span class="dh-term-ok">✓</span>
-                  <span class="dh-term-cat">{d.cat}</span>
-                  <span class="dh-term-title2">{d.title}</span>
-                  <span class="dh-term-save">−{d.pct}%</span>
-                </a>
-              ))}
-              <div class="dh-term-line"><span class="dh-term-time">now</span><span class="dh-term-ok">✓</span><span class="dh-term-title2">codes checked by CoursesWyn<span class="caret"></span></span></div>
-            </div>
-            <div class="dh-term-foot">$ instructor codes verified <b>{instructorCourses.length}</b></div>
-          </div>
-        </div>
+        <PageHero
+  eyebrow={`${provider} · ${instructorCourses.length} Coupon${instructorCourses.length === 1 ? "" : "s"}`}
+  titleHtml={`<span>${cleanName}</span>${topicsSuffix} Courses`}
+  subHtml={`Verified <strong>${instructorCourses.length} ${topicsLabel ? `${topicsLabel} ` : ""}course${instructorCourses.length === 1 ? "" : "s"} from ${instructorName}</strong> on ${provider} — checked against Udemy before listing, updated ${currentMonth} ${currentYear}.`}
+  stats={[{ val: instructorCourses.length, label: "courses" }, { val: maxDisc, label: "max discount", suffix: "%" }, { val: totalStudents, label: "students", suffix: "+" }]}
+  feedLines={heroFeed.map((d) => ({ href: "/coupon/" + d.slug, time: d.timeLabel, cat: d.cat, title: d.title, save: "−" + d.pct + "%" }))}
+  feedFootHtml={`$ instructor codes verified <b>${instructorCourses.length}</b>`}
+>
+  <div slot="top" class="ph-toprow">
+    {instructorImage ? (
+      <img class="ph-avatar" src={instructorImage} alt={instructorName} width={52} height={52} loading="lazy" />
+    ) : (
+      <span class="ph-avatar-fb" style={`background:${getAvatarColor(instructorName)}`}>{getInitials(instructorName)}</span>
+    )}
+    <span class="ph-topbadge">{provider} · {instructorCourses.length} Coupon{instructorCourses.length === 1 ? "" : "s"}</span>
+  </div>
+</PageHero>
         <div class="cc-toolbar" style="margin-top:1.5rem;">
           <a class="cc-hero-btn" href="#deals">View all {instructorCourses.length} courses</a>
           <a class="cc-hero-btn ghost" href="/instructors">Browse all instructors</a>
@@ -515,6 +492,15 @@ const benefitCards = [
     .cc-title { font-size: 1.7rem; }
     .cc-hero-btn { padding: 11px 16px; font-size: 0.85rem; }
   }
+  .dh-terminal { background: #fff; }
+  .dh-term-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #f7f7f8; border-bottom: 1px solid var(--border); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #111111; }
+  .dh-term-head a { margin-left: auto; font-size: 0.8rem; font-weight: 700; color: #550E71; text-decoration: none; text-transform: none; letter-spacing: 0; }
+  .dh-term-head a:hover { text-decoration: underline; }
+  .dh-term-dot, .dh-term-title, .dh-term-live { display: none; }
+  .dh-term-line { font-family: inherit; font-size: 0.85rem; color: #111111; }
+  .dh-term-ok { color: #16a34a; }
+  .dh-term-cat, .dh-term-save { color: #550E71; }
+  .dh-term-foot { background: #f7f7f8; color: #555555; font-family: inherit; }
 </style>
 
 <script>

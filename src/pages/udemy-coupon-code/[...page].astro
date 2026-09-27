@@ -65,12 +65,6 @@ const totalCoupons = allDeals.length;
 const catsSet = new Set<string>();
 allDeals.forEach((d: any) => { if (d.category) catsSet.add((d.category as string).trim()); });
 const categories = Array.from(catsSet).sort();
-const latestUpdate = allDeals.reduce((m: number, d: any) => {
-  const t = new Date(d.updatedAt || d.createdAt || 0).getTime();
-  return t > m ? t : m;
-}, 0);
-const diffMin = Math.floor((now.getTime() - latestUpdate) / 60000);
-const lastVerified = diffMin < 1 ? "Just now" : diffMin < 60 ? `${diffMin}m ago` : Math.floor(diffMin / 60) < 24 ? `${Math.floor(diffMin / 60)}h ago` : `${Math.floor(diffMin / 1440)}d ago`;
 
 const discountPcts = allDeals
   .filter((d: any) => d.price && d.originalPrice && d.originalPrice > d.price)
@@ -123,6 +117,7 @@ const faqs = [
   { q: "Can I use a Udemy coupon code on the Udemy mobile app?", a: "No. Udemy coupon codes can only be applied in a desktop or mobile browser at udemy.com checkout. The Udemy mobile app does not accept coupon codes — open the course page in your browser and log in there instead." },
   { q: "Can I get a refund on a Udemy course if I used a coupon?", a: "Yes. Udemy's 30-day money-back guarantee applies even when you enroll with a coupon code. Request the refund from your Purchase History within 30 days — it returns to your original payment method." },
   { q: "How much can I actually save with Udemy coupons?", a: "Most course coupons bring the price down to $9.99–$19.99 from a retail price of $49.99–$199.99 — savings of up to 95%. Many 100% off coupons are also available, though they sell out fast." },
+  { q: "What's the difference between a sitewide Udemy coupon and an instructor coupon code?", a: "Sitewide Udemy coupons auto-apply at checkout during sales, while instructor coupon codes are created by individual teachers for their own courses and entered by hand or opened through a referral link. Instructor codes carry tighter expiry dates and redemption caps — which is why every deal on this page shows a last-checked stamp." },
 ];
 
 const jsonLd: any = {
@@ -150,6 +145,7 @@ const jsonLd: any = {
       "dateModified": currentDate.toISOString().split('T')[0],
       "inLanguage": "en-US",
       "mainEntity": { "@id": `${currentUrl}#itemlist` },
+      "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["h1", ".ch-sub"] },
       "author": { "@type": "Person", "name": "Andrew Derek", "url": siteUrl },
     },
     {
@@ -234,7 +230,7 @@ for (let p = 1; p <= totalPages; p++) {
     <meta name="author" content="Andrew Derek" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   </Fragment>
 
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
@@ -243,39 +239,21 @@ for (let p = 1; p <= totalPages; p++) {
     <div class="container">
 
       {currentPage === 1 ? (
-        <section style={{ padding: "4rem 1rem 3rem", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: "20%", left: "5%", width: "280px", height: "280px", background: "var(--brand)", filter: "blur(120px)", opacity: 0.07, borderRadius: "50%", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: "10%", right: "5%", width: "240px", height: "240px", background: "#CF6F59", filter: "blur(100px)", opacity: 0.07, borderRadius: "50%", pointerEvents: "none" }} />
-          <div style={{ position: "relative", zIndex: 1, maxWidth: "1200px", margin: "0 auto" }}>
-            <div class="dh-hero-grid">
-              <div class="dh-hero-left">
-                <div class="dh-hero-badge"><span class="lg-blip"></span> Checked Daily — {currentMonth} {currentYear} &middot; updated {lastVerified}</div>
-                <h1 class="dh-hero-title">All {totalCoupons.toLocaleString()} Udemy Coupon Codes <span style={{ color: "var(--brand)" }}>for {currentMonth} {currentYear}</span></h1>
-                <p class="dh-hero-sub">The complete verified catalog — every Udemy coupon code, promo code and discount in one paginated directory across {categories.length} categories. Fresh codes added daily. Save up to <strong>{maxDiscountPct}%</strong>.</p>
-                <div class="dh-hero-stats">
-                  <div class="dh-stat"><b class="dh-stat-val"><span data-count={totalCoupons}>0</span><span class="lg-plus">+</span></b><span class="dh-stat-label">coupons listed</span></div>
-                  <div class="dh-stat"><b class="dh-stat-val"><span data-count={categories.length}>0</span></b><span class="dh-stat-label">categories · A to Z</span></div>
-                  <div class="dh-stat"><b class="dh-stat-val"><span data-count={todayAdded}>0</span><span class="lg-plus">+</span></b><span class="dh-stat-label">added today</span></div>
-                </div>
-              </div>
-              <div class="cc-terminal">
-                <div class="cc-term-head">
-                  <span class="cc-term-dot" style="background:#ff5f56"></span>
-                  <span class="cc-term-dot" style="background:#ffbd2e"></span>
-                  <span class="cc-term-dot" style="background:#27c93f"></span>
-                  <span class="cc-term-title">agents@courseswyn: ~/catalog</span>
-                  <span class="cc-term-live"><span class="lg-blip"></span> Live</span>
-                </div>
-                <div class="cc-term-body">
-                  <div class="cc-term-line"><span class="cc-term-title2">agents@courseswyn$ list every course we have codes for<span class="lg-caret"></span></span></div>
-                </div>
-              </div>
-            </div>
-            <form action="/search" method="GET" role="search" aria-label="Search coupon codes" class="cc-hero-search" style={{ display: "flex", alignItems: "center", gap: "8px", maxWidth: "560px", margin: "2rem 0 1.75rem" }}>
+        <section class="ch-hero">
+          <div class="container">
+            <p class="ch-eyebrow"><span class="ch-blink" aria-hidden="true"></span> Verified {lastChecked} · {todayAdded.toLocaleString()} new today</p>
+            <h1>All {totalCoupons.toLocaleString()} Udemy Coupon Codes <span>for {currentMonth} {currentYear}</span></h1>
+            <p class="ch-sub">The complete verified catalog — every Udemy coupon code, promo code and discount in one paginated directory across {categories.length} categories. Fresh codes added daily. Save up to <strong>{maxDiscountPct}%</strong>.</p>
+            <form action="/search" method="GET" role="search" aria-label="Search coupon codes" class="ch-search">
               <input type="search" name="q" placeholder={"Search " + totalCoupons.toLocaleString() + " Udemy coupon codes..."} autocomplete="off" aria-label="Search coupon codes" />
-              <button type="submit" class="cc-search-btn">Search</button>
+              <button type="submit">Search</button>
             </form>
-            <p style={{ fontSize: "0.82rem", color: "var(--muted)", marginTop: "0.5rem" }}>Compiled &amp; checked by <a href="/about" style={{ color: "var(--brand)", fontWeight: 600 }}>Andrew Derek</a> &middot; Offers last checked {lastChecked} &middot; <a href="/how-we-test-and-verify-udemy-coupons" style={{ color: "var(--brand)", fontWeight: 600 }}>How we verify</a> &middot; ✓ every code checked by our agents</p>
+            <div class="ch-stats">
+              <div class="ch-stat"><div class="ch-stat-num"><span data-count={totalCoupons}>0</span>+</div><div class="ch-stat-lab">coupons listed</div></div>
+              <div class="ch-stat"><div class="ch-stat-num"><span data-count={categories.length}>0</span></div><div class="ch-stat-lab">categories · A to Z</div></div>
+              <div class="ch-stat"><div class="ch-stat-num"><span data-count={todayAdded}>0</span>+</div><div class="ch-stat-lab">added today</div></div>
+            </div>
+            <p class="ch-byline">Compiled &amp; checked by <a href="/about">Andrew Derek</a> · Offers last checked {lastChecked} · <a href="/how-we-test-and-verify-udemy-coupons">How we verify</a></p>
           </div>
         </section>
       ) : (
@@ -293,7 +271,7 @@ for (let p = 1; p <= totalPages; p++) {
 
       <section style={{ background: "var(--card)", borderTop: "1px solid var(--border)", padding: "3rem 1.5rem 2rem", textAlign: "center" }}>
         <div class="container" style={{ maxWidth: "1280px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(255,201,77,0.1)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(85,14,113,0.07)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Browse by Topic
           </div>
           <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text)", margin: "0 0 0.35rem" }}>Udemy Coupon Categories</h2>
@@ -301,7 +279,7 @@ for (let p = 1; p <= totalPages; p++) {
             Jump straight to coupons in {categories.length} fields — from coding and AI to design, business and more.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", justifyContent: "center" }}>
-            <a href="/udemy-coupon-code" style={{ fontSize: "0.78rem", fontWeight: 600, color: "#121715", textDecoration: "none", padding: "3px 10px", borderRadius: "100px", border: "1px solid var(--brand)", background: "var(--brand)" }}>All</a>
+            <a href="/udemy-coupon-code" style={{ fontSize: "0.78rem", fontWeight: 600, color: "#fff", textDecoration: "none", padding: "3px 10px", borderRadius: "100px", border: "1px solid var(--brand)", background: "var(--brand)" }}>All</a>
             {categories.slice(0, 15).map((cat: string) => (
               <a href={`/categories/${slugifyCategory(cat)}`} style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--muted)", textDecoration: "none", padding: "3px 10px", borderRadius: "100px", border: "1px solid var(--border)", background: "var(--bg)" }}>{cat}</a>
             ))}
@@ -311,7 +289,7 @@ for (let p = 1; p <= totalPages; p++) {
 
       <section id="latest" style={{ padding: "3rem 1.5rem 4rem", maxWidth: "1280px", margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(255,201,77,0.1)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Fresh Coupons</div>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(85,14,113,0.07)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Fresh Coupons</div>
           <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text)", margin: "0 0 0.3rem" }}>
             Every Coupon on This Page{currentPage > 1 ? ` — Page ${currentPage}` : ""}
           </h2>
@@ -344,7 +322,7 @@ for (let p = 1; p <= totalPages; p++) {
                 const isActive = item.value === currentPage;
                 const href = item.value === 1 ? `/udemy-coupon-code${langQuery}` : `/udemy-coupon-code/${item.value}${langQuery}`;
                 return isActive
-                  ? <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#121715", width: "34px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "6px", border: "1px solid var(--brand)", background: "var(--brand)" }}>{item.value}</span>
+                  ? <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff", width: "34px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "6px", border: "1px solid var(--brand)", background: "var(--brand)" }}>{item.value}</span>
                   : <a href={href} style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text)", textDecoration: "none", width: "34px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "6px", border: "1px solid var(--border)" }}>{item.value}</a>;
               })}
             </div>
@@ -360,7 +338,7 @@ for (let p = 1; p <= totalPages; p++) {
       {currentPage === 1 && (
       <section aria-label="Featured Udemy coupons" style={{ padding: "0 1.5rem 3rem", maxWidth: "1280px", margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(255,201,77,0.1)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Top Picks</div>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(85,14,113,0.07)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Top Picks</div>
           <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text)", margin: "0 0 0.3rem" }}>Highest-Rated Udemy Courses With Coupons</h2>
           <p style={{ fontSize: "0.9rem", color: "var(--muted)", maxWidth: "600px", margin: "0 auto", lineHeight: 1.6 }}>4.5★ and up, all with a working coupon attached — refreshed as new deals land.</p>
         </div>
@@ -370,50 +348,12 @@ for (let p = 1; p <= totalPages; p++) {
       </section>
       )}
 
-      <section style={{ padding: "4rem 1rem", background: "linear-gradient(135deg, rgba(255,201,77,0.04) 0%, transparent 100%)" }}>
-        <div class="container" style={{ maxWidth: "1280px" }}>
-          <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(255,201,77,0.1)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "1rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>How We Verify</div>
-            <h2 style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)", fontWeight: 800, color: "var(--text)", marginBottom: "0.75rem" }}>
-              How CoursesWyn keeps these Udemy coupons working
-            </h2>
-            <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "700px", margin: "0 auto", lineHeight: 1.6 }}>
-              Every code below is re-checked against Udemy on a loop. Dead codes drop out on their own — fresh ones stream in all day.
-            </p>
-          </div>
-          <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "2rem" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-                  <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text)" }}>⏱ Live re-checking</span>
-                </div>
-                <p style={{ color: "var(--muted)", fontSize: "0.9rem", lineHeight: 1.6, margin: 0 }}>
-                  Since <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank" style={{ color: "var(--brand)", fontWeight: 600 }}>Udemy tightened coupon rules</a>, most codes cap at a handful of redemptions or die within days. Our checker retires the dead ones automatically, so this list only ever shows codes with a pulse.
-                </p>
-              </div>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-                  <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text)" }}>✓ Open method</span>
-                </div>
-                <p style={{ color: "var(--muted)", fontSize: "0.9rem", lineHeight: 1.6, margin: "0 0 0.75rem" }}>
-                  No black box: each listing shows its discount math, rating and last-checked time. Prefer browsing by field? Try <a href="/categories" style={{ color: "var(--brand)", fontWeight: 600 }}>categories</a>, <a href="/topics" style={{ color: "var(--brand)", fontWeight: 600 }}>topics</a> or <a href="/udemy-coupons-today" style={{ color: "var(--brand)", fontWeight: 600 }}>today's fresh batch</a>.
-                </p>
-              </div>
-            </div>
-            <div style={{ marginTop: "1.5rem", paddingTop: "1.25rem", borderTop: "1px solid var(--border)" }}>
-              <p style={{ color: "var(--muted)", fontSize: "0.85rem", lineHeight: 1.7, margin: 0 }}>
-                <strong style={{ color: "var(--text)" }}>Affiliate note:</strong> CoursesWyn earns a small commission when you enroll through our links — it funds the checking pipeline and costs you nothing. Commissions never decide ranking. <a href="/affiliate-disclosure" style={{ color: "var(--brand)", textDecoration: "underline" }}>Full disclosure</a>
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {currentPage === 1 && (
       <section style={{ padding: "4rem 1rem", background: "linear-gradient(180deg, rgba(255,201,77,0.05) 0%, rgba(255,201,77,0.015) 100%)" }}>
         <div class="container" style={{ maxWidth: "1400px" }}>
           <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "linear-gradient(135deg, rgba(255,201,77,0.12) 0%, rgba(76,154,118,0.08) 100%)", padding: "0.5rem 1rem", borderRadius: "20px", marginBottom: "1rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", border: "1px solid rgba(255,201,77,0.25)" }}>Learn More</div>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "linear-gradient(135deg, rgba(85,14,113,0.08) 0%, rgba(85,14,113,0.06) 100%)", padding: "0.5rem 1rem", borderRadius: "20px", marginBottom: "1rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", border: "1px solid rgba(85,14,113,0.28)" }}>Learn More</div>
             <h2 style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 800, color: "var(--text)", marginBottom: "0.75rem" }}>
               About <span style={{ color: "var(--brand)" }}>Udemy Coupon Codes</span> & Course Discounts
             </h2>
@@ -422,7 +362,7 @@ for (let p = 1; p <= totalPages; p++) {
             </p>
             <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap", marginTop: "1.5rem" }}>
               {[["✓", "Checked daily"], ["◉", `Up to ${maxDiscountPct}% off`], ["✦", "No CoursesWyn account"]].map(([icon, label]) => (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "var(--text)", background: "var(--card)", border: "1px solid rgba(255,201,77,0.3)", borderRadius: "999px", padding: "0.45rem 1rem" }}><span style={{ color: "var(--brand)" }}>{icon}</span>{label}</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "var(--text)", background: "var(--card)", border: "1px solid rgba(85,14,113,0.3)", borderRadius: "999px", padding: "0.45rem 1rem" }}><span style={{ color: "var(--brand)" }}>{icon}</span>{label}</span>
               ))}
             </div>
           </div>
@@ -437,29 +377,13 @@ for (let p = 1; p <= totalPages; p++) {
             ].map(([num, title, text]) => (
               <div class="about-card">
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-                  <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "rgba(255,201,77,0.12)", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,201,77,0.25)", color: "var(--brand)", fontWeight: 800 }}>{num}</div>
+                  <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "rgba(85,14,113,0.08)", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(85,14,113,0.28)", color: "var(--brand)", fontWeight: 800 }}>{num}</div>
                   <span style={{ fontSize: "0.8rem", fontWeight: 800, color: "rgba(255,201,77,0.4)", letterSpacing: "0.05em" }}>{num}</span>
                 </div>
                 <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text)", marginBottom: "0.5rem" }}>{title}</h3>
                 <p style={{ color: "var(--muted)", fontSize: "0.85rem", lineHeight: 1.7, margin: 0 }}>{text}</p>
               </div>
             ))}
-          </div>
-          <div style={{ marginTop: "3rem" }}>
-            <div class="cta-box">
-              <span class="cta-eyebrow">Udemy Personal Plan</span>
-              <h2>One Subscription, <span style={{ color: "var(--brand)" }}>26,000+ Courses</span><br />Zero Coupon-Hunting</h2>
-              <p class="cta-subtext">Prefer all-you-can-learn over single codes? One flat rate, certificates included, cancel anytime.</p>
-              <div class="cta-actions">
-                <a href="https://trk.udemy.com/c/6564357/4039145/39854" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg" style={{ borderRadius: "999px", padding: "1rem 2.5rem" }}>Start Free Trial</a>
-              </div>
-              <div class="cta-features">
-                <span><span class="cta-dot"></span>26,000+ courses</span>
-                <span><span class="cta-dot"></span>7-day free trial</span>
-                <span><span class="cta-dot"></span>Cancel anytime</span>
-                <span><span class="cta-dot"></span>From $20/month</span>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -599,7 +523,7 @@ for (let p = 1; p <= totalPages; p++) {
       {currentPage === 1 && (
         <section aria-label="Udemy coupon code FAQs" style={{ background: "var(--bg)", padding: "4rem 1.5rem", maxWidth: "1280px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(255,201,77,0.1)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Got Questions?</div>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(85,14,113,0.07)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Got Questions?</div>
             <h2 style={{ fontSize: "clamp(1.3rem, 3vw, 1.8rem)", fontWeight: 800, color: "var(--text)", margin: "0 0 0.5rem" }}>
               Udemy Coupon Code <span style={{ color: "var(--brand)" }}>FAQs</span>
             </h2>
@@ -609,9 +533,9 @@ for (let p = 1; p <= totalPages; p++) {
           </div>
           <div class="faq-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: "1.5rem" }}>
             {faqs.map((faq: any) => (
-              <div itemscope itemtype="https://schema.org/Question" style={{ background: "var(--card)", padding: "1.75rem 2rem", borderRadius: "20px", border: "1px solid rgba(255,201,77,0.18)", position: "relative", overflow: "hidden" }}>
+              <div itemscope itemtype="https://schema.org/Question" style={{ background: "var(--card)", padding: "1.75rem 2rem", borderRadius: "20px", border: "1px solid rgba(85,14,113,0.2)", position: "relative", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.75rem" }}>
-                  <div style={{ flexShrink: 0, width: "44px", height: "44px", background: "linear-gradient(135deg, rgba(255,201,77,0.15) 0%, rgba(76,154,118,0.08) 100%)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,201,77,0.25)", color: "var(--brand)", fontWeight: 800, fontSize: "1.1rem" }}>?</div>
+                  <div style={{ flexShrink: 0, width: "44px", height: "44px", background: "linear-gradient(135deg, rgba(255,201,77,0.15) 0%, rgba(85,14,113,0.06) 100%)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(85,14,113,0.28)", color: "var(--brand)", fontWeight: 800, fontSize: "1.1rem" }}>?</div>
                   <h3 itemprop="name" style={{ color: "var(--text)", fontSize: "1.05rem", margin: 0, fontWeight: 700, lineHeight: 1.4 }}>{faq.q}</h3>
                 </div>
                 <div itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer">
@@ -641,7 +565,14 @@ for (let p = 1; p <= totalPages; p++) {
   .lg-blip { width: 7px; height: 7px; border-radius: 50%; background: var(--brand); animation: lgBlip 1.6s infinite; }
   @keyframes lgBlip { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
   .lg-caret { display: inline-block; width: 0.55ch; height: 1em; margin-left: 4px; background: var(--brand); vertical-align: text-bottom; animation: lgBlip 1.1s step-end infinite; }
-  .cc-terminal { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; text-align: left; margin-bottom: 1.5rem; }
+  .cc-fresh { background: #fff; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; text-align: left; margin-bottom: 1.5rem; }
+  .cc-fresh-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: #f7f7f8; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #111111; }
+  .cc-fresh-head a { margin-left: auto; font-size: 0.8rem; font-weight: 700; color: #550E71; text-decoration: none; text-transform: none; letter-spacing: 0; }
+  .cc-fresh-head a:hover { text-decoration: underline; }
+  .cc-fresh ul { list-style: none; margin: 0; padding: 6px 0; }
+  .cc-fresh li { display: flex; align-items: center; gap: 10px; padding: 9px 16px; font-size: 0.88rem; color: #111111; border-top: 1px solid #f0f0f0; }
+  .cc-fresh li:first-child { border-top: none; }
+  .cc-fresh strong { color: #16a34a; }
   .cc-term-head { display: flex; align-items: center; gap: 6px; padding: 10px 14px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
   .cc-term-dot { width: 11px; height: 11px; border-radius: 50%; }
   .cc-term-title { margin-left: 8px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
@@ -654,7 +585,28 @@ for (let p = 1; p <= totalPages; p++) {
   .cc-hero-search { display: flex; align-items: center; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 4px 4px 4px 14px; gap: 8px; }
   .cc-hero-search input { flex: 1; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text); background: transparent; border: none; outline: none; }
   .cc-hero-search input::placeholder { color: var(--muted); }
-  .cc-search-btn { font-family: var(--font-display); font-weight: 700; color: #0b0e14; background: var(--brand); border: none; border-radius: 8px; padding: 9px 18px; cursor: pointer; }
+  .cc-search-btn { font-family: var(--font-display); font-weight: 700; color: #fff; background: var(--brand); border: none; border-radius: 8px; padding: 9px 18px; cursor: pointer; }
+  .ch-hero { background: linear-gradient(160deg, #14082b 0%, #2b1152 55%, #3b1d8f 100%); padding: 3.5rem 0 3rem; text-align: center; position: relative; overflow: hidden; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
+  .ch-hero::before { content: ''; position: absolute; top: -100px; left: 12%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(119,59,255,0.35) 0%, transparent 65%); pointer-events: none; }
+  .ch-hero::after { content: ''; position: absolute; bottom: -120px; right: 8%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(242,201,76,0.13) 0%, transparent 65%); pointer-events: none; }
+  .ch-hero .container { position: relative; z-index: 1; }
+  .ch-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #F2C94C; background: rgba(242,201,76,0.1); border: 1px solid rgba(242,201,76,0.35); border-radius: 999px; padding: 7px 16px; margin: 0 0 1.1rem; }
+  .ch-blink { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
+  .ch-hero h1 { font-family: 'Encode Sans', sans-serif; font-size: clamp(1.9rem, 4vw, 2.9rem); font-weight: 800; line-height: 1.12; color: #ffffff; margin: 0 0 0.75rem; letter-spacing: -0.02em; }
+  .ch-hero h1 span { color: #F2C94C; }
+  .ch-sub { font-size: 1.05rem; color: rgba(255,255,255,0.82); max-width: 640px; margin: 0 auto 1.5rem; line-height: 1.6; }
+  .ch-sub strong { color: #fff; }
+  .ch-search { display: flex; gap: 8px; max-width: 560px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.45); }
+  .ch-search input { flex: 1; border: none; outline: none; font-size: 0.9rem; padding: 10px 14px; min-width: 0; color: #111; background: transparent; font-family: inherit; }
+  .ch-search button { font-weight: 800; color: #fff; background: #773BFF; border: none; border-radius: 9px; padding: 0 24px; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
+  .ch-search button:hover { filter: brightness(1.1); }
+  .ch-stats { display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; margin-top: 1.75rem; }
+  .ch-stat { display: flex; flex-direction: column; }
+  .ch-stat-num { font-size: 1.5rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
+  .ch-stat-lab { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #F2C94C; }
+  .ch-byline { font-size: 0.82rem; color: rgba(255,255,255,0.65); margin: 1.25rem 0 0; }
+  .ch-byline a { color: #F2C94C; font-weight: 600; }
+  h1, h2, h3 { font-family: 'Encode Sans', sans-serif; }
   .cc-dir-num { font-family: var(--font-display); font-size: 1.75rem; font-weight: 800; color: var(--brand); display: block; }
   .dh-hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 2.5rem; align-items: center; }
   .dh-hero-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; margin-bottom: 1.25rem; }
@@ -682,7 +634,7 @@ for (let p = 1; p <= totalPages; p++) {
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #0b0e14, #FFC94D);
+    background: linear-gradient(90deg, #550E71, #FFC94D);
     opacity: 0;
     transition: opacity 0.25s ease;
   }
@@ -706,7 +658,7 @@ for (let p = 1; p <= totalPages; p++) {
   /* ===== REGISTER / LEDGER HEADER ===== */
   .cc-register { position: relative; background: var(--card); border: 1px solid #232B26; border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(0, 0, 0, 0.35); }
   .cc-register-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-  .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(76, 195, 138, 0.12); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 6px 13px; }
+  .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(85, 14, 113, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 6px 13px; }
   .cc-eyebrow a { color: inherit; text-decoration: none; }
   .cc-eyebrow a:hover { text-decoration: underline; }
   .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #FFC94D; animation: ccBlip 1.6s infinite; }
@@ -714,13 +666,13 @@ for (let p = 1; p <= totalPages; p++) {
   .cc-folio { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--muted); border: 1px dashed var(--border); border-radius: 6px; padding: 5px 10px; letter-spacing: .05em; white-space: nowrap; }
   .cc-title { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 700; color: var(--text); line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 12px; }
   .cc-title .cc-accent { color: #CF6F59; }
-  .cc-page-label { display: inline-flex; align-items: center; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(76, 195, 138, 0.12); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 4px 10px; margin-left: 0.6rem; vertical-align: middle; }
+  .cc-page-label { display: inline-flex; align-items: center; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(85, 14, 113, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 4px 10px; margin-left: 0.6rem; vertical-align: middle; }
   .cc-subtitle { color: var(--muted); font-size: 0.95rem; line-height: 1.7; margin: 0 0 20px; max-width: 640px; }
   .cc-subtitle strong { color: var(--text); font-weight: 700; }
 
   .cc-byline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 20px; }
-  .cc-byline-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(76, 195, 138, 0.12); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 5px 12px; text-decoration: none; transition: background 0.2s; }
-  .cc-byline-badge:hover { background: rgba(76, 195, 138, 0.2); }
+  .cc-byline-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(85, 14, 113, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 5px 12px; text-decoration: none; transition: background 0.2s; }
+  .cc-byline-badge:hover { background: rgba(85, 14, 113, 0.14); }
   .cc-byline-badge svg { flex-shrink: 0; }
   .cc-byline-date { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--muted); }
   .cc-byline-verify { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--text); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; transition: all 0.2s; }
@@ -810,8 +762,8 @@ for (let p = 1; p <= totalPages; p++) {
   .cc-guide-text { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.75rem; }
   .cc-guide-text:last-child { margin-bottom: 0; }
   .cc-guide-note { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); margin: 1rem 0 0; }
-  .cc-ppoffer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; background: rgba(76, 195, 138, 0.12); border: 1px solid rgba(0, 0, 0, 0.35); border-radius: 10px; padding: 12px 16px; text-decoration: none; transition: all 0.2s; }
-  .cc-ppoffer:hover { background: rgba(76, 195, 138, 0.2); border-color: var(--brand); }
+  .cc-ppoffer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; background: rgba(85, 14, 113, 0.08); border: 1px solid rgba(0, 0, 0, 0.35); border-radius: 10px; padding: 12px 16px; text-decoration: none; transition: all 0.2s; }
+  .cc-ppoffer:hover { background: rgba(85, 14, 113, 0.14); border-color: var(--brand); }
   .cc-ppoffer-label { font-family: var(--font-display); font-size: 0.8125rem; font-weight: 700; color: var(--text); }
   .cc-ppoffer-cta { font-family: var(--font-mono); font-size: 0.71875rem; font-weight: 600; color: var(--brand); white-space: nowrap; }
   .cc-guide-block a { color: var(--brand); text-decoration: none; font-weight: 600; }

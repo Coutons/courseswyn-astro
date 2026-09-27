@@ -70,14 +70,6 @@ const discountPcts = activeToday
   .map(d => Math.round(100 - (d.price / d.originalPrice!) * 100));
 const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 95;
 
-const todayFeed = todayGridDeals.slice(0, 6).map((d) => {
-  const t = new Date((d as any).updatedAt ?? (d as any).createdAt ?? 0).getTime();
-  const mins = Math.max(1, Math.round((now.getTime() - t) / 60000));
-  const timeLabel = mins < 60 ? mins + "m ago" : Math.round(mins / 60) + "h ago";
-  const pct = d.price && d.originalPrice && d.originalPrice > d.price ? Math.round(100 - (d.price / d.originalPrice) * 100) : 0;
-  return { title: String(d.title || ""), slug: String(d.slug), cat: (d.category || "Udemy").toLowerCase(), pct, timeLabel };
-});
-
 const siteUrl = "https://courseswyn.com";
 const pageUrl = `${siteUrl}/udemy-coupons-today/`;
 const shortDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(now);
@@ -203,55 +195,21 @@ const jsonLd = {
   <main class="cc-root">
     <div class="cc-container">
 
-      <header class="cc-header">
-        <div class="dh-hero">
-          <div class="dh-hero-grid">
-            <div class="dh-hero-left">
-              <a class="dh-hero-badge" href="/how-we-test-and-verify-udemy-coupons"><span class="lg-blip"></span> Live &middot; updated {lastVerified}</a>
-              <h1 class="dh-hero-title">Verified <span style="color: var(--brand)">Udemy Coupons Today</span> — {todayAdded} New Deals for {shortDate}</h1>
-              <p class="dh-hero-sub">{todayAdded} hand-picked deals added in the last 24 hours &mdash; every code re-verified before it's listed. Save up to <strong>{maxDiscountPct}%</strong> on premium courses.</p>
-              <div class="dh-hero-stats">
-                <div class="dh-stat"><b class="dh-stat-val"><span data-count={todayAdded}>0</span><span class="lg-plus">+</span></b><span class="dh-stat-label">added today</span></div>
-                <div class="dh-stat"><b class="dh-stat-val"><span data-count={totalActive}>0</span></b><span class="dh-stat-label">active today</span></div>
-                <div class="dh-stat"><b class="dh-stat-val"><span data-count={freeCount}>0</span></b><span class="dh-stat-label">free today</span></div>
-              </div>
-            </div>
-
-            <div class="dh-terminal">
-              <div class="dh-term-head">
-                <span class="dh-term-dot" style="background:#ff5f56"></span>
-                <span class="dh-term-dot" style="background:#ffbd2e"></span>
-                <span class="dh-term-dot" style="background:#27c93f"></span>
-                <span class="dh-term-title">agents@courseswyn: ~/verify --today</span>
-                <span class="dh-term-live"><span class="lg-blip"></span> Live</span>
-              </div>
-              <div class="dh-term-body">
-                {todayFeed.map((d) => (
-                  <a class="dh-term-line" href={"/coupon/" + d.slug}>
-                    <span class="dh-term-time">{d.timeLabel}</span>
-                    <span class="dh-term-ok">✓</span>
-                    <span class="dh-term-cat">{d.cat}</span>
-                    <span class="dh-term-title2">{d.title}</span>
-                    <span class="dh-term-save">−{d.pct}%</span>
-                  </a>
-                ))}
-                <div class="dh-term-line"><span class="dh-term-time">now</span><span class="dh-term-ok">✓</span><span class="dh-term-title2">codes checked by CoursesWyn<span class="caret"></span></span></div>
-              </div>
-              <div class="dh-term-foot">$ codes checked today by CoursesWyn <b>{totalActive}</b></div>
-            </div>
+      <header class="td-hero">
+        <div class="container">
+          <p class="td-eyebrow"><span class="td-blink" aria-hidden="true"></span> Live · updated {lastVerified}</p>
+          <h1>Verified <span>Udemy Coupons Today</span> — {todayAdded} New Deals for {shortDate}</h1>
+          <p class="td-sub">{todayAdded} hand-picked deals added in the last 24 hours &mdash; every code re-verified before it&apos;s listed. Save up to <strong>{maxDiscountPct}%</strong> on premium courses.</p>
+          <form action="/search" method="GET" role="search" aria-label="Search courses" class="td-search">
+            <input type="search" name="q" placeholder="Search today's discounted Udemy courses..." autocomplete="off" aria-label="Search courses" />
+            <button type="submit">Search</button>
+          </form>
+          <div class="td-stats">
+            <div class="td-stat"><div class="td-stat-num"><span data-count={todayAdded}>0</span>+</div><div class="td-stat-lab">added today</div></div>
+            <div class="td-stat"><div class="td-stat-num"><span data-count={totalActive}>0</span></div><div class="td-stat-lab">active today</div></div>
+            <div class="td-stat"><div class="td-stat-num"><span data-count={freeCount}>0</span></div><div class="td-stat-lab">free today</div></div>
           </div>
-
-          <div class="cc-toolbar" style="margin-top:1.5rem;">
-            <form action="/search" method="GET" role="search" aria-label="Search courses" class="cc-hero-search">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input type="search" name="q" placeholder="Search today's discounted Udemy courses..." autocomplete="off" aria-label="Search courses" />
-              <kbd>? + K</kbd>
-            </form>
-            <a class="cc-hero-btn" href="#latest">Browse today's deals</a>
-            <a class="cc-hero-btn ghost" href="/udemy-coupon-code">Browse all coupon codes</a>
-          </div>
-
-          <p class="cc-affiliate">CoursesWyn may earn a commission when you buy through links on this page — at no extra cost to you. <a href="/affiliate-disclosure">Affiliate Disclosure</a></p>
+          <p class="td-byline">Compiled &amp; checked by <a href="/about">Andrew Derek</a> · Offers last checked {lastVerified} · <a href="/how-we-test-and-verify-udemy-coupons">How we verify</a></p>
         </div>
       </header>
 
@@ -459,7 +417,7 @@ const jsonLd = {
   /* ===== REGISTER / LEDGER HEADER ===== */
   .cc-register { position: relative; background: var(--card); border: 1px solid #232B26; border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(0, 0, 0, 0.35); }
   .cc-register-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-  .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(76, 195, 138, 0.12); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 6px 13px; }
+  .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(85, 14, 113, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 6px 13px; }
   .cc-eyebrow a { color: inherit; text-decoration: none; }
   .cc-eyebrow a:hover { text-decoration: underline; }
   .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #FFC94D; animation: ccBlip 1.6s infinite; }
@@ -472,7 +430,7 @@ const jsonLd = {
   .cc-subtitle time { white-space: nowrap; }
 
   .cc-byline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; }
-  .cc-byline-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(76, 195, 138, 0.12); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 5px 12px; text-decoration: none; transition: background 0.2s; }
+  .cc-byline-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(85, 14, 113, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 5px 12px; text-decoration: none; transition: background 0.2s; }
   .cc-byline-badge:hover { background: rgba(76, 195, 138, 0.2); }
   .cc-byline-badge svg { flex-shrink: 0; }
   .cc-byline-date { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--muted); }
@@ -514,7 +472,7 @@ const jsonLd = {
   .daily-share-link:hover { border-color: var(--brand); color: var(--brand); }
   .daily-share-link:hover svg { color: var(--brand); }
   .daily-share-copy { display: inline-flex; align-items: center; padding: 8px 14px; border-radius: 8px; border: 1px dashed #FFC94D; background: transparent; font-size: 0.78125rem; font-weight: 600; color: var(--brand); cursor: pointer; transition: all 0.15s; }
-  .daily-share-copy:hover { background: rgba(76, 195, 138, 0.12); }
+  .daily-share-copy:hover { background: rgba(85, 14, 113, 0.08); }
   .daily-share-copy.copied { background: #FFC94D; color: #0b0e14; }
 
   /* ===== COMPACT PP BANNER — high CTR (amber urgency + Udemy purple CTA) ===== */
@@ -568,7 +526,7 @@ const jsonLd = {
   .pp-inline-list { margin: 2px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
   .pp-inline-list li { font-size: 0.8125rem; color: var(--text-secondary); padding-left: 18px; position: relative; }
   .pp-inline-list li::before { content: "✓"; position: absolute; left: 0; color: var(--brand); font-weight: 800; }
-  .pp-inline-btn { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; padding: 12px 16px; border-radius: 10px; background: linear-gradient(135deg, #0b0e14, #FFC94D); color: #121715; font-size: 0.875rem; font-weight: 800; text-decoration: none; transition: all 0.2s; }
+  .pp-inline-btn { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; padding: 12px 16px; border-radius: 10px; background: linear-gradient(135deg, #FFE9A8, #FFC94D); color: #121715; font-size: 0.875rem; font-weight: 800; text-decoration: none; transition: all 0.2s; }
   .pp-inline-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
   .pp-inline-arrow { transition: transform 0.2s; }
   .pp-inline-btn:hover .pp-inline-arrow { transform: translateX(3px); }
@@ -597,7 +555,7 @@ const jsonLd = {
   .pp-premium-grid { display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: center; margin-bottom: 18px; }
   .pp-premium-point { display: inline-flex; align-items: center; gap: 7px; font-size: 0.78rem; color: var(--text-secondary); background: var(--bg); border: 1px solid var(--border); padding: 5px 11px; border-radius: 999px; }
   .pp-premium-point strong { color: var(--text); }
-  .pp-premium-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 22px; border-radius: 10px; font-size: 0.92rem; font-weight: 800; text-decoration: none; background: linear-gradient(135deg, #0b0e14, #FFC94D); color: #121715; transition: all 0.2s; }
+  .pp-premium-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 22px; border-radius: 10px; font-size: 0.92rem; font-weight: 800; text-decoration: none; background: linear-gradient(135deg, #FFE9A8, #FFC94D); color: #121715; transition: all 0.2s; }
   .pp-premium-btn:hover { filter: brightness(1.08); transform: translateY(-2px); }
   .pp-premium-trust { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; font-size: 0.72rem; font-weight: 600; color: var(--muted); }
   .pp-premium-note { font-size: 0.72rem; color: var(--muted); line-height: 1.6; margin: 10px 0 0; }
@@ -640,6 +598,31 @@ const jsonLd = {
   .cc-cta-text { font-size: 0.95rem; line-height: 1.6; margin: 0 auto 18px; max-width: 480px; color: var(--muted); }
   .cc-cta .cc-hero-btn { background: #FFC94D; color: #0b0e14; box-shadow: 0 12px 28px -12px rgba(0, 0, 0, 0.5); }
   .cc-cta .cc-hero-btn:hover { background: #FFC94D; transform: translateY(-1px); }
+  h1, h2, h3 { font-family: 'Encode Sans', sans-serif; }
+  .td-hero { background: linear-gradient(160deg, #14082b 0%, #2b1152 55%, #3b1d8f 100%); padding: 3.5rem 0 3rem; text-align: center; position: relative; overflow: hidden; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
+  h1, h2, h3 { font-family: 'Encode Sans', sans-serif; }
+  .td-hero::before { content: ''; position: absolute; top: -100px; left: 12%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(119,59,255,0.35) 0%, transparent 65%); pointer-events: none; }
+  .td-hero::after { content: ''; position: absolute; bottom: -120px; right: 8%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(242,201,76,0.13) 0%, transparent 65%); pointer-events: none; }
+  .td-hero .container { position: relative; z-index: 1; }
+  .td-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #F2C94C; background: rgba(242,201,76,0.1); border: 1px solid rgba(242,201,76,0.35); border-radius: 999px; padding: 7px 16px; margin: 0 0 1.1rem; }
+  .td-blink { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
+  .td-hero h1 { font-size: clamp(1.9rem, 4vw, 2.9rem); font-weight: 800; line-height: 1.12; color: #ffffff; margin: 0 0 0.75rem; letter-spacing: -0.02em; }
+  .td-hero h1 span { color: #F2C94C; }
+  .td-sub { font-size: 1.05rem; color: rgba(255,255,255,0.82); max-width: 640px; margin: 0 auto 1.5rem; line-height: 1.6; }
+  .td-sub strong { color: #fff; }
+  .td-search { display: flex; gap: 8px; max-width: 560px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.45); }
+  .td-search input { flex: 1; border: none; outline: none; font-size: 0.9rem; padding: 10px 14px; min-width: 0; color: #111; background: transparent; font-family: inherit; }
+  .td-search button { font-weight: 800; color: #fff; background: #773BFF; border: none; border-radius: 9px; padding: 0 24px; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
+  .td-search button:hover { filter: brightness(1.1); }
+  .td-stats { display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; margin-top: 1.75rem; }
+  .td-stat { display: flex; flex-direction: column; }
+  .td-stat-num { font-size: 1.5rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
+  .td-stat-lab { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #F2C94C; }
+  .td-byline { font-size: 0.82rem; color: rgba(255,255,255,0.65); margin: 1.25rem 0 0; }
+  .td-byline a { color: #F2C94C; font-weight: 600; }
+  .daily-urgency strong { color: #8a6d00; }
+  .daily-urgency svg { color: #B8860B; }
+  .pp-compact-note span { color: #8a6d00; }
 
   @media (max-width: 900px) { .dh-hero-grid { grid-template-columns: 1fr; gap: 1.75rem; } }
   @media (max-width: 768px) {

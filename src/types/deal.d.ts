@@ -2,6 +2,7 @@ export interface Deal {
   slug: string;
   title: string;
   description: string;
+  content?: string;
   price: number;
   originalPrice?: number;
   discount?: number;

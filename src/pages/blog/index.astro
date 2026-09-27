@@ -1,5 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import PageHero from "@/components/PageHero.astro";
 import { Image } from 'astro:assets';
 import { getCollection } from "astro:content";
 import { formatDateWIB, toISODateWIB } from "../../lib/date";
@@ -184,40 +185,14 @@ const structuredData = {
     <div class="cc-container">
 
       <header class="cc-header">
-        <div class="dh-hero-grid">
-          <div class="dh-hero-left">
-            <div class="dh-hero-badge"><span class="lg-blip"></span> Original research &middot; {posts.length} articles</div>
-            <h1 class="dh-hero-title">Udemy Course <span class="cc-accent">Reviews &amp; Guides</span></h1>
-            <p class="dh-hero-sub">Guides built from our coupon verification pipeline — every review links to a course we've actually checked against Udemy, with the working discount code at hand.</p>
-            <div class="dh-hero-stats">
-              <div class="dh-stat"><b class="dh-stat-val"><span data-count={posts.length}>0</span></b><span class="dh-stat-label">articles</span></div>
-              <div class="dh-stat"><b class="dh-stat-val"><span data-count={topicChips.length}>0</span></b><span class="dh-stat-label">topics covered</span></div>
-              <div class="dh-stat"><b class="dh-stat-val"><span data-count={1300}>0</span><span class="lg-plus">+</span></b><span class="dh-stat-label">courses reviewed</span></div>
-            </div>
-          </div>
-          <div class="dh-terminal">
-            <div class="dh-term-head">
-              <span class="dh-term-dot" style="background:#ff5f56"></span>
-              <span class="dh-term-dot" style="background:#ffbd2e"></span>
-              <span class="dh-term-dot" style="background:#27c93f"></span>
-              <span class="dh-term-title">agents@courseswyn: ~/blog</span>
-              <span class="dh-term-live"><span class="lg-blip"></span> Live</span>
-            </div>
-            <div class="dh-term-body">
-              {heroFeed.map((p: { title: string; href: string; timeLabel: string }) => (
-                <a class="dh-term-line" href={p.href}>
-                  <span class="dh-term-time">{p.timeLabel}</span>
-                  <span class="dh-term-ok">✓</span>
-                  <span class="dh-term-cat">guide</span>
-                  <span class="dh-term-title2">{p.title}</span>
-                  <span class="dh-term-save">→</span>
-                </a>
-              ))}
-              <div class="dh-term-line"><span class="dh-term-time">now</span><span class="dh-term-ok">✓</span><span class="dh-term-title2">reviews checked by CoursesWyn<span class="caret"></span></span></div>
-            </div>
-            <div class="dh-term-foot">$ fresh articles <b>{posts.length}</b></div>
-          </div>
-        </div>
+        <PageHero
+  eyebrow={`Original research · ${posts.length} articles`}
+  titleHtml={`Udemy Course <span>Reviews & Guides</span>`}
+  subHtml="Guides built from our coupon verification pipeline — every review links to a course we've actually checked against Udemy, with the working discount code at hand."
+  stats={[{ val: posts.length, label: "articles" }, { val: topicChips.length, label: "topics covered" }, { val: 1300, label: "courses reviewed", suffix: "+" }]}
+  feedLines={heroFeed.map((p: { title: string; href: string; timeLabel: string }) => ({ href: p.href, time: p.timeLabel, cat: "guide", title: p.title, save: "→" }))}
+  feedFootHtml={`$ fresh articles <b>${posts.length}</b>`}
+/>
         <div class="cc-toolbar" style="margin-top:1.5rem;">
           <a class="cc-hero-btn" href="#latest">Latest reviews &amp; guides</a>
           <a class="cc-hero-btn ghost" href="/categories">Browse by category</a>
@@ -451,6 +426,15 @@ const structuredData = {
     .cc-title { font-size: 1.7rem; }
     .cc-hero-btn { padding: 11px 16px; font-size: 0.85rem; }
   }
+  .dh-terminal { background: #fff; }
+  .dh-term-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #f7f7f8; border-bottom: 1px solid var(--border); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #111111; }
+  .dh-term-head a { margin-left: auto; font-size: 0.8rem; font-weight: 700; color: #550E71; text-decoration: none; text-transform: none; letter-spacing: 0; }
+  .dh-term-head a:hover { text-decoration: underline; }
+  .dh-term-dot, .dh-term-title, .dh-term-live { display: none; }
+  .dh-term-line { font-family: inherit; font-size: 0.85rem; color: #111111; }
+  .dh-term-ok { color: #16a34a; }
+  .dh-term-cat, .dh-term-save { color: #550E71; }
+  .dh-term-foot { background: #f7f7f8; color: #555555; font-family: inherit; }
 </style>
 
 <script>
