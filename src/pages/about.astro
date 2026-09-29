@@ -4,159 +4,288 @@ import { readDeals } from '../lib/store';
 
 const allDeals = await readDeals();
 const totalCourses = allDeals.length;
-const freeCount = allDeals.filter(d => d.price === 0 || (d.originalPrice && d.price === 0)).length;
+const freeCount = allDeals.filter(d => d.price === 0).length;
 const totalCategories = [...new Set(allDeals.map(d => d.category?.trim()).filter(Boolean))].length;
-const avgDiscount = Math.round(allDeals.reduce((s, d) => s + (d.discount ?? (d.originalPrice ? Math.round((1 - d.price / d.originalPrice) * 100) : 0)), 0) / allDeals.length);
+const avgDiscount = totalCourses
+  ? Math.round(allDeals.reduce((s, d) => s + (d.discount ?? (d.originalPrice ? Math.round((1 - d.price / d.originalPrice) * 100) : 0)), 0) / totalCourses)
+  : 0;
 const dates = allDeals.map(d => d.updatedAt ?? d.createdAt).filter(Boolean) as string[];
 const latestDate = dates.length ? dates.sort().reverse()[0] : null;
 const latestStr = latestDate ? new Date(latestDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Jakarta' }) : '';
 const pubDate = '2024-01-01';
-const modDate = latestDate || pubDate;
+const modDate = latestDate ? new Date(latestDate).toISOString().slice(0,10) : '2026-07-27';
 
 const canonicalUrl = 'https://courseswyn.com/about';
-const pageTitle = 'About CoursesWyn: Tracking Udemy Coupons Since 2024 | CoursesWyn';
-const pageDesc = `CoursesWyn has tracked ${totalCourses.toLocaleString()}+ verified Udemy coupons across ${totalCategories} categories since 2024. One developer, zero gimmicks. Full story and live numbers.`;
+const pageTitle = 'About CoursesWyn: Verified Udemy Coupons & Free Courses Since 2024';
+const pageDesc = `CoursesWyn tracks ${totalCourses.toLocaleString()}+ verified Udemy coupon codes and free Udemy courses across ${totalCategories} categories. Every Udemy discount is checkout-tested daily — no fake codes, no pay-to-play.`;
 ---
 
 <Layout title={pageTitle} description={pageDesc} canonical={canonicalUrl} hideBreadcrumbs={true}>
-  <script type="application/ld+json">
-  {
+  <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "Article",
-        "@id": "https://courseswyn.com/about#article",
-        "headline": "About CoursesWyn: Tracking Udemy Coupons Since 2024",
-        "description": "CoursesWyn has tracked thousands of verified Udemy coupons since 2024. One developer, zero gimmicks. Full story and live numbers.",
-        "datePublished": "2024-01-01",
-        "dateModified": "2026-07-27",
-        "author": { "@type": "Organization", "@id": "https://courseswyn.com#organization" },
-        "publisher": { "@type": "Organization", "@id": "https://courseswyn.com#organization" }
+        "@type": "AboutPage",
+        "@id": "https://courseswyn.com/about#webpage",
+        "url": "https://courseswyn.com/about",
+        "name": pageTitle,
+        "description": pageDesc,
+        "datePublished": pubDate,
+        "dateModified": modDate,
+        "isPartOf": { "@id": "https://courseswyn.com#website" },
+        "about": { "@id": "https://courseswyn.com#organization" },
+        "inLanguage": "en-US"
       },
       {
         "@type": "Organization",
         "@id": "https://courseswyn.com#organization",
         "name": "CoursesWyn",
         "url": "https://courseswyn.com",
+        "logo": { "@type": "ImageObject", "url": "https://courseswyn.com/logo.svg" },
+        "description": "Verified Udemy coupon codes, Udemy discounts and free Udemy courses — re-checked daily.",
         "foundingDate": "2024",
-        "sameAs": ["https://x.com/CoursesWyn", "https://www.facebook.com/CoursesWyn"],
+        "sameAs": ["https://x.com/CoursesWyn", "https://www.facebook.com/CoursesWyn", "https://medium.com/@coursewyn"],
         "contactPoint": { "@type": "ContactPoint", "contactType": "customer support", "url": "https://courseswyn.com/contact" }
       },
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" },
-          { "@type": "ListItem", "position": 2, "name": "About", "item": "https://courseswyn.com/about" }
+          { "@type": "ListItem", "position": 2, "name": "About Us", "item": "https://courseswyn.com/about" }
         ]
       }
     ]
-  }
-  </script>
+  })} />
 
-  <main class="ab-root">
-    <div class="ab-container">
+  <main class="au-root">
+    <div class="au-container">
 
-      <nav aria-label="Breadcrumb" class="ab-breadcrumb">
+      <nav aria-label="Breadcrumb" class="au-crumb">
         <a href="/">Home</a>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-        <span aria-current="page">About</span>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">About Us</span>
       </nav>
 
-      <article>
+      {/* ── HERO (mirip courselegend: H1 statement + intro) ── */}
+      <header class="au-hero">
+        <p class="au-eyebrow">About CoursesWyn · Since 2024</p>
+        <h1>Online learning needs fewer coupons and better filters.</h1>
+        <p class="au-lead">
+          CoursesWyn exists to cut through the noise of fake Udemy coupon codes.
+          We curate <strong>verified Udemy coupons, Udemy discounts, and free Udemy courses</strong> that
+          actually work at checkout — reject what doesn't, and build a long-term resource for
+          people who value their time more than inbox subscriptions.
+        </p>
+        <p class="au-date">Published January 2024 · Updated {latestStr || 'continuously'} · {totalCourses.toLocaleString()}+ Udemy coupons tracked</p>
 
-        <h1>About CoursesWyn</h1>
-        <p class="ab-subtitle">Tracking Udemy coupons since 2024 &middot; One developer &middot; Verified daily</p>
-        <p class="ab-date">Published January 2024 &middot; Updated {latestStr || 'continuously'}</p>
-
-        <p class="ab-lead">CoursesWyn tracks Udemy coupons and free courses, and verifies each before showing it to you. When a page says a coupon was checked hours ago, that is a real timestamp from a real verification, not a marketing claim. This page tells you who is behind it, how it started, and how it works.</p>
-
-        <dl class="ab-stats">
-          <div class="ab-stat">
+        <dl class="au-stats" aria-label="CoursesWyn in numbers">
+          <div class="au-stat">
             <dt>Udemy courses catalogued</dt>
             <dd>{totalCourses.toLocaleString()}</dd>
           </div>
-          <div class="ab-stat">
+          <div class="au-stat">
+            <dt>Free Udemy courses</dt>
+            <dd>{freeCount.toLocaleString()}</dd>
+          </div>
+          <div class="au-stat">
             <dt>Categories tracked</dt>
             <dd>{totalCategories}</dd>
           </div>
-          <div class="ab-stat">
-            <dt>Average discount</dt>
+          <div class="au-stat">
+            <dt>Avg. Udemy discount</dt>
             <dd>{avgDiscount}%</dd>
           </div>
-          <div class="ab-stat">
-            <dt>Last verified</dt>
-            <dd>{latestStr || 'Today'}</dd>
-          </div>
         </dl>
+      </header>
 
-        <h2>It started with a simple observation</h2>
+      <article class="au-article">
+        <section>
+          <h2>The Problem With Modern Udemy Coupons</h2>
+          <p>The internet promised unlimited access to affordable learning. What it delivered was unlimited access to content marketing disguised as coupon sites.</p>
+          <p>Udemy courses go on sale constantly, but finding a real <strong>Udemy coupon code</strong> among expired or fake ones is a mess. Most coupon directories operate like phone books: they list everything and stand for nothing. They show codes that expired years ago, prices that don't exist at checkout, and call collecting commissions "curation." Learners are left drowning in options and starved for direction.</p>
+          <p>CoursesWyn started because there was no reliable directory — one where a listed <strong>verified Udemy coupon</strong> actually worked at the moment you saw it. The result we refused to accept: thousands of hours wasted chasing dead codes, minimal skills retained, careers unchanged.</p>
+        </section>
 
-        <p>Udemy courses go on sale constantly, but finding the actual discount codes among expired or fake ones was a mess. Most coupon sites list codes they haven't checked. Some list codes that expired years ago. Many show prices that don't exist at checkout. CoursesWyn started because there was no reliable directory — one where you could trust that a listed coupon actually worked at the moment you saw it.</p>
+        <section>
+          <h2>What CoursesWyn Is Really Building</h2>
+          <p>We are not building a marketplace. We are building a signal in a sea of coupon noise.</p>
+          <p>CoursesWyn is a filtration system for Udemy discounts. We evaluate every <strong>Udemy promo code and free Udemy course</strong> against a real Udemy checkout — current price, discount percentage, and coupon status. We publish listings we would trust with our own time. We decline codes that don't verify. This is slower, less profitable, and the only way to build something that lasts.</p>
+          <p>Our goal is not to list every Udemy course. Our goal is to save you years of wasted effort and overpayment by pointing you toward <strong>verified Udemy discounts</strong> that compound over time. If a coupon expires or hits its redemption cap, it disappears within hours — no manual cleanup, no guesswork.</p>
+        </section>
 
-        <p>The first version shipped in early 2024: a minimal page listing coupon codes that had been manually tested minutes before publishing. No accounts, no emails, no gimmicks. Just working codes and the time they were last checked.</p>
+        <section>
+          <h2>Our Philosophy</h2>
+          <div class="au-grid">
+            <div class="au-card">
+              <h3>Curation is an ethical responsibility.</h3>
+              <p>If we list a Udemy coupon code, we've checkout-tested it. If we don't list it, it's not here. Silence is not neutrality — it's a choice we make deliberately to protect your wallet.</p>
+            </div>
+            <div class="au-card">
+              <h3>Skills compound. Content decays.</h3>
+              <p>The best Udemy courses create capabilities, not just credentials. We prioritize discounts on courses that build transferable skills over flash sales that ride temporary trends.</p>
+            </div>
+            <div class="au-card">
+              <h3>Transparency is non-negotiable.</h3>
+              <p>We are clear about what we earn, why we recommend a deal, and when we say no. Affiliate relationships never compromise verification standards. Ever. See our <a href="/affiliate-disclosure">affiliate disclosure</a>.</p>
+            </div>
+            <div class="au-card">
+              <h3>Time is the ultimate currency.</h3>
+              <p>Wasting someone's time on a dead coupon is worse than wasting their money. We measure success by whether our Udemy coupons accelerate your learning, not by how many codes we list. Every listing shows its last-verified timestamp.</p>
+            </div>
+          </div>
+        </section>
 
-        <h2>What changed since then</h2>
+        <section>
+          <h2>How We Operate Differently</h2>
+          <div class="au-grid">
+            <div class="au-card">
+              <h3>Rejection as a feature</h3>
+              <p>Most platforms accept every submitted code. We decline more Udemy coupons than we approve. Our credibility depends on what we leave out, not what we include.</p>
+            </div>
+            <div class="au-card">
+              <h3>Real checkout verification</h3>
+              <p>We assess every deal through live tests: real Udemy checkout price, discount durability, instructor credibility, and return on time invested. Details in <a href="/how-we-test-and-verify-udemy-coupons">how we test &amp; verify Udemy coupons</a>.</p>
+            </div>
+            <div class="au-card">
+              <h3>No pay-to-play rankings</h3>
+              <p>Listings reflect verification status, not ad spend. Course providers cannot buy placement, boost visibility, or influence our Udemy coupon rankings.</p>
+            </div>
+            <div class="au-card">
+              <h3>Long-term perspective</h3>
+              <p>We build for learners who will still trust us five years from now. Short-term revenue that compromises that trust is rejected by default.</p>
+            </div>
+          </div>
+        </section>
 
-        <p>The manual approach didn't scale. By mid-2024 the list was being updated in batches, then the verification pipeline was automated: every coupon is now checked programmatically against Udemy's own data — current price, discount, and availability. If a coupon expires or reaches its redemption limit, it disappears from the site within hours. No manual cleanup, no guesswork.</p>
+        <section class="au-identity">
+          <h2>Who We Are</h2>
+          <p><strong>CoursesWyn is an independent Udemy coupon hub</strong> created for one mission: to make world-class Udemy courses accessible to everyone, anywhere. We bring together the best <strong>Udemy coupon codes and free Udemy courses</strong> from trusted instructors into one place, so learners don't waste time searching and can focus on what really matters: learning, growing, and achieving.</p>
+          <p>We aren't just a coupon listing site. We're a bridge between ambitious learners and high-quality, affordable education — built on the belief that knowledge is the most powerful tool for changing lives. No team, no investors, no content farm. One developer, zero gimmicks.</p>
 
-        <p>The current platform runs on Astro with a lightweight data pipeline. The design has been rebuilt a few times, but the core promise never changed: show coupons that work, mark expiration honestly, and don't waste the visitor's time.</p>
+          <div class="au-mv">
+            <div>
+              <h3>Our Mission</h3>
+              <p>To connect millions of learners worldwide with the Udemy skills they need — without barriers of cost, time, or complexity. Every Udemy discount we feature is selected for real-world impact: better careers, smarter businesses, and personal growth that lasts.</p>
+            </div>
+            <div>
+              <h3>Our Vision</h3>
+              <p>A future where anyone with ambition can learn from the best Udemy instructors in the world, whether they live in a small town or a busy city. Our goal is to become the most trusted destination for <strong>verified Udemy coupons</strong> — where quality, transparency, and accessibility define the experience.</p>
+            </div>
+          </div>
+        </section>
 
-        <h2>How CoursesWyn is funded</h2>
+        <section>
+          <h2>What We Do for You</h2>
+          <ul class="au-list">
+            <li><strong>Curated Udemy coupon listings</strong> — No endless scrolling, no confusion. Just verified Udemy coupon codes and Udemy promo codes in one organised platform.</li>
+            <li><strong>Free Udemy courses, daily</strong> — {freeCount.toLocaleString()}+ free courses tracked right now, removed automatically when the free window closes.</li>
+            <li><strong>Outcome-focused selection</strong> — Udemy courses are chosen for their ability to deliver measurable results in skills and knowledge, not marketing budgets.</li>
+            <li><strong>Direct &amp; transparent links</strong> — We send you straight to official Udemy checkout via secure affiliate links. No hidden costs, no extra steps.</li>
+            <li><strong>Wide range of skills</strong> — From coding to business, design to personal development across {totalCategories} categories, we cover it all.</li>
+          </ul>
+        </section>
 
-        <p>CoursesWyn earns commissions through affiliate links — when you enroll in a course after clicking through, the platform gets a small referral fee at no extra cost to you. This is the standard model across the coupon industry, and it is disclosed clearly on every page.</p>
+        <section>
+          <h2>Why Learners Trust Us</h2>
+          <ul class="au-list au-trust">
+            <li><strong>Quality first</strong> — We only list Udemy coupons from reliable, checkout-verified sources.</li>
+            <li><strong>Verified daily</strong> — Every active Udemy discount is re-checked continuously. Last verification sweep: {latestStr || 'today'}.</li>
+            <li><strong>Learner-centric</strong> — Our platform is built for you, not for algorithms. Expired codes are labeled as expired.</li>
+            <li><strong>Transparency</strong> — We clearly disclose affiliate relationships and maintain unbiased Udemy coupon recommendations.</li>
+          </ul>
+        </section>
 
-        <p>What this means in practice: a coupon is shown because it exists and verifies, not because it pays. Expired codes are labeled as expired. The verification pipeline treats every coupon equally regardless of commission. There is no paid placement, no promoted listings, and no "editorial" content masquerading as independent review.</p>
+        <section class="au-trustbox">
+          <h2>Why Trust Matters Here</h2>
+          <p>Let's be direct: CoursesWyn earns affiliate commissions when you enroll in a Udemy course we recommend.</p>
+          <p>This is a common revenue model, but it's also where most coupon directories lose their integrity. The incentive is obvious: recommend everything, collect commissions, prioritize volume over value.</p>
+          <p>We operate under a different constraint: if we recommend a mediocre course or a dead <strong>Udemy coupon code</strong>, you will stop trusting us. Once that trust is gone, no amount of affiliate revenue matters because the brand is worthless. So we make a simple calculation: <strong>long-term trust is more valuable than short-term commissions.</strong> We decline partnerships that compromise verification standards. We say no to courses with aggressive sales tactics. We refuse to optimize for conversion rates at the expense of learner outcomes.</p>
+          <p>If you find a Udemy discount on CoursesWyn, it's here because we believe it's worth your time and money. Not because someone paid us more.</p>
+        </section>
 
-        <h2>Who runs CoursesWyn</h2>
+        <section>
+          <h2>The Bigger Vision</h2>
+          <p>Online education is still in its infrastructure phase. Most platforms optimize for growth. Very few optimize for impact.</p>
+          <p>We believe affordable Udemy education is the highest-leverage investment most people can make. Done right, a $12.99 course changes trajectories. Done poorly, full-price impulse buys burn years.</p>
+          <p>CoursesWyn exists to increase the probability that your Udemy investment pays off. That means better filtration of coupon codes, clearer learning paths, and honest feedback loops. It means saying no to coupon noise and yes to verified signal.</p>
+          <p>Our ambition is to become the default resource for people who take learning seriously — and who refuse to pay full price. Not the biggest coupon directory. Not the flashiest platform. The most trusted source for <strong>Udemy coupons, Udemy discounts, and free Udemy courses</strong>.</p>
+          <p>This requires patience, discipline, and a willingness to build slowly. We're fine with that. The alternative is becoming another coupon site people scroll through and never trust.</p>
+        </section>
 
-        <p>CoursesWyn is built and operated independently. No team, no investors, no content farm. If something on the site is wrong, you can say so and the person who built it will fix it.</p>
-
-        <h2>Our verification promise</h2>
-
-        <p>Every active coupon on CoursesWyn is re-checked continuously against Udemy's course data: current price, discount percentage, and coupon status. Since Udemy coupons are capped by time (typically 3–7 days) and redemption limits, the median coupon survives only a limited window — which is exactly why every listing shows when it was last verified instead of pretending codes live forever.</p>
-
-        <p>If a coupon stops working between checks, it is removed in the next verification cycle. Our directory reflects what is actually available right now, not what was available last week.</p>
-
+        <section class="au-promise">
+          <h2>Our Promise</h2>
+          <p>We promise to stay learner-focused, transparent, and quality-driven — always. Every Udemy coupon code verified, every free Udemy course dated, every expiration honored. Because at CoursesWyn, your growth is our mission.</p>
+          <div class="au-cta">
+            <a href="/udemy-coupon-code" class="au-btn">Explore {totalCourses.toLocaleString()}+ verified Udemy coupons →</a>
+            <a href="/udemy-coupons-today" class="au-ghost">Today's Udemy drops</a>
+            <a href="/how-we-test-and-verify-udemy-coupons" class="au-ghost">How we verify</a>
+            <a href="/contact" class="au-ghost">Contact us</a>
+          </div>
+        </section>
       </article>
-
-      <div class="ab-cta">
-        <p>Start browsing {totalCourses.toLocaleString()}+ verified Udemy coupons.</p>
-        <a href="/udemy-coupon-code" class="ab-btn">Browse all coupons &rarr;</a>
-      </div>
 
     </div>
   </main>
 
   <style>
-    .ab-root { padding: 2rem 0 4rem; }
-    .ab-container { max-width: 56rem; margin: 0 auto; padding: 0 1.5rem; }
+    .au-root { background: #fff; padding: 0 0 4rem; }
+    .au-container { max-width: 52rem; margin: 0 auto; padding: 0 1.5rem; }
+    .au-crumb { display: flex; align-items: center; gap: 0.5rem; padding: 1.25rem 0; font-size: 0.82rem; color: var(--muted); border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
+    .au-crumb a { color: var(--brand); font-weight: 600; text-decoration: none; }
+    .au-crumb a:hover { text-decoration: underline; }
 
-    .ab-breadcrumb { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 2rem; font-size: 0.78rem; color: var(--muted); }
-    .ab-breadcrumb a { color: var(--brand); text-decoration: none; font-weight: 600; }
-    .ab-breadcrumb a:hover { text-decoration: underline; }
-    .ab-breadcrumb svg { width: 0.85rem; height: 0.85rem; flex-shrink: 0; }
+    .au-eyebrow { display: inline-block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brand); background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 999px; padding: 6px 14px; margin: 0 0 1.25rem; }
+    .au-hero h1 { font-size: clamp(2.1rem, 4.5vw, 3.1rem); font-weight: 800; line-height: 1.12; letter-spacing: -0.02em; color: #111; margin: 0 0 1rem; }
+    .au-lead { font-size: 1.08rem; line-height: 1.7; color: #333; margin: 0; }
+    .au-lead strong { color: #111; }
+    .au-date { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 1rem 0 0; }
 
-    article h1 { font-size: clamp(2rem,4vw,2.8rem); font-weight: 700; line-height: 1.1; color: var(--text); margin: 0; letter-spacing: -0.03em; }
-    .ab-subtitle { font-size: 1rem; color: var(--brand); font-weight: 600; margin: 0.5rem 0 0; }
-    .ab-date { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0.75rem 0 0; }
-    .ab-lead { font-size: 1rem; line-height: 1.7; color: var(--text); margin-top: 1.5rem; }
+    .au-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin: 2rem 0 0; padding: 0; }
+    .au-stat { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem 1.25rem; }
+    .au-stat dt { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+    .au-stat dd { font-size: 1.6rem; font-weight: 800; color: #111; margin: 0.3rem 0 0; font-variant-numeric: tabular-nums; }
 
-    .ab-stats { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.75rem; margin-top: 2rem; }
-    .ab-stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; }
-    .ab-stat dt { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
-    .ab-stat dd { font-size: 1.5rem; font-weight: 700; color: var(--text); margin: 0.25rem 0 0; font-variant-numeric: tabular-nums; }
+    .au-article { margin-top: 1rem; }
+    .au-article section { margin-top: 3rem; }
+    .au-article h2 { font-size: clamp(1.5rem, 2.6vw, 1.9rem); font-weight: 800; letter-spacing: -0.01em; color: #111; margin: 0 0 1rem; line-height: 1.25; padding-top: 0.5rem; border-top: 2px solid #111; padding-top: 1.25rem; }
+    .au-article section:first-of-type h2 { border-top: none; padding-top: 0; }
+    .au-article p { font-size: 0.98rem; line-height: 1.75; color: #444; margin: 0 0 1rem; }
+    .au-article p strong { color: #111; }
+    .au-article a { color: var(--brand); font-weight: 600; }
+    .au-article a:hover { text-decoration: underline; }
 
-    article h2 { font-size: 1.35rem; font-weight: 700; color: var(--text); margin: 2.5rem 0 0; line-height: 1.3; }
-    article p { font-size: 0.92rem; line-height: 1.7; color: var(--muted); margin: 0.75rem 0 0; }
-    article p:first-of-type { margin-top: 1rem; }
+    .au-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 1.5rem; }
+    .au-card { background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 14px; padding: 1.4rem 1.4rem; }
+    .au-card h3 { font-size: 1.02rem; font-weight: 800; color: #111; margin: 0 0 0.5rem; line-height: 1.4; }
+    .au-card p { font-size: 0.9rem; margin: 0; }
 
-    .ab-cta { margin-top: 3rem; padding: 2rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; text-align: center; }
-    .ab-cta p { font-size: 0.95rem; color: var(--text); font-weight: 600; margin: 0 0 1rem; }
-    .ab-btn { display: inline-block; padding: 0.75rem 2rem; background: var(--brand); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.9rem; transition: opacity 0.2s; }
-    .ab-btn:hover { opacity: 0.9; }
+    .au-mv { display: grid; gap: 1rem; margin-top: 1.5rem; }
+    .au-mv > div { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 1.4rem; }
+    .au-mv h3 { font-size: 1rem; font-weight: 800; color: var(--brand); margin: 0 0 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.85rem; }
+    .au-mv p { margin: 0; font-size: 0.92rem; }
 
-    @media (min-width:640px) {
-      .ab-stats { grid-template-columns: repeat(4,1fr); }
+    .au-list { list-style: none; margin: 1rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+    .au-list li { position: relative; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.2rem 1rem 2.6rem; font-size: 0.92rem; line-height: 1.6; color: #444; }
+    .au-list li::before { content: '✓'; position: absolute; left: 1rem; top: 1rem; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; background: var(--brand); color: #fff; font-size: 0.75rem; font-weight: 800; border-radius: 50%; }
+    .au-list li strong { color: #111; }
+
+    .au-trustbox { background: #1B0B33; border-radius: 18px; padding: 2rem; }
+    .au-trustbox h2 { color: #fff !important; border-top: none !important; padding-top: 0 !important; }
+    .au-trustbox p { color: rgba(255,255,255,0.82) !important; }
+    .au-trustbox p strong { color: #F2C94C !important; }
+
+    .au-promise { background: linear-gradient(180deg, #faf5ff 0%, #fff 100%); border: 1px solid #e9d5ff; border-radius: 18px; padding: 2rem; text-align: center; }
+    .au-promise h2 { border: none !important; padding: 0 !important; text-align: center; }
+    .au-promise p { text-align: center; max-width: 36rem; margin: 0 auto 1.5rem; }
+    .au-cta { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; align-items: center; }
+    .au-btn { display: inline-block; background: #773BFF; color: #fff; font-weight: 800; padding: 0.9rem 1.8rem; border-radius: 10px; text-decoration: none; font-size: 0.92rem; }
+    .au-btn:hover { filter: brightness(1.08); text-decoration: none !important; }
+    .au-ghost { font-size: 0.88rem; }
+
+    @media (min-width: 720px) {
+      .au-stats { grid-template-columns: repeat(4, 1fr); }
+      .au-grid { grid-template-columns: 1fr 1fr; }
+      .au-mv { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </Layout>

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Deal } from "@/types/deal";
 import { slugifyCategory, slugifyTopic } from "@/lib/utils";
 import { parseInstructors, createInstructorSlug } from "@/lib/instructors";
-import { buildCouponFAQs, formatMoney } from "@/lib/dealStats";
+import { buildCouponFAQs, formatDuration, formatMoney } from "@/lib/dealStats";
 import { renderMarkdownToHtml } from "@/lib/markdown";
 
 interface Props {
@@ -238,7 +238,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
               <img src={deal.image} alt={deal.title} title={deal.title} width="640" height="360" loading="eager" decoding="async" className="clx-poster" />
             )}
             <a href={deal.url} target="_blank" rel="noopener noreferrer nofollow" className="clx-enroll clx-enroll-desktop" aria-label={`Claim coupon for ${deal.title} on ${deal.provider || "Udemy"}`}>
-              <span className="clx-enroll-text">Claim Coupon</span>
+              <span className="clx-enroll-text">CLAIM COUPON</span>
               <span className="clx-enroll-icon" aria-hidden="true">
                 <svg viewBox="0 0 512 512" width="16" height="16" fill="currentColor"><path d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z" /></svg>
               </span>
@@ -369,9 +369,36 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
           </aside>
 
           <div className="clx-main">
+            {/* ── Key Takeaways (sebelum What You'll Learn, ala coursespeak) ── */}
+            <section aria-labelledby="key-takeaways-heading">
+              <h2 id="key-takeaways-heading">Course Overview — Key Takeaways</h2>
+              <p className="clx-tk-intro">Verified details for this course — last checked {updatedLong}. Rating and student counts are {(deal.provider || "Udemy")}&apos;s own published figures.</p>
+              <dl className="clx-tk-grid">
+                <div><dt>Course Title</dt><dd>{deal.title}</dd></div>
+                <div><dt>Platform</dt><dd>{deal.provider || "Udemy"} (coupon tracked by CoursesWyn)</dd></div>
+                {deal.instructor && (<div><dt>Instructor</dt><dd>{deal.instructor}</dd></div>)}
+                {deal.updatedAt && (<div><dt>Coupon Last Checked</dt><dd>{updatedLong}</dd></div>)}
+                <div><dt>Level</dt><dd>{levelLabel}</dd></div>
+                {deal.category && (<div><dt>Category</dt><dd>{deal.category}</dd></div>)}
+                {deal.subcategory && deal.subcategory !== deal.category && (<div><dt>Topic</dt><dd>{deal.subcategory}</dd></div>)}
+                {deal.duration && (<div><dt>Length</dt><dd>{formatDuration(deal.duration)} of on-demand video</dd></div>)}
+                {deal.language && (<div><dt>Language</dt><dd>{deal.language}</dd></div>)}
+                <div><dt>Access</dt><dd>Lifetime access on Udemy</dd></div>
+                <div><dt>Certificate</dt><dd>Certificate of completion</dd></div>
+                {learnPoints.length > 0 && (<div><dt>Top Outcomes</dt><dd>{learnPoints.slice(0, 3).join(" · ")}</dd></div>)}
+                {reqPoints.length > 0 && (<div><dt>Prerequisites</dt><dd>{reqPoints.slice(0, 2).join(" · ")}</dd></div>)}
+                {discountPct > 0 ? (
+                  <div><dt>Price</dt><dd>{formatMoney(price)} with coupon (list {formatMoney(originalPrice)} — save {formatMoney(savings)}, {discountPct}% off)</dd></div>
+                ) : (
+                  <div><dt>Price</dt><dd>Free enrollment with coupon</dd></div>
+                )}
+                <div><dt>Coupon</dt><dd>Hit Claim Coupon — the discount applies at checkout</dd></div>
+              </dl>
+            </section>
             {learnPoints.length > 0 && (
               <>
                 <h2 id="learn-heading">What You&apos;ll Learn</h2>
+                <p className="clx-sec-intro">Practical skills and outcomes you&apos;ll gain from {deal.title} — taken from the official {deal.provider || "Udemy"} syllabus{deal.category ? ` for ${deal.category} learners` : ""}.</p>
                 <div className={!showAllLearn && needLearnToggle ? "clx-collapsed-learn" : undefined}>
                   {visibleLearn.map((point, idx) => (
                     <p key={idx}>{point.endsWith(".") ? point : point + "."}</p>
@@ -389,11 +416,13 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
             {reqPoints.length > 0 && (
               <>
                 <h2 id="requirements-heading">Requirements</h2>
+                <p className="clx-sec-intro">What you need before enrolling in {deal.title} — prerequisites as listed by the instructor on {deal.provider || "Udemy"}.</p>
                 {reqPoints.map((req, idx) => (<p key={idx}>{req}</p>))}
               </>
             )}
 
             <h2 id="about-heading">Overview</h2>
+            <p className="clx-sec-intro">The full official description of {deal.title} — curriculum, teaching approach, and everything included with this {deal.provider || "Udemy"} coupon.</p>
             <div className={overviewOpen ? "" : "clx-collapsed" } data-readmore={overviewOpen ? undefined : "true"}>
               <div ref={markdownRef} className="clx-prose" />
             </div>
@@ -656,6 +685,20 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         .clx-coderow button { background: #550E71; color: #fff; border: none; padding: 9px 14px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; align-self: stretch; }
         .clx-coderow button:hover { background: #6b21a8; }
         .clx-cols { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; align-items: flex-start; margin-top: 1.5rem; }
+        .clx-takeaways { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; padding: 1.25rem 1.5rem; margin-top: 1.5rem; }
+        .clx-takeaways-title { font-size: 1.15rem; font-weight: 800; color: #111111; margin: 0 0 0.75rem; }
+        .clx-takeaways ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.6rem 1.5rem; }
+        .clx-takeaways li { display: flex; gap: 10px; align-items: flex-start; font-size: 0.9rem; color: #333333; line-height: 1.6; }
+        .clx-takeaways li > span:first-child { color: #16a34a; font-weight: 800; flex-shrink: 0; }
+        .clx-takeaways strong { color: #111111; }
+        .clx-tk-intro { font-size: 0.88rem; color: #555555; margin: 0 0 0.25rem; line-height: 1.6; }
+        .clx-tk-grid { display: flex; flex-direction: column; margin: 0; padding: 0; background: transparent; border: none; border-radius: 0; }
+        .clx-tk-grid > div { display: grid; grid-template-columns: 170px 1fr; gap: 12px; padding: 0.65rem 0; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem; }
+        .clx-tk-grid > div:last-child { border-bottom: none; }
+        .clx-tk-grid dt { color: #666666; font-weight: 600; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 3px; }
+        .clx-tk-grid dd { margin: 0; color: #111111; font-weight: 500; line-height: 1.6; }
+        .clx-sec-intro { font-size: 0.9rem; color: #555555; line-height: 1.65; margin: 0 0 1rem; max-width: 720px; }
+        @media (max-width: 560px) { .clx-tk-grid > div { grid-template-columns: 1fr; gap: 2px; } }
         .clx-side { flex: 0 1 300px; min-width: 0; position: sticky; top: 15px; }
         .clx-sidecard { border: 1px solid #D9D9D9; border-radius: 10px; padding: 15px; background: #fff; }
         .clx-side-h2 { font-size: 22px; font-weight: 700; color: #111111; margin: 0 0 0.75rem 0; }
