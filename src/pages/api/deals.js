@@ -106,8 +106,13 @@ export async function PUT({ request, params }) {
 
     const body = await request.json();
     const deals = await readDealsFromFile();
-    const existing = deals.find((d) => d.slug === id);
-    if (!existing) return json({ error: 'Coupon not found' }, 404);
+    let existing = deals.find((d) => d.slug === id);
+    // Fallback: halaman edit stale (slug sudah di-rename pada save sebelumnya)
+    // tapi browser masih PUT dengan id lama — coba cocokkan via body.slug.
+    if (!existing && body?.slug) {
+      existing = deals.find((d) => d.slug === body.slug);
+    }
+    if (!existing) return json({ error: `Coupon not found: "${id}". It may have been renamed — check /admin for the new slug.` }, 404);
 
     if (Array.isArray(body?.ids) && body.expiresAt) {
       let updatedCount = 0;

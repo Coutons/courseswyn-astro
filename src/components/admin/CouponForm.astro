@@ -196,20 +196,20 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
           <span class="adm-hint">Ringkasan 1–2 kalimat untuk listing. Untuk teks panjang resmi gunakan kolom Full Description di bawah.</span>
         </div>
         <div>
-          <label class="adm-label" for="contentRaw">Full Description (official)</label>
-          <div class="rte-paste" id="contentRaw" contenteditable="true" spellcheck="false" aria-label="Paste description here"></div>
-          <span class="adm-hint">Copy langsung dari halaman Udemy (blok teksnya, bukan view-source) — bold, bullet &amp; link ikut persis. Atau tempel HTML mentah. Tidak perlu edit manual.</span>
-          <div class="adm-label" style="margin-top:.9rem;">Live Preview (hasil tersimpan)</div>
-          <div class="rte-preview" id="rtePreview" aria-live="polite"></div>
-          <textarea id="content" name="content" hidden>{deal?.content ?? ""}</textarea>
-        </div>
-        <div>
           <label class="adm-label" for="learn">What you'll learn (one per line)</label>
           <textarea class="adm-textarea" id="learn" name="learn" rows="6" placeholder={"Build production-ready React apps\nOptimize render performance"}>{deal?.learn?.join("\n") ?? ""}</textarea>
         </div>
         <div>
           <label class="adm-label" for="requirements">Requirements (one per line)</label>
           <textarea class="adm-textarea" id="requirements" name="requirements" rows="4" placeholder={"Basic JavaScript knowledge\nA computer with internet"}>{deal?.requirements?.join("\n") ?? ""}</textarea>
+        </div>
+        <div>
+          <label class="adm-label" for="contentRaw">Full Description (official)</label>
+          <div class="rte-paste" id="contentRaw" contenteditable="true" spellcheck="false" aria-label="Paste description here"></div>
+          <span class="adm-hint">Copy langsung dari halaman Udemy (blok teksnya, bukan view-source) — bold, bullet &amp; link ikut persis. Atau tempel HTML mentah. Tidak perlu edit manual.</span>
+          <div class="adm-label" style="margin-top:.9rem;">Live Preview (hasil tersimpan)</div>
+          <div class="rte-preview" id="rtePreview" aria-live="polite"></div>
+          <textarea id="content" name="content" hidden>{deal?.content ?? ""}</textarea>
         </div>
         <p class="adm-note" style="margin:0;">FAQs halaman deal dibuat otomatis dari data (harga, rating, durasi, garansi) — tidak perlu diisi manual.</p>
       </div>
@@ -242,7 +242,7 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
 <script>
   const form = document.getElementById("couponForm") as HTMLFormElement;
   const isEdit = form.dataset.isEdit === "true";
-  const dealId = form.dataset.dealId || null;
+  let currentId: string | null = form.dataset.dealId || null;
   const statusEl = document.getElementById("formStatus");
 
   function setStatus(text: string, kind = "") {
@@ -384,7 +384,7 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
     recordCheckBtn.textContent = "…";
     setStatus("Recording check…", "adm-warn");
     try {
-      const res = await fetch(`/api/deals?id=${encodeURIComponent(String(dealId))}&check=1`, { method: "PUT" });
+      const res = await fetch(`/api/deals?id=${encodeURIComponent(String(currentId))}&check=1`, { method: "PUT" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Request failed");
       setStatus("Check recorded ✓", "adm-ok");
@@ -419,14 +419,14 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
       }
     }
 
-    if (payload.slug === (dealId ?? "")) delete payload.slug;
+    if (payload.slug === (currentId ?? "")) delete payload.slug;
 
     setStatus("Saving…", "adm-warn");
     const submitBtn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
     if (submitBtn) submitBtn.disabled = true;
 
     try {
-      const url = isEdit ? `/api/deals?id=${encodeURIComponent(String(dealId))}` : "/api/deals";
+      const url = isEdit ? `/api/deals?id=${encodeURIComponent(String(currentId))}` : "/api/deals";
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -436,8 +436,18 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
       if (!res.ok) {
         throw new Error(data.error || "Request failed");
       }
-      setStatus("Saved ✓", "adm-ok");
-      setTimeout(() => (window.location.href = "/admin"), 400);
+      // Kalau slug berubah (rename), arahkan ke URL edit baru agar save berikutnya tidak 404.
+      const newSlug = (data as { slug?: string })?.slug;
+      if (isEdit && newSlug && currentId && newSlug !== currentId) {
+        currentId = newSlug;
+        form.dataset.dealId = newSlug;
+        setStatus(`Saved ✓ — slug renamed to ${newSlug}`, "adm-ok");
+        setTimeout(() => (window.location.href = `/admin/coupons/edit/${encodeURIComponent(newSlug)}`), 600);
+      } else {
+        if (newSlug) currentId = newSlug;
+        setStatus("Saved ✓", "adm-ok");
+        setTimeout(() => (window.location.href = "/admin"), 400);
+      }
     } catch (err) {
       setStatus(`Error: ${(err as Error).message}`, "adm-err");
       if (submitBtn) submitBtn.disabled = false;

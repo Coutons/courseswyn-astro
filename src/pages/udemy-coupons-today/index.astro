@@ -3,7 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import LedgerRow from '../../components/LedgerRow.astro';
 import AuthorBox from '../../components/AuthorBox.astro';
 import { getDeals } from '../../lib/store.js';
-import { formatDateWIB, toISODateWIB } from '../../lib/date';
+import { toISODateWIB } from '../../lib/date';
 
 const allDeals = await getDeals();
 const now = new Date();
@@ -38,10 +38,7 @@ for (const d of activeToday) {
     topicCounts[sub] = (topicCounts[sub] || 0) + 1;
   }
 }
-const totalTopics = Object.keys(topicCounts).length;
 const trendingTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).slice(0, 12);
-
-const dateFull = formatDateWIB(now, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
 const latestUpdate = todayDeals.reduce((latest, d) => {
   const t = new Date(d.updatedAt || d.createdAt || 0).getTime();
