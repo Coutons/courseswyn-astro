@@ -1,10 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import PageHero from "@/components/PageHero.astro";
 import { readDeals } from '../lib/store';
 import { dealTopicNames } from '../lib/dealStats';
 import { toISODateWIB } from '../lib/date';
-import { buildHeroFeed } from '../lib/utils';
 
 const allDeals = await readDeals();
 
@@ -47,10 +45,6 @@ const catGroups = categoryOrder
 
 const totalTopics = catGroups.reduce((s, g) => s + g.topics.length, 0);
 const totalCategories = catGroups.length;
-const totalCourses = allDeals.length;
-const avgDiscount = Math.round(allDeals.reduce((s, d) => s + (d.discount ?? (d.originalPrice ? Math.round((1 - d.price / d.originalPrice) * 100) : 0)), 0) / allDeals.length);
-const now = new Date();
-const heroFeed = buildHeroFeed(allDeals, now, 3);
 
 const dates = allDeals.map(d => d.updatedAt ?? d.createdAt).filter(Boolean) as string[];
 const latestDate = dates.length ? dates.sort().reverse()[0] : null;
@@ -98,49 +92,58 @@ const structuredData = {
   <main class="cc-root">
     <div class="cc-container">
 
-      <header class="cc-header">
-        <PageHero
-  eyebrow={`Course taxonomy · ${totalTopics.toLocaleString()} topics`}
-  titleHtml={`Browse Udemy <span>Course Topics</span>`}
-  subHtml="An independent taxonomy built from what courses actually teach, not their marketing tags. Open any topic to see its courses and their current coupon availability."
-  stats={[{ val: totalTopics, label: "curated topics", suffix: "+" }, { val: totalCourses, label: "tracked coupons", suffix: "+" }, { val: avgDiscount, label: "avg discount", suffix: "%" }]}
-  feedLines={heroFeed.map((d) => ({ href: "/coupon/" + d.slug, time: d.timeLabel, cat: d.cat, title: d.title, save: "−" + d.pct + "%" }))}
-  feedFootHtml={`$ topics tracked <b>${totalTopics}</b>`}
-/>
-        <div class="cc-toolbar" style="margin-top:1.5rem;">
-          {catGroups.length > 0 && <a class="cc-hero-btn" href={`#cat-${catGroups[0].slug}`}>Explore topics</a>}
-          <a class="cc-hero-btn ghost" href="/categories">Browse by category</a>
-          <a class="cc-hero-btn ghost" href="/udemy-coupons-today">Today's new deals</a>
-        </div>
+      <header class="fd-header">
+        <h1 class="fd-title">Find Courses by Topic</h1>
+        <p class="fd-sub">Course topics across business, technology, creative arts, and personal development — every topic backed by verified Udemy coupon codes. Filter by category, search, or sort to find your next course.</p>
       </header>
 
-      <nav class="cc-chip-nav" aria-label="Topic categories">
-        {catGroups.map((g, i) => (
-          <a href={`#cat-${g.slug}`} class="cc-chip">
-            <span class="cc-chip-num">{(i + 1).toString().padStart(2, '0')}</span>
-            <span class="cc-chip-name">{g.name}</span>
-            <span class="cc-chip-arrow">→</span>
-          </a>
-        ))}
-      </nav>
-
-      {catGroups.map((g) => (
-        <section id={`cat-${g.slug}`} class="cc-section" aria-labelledby={`cat-title-${g.slug}`}>
-          <div class="cc-sec-head">
-            <h2 id={`cat-title-${g.slug}`} class="cc-sec-title">{g.name} <span class="cc-tag">{g.total.toLocaleString()} tracked courses</span></h2>
-            <p class="cc-sec-desc">The most popular {g.name} topics with verified coupon codes — ranked by deal count.</p>
+      <section class="fd-wrap" id="finder" aria-label="Find a topic">
+        <div class="fd-bar">
+          <div class="fd-bar-left">
+            <label class="fd-cat-wrap" aria-label="Filter by category">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>
+              <select class="fd-cat" id="fdCat" aria-label="Filter by category">
+                <option value="">All categories</option>
+                {catGroups.map((g) => (
+                  <option value={g.slug}>{g.name} ({g.topics.length})</option>
+                ))}
+              </select>
+            </label>
+            <span class="fd-tags" id="fdTags"></span>
           </div>
-          <nav class="cc-cat-grid" aria-label={`${g.name} topics`}>
-            {g.topics.map((t) => (
-              <a href={`/topics/${t.slug}`} class="cc-cat" title={`Best ${t.name} Courses on Udemy for ${currentYear}`}>
-                <div class="cc-cat-num">{t.count}</div>
-                <div class="cc-cat-label">{t.name}</div>
-                <div class="cc-cat-count">courses</div>
-              </a>
-            ))}
-          </nav>
-        </section>
-      ))}
+          <div class="fd-bar-right">
+            <div class="fd-search-wrap" role="search">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="search" id="fdSearch" class="fd-search-input" placeholder={`Search ${totalTopics.toLocaleString()} topics…`} autocomplete="off" spellcheck="false" aria-label="Search topics by name" />
+            </div>
+            <span class="fd-count" id="fdCount"></span>
+            <button class="fd-clear-bar" id="fdClear" type="button" hidden>Clear</button>
+          </div>
+        </div>
+
+        {catGroups.map((g) => (
+          <section class="tp-group" data-group={g.slug} id={`topics-${g.slug}`} aria-label={`${g.name} topics`}>
+            <h2 class="tp-glabel">{g.name} <span class="tp-gcount">{g.topics.length} topics</span></h2>
+            <div class="fd-grid">
+              {g.topics.map((t) => (
+                <a
+                  href={`/topics/${t.slug}`}
+                  class="fd-card"
+                  data-name={t.name.toLowerCase()}
+                  title={`Best ${t.name} Courses on Udemy for ${currentYear}`}
+                >
+                  <span class="fd-body">
+                    <span class="fd-name">{t.name}</span>
+                    <span class="fd-meta">{t.count} courses · verified coupons</span>
+                    <span class="fd-go">Explore courses →</span>
+                  </span>
+                </a>
+              ))}
+            </div>
+          </section>
+        ))}
+        <p class="fd-empty" id="fdEmpty" hidden>No topics match your filters. <button type="button" id="fdEmptyClear">Clear all</button></p>
+      </section>
 
       <section class="cc-seo-section">
         <h2 class="cc-section-title">How CoursesWyn Topic Pages Work</h2>
@@ -179,10 +182,10 @@ const structuredData = {
   .cc-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
 
   /* ===== REGISTER / LEDGER HEADER ===== */
-  .cc-register { position: relative; background: var(--card); border: 1px solid #232B26; border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(0, 0, 0, 0.35); }
+  .cc-register { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(0, 0, 0, 0.35); }
   .cc-register-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
   .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(76, 195, 138, 0.12); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 6px 13px; }
-  .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #FFC94D; animation: ccBlip 1.6s infinite; }
+  .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #3C85DA; animation: ccBlip 1.6s infinite; }
     @keyframes ccBlip { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
     .dh-hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 2.5rem; align-items: center; }
     .dh-hero-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; margin-bottom: 1.25rem; }
@@ -220,48 +223,66 @@ const structuredData = {
   .cc-subtitle strong { color: var(--text); font-weight: 700; }
 
   .cc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .cc-hero-btn { font-family: var(--font-display); font-size: 0.9rem; font-weight: 600; text-decoration: none; padding: 12px 20px; border-radius: 9px; background: #FFC94D; color: #0b0e14; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35); transition: background 0.2s, transform 0.2s; white-space: nowrap; }
-  .cc-hero-btn:hover { background: #FFC94D; transform: translateY(-1px); }
-  .cc-hero-btn.ghost { background: transparent; color: var(--brand); border: 1px solid #FFC94D; box-shadow: none; }
-  .cc-hero-btn.ghost:hover { background: #FFC94D; color: #0b0e14; }
+  .cc-hero-btn { font-family: var(--font-display); font-size: 0.9rem; font-weight: 600; text-decoration: none; padding: 12px 20px; border-radius: 9px; background: linear-gradient(135deg, #3C85DA 0%, #5D61DC 100%); color: #fff; box-shadow: 0 10px 24px -8px rgba(60, 133, 218, 0.5); transition: filter 0.2s, transform 0.2s; white-space: nowrap; }
+  .cc-hero-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+  .cc-hero-btn.ghost { background: transparent; color: var(--brand); border: 1px solid var(--brand); box-shadow: none; }
+  .cc-hero-btn.ghost:hover { background: var(--brand-soft); color: var(--brand); }
 
   .cc-ledger { display: flex; margin-top: 24px; border-top: 1px dashed var(--border); padding-top: 20px; flex-wrap: wrap; }
-  .cc-ledger-cell { flex: 1 1 150px; padding: 2px 18px; border-left: 1px solid #232B26; }
+  .cc-ledger-cell { flex: 1 1 150px; padding: 2px 18px; border-left: 1px solid var(--border); }
   .cc-ledger-cell:first-child { border-left: none; padding-left: 2px; }
   .cc-ledger-label { font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
   .cc-ledger-value { font-family: var(--font-display); font-weight: 700; font-size: 1.375rem; color: var(--text); }
 
   /* ===== CHIP NAV ===== */
-  .cc-chip-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 3.25rem -1.5rem 0; padding: 12px 1.5rem 10px; position: sticky; top: 70px; z-index: 40; background: var(--bg); border-bottom: 1px solid #232B26; box-shadow: 0 8px 18px -12px rgba(0, 0, 0, 0.25); }
-  .cc-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--card); border: 1px solid #232B26; border-radius: 999px; text-decoration: none; transition: all 0.15s; }
-  .cc-chip:hover { border-color: var(--brand); }
-  .cc-chip-num { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 600; color: var(--muted); }
-  .cc-chip-name { font-size: 0.78125rem; font-weight: 600; color: var(--text); }
-  .cc-chip-arrow { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--muted); transition: transform 0.15s; }
-  .cc-chip:hover .cc-chip-arrow { color: var(--brand); transform: translateX(3px); }
 
   /* ===== SECTION HEADS ===== */
   .cc-sec-head { margin-bottom: 0.9rem; }
   .cc-sec-title { font-size: 1.2rem; font-weight: 700; color: var(--text); margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; letter-spacing: -0.01em; }
-  .cc-sec-title .cc-tag { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; color: var(--muted); border: 1px solid #232B26; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+  .cc-sec-title .cc-tag { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; color: var(--muted); border: 1px solid var(--border); padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
   .cc-sec-desc { font-size: 0.85rem; color: var(--muted); margin: 0; }
 
   .cc-section { margin-top: 3.25rem; scroll-margin-top: 120px; }
 
-  /* ===== TOPIC BOXES ===== */
-  .cc-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
-  .cc-cat { background: var(--card); border: 1px solid #232B26; border-radius: 12px; padding: 16px; text-align: left; text-decoration: none; display: block; transition: all 0.2s; }
-  .cc-cat:hover { transform: translateY(-2px); border-color: #FFC94D; box-shadow: 0 10px 28px -16px rgba(0, 0, 0, 0.35); }
-  .cc-cat-num { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: var(--text); }
-  .cc-cat-label { font-size: 0.75rem; color: var(--muted); margin-top: 3px; font-weight: 600; }
-  .cc-cat-count { font-family: var(--font-mono); font-size: 0.65625rem; color: var(--brand); margin-top: 6px; font-weight: 500; }
+  /* ===== FINDER HEADER (like the reference: title + short paragraph) ===== */
+  .fd-header { margin-top: 1.5rem; padding: 1.75rem 1.75rem; max-width: none; background: linear-gradient(135deg, #3C85DA 0%, #5D61DC 100%); border-radius: 16px; }
+  .fd-title { font-size: clamp(1.7rem, 3.6vw, 2.3rem); font-weight: 800; letter-spacing: -0.02em; color: #fff; margin: 0 0 0.5rem; line-height: 1.15; }
+  .fd-sub { font-size: 0.93rem; line-height: 1.65; color: rgba(255, 255, 255, 0.85); margin: 0; max-width: 720px; }
+
+  /* ===== TOPIC FINDER (CourseLegend-style toolbar + cards) ===== */
+  .fd-wrap { margin-top: 2.5rem; scroll-margin-top: 90px; }
+  .fd-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
+  .fd-bar-left, .fd-bar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+  .fd-cat-wrap, .fd-sort-wrap, .fd-search-wrap { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); }
+  .fd-cat, .fd-sort { font-size: 0.85rem; font-weight: 600; color: var(--text); background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-family: inherit; max-width: 220px; }
+  .fd-search-wrap { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 0 10px; }
+  .fd-search-input { border: none; background: transparent; outline: none; font-size: 0.85rem; color: var(--text); padding: 8px 0; width: 190px; font-family: inherit; }
+  .fd-count { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .fd-tags { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+  .fd-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; color: var(--brand); background: var(--brand-soft); border-radius: 999px; padding: 4px 6px 4px 12px; }
+  .fd-tag button { border: none; background: transparent; color: inherit; cursor: pointer; font-size: 0.85rem; line-height: 1; padding: 2px 4px; }
+  .fd-clear-bar { border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 0.78rem; font-weight: 700; border-radius: 8px; padding: 7px 12px; cursor: pointer; font-family: inherit; }
+  .fd-clear-bar:hover { color: var(--brand); border-color: var(--brand); }
+  .tp-group { margin-top: 2.5rem; scroll-margin-top: 90px; }
+  .tp-glabel { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.01em; color: var(--text); margin: 0 0 0.85rem; display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+  .tp-gcount { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .fd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.85rem; }
+  .fd-card { display: block; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem; text-decoration: none; transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s; }
+  .fd-card:hover { transform: translateY(-2px); border-color: var(--brand); box-shadow: 0 10px 26px -18px rgba(60, 133, 218, 0.4); }
+  .fd-body { display: flex; flex-direction: column; gap: 3px; }
+  .fd-name { font-size: 0.95rem; font-weight: 700; color: var(--text); line-height: 1.35; }
+  .fd-card:hover .fd-name { color: var(--brand); }
+  .fd-meta { font-size: 0.78rem; color: var(--muted); }
+  .fd-go { margin-top: 6px; font-size: 0.8rem; font-weight: 700; color: var(--brand); }
+  .fd-empty { font-size: 0.9rem; color: var(--muted); background: var(--bg-secondary); border: 1px dashed var(--border); border-radius: 12px; padding: 1.5rem; text-align: center; margin-top: 1.25rem; }
+  .fd-empty button { border: none; background: none; color: var(--brand); font-weight: 700; cursor: pointer; font-size: inherit; font-family: inherit; }
 
   /* ===== GENERIC SECTION HEADS (seo/faq) ===== */
   .cc-section-title { font-size: 1.2rem; font-weight: 700; color: var(--text); margin: 0 0 0.3rem; display: flex; align-items: center; gap: 0.6rem; letter-spacing: -0.01em; flex-wrap: wrap; }
   .cc-section-title svg { color: var(--brand); flex-shrink: 0; }
-  .cc-section-title .cc-tag { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; color: var(--muted); border: 1px solid #232B26; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+  .cc-section-title .cc-tag { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; color: var(--muted); border: 1px solid var(--border); padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
 
-  .cc-seo-section { background: var(--card); border: 1px solid #232B26; border-radius: 14px; padding: 1.5rem; margin: 3.25rem 0 0; }
+  .cc-seo-section { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin: 3.25rem 0 0; }
   .cc-seo-section .cc-section-title { font-size: 1.15rem; margin-bottom: 0.75rem; }
   .cc-seo-section p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.75rem; }
   .cc-seo-section p:last-child { margin-bottom: 0; }
@@ -270,18 +291,18 @@ const structuredData = {
 
   .cc-faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
   @media (max-width: 768px) { .cc-faq-grid { grid-template-columns: 1fr; } }
-  .cc-faq-card { background: var(--card); border: 1px solid #232B26; border-radius: 12px; padding: 1.1rem 1.15rem; }
-  .cc-faq-card:hover { border-color: #8A877C; }
+  .cc-faq-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.15rem; }
+  .cc-faq-card:hover { border-color: var(--muted-light); }
   .cc-faq-q { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0 0 0.4rem; line-height: 1.4; }
   .cc-faq-a { font-size: 0.85rem; color: var(--muted); line-height: 1.55; margin: 0; }
   .cc-faq-a a { color: var(--brand); text-decoration: none; font-weight: 600; }
   .cc-faq-a a:hover { text-decoration: underline; }
 
-  .cc-cta { background: var(--card); border: 1px solid #232B26; color: var(--text); border-radius: 16px; padding: 30px 32px; text-align: center; margin: 3.25rem 0 0; }
+  .cc-cta { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 16px; padding: 30px 32px; text-align: center; margin: 3.25rem 0 0; }
   .cc-cta-eyebrow { font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: .07em; text-transform: uppercase; color: var(--brand); margin: 0 0 8px; }
   .cc-cta-text { font-size: 0.95rem; line-height: 1.6; margin: 0 auto 18px; max-width: 480px; color: var(--muted); }
-  .cc-cta .cc-hero-btn { background: #FFC94D; color: #0b0e14; box-shadow: 0 12px 28px -12px rgba(0, 0, 0, 0.5); }
-  .cc-cta .cc-hero-btn:hover { background: #FFC94D; transform: translateY(-1px); }
+  .cc-cta .cc-hero-btn { background: linear-gradient(135deg, #3C85DA 0%, #5D61DC 100%); color: #fff; box-shadow: 0 12px 28px -12px rgba(60, 133, 218, 0.55); }
+  .cc-cta .cc-hero-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
 
   @media (max-width: 768px) {
     .cc-title { font-size: 1.9rem; }
@@ -294,17 +315,71 @@ const structuredData = {
   }
   .dh-terminal { background: #fff; }
   .dh-term-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #f7f7f8; border-bottom: 1px solid var(--border); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #111111; }
-  .dh-term-head a { margin-left: auto; font-size: 0.8rem; font-weight: 700; color: #550E71; text-decoration: none; text-transform: none; letter-spacing: 0; }
+  .dh-term-head a { margin-left: auto; font-size: 0.8rem; font-weight: 700; color: #3C85DA; text-decoration: none; text-transform: none; letter-spacing: 0; }
   .dh-term-head a:hover { text-decoration: underline; }
   .dh-term-dot, .dh-term-title, .dh-term-live { display: none; }
   .dh-term-line { font-family: inherit; font-size: 0.85rem; color: #111111; }
   .dh-term-ok { color: #16a34a; }
-  .dh-term-cat, .dh-term-save { color: #550E71; }
+  .dh-term-cat, .dh-term-save { color: #3C85DA; }
   .dh-term-foot { background: #f7f7f8; color: #555555; font-family: inherit; }
 </style>
 
 <script>
   (function () {
+    var catSel = document.getElementById('fdCat') as HTMLSelectElement | null;
+    var searchInput = document.getElementById('fdSearch') as HTMLInputElement | null;
+    var countEl = document.getElementById('fdCount');
+    var emptyEl = document.getElementById('fdEmpty');
+    var clearBtn = document.getElementById('fdClear') as HTMLButtonElement | null;
+    var emptyClear = document.getElementById('fdEmptyClear');
+    var tagsEl = document.getElementById('fdTags');
+    var total = document.querySelectorAll('.fd-card').length;
+    function isDefault(): boolean {
+      return (catSel?.value || '') === '' && (searchInput?.value.trim() || '') === '';
+    }
+    // NOTE: filter only — never reorders the DOM, so the page can't jump on its own.
+    function applyFinder() {
+      var cat = catSel?.value || '';
+      var q = (searchInput?.value || '').trim().toLowerCase();
+      var shown = 0;
+      document.querySelectorAll<HTMLElement>('.tp-group').forEach(function (sec) {
+        var visible = 0;
+        var groupMatch = !cat || sec.dataset.group === cat;
+        sec.querySelectorAll<HTMLElement>('.fd-card').forEach(function (card) {
+          var hit = groupMatch && (!q || (card.dataset.name || '').includes(q));
+          card.style.display = hit ? '' : 'none';
+          if (hit) { visible++; shown++; }
+        });
+        sec.style.display = visible ? '' : 'none';
+      });
+      if (emptyEl) emptyEl.hidden = shown !== 0;
+      if (countEl) countEl.textContent = isDefault() ? total + ' topics' : 'Showing ' + shown + ' of ' + total + ' topics';
+      if (clearBtn) clearBtn.hidden = isDefault();
+      if (tagsEl) {
+        tagsEl.innerHTML = '';
+        if (cat && catSel) {
+          var label = catSel.options[catSel.selectedIndex]?.text || cat;
+          var tag = document.createElement('span');
+          tag.className = 'fd-tag';
+          tag.textContent = label + ' ';
+          var x = document.createElement('button');
+          x.type = 'button'; x.textContent = '✕'; x.setAttribute('aria-label', 'Remove category filter');
+          x.addEventListener('click', function () { if (catSel) catSel.value = ''; applyFinder(); });
+          tag.appendChild(x);
+          tagsEl.appendChild(tag);
+        }
+      }
+    }
+    function resetFinder() {
+      if (catSel) catSel.value = '';
+      if (searchInput) searchInput.value = '';
+      applyFinder();
+    }
+    catSel?.addEventListener('change', applyFinder);
+    searchInput?.addEventListener('input', applyFinder);
+    clearBtn?.addEventListener('click', resetFinder);
+    emptyClear?.addEventListener('click', resetFinder);
+    applyFinder();
     function animateCount(el: Element): void {
       const target = parseInt(el.getAttribute('data-count') || '0', 10);
       if (isNaN(target)) return;

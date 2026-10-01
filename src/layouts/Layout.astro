@@ -1,6 +1,7 @@
 ---
 import "../styles/globals.css";
 
+import { ClientRouter } from "astro:transitions";
 import BrandLogo from "../components/BrandLogo.astro";
 import { currentYearWIB } from "../lib/date";
 
@@ -257,49 +258,53 @@ const currentPath = Astro.url.pathname;
         display: flex;
         gap: 2px;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: flex-end;
+        flex-shrink: 0;
       }
       .nav-item {
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 0.82rem;
+        padding: 8px 12px;
+        border-radius: 0;
+        font-size: 0.85rem;
         font-weight: 600;
-        color: var(--text);
+        color: #232326;
         text-decoration: none;
-        border: 1px solid var(--brand-soft);
+        border: none;
         background: transparent;
-        transition: all 0.25s ease;
+        transition: color 0.2s ease;
         white-space: nowrap;
         position: relative;
       }
       .nav-item::after {
         content: '';
         position: absolute;
-        bottom: -1px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 0;
+        bottom: 2px;
+        left: 12px;
+        right: 12px;
         height: 2px;
-        background: linear-gradient(90deg, #0b0e14, #FFC94D, #FFC94D);
+        background: #3C85DA;
         border-radius: 1px;
-        transition: all 0.3s ease;
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.25s ease;
       }
       .nav-item:hover {
-        background: var(--brand-soft);
-        border-color: rgba(76, 195, 138, 0.3);
+        background: transparent;
+        border: none;
+        color: #3C85DA;
       }
       .nav-item:hover::after {
-        width: 60%;
+        transform: scaleX(1);
       }
       .nav-item.active {
-        background: rgba(76, 195, 138, 0.18);
-        border-color: rgba(76, 195, 138, 0.4);
+        background: transparent;
+        border: none;
+        color: #3C85DA;
       }
       .nav-item.active::after {
-        width: 60%;
+        transform: scaleX(1);
       }
 
       .nav-right {
@@ -308,15 +313,47 @@ const currentPath = Astro.url.pathname;
         gap: 12px;
         flex-shrink: 0;
       }
+      .nav-more { position: relative; }
+      .nav-more-toggle { cursor: pointer; }
+      .nav-more-caret { transition: transform 0.2s; }
+      .nav-more.open .nav-more-caret { transform: rotate(180deg); }
+      .nav-more-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        min-width: 200px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 6px;
+        display: none;
+        flex-direction: column;
+        box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.15);
+        z-index: 50;
+      }
+      .nav-more.open .nav-more-menu { display: flex; }
+      .nav-more-menu a {
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text);
+        text-decoration: none;
+        transition: all 0.15s;
+        white-space: nowrap;
+      }
+      .nav-more-menu a:hover { background: var(--brand-soft); color: var(--brand); }
       .search-form {
         display: flex;
         align-items: center;
         gap: 8px;
-        background: var(--bg);
+        background: var(--bg-secondary);
         border: 1px solid var(--border);
         border-radius: 10px;
-        padding: 7px 14px;
-        width: 280px;
+        padding: 9px 16px;
+        width: 100%;
+        max-width: 460px;
+        margin: 0 auto;
         transition: all 0.3s ease;
         cursor: text;
         position: relative;
@@ -343,7 +380,7 @@ const currentPath = Astro.url.pathname;
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background: #FFC94D;
+        background: #3C85DA;
         display: inline-block;
         animation: pulse 2s ease-in-out infinite;
       }
@@ -351,38 +388,6 @@ const currentPath = Astro.url.pathname;
         0%, 100% { opacity: 1; }
         50% { opacity: 0.4; }
       }
-
-      .nav-more { position: relative; }
-      .nav-more summary { list-style: none; cursor: pointer; }
-      .nav-more summary::-webkit-details-marker { display: none; }
-      .nav-more-toggle { border-color: transparent; background: transparent; }
-      .nav-more-caret { transition: transform 0.2s; }
-      .nav-more[open] .nav-more-caret { transform: rotate(180deg); }
-      .nav-more-menu {
-        position: absolute;
-        top: calc(100% + 8px);
-        right: 0;
-        min-width: 180px;
-        background: var(--bg-secondary);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 6px;
-        display: flex;
-        flex-direction: column;
-        box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.5);
-        z-index: 50;
-      }
-      .nav-more-menu a {
-        padding: 10px 14px;
-        border-radius: 8px;
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: var(--text);
-        text-decoration: none;
-        transition: all 0.15s;
-        white-space: nowrap;
-      }
-      .nav-more-menu a:hover { background: var(--brand-soft); color: var(--brand); }
 
       .nav-hamburger {
         display: none;
@@ -440,27 +445,27 @@ const currentPath = Astro.url.pathname;
       .site-header { background: #fff; border-bottom: 1px solid #e5e5e5; }
       .brand-name { color: #111; }
       .brand-tagline { color: #666; }
-      .nav-item { color: #111; border-color: transparent; background: transparent; }
-      .nav-item::after { background: linear-gradient(90deg, #fff, #550E71, #550E71); }
-      .nav-item:hover { background: #faf5ff; border-color: #e9d5ff; }
-      .nav-item.active { background: #faf5ff; border-color: #550E71; }
+      .nav-item { color: #232326; border: none; background: transparent; }
+      .nav-item::after { background: #3C85DA; }
+      .nav-item:hover { background: transparent; border: none; color: #3C85DA; }
+      .nav-item.active { background: transparent; border: none; color: #3C85DA; }
       .nav-more-menu { background: #fff; border-color: #e5e5e5; box-shadow: 0 18px 40px -12px rgba(0,0,0,0.15); }
       .nav-more-menu a { color: #111; }
-      .nav-more-menu a:hover { background: #faf5ff; color: #550E71; }
+      .nav-more-menu a:hover { background: #e8f4fd; color: #3C85DA; }
       .search-form { background: #f5f5f5; border-color: #e5e5e5; }
-      .search-form:hover { border-color: #550E71; background: #fff; }
-      .search-form:focus-within { border-color: #550E71; background: #fff; box-shadow: 0 0 0 3px rgba(85,14,113,0.12); }
+      .search-form:hover { border-color: #3C85DA; background: #fff; }
+      .search-form:focus-within { border-color: #3C85DA; background: #fff; box-shadow: 0 0 0 3px rgba(60,133,218,0.15); }
       .nav-count { color: #666; white-space: nowrap; flex-shrink: 0; }
       .site-header .container { width: 100%; gap: 1rem; }
       .nav-links { min-width: 0; }
-      .search-form { width: 210px; flex-shrink: 0; }
+      .search-form { max-width: 380px; }
       @media (max-width: 1250px) { .nav-count { display: none; } }
       .nav-hamburger { border-color: #e5e5e5; }
       .nav-hamburger span { background: #111; }
       .nav-mobile { background: #fff; border-bottom: 1px solid #e5e5e5; box-shadow: 0 18px 40px -12px rgba(0,0,0,0.15); }
       .nav-mobile-link { background: #f9f9f9; border-color: #e5e5e5; color: #111; }
-      .nav-mobile-link:hover, .nav-mobile-link.active { border-color: #550E71; color: #550E71; }
-      .fresh-btn { display: inline-flex; align-items: center; gap: 8px; background: #773BFF; color: #fff; font-size: 0.82rem; font-weight: 700; padding: 9px 18px; border-radius: 7px; text-decoration: none; white-space: nowrap; }
+      .nav-mobile-link:hover, .nav-mobile-link.active { border-color: #3C85DA; color: #3C85DA; }
+      .fresh-btn { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #3C85DA 0%, #5D61DC 100%); color: #fff; font-size: 0.82rem; font-weight: 700; padding: 9px 18px; border-radius: 7px; text-decoration: none; white-space: nowrap; }
       .fresh-btn:hover { filter: brightness(1.07); }
       .top-alert { display: flex; flex-wrap: wrap; align-items: center; background: linear-gradient(90deg, #6600FF 0%, #267EDB 100%); color: #fff; font-size: 15px; padding: 12px 20px; gap: 12px; }
       .top-alert .alert-message { flex: 1 1 auto; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 120px; }
@@ -479,13 +484,14 @@ const currentPath = Astro.url.pathname;
 
     </style>
     <slot name="head" />
+    {Astro.url.pathname.startsWith('/topics') && <ClientRouter />}
   </head>
   <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <div class="top-alert" id="siteAlert">
-      <span class="alert-message">🔥 2 days left! Want to build career momentum? | Courses on the latest skills start at just $12.99</span>
+      <span class="alert-message">Prepping for an AWS, Microsoft, or CompTIA certification? | Buy your exam voucher with Udemy and save.</span>
       <span class="alert-actions">
-        <a href="https://trk.udemy.com/c/6564357/3708159/39854" class="alert-button">Flash Sale Coupons</a>
+        <a href="http://localhost:4321/udemy-certification-vouchers" class="alert-button">Exams Vouchers</a>
         <button class="close-btn" id="siteAlertClose" aria-label="Dismiss">✕</button>
       </span>
     </div>
@@ -513,6 +519,26 @@ const currentPath = Astro.url.pathname;
           </div>
         </a>
 
+        <form action="/search" method="get" class="search-form" role="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3C85DA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input
+            type="text"
+            name="q"
+            placeholder="Search courses..."
+            style={{
+              background: 'transparent',
+              color: 'var(--text)',
+              border: 'none',
+              fontSize: '0.85rem',
+              width: '100%',
+              outline: 'none',
+              padding: 0
+            }}
+          />
+        </form>
+
         <div class="nav-links">
           <a href="/udemy-coupon-code" itemprop="url"
             class:list={['nav-item', { active: currentPath === '/udemy-coupon-code' }]}
@@ -532,51 +558,42 @@ const currentPath = Astro.url.pathname;
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
             <span itemprop="name">Categories</span>
           </a>
-          <a href="/udemy-certification-vouchers" class="fresh-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2.5 2.5 0 0 0 0 5v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2.5 2.5 0 0 0 0-5z"/><path d="M13 5v2"/><path d="M13 11v2"/><path d="M13 17v2"/></svg>
-            <span>Exam Vouchers</span>
-          </a>
+          <div class="nav-more">
+            <button type="button" class="nav-item nav-more-toggle" id="voucherToggle" aria-haspopup="true" aria-expanded="false" aria-controls="voucherMenu">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2.5 2.5 0 0 0 0 5v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2.5 2.5 0 0 0 0-5z"/><path d="M13 5v2"/><path d="M13 11v2"/><path d="M13 17v2"/></svg>
+              <span>Exam Vouchers</span>
+              <svg class="nav-more-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="nav-more-menu" id="voucherMenu" role="menu">
+              <a href="/udemy-certification-vouchers" role="menuitem">All Exam Vouchers</a>
+              <a href="/udemy-comptia-exam-vouchers" role="menuitem">CompTIA Vouchers</a>
+              <a href="/udemy-aws-exam-vouchers" role="menuitem">AWS Vouchers</a>
+              <a href="/udemy-microsoft-exam-vouchers" role="menuitem">Microsoft Vouchers</a>
+            </div>
+          </div>
         </div>
 
         <div class="nav-right">
           <button type="button" class="nav-hamburger" id="navHamburger" aria-label="Open menu" aria-expanded="false" aria-controls="navMobile">
             <span></span><span></span><span></span>
           </button>
-          <form action="/search" method="get" class="search-form" role="search">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#550E71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input
-              type="text"
-              name="q"
-              placeholder="Search courses..."
-                style={{
-                  background: 'transparent',
-                  color: 'var(--text)',
-                  border: 'none',
-                  fontSize: '0.82rem',
-                  width: '100%',
-                  outline: 'none',
-                  padding: 0
-                }}
-            />
-          </form>
-           <span class="nav-count" title="Affiliate ID">{affiliateNumber}</span>
+          <span class="nav-count" title="Affiliate ID">{affiliateNumber}</span>
         </div>
       </nav>
     </header>
 
     <div class="nav-mobile" id="navMobile" hidden>
       <form action="/search" method="get" class="search-form nav-mobile-search" role="search">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#550E71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3C85DA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
-        <input type="text" name="q" placeholder="Search courses..." style={{ background: 'transparent', color: 'var(--text)', border: 'none', fontSize: '0.82rem', width: '100%', outline: 'none', padding: 0 }} />
+        <input type="text" name="q" placeholder="Search courses..." style={{ background: 'transparent', color: 'var(--text)', border: 'none', fontSize: '0.85rem', width: '100%', outline: 'none', padding: 0 }} />
       </form>
       <nav aria-label="Mobile navigation">
         <a href="/udemy-coupon-code" class:list={['nav-mobile-link', { active: currentPath === '/udemy-coupon-code' }]}>Udemy Coupons</a>
         <a href="/udemy-coupons-today" class:list={['nav-mobile-link', { active: currentPath === '/udemy-coupons-today' }]}>Today's Discounts</a>
         <a href="/categories" class:list={['nav-mobile-link', { active: currentPath === '/categories' || currentPath.startsWith('/categories/') }]}>Categories</a>
+        <a href="/udemy-certification-vouchers" class:list={['nav-mobile-link', { active: currentPath === '/udemy-certification-vouchers' || currentPath.startsWith('/udemy-') && currentPath.includes('voucher') }]}>Exam Vouchers</a>
         <a href="/instructors" class:list={['nav-mobile-link', { active: currentPath === '/instructors' || currentPath.startsWith('/instructor/') }]}>Instructors</a>
         <a href="/popular" class:list={['nav-mobile-link', { active: currentPath === '/popular' }]}>Popular Courses</a>
         <a href="/blog" class:list={['nav-mobile-link', { active: currentPath === '/blog' || currentPath.startsWith('/blog/') }]}>Blog</a>
@@ -769,11 +786,12 @@ const currentPath = Astro.url.pathname;
       </nav>
     )}
 
+
     <main id="main-content" style={{ minHeight: "calc(100vh - 300px)" }}>
       <slot />
     </main>
 
-    <style>.cw-foot{background:#fff}.cw-foot-cards{max-width:1400px;margin:0 auto;padding:0 1rem;display:grid;gap:26px;position:relative;z-index:1}@media(min-width:900px){.cw-foot-cards{grid-template-columns:1fr 1fr}}.cw-foot-card{background:#fff;border-radius:20px;box-shadow:0 0 2px rgba(0,0,0,.3);padding:40px;text-align:center;margin-bottom:-50px}.cw-foot-ico{display:inline-flex;line-height:0}.cw-foot-card h3{font-family:sans-serif;font-size:28px;font-weight:800;color:#111;margin:12px 0 18px;line-height:1.25}.cw-foot-card a{display:inline-block;background:#773BFF;color:#fff;font-family:sans-serif;font-size:17px;font-weight:500;padding:13px 24px;border-radius:7px;text-decoration:none}.cw-foot-card a:hover{filter:brightness(1.07)}.cw-foot-main{background:linear-gradient(180deg,#1B0B33 0%,#5D61DC 140%);padding:100px 0 24px}.cw-foot-grid{max-width:1400px;margin:0 auto;padding:0 1rem;display:grid;gap:26px}@media(min-width:900px){.cw-foot-grid{grid-template-columns:1.4fr 1fr 1fr 1fr}}.cw-foot-brand h3{font-family:sans-serif;font-size:30px;font-weight:800;color:#fff;margin:14px 0 8px;line-height:1.2}.cw-foot-brand p{font-family:sans-serif;font-size:16px;color:#FFFFFFBF;margin:0}.cw-foot-social{display:flex;gap:13px;margin-top:20px}.cw-foot-social a{width:38px;height:38px;border-radius:50%;background:#1B0B33;display:inline-flex;align-items:center;justify-content:center}.cw-foot-social a:hover{background:#fff}.cw-foot-social svg{fill:#fff}.cw-foot-social a:hover svg{fill:#267EDB}.cw-foot-col h4{font-family:sans-serif;font-size:22px;font-weight:700;color:#fff;margin:0 0 4px;padding-bottom:10px;border-bottom:2px solid #EFEFEF8F}.cw-foot-col a{display:block;font-family:sans-serif;font-size:16px;font-weight:600;color:#EDEDEDD4;text-decoration:none;padding:7px 4px}.cw-foot-col a:hover{color:#fff}@media(min-width:900px){.cw-foot-col.mid{border-left:1px solid #EDEDED26;border-right:1px solid #EDEDED26;padding:0 26px}}.cw-foot-legal{display:flex;gap:8px 20px;flex-wrap:wrap;justify-content:center;margin:28px 0 0;padding:0 1rem}.cw-foot-legal a{font-family:sans-serif;font-size:15px;font-weight:500;color:#DCDCDCBA;text-decoration:none}.cw-foot-legal a:hover{color:#fff}.cw-foot-copy{text-align:center;font-size:13px;color:#FFFFFFC9;margin:10px 0 0}.cw-foot-ico{display:inline-flex;line-height:0}.cw-foot-social a{width:38px !important;height:38px !important;border-radius:50% !important;background:#1B0B33 !important;border:none !important;color:#fff !important}.cw-foot-social a:hover{background:#fff !important;color:#267EDB !important}</style>
+    <style>.cw-foot{background:#fff}.cw-foot-cards{max-width:1400px;margin:0 auto;padding:0 1rem;display:grid;gap:26px;position:relative;z-index:1}@media(min-width:900px){.cw-foot-cards{grid-template-columns:1fr 1fr}}.cw-foot-card{background:#fff;border-radius:20px;box-shadow:0 0 2px rgba(0,0,0,.3);padding:40px;text-align:center;margin-bottom:-50px}.cw-foot-ico{display:inline-flex;line-height:0}.cw-foot-card h3{font-family:sans-serif;font-size:28px;font-weight:800;color:#111;margin:12px 0 18px;line-height:1.25}.cw-foot-card a{display:inline-block;background:linear-gradient(135deg,#3C85DA 0%,#5D61DC 100%);color:#fff;font-family:sans-serif;font-size:17px;font-weight:500;padding:13px 24px;border-radius:7px;text-decoration:none}.cw-foot-card a:hover{filter:brightness(1.07)}.cw-foot-main{background:linear-gradient(180deg,#3C85DA 0%,#5D61DC 100%);padding:100px 0 24px}.cw-foot-grid{max-width:1400px;margin:0 auto;padding:0 1rem;display:grid;gap:26px}@media(min-width:900px){.cw-foot-grid{grid-template-columns:1.4fr 1fr 1fr 1fr}}.cw-foot-brand h3{font-family:sans-serif;font-size:30px;font-weight:800;color:#fff;margin:14px 0 8px;line-height:1.2}.cw-foot-brand p{font-family:sans-serif;font-size:16px;color:#FFFFFFBF;margin:0}.cw-foot-social{display:flex;gap:13px;margin-top:20px}.cw-foot-social a{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.16);display:inline-flex;align-items:center;justify-content:center}.cw-foot-social a:hover{background:#fff}.cw-foot-social svg{fill:#fff}.cw-foot-social a:hover svg{fill:#267EDB}.cw-foot-col h4{font-family:sans-serif;font-size:22px;font-weight:700;color:#fff;margin:0 0 4px;padding-bottom:10px;border-bottom:2px solid #EFEFEF8F}.cw-foot-col a{display:block;font-family:sans-serif;font-size:16px;font-weight:600;color:#EDEDEDD4;text-decoration:none;padding:7px 4px}.cw-foot-col a:hover{color:#fff}@media(min-width:900px){.cw-foot-col.mid{border-left:1px solid #EDEDED26;border-right:1px solid #EDEDED26;padding:0 26px}}.cw-foot-legal{display:flex;gap:8px 20px;flex-wrap:wrap;justify-content:center;margin:28px 0 0;padding:0 1rem}.cw-foot-legal a{font-family:sans-serif;font-size:15px;font-weight:500;color:#DCDCDCBA;text-decoration:none}.cw-foot-legal a:hover{color:#fff}.cw-foot-copy{text-align:center;font-size:13px;color:#FFFFFFC9;margin:10px 0 0}.cw-foot-ico{display:inline-flex;line-height:0}.cw-foot-social a{width:38px !important;height:38px !important;border-radius:50% !important;background:rgba(255,255,255,0.16) !important;border:none !important;color:#fff !important}.cw-foot-social a:hover{background:#fff !important;color:#267EDB !important}</style>
     <footer class="cw-foot" role="contentinfo" itemscope itemtype="https://schema.org/WPFooter">
       <div class="cw-foot-cards">
         <div class="cw-foot-card">
@@ -882,6 +900,28 @@ const currentPath = Astro.url.pathname;
 
     <script>
       if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(r => r.forEach(s => s.unregister())); }
+      (function () {
+        var toggle = document.getElementById('voucherToggle');
+        var wrap = toggle ? toggle.closest('.nav-more') : null;
+        if (!toggle || !wrap) return;
+        toggle.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var open = wrap.classList.toggle('open');
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        document.addEventListener('click', function (e) {
+          if (!wrap.contains(e.target)) {
+            wrap.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+          }
+        });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') {
+            wrap.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+          }
+        });
+      })();
       const backToTopButton = document.getElementById('backToTop');
       window.addEventListener('scroll', () => {
         if (backToTopButton) {
