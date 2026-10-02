@@ -558,16 +558,16 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
                 const ro = typeof r.originalPrice === "number" && r.originalPrice > rp ? r.originalPrice : rp;
                 const rd = ro > rp && rp >= 0 ? Math.round(100 - (rp / ro) * 100) : 0;
                 return (
-                  <a key={r.slug} href={`/coupon/${r.slug}`} className="clx-card" data-card>
-                    <span className="clx-card-media">
-                      {r.image && (<img src={r.image} alt={r.title} width="400" height="205" loading="lazy" />)}
-                      <span className="clx-card-flag">🏷 {rd > 0 ? `${rd}% OFF` : "Free"}</span>
-                    </span>
-                    <span className="clx-card-provider"><ProviderLogo name={r.provider} height={24} /></span>
-                    <span className="clx-card-title">{r.title}</span>
-                    <span className="clx-card-cert">🎓 {typeof r.rating === "number" ? `${r.rating.toFixed(1)} rated` : "Certificate"} · {formatMoney(rp)}</span>
-                    <span className="clx-card-meta">▅ {r.subcategory || r.category || "Course"}</span>
-                  </a>
+                  <article key={r.slug} className="clx-card" data-card itemScope itemType="https://schema.org/Course">
+                    <a href={`/coupon/${r.slug}`} className="clx-card-media" tabIndex={-1} aria-hidden="true">
+                      {r.image && (<img src={r.image} alt="" width="400" height={225} loading="lazy" decoding="async" />)}
+                      <span className="clx-card-flag">{rd > 0 ? `${rd}% OFF` : "FREE"}</span>
+                    </a>
+                    <div className="clx-card-provider"><ProviderLogo name={r.provider} height={24} /></div>
+                    <h3 className="clx-card-title"><a href={`/coupon/${r.slug}`}>{r.title}</a></h3>
+                    <p className="clx-card-cert">★ {typeof r.rating === "number" ? `${r.rating.toFixed(1)} rated` : "Certificate"} · {formatMoney(rp)}</p>
+                    <p className="clx-card-meta">{r.subcategory || r.category || "Course"}</p>
+                  </article>
                 );
               })}
               </div>
@@ -700,11 +700,11 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         .clx-crumb { white-space: nowrap; overflow-x: auto; scrollbar-width: none; padding: 1rem 0; margin-bottom: 0; }
         .clx-crumb::-webkit-scrollbar { display: none; }
         .clx-crumb p { margin: 0; white-space: nowrap; font-size: 15px; color: #555555; }
-        .clx-crumb a { color: #3C85DA; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+        .clx-crumb a { color: #2563EB; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
         .clx-hero { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
         .clx-media { flex: 0 1 380px; min-width: 0; }
         .clx-poster { width: 100%; height: auto; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; display: block; }
-        .clx-enroll { display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; box-sizing: border-box; background: linear-gradient(135deg, #3C85DA 0%, #5D61DC 100%); color: #fff; font-family: sans-serif; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid rgba(255,255,255,0.2); border-radius: 7px; padding: 17px 17px 16px 14px; margin-top: 14px; cursor: pointer; text-decoration: none; text-align: center; }
+        .clx-enroll { display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; box-sizing: border-box; background: var(--brand-gradient); color: #fff; font-family: sans-serif; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid rgba(255,255,255,0.2); border-radius: 7px; padding: 17px 17px 16px 14px; margin-top: 14px; cursor: pointer; text-decoration: none; text-align: center; }
         .clx-enroll:hover { filter: brightness(1.07); }
         .clx-enroll-text { flex: 1; }
         .clx-enroll-icon { display: inline-flex; flex-shrink: 0; }
@@ -727,7 +727,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         .clx-pill a { color: inherit; }
         .clx-pill-link a { color: #292EC9; font-weight: 700; }
         .clx a:hover:not(.clx-enroll):not(.clx-report-submit):not(.clx-nl-submit):not(.clx-sidepill) { color: #7c3aed; }
-        .clx-card:hover .clx-card-title { color: #3C85DA; text-decoration: underline; }
+        .clx-card:hover .clx-card-title { color: #2563EB; text-decoration: underline; }
         .clx-ratingrow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 0 0 10px 0; }
         .clx-stars { display: inline-flex; gap: 3px; line-height: 1; vertical-align: middle; }
         .clx-star { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #4b5563; border-radius: 5px; line-height: 1; overflow: hidden; }
@@ -746,13 +746,13 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         .clx-checked code { padding: 1px 5px; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 0.875em; font-family: Consolas, Monaco, monospace; color: #c7254e; }
         .clx-timer { display: flex; align-items: center; gap: 8px; margin: 0 0 1rem 0; flex-wrap: wrap; }
         .clx-timer-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #555555; margin-right: 2px; }
-        .clx-tbox { display: inline-flex; flex-direction: column; align-items: center; min-width: 52px; background: #e8f4fd; border: 1px solid #3C85DA; border-radius: 6px; padding: 6px 8px 5px 8px; }
-        .clx-tbox strong { font-size: 1.15rem; font-weight: 800; color: #3C85DA; line-height: 1; font-variant-numeric: tabular-nums; }
+        .clx-tbox { display: inline-flex; flex-direction: column; align-items: center; min-width: 52px; background: #e8f4fd; border: 1px solid #2563EB; border-radius: 6px; padding: 6px 8px 5px 8px; }
+        .clx-tbox strong { font-size: 1.15rem; font-weight: 800; color: #2563EB; line-height: 1; font-variant-numeric: tabular-nums; }
         .clx-tbox small { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #777777; }
-        .clx-coderow { display: inline-flex; align-items: center; gap: 0; margin: 0 0 1rem 0; border: 1px dashed #3C85DA; border-radius: 6px; overflow: hidden; background: #fff; }
+        .clx-coderow { display: inline-flex; align-items: center; gap: 0; margin: 0 0 1rem 0; border: 1px dashed #2563EB; border-radius: 6px; overflow: hidden; background: #fff; }
         .clx-coderow code { font-size: 0.95rem; font-weight: 800; letter-spacing: 1.5px; color: #111111; font-family: Consolas, Monaco, monospace; padding: 8px 14px; }
-        .clx-coderow button { background: linear-gradient(135deg, #3C85DA 0%, #5D61DC 100%); color: #fff; border: none; padding: 9px 14px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; align-self: stretch; }
-        .clx-coderow button:hover { background: #5D61DC; }
+        .clx-coderow button { background: var(--brand-gradient); color: #fff; border: none; padding: 9px 14px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; align-self: stretch; }
+        .clx-coderow button:hover { background: #7C3AED; }
         .clx-cols { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; align-items: flex-start; margin-top: 1.5rem; }
         .clx-takeaways { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; padding: 1.25rem 1.5rem; margin-top: 1.5rem; }
         .clx-takeaways-title { font-size: 1.15rem; font-weight: 800; color: #111111; margin: 0 0 0.75rem; }
@@ -804,17 +804,17 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         .clx-sidetopics-title { font-size: 16px; font-weight: 700; color: #111111; margin-bottom: 0.6rem; }
         .clx-sidepills { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem; }
         .clx-sidepill { background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); padding: 8px 16px; font-size: 15px; font-weight: 600; color: #1f2937; text-decoration: none; }
-        .clx-sidepill:hover { border-color: #3C85DA; color: #3C85DA; }
+        .clx-sidepill:hover { border-color: #2563EB; color: #2563EB; }
         .clx-postinfo { list-style: none; margin: 0; padding: 0; }
         .clx-postinfo li { display: flex; gap: 10px; align-items: center; font-size: 17px; font-weight: 600; color: #111111; margin-bottom: 0.55rem; }
         .clx-main { flex: 1 1 420px; min-width: 0; }
         .clx-mobile-h2 { font-size: 1.375rem; font-weight: 800; margin: 0 0 0.5rem 0; color: #111111; }
         .clx-main > p { margin: 0 0 1rem 0; color: #444444; }
         .clx-main h2 { font-size: 1.75rem; font-weight: 800; margin: 2rem 0 0.75rem 0; color: #111111; line-height: 1.25; }
-        .clx-main a { color: #3C85DA; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+        .clx-main a { color: #2563EB; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
         .clx-main a:hover { color: #7c3aed; }
         .clx-tags { display: flex; gap: 8px; flex-wrap: wrap; margin: 0.5rem 0; }
-        .clx-tag { color: #3C85DA; font-weight: 700; }
+        .clx-tag { color: #2563EB; font-weight: 700; }
         .clx-report-btn { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 1px solid #e53e3e; color: #e53e3e; padding: 6px 14px; border-radius: 4px; font-size: 13px; font-family: inherit; cursor: pointer; line-height: 1.4; }
         .clx-report-btn:hover { background: #e53e3e; color: #fff; }
         .clx-collapsed-learn { max-height: 150px; overflow: hidden; position: relative; }
@@ -822,7 +822,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         .clx-main [data-readmore] { position: relative; }
         .clx-main [data-readmore="true"] { max-height: 260px; overflow: hidden; }
         .clx-main [data-readmore="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 60px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(237,237,237,0.8), #ededed); pointer-events: none; }
-        .clx-readmore { background: none; border: none; padding: 0; color: #3C85DA; font-weight: 700; cursor: pointer; font-size: 16px; font-family: inherit; display: inline-flex; align-items: center; gap: 4px; }
+        .clx-readmore { background: none; border: none; padding: 0; color: #2563EB; font-weight: 700; cursor: pointer; font-size: 16px; font-family: inherit; display: inline-flex; align-items: center; gap: 4px; }
         .clx-readmore:hover { color: #7c3aed; }
         .clx-arrow { font-size: 14px; }
         .clx-prose { line-height: 1.7; color: #444444; }
@@ -831,15 +831,15 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         .clx-prose ul { list-style-type: disc; }
         .clx-prose ol { list-style-type: decimal; }
         .clx-prose li { margin-bottom: 0.35rem; }
-        .clx-prose a { color: #3C85DA; font-weight: 700; }
+        .clx-prose a { color: #2563EB; font-weight: 700; }
         .clx-prose strong { color: #111111; }
         .clx-warningbox { background: #fff8e1; border-left: 4px solid #ffc107; border-radius: 0 5px 5px 0; padding: 0.75rem 1.125rem; font-size: 15px; line-height: 1.6; color: #555555; margin: 1.25rem 0; }
         .clx-share { display: flex; gap: 10px; align-items: center; margin-top: 1.5rem; font-weight: 700; color: #111111; }
-        .clx-share a, .clx-share button { border: 1px solid #e0e0e0; background: #fff; border-radius: 4px; padding: 5px 12px; font-size: 13px; font-weight: 700; color: #3C85DA; cursor: pointer; text-decoration: none; font-family: inherit; }
+        .clx-share a, .clx-share button { border: 1px solid #e0e0e0; background: #fff; border-radius: 4px; padding: 5px 12px; font-size: 13px; font-weight: 700; color: #2563EB; cursor: pointer; text-decoration: none; font-family: inherit; }
         .clx-faqs { display: flex; flex-direction: column; gap: 0.75rem; }
         .clx-faq { border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; background: #fff; }
         .clx-faq-q { width: 100%; padding: 1rem 1.25rem; background: none; border: none; text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; font-weight: 700; color: #111111; gap: 1rem; font-family: inherit; }
-        .clx-caret { transition: transform 0.2s; flex-shrink: 0; color: #3C85DA; }
+        .clx-caret { transition: transform 0.2s; flex-shrink: 0; color: #2563EB; }
         .clx-caret.open { transform: rotate(180deg); }
         .clx-faq-a { padding: 0 1.25rem 1rem 1.25rem; }
         .clx-faq-a p { color: #444444; line-height: 1.65; font-size: 16px; margin: 0; border-top: 1px dashed #e0e0e0; padding-top: 0.9rem; }
@@ -874,31 +874,34 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         .clx-nl-ok { width: 44px; height: 44px; border-radius: 12px; background: rgba(242,201,76,.18); border: 1px solid rgba(242,201,76,.35); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .clx-nl-success strong { display: block; font-family: sans-serif; font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 3px; }
         .clx-nl-success p { font-size: 13px; color: rgba(255,255,255,.75); margin: 0; padding: 0; line-height: 1.5; }
-        .clx-card { border-radius: 10px; padding: 10px; background: #ffffff; border: 1px solid #e0e0e0; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; flex-direction: column; text-decoration: none; transition: transform 0.2s ease; }
-        .clx-card:hover { transform: translateY(-5px); }
-        .clx-card-media { position: relative; display: block; }
-        .clx-card-media img { width: 100%; height: 205px; object-fit: cover; border-radius: 7px; display: block; }
-        .clx-card-flag { position: absolute; left: 0; bottom: 10px; background: #040803DE; color: #D4D7CE; font-size: 13px; font-weight: 500; letter-spacing: 0.3px; padding: 3px 10px 2px 10px; border-radius: 0 4px 0 4px; }
+        .clx-card { border-radius: 10px; padding: 10px; background: #ffffff; border: 1px solid #e0e0e0; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; flex-direction: column; text-decoration: none; transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+        .clx-card:hover { transform: translateY(-3px); border-color: #2563EB; box-shadow: 0 12px 28px -12px rgba(37, 99, 235,0.28); }
+        .clx-card:focus-within { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37, 99, 235,0.15); }
+        .clx-card-media { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 7px; background: #f0f0f0; }
+        .clx-card-media img { width: 100%; height: 100%; object-fit: cover; border-radius: 7px; display: block; }
+        .clx-card-flag { position: absolute; left: 0; bottom: 10px; background: #040803DE; color: #D4D7CE; font-size: 13px; font-weight: 700; letter-spacing: 0.3px; padding: 3px 10px 2px 10px; border-radius: 0 4px 4px 0; }
         .clx-card-provider { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; color: #111111; margin-top: 10px; font-family: sans-serif; }
-        .clx-card-title { font-size: 20px; font-weight: 700; line-height: 1.4; color: #111111; margin: 2px 0 6px 0; }
-        .clx-card-cert { display: inline-block; background: #75DC5D1F; color: #222B10; font-size: 13px; font-weight: 500; padding: 0 10px; border-radius: 4px; width: fit-content; }
-        .clx-card-meta { display: inline-block; background: #2323261A; color: #1F1F30; font-size: 14px; font-weight: 500; padding: 3px 8px; border-radius: 8px; width: fit-content; margin-top: 6px; }
+        .clx-card-title { font-size: 18px; font-weight: 700; line-height: 1.4; color: #111111; margin: 2px 0 6px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; }
+        .clx-card-title a { color: inherit; text-decoration: none; }
+        .clx-card-title a:hover { color: #2563EB; text-decoration: underline; }
+        .clx-card-cert { display: inline-block; background: #75DC5D1F; color: #222B10; font-size: 13px; font-weight: 500; padding: 0 10px; border-radius: 4px; width: fit-content; margin: 0; }
+        .clx-card-meta { display: inline-block; background: #2323261A; color: #1F1F30; font-size: 14px; font-weight: 500; padding: 3px 8px; border-radius: 8px; width: fit-content; margin: 6px 0 0 0; }
         .clx-affiliate { font-size: 13px; color: #777777; margin-top: 1.5rem; }
-        .clx-affiliate a { color: #3C85DA; font-weight: 700; }
+        .clx-affiliate a { color: #2563EB; font-weight: 700; }
         .clx-stickybar { display: none; }
         .clx-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999999; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
         .clx-modal { background: #fff; border-radius: 12px; width: 100%; max-width: 460px; position: relative; box-shadow: 0 16px 48px rgba(0,0,0,0.18); overflow: hidden; padding: 2rem; box-sizing: border-box; }
-        .clx-stripe { position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #3C85DA, #5D61DC); }
+        .clx-stripe { position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #2563EB, #7C3AED); }
         .clx-close { position: absolute; top: 14px; right: 14px; background: none; border: none; cursor: pointer; color: #aaa; padding: 5px; border-radius: 6px; display: flex; line-height: 1; }
         .clx-close:hover { color: #111; background: #f0f0f0; }
         .clx-modal-title { color: #111111; font-size: 1.3rem; font-weight: 700; margin: 0 0 0.5rem 0; text-align: center; }
         .clx-modal-sub { color: #555555; font-size: 0.9rem; text-align: center; margin: 0 0 1.25rem 0; }
-        .clx-codebox { background: #e8f4fd; border: 1px dashed #3C85DA; padding: 1rem; border-radius: 6px; margin-bottom: 1.25rem; text-align: center; }
-        .clx-codebox p { color: #3C85DA; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.6px; margin: 0 0 6px 0; font-weight: 700; }
+        .clx-codebox { background: #e8f4fd; border: 1px dashed #2563EB; padding: 1rem; border-radius: 6px; margin-bottom: 1.25rem; text-align: center; }
+        .clx-codebox p { color: #2563EB; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.6px; margin: 0 0 6px 0; font-weight: 700; }
         .clx-codebox code { display: block; font-size: 1.15rem; font-weight: 800; color: #111111; letter-spacing: 1px; }
         .clx-modal-actions { display: flex; gap: 0.75rem; flex-direction: column; }
         .clx-modal-actions .clx-enroll { margin-top: 0; text-align: center; }
-        .clx-soft { background: #e8f4fd; color: #3C85DA; border: 1px solid #3C85DA; }
+        .clx-soft { background: #e8f4fd; color: #2563EB; border: 1px solid #2563EB; }
         .clx-inner { padding-top: 0.5rem; }
         .clx-label { font-size: 14px; font-weight: 700; color: #777777; margin: 0; text-transform: uppercase; letter-spacing: 0.6px; }
         .clx-qn-heading { font-size: 22px; font-weight: 800; color: #111111; margin: 2px 0 0.6rem 0; }
@@ -958,7 +961,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
           .clx-stickybar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000; align-items: center; gap: 0.8rem; background: #fff; border-top: 1px solid #e0e0e0; padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom)); box-shadow: 0 -8px 24px rgba(0,0,0,0.12); }
           .clx-stickybar-main { flex: 1; min-width: 0; }
           .clx-stickybar-price { font-weight: 800; color: #111111; font-size: 0.95rem; }
-          .clx-stickybar-price span { font-weight: 600; color: #3C85DA; font-size: 0.78rem; }
+          .clx-stickybar-price span { font-weight: 600; color: #2563EB; font-size: 0.78rem; }
           .clx-stickybar-sub { font-size: 0.72rem; color: #777777; }
           .clx-stickybar-cta { width: auto; margin-top: 0; }
         }

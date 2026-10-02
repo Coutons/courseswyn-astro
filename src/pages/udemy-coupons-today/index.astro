@@ -70,12 +70,12 @@ const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 95;
 const siteUrl = "https://courseswyn.com";
 const pageUrl = `${siteUrl}/udemy-coupons-today/`;
 const shortDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(now);
-const pageTitle = todayAdded > 0
-  ? `${todayAdded} Verified Udemy Coupons Today — ${shortDate} | Save Up To ${maxDiscountPct}% | CoursesWyn`
-  : `Udemy Coupons Today (${shortDate}) — Fresh Verified Deals | CoursesWyn`;
-const metaDescription = todayAdded > 0
-  ? `${todayAdded} fresh Udemy coupon codes verified today (${shortDate}). ${totalActive} active deals, save up to ${maxDiscountPct}% — checked ${lastVerified}, expires in hours.`
-  : `Fresh Udemy coupons updated ${lastVerified} — ${totalActive} verified codes today. No code? Try Udemy Personal Plan with 26,000+ courses.`;
+const pageTitle = discountPcts.length
+  ? `Udemy Coupons Today — Up To ${maxDiscountPct}% Off, Verified Daily | CoursesWyn`
+  : `Udemy Coupons Today — Verified Daily Deals & Discount Codes | CoursesWyn`;
+const metaDescription = totalActive > 0
+  ? `${totalActive} verified Udemy coupons live today (${shortDate}), last checked ${lastVerified}. Save up to ${maxDiscountPct}% on ${freeCount} free and premium courses — codes expire fast.`
+  : `Fresh Udemy coupon codes added and re-verified ${lastVerified}. Browse today's verified Udemy deals, or use the Udemy Personal Plan for 26,000+ courses.`;
 const pageKeywords = [
   "udemy coupons today", "udemy coupon today", "todays udemy coupons",
   "new udemy coupon", "fresh udemy coupon codes today", "udemy deals today",
@@ -102,7 +102,9 @@ const faqs = [
   { q: "How long do Udemy coupons added today last?", a: "Since Udemy's 2025 policy update most coupons are capped at 10-100 redemptions and expire within days. We recommend enrolling immediately — " + expiringCount + " of today's coupons already expire within 7 days." },
   { q: "How do I redeem a Udemy coupon from today's list?", a: "Click the course card to open its deal page on CoursesWyn, then click 'Claim Coupon'. You'll land on Udemy with the discount pre-applied. Complete enrollment there — no manual code entry needed." },
   { q: "Do discounted courses from today include certificates?", a: "Yes. Courses enrolled via today's coupons include lifetime access, downloadable resources, and an official Udemy completion certificate when you finish the course." },
+  { q: "What's the difference between a Udemy promo code and an automatic discount?", a: "A Udemy promo code is applied through a link or coupon field and usually comes from an instructor with limited redemptions. An automatic discount is Udemy's own sitewide sale pricing — no code needed, applied at checkout. On this page, paid listings are instructor promo codes with the discount pre-applied, while free listings need no payment at all." },
   { q: "How often are new Udemy coupons added today?", a: "New coupons are added throughout the day as instructors publish them. We check Udemy in near real time and update this list automatically — checking back every few hours shows fresh deals. You can also try <a href='/blog/udemy-personal-plan-review-2026/'>Udemy Personal Plan</a> for unlimited access when no coupon fits." },
+  { q: "Is there a Udemy sale today, or should I use a coupon code?", a: "Both can work in your favor. Udemy runs sitewide sales every few weeks with automatic discounts, but instructor coupon codes — like the ones listed here — often beat sale prices with deeper, course-specific cuts up to 95% off. Check today's verified coupon codes first; if none fit, fall back to the current <a href='/udemy-coupon-code'>sitewide Udemy deals</a>." },
   { q: "Why did Udemy change its coupon policy?", a: `In 2025 Udemy updated its coupon policy to improve course quality. Most coupons are now limited to 10-100 redemptions. Read more on <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's instructor blog</a>.` },
 ];
 
@@ -195,7 +197,7 @@ const jsonLd = {
       <header class="td-hero">
         <div class="container">
           <p class="td-eyebrow"><span class="td-blink" aria-hidden="true"></span> Live · updated {lastVerified}</p>
-          <h1>Verified <span>Udemy Coupons Today</span> — {todayAdded} New Deals for {shortDate}</h1>
+          <h1>Udemy Coupons Today — {totalActive} Verified Deals, Save Up To {maxDiscountPct}%</h1>
           <p class="td-sub">{todayAdded} hand-picked deals added in the last 24 hours &mdash; every code re-verified before it&apos;s listed. Save up to <strong>{maxDiscountPct}%</strong> on premium courses.</p>
           <form action="/search" method="GET" role="search" aria-label="Search courses" class="td-search">
             <input type="search" name="q" placeholder="Search today's discounted Udemy courses..." autocomplete="off" aria-label="Search courses" />
@@ -212,8 +214,8 @@ const jsonLd = {
 
       <div class="daily-urgency" role="note">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span><strong>Coupons expire fast</strong> &mdash; {todayAdded} added today{expiringCount > 0 ? `, ${expiringCount} expiring within 7 days` : ''}{freeCount > 0 ? `, ${freeCount} free` : ''}. Enroll before they run out.</span>
-        <a href="/how-to-redeem-coupon">How to redeem &rarr;</a>
+        <span><strong>How to redeem:</strong> pick a coupon below &rarr; hit Claim &rarr; enroll on Udemy. {todayAdded} added today{freeCount > 0 ? `, including ${freeCount} free` : ''} — codes run out fast, don't wait.</span>
+        <a href="/how-to-redeem-coupon">Step-by-step &rarr;</a>
       </div>
 
       <div class="daily-share" role="region" aria-label="Share today's coupons">
@@ -255,44 +257,9 @@ const jsonLd = {
         <div class="cc-deal-more"><span class="cc-deal-count">Showing {todayGridDeals.length} of {totalActive} coupons verified today</span><a href="/udemy-coupon-code">Browse all {totalCoupons.toLocaleString()} coupons →</a></div>
       </section>
 
-      {/* PREMIUM PERSONAL PLAN SECTION - dark high-conversion hero */}
-      <section class="pp-premium" aria-label="Udemy Personal Plan promotion">
-        <div class="pp-premium-bg"></div>
-        <div class="pp-premium-inner">
-          <span class="pp-premium-badge"><span class="pp-dot"></span> Sponsored — CoursesWyn readers exclusive</span>
-          <h2>Stop chasing <span>single coupons</span> — unlock <span>26,000+</span> courses for $20/mo</h2>
-          <p class="pp-premium-desc">Today's coupons expire in <strong>~7 hours / 100 redemptions</strong> on average. Instead of hunting one by one, Personal Plan gives you unlimited access to 26,000+ curated courses with certificates — one flat price, cancel anytime. <strong>25% OFF your first year for CoursesWyn readers.</strong></p>
-
-          <div class="pp-premium-compare">
-            <div class="pp-compare-col"><span class="pp-compare-label">Buy individually</span><span class="pp-compare-price">$45</span><span class="pp-compare-sub">3 courses × $15</span></div>
-            <div class="pp-compare-vs">vs</div>
-            <div class="pp-compare-col highlight"><span class="pp-compare-label">Personal Plan</span><span class="pp-compare-price">$20<span>/mo</span></span><span class="pp-compare-sub">26,000+ courses unlimited</span></div>
-          </div>
-
-          <div class="pp-premium-grid">
-            <div class="pp-premium-point"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3C85DA" stroke-width="2.8"><path d="M20 6L9 17l-5-5"/></svg><span><strong>26,000+</strong> top-rated courses</span></div>
-            <div class="pp-premium-point"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3C85DA" stroke-width="2.8"><path d="M20 6L9 17l-5-5"/></svg><span><strong>$240/yr</strong> ($20/mo) — 25% OFF</span></div>
-            <div class="pp-premium-point"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3C85DA" stroke-width="2.8"><path d="M20 6L9 17l-5-5"/></svg><span><strong>Cancel anytime</strong> · 7-day trial</span></div>
-          </div>
-
-          <a class="pp-premium-btn" href="https://trk.udemy.com/c/6564357/4039145/39854" rel="nofollow sponsored noopener" target="_blank">
-            <span>Yes, I Want 25% OFF Personal Plan</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </a>
-          <div class="pp-premium-trust">
-            <span><svg width="12" height="12" viewBox="0 0 24 24" fill="#3C85DA"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg> 4.8/5 rating</span>
-            <span>·</span>
-            <span>75k+ learners</span>
-            <span>·</span>
-            <span>7-day free trial</span>
-          </div>
-          <p class="pp-premium-note">Sponsored — We may earn a commission at no extra cost to you. <a href="/blog/udemy-personal-plan-review-2026/">Read detailed 2026 review →</a> · <a href="/affiliate-disclosure">Affiliate Disclosure</a></p>
-        </div>
-      </section>
-
       <section class="cc-section">
         <div class="cc-sec-head">
-          <h2 class="cc-sec-title">Trending Udemy Topics Today <span class="cc-tag">{trendingTopics.length} topics</span></h2>
+          <h2 class="cc-sec-title">Trending Topics <span class="cc-tag">{trendingTopics.length} topics</span></h2>
           <p class="cc-sec-desc">Most popular topics among today's verified coupons.</p>
         </div>
         <nav class="cc-cat-grid" aria-label="Trending topics">
@@ -309,13 +276,41 @@ const jsonLd = {
       <section class="cc-seo-section">
         <h2 class="cc-section-title">Why Today's Udemy Coupons Are Different From Our Full List</h2>
         <p>Since <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's coupon policy update</a>, most coupons are limited to about 10 to 100 redemptions or expire within days, which is why so many coupon sites list codes that no longer work. This page only shows deals added or re-verified in the last 24 hours &mdash; the freshest, most reliable codes available right now.</p>
-        <p>CoursesWyn checks every coupon against Udemy in near real time. When a coupon runs out, it disappears from this list automatically. For the complete archive with category filters, browse <a href="/udemy-coupon-code">all verified coupons</a>. No coupon for the course you want? <a href="https://trk.udemy.com/c/6564357/4039145/39854" rel="sponsored noopener" target="_blank">Udemy Personal Plan</a> gives unlimited access to 26,000+ courses for one price — see our <a href="/blog/udemy-personal-plan-review-2026/">Personal Plan review</a>.</p>
+        <p>CoursesWyn checks every coupon against Udemy in near real time. When a coupon runs out, it disappears from this list automatically. For the complete archive with category filters, browse <a href="/udemy-coupon-code">all verified coupons</a>.</p>
+      </section>
+
+      <section class="td-guide" aria-label="Udemy discount code guide">
+        <p class="td-guide-badge">What to Expect From</p>
+        <h2 class="td-guide-title">Udemy Discount Codes</h2>
+        <p class="td-guide-sub">Udemy sells courses on everything from data science to personal development — the right discount can cut a $89.99 course to $12.99 or even free. Here's what to know before you enroll.</p>
+        <div class="td-guide-grid">
+          <article class="td-guide-card">
+            <span class="td-guide-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></span>
+            <h3>Types of discount codes</h3>
+            <p>Instructor <strong>promo codes</strong> give percentage-off deals capped at 10–100 redemptions, while 100%-off codes make a course completely free. Udemy also runs its own <strong>sitewide sales</strong> every few weeks with automatic discounts at checkout — no code needed.</p>
+          </article>
+          <article class="td-guide-card">
+            <span class="td-guide-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+            <h3>When to shop</h3>
+            <p>New <strong>coupon codes</strong> appear daily as instructors launch courses — the fresh codes above usually beat waiting for a sale. The deepest automatic discounts land around New Year, Black Friday, and back-to-school, when courses drop to $9.99–$12.99.</p>
+          </article>
+          <article class="td-guide-card">
+            <span class="td-guide-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+            <h3>Things to watch out for</h3>
+            <p>Udemy codes can't be stacked — one <strong>coupon</strong> per purchase. Free codes can run out within hours, paid promos typically expire within days, and prices vary by region. The final total is always confirmed on Udemy's checkout page.</p>
+          </article>
+          <article class="td-guide-card">
+            <span class="td-guide-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span>
+            <h3>How we verify</h3>
+            <p>Every code above is checked against Udemy's live pricing before listing — last checked <strong>{lastVerified}</strong>. Expired offers are removed automatically instead of wasting your time. See <a href="/how-we-test-and-verify-udemy-coupons">how we verify</a>.</p>
+          </article>
+        </div>
       </section>
 
       <section class="cc-section cc-faq" id="faq">
         <h2 class="cc-section-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Frequently asked questions — Udemy coupons today
+          Frequently asked questions
           <span class="cc-tag">{faqs.length} questions</span>
         </h2>
         <div class="cc-faq-grid">
@@ -380,10 +375,10 @@ const jsonLd = {
   /* ===== REGISTER / LEDGER HEADER ===== */
   .cc-register { position: relative; background: var(--card); border: 1px solid #232B26; border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(0, 0, 0, 0.35); }
   .cc-register-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-  .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(60, 133, 218, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 6px 13px; }
+  .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 6px 13px; }
   .cc-eyebrow a { color: inherit; text-decoration: none; }
   .cc-eyebrow a:hover { text-decoration: underline; }
-  .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #3C85DA; animation: ccBlip 1.6s infinite; }
+  .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #2563EB; animation: ccBlip 1.6s infinite; }
   @keyframes ccBlip { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   .cc-folio { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--muted); border: 1px dashed var(--border); border-radius: 6px; padding: 5px 10px; letter-spacing: .05em; white-space: nowrap; }
   .cc-title { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 700; color: var(--text); line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 12px; }
@@ -393,7 +388,7 @@ const jsonLd = {
   .cc-subtitle time { white-space: nowrap; }
 
   .cc-byline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; }
-  .cc-byline-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(60, 133, 218, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 5px 12px; text-decoration: none; transition: background 0.2s; }
+  .cc-byline-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 5px 12px; text-decoration: none; transition: background 0.2s; }
   .cc-byline-badge:hover { background: rgba(76, 195, 138, 0.2); }
   .cc-byline-badge svg { flex-shrink: 0; }
   .cc-byline-date { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--muted); }
@@ -409,7 +404,7 @@ const jsonLd = {
   .cc-hero-search svg { color: var(--muted); flex-shrink: 0; }
   .cc-hero-search input { flex: 1; border: none; outline: none; background: transparent; color: var(--text); font-size: 0.93rem; padding: 0; min-width: 0; }
   .cc-hero-search kbd { font-size: 0.7rem; color: var(--muted); background: transparent; border: 1px solid #232B26; border-radius: 5px; padding: 2px 7px; white-space: nowrap; }
-  .cc-hero-btn { font-family: var(--font-display); font-size: 0.9rem; font-weight: 600; text-decoration: none; padding: 12px 20px; border-radius: 9px; background: linear-gradient(135deg, #3C85DA 0%, #5D61DC 100%); color: #fff; box-shadow: 0 10px 24px -8px rgba(60, 133, 218, 0.5); transition: filter 0.2s, transform 0.2s; white-space: nowrap; }
+  .cc-hero-btn { font-family: var(--font-display); font-size: 0.9rem; font-weight: 600; text-decoration: none; padding: 12px 20px; border-radius: 9px; background: var(--brand-gradient); color: #fff; box-shadow: 0 10px 24px -8px rgba(37, 99, 235, 0.5); transition: filter 0.2s, transform 0.2s; white-space: nowrap; }
   .cc-hero-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
   .cc-hero-btn.ghost { background: transparent; color: var(--brand); border: 1px solid var(--brand); box-shadow: none; }
   .cc-hero-btn.ghost:hover { background: var(--brand-soft); color: var(--brand); }
@@ -422,9 +417,9 @@ const jsonLd = {
 
   /* ===== URGENCY + SHARE ===== */
   .daily-urgency { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--card); border: 1px solid rgba(184, 144, 31, 0.45); border-radius: 12px; padding: 14px 18px; margin: 24px 0 0; }
-  .daily-urgency svg { color: #3C85DA; flex-shrink: 0; }
+  .daily-urgency svg { color: #2563EB; flex-shrink: 0; }
   .daily-urgency span { font-size: 0.9rem; color: var(--muted); line-height: 1.5; flex: 1; }
-  .daily-urgency strong { color: #3C85DA; font-weight: 700; }
+  .daily-urgency strong { color: #2563EB; font-weight: 700; }
   .daily-urgency a { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; color: var(--brand); text-decoration: none; white-space: nowrap; }
   .daily-urgency a:hover { text-decoration: underline; }
 
@@ -435,15 +430,15 @@ const jsonLd = {
   .daily-share-link:hover { border-color: var(--brand); color: var(--brand); }
   .daily-share-link:hover svg { color: var(--brand); }
   .daily-share-copy { display: inline-flex; align-items: center; padding: 8px 14px; border-radius: 8px; border: 1px dashed var(--brand); background: transparent; font-size: 0.78125rem; font-weight: 600; color: var(--brand); cursor: pointer; transition: all 0.15s; }
-  .daily-share-copy:hover { background: rgba(60, 133, 218, 0.08); }
+  .daily-share-copy:hover { background: rgba(37, 99, 235, 0.08); }
   .daily-share-copy.copied { background: var(--brand); color: #fff; }
 
   /* ===== COMPACT PP BANNER — high CTR (amber urgency + Udemy purple CTA) ===== */
   .pp-compact { background: #fff; border: 1.5px solid #e5e5e5; border-left: 4px solid #F59E0B; border-radius: 14px; padding: 16px 18px; margin: 20px 0 0; box-shadow: 0 6px 20px -12px rgba(0,0,0,0.15); }
   .pp-compact-inner { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
   .pp-compact-left { flex: 1; min-width: 260px; }
-  .pp-compact-pill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.625rem; font-weight: 700; color: #3C85DA; background: rgba(60,133,218,0.08); border: 1px solid rgba(60,133,218,0.25); padding: 4px 10px; border-radius: 999px; margin-bottom: 6px; letter-spacing: .02em; }
-  .pp-dot { width: 6px; height: 6px; border-radius: 50%; background: #3C85DA; animation: ccBlip 1.4s infinite; display: inline-block; }
+  .pp-compact-pill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.625rem; font-weight: 700; color: #2563EB; background: rgba(37, 99, 235,0.08); border: 1px solid rgba(37, 99, 235,0.25); padding: 4px 10px; border-radius: 999px; margin-bottom: 6px; letter-spacing: .02em; }
+  .pp-dot { width: 6px; height: 6px; border-radius: 50%; background: #2563EB; animation: ccBlip 1.4s infinite; display: inline-block; }
   .pp-compact-text { font-size: 0.875rem; color: var(--text); line-height: 1.55; }
   .pp-compact-text strong { color: #E3B341; }
   .pp-compact-text a { color: #E3B341; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
@@ -478,7 +473,7 @@ const jsonLd = {
 
   /* ===== INLINE PP CARD — ledger paper, green reserved for action ===== */
   .pp-inline-card { background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--brand); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 10px; min-height: 100%; position: relative; overflow: hidden; box-shadow: 0 14px 28px -20px rgba(20,32,27,0.25); }
-  .pp-inline-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #3C85DA, #5D61DC); }
+  .pp-inline-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #2563EB, #7C3AED); }
   .pp-inline-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.625rem; font-weight: 700; color: #E3B341; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); padding: 4px 10px; border-radius: 999px; align-self: flex-start; }
   .pp-inline-title { font-size: 1.08rem; font-weight: 800; color: var(--text); margin: 0; line-height: 1.3; letter-spacing: -0.01em; }
   .pp-inline-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin: 0; }
@@ -489,7 +484,7 @@ const jsonLd = {
   .pp-inline-list { margin: 2px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
   .pp-inline-list li { font-size: 0.8125rem; color: var(--text-secondary); padding-left: 18px; position: relative; }
   .pp-inline-list li::before { content: "✓"; position: absolute; left: 0; color: var(--brand); font-weight: 800; }
-  .pp-inline-btn { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; padding: 12px 16px; border-radius: 10px; background: linear-gradient(135deg, #3C85DA, #5D61DC); color: #fff; font-size: 0.875rem; font-weight: 800; text-decoration: none; transition: all 0.2s; }
+  .pp-inline-btn { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; padding: 12px 16px; border-radius: 10px; background: var(--brand-gradient); color: #fff; font-size: 0.875rem; font-weight: 800; text-decoration: none; transition: all 0.2s; }
   .pp-inline-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
   .pp-inline-arrow { transition: transform 0.2s; }
   .pp-inline-btn:hover .pp-inline-arrow { transform: translateX(3px); }
@@ -518,7 +513,7 @@ const jsonLd = {
   .pp-premium-grid { display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: center; margin-bottom: 18px; }
   .pp-premium-point { display: inline-flex; align-items: center; gap: 7px; font-size: 0.78rem; color: var(--text-secondary); background: var(--bg); border: 1px solid var(--border); padding: 5px 11px; border-radius: 999px; }
   .pp-premium-point strong { color: var(--text); }
-  .pp-premium-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 22px; border-radius: 10px; font-size: 0.92rem; font-weight: 800; text-decoration: none; background: linear-gradient(135deg, #3C85DA, #5D61DC); color: #fff; transition: all 0.2s; }
+  .pp-premium-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 22px; border-radius: 10px; font-size: 0.92rem; font-weight: 800; text-decoration: none; background: var(--brand-gradient); color: #fff; transition: all 0.2s; }
   .pp-premium-btn:hover { filter: brightness(1.08); transform: translateY(-2px); }
   .pp-premium-trust { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; font-size: 0.72rem; font-weight: 600; color: var(--muted); }
   .pp-premium-note { font-size: 0.72rem; color: var(--muted); line-height: 1.6; margin: 10px 0 0; }
@@ -545,6 +540,21 @@ const jsonLd = {
   .cc-seo-section p:last-child { margin-bottom: 0; }
   .cc-seo-section a { color: var(--brand); text-decoration: none; font-weight: 600; }
   .cc-seo-section a:hover { text-decoration: underline; }
+  .td-guide { margin: 3.25rem 0 0; background: linear-gradient(135deg, #1B0B33 0%, #7C3AED 130%); border-radius: 24px; padding: clamp(1.75rem, 4vw, 2.75rem); position: relative; overflow: hidden; }
+  .td-guide::before { content: ''; position: absolute; top: -90px; left: 50%; transform: translateX(-50%); width: 520px; height: 260px; background: radial-gradient(ellipse, rgba(242,201,76,0.16) 0%, transparent 65%); pointer-events: none; }
+  .td-guide-badge { display: inline-block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #F2C94C; background: rgba(242,201,76,0.12); border: 1px solid rgba(242,201,76,0.35); border-radius: 999px; padding: 6px 14px; margin: 0 0 0.8rem; position: relative; }
+  .td-guide-title { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 800; color: #fff; margin: 0 0 0.5rem; letter-spacing: -0.02em; line-height: 1.15; position: relative; }
+  .td-guide-sub { color: rgba(255,255,255,0.78); font-size: 0.95rem; line-height: 1.65; margin: 0; max-width: 640px; position: relative; }
+  .td-guide-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem; position: relative; }
+  .td-guide-card { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; padding: 1.25rem 1.25rem 1.1rem; transition: transform 0.2s, background 0.2s, border-color 0.2s; }
+  .td-guide-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.1); border-color: rgba(242,201,76,0.45); }
+  .td-guide-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 12px; background: rgba(242,201,76,0.15); color: #F2C94C; margin-bottom: 0.7rem; }
+  .td-guide-card h3 { font-size: 1rem; font-weight: 800; color: #fff; margin: 0 0 0.45rem; letter-spacing: -0.01em; }
+  .td-guide-card p { font-size: 0.87rem; color: rgba(255,255,255,0.75); line-height: 1.65; margin: 0; }
+  .td-guide-card p strong { color: #fff; }
+  .td-guide-card a { color: #F2C94C; font-weight: 600; text-decoration: none; }
+  .td-guide-card a:hover { text-decoration: underline; }
+  @media (max-width: 720px){ .td-guide-grid { grid-template-columns: 1fr; } }
 
   .cc-faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
   @media (max-width: 768px) { .cc-faq-grid { grid-template-columns: 1fr; } }
@@ -559,10 +569,10 @@ const jsonLd = {
   .cc-cta-eyebrow { font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: .07em; text-transform: uppercase; color: var(--brand); margin: 0 0 8px; }
 
   .cc-cta-text { font-size: 0.95rem; line-height: 1.6; margin: 0 auto 18px; max-width: 480px; color: var(--muted); }
-  .cc-cta .cc-hero-btn { background: linear-gradient(135deg, #3C85DA 0%, #5D61DC 100%); color: #fff; box-shadow: 0 12px 28px -12px rgba(60, 133, 218, 0.55); }
+  .cc-cta .cc-hero-btn { background: var(--brand-gradient); color: #fff; box-shadow: 0 12px 28px -12px rgba(37, 99, 235, 0.55); }
   .cc-cta .cc-hero-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
   h1, h2, h3 { font-family: sans-serif; }
-  .td-hero { background: linear-gradient(135deg, #3C85DA 0%, #5D61DC 100%); padding: 3.5rem 0 3rem; text-align: center; position: relative; overflow: hidden; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
+  .td-hero { background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%); padding: 3.5rem 0 3rem; text-align: center; position: relative; overflow: hidden; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
   h1, h2, h3 { font-family: sans-serif; }
   .td-hero::before { content: ''; position: absolute; top: -100px; left: 12%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(119,59,255,0.35) 0%, transparent 65%); pointer-events: none; }
   .td-hero::after { content: ''; position: absolute; bottom: -120px; right: 8%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(242,201,76,0.13) 0%, transparent 65%); pointer-events: none; }
@@ -575,7 +585,7 @@ const jsonLd = {
   .td-sub strong { color: #fff; }
   .td-search { display: flex; gap: 8px; max-width: 560px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.45); }
   .td-search input { flex: 1; border: none; outline: none; font-size: 0.9rem; padding: 10px 14px; min-width: 0; color: #111; background: transparent; font-family: inherit; }
-  .td-search button { font-weight: 800; color: #fff; background: linear-gradient(135deg, #3C85DA 0%, #5D61DC 100%); border: none; border-radius: 9px; padding: 0 24px; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
+  .td-search button { font-weight: 800; color: #fff; background: var(--brand-gradient); border: none; border-radius: 9px; padding: 0 24px; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
   .td-search button:hover { filter: brightness(1.1); }
   .td-stats { display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; margin-top: 1.75rem; }
   .td-stat { display: flex; flex-direction: column; }
