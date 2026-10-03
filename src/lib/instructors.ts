@@ -14,6 +14,7 @@ export function parseInstructors(instructorField: string | undefined): string[] 
  */
 export function createInstructorSlug(name: string): string {
   return name.toLowerCase()
+    .normalize("NFKD").replace(/[\u0300-\u036f]/g, "") // ü → u, é → e (jangan hilangkan huruf)
     .replace(/[^\w\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")

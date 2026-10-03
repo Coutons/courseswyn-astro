@@ -10,6 +10,22 @@ import mdx from '@astrojs/mdx';
 
 export default defineConfig({
   output: 'static',
+  // Slug instruktur lama (dulu ü → hilang, mis. schwarzmller) dialihkan ke
+  // slug baru yang ditransliterasi dengan benar (schwarzmuller).
+  redirects: {
+    '/instructor/maximilian-schwarzmller': '/instructor/maximilian-schwarzmuller',
+    '/instructor/academind-by-maximilian-schwarzmller': '/instructor/academind-by-maximilian-schwarzmuller',
+    '/instructor/santiago-hernndez': '/instructor/santiago-hernandez',
+    '/instructor/felipe-gaviln': '/instructor/felipe-gavilan',
+    '/instructor/lauro-fialho-mller': '/instructor/lauro-fialho-muller',
+    '/instructor/andrs-guzmn': '/instructor/andres-guzman',
+    '/instructor/gastn-galarza': '/instructor/gaston-galarza',
+    '/instructor/gustavo-escobar-henrquez': '/instructor/gustavo-escobar-henriquez',
+    '/instructor/ivan-loureno-gomes': '/instructor/ivan-lourenco-gomes',
+    '/instructor/jnis-smilga': '/instructor/janis-smilga',
+    '/instructor/mihai-ctlin-teodosiu': '/instructor/mihai-catalin-teodosiu',
+    '/instructor/mislav-majdandi': '/instructor/mislav-majdandzic',
+  },
   image: {
     remotePatterns: [{ protocol: 'https', hostname: 'images.unsplash.com' }]
   },

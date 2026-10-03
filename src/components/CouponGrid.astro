@@ -1,0 +1,300 @@
+---
+// Grid coupon card (dark navy, coursespeak-style).
+// Untuk baris tabel (`<tr>`), lihat CouponRow.astro.
+import { Image } from 'astro:assets';
+import { createInstructorSlug, parseInstructors } from '../lib/instructors';
+import { slugifyTopic } from '../lib/utils';
+import instructorDirectory from "../data/instructorCounts.json";
+
+const { deal, eager = false, priority = false } = Astro.props;
+
+function formatCount(n: number) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(n);
+}
+
+function formatDuration(duration: string) {
+  if (!duration) return "";
+  return duration
+    .replace(/(\d+)h/g, '$1 hours')
+    .replace(/(\d+)m/g, '$1 minutes')
+    .replace(/\s+/g, ' ');
+}
+
+function formatRelativeTime(dateString: string) {
+  const t = new Date(dateString).getTime();
+  if (isNaN(t)) return "Updated recently";
+  const diffMs = Date.now() - t;
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffHours < 1) return "Updated recently";
+  if (diffHours < 24) return `Updated ${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+  return `Updated ${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+}
+
+function toISOorEmpty(s?: string) {
+  if (!s) return "";
+  const t = new Date(s).getTime();
+  if (isNaN(t)) return "";
+  try { return new Date(s).toISOString(); } catch { return ""; }
+}
+
+// ===== Price / rating / title =====
+const p = typeof deal.price === "number" && isFinite(deal.price) && deal.price > 0 ? deal.price : 0;
+const opRaw = typeof deal.originalPrice === "number" && isFinite(deal.originalPrice) ? deal.originalPrice : 119.99;
+const op = opRaw > p ? opRaw : 119.99;
+const hasDiscount = op > p && p > 0;
+const discountPct = hasDiscount ? Math.round(100 - (p / op) * 100) : 0;
+const isFree = p === 0;
+const r = typeof deal.rating === "number" && isFinite(deal.rating) ? deal.rating : null;
+const title = String(deal.title || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;|&#8217;/g, "'").replace(/&ndash;|&#8211;/g, " & ").replace(/\s{2,}/g, " ").trim();
+const provider = (deal.provider || "Udemy").trim();
+const dealUrl = `/coupon/${deal.slug}`;
+const extUrl = (deal.url || dealUrl).trim() || dealUrl;
+const isExternal = extUrl !== dealUrl;
+const studentsNum = typeof deal.students === "number" && isFinite(deal.students) && deal.students > 0 ? deal.students : 0;
+const expISO = toISOorEmpty(deal.expiresAt);
+
+// ===== Instructor header =====
+const LANG_FLAGS: Record<string, string> = {
+  english: "🇺🇸", spanish: "🇪🇸", turkish: "🇹🇷", german: "🇩🇪", french: "🇫🇷",
+  portuguese: "🇧🇷", italian: "🇮🇹", arabic: "🇸🇦", indonesian: "🇮🇩", hindi: "🇮🇳",
+  japanese: "🇯🇵", korean: "🇰🇷", chinese: "🇨🇳", russian: "🇷🇺", dutch: "🇳🇱",
+  polish: "🇵🇱", thai: "🇹🇭", vietnamese: "🇻🇳", ukrainian: "🇺🇦", greek: "🇬🇷",
+};
+const instructorsList = deal.instructor ? parseInstructors(String(deal.instructor)) : [];
+const firstInstructor = (instructorsList[0] ?? String(deal.instructor || "").split(/[,&]/)[0]?.trim() ?? "").trim();
+const instructorSlug = firstInstructor ? createInstructorSlug(firstInstructor) : "";
+const dirEntry = (instructorDirectory as unknown as Record<string, { name?: string; count?: number; image?: string }>)[instructorSlug];
+const instructorImg = (deal as any).instructorImage || dirEntry?.image || "";
+const instructorCourses = typeof (deal as any).instructorCourses === "number" ? (deal as any).instructorCourses : dirEntry?.count;
+const dealLang = (deal.language || "").toString().trim();
+const langFlag = LANG_FLAGS[dealLang.toLowerCase()] || "";
+const insSub = typeof instructorCourses === "number" ? `${instructorCourses} course${instructorCourses === 1 ? "" : "s"}` : (dealLang || deal.category || provider);
+const instructorHref = instructorSlug ? `/instructor/${instructorSlug}` : "";
+const instructorInitials = firstInstructor.split(/\s+/).map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
+const desc = String(deal.description || "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim() || "Master this in-demand skill with comprehensive training from industry experts.";
+const updatedBadge = deal.updatedAt ? formatRelativeTime(deal.updatedAt) : "Updated recently";
+const subSlug = deal.subcategory ? slugifyTopic(String(deal.subcategory)) : "";
+---
+
+<article class="cpn-card" itemscope itemtype="https://schema.org/Course">
+    <meta itemprop="name" content={title} />
+    <span itemprop="provider" itemscope itemtype="https://schema.org/Organization">
+      <meta itemprop="name" content={provider} />
+    </span>
+    {firstInstructor && (
+      <div class="cpn-ins-header">
+        {instructorHref ? (
+        <a href={instructorHref} class="cpn-ins-avatar" aria-label={firstInstructor} tabindex="-1">
+          {instructorImg ? (
+            <img src={instructorImg} alt={firstInstructor} width="44" height="44" loading={eager ? "eager" : "lazy"} decoding="async" />
+          ) : (
+            <span class="cpn-ins-fallback" aria-hidden="true">{instructorInitials}</span>
+          )}
+        </a>
+      ) : (
+        <span class="cpn-ins-avatar" aria-hidden="true">
+          {instructorImg ? (
+            <img src={instructorImg} alt="" width="44" height="44" loading={eager ? "eager" : "lazy"} decoding="async" />
+            ) : (
+              <span class="cpn-ins-fallback">{instructorInitials}</span>
+            )}
+          </span>
+        )}
+      <div class="cpn-ins-text">
+        {instructorsList.length > 1 ? (
+          <span class="cpn-ins-name">{instructorsList.map((n, i) => (
+            <Fragment key={n}>{i > 0 && ", "}<a href={`/instructor/${createInstructorSlug(n)}`}>{n}</a></Fragment>
+          ))}</span>
+        ) : instructorHref ? (
+          <a href={instructorHref} class="cpn-ins-name">{firstInstructor}</a>
+        ) : (
+          <span class="cpn-ins-name">{firstInstructor}</span>
+        )}
+        <span class="cpn-ins-sub">{insSub}</span>
+      </div>
+        {langFlag ? (
+          <span class="cpn-flag" title={dealLang} role="img" aria-label={dealLang}>{langFlag}</span>
+        ) : dealLang ? (
+          <span class="cpn-flag-text" title={dealLang}>{dealLang.slice(0, 2).toUpperCase()}</span>
+        ) : null}
+      </div>
+    )}
+    <div class="cpn-media">
+      <a href={dealUrl} aria-label={title} tabindex="-1">
+        {deal.image ? (
+          <Image src={deal.image} alt={title} width={400} height={225} loading={eager ? "eager" : "lazy"} fetchpriority={priority ? "high" : undefined} decoding={priority ? "sync" : "async"} inferSize={false} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} itemprop="image" />
+        ) : (
+          <span class="cpn-media-fallback" aria-hidden="true">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="currentColor" opacity="0.35"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </span>
+        )}
+      </a>
+      {isFree && <span class="cpn-badge-free">FREE</span>}
+      <span class="cpn-badge-time">{updatedBadge}</span>
+    </div>
+    <div class="cpn-body">
+      <h3 class="cpn-title" itemprop="name"><a href={dealUrl}>{title}</a></h3>
+      <p class="cpn-desc">{desc}</p>
+      <div class="cpn-rate-row">
+        {r ? (
+          <span class="cpn-rating" title={`${r.toFixed(1)} out of 5 stars`}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#FF9800" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <span>{r.toFixed(1)}{studentsNum > 0 ? ` (${formatCount(studentsNum)}+ students)` : ""}</span>
+          </span>
+        ) : studentsNum > 0 ? (
+          <span class="cpn-rating">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#FF9800" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <span>{formatCount(studentsNum)}+ students</span>
+          </span>
+        ) : null}
+        {deal.subcategory && subSlug && (
+          <a href={`/topics/${subSlug}`} class="cpn-topic" title={`Browse ${deal.subcategory} courses`}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+            {deal.subcategory}
+          </a>
+        )}
+      </div>
+      <div class="cpn-price-row">
+        <div class="cpn-price">
+          <span class="cpn-now">{isFree ? "FREE" : `$${p.toFixed(2)}`}</span>
+          {hasDiscount && (
+            <>
+              <s class="cpn-was">${op.toFixed(2)}</s>
+              <span class="cpn-off">{discountPct}% OFF</span>
+            </>
+          )}
+        </div>
+        <span class="cpn-verified">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          Verified
+        </span>
+      </div>
+      {deal.duration && (
+        <div class="cpn-duration">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Course Duration: {formatDuration(String(deal.duration))}</span>
+        </div>
+      )}
+      <a href={extUrl} class="cpn-cta" target={isExternal ? "_blank" : undefined} rel={isExternal ? "sponsored noopener noreferrer nofollow" : undefined}>{isFree ? "Enroll for Free" : "Get Coupon"}</a>
+    </div>
+    <div itemprop="offers" itemscope itemtype="https://schema.org/Offer" style="display:none">
+      <meta itemprop="priceCurrency" content="USD" />
+      <meta itemprop="price" content={String(p)} />
+      <link itemprop="availability" href="https://schema.org/InStock" />
+      <link itemprop="url" href={dealUrl} />
+      {expISO && <meta itemprop="priceValidUntil" content={expISO} />}
+    </div>
+    <meta itemprop="description" content={desc.slice(0, 160)} />
+</article>
+
+<style>
+
+  /* ===== Grid coupon card (warm charcoal + amber) ===== */
+  .cpn-card {
+    background: #121212;
+    border: 1px solid #2E2E33;
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    color: #E4E4E7;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .cpn-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,152,0,0.45);
+    box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.6);
+  }
+  .cpn-card:focus-within {
+    border-color: rgba(255,152,0,0.45);
+    box-shadow: 0 0 0 3px rgba(255,152,0,0.18);
+  }
+  .cpn-ins-header { display: flex; align-items: center; gap: 0.75rem; padding: 1.1rem 1.25rem 1rem; background: #121212; }
+  .cpn-ins-avatar {
+    width: 44px; height: 44px; flex-shrink: 0; border-radius: 10px; overflow: hidden;
+    display: block; background: #26262B; border: 1px solid #2E2E33;
+  }
+  .cpn-ins-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cpn-ins-fallback {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.95rem; color: #FF9800; background: #26262B;
+  }
+  .cpn-ins-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .cpn-ins-name {
+    font-size: 0.95rem; font-weight: 800; color: #E4E4E7; line-height: 1.25;
+    text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  a.cpn-ins-name:hover { color: #FF9800; text-decoration: underline; }
+  .cpn-ins-name a { color: inherit; text-decoration: none; }
+  .cpn-ins-name a:hover { color: #FF9800; text-decoration: underline; }
+  .cpn-ins-sub { font-size: 0.8rem; color: #9E9E9E; margin-top: 1px; }
+  .cpn-flag { font-size: 1.35rem; line-height: 1; flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5)); }
+  .cpn-flag-text {
+    flex-shrink: 0; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em;
+    color: #E4E4E7; background: #26262B;
+    border: 1px solid #2E2E33; padding: 4px 8px; border-radius: 6px;
+  }
+  .cpn-media { position: relative; height: 180px; background: #1E1E1E; overflow: hidden; }
+  .cpn-media a { display: block; width: 100%; height: 100%; }
+  .cpn-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cpn-media-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(228,228,231,0.3); }
+  .cpn-badge-free {
+    position: absolute; top: 1rem; left: 1rem; z-index: 2;
+    background: linear-gradient(135deg, #FFB74D 0%, #F57C00 100%); color: #1A1408;
+    padding: 0.25rem 0.75rem; border-radius: 999px;
+    font-size: 0.75rem; font-weight: 700;
+  }
+  .cpn-badge-time {
+    position: absolute; top: 1rem; right: 1rem; z-index: 2;
+    background: rgba(0, 0, 0, 0.8); color: #fff;
+    padding: 0.25rem 0.5rem; border-radius: 4px;
+    font-size: 0.7rem; font-weight: 600;
+  }
+  .cpn-body { padding: 1.25rem 1.5rem 1.5rem; display: flex; flex-direction: column; flex: 1; }
+  .cpn-title {
+    font-size: 1.1rem; font-weight: 700; color: #E4E4E7; margin: 0 0 0.5rem; line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .cpn-title a { color: inherit; text-decoration: none; }
+  .cpn-title a:hover { color: #FF9800; }
+  .cpn-desc {
+    color: rgba(228,228,231,0.72); font-size: 0.9rem; margin: 0 0 1rem; line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .cpn-rate-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .cpn-rating { display: inline-flex; align-items: center; gap: 0.5rem; color: rgba(228,228,231,0.72); font-size: 0.85rem; font-weight: 600; }
+  .cpn-topic {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    color: #7A5C00; font-size: 0.8rem; font-weight: 600;
+    padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(212, 160, 23, 0.12); border: 1px solid rgba(212, 160, 23, 0.35); text-decoration: none;
+  }
+  .cpn-topic:hover { background: rgba(232, 185, 62, 0.22); color: #E4E4E7; }
+  .cpn-price-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .cpn-price { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .cpn-now { font-size: 1.2rem; font-weight: 700; color: #E4E4E7; }
+  .cpn-was { color: #9E9E9E; font-size: 0.9rem; }
+  .cpn-off {
+    background: #e53e3e; color: #fff; padding: 0.25rem 0.5rem;
+    border-radius: 4px; font-size: 0.75rem; font-weight: 700;
+  }
+  .cpn-verified {
+    color: #4ade80; font-size: 0.7rem; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 0.25rem;
+  }
+  .cpn-duration { display: flex; align-items: center; gap: 0.35rem; margin-bottom: 1rem; color: #9E9E9E; font-size: 0.8rem; font-weight: 500; }
+  .cpn-cta {
+    display: block; width: 100%; margin-top: auto;
+    padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #FFB74D 0%, #F57C00 100%); color: #1A1408; font-weight: 700;
+    text-decoration: none; border-radius: 8px; text-align: center;
+    font-weight: 700; font-size: 0.9rem; transition: filter 0.2s ease;
+  }
+  .cpn-cta:hover { filter: brightness(1.1); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cpn-card { transition: none !important; transform: none !important; }
+  }
+</style>
