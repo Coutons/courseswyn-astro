@@ -238,8 +238,8 @@ const benefitCards = [
           keywords: pageKeywords,
           inLanguage: 'en-US',
           dateModified: currentDate,
-          isPartOf: { '@id': `${siteUrl}#website` },
-          mainEntity: { '@id': `${canonicalUrl}#itemlist` },
+          isPartOf: { '@type': 'WebSite', '@id': `${siteUrl}/#website` },
+          mainEntity: { '@type': 'ItemList', '@id': `${canonicalUrl}#itemlist` },
         },
         {
           '@type': 'ItemList',
@@ -253,14 +253,20 @@ const benefitCards = [
             item: {
               '@type': 'Course',
               name: c.title,
+              description: (c.description || `${c.title} — ${provider} course by ${instructorName}.`).slice(0, 500),
               url: `${siteUrl}/coupon/${c.slug}`,
               image: c.image,
-              provider: { '@type': 'Organization', name: c.provider || 'Udemy' },
-              offers: {
-                '@type': 'Offer',
-                price: String(c.price ?? '0'),
-                priceCurrency: 'USD',
-                availability: 'https://schema.org/InStock',
+              provider: { '@type': 'Organization', name: c.provider || 'Udemy', sameAs: 'https://www.udemy.com' },
+              hasCourseInstance: {
+                '@type': 'CourseInstance',
+                courseMode: 'online',
+                offers: {
+                  '@type': 'Offer',
+                  price: c.price ?? 0,
+                  priceCurrency: 'USD',
+                  availability: 'https://schema.org/InStock',
+                  url: `${siteUrl}/coupon/${c.slug}`,
+                },
               },
             },
           })),
