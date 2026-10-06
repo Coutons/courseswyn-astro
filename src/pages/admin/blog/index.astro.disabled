@@ -35,7 +35,10 @@ const draftCount = posts.length - publishedCount;
 
   <div class="adm-card">
     <div class="adm-toolbar">
-      <input class="adm-input" id="searchBox" type="search" placeholder="Search title, slug, tags…" />
+      <div class="adm-search-wrap">
+        <input class="adm-input" id="searchBox" type="search" placeholder="Search title, slug, tags…" autocomplete="off" aria-label="Search posts" />
+        <button class="adm-search-clear" id="clearSearch" type="button" aria-label="Clear search" title="Clear search" hidden>×</button>
+      </div>
       <select class="adm-select" id="draftFilter" style="max-width:200px;">
         <option value="">All status</option>
         <option value="draft">Draft</option>
@@ -91,6 +94,18 @@ const draftCount = posts.length - publishedCount;
               </td>
             </tr>
           ))}
+          <tr id="emptyRow" class="adm-empty-row" style="display:none;">
+            <td colspan="5">
+              <div class="adm-empty">
+                <div style="font-size:1.6rem;line-height:1;" aria-hidden="true">🔍</div>
+                <p style="margin:.75rem 0 0;">No posts found for <strong id="emptyQuery"></strong></p>
+                <p class="adm-hint" style="margin:.35rem 0 0;">Try a different keyword or clear the search to show all posts.</p>
+                <div class="adm-empty-actions">
+                  <button class="adm-btn adm-btn-outline adm-btn-sm" id="emptyClear" type="button">Clear search ✕</button>
+                </div>
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -115,13 +130,26 @@ const draftCount = posts.length - publishedCount;
   const draftFilter = document.getElementById("draftFilter") as HTMLSelectElement;
   const countLabel = document.getElementById("countLabel") as HTMLElement;
   const pager = document.getElementById("pager") as HTMLElement;
+  const clearSearch = document.getElementById("clearSearch") as HTMLButtonElement | null;
+  const emptyRow = document.getElementById("emptyRow") as HTMLElement | null;
+  const emptyQuery = document.getElementById("emptyQuery") as HTMLElement | null;
+  const emptyClear = document.getElementById("emptyClear") as HTMLButtonElement | null;
   const rows = Array.from(document.querySelectorAll<HTMLElement>("[data-row]"));
   const PAGE_SIZE = 50;
   let currentPage = 1;
   let matched: HTMLElement[] = [];
 
+  function clearAllFilters(focus = true) {
+    searchBox.value = "";
+    draftFilter.value = "";
+    currentPage = 1;
+    applyFilters();
+    if (focus) searchBox.focus();
+  }
+
   function applyFilters() {
-    const q = searchBox.value.trim().toLowerCase();
+    const rawQ = searchBox.value.trim();
+    const q = rawQ.toLowerCase();
     const status = draftFilter.value;
     matched = rows.filter((row) => {
       const text = row.dataset.search || "";
@@ -134,6 +162,10 @@ const draftCount = posts.length - publishedCount;
     renderPage();
     countLabel.textContent = `${matched.length} / ${rows.length} shown`;
     renderPager(totalPages);
+    if (clearSearch) clearSearch.hidden = !rawQ && !status;
+    const isEmpty = matched.length === 0;
+    if (emptyRow) emptyRow.style.display = isEmpty ? "" : "none";
+    if (isEmpty && emptyQuery) emptyQuery.textContent = rawQ ? `"${rawQ}"` : "with current filters";
   }
 
   function renderPage() {
@@ -199,7 +231,13 @@ const draftCount = posts.length - publishedCount;
   }
 
   searchBox.addEventListener("input", () => { currentPage = 1; applyFilters(); });
+  searchBox.addEventListener("search", () => { currentPage = 1; applyFilters(); });
   draftFilter.addEventListener("change", () => { currentPage = 1; applyFilters(); });
+  clearSearch?.addEventListener("click", () => clearAllFilters());
+  emptyClear?.addEventListener("click", () => clearAllFilters());
+  searchBox.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && searchBox.value) clearAllFilters();
+  });
   applyFilters();
 
   document.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach((btn) => {

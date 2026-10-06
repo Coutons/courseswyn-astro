@@ -39,7 +39,10 @@ function getInitials(name: string): string {
 
   <div class="adm-card">
     <div class="adm-toolbar">
-      <input class="adm-input" id="searchBox" type="search" placeholder="Search instructor name, slug…" />
+      <div class="adm-search-wrap">
+        <input class="adm-input" id="searchBox" type="search" placeholder="Search instructor name, slug…" autocomplete="off" aria-label="Search instructors" />
+        <button class="adm-search-clear" id="clearSearch" type="button" aria-label="Clear search" title="Clear search" hidden>×</button>
+      </div>
       <span class="adm-count" id="countLabel"></span>
     </div>
     <div class="adm-table-wrap">
@@ -62,7 +65,7 @@ function getInitials(name: string): string {
                   {ins.image ? (
                     <img class="adm-avatar" src={ins.image} alt="" loading="lazy" />
                   ) : (
-                    <div class="adm-avatar" style="display:grid;place-items:center;background:rgba(255,201,77,.12);color:#ffc94d;border:1px solid rgba(255,201,77,.30);">{getInitials(ins.name)}</div>
+                    <div class="adm-avatar" style="display:grid;place-items:center;background:rgba(169, 199, 255,.12);color:#A9C7FF;border:1px solid rgba(169, 199, 255,.30);">{getInitials(ins.name)}</div>
                   )}
                   <div style="min-width:0;">
                     <a class="adm-link" href={`/instructor/${ins.slug}`} target="_blank">{ins.name}</a>
@@ -82,6 +85,18 @@ function getInitials(name: string): string {
               </td>
             </tr>
           ))}
+          <tr id="emptyRow" class="adm-empty-row" style="display:none;">
+            <td colspan="4">
+              <div class="adm-empty">
+                <div style="font-size:1.6rem;line-height:1;" aria-hidden="true">🔍</div>
+                <p style="margin:.75rem 0 0;">No instructors found for <strong id="emptyQuery"></strong></p>
+                <p class="adm-hint" style="margin:.35rem 0 0;">Try a different keyword or clear the search to show all instructors.</p>
+                <div class="adm-empty-actions">
+                  <button class="adm-btn adm-btn-outline adm-btn-sm" id="emptyClear" type="button">Clear search ✕</button>
+                </div>
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -101,13 +116,25 @@ function getInitials(name: string): string {
   const searchBox = document.getElementById("searchBox") as HTMLInputElement;
   const countLabel = document.getElementById("countLabel") as HTMLElement;
   const pager = document.getElementById("pager") as HTMLElement;
+  const clearSearch = document.getElementById("clearSearch") as HTMLButtonElement | null;
+  const emptyRow = document.getElementById("emptyRow") as HTMLElement | null;
+  const emptyQuery = document.getElementById("emptyQuery") as HTMLElement | null;
+  const emptyClear = document.getElementById("emptyClear") as HTMLButtonElement | null;
   const rows = Array.from(document.querySelectorAll<HTMLElement>("[data-row]"));
   const PAGE_SIZE = 100;
   let currentPage = 1;
   let matched: HTMLElement[] = [];
 
+  function clearSearchInput(focus = true) {
+    searchBox.value = "";
+    currentPage = 1;
+    applyFilters();
+    if (focus) searchBox.focus();
+  }
+
   function applyFilters() {
-    const q = searchBox.value.trim().toLowerCase();
+    const rawQ = searchBox.value.trim();
+    const q = rawQ.toLowerCase();
     matched = rows.filter((row) => {
       const text = row.dataset.search || "";
       return !q || text.includes(q);
@@ -117,6 +144,10 @@ function getInitials(name: string): string {
     renderPage();
     countLabel.textContent = `${matched.length} / ${rows.length} instructors`;
     renderPager(totalPages);
+    if (clearSearch) clearSearch.hidden = !rawQ;
+    const isEmpty = matched.length === 0;
+    if (emptyRow) emptyRow.style.display = isEmpty ? "" : "none";
+    if (isEmpty && emptyQuery) emptyQuery.textContent = rawQ ? `"${rawQ}"` : "with current filters";
   }
 
   function renderPage() {
@@ -173,6 +204,12 @@ function getInitials(name: string): string {
   }
 
   searchBox.addEventListener("input", () => { currentPage = 1; applyFilters(); });
+  searchBox.addEventListener("search", () => { currentPage = 1; applyFilters(); });
+  clearSearch?.addEventListener("click", () => clearSearchInput());
+  emptyClear?.addEventListener("click", () => clearSearchInput());
+  searchBox.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && searchBox.value) clearSearchInput();
+  });
   applyFilters();
 
   function setRowAvatar(row: HTMLElement, image: string) {
@@ -193,9 +230,9 @@ function getInitials(name: string): string {
       div.className = "adm-avatar";
       div.style.display = "grid";
       div.style.placeItems = "center";
-      div.style.background = "rgba(255,201,77,.12)";
-      div.style.color = "#ffc94d";
-      div.style.border = "1px solid rgba(255,201,77,.30)";
+      div.style.background = "rgba(169, 199, 255,.12)";
+      div.style.color = "#A9C7FF";
+      div.style.border = "1px solid rgba(169, 199, 255,.30)";
       div.textContent = row.dataset.initials || "?";
       if (old) old.replaceWith(div); else course.prepend(div);
       if (clearBtn) clearBtn.disabled = true;

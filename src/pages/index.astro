@@ -42,12 +42,15 @@ if (deepCuts.length < 6) {
     if (!latestSlugs.has(s) && !pickedSlugs.has(s)) { deepCuts.push(d); pickedSlugs.add(s); }
   }
 }
-const discountPcts = allDeals
+// Homepage claims use LIVE deals only — expired entries must never feed
+// "verified coupons" counts or "up to X%" headlines.
+const liveCount = activeDeals.length;
+const paidActive = activeDeals.filter((d) => typeof d.price === "number" && d.price > 0);
+const discountPcts = paidActive
   .filter((d): d is typeof d & { price: number; originalPrice: number } => typeof d.price === "number" && typeof d.originalPrice === "number" && d.originalPrice > d.price && d.price > 0)
   .map((d) => Math.round(100 - (d.price / d.originalPrice) * 100));
-const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 95;
+const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 90;
 const avgDiscount = discountPcts.length ? Math.round(discountPcts.reduce((a, b) => a + b, 0) / discountPcts.length) : 0;
-const totalCount = allDeals.length;
 
 function clean(s: string) { return String(s || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;|&#8217;/g, "'").replace(/\s{2,}/g, " ").trim(); }
 function pctOf(d: any) {
@@ -57,17 +60,29 @@ function pctOf(d: any) {
   return 0;
 }
 
-const pageTitle = `Udemy Coupons and Promo Codes for ${currentMonth} ${currentYear} — Save Up to ${maxDiscountPct}% | CoursesWyn`;
-const pageDescription = `Verified Udemy coupons and promo codes for ${currentMonth} ${currentYear}. Save up to ${maxDiscountPct}% on top courses — every code re-checked daily and dead codes are pulled before you see them.`;
+// Homepage = brand + curation positioning. The exact-match listing keyword
+// ("udemy coupon code") belongs to /udemy-coupon-code — this title leads
+// with the brand to avoid cannibalizing it.
+const pageTitle = `CoursesWyn: Verified Udemy Coupons & Promo Codes (${currentMonth} ${currentYear})`;
+const pageDescription = `CoursesWyn tracks ${liveCount.toLocaleString()} verified Udemy coupons & promo codes for ${currentMonth} ${currentYear} — save up to ${maxDiscountPct}% on top-rated courses. Every code re-checked daily; dead codes pulled before you see them.`;
+
+const faqs = [
+  { q: "Are CoursesWyn's Udemy coupons legitimate?", a: "Yes. Every coupon comes from Udemy's official affiliate program or the course instructor directly. Each code is re-checked against Udemy daily, and dead codes are pulled from the site before you see them." },
+  { q: "How do I claim a Udemy promo code here?", a: "Open any deal and continue to Udemy — the instructor coupon applies automatically at checkout, no typing needed. If a course needs a manual code, its deal page shows the code with copy-and-paste instructions." },
+  { q: "Why do Udemy coupon codes stop working?", a: "Instructor coupons carry an expiry date, a redemption cap (often 10–100 uses), or both. Once either limit is hit, Udemy rejects the code. That is why we re-check every deal daily and only list live ones." },
+  { q: "Should I wait for a Udemy sale instead?", a: "Instructor coupons often beat sitewide sale prices with deeper, course-specific cuts — sometimes up to 95% off. If no coupon fits your course, Udemy runs sitewide sales every few weeks as a fallback." },
+  { q: "Do discounted courses include a certificate?", a: "Yes. A course claimed with a coupon is identical to full price: same videos, same instructor Q&A, same certificate of completion, and lifetime access." },
+];
 
 const jsonLd = {
   "@context": "https://schema.org", "@graph": [
     { "@type": "WebSite", "@id": "https://courseswyn.com/#website", "url": "https://courseswyn.com", "name": "CoursesWyn", "description": pageDescription, "inLanguage": "en-US", "publisher": { "@id": "https://courseswyn.com/#organization" }, "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://courseswyn.com/search?q={search_term_string}" }, "query-input": "required name=search_term_string" } },
     { "@type": "Organization", "@id": "https://courseswyn.com/#organization", "name": "CoursesWyn", "url": "https://courseswyn.com", "logo": { "@type": "ImageObject", "url": "https://courseswyn.com/logo.svg", "width": 200, "height": 60 }, "sameAs": ["https://x.com/CoursesWyn", "https://www.facebook.com/CoursesWyn", "https://medium.com/@coursewyn"], "description": `Verified Udemy coupons with savings up to ${maxDiscountPct}%, refreshed daily.` },
-    { "@type": "WebPage", "@id": "https://courseswyn.com/#webpage", "url": "https://courseswyn.com", "name": pageTitle, "description": pageDescription, "author": { "@type": "Person", "name": "Andrew Derek", "url": "https://courseswyn.com/about" }, "isPartOf": { "@id": "https://courseswyn.com/#website" }, "dateModified": toISODateWIB(new Date()), "datePublished": toISODateWIB(new Date()), "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["h1", ".hp-sub"] }, "inLanguage": "en-US" },
+    { "@type": "WebPage", "@id": "https://courseswyn.com/#webpage", "url": "https://courseswyn.com", "name": pageTitle, "description": pageDescription, "author": { "@type": "Person", "name": "Andrew Derek", "url": "https://courseswyn.com/about" }, "isPartOf": { "@id": "https://courseswyn.com/#website" }, "dateModified": toISODateWIB(new Date()), "datePublished": toISODateWIB(new Date()), "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["h1", ".sx-sub"] }, "inLanguage": "en-US" },
     { "@type": "BreadcrumbList", "itemListElement": [{ "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" }] },
     { "@type": "ItemList", "numberOfItems": latestSix.length, "itemListElement": latestSix.slice(0, 10).map((d, i) => ({ "@type": "ListItem", "position": i + 1, "item": { "@type": "Course", "name": clean(d.title), "url": "https://courseswyn.com/coupon/" + d.slug, "description": clean(d.description), "provider": { "@type": "Organization", "name": d.provider || "Udemy", "sameAs": "https://www.udemy.com" }, "offers": { "@type": "Offer", "price": d.price && d.price > 0 ? d.price : (d.originalPrice || 0), "priceCurrency": "USD", "availability": "https://schema.org/InStock", "url": "https://courseswyn.com/coupon/" + d.slug } } })) },
     { "@type": "ItemList", "name": "Deepest verified Udemy discounts", "numberOfItems": deepCuts.length, "itemListElement": deepCuts.map((d, i) => ({ "@type": "ListItem", "position": i + 1, "item": { "@type": "Course", "name": clean(d.title), "url": "https://courseswyn.com/coupon/" + d.slug, "provider": { "@type": "Organization", "name": "Udemy", "sameAs": "https://www.udemy.com" }, "offers": { "@type": "Offer", "price": d.price && d.price > 0 ? d.price : (d.originalPrice || 0), "priceCurrency": "USD", "availability": "https://schema.org/InStock", "url": "https://courseswyn.com/coupon/" + d.slug } } })) },
+    { "@type": "FAQPage", "@id": "https://courseswyn.com#faq", "mainEntity": faqs.map((f) => ({ "@type": "Question", "name": f.q, "acceptedAnswer": { "@type": "Answer", "text": f.a } })) },
   ]
 };
 
@@ -112,85 +127,85 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
 
 
   /* ── Sales design (sx-) ── */
-  .sx-hero { background: linear-gradient(160deg, #0E0E10 0%, #121212 45%, #1E1E1E 100%); padding: 4rem 0 0; text-align: center; position: relative; overflow: hidden; }
-  .sx-hero::before { content: ''; position: absolute; top: -190px; left: 50%; transform: translateX(-50%); width: 660px; height: 480px; background: radial-gradient(ellipse, rgba(255,152,0,0.14) 0%, transparent 65%); pointer-events: none; }
-  .sx-hero-dots { position: absolute; inset: 0; background-image: radial-gradient(rgba(228,228,231,0.1) 1px, transparent 1.6px); background-size: 26px 26px; -webkit-mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000 20%, transparent 70%); mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000 20%, transparent 70%); pointer-events: none; }
+  .sx-hero { background: linear-gradient(160deg, #0E0E10 0%, #0a0b0d 45%, #101216 100%); padding: 4rem 0 0; text-align: center; position: relative; overflow: hidden; }
+  .sx-hero::before { content: ''; position: absolute; top: -190px; left: 50%; transform: translateX(-50%); width: 660px; height: 480px; background: radial-gradient(ellipse, rgba(169, 199, 255,0.14) 0%, transparent 65%); pointer-events: none; }
+  .sx-hero-dots { position: absolute; inset: 0; background-image: radial-gradient(rgba(242, 244, 246,0.1) 1px, transparent 1.6px); background-size: 26px 26px; -webkit-mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000 20%, transparent 70%); mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000 20%, transparent 70%); pointer-events: none; }
   .sx-hero .container { position: relative; z-index: 1; padding-bottom: 3rem; }
   .sx-ticket { position: relative; z-index: 1; }
-  .sx-ticket-line { border-top: 2px dashed rgba(255,152,0,0.45); }
+  .sx-ticket-line { border-top: 2px dashed rgba(169, 199, 255,0.45); }
   .sx-ticket-edge { height: 14px; background-image: radial-gradient(circle at 50% 0%, #ffffff 9px, transparent 10px); background-size: 28px 14px; background-repeat: repeat-x; }
 
   /* ── Hero charcoal (single variant) ── */
 
   .sx-blink { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
-  .sx-hero h1 { font-family: sans-serif; font-size: clamp(2.2rem, 4.6vw, 3.4rem); font-weight: 800; line-height: 1.1; color: #E4E4E7; margin: 0 0 0.9rem; letter-spacing: -0.02em; }
-  .sx-gold { background: linear-gradient(135deg, #F5D76E 0%, #FFB74D 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
-  .sx-sub { font-size: 1.15rem; color: rgba(228,228,231,0.78); max-width: 640px; margin: 0 auto 1.75rem; line-height: 1.6; }
+  .sx-hero h1 { font-family: sans-serif; font-size: clamp(2.2rem, 4.6vw, 3.4rem); font-weight: 800; line-height: 1.1; color: #f2f4f6; margin: 0 0 0.9rem; letter-spacing: -0.02em; }
+  .sx-gold { background: linear-gradient(135deg, #D6E4FF 0%, #D6E4FF 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+  .sx-sub { font-size: 1.15rem; color: rgba(242, 244, 246,0.78); max-width: 640px; margin: 0 auto 1.75rem; line-height: 1.6; }
   .sx-search { display: flex; gap: 8px; max-width: 640px; margin: 0 auto; background: #fff; border-radius: 14px; padding: 6px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.45); }
   .sx-search input { flex: 1; border: none; outline: none; font-size: 0.95rem; padding: 12px 16px; min-width: 0; color: #111; background: transparent; font-family: inherit; }
-  .sx-search button { font-weight: 800; color: #1A1408; background: linear-gradient(135deg, #FFB74D 0%, #F57C00 100%); border: none; border-radius: 10px; padding: 0 28px; cursor: pointer; font-size: 0.95rem; font-family: inherit; }
+  .sx-search button { font-weight: 800; color: #0a0b0d; background: linear-gradient(135deg, #D6E4FF 0%, #A9C7FF 100%); border: none; border-radius: 10px; padding: 0 28px; cursor: pointer; font-size: 0.95rem; font-family: inherit; }
   .sx-search button:hover { filter: brightness(1.1); }
   .sx-chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 1.1rem; }
-  .sx-chip { display: inline-block; padding: 7px 16px; border-radius: 999px; background: rgba(228,228,231,0.07); border: 1px solid rgba(228,228,231,0.18); color: #E4E4E7; text-decoration: none; font-size: 0.82rem; font-weight: 600; }
-  .sx-chip:hover { background: rgba(228,228,231,0.14); border-color: rgba(255,152,0,0.5); }
-  .sx-proof { margin: 1.75rem auto 0; font-family: var(--font-mono); font-size: 0.78rem; color: rgba(228,228,231,0.62); display: flex; gap: 10px; justify-content: center; align-items: baseline; flex-wrap: wrap; }
-  .sx-proof b { color: #E4E4E7; font-variant-numeric: tabular-nums; }
-  .sx-proof .sx-dot { color: #FF9800; }
-  .sx-eyebrow-sec { display: inline-block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #2563EB; margin: 0 0 0.5rem; }
-  .sx-h2 { font-family: sans-serif; font-size: clamp(1.6rem, 2.8vw, 2.2rem); font-weight: 800; margin: 0 0 0.5rem; color: #E4E4E7; line-height: 1.2; letter-spacing: -0.01em; }
-  .sx-h2 span { color: #FF9800; }
+  .sx-chip { display: inline-block; padding: 7px 16px; border-radius: 999px; background: rgba(242, 244, 246,0.07); border: 1px solid rgba(242, 244, 246,0.18); color: #f2f4f6; text-decoration: none; font-size: 0.82rem; font-weight: 600; }
+  .sx-chip:hover { background: rgba(242, 244, 246,0.14); border-color: rgba(169, 199, 255,0.5); }
+  .sx-proof { margin: 1.75rem auto 0; font-family: var(--font-mono); font-size: 0.78rem; color: rgba(242, 244, 246,0.62); display: flex; gap: 10px; justify-content: center; align-items: baseline; flex-wrap: wrap; }
+  .sx-proof b { color: #f2f4f6; font-variant-numeric: tabular-nums; }
+  .sx-proof .sx-dot { color: #A9C7FF; }
+  .sx-eyebrow-sec { display: inline-block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #A9C7FF; margin: 0 0 0.5rem; }
+  .sx-h2 { font-family: sans-serif; font-size: clamp(1.6rem, 2.8vw, 2.2rem); font-weight: 800; margin: 0 0 0.5rem; color: #f2f4f6; line-height: 1.2; letter-spacing: -0.01em; }
+  .sx-h2 span { color: #A9C7FF; }
   .sx-vouchers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.75rem; }
-  .sx-voucher { background: #1E1E1E; border: 1px solid #2A2A2E; border-radius: 18px; overflow: hidden; text-decoration: none; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; }
-  .sx-voucher:hover { transform: translateY(-4px); border-color: #2563EB; box-shadow: 0 20px 40px -16px rgba(37, 99, 235,0.3); }
+  .sx-voucher { background: #101216; border: 1px solid #22262d; border-radius: 18px; overflow: hidden; text-decoration: none; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; }
+  .sx-voucher:hover { transform: translateY(-4px); border-color: #A9C7FF; box-shadow: 0 20px 40px -16px rgba(169, 199, 255,0.3); }
 .sx-v-media { position: relative; display: block; }
 .sx-v-media img { width: 100%; height: auto; border-radius: 10px; display: block; }
 .sx-v-flag { position: absolute; left: 0; bottom: 10px; background: #040803DE; color: #D4D7CE; font-size: 13px; font-weight: 500; letter-spacing: 0.3px; padding: 3px 10px 2px 10px; border-radius: 0 4px 0 4px; }
-  .sx-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #E4E4E7; background: rgba(228,228,231,0.08); border: 1px solid rgba(228,228,231,0.2); border-radius: 999px; padding: 7px 16px; margin: 0 0 1.1rem; }
-  .sx-band { background: #161619; border-top: 1px solid #2A2A2E; border-bottom: 1px solid #2A2A2E; }
+  .sx-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #f2f4f6; background: rgba(242, 244, 246,0.08); border: 1px solid rgba(242, 244, 246,0.2); border-radius: 999px; padding: 7px 16px; margin: 0 0 1.1rem; }
+  .sx-band { background: #161619; border-top: 1px solid #22262d; border-bottom: 1px solid #22262d; }
   .sx-head { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-  .sx-v-logos { display: flex; align-items: center; justify-content: center; gap: 12px; background: #26262B; border-bottom: 1px solid #2A2A2E; padding: 18px 12px; min-height: 76px; }
+  .sx-v-logos { display: flex; align-items: center; justify-content: center; gap: 12px; background: #14171c; border-bottom: 1px solid #22262d; padding: 18px 12px; min-height: 76px; }
   .sx-v-logos img { height: 17px; width: auto; object-fit: contain; }
-  .sx-v-count { font-size: 0.72rem; font-weight: 800; color: #FF9800; text-transform: uppercase; letter-spacing: 0.06em; padding: 14px 16px 0; }
-  .sx-v-name { font-size: 1.1rem; font-weight: 800; color: #E4E4E7; padding: 2px 16px 0; }
-  .sx-v-desc { font-size: 0.85rem; color: #9E9E9E; margin: 0; padding: 0 16px; flex: 1; }
-  .sx-v-link { font-size: 0.85rem; font-weight: 800; color: #FF9800; padding: 0 16px 16px; margin-top: 0.6rem; }
-  .sx-pp { background: #1E1E1E; border: 1px solid #2A2A2E; border-radius: 24px; overflow: hidden; display: grid; grid-template-columns: 1.1fr 1fr; margin-top: 1.75rem; box-shadow: 0 24px 60px -30px rgba(27,11,51,0.35); }
-  .sx-eyebrow-light { color: #2563EB; background: #e8f4fd; border-color: #e9d5ff; }
-  .sx-h2-light { color: #E4E4E7; }
-  .sx-pp-sub { color: #C9C9CF; line-height: 1.7; margin: 0 0 1.1rem; }
-  .sx-pp-points { list-style: none; margin: 0 0 1.5rem; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; font-size: 0.92rem; color: #C9C9CF; font-weight: 500; }
+  .sx-v-count { font-size: 0.72rem; font-weight: 800; color: #A9C7FF; text-transform: uppercase; letter-spacing: 0.06em; padding: 14px 16px 0; }
+  .sx-v-name { font-size: 1.1rem; font-weight: 800; color: #f2f4f6; padding: 2px 16px 0; }
+  .sx-v-desc { font-size: 0.85rem; color: #9aa3ab; margin: 0; padding: 0 16px; flex: 1; }
+  .sx-v-link { font-size: 0.85rem; font-weight: 800; color: #A9C7FF; padding: 0 16px 16px; margin-top: 0.6rem; }
+  .sx-pp { background: #101216; border: 1px solid #22262d; border-radius: 24px; overflow: hidden; display: grid; grid-template-columns: 1.1fr 1fr; margin-top: 1.75rem; box-shadow: 0 24px 60px -30px rgba(27,11,51,0.35); }
+  .sx-eyebrow-light { color: #A9C7FF; background: #e8f4fd; border-color: #e9d5ff; }
+  .sx-h2-light { color: #f2f4f6; }
+  .sx-pp-sub { color: #9aa3ab; line-height: 1.7; margin: 0 0 1.1rem; }
+  .sx-pp-points { list-style: none; margin: 0 0 1.5rem; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; font-size: 0.92rem; color: #9aa3ab; font-weight: 500; }
   .sx-pp-cta { display: flex; gap: 0.9rem; flex-wrap: wrap; align-items: center; }
-  .sx-pp-btn { display: inline-block; background: var(--brand-gradient); color: #1A1408; font-weight: 800; padding: 0.9rem 2rem; border-radius: 12px; text-decoration: none; }
+  .sx-pp-btn { display: inline-block; background: var(--brand-gradient); color: #0a0b0d; font-weight: 800; padding: 0.9rem 2rem; border-radius: 12px; text-decoration: none; }
   .sx-pp-btn:hover { filter: brightness(1.1); }
-  .sx-pp-ghost { color: #FF9800; font-weight: 700; font-size: 0.9rem; }
-  .sx-cta { background: linear-gradient(135deg, #121212 0%, #1E1E1E 130%); border-radius: 24px; padding: clamp(2rem, 5vw, 3.5rem); text-align: center; color: #E4E4E7; position: relative; overflow: hidden; margin-top: 1.75rem; }
-  .sx-cta::before { content: ''; position: absolute; top: -80px; left: 50%; transform: translateX(-50%); width: 480px; height: 240px; background: radial-gradient(ellipse, rgba(255,152,0,0.18) 0%, transparent 65%); pointer-events: none; }
+  .sx-pp-ghost { color: #A9C7FF; font-weight: 700; font-size: 0.9rem; }
+  .sx-cta { background: linear-gradient(135deg, #0a0b0d 0%, #101216 130%); border-radius: 24px; padding: clamp(2rem, 5vw, 3.5rem); text-align: center; color: #f2f4f6; position: relative; overflow: hidden; margin-top: 1.75rem; }
+  .sx-cta::before { content: ''; position: absolute; top: -80px; left: 50%; transform: translateX(-50%); width: 480px; height: 240px; background: radial-gradient(ellipse, rgba(169, 199, 255,0.18) 0%, transparent 65%); pointer-events: none; }
   .sx-cta h2 { font-family: sans-serif; font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 800; margin: 0 0 0.6rem; position: relative; }
-  .sx-cta p { color: rgba(228,228,231,0.75); margin: 0 0 1.5rem; position: relative; }
+  .sx-cta p { color: rgba(242, 244, 246,0.75); margin: 0 0 1.5rem; position: relative; }
   .sx-cta-row { display: flex; gap: 0.9rem; justify-content: center; flex-wrap: wrap; position: relative; }
-  .sx-cta-btn { display: inline-block; background: #FFB74D; color: #1a1040; font-weight: 800; padding: 0.9rem 2.2rem; border-radius: 12px; text-decoration: none; }
+  .sx-cta-btn { display: inline-block; background: #D6E4FF; color: #1a1040; font-weight: 800; padding: 0.9rem 2.2rem; border-radius: 12px; text-decoration: none; }
   .sx-cta-btn:hover { filter: brightness(1.05); }
-  .sx-cta-ghost { align-self: center; color: rgba(228,228,231,0.8); font-weight: 600; font-size: 0.9rem; }
+  .sx-cta-ghost { align-self: center; color: rgba(242, 244, 246,0.8); font-weight: 600; font-size: 0.9rem; }
   @media (max-width: 860px) { .sx-pp { grid-template-columns: 1fr; } }
   .sx-v-body { padding: 1.1rem 1.25rem 1.25rem; display: flex; flex-direction: column; gap: 0.3rem; flex: 1; }
 @media (max-width: 900px) { .sx-vouchers { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 640px) { .sx-vouchers { grid-template-columns: 1fr; } }
   .sx-pp-copy { padding: clamp(1.75rem, 4vw, 3rem); display: flex; flex-direction: column; justify-content: center; }
-  .sx-pp-points { list-style: none; margin: 0 0 1.5rem; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; font-size: 0.92rem; color: #C9C9CF; font-weight: 500; }
+  .sx-pp-points { list-style: none; margin: 0 0 1.5rem; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; font-size: 0.92rem; color: #9aa3ab; font-weight: 500; }
   .sx-pp-cta { display: flex; gap: 0.9rem; flex-wrap: wrap; align-items: center; }
-  .sx-pp-btn { display: inline-block; background: var(--brand-gradient); color: #1A1408; font-weight: 800; padding: 0.9rem 2rem; border-radius: 12px; text-decoration: none; }
+  .sx-pp-btn { display: inline-block; background: var(--brand-gradient); color: #0a0b0d; font-weight: 800; padding: 0.9rem 2rem; border-radius: 12px; text-decoration: none; }
   .sx-pp-btn:hover { filter: brightness(1.1); }
-  .sx-pp-ghost { color: #FF9800; font-weight: 700; font-size: 0.9rem; }
-  .sx-pp-media { background: linear-gradient(135deg, #121212, #1E1E1E); display: flex; align-items: center; justify-content: center; padding: 2rem; min-height: 280px; }
+  .sx-pp-ghost { color: #A9C7FF; font-weight: 700; font-size: 0.9rem; }
+  .sx-pp-media { background: linear-gradient(135deg, #0a0b0d, #101216); display: flex; align-items: center; justify-content: center; padding: 2rem; min-height: 280px; }
   .sx-pp-media img { width: 100%; height: auto; border-radius: 14px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.5); }
 
   /* ── Section headings ── */
-  .dh-tsec { font-family: sans-serif; font-size: 1.75rem; font-weight: 800; margin: 0 0 0.8rem; color: #E4E4E7; line-height: 1.25; }
-  .dh-tsec span { color: #FF9800; }
-  .dh-tsec span { color: #2563EB; }
+  .dh-tsec { font-family: sans-serif; font-size: 1.75rem; font-weight: 800; margin: 0 0 0.8rem; color: #f2f4f6; line-height: 1.25; }
+  .dh-tsec span { color: #A9C7FF; }
+  .dh-tsec span { color: #A9C7FF; }
   .section-hd { margin-bottom: 1.75rem; }
-  .lg-sub { color: #9E9E9E; font-size: 0.92rem; line-height: 1.6; margin: 0.5rem 0 0; max-width: 620px; }
-  .lg-link { display: inline-flex; align-items: center; gap: 7px; font-size: 0.9rem; font-weight: 700; color: #2563EB; text-decoration: none; }
+  .lg-sub { color: #9aa3ab; font-size: 0.92rem; line-height: 1.6; margin: 0.5rem 0 0; max-width: 620px; }
+  .lg-link { display: inline-flex; align-items: center; gap: 7px; font-size: 0.9rem; font-weight: 700; color: #A9C7FF; text-decoration: none; }
   .lg-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 
@@ -203,6 +218,14 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
     .section-wrapper { padding: 2.25rem 1rem; }
   }
   html { scroll-behavior: smooth; }
+  .hp-faq { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.5rem; }
+  .hp-faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.15rem; }
+  .hp-faq-item:hover { border-color: var(--brand); }
+  .hp-faq-item summary { cursor: pointer; font-weight: 700; color: var(--text); font-size: 0.95rem; line-height: 1.4; }
+  .hp-faq-item summary:hover { color: var(--brand); }
+  .hp-faq-item p { margin: 0.6rem 0 0; color: var(--muted); font-size: 0.9rem; line-height: 1.65; }
+  .hp-faq-item:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  @media (max-width: 768px) { .hp-faq { grid-template-columns: 1fr; } }
 </style>
   <!-- ===================== HERO ===================== -->
   <div class="sx-hero">
@@ -210,8 +233,8 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
     <div class="container">
 
       <p class="sx-eyebrow"><span class="sx-blink" aria-hidden="true"></span> {last24h} codes checked in the last 24 hours</p>
-      <h1>Udemy Coupons and <span class="sx-gold">Promo Codes</span> for {currentMonth} {currentYear}</h1>
-      <p class="sx-sub">Save up to {maxDiscountPct}% on {totalCount.toLocaleString()}+ courses. Every code verified — claim in one click, pay almost nothing.</p>
+      <h1>Udemy Coupons & <span class="sx-gold">Promo Codes</span> for {currentMonth} {currentYear}</h1>
+      <p class="sx-sub">Save up to {maxDiscountPct}% on {liveCount.toLocaleString()}+ live courses. Every code re-checked daily — dead codes pulled before you see them.</p>
       <form action="/search" method="GET" role="search" aria-label="Search discounted Udemy courses" class="sx-search">
         <input type="search" name="q" placeholder="Search Python, AWS, Excel courses…" autocomplete="off" aria-label="Search discounted courses" />
         <button type="submit">Search</button>
@@ -219,7 +242,7 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
       <div class="sx-chips" aria-label="Popular searches">
         {heroChips.map((c) => (<a class="sx-chip" href={`/search?q=${encodeURIComponent(c.q)}`}>{c.name}</a>))}
       </div>
-      <p class="sx-proof"><b><span data-count={totalCount}>0</span>+</b> verified coupons <span class="sx-dot">·</span> <b><span data-count={voucherTotal}>0</span></b> exam vouchers <span class="sx-dot">·</span> <b><span data-count={avgDiscount}>0</span>%</b> avg discount</p>
+      <p class="sx-proof"><b><span data-count={liveCount}>0</span>+</b> live verified coupons <span class="sx-dot">·</span> <b><span data-count={voucherTotal}>0</span></b> exam vouchers <span class="sx-dot">·</span> <b><span data-count={avgDiscount}>0</span>%</b> avg discount</p>
     </div>
     <div class="sx-ticket" aria-hidden="true"><div class="sx-ticket-line"></div><div class="sx-ticket-edge"></div></div>
   </div>
@@ -228,13 +251,30 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
   <section class="section-wrapper" aria-label="Today's top Udemy deals" style="padding-top:2.5rem;">
     <div class="container">
       <div class="section-hd">
-        <h2 class="dh-tsec">Latest <span style={{ color: "var(--brand)" }}>Coupon Drops</span></h2>
-        <p class="lg-sub">Fresh codes, biggest cuts first — claim one before the cap runs out.</p>
+        <h2 class="dh-tsec">Latest <span style={{ color: "var(--brand)" }}>Udemy Coupon Drops</span></h2>
+        <p class="lg-sub">Fresh instructor coupon codes — claim one before the redemption cap runs out.</p>
       </div>
       <div class="grid">
         {latestSix.map((deal, i) => (<CouponGrid deal={deal} eager={i < 3} priority={i < 3} />))}
       </div>
-      <div style={{ textAlign: "center", marginTop: "1.5rem" }}><a href="/udemy-coupon-code" class="lg-link">See all {totalCount.toLocaleString()} coupons →</a></div>
+      <div style={{ textAlign: "center", marginTop: "1.5rem" }}><a href="/udemy-coupon-code" class="lg-link">See all {liveCount.toLocaleString()} coupons →</a></div>
+    </div>
+  </section>
+
+  <!-- ===================== DEEPEST DISCOUNTS ===================== -->
+  <section class="section-wrapper sx-band" aria-label="Deepest Udemy discounts">
+    <div class="container">
+      <div class="section-hd sx-head">
+        <div>
+          <p class="sx-eyebrow">Biggest cuts</p>
+          <h2 class="sx-h2">Deepest <span>Udemy Discounts</span> Right Now</h2>
+          <p class="lg-sub">Top-rated courses at our deepest verified discounts — instructor coupons up to {maxDiscountPct}% off, checked {currentMonth} {currentYear}.</p>
+        </div>
+        <a href="/udemy-coupon-code" class="lg-link">Browse all discounts →</a>
+      </div>
+      <div class="grid">
+        {deepCuts.map((deal, i) => (<CouponGrid deal={deal} />))}
+      </div>
     </div>
   </section>
 
@@ -244,8 +284,8 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
       <div class="section-hd sx-head">
         <div>
           <p class="sx-eyebrow">Certification</p>
-          <h2 class="sx-h2">Exam Vouchers, <span>Discounted</span></h2>
-          <p class="lg-sub">Official exam vouchers below list price — pick your provider and save on exam day.</p>
+          <h2 class="sx-h2">Udemy Exam Vouchers, <span>Discounted</span></h2>
+          <p class="lg-sub">Official certification exam vouchers below list price — pick your provider and save on exam day.</p>
         </div>
         <a href="/udemy-certification-vouchers" class="lg-link">All vouchers →</a>
       </div>
@@ -286,6 +326,30 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
         <div class="sx-pp-media">
           <Image src="/assets/images/Udemy%20Personal%20Plan%20Offers.png" alt="Udemy Personal Plan offer — 26,000+ courses with 25% off" width={948} height={406} widths={[480, 768, 948]} sizes="(max-width: 860px) 100vw, 50vw" loading="lazy" />
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== WHY COURSESWYN + FAQ ===================== -->
+  <section class="section-wrapper sx-band" aria-label="Why CoursesWyn for Udemy coupons">
+    <div class="container">
+      <div class="section-hd sx-head">
+        <div>
+          <p class="sx-eyebrow">Why CoursesWyn</p>
+          <h2 class="sx-h2">Why Learners Start Here for <span>Udemy Discounts</span></h2>
+          <p class="lg-sub">A Udemy-only coupon tracker — not a generic deals wall. Every instructor coupon and promo code is checked against Udemy daily: dead codes pulled, live prices verified, discounts auto-applied. No expired lists, no bait pricing.</p>
+        </div>
+        <a href="/udemy-coupons-guide" class="lg-link">How coupons work →</a>
+      </div>
+      <div class="hp-faq">
+        {faqs.map((f) => (
+          <details class="hp-faq-item" itemscope itemtype="https://schema.org/Question">
+            <summary itemprop="name">{f.q}</summary>
+            <div itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer">
+              <p itemprop="text">{f.a}</p>
+            </div>
+          </details>
+        ))}
       </div>
     </div>
   </section>

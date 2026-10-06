@@ -87,7 +87,10 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
 
   <div class="adm-card">
     <div class="adm-toolbar">
-      <input class="adm-input" id="searchBox" type="search" placeholder="Search title, coupon code, category…" />
+      <div class="adm-search-wrap">
+        <input class="adm-input" id="searchBox" type="search" placeholder="Search title, coupon code, category…" autocomplete="off" aria-label="Search coupons" />
+        <button class="adm-search-clear" id="clearSearch" type="button" aria-label="Clear search" title="Clear search" hidden>×</button>
+      </div>
       <select class="adm-select" id="catFilter" style="max-width:220px;">
         <option value="">All categories</option>
         {[...new Set(allDeals.map((d) => d.category).filter(Boolean))].sort().map((cat) => (
@@ -156,6 +159,18 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
               </td>
             </tr>
           ))}
+          <tr id="emptyRow" class="adm-empty-row" style="display:none;">
+            <td colspan="6">
+              <div class="adm-empty">
+                <div style="font-size:1.6rem;line-height:1;" aria-hidden="true">🔍</div>
+                <p style="margin:.75rem 0 0;">No courses found for <strong id="emptyQuery"></strong></p>
+                <p class="adm-hint" style="margin:.35rem 0 0;">Try a different keyword or clear the search to show all coupons.</p>
+                <div class="adm-empty-actions">
+                  <button class="adm-btn adm-btn-outline adm-btn-sm" id="emptyClear" type="button">Clear search ✕</button>
+                </div>
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -188,12 +203,26 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
   const rows = Array.from(document.querySelectorAll<HTMLElement>("[data-row]"));
   const rowChecks = Array.from(document.querySelectorAll<HTMLInputElement>(".row-check"));
   const pager = document.getElementById("pager") as HTMLElement;
+  const clearSearch = document.getElementById("clearSearch") as HTMLButtonElement | null;
+  const emptyRow = document.getElementById("emptyRow") as HTMLElement | null;
+  const emptyQuery = document.getElementById("emptyQuery") as HTMLElement | null;
+  const emptyClear = document.getElementById("emptyClear") as HTMLButtonElement | null;
   const PAGE_SIZE = 50;
   let currentPage = 1;
   let matched: HTMLElement[] = [];
 
+  function clearAllFilters(focus = true) {
+    searchBox.value = "";
+    catFilter.value = "";
+    statusFilter.value = "";
+    currentPage = 1;
+    applyFilters();
+    if (focus) searchBox.focus();
+  }
+
   function applyFilters() {
-    const q = searchBox.value.trim().toLowerCase();
+    const rawQ = searchBox.value.trim();
+    const q = rawQ.toLowerCase();
     const cat = catFilter.value;
     const status = statusFilter.value;
     matched = rows.filter((row) => {
@@ -210,6 +239,10 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
     countLabel.textContent = `${matched.length} / ${rows.length} shown`;
     renderPager(totalPages);
     updateSel();
+    if (clearSearch) clearSearch.hidden = !rawQ && !cat && !status;
+    const isEmpty = matched.length === 0;
+    if (emptyRow) emptyRow.style.display = isEmpty ? "" : "none";
+    if (isEmpty && emptyQuery) emptyQuery.textContent = rawQ ? `"${rawQ}"` : "with current filters";
   }
 
   function renderPage() {
@@ -282,9 +315,15 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
     selAll.checked = visible > 0 && rowChecks.filter((c) => c.closest("tr")?.style.display !== "none").every((c) => c.checked);
   }
 
-  searchBox.addEventListener("input", applyFilters);
-  catFilter.addEventListener("change", applyFilters);
-  statusFilter.addEventListener("change", applyFilters);
+  searchBox.addEventListener("input", () => { currentPage = 1; applyFilters(); });
+  searchBox.addEventListener("search", () => { currentPage = 1; applyFilters(); });
+  catFilter.addEventListener("change", () => { currentPage = 1; applyFilters(); });
+  statusFilter.addEventListener("change", () => { currentPage = 1; applyFilters(); });
+  clearSearch?.addEventListener("click", () => clearAllFilters());
+  emptyClear?.addEventListener("click", () => clearAllFilters());
+  searchBox.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && searchBox.value) clearAllFilters();
+  });
   selAll.addEventListener("change", () => {
     rowChecks.forEach((c) => {
       const tr = c.closest("tr");

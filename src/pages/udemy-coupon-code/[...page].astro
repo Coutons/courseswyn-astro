@@ -9,7 +9,7 @@ import { slugifyCategory } from "../../lib/utils";
 
 export async function getStaticPaths({ paginate }: { paginate: any }) {
   const allDeals = await readDeals();
-  return paginate(allDeals, { pageSize: 36 });
+  return paginate(allDeals, { pageSize: 24 });
 }
 
 const { page } = Astro.props as { page: any };
@@ -48,34 +48,41 @@ const currentYear = currentDate.getFullYear();
 
 const lastChecked = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jakarta', month: 'long', day: 'numeric', year: 'numeric' }).format(now);
 
-// Totals use the full catalog (expired included) — listings show checkable deals
+// Counts: hero/SEO claims use live (non-expired) deals only — never the full
+// catalog with expired entries. This page lists paid discounts; 100% off
+// (free) coupons live on /udemy-coupons-today.
 const totalCoupons = allDeals.length;
+const paidActiveDeals = activeDeals.filter((d: any) => typeof d.price === "number" && d.price > 0);
+const freeActiveCount = activeDeals.filter((d: any) => d.price === 0).length;
 const catsSet = new Set<string>();
 allDeals.forEach((d: any) => { if (d.category) catsSet.add((d.category as string).trim()); });
 const categories = Array.from(catsSet).sort();
 
-const discountPcts = allDeals
-  .filter((d: any) => d.price && d.originalPrice && d.originalPrice > d.price)
+// "Up to X%" is the max over currently available paid deals — not an
+// outlier from expired entries, not a typical saving.
+const discountPcts = paidActiveDeals
+  .filter((d: any) => d.originalPrice && d.originalPrice > d.price)
   .map((d: any) => Math.round(100 - (d.price / d.originalPrice) * 100));
-const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 95;
+const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 90;
 
 const pageTitle = currentPage === 1
-  ? `Udemy Coupon Codes — Verified Discounts Up to ${maxDiscountPct}% Off | CoursesWyn`
+  ? `Udemy Coupon Codes (${currentMonth} ${currentYear}) | CoursesWyn`
   : `Udemy Coupon Codes — Page ${currentPage} of ${totalPages} | CoursesWyn`;
 
 const pageDescription = currentPage === 1
-  ? `Browse ${totalCoupons.toLocaleString()} verified Udemy coupon codes, promo codes & discounts for ${currentMonth} ${currentYear} — save up to ${maxDiscountPct}%. New codes checked daily.`
-  : `Page ${currentPage} of ${totalPages} — more verified Udemy coupon codes, promo codes & discounts, savings up to ${maxDiscountPct}%. Checked daily.`;
+  ? `${totalActive.toLocaleString()} verified Udemy coupon codes & course discounts for ${currentMonth} ${currentYear} — open a deal to reveal its code; most apply automatically on Udemy. Up to ${maxDiscountPct}% off, checked ${lastChecked}.`
+  : `Page ${currentPage} of ${totalPages} — more verified Udemy coupon codes & course discounts for ${currentMonth} ${currentYear}, up to ${maxDiscountPct}% off. Checked ${lastChecked}.`;
 
 const pageKeywords = [
-  "udemy coupon code", "udemy coupon codes", "free udemy coupon", "udemy discount",
-  "udemy free course", "udemy promo code", "udemy deals", "udemy sale",
-  "coupon code", "udemy courses", "verified udemy coupons"
+  "udemy coupon code", "udemy coupon codes", "udemy coupons discounts", "udemy promo code",
+  "udemy discount", "udemy instructor coupon", "udemy sale",
+  "verified udemy coupons", "udemy courses discount", "free udemy coupon"
 ].join(", ");
 
 const currentDeals = currentItems.filter((d: any) => d.price > 0 || d.price == null);
 
 const faqs = [
+  { q: "Where is the actual coupon code — do I need to type it?", a: "Each card below is a discounted course with its own instructor coupon. Click any deal to open its page and reveal the code. Most codes apply automatically when you continue to Udemy through our link — no typing needed. If a course needs a manual code, the deal page shows it with copy and paste instructions." },
   { q: "Are these Udemy coupon codes legitimate and safe?", a: "Yes! All Udemy coupons listed on CoursesWyn are 100% legitimate. We source codes directly from Udemy's official affiliate program and verified course instructors. Each coupon is manually tested by our team before listing." },
   { q: "How do I use a Udemy coupon code?", a: "Browse our deals page and find a course you want, click the deal card, and you'll be redirected to Udemy with the coupon pre-applied. Verify the discounted price at checkout and click 'Enroll Now'." },
   { q: "How often are new Udemy coupons added?", a: "We update our database every single day with fresh Udemy coupon codes. Bookmark this page and check back regularly." },
@@ -211,15 +218,16 @@ for (let p = 1; p <= totalPages; p++) {
       {currentPage === 1 ? (
         <section class="ch-hero">
           <div class="container">
-            <p class="ch-eyebrow"><span class="ch-blink" aria-hidden="true"></span> Verified {lastChecked} · {todayAdded.toLocaleString()} new today</p>
-            <h1>Udemy Coupon Codes <span>— Up to {maxDiscountPct}% Off, Verified Daily</span></h1>
-            <p class="ch-sub">The complete verified catalog — every Udemy coupon code, promo code and discount in one paginated directory across {categories.length} categories. Fresh codes added daily. Save up to <strong>{maxDiscountPct}%</strong>.</p>
+            <p class="ch-eyebrow"><span class="ch-blink" aria-hidden="true"></span> Checked {lastChecked} · {todayAdded.toLocaleString()} new today</p>
+            <h1>Udemy <span>Coupon Codes</span> & Discounts — {currentMonth} {currentYear}, Up to {maxDiscountPct}% Off</h1>
+            <p class="ch-sub">{totalActive.toLocaleString()} verified instructor coupons & promo codes across {categories.length} categories — open any deal and the Udemy discount applies automatically, no typing needed. Save up to <strong>{maxDiscountPct}%</strong> on top-rated online courses.</p>
             <form action="/search" method="GET" role="search" aria-label="Search coupon codes" class="ch-search">
-              <input type="search" name="q" placeholder={"Search " + totalCoupons.toLocaleString() + " Udemy coupon codes..."} autocomplete="off" aria-label="Search coupon codes" />
+              <input type="search" name="q" placeholder={"Search " + totalActive.toLocaleString() + " Udemy coupons & discounts..."} autocomplete="off" aria-label="Search coupon codes" />
               <button type="submit">Search</button>
             </form>
+            <p class="ch-note">How codes work here: <strong>open a deal → reveal the code → continue to Udemy</strong> with the discount pre-applied. Manual codes include copy-paste instructions. Looking for 100% off? <a href="/udemy-coupons-today">See today's deals{freeActiveCount > 0 ? ` (${freeActiveCount} free)` : ""}</a>.</p>
             <div class="ch-stats">
-              <div class="ch-stat"><div class="ch-stat-num"><span data-count={totalCoupons}>0</span>+</div><div class="ch-stat-lab">coupons listed</div></div>
+              <div class="ch-stat"><div class="ch-stat-num"><span data-count={totalActive}>0</span>+</div><div class="ch-stat-lab">verified deals live</div></div>
               <div class="ch-stat"><div class="ch-stat-num"><span data-count={categories.length}>0</span></div><div class="ch-stat-lab">categories · A to Z</div></div>
               <div class="ch-stat"><div class="ch-stat-num"><span data-count={todayAdded}>0</span>+</div><div class="ch-stat-lab">added today</div></div>
             </div>
@@ -241,16 +249,16 @@ for (let p = 1; p <= totalPages; p++) {
 
       <section style={{ background: "var(--card)", borderTop: "1px solid var(--border)", padding: "3rem 1.5rem 2rem", textAlign: "center" }}>
         <div class="container" style={{ maxWidth: "1280px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(37, 99, 235,0.07)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(169, 199, 255,0.07)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Browse by Topic
           </div>
-          <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text)", margin: "0 0 0.35rem" }}>Udemy Coupon Categories</h2>
+          <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text)", margin: "0 0 0.35rem" }}>Udemy Coupons by Category</h2>
           <p style={{ fontSize: "0.85rem", color: "var(--muted)", margin: "0 auto 1rem", maxWidth: "550px", lineHeight: 1.6 }}>
-            Jump straight to coupons in {categories.length} fields — from coding and AI to design, business and more.
+            Jump straight to Udemy deals & promo codes in {categories.length} fields — coding, AI, design, business, marketing and more. Pick a category to filter discounted courses.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", justifyContent: "center" }}>
-            <a href="/udemy-coupon-code" style={{ fontSize: "0.78rem", fontWeight: 600, color: "#fff", textDecoration: "none", padding: "3px 10px", borderRadius: "100px", border: "1px solid var(--brand)", background: "var(--brand)" }}>All</a>
-            {categories.slice(0, 15).map((cat: string) => (
+            <span aria-current="page" style={{ fontSize: "0.78rem", fontWeight: 600, color: "#fff", padding: "3px 10px", borderRadius: "100px", border: "1px solid var(--brand)", background: "var(--brand)" }}>All</span>
+            {categories.map((cat: string) => (
               <a href={`/categories/${slugifyCategory(cat)}`} style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--muted)", textDecoration: "none", padding: "3px 10px", borderRadius: "100px", border: "1px solid var(--border)", background: "var(--bg)" }}>{cat}</a>
             ))}
           </div>
@@ -259,12 +267,12 @@ for (let p = 1; p <= totalPages; p++) {
 
       <section id="latest" style={{ padding: "3rem 1.5rem 4rem", maxWidth: "1280px", margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(37, 99, 235,0.07)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Fresh Coupons</div>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(169, 199, 255,0.07)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Fresh Coupons</div>
             <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text)", margin: "0 0 0.3rem" }}>
-              Verified Coupons on This Page{currentPage > 1 ? ` — Page ${currentPage}` : ""}
+              Verified Udemy Deals & Promo Codes{currentPage > 1 ? ` — Page ${currentPage}` : ""}
             </h2>
           <p style={{ fontSize: "0.9rem", color: "var(--muted)", maxWidth: "650px", margin: "0 auto", lineHeight: 1.6 }}>
-            {currentDeals.length} verified Udemy coupons below ({currentMonth} {currentYear} catalog) with savings up to {maxDiscountPct}% — programming, AI, business, design and more.
+            {currentDeals.length} paid instructor coupon codes below ({currentMonth} {currentYear} catalog) with sale-beating Udemy discounts up to {maxDiscountPct}% — programming, AI, business, design and more. Open any deal and the promo applies automatically at checkout.
           </p>
         </div>
         {selectedLanguage && (
@@ -275,7 +283,7 @@ for (let p = 1; p <= totalPages; p++) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" }} class="deals-grid">
           {currentDeals.map((deal: any, idx: number) => <CouponGrid deal={deal} eager={idx < 6} priority={idx < 3} />)}
         </div>
-        <p style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--muted)", marginTop: "1rem" }}>{currentDeals.length} coupons on this page — each one checked before listing.</p>
+        <p style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--muted)", marginTop: "1rem" }}>{currentDeals.length} paid deals on this page — each code checked {lastChecked}. 100% off freebies appear on <a href="/udemy-coupons-today" style={{ color: "var(--brand)", fontWeight: 700 }}>today's deals</a> when available.</p>
 
         {totalPages > 1 && (
           <nav aria-label="Pagination" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", padding: "1.5rem 0", marginTop: "1.5rem", borderTop: "1px solid var(--border)" }}>
@@ -310,7 +318,7 @@ for (let p = 1; p <= totalPages; p++) {
         <div class="container" style={{ maxWidth: "1280px" }}>
           <p class="ch-about-badge">Coupon Guide</p>
           <h2 class="ch-about-title">Udemy Coupon Codes, <span>Explained</span></h2>
-          <p class="ch-about-sub">The short course on scoring verified Udemy discounts without the trial and error.</p>
+          <p class="ch-about-sub">The short course on scoring verified Udemy promo codes, instructor coupons and sale discounts without the trial and error.</p>
           <div class="ch-about-grid">
             {[
               ["Where do these coupons come from?", "Instructors mint coupon codes inside Udemy to fill launches and seasonal pushes. Each carries an expiry date and a redemption cap — which is why one course can swing from $89 to $12 and back within a week."],
@@ -337,7 +345,7 @@ for (let p = 1; p <= totalPages; p++) {
             How to Redeem a Udemy Coupon Code
             <span class="cc-tag">Step-by-step</span>
           </h2>
-          <p class="cc-guide-desc">Most coupons on this page apply automatically — click a deal and you're taken to Udemy with the discount pre-applied. For codes you enter by hand, follow these four steps:</p>
+          <p class="cc-guide-desc">Most Udemy promo codes on this page apply automatically — click a deal and you're taken to Udemy with the sale discount pre-applied. For instructor coupon codes you enter by hand, follow these four steps:</p>
           <ol class="cc-steps">
             <li class="cc-step">
               <span class="cc-step-num">1</span>
@@ -377,19 +385,19 @@ for (let p = 1; p <= totalPages; p++) {
       {currentPage === 1 && (
         <section aria-label="Udemy coupon code FAQs" style={{ background: "var(--bg)", padding: "4rem 1.5rem", maxWidth: "1280px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(37, 99, 235,0.07)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Got Questions?</div>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(169, 199, 255,0.07)", padding: "0.35rem 0.85rem", borderRadius: "20px", marginBottom: "0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Got Questions?</div>
             <h2 style={{ fontSize: "clamp(1.3rem, 3vw, 1.8rem)", fontWeight: 800, color: "var(--text)", margin: "0 0 0.5rem" }}>
               Udemy Coupon Code <span style={{ color: "var(--brand)" }}>FAQs</span>
             </h2>
             <p style={{ color: "var(--muted)", fontSize: "1rem", maxWidth: "600px", margin: "0 auto", lineHeight: 1.6 }}>
-              Straight answers on legitimacy, redemption, expiries, certificates and refunds.
+              Straight answers on Udemy promo codes: legitimacy, redemption, expiries, sale timing, certificates and refunds.
             </p>
           </div>
           <div class="faq-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: "1.5rem" }}>
             {faqs.map((faq: any) => (
-              <div itemscope itemtype="https://schema.org/Question" style={{ background: "var(--card)", padding: "1.75rem 2rem", borderRadius: "20px", border: "1px solid rgba(37, 99, 235,0.2)", position: "relative", overflow: "hidden" }}>
+              <div itemscope itemtype="https://schema.org/Question" style={{ background: "var(--card)", padding: "1.75rem 2rem", borderRadius: "20px", border: "1px solid rgba(169, 199, 255,0.2)", position: "relative", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.75rem" }}>
-                  <div style={{ flexShrink: 0, width: "44px", height: "44px", background: "linear-gradient(135deg, rgba(255,201,77,0.15) 0%, rgba(37, 99, 235,0.06) 100%)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(37, 99, 235,0.28)", color: "var(--brand)", fontWeight: 800, fontSize: "1.1rem" }}>?</div>
+                  <div style={{ flexShrink: 0, width: "44px", height: "44px", background: "linear-gradient(135deg, rgba(169, 199, 255,0.15) 0%, rgba(169, 199, 255,0.06) 100%)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(169, 199, 255,0.28)", color: "var(--brand)", fontWeight: 800, fontSize: "1.1rem" }}>?</div>
                   <h3 itemprop="name" style={{ color: "var(--text)", fontSize: "1.05rem", margin: 0, fontWeight: 700, lineHeight: 1.4 }}>{faq.q}</h3>
                 </div>
                 <div itemscope itemtype="https://schema.org/Answer" itemprop="acceptedAnswer">
@@ -407,7 +415,7 @@ for (let p = 1; p <= totalPages; p++) {
 
       <section class="cc-cta">
         <p class="cc-cta-eyebrow">Catalog complete</p>
-        <p class="cc-cta-text">Every coupon on this page was checked against Udemy before listing. Check back tomorrow — fresh verified codes are added daily.</p>
+        <p class="cc-cta-text">Every Udemy discount on this page was checked against Udemy before listing. Check back tomorrow — fresh verified coupon codes are added daily.</p>
         <a class="cc-hero-btn" href="/udemy-coupons-today">See today's new coupons →</a>
       </section>
 
@@ -421,7 +429,7 @@ for (let p = 1; p <= totalPages; p++) {
   .lg-caret { display: inline-block; width: 0.55ch; height: 1em; margin-left: 4px; background: var(--brand); vertical-align: text-bottom; animation: lgBlip 1.1s step-end infinite; }
   .cc-fresh { background: #fff; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; text-align: left; margin-bottom: 1.5rem; }
   .cc-fresh-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: #f7f7f8; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #111111; }
-  .cc-fresh-head a { margin-left: auto; font-size: 0.8rem; font-weight: 700; color: #2563EB; text-decoration: none; text-transform: none; letter-spacing: 0; }
+  .cc-fresh-head a { margin-left: auto; font-size: 0.8rem; font-weight: 700; color: #A9C7FF; text-decoration: none; text-transform: none; letter-spacing: 0; }
   .cc-fresh-head a:hover { text-decoration: underline; }
   .cc-fresh ul { list-style: none; margin: 0; padding: 6px 0; }
   .cc-fresh li { display: flex; align-items: center; gap: 10px; padding: 9px 16px; font-size: 0.88rem; color: #111111; border-top: 1px solid #f0f0f0; }
@@ -440,26 +448,30 @@ for (let p = 1; p <= totalPages; p++) {
   .cc-hero-search input { flex: 1; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text); background: transparent; border: none; outline: none; }
   .cc-hero-search input::placeholder { color: var(--muted); }
   .cc-search-btn { font-family: var(--font-display); font-weight: 700; color: #fff; background: var(--brand); border: none; border-radius: 8px; padding: 9px 18px; cursor: pointer; }
-  .ch-hero { background: linear-gradient(135deg, #121212 0%, #1E1E1E 100%); padding: 3.5rem 0 3rem; text-align: center; position: relative; overflow: hidden; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
-  .ch-hero::before { content: ''; position: absolute; top: -100px; left: 12%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(255,152,0,0.12) 0%, transparent 65%); pointer-events: none; }
-  .ch-hero::after { content: ''; position: absolute; bottom: -120px; right: 8%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(255,152,0,0.14) 0%, transparent 65%); pointer-events: none; }
+  .ch-hero { background: linear-gradient(135deg, #0a0b0d 0%, #101216 100%); padding: 3.5rem 0 3rem; text-align: center; position: relative; overflow: hidden; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
+  .ch-hero::before { content: ''; position: absolute; top: -100px; left: 12%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(169, 199, 255,0.12) 0%, transparent 65%); pointer-events: none; }
+  .ch-hero::after { content: ''; position: absolute; bottom: -120px; right: 8%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(169, 199, 255,0.14) 0%, transparent 65%); pointer-events: none; }
   .ch-hero .container { position: relative; z-index: 1; }
-  .ch-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #E4E4E7; background: rgba(228,228,231,0.08); border: 1px solid rgba(228,228,231,0.2); border-radius: 999px; padding: 7px 16px; margin: 0 0 1.1rem; }
+  .ch-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #f2f4f6; background: rgba(242, 244, 246,0.08); border: 1px solid rgba(242, 244, 246,0.2); border-radius: 999px; padding: 7px 16px; margin: 0 0 1.1rem; }
   .ch-blink { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
-  .ch-hero h1 { font-family: sans-serif; font-size: clamp(1.9rem, 4vw, 2.9rem); font-weight: 800; line-height: 1.12; color: #E4E4E7; margin: 0 0 0.75rem; letter-spacing: -0.02em; }
-  .ch-hero h1 span { color: #FF9800; }
-  .ch-sub { font-size: 1.05rem; color: rgba(228,228,231,0.78); max-width: 640px; margin: 0 auto 1.5rem; line-height: 1.6; }
-  .ch-sub strong { color: #E4E4E7; }
+  .ch-hero h1 { font-family: sans-serif; font-size: clamp(1.9rem, 4vw, 2.9rem); font-weight: 800; line-height: 1.12; color: #f2f4f6; margin: 0 0 0.75rem; letter-spacing: -0.02em; }
+  .ch-hero h1 span { color: #A9C7FF; }
+  .ch-sub { font-size: 1.05rem; color: rgba(242, 244, 246,0.78); max-width: 640px; margin: 0 auto 1.5rem; line-height: 1.6; }
+  .ch-sub strong { color: #f2f4f6; }
+  .ch-note { font-size: 0.85rem; color: rgba(242, 244, 246,0.65); max-width: 640px; margin: 1rem auto 0; line-height: 1.6; }
+  .ch-note strong { color: #f2f4f6; }
+  .ch-note a { color: #A9C7FF; font-weight: 700; text-decoration: none; }
+  .ch-note a:hover { text-decoration: underline; }
   .ch-search { display: flex; gap: 8px; max-width: 560px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.45); }
   .ch-search input { flex: 1; border: none; outline: none; font-size: 0.9rem; padding: 10px 14px; min-width: 0; color: #111; background: transparent; font-family: inherit; }
-  .ch-search button { font-weight: 800; color: #1A1408; background: linear-gradient(135deg, #FFB74D 0%, #F57C00 100%); border: none; border-radius: 9px; padding: 0 24px; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
+  .ch-search button { font-weight: 800; color: #0a0b0d; background: linear-gradient(135deg, #D6E4FF 0%, #A9C7FF 100%); border: none; border-radius: 9px; padding: 0 24px; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
   .ch-search button:hover { filter: brightness(1.1); }
   .ch-stats { display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; margin-top: 1.75rem; }
   .ch-stat { display: flex; flex-direction: column; }
-  .ch-stat-num { font-size: 1.5rem; font-weight: 800; color: #E4E4E7; font-variant-numeric: tabular-nums; }
-  .ch-stat-lab { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9E9E9E; }
-  .ch-byline { font-size: 0.82rem; color: rgba(228,228,231,0.6); margin: 1.25rem 0 0; }
-  .ch-byline a { color: #FF9800; font-weight: 600; }
+  .ch-stat-num { font-size: 1.5rem; font-weight: 800; color: #f2f4f6; font-variant-numeric: tabular-nums; }
+  .ch-stat-lab { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9aa3ab; }
+  .ch-byline { font-size: 0.82rem; color: rgba(242, 244, 246,0.6); margin: 1.25rem 0 0; }
+  .ch-byline a { color: #A9C7FF; font-weight: 600; }
   h1, h2, h3 { font-family: sans-serif; }
   .cc-dir-num { font-family: var(--font-display); font-size: 1.75rem; font-weight: 800; color: var(--brand); display: block; }
   .dh-hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 2.5rem; align-items: center; }
@@ -488,13 +500,13 @@ for (let p = 1; p <= totalPages; p++) {
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #FFB74D, #F57C00);
+    background: linear-gradient(90deg, #D6E4FF, #A9C7FF);
     opacity: 0;
     transition: opacity 0.25s ease;
   }
   .about-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(255,201,77,0.4);
+    border-color: rgba(169, 199, 255,0.4);
     box-shadow: 0 14px 30px -12px rgba(0,0,0,0.5);
   }
   .about-card:hover::before {
@@ -510,23 +522,23 @@ for (let p = 1; p <= totalPages; p++) {
   .cc-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
 
   /* ===== REGISTER / LEDGER HEADER ===== */
-  .cc-register { position: relative; background: var(--card); border: 1px solid #232B26; border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(0, 0, 0, 0.35); }
+  .cc-register { position: relative; background: var(--card); border: 1px solid #22262d; border-radius: 18px; padding: 30px 34px 28px; margin-top: 24px; box-shadow: 0 24px 48px -30px rgba(0, 0, 0, 0.35); }
   .cc-register-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-  .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 6px 13px; }
+  .cc-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(169, 199, 255, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 6px 13px; }
   .cc-eyebrow a { color: inherit; text-decoration: none; }
   .cc-eyebrow a:hover { text-decoration: underline; }
-  .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #2563EB; animation: ccBlip 1.6s infinite; }
+  .cc-blip { width: 6px; height: 6px; border-radius: 50%; background: #A9C7FF; animation: ccBlip 1.6s infinite; }
   @keyframes ccBlip { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   .cc-folio { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--muted); border: 1px dashed var(--border); border-radius: 6px; padding: 5px 10px; letter-spacing: .05em; white-space: nowrap; }
   .cc-title { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 700; color: var(--text); line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 12px; }
-  .cc-title .cc-accent { color: #CF6F59; }
-  .cc-page-label { display: inline-flex; align-items: center; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 4px 10px; margin-left: 0.6rem; vertical-align: middle; }
+  .cc-title .cc-accent { color: #A9C7FF; }
+  .cc-page-label { display: inline-flex; align-items: center; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(169, 199, 255, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 4px 10px; margin-left: 0.6rem; vertical-align: middle; }
   .cc-subtitle { color: var(--muted); font-size: 0.95rem; line-height: 1.7; margin: 0 0 20px; max-width: 640px; }
   .cc-subtitle strong { color: var(--text); font-weight: 700; }
 
   .cc-byline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 20px; }
-  .cc-byline-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 5px 12px; text-decoration: none; transition: background 0.2s; }
-  .cc-byline-badge:hover { background: rgba(37, 99, 235, 0.14); }
+  .cc-byline-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--brand); background: rgba(169, 199, 255, 0.08); border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 5px 12px; text-decoration: none; transition: background 0.2s; }
+  .cc-byline-badge:hover { background: rgba(169, 199, 255, 0.14); }
   .cc-byline-badge svg { flex-shrink: 0; }
   .cc-byline-date { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--muted); }
   .cc-byline-verify { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--text); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; transition: all 0.2s; }
@@ -536,18 +548,18 @@ for (let p = 1; p <= totalPages; p++) {
   .cc-byline-note a:hover { text-decoration: underline; }
 
   .cc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .cc-hero-search { display: flex; align-items: center; gap: 10px; flex: 1 1 300px; max-width: 460px; min-width: 240px; background: var(--card); border: 1px solid #232B26; border-radius: 10px; padding: 0 14px; height: 48px; box-shadow: 0 8px 24px -18px rgba(0, 0, 0, 0.4); transition: border-color 0.2s, box-shadow 0.2s; }
+  .cc-hero-search { display: flex; align-items: center; gap: 10px; flex: 1 1 300px; max-width: 460px; min-width: 240px; background: var(--card); border: 1px solid #22262d; border-radius: 10px; padding: 0 14px; height: 48px; box-shadow: 0 8px 24px -18px rgba(0, 0, 0, 0.4); transition: border-color 0.2s, box-shadow 0.2s; }
   .cc-hero-search:focus-within { border-color: var(--brand); box-shadow: 0 8px 28px -14px rgba(0, 0, 0, 0.4); }
   .cc-hero-search svg { color: var(--muted); flex-shrink: 0; }
   .cc-hero-search input { flex: 1; border: none; outline: none; background: transparent; color: var(--text); font-size: 0.93rem; padding: 0; min-width: 0; }
-  .cc-hero-search kbd { font-size: 0.7rem; color: var(--muted); background: transparent; border: 1px solid #232B26; border-radius: 5px; padding: 2px 7px; white-space: nowrap; }
-  .cc-hero-btn { font-family: var(--font-display); font-size: 0.9rem; font-weight: 600; text-decoration: none; padding: 12px 20px; border-radius: 9px; background: var(--brand-gradient); color: #1A1408; box-shadow: 0 10px 24px -8px rgba(37, 99, 235, 0.5); transition: filter 0.2s, transform 0.2s; white-space: nowrap; }
+  .cc-hero-search kbd { font-size: 0.7rem; color: var(--muted); background: transparent; border: 1px solid #22262d; border-radius: 5px; padding: 2px 7px; white-space: nowrap; }
+  .cc-hero-btn { font-family: var(--font-display); font-size: 0.9rem; font-weight: 600; text-decoration: none; padding: 12px 20px; border-radius: 9px; background: var(--brand-gradient); color: #0a0b0d; box-shadow: 0 10px 24px -8px rgba(169, 199, 255, 0.5); transition: filter 0.2s, transform 0.2s; white-space: nowrap; }
   .cc-hero-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
   .cc-hero-btn.ghost { background: transparent; color: var(--brand); border: 1px solid var(--brand); box-shadow: none; }
   .cc-hero-btn.ghost:hover { background: var(--brand-soft); color: var(--brand); }
 
   .cc-ledger { display: flex; margin-top: 24px; border-top: 1px dashed var(--border); padding-top: 20px; flex-wrap: wrap; }
-  .cc-ledger-cell { flex: 1 1 150px; padding: 2px 18px; border-left: 1px solid #232B26; }
+  .cc-ledger-cell { flex: 1 1 150px; padding: 2px 18px; border-left: 1px solid #22262d; }
   .cc-ledger-cell:first-child { border-left: none; padding-left: 2px; }
   .cc-ledger-label { font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
   .cc-ledger-value { font-family: var(--font-display); font-weight: 700; font-size: 1.375rem; color: var(--text); }
@@ -555,32 +567,32 @@ for (let p = 1; p <= totalPages; p++) {
   /* ===== SECTION HEADS ===== */
   .cc-sec-head { margin-bottom: 0.9rem; }
   .cc-sec-title { font-size: 1.2rem; font-weight: 700; color: var(--text); margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; letter-spacing: -0.01em; }
-  .cc-sec-title .cc-tag { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; color: var(--muted); border: 1px solid #232B26; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+  .cc-sec-title .cc-tag { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; color: var(--muted); border: 1px solid #22262d; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
   .cc-sec-desc { font-size: 0.85rem; color: var(--muted); margin: 0; }
 
   /* ===== LEDGER TABLE (matches homepage deal table) ===== */
   .cc-featured { margin-top: 3.25rem; }
   .cc-deals-section { margin-top: 3.25rem; }
-  .cc-ledger-wrap { background: var(--card); border: 1px solid #232B26; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.16); margin-top: 16px; }
+  .cc-ledger-wrap { background: var(--card); border: 1px solid #22262d; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.16); margin-top: 16px; }
   table.cc-ledger-table { width: 100%; border-collapse: collapse; }
-  .cc-ledger-table thead th { font-family: var(--font-mono); font-size: 0.625rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); text-align: left; padding: 12px 14px; border-bottom: 1px solid #232B26; background: var(--bg-secondary); white-space: nowrap; }
+  .cc-ledger-table thead th { font-family: var(--font-mono); font-size: 0.625rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); text-align: left; padding: 12px 14px; border-bottom: 1px solid #22262d; background: var(--bg-secondary); white-space: nowrap; }
   /* ===== GRID DESIGN (coursecard) ===== */
   .cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; margin-top: 16px; }
   @media (max-width: 640px) { .cc-grid { grid-template-columns: 1fr; } }
-  .cc-deal-more { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px; background: var(--bg-secondary); border-top: 1px solid #232B26; }
+  .cc-deal-more { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px; background: var(--bg-secondary); border-top: 1px solid #22262d; }
   .cc-deal-more a { font-family: var(--font-mono); font-size: 0.78125rem; font-weight: 600; color: var(--brand); text-decoration: none; }
   .cc-deal-more a:hover { text-decoration: underline; }
   .cc-deal-count { font-family: var(--font-mono); font-size: 0.71875rem; color: var(--muted); }
 
   /* ===== FOLIO PAGINATION ===== */
   .cc-pagination { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 1.1rem 0 0; margin-top: 1rem; border-top: 1px dashed var(--border); }
-  .cc-page-link { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--text); text-decoration: none; padding: 0.4rem 0.85rem; border: 1px solid #232B26; border-radius: 6px; background: var(--card); transition: all 0.2s; white-space: nowrap; }
+  .cc-page-link { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--text); text-decoration: none; padding: 0.4rem 0.85rem; border: 1px solid #22262d; border-radius: 6px; background: var(--card); transition: all 0.2s; white-space: nowrap; }
   .cc-page-link:hover { border-color: var(--brand); color: var(--brand); }
-  .cc-page-disabled { color: #8A877C; opacity: 0.6; pointer-events: none; border-style: dashed; }
+  .cc-page-disabled { color: #3a4149; opacity: 0.6; pointer-events: none; border-style: dashed; }
   .cc-page-numbers { display: flex; align-items: center; gap: 4px; }
-  .cc-page-num { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--text); text-decoration: none; min-width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #232B26; background: var(--card); transition: all 0.2s; }
+  .cc-page-num { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--text); text-decoration: none; min-width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #22262d; background: var(--card); transition: all 0.2s; }
   .cc-page-num:hover { border-color: var(--brand); color: var(--brand); }
-  .cc-page-active { background: var(--brand-gradient); color: #1A1408; border-color: transparent; }
+  .cc-page-active { background: var(--brand-gradient); color: #0a0b0d; border-color: transparent; }
   .cc-page-active:hover { color: #fff; }
   .cc-page-ellipsis { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); min-width: 28px; text-align: center; }
 
@@ -589,7 +601,7 @@ for (let p = 1; p <= totalPages; p++) {
   .cc-deals-header { margin-bottom: 0.9rem; }
   .cc-deals-desc { font-size: 0.85rem; color: var(--muted); margin: 0; }
   .cc-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
-  .cc-cat { background: var(--card); border: 1px solid #232B26; border-radius: 12px; padding: 16px; text-align: left; text-decoration: none; display: block; transition: all 0.2s; }
+  .cc-cat { background: var(--card); border: 1px solid #22262d; border-radius: 12px; padding: 16px; text-align: left; text-decoration: none; display: block; transition: all 0.2s; }
   .cc-cat:hover { transform: translateY(-2px); border-color: var(--brand); box-shadow: 0 10px 28px -16px rgba(0, 0, 0, 0.35); }
   .cc-cat-num { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: var(--text); }
   .cc-cat-label { font-size: 0.75rem; color: var(--muted); margin-top: 3px; font-weight: 600; }
@@ -599,9 +611,9 @@ for (let p = 1; p <= totalPages; p++) {
   .cc-section { margin-top: 3.25rem; }
   .cc-section-title { font-size: 1.2rem; font-weight: 700; color: var(--text); margin: 0 0 0.3rem; display: flex; align-items: center; gap: 0.6rem; letter-spacing: -0.01em; flex-wrap: wrap; }
   .cc-section-title svg { color: var(--brand); flex-shrink: 0; }
-  .cc-section-title .cc-tag { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; color: var(--muted); border: 1px solid #232B26; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
+  .cc-section-title .cc-tag { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; color: var(--muted); border: 1px solid #22262d; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
 
-  .cc-seo-section { background: var(--card); border: 1px solid #232B26; border-radius: 14px; padding: 1.5rem; margin: 3.25rem 0 0; }
+  .cc-seo-section { background: var(--card); border: 1px solid #22262d; border-radius: 14px; padding: 1.5rem; margin: 3.25rem 0 0; }
   .cc-seo-section .cc-section-title { font-size: 1.15rem; margin-bottom: 0.75rem; }
   .cc-seo-section p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.75rem; }
   .cc-seo-section p:last-child { margin-bottom: 0; }
@@ -610,55 +622,55 @@ for (let p = 1; p <= totalPages; p++) {
 
   /* ===== EVERGREEN GUIDE BLOCKS ===== */
   .cc-guide { margin: 3.25rem 0 0; display: grid; gap: 1.25rem; }
-  .ch-about { margin: 3.25rem 1.5rem 0; background: linear-gradient(135deg, #121212 0%, #1E1E1E 130%); border-radius: 24px; padding: clamp(1.75rem, 4vw, 2.75rem); position: relative; overflow: hidden; }
-  .ch-about::before { content: ''; position: absolute; top: -90px; left: 50%; transform: translateX(-50%); width: 520px; height: 260px; background: radial-gradient(ellipse, rgba(255,152,0,0.16) 0%, transparent 65%); pointer-events: none; }
-  .ch-about-badge { display: inline-block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #FF9800; background: rgba(255,152,0,0.12); border: 1px solid rgba(255,152,0,0.35); border-radius: 999px; padding: 6px 14px; margin: 0 0 0.8rem; position: relative; }
-  .ch-about-title { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 800; color: #E4E4E7; margin: 0 0 0.5rem; letter-spacing: -0.02em; line-height: 1.15; position: relative; }
-  .ch-about-title span { color: #FF9800; }
-  .ch-about-sub { color: rgba(228,228,231,0.75); font-size: 0.95rem; line-height: 1.65; margin: 0; max-width: 640px; position: relative; }
+  .ch-about { margin: 3.25rem 1.5rem 0; background: linear-gradient(135deg, #0a0b0d 0%, #101216 130%); border-radius: 24px; padding: clamp(1.75rem, 4vw, 2.75rem); position: relative; overflow: hidden; }
+  .ch-about::before { content: ''; position: absolute; top: -90px; left: 50%; transform: translateX(-50%); width: 520px; height: 260px; background: radial-gradient(ellipse, rgba(169, 199, 255,0.16) 0%, transparent 65%); pointer-events: none; }
+  .ch-about-badge { display: inline-block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #A9C7FF; background: rgba(169, 199, 255,0.12); border: 1px solid rgba(169, 199, 255,0.35); border-radius: 999px; padding: 6px 14px; margin: 0 0 0.8rem; position: relative; }
+  .ch-about-title { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 800; color: #f2f4f6; margin: 0 0 0.5rem; letter-spacing: -0.02em; line-height: 1.15; position: relative; }
+  .ch-about-title span { color: #A9C7FF; }
+  .ch-about-sub { color: rgba(242, 244, 246,0.75); font-size: 0.95rem; line-height: 1.65; margin: 0; max-width: 640px; position: relative; }
   .ch-about-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem; position: relative; }
-  .ch-about-card { background: rgba(228,228,231,0.05); border: 1px solid rgba(228,228,231,0.12); border-radius: 14px; padding: 1.25rem; transition: transform 0.2s, background 0.2s, border-color 0.2s; }
-  .ch-about-card:hover { transform: translateY(-3px); background: rgba(228,228,231,0.08); border-color: rgba(255,152,0,0.45); }
-  .ch-about-card h3 { font-size: 1rem; font-weight: 800; color: #E4E4E7; margin: 0 0 0.45rem; letter-spacing: -0.01em; }
-  .ch-about-card p { font-size: 0.87rem; color: rgba(228,228,231,0.72); line-height: 1.65; margin: 0; }
+  .ch-about-card { background: rgba(242, 244, 246,0.05); border: 1px solid rgba(242, 244, 246,0.12); border-radius: 14px; padding: 1.25rem; transition: transform 0.2s, background 0.2s, border-color 0.2s; }
+  .ch-about-card:hover { transform: translateY(-3px); background: rgba(242, 244, 246,0.08); border-color: rgba(169, 199, 255,0.45); }
+  .ch-about-card h3 { font-size: 1rem; font-weight: 800; color: #f2f4f6; margin: 0 0 0.45rem; letter-spacing: -0.01em; }
+  .ch-about-card p { font-size: 0.87rem; color: rgba(242, 244, 246,0.72); line-height: 1.65; margin: 0; }
   @media (max-width: 720px){ .ch-about-grid { grid-template-columns: 1fr; } }
-  .cc-guide-block { background: var(--card); border: 1px solid #232B26; border-radius: 14px; padding: 1.5rem; }
+  .cc-guide-block { background: var(--card); border: 1px solid #22262d; border-radius: 14px; padding: 1.5rem; }
   .cc-guide-block .cc-section-title { font-size: 1.15rem; margin-bottom: 0.75rem; }
   .cc-guide-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 1rem; }
   .cc-guide-text { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 0.75rem; }
   .cc-guide-text:last-child { margin-bottom: 0; }
   .cc-guide-note { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); margin: 1rem 0 0; }
-  .cc-ppoffer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; background: rgba(255,152,0,0.08); border: 1px solid rgba(255,152,0,0.3); border-radius: 10px; padding: 12px 16px; text-decoration: none; transition: all 0.2s; }
-  .cc-ppoffer:hover { background: rgba(255,152,0,0.14); border-color: var(--brand); }
+  .cc-ppoffer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; background: rgba(169, 199, 255,0.08); border: 1px solid rgba(169, 199, 255,0.3); border-radius: 10px; padding: 12px 16px; text-decoration: none; transition: all 0.2s; }
+  .cc-ppoffer:hover { background: rgba(169, 199, 255,0.14); border-color: var(--brand); }
   .cc-ppoffer-label { font-family: var(--font-display); font-size: 0.8125rem; font-weight: 700; color: var(--text); }
   .cc-ppoffer-cta { font-family: var(--font-mono); font-size: 0.71875rem; font-weight: 600; color: var(--brand); white-space: nowrap; }
   .cc-guide-block a { color: var(--brand); text-decoration: none; font-weight: 600; }
   .cc-guide-block a:hover { text-decoration: underline; }
 
   .cc-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
-  .cc-step { display: flex; gap: 0.9rem; background: var(--card); border: 1px solid #232B26; border-radius: 12px; padding: 1rem 1.1rem; }
-  .cc-step-num { flex-shrink: 0; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--brand-gradient); color: #1A1408; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; }
+  .cc-step { display: flex; gap: 0.9rem; background: var(--card); border: 1px solid #22262d; border-radius: 12px; padding: 1rem 1.1rem; }
+  .cc-step-num { flex-shrink: 0; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--brand-gradient); color: #0a0b0d; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; }
   .cc-step-title { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0 0 0.25rem; }
   .cc-step-text { font-size: 0.85rem; color: var(--muted); line-height: 1.55; margin: 0; }
 
   .cc-tips { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
-  .cc-tip { font-size: 0.87rem; color: var(--muted); line-height: 1.55; background: var(--card); border: 1px solid #232B26; border-radius: 10px; padding: 0.85rem 1rem; }
+  .cc-tip { font-size: 0.87rem; color: var(--muted); line-height: 1.55; background: var(--card); border: 1px solid #22262d; border-radius: 10px; padding: 0.85rem 1rem; }
   .cc-tip strong { color: var(--text); }
   .cc-tip a { font-weight: 600; }
 
   .cc-faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
   @media (max-width: 768px) { .cc-faq-grid { grid-template-columns: 1fr; } }
-  .cc-faq-card { background: var(--card); border: 1px solid #232B26; border-radius: 12px; padding: 1.1rem 1.15rem; }
-  .cc-faq-card:hover { border-color: #8A877C; }
+  .cc-faq-card { background: var(--card); border: 1px solid #22262d; border-radius: 12px; padding: 1.1rem 1.15rem; }
+  .cc-faq-card:hover { border-color: #3a4149; }
   .cc-faq-q { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0 0 0.4rem; line-height: 1.4; }
   .cc-faq-a { font-size: 0.85rem; color: var(--muted); line-height: 1.55; margin: 0; }
   .cc-faq-a a { color: var(--brand); text-decoration: none; font-weight: 600; }
   .cc-faq-a a:hover { text-decoration: underline; }
 
-  .cc-cta { background: var(--card); border: 1px solid #232B26; color: var(--text); border-radius: 16px; padding: 30px 32px; text-align: center; margin: 3.25rem 0 3rem; }
+  .cc-cta { background: var(--card); border: 1px solid #22262d; color: var(--text); border-radius: 16px; padding: 30px 32px; text-align: center; margin: 3.25rem 0 3rem; }
   .cc-cta-eyebrow { font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: .07em; text-transform: uppercase; color: var(--brand); margin: 0 0 8px; }
   .cc-cta-text { font-size: 0.95rem; line-height: 1.6; margin: 0 auto 18px; max-width: 480px; color: var(--muted); }
-  .cc-cta .cc-hero-btn { background: var(--brand-gradient); color: #1A1408; box-shadow: 0 12px 28px -12px rgba(37, 99, 235, 0.55); }
+  .cc-cta .cc-hero-btn { background: var(--brand-gradient); color: #0a0b0d; box-shadow: 0 12px 28px -12px rgba(169, 199, 255, 0.55); }
   .cc-cta .cc-hero-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
 
   @media (max-width: 768px) {
