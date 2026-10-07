@@ -1,6 +1,36 @@
 import { promises as fs } from "fs";
 import path from "path";
-import matter from "gray-matter";
+import YAML from "yaml";
+
+// Minimal frontmatter parser/stringifier compatible with gray-matter's
+// basic behaviour, backed by `yaml` v2 (safe by default).
+// This avoids gray-matter@4 which calls `yaml.safeLoad` — an API removed
+// in js-yaml v4 (forced via package.json overrides) and crashes on save.
+function parseMatter(raw: string): { data: Record<string, unknown>; content: string } {
+  const text = String(raw ?? "");
+  if (!text.startsWith("---")) return { data: {}, content: text };
+  const end = text.indexOf("\n---", 3);
+  if (end === -1) return { data: {}, content: text };
+  const yamlText = text.slice(3, end).replace(/^\r?\n/, "");
+  let data: Record<string, unknown> = {};
+  try {
+    const parsed = YAML.parse(yamlText) as unknown;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      data = parsed as Record<string, unknown>;
+    }
+  } catch {
+    data = {};
+  }
+  let content = text.slice(end + 4);
+  if (content.startsWith("\r\n")) content = content.slice(2);
+  else if (content.startsWith("\n")) content = content.slice(1);
+  return { data, content };
+}
+
+function stringifyMatter(body: string, data: Record<string, unknown>): string {
+  const yamlText = YAML.stringify(data ?? {}).trimEnd();
+  return yamlText ? `---\n${yamlText}\n---\n${String(body ?? "")}` : String(body ?? "");
+}
 
 const BLOG_DIR = path.join(process.cwd(), "src", "content", "blog");
 
@@ -50,11 +80,32 @@ function safeSlug(slug: string): string {
 
 async function postPathFor(slug: string): Promise<string | null> {
   const dir = path.join(BLOG_DIR, safeSlug(slug));
-  for (const name of ["index.md", "index.mdx"]) {
+  // Prefer .mdx when both exist: MDX is a superset of Markdown and the
+  // canonical format in this repo (supports `import` + components).
+  for (const name of ["index.mdx", "index.md"]) {
     const file = path.join(dir, name);
     try {
       await fs.access(file);
       return file;
+    } catch {}
+  }
+  return null;
+}
+
+// Detect MDX-only syntax (imports, JSX components) that would render as
+// literal text if saved as plain .md.
+function looksLikeMdx(body: string): boolean {
+  const text = String(body ?? "");
+  if (/^\s*import\s+.+\sfrom\s+['"][^'"]+['"];?\s*$/m.test(text)) return true;
+  if (/<[A-Z][A-Za-z0-9]*(?:\s[^<>]*)?\/?>/.test(text)) return true;
+  return false;
+}
+
+async function extInDir(dir: string): Promise<"mdx" | "md" | null> {
+  for (const name of ["index.mdx", "index.md"]) {
+    try {
+      await fs.access(path.join(dir, name));
+      return name.endsWith("mdx") ? "mdx" : "md";
     } catch {}
   }
   return null;
@@ -71,7 +122,7 @@ export async function listBlogPosts(): Promise<BlogPostMeta[]> {
     if (!file) continue;
     try {
       const raw = await fs.readFile(file, "utf-8");
-      const { data } = matter(raw);
+      const { data } = parseMatter(raw);
       posts.push({
         slug,
         file,
@@ -102,7 +153,7 @@ export async function readBlogPost(slug: string): Promise<BlogPost | null> {
   if (!file) return null;
   try {
     const raw = await fs.readFile(file, "utf-8");
-    const { data, content } = matter(raw);
+    const { data, content } = parseMatter(raw);
     const meta: Record<string, unknown> = data as Record<string, unknown>;
     return {
       slug: safeSlug(slug),
@@ -140,8 +191,22 @@ export async function writeBlogPost(opts: {
     frontmatter[key] = value;
   }
 
-  const file = path.join(dir, "index.md");
-  await fs.writeFile(file, matter.stringify(opts.body, frontmatter), "utf-8");
+  // Preserve the original extension: an .mdx post contains `import`
+  // statements and components (e.g. DealEmbed) that render as literal text
+  // if saved as plain .md. Bodies with MDX syntax are upgraded to .mdx.
+  let ext: "mdx" | "md" = "mdx";
+  if (!looksLikeMdx(opts.body)) {
+    const prevDir = path.join(BLOG_DIR, safeSlug(opts.prevSlug ?? slug));
+    ext = (await extInDir(prevDir)) ?? (await extInDir(dir)) ?? "mdx";
+  }
+
+  const file = path.join(dir, `index.${ext}`);
+  await fs.writeFile(file, stringifyMatter(opts.body, frontmatter), "utf-8");
+
+  // Remove a stale sibling with the other extension (created by older saves
+  // that always wrote index.md) so the content loader never sees duplicates.
+  const stale = path.join(dir, ext === "mdx" ? "index.md" : "index.mdx");
+  await fs.rm(stale, { force: true });
 
   if (opts.prevSlug && opts.prevSlug !== slug) {
     await fs.rm(path.join(BLOG_DIR, safeSlug(opts.prevSlug)), { recursive: true, force: true });
