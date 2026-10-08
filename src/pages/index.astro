@@ -1,9 +1,9 @@
 ﻿---
 import Layout from "../layouts/Layout.astro";
 import CouponGrid from "../components/CouponGrid.astro";
-import { Image } from "astro:assets";
 import { readDeals } from "../lib/store";
 import { toISODateWIB } from "../lib/date";
+import { slugifyCategory, slugifyTopic } from "../lib/utils";
 
 const allDeals = await readDeals();
 const now = new Date();
@@ -16,32 +16,6 @@ const last24h = allDeals.filter((d) => { const t = new Date(d.updatedAt ?? d.cre
 
 const latestSix = sortedDeals.slice(0, 6);
 
-// Learner favorites: highest rated with real enrollment weight
-const popularPicks = [...activeDeals].filter((d) => (d.rating ?? 0) >= 4.5).sort((a, b) => ((b.rating ?? 0) - (a.rating ?? 0)) || ((b.students ?? 0) - (a.students ?? 0))).slice(0, 6);
-
-// Deepest cuts: top-rated courses at 90%+ off — anti-duplikat rel latest.
-// Selalu 6 kartu: prioritas 90%+, backfill dari favorit 4.5★ lalu diskon terbesar.
-const latestSlugs = new Set(latestSix.map((d) => String(d.slug)));
-const deepCuts: typeof popularPicks = [];
-const pickedSlugs = new Set<string>();
-for (const d of popularPicks) {
-  if (deepCuts.length >= 6) break;
-  const s = String(d.slug);
-  if (pctOf(d) >= 90 && !latestSlugs.has(s) && !pickedSlugs.has(s)) { deepCuts.push(d); pickedSlugs.add(s); }
-}
-for (const d of popularPicks) {
-  if (deepCuts.length >= 6) break;
-  const s = String(d.slug);
-  if (!latestSlugs.has(s) && !pickedSlugs.has(s)) { deepCuts.push(d); pickedSlugs.add(s); }
-}
-if (deepCuts.length < 6) {
-  const byPct = [...sortedDeals].sort((a, b) => pctOf(b) - pctOf(a));
-  for (const d of byPct) {
-    if (deepCuts.length >= 6) break;
-    const s = String(d.slug);
-    if (!latestSlugs.has(s) && !pickedSlugs.has(s)) { deepCuts.push(d); pickedSlugs.add(s); }
-  }
-}
 // Homepage claims use LIVE deals only — expired entries must never feed
 // "verified coupons" counts or "up to X%" headlines.
 const liveCount = activeDeals.length;
@@ -52,13 +26,48 @@ const discountPcts = paidActive
 const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 90;
 const avgDiscount = discountPcts.length ? Math.round(discountPcts.reduce((a, b) => a + b, 0) / discountPcts.length) : 0;
 
-function clean(s: string) { return String(s || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;|&#8217;/g, "'").replace(/\s{2,}/g, " ").trim(); }
-function pctOf(d: any) {
-  if (typeof d?.price === "number" && typeof d?.originalPrice === "number" && d.originalPrice > d.price && d.price > 0) {
-    return Math.round(100 - (d.price / d.originalPrice) * 100);
-  }
-  return 0;
+// Top categories with live counts — server-rendered anchors distribute
+// homepage authority to money pages (body links, not just nav).
+const CAT_DESC: Record<string, string> = {
+  "IT & Software": "Certifications, network & security, and cloud.",
+  "Development": "Web dev, software testing, and AI agents.",
+  "Business": "Management, finance, and entrepreneurship.",
+  "Teaching & Academics": "Engineering, math, and languages.",
+  "Office Productivity": "Excel, SAP, and collaboration tools.",
+  "Finance & Accounting": "Investing, trading, and crypto.",
+  "Design": "UI/UX, 3D, and GenAI design.",
+  "Programming Languages": "Python, Java, and more.",
+  "Marketing": "Digital marketing and growth.",
+  "Photography & Video": "Shooting and editing.",
+  "Music": "Theory and production.",
+  "Personal Development": "Career and productivity.",
+};
+const catCounts = new Map<string, { name: string; count: number }>();
+for (const d of activeDeals) {
+  const name = String((d as any).category || "").trim();
+  if (!name) continue;
+  const e = catCounts.get(name) ?? { name, count: 0 };
+  e.count++;
+  catCounts.set(name, e);
 }
+const topCats = [...catCounts.values()].sort((a, b) => b.count - a.count).slice(0, 8).map((c) => ({
+  ...c,
+  slug: slugifyCategory(c.name),
+  desc: CAT_DESC[c.name] ?? "Verified coupon deals.",
+}));
+
+// Top topics — compact chip block, one click to long-tail pages.
+const topicCounts = new Map<string, number>();
+for (const d of activeDeals) {
+  const name = String((d as any).subcategory || "").trim();
+  if (!name) continue;
+  topicCounts.set(name, (topicCounts.get(name) ?? 0) + 1);
+}
+const topTopics = [...topicCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([name, count]) => ({
+  name, count, slug: slugifyTopic(name),
+}));
+
+function clean(s: string) { return String(s || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;|&#8217;/g, "'").replace(/\s{2,}/g, " ").trim(); }
 
 // Homepage = brand + curation positioning. The exact-match listing keyword
 // ("udemy coupon code") belongs to /udemy-coupon-code — this title leads
@@ -69,9 +78,12 @@ const pageDescription = `CoursesWyn tracks ${liveCount.toLocaleString()} verifie
 const faqs = [
   { q: "Are CoursesWyn's Udemy coupons legitimate?", a: "Yes. Every coupon comes from Udemy's official affiliate program or the course instructor directly. Each code is re-checked against Udemy daily, and dead codes are pulled from the site before you see them." },
   { q: "How do I claim a Udemy promo code here?", a: "Open any deal and continue to Udemy — the instructor coupon applies automatically at checkout, no typing needed. If a course needs a manual code, its deal page shows the code with copy-and-paste instructions." },
-  { q: "Why do Udemy coupon codes stop working?", a: "Instructor coupons carry an expiry date, a redemption cap (often 10–100 uses), or both. Once either limit is hit, Udemy rejects the code. That is why we re-check every deal daily and only list live ones." },
-  { q: "Should I wait for a Udemy sale instead?", a: "Instructor coupons often beat sitewide sale prices with deeper, course-specific cuts — sometimes up to 95% off. If no coupon fits your course, Udemy runs sitewide sales every few weeks as a fallback." },
-  { q: "Do discounted courses include a certificate?", a: "Yes. A course claimed with a coupon is identical to full price: same videos, same instructor Q&A, same certificate of completion, and lifetime access." },
+  { q: "Why do Udemy coupon codes stop working?", a: "Instructor coupons carry an expiry date, a redemption cap, or both. Free open coupons last 5 days for up to 10 students; targeted ones run up to 31 days for 100 students. Once either limit is hit, Udemy rejects the code. That is why we re-check every deal daily and only list live ones." },
+  { q: "Should I wait for a Udemy sale instead?", a: "Instructor coupons often beat sitewide sale prices with deeper, course-specific cuts. If no coupon fits your course, Udemy runs sitewide sales every few weeks as a fallback — the sale price then applies automatically at checkout." },
+  { q: "Do discounted courses include a certificate?", a: "Yes. A course claimed with a coupon is identical to full price: same videos, same instructor Q&A, same certificate of completion, and lifetime access on individually purchased courses." },
+  { q: "Can I use a coupon in the Udemy mobile app?", a: "No. Udemy does not support coupon codes in its iOS/Android apps due to app-store payment rules. Open the course in a desktop or mobile browser to redeem the code." },
+  { q: "Can I stack two Udemy codes on one course?", a: "No. Udemy applies one discount per course — either the coupon or the automatic sale price, whichever is lower. You can use different codes across different courses in the same cart." },
+  { q: "Can I get a refund after using a coupon?", a: "Yes. Udemy's 30-day money-back guarantee applies to coupon purchases on eligible courses. Request it from your Purchase History; app-store purchases follow Apple/Google refund rules." },
 ];
 
 const jsonLd = {
@@ -81,7 +93,6 @@ const jsonLd = {
     { "@type": "WebPage", "@id": "https://courseswyn.com/#webpage", "url": "https://courseswyn.com", "name": pageTitle, "description": pageDescription, "author": { "@type": "Person", "name": "Andrew Derek", "url": "https://courseswyn.com/about" }, "isPartOf": { "@id": "https://courseswyn.com/#website" }, "dateModified": toISODateWIB(new Date()), "datePublished": toISODateWIB(new Date()), "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["h1", ".sx-sub"] }, "inLanguage": "en-US" },
     { "@type": "BreadcrumbList", "itemListElement": [{ "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" }] },
     { "@type": "ItemList", "numberOfItems": latestSix.length, "itemListElement": latestSix.slice(0, 10).map((d, i) => ({ "@type": "ListItem", "position": i + 1, "item": { "@type": "Course", "name": clean(d.title), "url": "https://courseswyn.com/coupon/" + d.slug, "description": clean(d.description), "provider": { "@type": "Organization", "name": d.provider || "Udemy", "sameAs": "https://www.udemy.com" }, "offers": { "@type": "Offer", "price": d.price && d.price > 0 ? d.price : (d.originalPrice || 0), "priceCurrency": "USD", "availability": "https://schema.org/InStock", "url": "https://courseswyn.com/coupon/" + d.slug } } })) },
-    { "@type": "ItemList", "name": "Deepest verified Udemy discounts", "numberOfItems": deepCuts.length, "itemListElement": deepCuts.map((d, i) => ({ "@type": "ListItem", "position": i + 1, "item": { "@type": "Course", "name": clean(d.title), "url": "https://courseswyn.com/coupon/" + d.slug, "provider": { "@type": "Organization", "name": "Udemy", "sameAs": "https://www.udemy.com" }, "offers": { "@type": "Offer", "price": d.price && d.price > 0 ? d.price : (d.originalPrice || 0), "priceCurrency": "USD", "availability": "https://schema.org/InStock", "url": "https://courseswyn.com/coupon/" + d.slug } } })) },
     { "@type": "FAQPage", "@id": "https://courseswyn.com#faq", "mainEntity": faqs.map((f) => ({ "@type": "Question", "name": f.q, "acceptedAnswer": { "@type": "Answer", "text": f.a } })) },
   ]
 };
@@ -94,15 +105,6 @@ const heroChips = [
   { name: "Design", q: "Design" },
   { name: "Business", q: "Business" },
 ];
-
-import { COMPTIA_GROUPS, AWS_GROUPS, MICROSOFT_GROUPS, countVouchers } from "../lib/vouchers.js";
-
-const voucherCards = [
-  { name: "CompTIA", desc: "A+, Network+, Security+ & more.", count: countVouchers(COMPTIA_GROUPS), href: "/udemy-comptia-exam-vouchers", logo: "/assets/images/vouchers/provider-comptia.svg" },
-  { name: "AWS", desc: "Cloud Practitioner to Solutions Architect.", count: countVouchers(AWS_GROUPS), href: "/udemy-aws-exam-vouchers", logo: "/assets/images/vouchers/provider-aws.svg" },
-  { name: "Microsoft", desc: "Azure, 365 & role-based exams.", count: countVouchers(MICROSOFT_GROUPS), href: "/udemy-microsoft-exam-vouchers", logo: "/assets/images/vouchers/provider-microsoft.svg" },
-];
-const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
 
 ---
 
@@ -135,8 +137,6 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
   .sx-ticket-line { border-top: 2px dashed rgba(169, 199, 255,0.45); }
   .sx-ticket-edge { height: 14px; background-image: radial-gradient(circle at 50% 0%, #ffffff 9px, transparent 10px); background-size: 28px 14px; background-repeat: repeat-x; }
 
-  /* ── Hero charcoal (single variant) ── */
-
   .sx-blink { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
   .sx-hero h1 { font-family: sans-serif; font-size: clamp(2.2rem, 4.6vw, 3.4rem); font-weight: 800; line-height: 1.1; color: #f2f4f6; margin: 0 0 0.9rem; letter-spacing: -0.02em; }
   .sx-gold { background: linear-gradient(135deg, #D6E4FF 0%, #D6E4FF 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
@@ -154,30 +154,9 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
   .sx-eyebrow-sec { display: inline-block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #A9C7FF; margin: 0 0 0.5rem; }
   .sx-h2 { font-family: sans-serif; font-size: clamp(1.6rem, 2.8vw, 2.2rem); font-weight: 800; margin: 0 0 0.5rem; color: #f2f4f6; line-height: 1.2; letter-spacing: -0.01em; }
   .sx-h2 span { color: #A9C7FF; }
-  .sx-vouchers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.75rem; }
-  .sx-voucher { background: #101216; border: 1px solid #22262d; border-radius: 18px; overflow: hidden; text-decoration: none; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; }
-  .sx-voucher:hover { transform: translateY(-4px); border-color: #A9C7FF; box-shadow: 0 20px 40px -16px rgba(169, 199, 255,0.3); }
-.sx-v-media { position: relative; display: block; }
-.sx-v-media img { width: 100%; height: auto; border-radius: 10px; display: block; }
-.sx-v-flag { position: absolute; left: 0; bottom: 10px; background: #040803DE; color: #D4D7CE; font-size: 13px; font-weight: 500; letter-spacing: 0.3px; padding: 3px 10px 2px 10px; border-radius: 0 4px 0 4px; }
   .sx-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #f2f4f6; background: rgba(242, 244, 246,0.08); border: 1px solid rgba(242, 244, 246,0.2); border-radius: 999px; padding: 7px 16px; margin: 0 0 1.1rem; }
   .sx-band { background: #161619; border-top: 1px solid #22262d; border-bottom: 1px solid #22262d; }
   .sx-head { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-  .sx-v-logos { display: flex; align-items: center; justify-content: center; gap: 12px; background: #14171c; border-bottom: 1px solid #22262d; padding: 18px 12px; min-height: 76px; }
-  .sx-v-logos img { height: 17px; width: auto; object-fit: contain; }
-  .sx-v-count { font-size: 0.72rem; font-weight: 800; color: #A9C7FF; text-transform: uppercase; letter-spacing: 0.06em; padding: 14px 16px 0; }
-  .sx-v-name { font-size: 1.1rem; font-weight: 800; color: #f2f4f6; padding: 2px 16px 0; }
-  .sx-v-desc { font-size: 0.85rem; color: #9aa3ab; margin: 0; padding: 0 16px; flex: 1; }
-  .sx-v-link { font-size: 0.85rem; font-weight: 800; color: #A9C7FF; padding: 0 16px 16px; margin-top: 0.6rem; }
-  .sx-pp { background: #101216; border: 1px solid #22262d; border-radius: 24px; overflow: hidden; display: grid; grid-template-columns: 1.1fr 1fr; margin-top: 1.75rem; box-shadow: 0 24px 60px -30px rgba(27,11,51,0.35); }
-  .sx-eyebrow-light { color: #A9C7FF; background: #e8f4fd; border-color: #e9d5ff; }
-  .sx-h2-light { color: #f2f4f6; }
-  .sx-pp-sub { color: #9aa3ab; line-height: 1.7; margin: 0 0 1.1rem; }
-  .sx-pp-points { list-style: none; margin: 0 0 1.5rem; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; font-size: 0.92rem; color: #9aa3ab; font-weight: 500; }
-  .sx-pp-cta { display: flex; gap: 0.9rem; flex-wrap: wrap; align-items: center; }
-  .sx-pp-btn { display: inline-block; background: var(--brand-gradient); color: #0a0b0d; font-weight: 800; padding: 0.9rem 2rem; border-radius: 12px; text-decoration: none; }
-  .sx-pp-btn:hover { filter: brightness(1.1); }
-  .sx-pp-ghost { color: #A9C7FF; font-weight: 700; font-size: 0.9rem; }
   .sx-cta { background: linear-gradient(135deg, #0a0b0d 0%, #101216 130%); border-radius: 24px; padding: clamp(2rem, 5vw, 3.5rem); text-align: center; color: #f2f4f6; position: relative; overflow: hidden; margin-top: 1.75rem; }
   .sx-cta::before { content: ''; position: absolute; top: -80px; left: 50%; transform: translateX(-50%); width: 480px; height: 240px; background: radial-gradient(ellipse, rgba(169, 199, 255,0.18) 0%, transparent 65%); pointer-events: none; }
   .sx-cta h2 { font-family: sans-serif; font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 800; margin: 0 0 0.6rem; position: relative; }
@@ -186,33 +165,40 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
   .sx-cta-btn { display: inline-block; background: #D6E4FF; color: #1a1040; font-weight: 800; padding: 0.9rem 2.2rem; border-radius: 12px; text-decoration: none; }
   .sx-cta-btn:hover { filter: brightness(1.05); }
   .sx-cta-ghost { align-self: center; color: rgba(242, 244, 246,0.8); font-weight: 600; font-size: 0.9rem; }
-  @media (max-width: 860px) { .sx-pp { grid-template-columns: 1fr; } }
-  .sx-v-body { padding: 1.1rem 1.25rem 1.25rem; display: flex; flex-direction: column; gap: 0.3rem; flex: 1; }
-@media (max-width: 900px) { .sx-vouchers { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 640px) { .sx-vouchers { grid-template-columns: 1fr; } }
-  .sx-pp-copy { padding: clamp(1.75rem, 4vw, 3rem); display: flex; flex-direction: column; justify-content: center; }
-  .sx-pp-points { list-style: none; margin: 0 0 1.5rem; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; font-size: 0.92rem; color: #9aa3ab; font-weight: 500; }
-  .sx-pp-cta { display: flex; gap: 0.9rem; flex-wrap: wrap; align-items: center; }
-  .sx-pp-btn { display: inline-block; background: var(--brand-gradient); color: #0a0b0d; font-weight: 800; padding: 0.9rem 2rem; border-radius: 12px; text-decoration: none; }
-  .sx-pp-btn:hover { filter: brightness(1.1); }
-  .sx-pp-ghost { color: #A9C7FF; font-weight: 700; font-size: 0.9rem; }
-  .sx-pp-media { background: linear-gradient(135deg, #0a0b0d, #101216); display: flex; align-items: center; justify-content: center; padding: 2rem; min-height: 280px; }
-  .sx-pp-media img { width: 100%; height: auto; border-radius: 14px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.5); }
+
+  /* ── Category grid ── */
+  .hp-cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.9rem; margin-top: 1.75rem; }
+  .hp-cat { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.15rem 1.2rem; text-decoration: none; display: flex; flex-direction: column; gap: 0.3rem; transition: transform 0.2s, border-color 0.2s; }
+  .hp-cat:hover { transform: translateY(-3px); border-color: var(--brand); }
+  .hp-cat-count { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand); }
+  .hp-cat-name { font-size: 1.02rem; font-weight: 800; color: var(--text); }
+  .hp-cat-desc { font-size: 0.85rem; color: var(--muted); margin: 0; line-height: 1.55; }
+  @media (max-width: 900px) { .hp-cats { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .hp-cats { grid-template-columns: 1fr; } }
+
+  /* ── Guide + topics ── */
+  .hp-guide { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-top: 1.75rem; }
+  .hp-guide-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem 1.3rem; }
+  .hp-guide-card h3 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--text); }
+  .hp-guide-card p { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.7; }
+  .hp-guide-card a { color: var(--brand); font-weight: 700; }
+  @media (max-width: 860px) { .hp-guide { grid-template-columns: 1fr; } }
+  .hp-topics { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+  .hp-topics-head { margin-top: 1.75rem; }
+  .hp-topics-title { margin: 0 0 0.25rem; font-size: 1.05rem; color: var(--text); }
+  .hp-topics-sub { margin: 0; color: var(--muted); font-size: 0.88rem; }
+  .hp-topics-sub a { color: var(--brand); font-weight: 700; }
+  .hp-topic { font-size: 0.8rem; font-weight: 700; color: var(--text); text-decoration: none; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); }
+  .hp-topic:hover { border-color: var(--brand); color: var(--brand); }
+  .hp-topic span { color: var(--muted); font-weight: 600; }
 
   /* ── Section headings ── */
   .dh-tsec { font-family: sans-serif; font-size: 1.75rem; font-weight: 800; margin: 0 0 0.8rem; color: #f2f4f6; line-height: 1.25; }
-  .dh-tsec span { color: #A9C7FF; }
   .dh-tsec span { color: #A9C7FF; }
   .section-hd { margin-bottom: 1.75rem; }
   .lg-sub { color: #9aa3ab; font-size: 0.92rem; line-height: 1.6; margin: 0.5rem 0 0; max-width: 620px; }
   .lg-link { display: inline-flex; align-items: center; gap: 7px; font-size: 0.9rem; font-weight: 700; color: #A9C7FF; text-decoration: none; }
   .lg-link:hover { text-decoration: underline; text-underline-offset: 3px; }
-
-
-
-
-
-
 
   @media (max-width: 768px) {
     .section-wrapper { padding: 2.25rem 1rem; }
@@ -234,7 +220,7 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
 
       <p class="sx-eyebrow"><span class="sx-blink" aria-hidden="true"></span> {last24h} codes checked in the last 24 hours</p>
       <h1>Udemy Coupons & <span class="sx-gold">Promo Codes</span> for {currentMonth} {currentYear}</h1>
-      <p class="sx-sub">Save up to {maxDiscountPct}% on {liveCount.toLocaleString()}+ live courses. Every code re-checked daily — dead codes pulled before you see them.</p>
+      <p class="sx-sub">Save up to {maxDiscountPct}% on {liveCount.toLocaleString()}+ live courses across development, IT, business, and design. Every code re-checked daily — dead codes pulled before you see them.</p>
       <form action="/search" method="GET" role="search" aria-label="Search discounted Udemy courses" class="sx-search">
         <input type="search" name="q" placeholder="Search Python, AWS, Excel courses…" autocomplete="off" aria-label="Search discounted courses" />
         <button type="submit">Search</button>
@@ -242,7 +228,7 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
       <div class="sx-chips" aria-label="Popular searches">
         {heroChips.map((c) => (<a class="sx-chip" href={`/search?q=${encodeURIComponent(c.q)}`}>{c.name}</a>))}
       </div>
-      <p class="sx-proof"><b><span data-count={liveCount}>0</span>+</b> live verified coupons <span class="sx-dot">·</span> <b><span data-count={voucherTotal}>0</span></b> exam vouchers <span class="sx-dot">·</span> <b><span data-count={avgDiscount}>0</span>%</b> avg discount</p>
+      <p class="sx-proof"><b>{liveCount.toLocaleString()}+</b> live verified coupons <span class="sx-dot">·</span> <b>{catCounts.size}</b> categories <span class="sx-dot">·</span> <b>{topicCounts.size}</b> topics <span class="sx-dot">·</span> <b>{avgDiscount}%</b> avg discount</p>
     </div>
     <div class="sx-ticket" aria-hidden="true"><div class="sx-ticket-line"></div><div class="sx-ticket-edge"></div></div>
   </div>
@@ -252,80 +238,72 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
     <div class="container">
       <div class="section-hd">
         <h2 class="dh-tsec">Latest <span style={{ color: "var(--brand)" }}>Udemy Coupon Drops</span></h2>
-        <p class="lg-sub">Fresh instructor coupon codes — claim one before the redemption cap runs out.</p>
+        <p class="lg-sub">Fresh instructor coupon codes — {last24h} added in the last 24 hours. Claim one before the redemption cap runs out.</p>
       </div>
       <div class="grid">
         {latestSix.map((deal, i) => (<CouponGrid deal={deal} eager={i < 3} priority={i < 3} />))}
       </div>
-      <div style={{ textAlign: "center", marginTop: "1.5rem" }}><a href="/udemy-coupon-code" class="lg-link">See all {liveCount.toLocaleString()} coupons →</a></div>
+      <div style={{ textAlign: "center", marginTop: "1.5rem" }}><a href="/udemy-coupons-today" class="lg-link">See today's batch →</a></div>
     </div>
   </section>
 
-  <!-- ===================== DEEPEST DISCOUNTS ===================== -->
-  <section class="section-wrapper sx-band" aria-label="Deepest Udemy discounts">
+  <!-- ===================== BROWSE BY CATEGORY ===================== -->
+  <section class="section-wrapper sx-band" aria-label="Browse Udemy coupons by category">
     <div class="container">
       <div class="section-hd sx-head">
         <div>
-          <p class="sx-eyebrow">Biggest cuts</p>
-          <h2 class="sx-h2">Deepest <span>Udemy Discounts</span> Right Now</h2>
-          <p class="lg-sub">Top-rated courses at our deepest verified discounts — instructor coupons up to {maxDiscountPct}% off, checked {currentMonth} {currentYear}.</p>
+          <p class="sx-eyebrow">Categories</p>
+          <h2 class="sx-h2">Browse Coupons by <span>Category</span></h2>
+          <p class="lg-sub">Every category below is a live archive of working instructor coupons — pick your field and start saving.</p>
         </div>
-        <a href="/udemy-coupon-code" class="lg-link">Browse all discounts →</a>
+        <a href="/categories" class="lg-link">All categories →</a>
       </div>
-      <div class="grid">
-        {deepCuts.map((deal, i) => (<CouponGrid deal={deal} />))}
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== EXAM VOUCHERS ===================== -->
-  <section class="section-wrapper sx-band" aria-label="Exam certification vouchers">
-    <div class="container">
-      <div class="section-hd sx-head">
-        <div>
-          <p class="sx-eyebrow">Certification</p>
-          <h2 class="sx-h2">Udemy Exam Vouchers, <span>Discounted</span></h2>
-          <p class="lg-sub">Official certification exam vouchers below list price — pick your provider and save on exam day.</p>
-        </div>
-        <a href="/udemy-certification-vouchers" class="lg-link">All vouchers →</a>
-      </div>
-      <div class="sx-vouchers">
-        {voucherCards.map((v) => (
-          <a class="sx-voucher" href={v.href}>
-            <span class="sx-v-media">
-              <img src={v.logo} alt={`${v.name} exam vouchers`} width="480" height="270" loading="lazy" />
-              <span class="sx-v-flag">{v.count} vouchers</span>
-            </span>
-            <span class="sx-v-name">{v.name}</span>
-            <span class="sx-v-desc">{v.desc}</span>
-            <span class="sx-v-link">Browse →</span>
+      <div class="hp-cats">
+        {topCats.map((c) => (
+          <a class="hp-cat" href={`/categories/${c.slug}`} title={`Browse ${c.count} ${c.name} courses with Udemy coupons`}>
+            <span class="hp-cat-count">{c.count} coupons</span>
+            <span class="hp-cat-name">{c.name}</span>
+            <span class="hp-cat-desc">{c.desc}</span>
           </a>
+        ))}
+      </div>
+      <div class="hp-topics-head">
+        <h3 class="hp-topics-title">Popular topics right now</h3>
+        <p class="hp-topics-sub">Skill-level entry points — each topic is a live list of working coupons. <a href="/topics">Browse all topics →</a></p>
+      </div>
+      <div class="hp-topics" aria-label="Popular topics">
+        {topTopics.map((t) => (
+          <a class="hp-topic" href={`/topics/${t.slug}`} title={`Browse ${t.count} ${t.name} courses`}>{t.name} <span>· {t.count}</span></a>
         ))}
       </div>
     </div>
   </section>
 
-  <!-- ===================== PERSONAL PLAN ===================== -->
-  <section class="section-wrapper" aria-label="Udemy Personal Plan offer" style="padding-top:2.5rem;">
+  <!-- ===================== HOW COUPONS WORK ===================== -->
+  <section class="section-wrapper" aria-label="How Udemy coupons work">
     <div class="container">
-      <div class="sx-pp">
-        <div class="sx-pp-copy">
-          <p class="sx-eyebrow sx-eyebrow-light">Sponsored · 25% off</p>
-          <h2 class="sx-h2 sx-h2-light">One subscription.<br />26,000+ courses.</h2>
-          <p class="sx-pp-sub">No code for the course you want? Personal Plan covers it: one flat price, certificates included, 7-day free trial, cancel anytime.</p>
-          <ul class="sx-pp-points">
-            <li>✓ Unlimited access to 26,000+ premium courses</li>
-            <li>✓ Certificates + lifetime access included</li>
-            <li>✓ Cheaper than two full-price courses</li>
-          </ul>
-          <div class="sx-pp-cta">
-            <a class="sx-pp-btn" href="https://trk.udemy.com/c/6564357/4039145/39854" target="_blank" rel="sponsored noopener noreferrer">Try Personal Plan →</a>
-            <a class="sx-pp-ghost" href="/blog/udemy-personal-plan-review-2026/">Read our review</a>
-          </div>
-        </div>
-        <div class="sx-pp-media">
-          <Image src="/assets/images/Udemy%20Personal%20Plan%20Offers.png" alt="Udemy Personal Plan offer — 26,000+ courses with 25% off" width={948} height={406} widths={[480, 768, 948]} sizes="(max-width: 860px) 100vw, 50vw" loading="lazy" />
-        </div>
+      <div class="section-hd">
+        <p class="sx-eyebrow">Coupon guide</p>
+        <h2 class="sx-h2">How Udemy Coupons <span>Actually Work</span></h2>
+        <p class="lg-sub">Udemy itself documents two coupon types. Knowing the difference is the fastest way to stop wasting clicks on dead codes.</p>
+      </div>
+      <div class="hp-guide">
+        <article class="hp-guide-card">
+          <h3>Udemy sales apply automatically</h3>
+          <p>Udemy's own promotions apply at checkout with no code to type — the discount simply appears under Promotions. Instructors can opt a course out, and promos run days to weeks. If a sale already beats a code, Udemy keeps the lower price. Details: <a href="/udemy-coupons-guide">coupon guide</a>.</p>
+        </article>
+        <article class="hp-guide-card">
+          <h3>Instructor codes are per-course and capped</h3>
+          <p>Instructors mint up to 3 codes per course per month for their own courses only. Free open coupons last 5 days for 10 students; targeted ones run 31 days for 100 students. Redeem in a browser — <a href="/how-to-redeem-coupon">the app has no coupon field</a> — and verify the price before paying.</p>
+        </article>
+        <article class="hp-guide-card">
+          <h3>Why we only list live codes</h3>
+          <p>Each card above carries live discount math, rating, and a last-checked stamp. Our pipeline re-checks every deal daily and prunes dead codes instead of leaving them to rot. How we verify: <a href="/how-we-test-and-verify-udemy-coupons">methodology</a>.</p>
+        </article>
+        <article class="hp-guide-card">
+          <h3>Refunds still apply</h3>
+          <p>Udemy's 30-day guarantee covers coupon purchases on eligible courses via browser checkout. App-store purchases follow Apple/Google rules. New deals land daily — <a href="/udemy-coupons-today">see today's batch</a>.</p>
+        </article>
       </div>
     </div>
   </section>
@@ -339,7 +317,7 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
           <h2 class="sx-h2">Why Learners Start Here for <span>Udemy Discounts</span></h2>
           <p class="lg-sub">A Udemy-only coupon tracker — not a generic deals wall. Every instructor coupon and promo code is checked against Udemy daily: dead codes pulled, live prices verified, discounts auto-applied. No expired lists, no bait pricing.</p>
         </div>
-        <a href="/udemy-coupons-guide" class="lg-link">How coupons work →</a>
+        <a href="/how-we-test-and-verify-udemy-coupons" class="lg-link">How we verify →</a>
       </div>
       <div class="hp-faq">
         {faqs.map((f) => (
@@ -361,42 +339,12 @@ const voucherTotal = voucherCards.reduce((s, v) => s + v.count, 0);
         <h2>Stop paying full price for Udemy courses.</h2>
         <p>Every coupon above passed its last verification check. Pick your skill and claim it in one click.</p>
         <div class="sx-cta-row">
-          <a href="/udemy-coupon-code" class="sx-cta-btn">Browse all coupons →</a>
-          <a href="/udemy-coupons-guide" class="sx-cta-ghost">How coupons work</a>
+          <a href="/udemy-coupon-code" class="sx-cta-btn">Browse all {liveCount.toLocaleString()} coupons →</a>
+          <a href="/contact" class="sx-cta-ghost">Share a coupon</a>
         </div>
       </div>
     </div>
   </section>
 
-
-
-<script>
-  (function () {
-    function animateCount(el: Element): void {
-      const target = parseInt(el.getAttribute('data-count') || '0', 10);
-      if (isNaN(target)) return;
-      const dur = 900;
-      let start: number | null = null;
-      function step(ts: number): void {
-        if (!start) start = ts;
-        const p = Math.min(1, (ts - start) / dur);
-        el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
-        if (p < 1) requestAnimationFrame(step);
-      }
-      requestAnimationFrame(step);
-    }
-    var counters = document.querySelectorAll('[data-count]');
-    if (!('IntersectionObserver' in window)) {
-      counters.forEach(animateCount);
-    } else {
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting) { animateCount(e.target); io.unobserve(e.target); }
-        });
-      }, { threshold: 0.3 });
-      counters.forEach(function (c) { io.observe(c); });
-    }
-  })();
-</script>
 
 </Layout>
