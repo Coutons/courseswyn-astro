@@ -75,6 +75,8 @@ const r = typeof deal.rating === "number" && isFinite(deal.rating) ? deal.rating
 const title = String(deal.title || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;|&#8217;/g, "'").replace(/&ndash;|&#8211;/g, " & ").replace(/\s{2,}/g, " ").trim();
 const provider = (deal.provider || "Udemy").trim();
 const dealUrl = `/coupon/${deal.slug}`;
+const extUrl = String(deal.url || dealUrl).trim() || dealUrl;
+const isExternal = extUrl !== dealUrl;
 const studentsNum = typeof deal.students === "number" && isFinite(deal.students) && deal.students > 0 ? deal.students : 0;
 const expISO = toISOorEmpty(deal.expiresAt);
 const updatedISO = toISOorEmpty(deal.updatedAt || deal.createdAt);
@@ -241,6 +243,7 @@ const topicHref = subSlug ? `/topics/${subSlug}` : "";
           </>
         )}
       </div>
+      <a href={extUrl} class="cpn-cta" target={isExternal ? "_blank" : undefined} rel={isExternal ? "sponsored noopener noreferrer nofollow" : undefined} aria-label={`${isFree ? "Enroll for free" : "Get coupon"} for ${title} on ${provider}`}>{isFree ? "Enroll for Free" : "Get Coupon"}</a>
     </div>
     <meta itemprop="description" content={desc.slice(0, 160)} />
 </article>
@@ -374,6 +377,13 @@ const topicHref = subSlug ? `/topics/${subSlug}` : "";
   }
   .cpn-was { color: var(--muted); font-size: 1rem; font-weight: 600; text-decoration: line-through; }
   .cpn-now { font-size: 1.3rem; font-weight: 800; color: var(--text); letter-spacing: 0.02em; }
+  .cpn-cta {
+    display: block; width: 100%; margin-top: 1rem;
+    padding: 0.75rem 1.5rem; background: var(--brand-gradient); color: #0a0b0d;
+    font-weight: 800; font-size: 0.9rem; text-decoration: none; border-radius: 8px; text-align: center;
+    transition: filter 0.2s ease;
+  }
+  .cpn-cta:hover { filter: brightness(1.1); }
 
   @media (max-width: 480px) {
     .cpn-media { height: 180px; }
