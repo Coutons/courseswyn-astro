@@ -2,7 +2,7 @@
 export const prerender = true;
 import Layout from "../layouts/Layout.astro";
 import PageHero from "@/components/PageHero.astro";
-import CouponRow from "../components/CouponRow.astro";
+import CouponGrid from "../components/CouponGrid.astro";
 import { readDeals } from "../lib/store";
 import { normName, slugifyCategory, buildHeroFeed } from "../lib/utils";
 import { toISODateWIB } from "../lib/date";
@@ -192,13 +192,10 @@ const structuredData = {
         </div>
 
         {popularCourses.length > 0 ? (
-          <div class="cc-ledger-wrap">
-            <table class="cc-ledger-table">
-              <thead><tr><th>Course</th><th>Price</th><th class="cc-col-hide">Status</th><th>Checked</th></tr></thead>
-              <tbody>
-                {popularCourses.map((course) => <CouponRow deal={course} />)}
-              </tbody>
-            </table>
+          <div>
+            <div class="cc-grid">
+              {popularCourses.map((course, idx) => <CouponGrid deal={course} eager={idx < 6} priority={idx < 3} />)}
+            </div>
             <div class="cc-deal-more"><span class="cc-deal-count">{popularCourses.length} top-rated courses — verified before listing</span></div>
           </div>
         ) : (
@@ -323,6 +320,8 @@ const structuredData = {
   .cc-ledger-wrap { background: var(--card); border: 1px solid #22262d; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.16); margin-top: 16px; }
   table.cc-ledger-table { width: 100%; border-collapse: collapse; }
   .cc-ledger-table thead th { font-family: var(--font-mono); font-size: 0.625rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); text-align: left; padding: 12px 14px; border-bottom: 1px solid #22262d; background: var(--bg-secondary); white-space: nowrap; }
+  .cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; margin-top: 16px; }
+  @media (max-width: 640px) { .cc-grid { grid-template-columns: 1fr; } }
   .cc-deal-more { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px; background: var(--bg-secondary); border-top: 1px solid #22262d; }
   .cc-deal-more a { font-family: var(--font-mono); font-size: 0.78125rem; font-weight: 600; color: var(--brand); text-decoration: none; }
   .cc-deal-more a:hover { text-decoration: underline; }

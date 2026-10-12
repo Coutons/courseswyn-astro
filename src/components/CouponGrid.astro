@@ -6,6 +6,7 @@ import { Image } from 'astro:assets';
 import { createInstructorSlug, parseInstructors } from '../lib/instructors';
 import { slugifyCategory, slugifyTopic } from '../lib/utils';
 import instructorDirectory from "../data/instructorCounts.json";
+import instructorProfiles from "../data/instructors.json";
 
 const { deal, eager = false, priority = false } = Astro.props;
 
@@ -91,8 +92,15 @@ const LANG_FLAGS: Record<string, string> = {
 const instructorsList = deal.instructor ? parseInstructors(String(deal.instructor)) : [];
 const firstInstructor = (instructorsList[0] ?? String(deal.instructor || "").split(/[,&]/)[0]?.trim() ?? "").trim();
 const instructorSlug = firstInstructor ? createInstructorSlug(firstInstructor) : "";
-const dirEntry = (instructorDirectory as unknown as Record<string, { name?: string; count?: number; image?: string }>)[instructorSlug];
-const instructorImg = (deal as any).instructorImage || dirEntry?.image || "";
+// Lookup bertoleransi gelar (Dr/Prof/dst) sehingga "Dr. Satyajit Pattnaik" tetap
+// menemukan entri "satyajit-pattnaik" bila slug bergelar tidak ada di direktori.
+const altSlug = instructorSlug.replace(/^(?:dr|mr|mrs|ms|miss|prof|professor|sir|ir)-/, "");
+type DirEntry = { name?: string; count?: number; image?: string };
+const dirEntries = instructorDirectory as unknown as Record<string, DirEntry>;
+const profileEntries = instructorProfiles as unknown as Record<string, DirEntry>;
+const dirEntry = (instructorSlug && dirEntries[instructorSlug]) || (altSlug && dirEntries[altSlug]) || undefined;
+const profileEntry = (instructorSlug && profileEntries[instructorSlug]) || (altSlug && profileEntries[altSlug]) || undefined;
+const instructorImg = (deal as any).instructorImage || profileEntry?.image || dirEntry?.image || "";
 const instructorCourses = typeof (deal as any).instructorCourses === "number" ? (deal as any).instructorCourses : dirEntry?.count;
 const dealLang = (deal.language || "").toString().trim();
 const langFlag = LANG_FLAGS[dealLang.toLowerCase()] || "";

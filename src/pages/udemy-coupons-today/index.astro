@@ -1,6 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import CouponList from '../../components/CouponList.astro';
+import CouponGrid from '../../components/CouponGrid.astro';
 import AuthorBox from '../../components/AuthorBox.astro';
 import { getDeals } from '../../lib/store.js';
 import { toISODateWIB } from '../../lib/date';
@@ -414,12 +414,12 @@ const jsonLd = {
       <section class="cc-deals-section" id="latest">
         <div class="cc-sec-head">
           <h2 class="cc-sec-title">Today's Verified Udemy Coupons <span class="cc-tag">{totalActive} fresh deals · checked {lastVerified}</span></h2>
-          <p class="cc-sec-desc">One list, no duplicates — {freeCount > 0 ? `${freeCount} free & ` : ''}{totalActive - freeCount} paid coupons added or re-verified today. Sorted by freshest. Expires soon = enroll now.</p>
+          <p class="cc-sec-desc">Every coupon below is live — {freeCount > 0 ? `${freeCount} free & ` : ''}{totalActive - freeCount} paid coupons added or re-verified today. Sorted by freshest. Expires soon = enroll now.</p>
         </div>
         {todayGridDeals.length > 0 ? (
-          <div class="cc-list">
+          <div class="cc-grid">
             {todayGridDeals.map((deal: any, idx: number) => (
-              <CouponList deal={deal} eager={idx < 6} priority={idx < 3} rank={idx + 1} />
+              <CouponGrid deal={deal} eager={idx < 6} priority={idx < 3} />
             ))}
           </div>
         ) : (
@@ -734,7 +734,8 @@ const jsonLd = {
 
   /* ===== GRID ===== */
   .cc-deals-section { margin-top: 3.25rem; }
-  .cc-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+  .cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; margin-top: 16px; }
+  @media (max-width: 640px) { .cc-grid { grid-template-columns: 1fr; } }
   .cc-deal-more { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px; background: var(--bg-secondary); border-top: 1px solid #22262d; margin-top: 16px; border-radius: 0 0 12px 12px; }
   .cc-deal-more a { font-family: var(--font-mono); font-size: 0.78125rem; font-weight: 600; color: var(--brand); text-decoration: none; }
   .cc-deal-more a:hover { text-decoration: underline; }
