@@ -58,6 +58,25 @@ const catsSet = new Set<string>();
 allDeals.forEach((d: any) => { if (d.category) catsSet.add((d.category as string).trim()); });
 const categories = Array.from(catsSet).sort();
 
+const feedTime = (raw?: string) => {
+  const t = raw ? new Date(raw) : now;
+  const mins = Math.floor((now.getTime() - t.getTime()) / 60000);
+  if (mins < 1) return 'now';
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+  return `${Math.floor(hrs / 24)}d`;
+};
+const chFeedLines = [...activeDeals]
+  .sort((a, b) => new Date((b as any).updatedAt || (b as any).createdAt || 0).getTime() - new Date((a as any).updatedAt || (a as any).createdAt || 0).getTime())
+  .slice(0, 7)
+  .map((d: any) => ({
+    time: feedTime(d.updatedAt || d.createdAt),
+    cat: String(d.category || 'Udemy').split(' ')[0].slice(0, 8) || 'Udemy',
+    title: String(d.title || '').length > 42 ? `${String(d.title).slice(0, 42)}…` : String(d.title || ''),
+    save: d.originalPrice && d.price ? `−${Math.round(100 - (d.price / d.originalPrice) * 100)}%` : 'DEAL',
+  }));
+
 // "Up to X%" is the max over currently available paid deals — not an
 // outlier from expired entries, not a typical saving.
 const discountPcts = paidActiveDeals
@@ -218,20 +237,46 @@ for (let p = 1; p <= totalPages; p++) {
       {currentPage === 1 ? (
         <section class="ch-hero">
           <div class="container">
-            <p class="ch-eyebrow"><span class="ch-blink" aria-hidden="true"></span> Checked {lastChecked} · {todayAdded.toLocaleString()} new today</p>
-            <h1>Udemy <span>Coupon Codes</span> & Discounts — {currentMonth} {currentYear}, Up to {maxDiscountPct}% Off</h1>
-            <p class="ch-sub">{totalActive.toLocaleString()} verified instructor coupons & promo codes across {categories.length} categories — open any deal and the Udemy discount applies automatically, no typing needed. Save up to <strong>{maxDiscountPct}%</strong> on top-rated online courses.</p>
-            <form action="/search" method="GET" role="search" aria-label="Search coupon codes" class="ch-search">
-              <input type="search" name="q" placeholder={"Search " + totalActive.toLocaleString() + " Udemy coupons & discounts..."} autocomplete="off" aria-label="Search coupon codes" />
-              <button type="submit">Search</button>
-            </form>
-            <p class="ch-note">How codes work here: <strong>open a deal → reveal the code → continue to Udemy</strong> with the discount pre-applied. Manual codes include copy-paste instructions. Looking for 100% off? <a href="/udemy-coupons-today">See today's deals{freeActiveCount > 0 ? ` (${freeActiveCount} free)` : ""}</a>.</p>
-            <div class="ch-stats">
-              <div class="ch-stat"><div class="ch-stat-num"><span data-count={totalActive}>0</span>+</div><div class="ch-stat-lab">verified deals live</div></div>
-              <div class="ch-stat"><div class="ch-stat-num"><span data-count={categories.length}>0</span></div><div class="ch-stat-lab">categories · A to Z</div></div>
-              <div class="ch-stat"><div class="ch-stat-num"><span data-count={todayAdded}>0</span>+</div><div class="ch-stat-lab">added today</div></div>
+            <div class="dh-hero-grid">
+              <div class="ch-copy">
+                <p class="ch-eyebrow"><span class="ch-blink" aria-hidden="true"></span> Checked {lastChecked} · {todayAdded.toLocaleString()} new today</p>
+                <h1>Udemy <span>Coupon Codes</span> & Discounts — {currentMonth} {currentYear}, Up to {maxDiscountPct}% Off</h1>
+                <p class="ch-sub">{totalActive.toLocaleString()} verified instructor coupons & promo codes across {categories.length} categories — open any deal and the Udemy discount applies automatically, no typing needed. Save up to <strong>{maxDiscountPct}%</strong> on top-rated online courses.</p>
+                <form action="/search" method="GET" role="search" aria-label="Search coupon codes" class="ch-search">
+                  <input type="search" name="q" placeholder={"Search " + totalActive.toLocaleString() + " Udemy coupons & discounts..."} autocomplete="off" aria-label="Search coupon codes" />
+                  <button type="submit">Search</button>
+                </form>
+                <p class="ch-note">How codes work here: <strong>open a deal → reveal the code → continue to Udemy</strong> with the discount pre-applied. Manual codes include copy-paste instructions. Looking for 100% off? <a href="/udemy-coupons-today">See today's deals{freeActiveCount > 0 ? ` (${freeActiveCount} free)` : ""}</a>.</p>
+                <div class="ch-stats">
+                  <div class="ch-stat"><div class="ch-stat-num"><span data-count={totalActive}>0</span>+</div><div class="ch-stat-lab">verified deals live</div></div>
+                  <div class="ch-stat"><div class="ch-stat-num"><span data-count={categories.length}>0</span></div><div class="ch-stat-lab">categories · A to Z</div></div>
+                  <div class="ch-stat"><div class="ch-stat-num"><span data-count={todayAdded}>0</span>+</div><div class="ch-stat-lab">added today</div></div>
+                </div>
+                <p class="ch-byline">Compiled &amp; checked by <a href="/about">Andrew Derek</a> · Offers last checked {lastChecked} · <a href="/how-we-test-and-verify-udemy-coupons">How we verify</a></p>
+              </div>
+
+              <aside class="ch-term" aria-label="Live coupon feed">
+                <div class="cc-term-head">
+                  <span class="cc-term-dot" style="background:#ff5f57"></span>
+                  <span class="cc-term-dot" style="background:#febc2e"></span>
+                  <span class="cc-term-dot" style="background:#28c840"></span>
+                  <span class="cc-term-title">courseswyn · live feed</span>
+                  <span class="cc-term-live"><span class="lg-blip"></span> live</span>
+                </div>
+                <div class="cc-term-body">
+                  {chFeedLines.length > 0 ? chFeedLines.map(l => (
+                    <div class="cc-term-line">
+                      <span class="cc-term-time">{l.time}</span>
+                      <span class="cc-term-ok">✓</span>
+                      <span class="cc-term-cat">{l.cat}</span>
+                      <span class="cc-term-title2">{l.title}</span>
+                      <span class="cc-term-save">{l.save}</span>
+                    </div>
+                  )) : <div class="cc-term-line"><span class="cc-term-ok">✓</span><span class="cc-term-title2">Scanning Udemy for new coupons…</span></div>}
+                </div>
+                <div class="cc-term-foot">last check <b>{lastChecked}</b> · {totalActive.toLocaleString()} codes live</div>
+              </aside>
             </div>
-            <p class="ch-byline">Compiled &amp; checked by <a href="/about">Andrew Derek</a> · Offers last checked {lastChecked} · <a href="/how-we-test-and-verify-udemy-coupons">How we verify</a></p>
           </div>
         </section>
       ) : (
@@ -448,31 +493,44 @@ for (let p = 1; p <= totalPages; p++) {
   .cc-hero-search input { flex: 1; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text); background: transparent; border: none; outline: none; }
   .cc-hero-search input::placeholder { color: var(--muted); }
   .cc-search-btn { font-family: var(--font-display); font-weight: 700; color: #fff; background: var(--brand); border: none; border-radius: 8px; padding: 9px 18px; cursor: pointer; }
-  .ch-hero { background: linear-gradient(135deg, #0a0b0d 0%, #101216 100%); padding: 3.5rem 0 3rem; text-align: center; position: relative; overflow: hidden; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
+  .ch-hero { background: linear-gradient(135deg, #0a0b0d 0%, #101216 100%); padding: 3.5rem 0 3rem; text-align: left; position: relative; overflow: hidden; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
   .ch-hero::before { content: ''; position: absolute; top: -100px; left: 12%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(169, 199, 255,0.12) 0%, transparent 65%); pointer-events: none; }
   .ch-hero::after { content: ''; position: absolute; bottom: -120px; right: 8%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(169, 199, 255,0.14) 0%, transparent 65%); pointer-events: none; }
   .ch-hero .container { position: relative; z-index: 1; }
   .ch-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #f2f4f6; background: rgba(242, 244, 246,0.08); border: 1px solid rgba(242, 244, 246,0.2); border-radius: 999px; padding: 7px 16px; margin: 0 0 1.1rem; }
   .ch-blink { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
-  .ch-hero h1 { font-family: sans-serif; font-size: clamp(1.9rem, 4vw, 2.9rem); font-weight: 800; line-height: 1.12; color: #f2f4f6; margin: 0 0 0.75rem; letter-spacing: -0.02em; }
+  .ch-hero h1 { font-size: clamp(1.9rem, 4vw, 2.9rem); font-weight: 800; line-height: 1.12; color: #f2f4f6; margin: 0 0 0.75rem; letter-spacing: -0.02em; }
   .ch-hero h1 span { color: #A9C7FF; }
-  .ch-sub { font-size: 1.05rem; color: rgba(242, 244, 246,0.78); max-width: 640px; margin: 0 auto 1.5rem; line-height: 1.6; }
+  .ch-copy { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+  .ch-sub { font-size: 1.05rem; color: rgba(242, 244, 246,0.78); max-width: 560px; margin: 0 0 1.5rem; line-height: 1.6; }
   .ch-sub strong { color: #f2f4f6; }
-  .ch-note { font-size: 0.85rem; color: rgba(242, 244, 246,0.65); max-width: 640px; margin: 1rem auto 0; line-height: 1.6; }
+  .ch-note { font-size: 0.85rem; color: rgba(242, 244, 246,0.65); max-width: 560px; margin: 1rem 0 0; line-height: 1.6; }
   .ch-note strong { color: #f2f4f6; }
   .ch-note a { color: #A9C7FF; font-weight: 700; text-decoration: none; }
   .ch-note a:hover { text-decoration: underline; }
-  .ch-search { display: flex; gap: 8px; max-width: 560px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.45); }
+  .ch-search { display: flex; gap: 8px; max-width: 560px; margin: 0; background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.45); }
   .ch-search input { flex: 1; border: none; outline: none; font-size: 0.9rem; padding: 10px 14px; min-width: 0; color: #111; background: transparent; font-family: inherit; }
   .ch-search button { font-weight: 800; color: #0a0b0d; background: linear-gradient(135deg, #D6E4FF 0%, #A9C7FF 100%); border: none; border-radius: 9px; padding: 0 24px; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
   .ch-search button:hover { filter: brightness(1.1); }
-  .ch-stats { display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; margin-top: 1.75rem; }
-  .ch-stat { display: flex; flex-direction: column; }
-  .ch-stat-num { font-size: 1.5rem; font-weight: 800; color: #f2f4f6; font-variant-numeric: tabular-nums; }
-  .ch-stat-lab { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9aa3ab; }
+  .ch-stats { display: flex; gap: 10px; justify-content: flex-start; flex-wrap: wrap; margin-top: 1.75rem; }
+  .ch-stat { display: flex; flex-direction: column; background: rgba(242, 244, 246,0.05); border: 1px solid rgba(242, 244, 246,0.14); border-radius: 12px; padding: 12px 20px; min-width: 108px; }
+  .ch-stat-num { font-size: 1.5rem; font-weight: 800; color: #f2f4f6; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .ch-stat-lab { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9aa3ab; margin-top: 3px; }
+  .ch-term { background: #101216; border: 1px solid #22262d; border-radius: 14px; overflow: hidden; min-width: 0; align-self: center; text-align: left; box-shadow: 0 24px 60px -20px rgba(0,0,0,0.5); }
+  .ch-term .cc-term-head { background: #14171c; border-bottom: 1px solid #22262d; }
+  .ch-term .cc-term-title { color: #f2f4f6; }
+  .ch-term .cc-term-body { padding: 4px 0; }
+  .ch-term .cc-term-line { padding: 7px 16px; }
+  .ch-term .cc-term-line + .cc-term-line { border-top: 1px solid #1a1d22; }
+  .ch-term .cc-term-line { color: #f2f4f6; }
+  .cc-term-time { color: #9aa3ab; font-size: 0.75rem; flex-shrink: 0; min-width: 44px; }
+  .cc-term-ok { color: #4ADE80; font-weight: 800; flex-shrink: 0; }
+  .cc-term-cat { color: #A9C7FF; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+  .cc-term-save { color: #A9C7FF; font-weight: 800; flex-shrink: 0; }
+  .cc-term-foot { padding: 10px 16px; background: #14171c; font-family: var(--font-mono); font-size: 0.78rem; color: #9aa3ab; }
+  .cc-term-foot b { color: #A9C7FF; }
   .ch-byline { font-size: 0.82rem; color: rgba(242, 244, 246,0.6); margin: 1.25rem 0 0; }
   .ch-byline a { color: #A9C7FF; font-weight: 600; }
-  h1, h2, h3 { font-family: sans-serif; }
   .cc-dir-num { font-family: var(--font-display); font-size: 1.75rem; font-weight: 800; color: var(--brand); display: block; }
   .dh-hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 2.5rem; align-items: center; }
   .dh-hero-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; margin-bottom: 1.25rem; }

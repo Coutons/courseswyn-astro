@@ -1,10 +1,10 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import CouponGrid from '../../components/CouponGrid.astro';
+import CouponList from '../../components/CouponList.astro';
 import AuthorBox from '../../components/AuthorBox.astro';
 import { getDeals } from '../../lib/store.js';
 import { toISODateWIB } from '../../lib/date';
-import { slugifyTopic } from '../../lib/utils';
+import { slugifyTopic, slugifyCategory } from '../../lib/utils';
 
 const allDeals = await getDeals();
 const now = new Date();
@@ -21,11 +21,11 @@ const activeToday = todayDeals.filter(d => !d.expiresAt || new Date(d.expiresAt)
 
 // Single deduped grid: free+paid sorted freshest first (fix freeDeals unused + duplicate grids)
 const todayGridDeals = [...activeToday]
-  .sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime())
-  .slice(0, 48);
+  .sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime());
 
 const todayAdded = todayDeals.length;
 const totalActive = activeToday.length;
+const listedCount = todayGridDeals.length;
 // Cross-links must quote LIVE inventory, never the full catalog with expired entries.
 const totalLive = allDeals.filter(d => !d.expiresAt || new Date(d.expiresAt) > now).length;
 const freeCount = activeToday.filter(d => d.price === 0).length;
@@ -41,6 +41,26 @@ for (const d of activeToday) {
   }
 }
 const trendingTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).slice(0, 12);
+
+const catCounts: Record<string, number> = {};
+for (const d of activeToday) {
+  const cat = d.category ? decodeHtml(d.category) : '';
+  if (cat) catCounts[cat] = (catCounts[cat] || 0) + 1;
+}
+const todayCategories = Object.entries(catCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+const relatedSearches: { label: string; href: string }[] = [
+  { label: "Udemy coupon code", href: "/udemy-coupon-code" },
+  { label: "Free Udemy courses", href: "/categories/development" },
+  { label: "Udemy promo code today", href: "/udemy-coupon-code" },
+  { label: "Most popular Udemy courses", href: "/popular" },
+  { label: "Udemy courses by category", href: "/categories" },
+  { label: "Udemy learning topics", href: "/topics" },
+  { label: "Top Udemy instructors", href: "/instructors" },
+  { label: "How to redeem a Udemy coupon", href: "/how-to-redeem-coupon" },
+  { label: "Udemy coupon guide", href: "/udemy-coupons-guide" },
+  { label: "Udemy Personal Plan review", href: "/blog/udemy-personal-plan-review-2026/" },
+];
 
 const latestUpdate = todayDeals.reduce((latest, d) => {
   const t = new Date(d.updatedAt || d.createdAt || 0).getTime();
@@ -64,22 +84,101 @@ const expiringCount = activeToday
     return diff > 0 && diff < 7 * 24 * 3600000;
   }).length;
 
-const discountPcts = activeToday
-  .filter(d => d.price && d.originalPrice && d.originalPrice > d.price)
-  .map(d => Math.round(100 - (d.price / d.originalPrice!) * 100));
+// ---- Stats computed FROM the rendered list (todayGridDeals), never from a larger pool ----
+const listed = todayGridDeals;
+const listedSaved = (d: any) =>
+  d.originalPrice && d.originalPrice > (d.price ?? 0) ? d.originalPrice - (d.price ?? 0) : 0;
+
+const discountPcts = listed
+  .filter((d: any) => d.price && d.originalPrice && d.originalPrice > d.price)
+  .map((d: any) => Math.round(100 - (d.price / d.originalPrice!) * 100));
 const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 95;
+const avgDiscountPct = discountPcts.length
+  ? Math.round(discountPcts.reduce((a, b) => a + b, 0) / discountPcts.length)
+  : 90;
+const totalSavedToday = listed.reduce((sum: number, d: any) => sum + listedSaved(d), 0);
+const paidCount = listedCount - freeCount;
+const measuredCount = discountPcts.length;
+
+// Card 1 — where the list comes from, by category (share of the listed coupons)
+const listCatCounts: Record<string, number> = {};
+for (const d of listed) {
+  const c = (d.category || '').trim() || 'Other';
+  listCatCounts[c] = (listCatCounts[c] || 0) + 1;
+}
+const catColors = ['#59C2FF', '#A9C7FF', '#FFC94D', '#AAD94C', '#C9A0FF', '#FF8A65', '#7DD3FC', '#F0ABFC'];
+const listByCategory = Object.entries(listCatCounts)
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 8)
+  .map(([name, count], i) => ({
+    name,
+    count,
+    pct: Math.round((count / listedCount) * 100),
+    color: catColors[i % catColors.length],
+  }));
+
+// Card 2 — biggest confirmed savings, top 5 by absolute $ off
+const topSavings = listed
+  .map((d: any) => ({
+    title: d.title.length > 46 ? `${d.title.slice(0, 46)}…` : d.title,
+    save: listedSaved(d),
+    pct: d.originalPrice && d.originalPrice > (d.price ?? 0) ? Math.round(100 - (d.price / d.originalPrice) * 100) : 0,
+  }))
+  .filter((x) => x.save > 0)
+  .sort((a, b) => b.save - a.save)
+  .slice(0, 5);
+const topSaveMax = topSavings.length ? topSavings[0].save : 1;
+
+// Card 3 — histogram of how deep the listed coupons cut
+// Card 3 — histogram of how deep the listed coupons cut.
+// Udemy coupons cluster hard at 91–95%, so use per-point buckets there and a
+// catch-all below; generic 10-pt buckets would render as four empty bars.
+const histBuckets = [
+  { label: '91%', lo: 91, hi: 92, count: 0 },
+  { label: '92%', lo: 92, hi: 93, count: 0 },
+  { label: '93%', lo: 93, hi: 94, count: 0 },
+  { label: '94%', lo: 94, hi: 95, count: 0 },
+  { label: '95%+', lo: 95, hi: 101, count: 0 },
+];
+for (const p of discountPcts) {
+  const b = histBuckets.find((x) => p >= x.lo && p < x.hi);
+  if (b) b.count += 1;
+}
+// Rare sub-91% tail: add a leading bucket only when it has data.
+const below91 = discountPcts.filter((p) => p < 91).length;
+if (below91 > 0) histBuckets.unshift({ label: 'Under 91%', lo: 0, hi: 91, count: below91 });
+const histMax = Math.max(...histBuckets.map((b) => b.count), 1);
+const histTotal = discountPcts.length;
 
 const siteUrl = "https://courseswyn.com";
 const pageUrl = `${siteUrl}/udemy-coupons-today/`;
 const shortDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(now);
-const pageTitle = `Udemy Coupons Today (${shortDate}) | CoursesWyn`;
+const titleDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' }).format(now);
+const isoDate = toISODateWIB(now);
+const timeLabel = (raw?: string) => {
+  const t = raw ? new Date(raw) : now;
+  const mins = Math.floor((now.getTime() - t.getTime()) / 60000);
+  if (mins < 1) return 'now';
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+  return `${Math.floor(hrs / 24)}d`;
+};
+const feedLines = todayGridDeals.slice(0, 7).map(d => ({
+  time: timeLabel(d.updatedAt || d.createdAt),
+  cat: (d.category || '').split(' ')[0].slice(0, 8) || 'Udemy',
+  title: d.title.length > 42 ? `${d.title.slice(0, 42)}…` : d.title,
+  save: d.price === 0 ? 'FREE' : `−${Math.max(1, Math.round(100 - ((d.price ?? 0) / (d.originalPrice || d.price || 1)) * 100))}%`,
+}));
+const pageTitle = `Udemy Coupons Today (${titleDate}) — Free & 100% OFF Deals | CoursesWyn`;
 const metaDescription = totalActive > 0
-  ? `${totalActive} verified Udemy coupons live today (${shortDate}), last checked ${lastVerified}. Save up to ${maxDiscountPct}% on ${freeCount > 0 ? `${freeCount} free & ` : ''}premium courses — codes expire fast.`
+  ? `Udemy coupons today (${titleDate}): ${totalActive} verified codes live — save up to ${maxDiscountPct}% on premium courses${freeCount > 0 ? `, including ${freeCount} free 100% OFF coupons` : ' (free 100% OFF coupons drop daily)'}. Last checked ${lastVerified}.`
   : `Fresh Udemy coupon codes added and re-verified ${lastVerified}. Browse today's verified Udemy deals, or use the Udemy Personal Plan for 26,000+ courses.`;
 const pageKeywords = [
   "udemy coupons today", "udemy coupon today", "todays udemy coupons",
   "new udemy coupon", "fresh udemy coupon codes today", "udemy deals today",
-  "udemy discount today", "free udemy coupon", "verified udemy coupons", "udemy promo code"
+  "udemy discount today", "free udemy coupon", "verified udemy coupons", "udemy promo code",
+  "udemy 100 off coupon", "free udemy courses", "udemy coupon code today", "udemy sale today"
 ].join(", ");
 
 const shareUrl = encodeURIComponent(pageUrl);
@@ -102,6 +201,10 @@ const faqs = [
   { q: "How often are new Udemy coupons added today?", a: "New coupons are added throughout the day as instructors publish them. We check Udemy in near real time and update this list automatically — checking back every few hours shows fresh deals. You can also try <a href='/blog/udemy-personal-plan-review-2026/'>Udemy Personal Plan</a> for unlimited access when no coupon fits." },
   { q: "Is there a Udemy sale today, or should I use a coupon code?", a: "Both can work in your favor. Udemy runs sitewide sales every few weeks with automatic discounts, but instructor coupon codes — like the ones listed here — often beat sale prices with deeper, course-specific cuts up to 95% off. Check today's verified coupon codes first; if none fit, fall back to the current <a href='/udemy-coupon-code'>sitewide Udemy deals</a>." },
   { q: "Why did Udemy change its coupon policy?", a: `In 2025 Udemy updated its coupon policy to improve course quality. Most coupons are now limited to 10-100 redemptions. Read more on <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's instructor blog</a>.` },
+  { q: "How do I get a 100% off Udemy coupon today?", a: "Look for listings marked <strong>Free</strong> in the grid above — those are 100% off coupons. Click the card, then 'Claim Coupon' to open Udemy with the discount pre-applied and enroll at $0. Availability resets as instructors add new codes, so " + freeCount + " free courses are live right now." },
+  { q: "Are Udemy coupons today free to use?", a: "Yes. Applying a coupon on CoursesWyn never costs anything — you only pay if a paid (discounted) course is enrolled after the discount. Coupons are supplied by instructors and redeemed directly on Udemy's checkout." },
+  { q: "Do free Udemy coupons include a certificate?", a: "Yes. A course enrolled through a 100% off coupon is a full enrollment: lifetime access, all downloadable resources, Q&amp;A, and the official Udemy certificate of completion once you finish — identical to paying full price." },
+  { q: "Is there a Udemy sale today in addition to coupons?", a: "Udemy runs its own sitewide sales roughly every few weeks, dropping most courses to $9.99–$12.99 automatically. Instructor coupons listed above often go deeper — up to " + maxDiscountPct + "% off — and can be combined with neither a sale price nor another code. Check both: today's coupons first, the current sitewide sale second." },
 ];
 
 const jsonLd = {
@@ -118,6 +221,8 @@ const jsonLd = {
       "inLanguage": "en-US",
       "datePublished": latestUpdateIso,
       "dateModified": latestUpdateIso,
+      "lastReviewed": latestUpdateIso,
+      "primaryImageOfPage": { "@type": "ImageObject", "url": `${siteUrl}/assets/images/og-default.svg`, "width": 1200, "height": 630 },
       "breadcrumb": { "@id": `${pageUrl}#breadcrumb` },
       "mainEntity": { "@id": `${pageUrl}#itemlist` },
       "author": { "@type": "Person", "name": "Andrew Derek", "url": `${siteUrl}/about` },
@@ -171,19 +276,9 @@ const jsonLd = {
 };
 ---
 
-<Layout title={pageTitle} description={metaDescription} canonical={pageUrl} hideBreadcrumbs={false} pubDate={new Date(latestUpdate || Date.now())} updatedDate={now}>
+<Layout title={pageTitle} description={metaDescription} canonical={pageUrl} image="/assets/images/udemy-free-courses.png" imageWidth={1200} imageHeight={630} hideBreadcrumbs={false} pubDate={new Date(latestUpdate || Date.now())} updatedDate={now}>
   <Fragment slot="head">
     <meta name="keywords" content={pageKeywords} />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content={pageUrl} />
-    <meta property="og:title" content={pageTitle} />
-    <meta property="og:description" content={metaDescription} />
-    <meta property="og:image" content={`${siteUrl}/assets/images/og-default.svg`} />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={pageTitle} />
-    <meta name="twitter:description" content={metaDescription} />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </Fragment>
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
@@ -192,19 +287,50 @@ const jsonLd = {
 
       <header class="td-hero">
         <div class="container">
-          <p class="td-eyebrow"><span class="td-blink" aria-hidden="true"></span> Live · updated {lastVerified}</p>
-          <h1>Udemy <span>Coupons Today</span> — {totalActive} Verified Deals, Save Up To {maxDiscountPct}%</h1>
-          <p class="td-sub">{todayAdded} hand-picked deals added in the last 24 hours &mdash; every code re-verified before it&apos;s listed. Save up to <strong>{maxDiscountPct}%</strong> on premium courses.</p>
-          <form action="/search" method="GET" role="search" aria-label="Search courses" class="td-search">
-            <input type="search" name="q" placeholder="Search today's discounted Udemy courses..." autocomplete="off" aria-label="Search courses" />
-            <button type="submit">Search</button>
-          </form>
-          <div class="td-stats">
-            <div class="td-stat"><div class="td-stat-num"><span data-count={todayAdded}>0</span>+</div><div class="td-stat-lab">added today</div></div>
-            <div class="td-stat"><div class="td-stat-num"><span data-count={totalActive}>0</span></div><div class="td-stat-lab">active today</div></div>
-            <div class="td-stat"><div class="td-stat-num"><span data-count={freeCount}>0</span></div><div class="td-stat-lab">free today</div></div>
+          <div class="dh-hero-grid">
+            <div class="dh-hero-copy">
+              <p class="td-eyebrow"><span class="td-blink" aria-hidden="true"></span> Live · updated {lastVerified}</p>
+              <h1>
+                Udemy <span>Coupons Today</span>
+                <span class="td-h1-meta"> <time datetime={isoDate}>{shortDate}</time> · {totalActive} Verified · Up To {maxDiscountPct}% OFF</span>
+              </h1>
+              <p class="td-sub">{todayAdded} coupons added in the last 24 hours &mdash; each one re-verified against Udemy {lastVerified}. {freeCount > 0 ? <>Right now <strong>{freeCount} courses are 100% OFF</strong>, plus </> : <>Premium courses are </>}discounted up to <strong>{maxDiscountPct}%</strong>, with lifetime access and a certificate on every enrollment.</p>
+              <form action="/search" method="GET" role="search" aria-label="Search courses" class="td-search">
+                <input type="search" name="q" placeholder="Search today's discounted Udemy courses..." autocomplete="off" aria-label="Search courses" />
+                <button type="submit">Search</button>
+              </form>
+              <div class="td-stats">
+                <div class="td-stat"><div class="td-stat-num"><span data-count={todayAdded}>0</span>+</div><div class="td-stat-lab">added today</div></div>
+                <div class="td-stat"><div class="td-stat-num"><span data-count={totalActive}>0</span></div><div class="td-stat-lab">active today</div></div>
+                <div class="td-stat"><div class="td-stat-num"><span data-count={freeCount}>0</span></div><div class="td-stat-lab">free today</div></div>
+              </div>
+              <p class="td-byline">Compiled &amp; checked by <a href="/about">Andrew Derek</a> · Offers last checked {lastVerified} · <a href="/how-we-test-and-verify-udemy-coupons">How we verify</a></p>
+            </div>
+
+            <aside class="dh-terminal" aria-label="Live coupon feed">
+              <div class="dh-term-head">
+                <span class="dh-term-dot" style="background:#ff5f57"></span>
+                <span class="dh-term-dot" style="background:#febc2e"></span>
+                <span class="dh-term-dot" style="background:#28c840"></span>
+                <span class="dh-term-title">courseswyn · live feed</span>
+                <span class="dh-term-live"><span class="lg-blip"></span> live</span>
+              </div>
+              <div class="dh-term-body">
+                {feedLines.length > 0 ? feedLines.map(l => (
+                  <div class="dh-term-line">
+                    <span class="dh-term-time">{l.time}</span>
+                    <span class="dh-term-ok">✓</span>
+                    <span class="dh-term-cat">{l.cat}</span>
+                    <span class="dh-term-title2">{l.title}</span>
+                    <span class="dh-term-save">{l.save}</span>
+                  </div>
+                )) : (
+                  <div class="dh-term-line"><span class="dh-term-time">—</span><span class="dh-term-ok">✓</span><span class="dh-term-cat">Udemy</span><span class="dh-term-title2">Scanning Udemy for new coupons…</span></div>
+                )}
+              </div>
+              <div class="dh-term-foot">last check <b>{lastVerified}</b> · {totalActive} codes live</div>
+            </aside>
           </div>
-          <p class="td-byline">Compiled &amp; checked by <a href="/about">Andrew Derek</a> · Offers last checked {lastVerified} · <a href="/how-we-test-and-verify-udemy-coupons">How we verify</a></p>
         </div>
       </header>
 
@@ -214,6 +340,76 @@ const jsonLd = {
         <a href="/how-to-redeem-coupon">Step-by-step &rarr;</a>
       </div>
 
+      {/* THE LIST IN NUMBERS — 3 terminal cards, stats computed from the rendered list */}
+      <section class="ln-section" aria-labelledby="ln-title">
+        <div class="ln-head">
+          <h2 id="ln-title" class="ln-title">The list in numbers</h2>
+        </div>
+
+        <div class="ln-grid">
+          {/* Card 1 — by category */}
+          <article class="ln-card">
+            <div class="ln-cmd"><span class="ln-dollar">$</span> coupons <span class="ln-flag">--by-category</span></div>
+            <h3 class="ln-h">Where today's coupons come from</h3>
+            <div class="ln-bar" aria-hidden="true">
+              {listByCategory.map(c => (
+                <span class="ln-bar-seg" style={`width:${c.pct}%;background:${c.color}`}></span>
+              ))}
+            </div>
+            <ul class="ln-list">
+              {listByCategory.map(c => (
+                <li class="ln-row">
+                  <span class="ln-key" style={`background:${c.color}`}></span>
+                  <span class="ln-name">{c.name}</span>
+                  <span class="ln-meta">{c.count} coupon{c.count === 1 ? '' : 's'}</span>
+                  <span class="ln-pct">{c.pct}%</span>
+                </li>
+              ))}
+            </ul>
+            <p class="ln-foot">{listedCount} coupons on this list.</p>
+          </article>
+
+          {/* Card 2 — top savings */}
+          <article class="ln-card">
+            <div class="ln-cmd"><span class="ln-dollar">$</span> savings <span class="ln-flag">--top 5</span></div>
+            <h3 class="ln-h">Biggest confirmed savings</h3>
+            <ol class="ln-top">
+              {topSavings.map((t, i) => (
+                <li class="ln-top-row">
+                  <span class="ln-rank">{i + 1}</span>
+                  <div class="ln-top-main">
+                    <div class="ln-top-line">
+                      <span class="ln-top-title">{t.title}</span>
+                      <span class="ln-top-save">${t.save.toLocaleString('en-US')}</span>
+                    </div>
+                    <div class="ln-track"><span class="ln-fill" style={`width:${Math.round((t.save / topSaveMax) * 100)}%`}></span></div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <p class="ln-foot">Total taken off Udemy's listed prices, across every coupon we have on this list.</p>
+          </article>
+
+          {/* Card 3 — histogram */}
+          <article class="ln-card">
+            <div class="ln-cmd"><span class="ln-dollar">$</span> discounts <span class="ln-flag">--histogram</span></div>
+            <h3 class="ln-h">How much these coupons save</h3>
+            <div class="ln-hist" style={`--ln-hist-cols:${histBuckets.length}`}>
+              {histBuckets.map(b => (
+                <div class="ln-hist-col">
+                  <span class="ln-hist-n">{b.count}</span>
+                  <div class="ln-hist-track">
+                    <span class="ln-hist-bar" style={`height:${Math.max(4, Math.round((b.count / histMax) * 100))}%`}></span>
+                  </div>
+                  <span class="ln-hist-lab">{b.label}</span>
+                </div>
+              ))}
+            </div>
+            <p class="ln-foot">{measuredCount} of {listedCount} coupons have a listed original price to measure against.</p>
+          </article>
+        </div>
+      </section>
+
       {/* SINGLE GRID - NO DUPLICATES: free+paid combined, freshest first */}
       <section class="cc-deals-section" id="latest">
         <div class="cc-sec-head">
@@ -221,9 +417,9 @@ const jsonLd = {
           <p class="cc-sec-desc">One list, no duplicates — {freeCount > 0 ? `${freeCount} free & ` : ''}{totalActive - freeCount} paid coupons added or re-verified today. Sorted by freshest. Expires soon = enroll now.</p>
         </div>
         {todayGridDeals.length > 0 ? (
-          <div class="cc-grid">
+          <div class="cc-list">
             {todayGridDeals.map((deal: any, idx: number) => (
-              <CouponGrid deal={deal} eager={idx < 6} priority={idx < 3} />
+              <CouponList deal={deal} eager={idx < 6} priority={idx < 3} rank={idx + 1} />
             ))}
           </div>
         ) : (
@@ -254,6 +450,26 @@ const jsonLd = {
 
       <section class="cc-section">
         <div class="cc-sec-head">
+          <h2 class="cc-sec-title">Today's Udemy Coupons by Category <span class="cc-tag">{todayCategories.length} categories</span></h2>
+          <p class="cc-sec-desc">Every category with coupons verified today — jump straight to the subject you want to learn.</p>
+        </div>
+        <nav class="cc-cat-grid" aria-label="Coupons by category">
+          {todayCategories.map(([cat, count]) => (
+            <a
+              href={`/categories/${slugifyCategory(cat)}`}
+              class="cc-cat"
+              title={`Today's Udemy coupons in ${decodeHtml(cat)} — ${count} live ${count === 1 ? 'deal' : 'deals'}`}
+            >
+              <div class="cc-cat-num">{count}</div>
+              <div class="cc-cat-label">{decodeHtml(cat)}</div>
+              <div class="cc-cat-count">coupons today</div>
+            </a>
+          ))}
+        </nav>
+      </section>
+
+      <section class="cc-section">
+        <div class="cc-sec-head">
           <h2 class="cc-sec-title">Today's Trending Coupon Topics <span class="cc-tag">{trendingTopics.length} topics</span></h2>
           <p class="cc-sec-desc">Most popular course topics among today's verified Udemy coupons — jump straight to your skill.</p>
         </div>
@@ -270,14 +486,15 @@ const jsonLd = {
 
       <section class="cc-seo-section">
         <h2 class="cc-section-title">Why Today's Udemy Coupons Work When Other Code Lists Don't</h2>
-        <p>Since <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's coupon policy update</a>, most coupons are limited to about 10 to 100 redemptions or expire within days, which is why so many coupon sites list codes that no longer work. This page only shows deals added or re-verified in the last 24 hours &mdash; the freshest, most reliable codes available right now.</p>
-        <p>CoursesWyn checks every coupon against Udemy in near real time. When a coupon runs out, it disappears from this list automatically. For the complete archive with category filters, browse <a href="/udemy-coupon-code">all verified coupons</a>.</p>
+        <p>Since <a href="https://teach.udemy.com/update-for-instructors-improving-free-coupons-better-targeting-higher-quality-learning/" rel="noopener" target="_blank">Udemy's coupon policy update</a>, most coupons are limited to about 10 to 100 redemptions or expire within days, which is why so many coupon sites list <a href="/udemy-coupon-code">Udemy coupon codes</a> that no longer work. This page only shows deals added or re-verified in the last 24 hours &mdash; the freshest, most reliable codes available right now, including {freeCount > 0 ? `${freeCount} free courses at 100% off` : 'free courses at 100% off'}.</p>
+        <p>CoursesWyn checks every coupon against Udemy in near real time. When a coupon runs out, it disappears from this list automatically, so what you see is a live snapshot of <strong>Udemy coupons today</strong> rather than a static list that rots. Grab a code, hit <em>Claim</em>, and Udemy loads with the discount pre-applied &mdash; no manual entry.</p>
+        <p>For the complete archive with category filters, browse <a href="/udemy-coupon-code">all verified coupons</a>. Want the bigger picture? Compare <a href="/platforms/udemy-vs-coursera">Udemy vs Coursera</a>, see <a href="/popular">today's most popular courses</a>, or read <a href="/udemy-coupons-guide">the full Udemy coupon guide</a>.</p>
       </section>
 
       <section class="td-guide" aria-label="Udemy discount code guide">
         <p class="td-guide-badge">What to Expect From</p>
-        <h2 class="td-guide-title">Udemy Discount Codes</h2>
-        <p class="td-guide-sub">Udemy sells courses on everything from data science to personal development — the right discount can cut a $89.99 course to $12.99 or even free. Here's what to know before you enroll.</p>
+        <h2 class="td-guide-title">Udemy Discount Codes &amp; Promo Codes</h2>
+        <p class="td-guide-sub">Udemy sells courses on everything from data science to personal development — the right discount can cut a $89.99 course to $12.99 or even free. Here's what to know before you enroll with today's coupons.</p>
         <div class="td-guide-grid">
           <article class="td-guide-card">
             <span class="td-guide-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></span>
@@ -318,6 +535,18 @@ const jsonLd = {
             </details>
           ))}
         </div>
+      </section>
+
+      <section class="cc-section cc-related">
+        <div class="cc-sec-head">
+          <h2 class="cc-sec-title">Popular Searches Related to Udemy Coupons Today</h2>
+          <p class="cc-sec-desc">Jump to the most requested Udemy deal pages &mdash; all verified on the same schedule as this list.</p>
+        </div>
+        <nav class="cc-related-grid" aria-label="Related Udemy coupon searches">
+          {relatedSearches.map(s => (
+            <a href={s.href} class="cc-related-link">{s.label} <span aria-hidden="true">→</span></a>
+          ))}
+        </nav>
       </section>
 
       <div style={{ margin: "2.5rem 0" }}>
@@ -450,14 +679,62 @@ const jsonLd = {
 
   /* ===== SECTION HEADS ===== */
   .cc-sec-head { margin-bottom: 0.9rem; }
+
+  /* ===== THE LIST IN NUMBERS — 3 terminal cards ===== */
+  .ln-section { margin-top: 2.75rem; }
+  .ln-head { margin-bottom: 1rem; }
+  .ln-title { font-size: 1.2rem; font-weight: 700; color: var(--text); margin: 0; letter-spacing: -0.01em; display: inline-block; }
+  .ln-title::before { content: '## '; color: var(--brand); font-family: var(--font-mono); font-weight: 600; }
+  .ln-title::after { content: ''; display: block; height: 3px; width: 2.75rem; background: var(--brand); border-radius: 2px; margin-top: 6px; }
+  .ln-grid { display: grid; grid-template-columns: 1.15fr 1fr 0.9fr; gap: 16px; align-items: stretch; }
+
+  .ln-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px 16px; display: flex; flex-direction: column; min-width: 0; }
+  .ln-cmd { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); margin-bottom: 14px; letter-spacing: 0.01em; }
+  .ln-dollar { color: var(--brand); margin-right: 4px; }
+  .ln-flag { color: var(--muted); opacity: 0.85; }
+  .ln-h { font-size: 1.2rem; font-weight: 700; color: var(--text); margin: 0 0 18px; line-height: 1.25; letter-spacing: -0.01em; }
+
+  /* Card 1 — stacked bar + legend */
+  .ln-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--bg-secondary); margin-bottom: 18px; }
+  .ln-bar-seg { height: 100%; display: block; }
+  .ln-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .ln-row { display: grid; grid-template-columns: 10px 1fr auto auto; align-items: center; gap: 10px; font-size: 0.85rem; }
+  .ln-key { width: 10px; height: 10px; border-radius: 3px; display: block; }
+  .ln-name { color: var(--text); font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ln-meta { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
+  .ln-pct { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; min-width: 3.4ch; text-align: right; }
+
+  /* Card 2 — top 5 */
+  .ln-top { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+  .ln-top-row { display: flex; gap: 12px; align-items: flex-start; }
+  .ln-rank { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); width: 1ch; padding-top: 2px; flex-shrink: 0; }
+  .ln-top-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .ln-top-line { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .ln-top-title { color: var(--text); font-weight: 600; font-size: 0.9rem; line-height: 1.3; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ln-top-save { color: var(--brand); font-weight: 700; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .ln-track { height: 5px; border-radius: 999px; background: var(--bg-secondary); overflow: hidden; }
+  .ln-fill { display: block; height: 100%; border-radius: 999px; background: var(--brand); }
+
+  /* Card 3 — histogram */
+  .ln-hist { display: grid; grid-template-columns: repeat(var(--ln-hist-cols, 5), 1fr); gap: 8px; align-items: end; flex: 1; min-height: 180px; padding-bottom: 4px; }
+  .ln-hist-col { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+  .ln-hist-n { font-size: 1rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+  .ln-hist-track { width: 100%; height: 130px; display: flex; align-items: flex-end; background: var(--bg-secondary); border-radius: 8px; overflow: hidden; }
+  .ln-hist-bar { display: block; width: 100%; background: #AAD94C; border-radius: 8px 8px 0 0; }
+  .ln-hist-lab { font-family: var(--font-mono); font-size: 0.62rem; color: var(--muted); text-align: center; line-height: 1.3; }
+
+  .ln-foot { font-size: 0.78rem; color: var(--muted); line-height: 1.5; margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--border); }
+
+  @media (max-width: 1100px) { .ln-grid { grid-template-columns: 1fr 1fr; } .ln-card:last-child { grid-column: span 2; } }
+  @media (max-width: 720px) { .ln-grid { grid-template-columns: 1fr; } .ln-card:last-child { grid-column: auto; } }
+
   .cc-sec-title { font-size: 1.2rem; font-weight: 700; color: var(--text); margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; letter-spacing: -0.01em; }
   .cc-sec-title .cc-tag { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; color: var(--muted); border: 1px solid #22262d; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-left: auto; white-space: nowrap; }
   .cc-sec-desc { font-size: 0.85rem; color: var(--muted); margin: 0; }
 
   /* ===== GRID ===== */
   .cc-deals-section { margin-top: 3.25rem; }
-  .cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; margin-top: 16px; }
-  @media (max-width: 640px) { .cc-grid { grid-template-columns: 1fr; } }
+  .cc-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
   .cc-deal-more { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px; background: var(--bg-secondary); border-top: 1px solid #22262d; margin-top: 16px; border-radius: 0 0 12px 12px; }
   .cc-deal-more a { font-family: var(--font-mono); font-size: 0.78125rem; font-weight: 600; color: var(--brand); text-decoration: none; }
   .cc-deal-more a:hover { text-decoration: underline; }
@@ -525,6 +802,13 @@ const jsonLd = {
   .cc-cat-label { font-size: 0.75rem; color: var(--muted); margin-top: 3px; font-weight: 600; }
   .cc-cat-count { font-family: var(--font-mono); font-size: 0.65625rem; color: var(--brand); margin-top: 6px; font-weight: 500; }
 
+  /* ===== RELATED SEARCHES ===== */
+  .cc-related-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .cc-related-link { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 9px 16px; font-size: 0.85rem; font-weight: 600; color: var(--text); text-decoration: none; transition: all 0.18s; }
+  .cc-related-link span { color: var(--brand); transition: transform 0.18s; }
+  .cc-related-link:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
+  .cc-related-link:hover span { transform: translateX(3px); }
+
   /* ===== GENERIC SECTION HEADS (seo/faq) ===== */
   .cc-section { margin-top: 3.25rem; }
   .cc-section-title { font-size: 1.2rem; font-weight: 700; color: var(--text); margin: 0 0 0.3rem; display: flex; align-items: center; gap: 0.6rem; letter-spacing: -0.01em; flex-wrap: wrap; }
@@ -572,9 +856,7 @@ const jsonLd = {
   .cc-cta-text { font-size: 0.95rem; line-height: 1.6; margin: 0 auto 18px; max-width: 480px; color: var(--muted); }
   .cc-cta .cc-hero-btn { background: var(--brand-gradient); color: #0a0b0d; box-shadow: 0 12px 28px -12px rgba(169, 199, 255, 0.55); }
   .cc-cta .cc-hero-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
-  h1, h2, h3 { font-family: sans-serif; }
-  .td-hero { background: linear-gradient(135deg, #0a0b0d 0%, #101216 100%); padding: 3.5rem 0 3rem; text-align: center; position: relative; overflow: hidden; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
-  h1, h2, h3 { font-family: sans-serif; }
+  .td-hero { background: linear-gradient(135deg, #0a0b0d 0%, #101216 100%); padding: 3.5rem 0 3rem; text-align: left; position: relative; overflow: hidden; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
   .td-hero::before { content: ''; position: absolute; top: -100px; left: 12%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(169, 199, 255,0.12) 0%, transparent 65%); pointer-events: none; }
   .td-hero::after { content: ''; position: absolute; bottom: -120px; right: 8%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(169, 199, 255,0.14) 0%, transparent 65%); pointer-events: none; }
   .td-hero .container { position: relative; z-index: 1; }
@@ -582,17 +864,21 @@ const jsonLd = {
   .td-blink { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
   .td-hero h1 { font-size: clamp(1.9rem, 4vw, 2.9rem); font-weight: 800; line-height: 1.12; color: #f2f4f6; margin: 0 0 0.75rem; letter-spacing: -0.02em; }
   .td-hero h1 span { color: #A9C7FF; }
-  .td-sub { font-size: 1.05rem; color: rgba(242, 244, 246,0.78); max-width: 640px; margin: 0 auto 1.5rem; line-height: 1.6; }
+  .td-hero h1 span.td-h1-meta { display: block; font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #9aa3ab; margin-top: 0.7rem; }
+  .td-hero h1 span.td-h1-meta time { color: #4ade80; }
+  .dh-hero-copy { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+  .dh-terminal { align-self: center; }
+  .td-sub { font-size: 1.05rem; color: rgba(242, 244, 246,0.78); max-width: 560px; margin: 0 0 1.5rem; line-height: 1.6; }
   .td-sub strong { color: #f2f4f6; }
-  .td-search { display: flex; gap: 8px; max-width: 560px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.45); }
+  .td-search { display: flex; gap: 8px; max-width: 560px; margin: 0; background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 20px 50px -12px rgba(0,0,0,0.45); }
   .td-search input { flex: 1; border: none; outline: none; font-size: 0.9rem; padding: 10px 14px; min-width: 0; color: #111; background: transparent; font-family: inherit; }
   .td-search button { font-weight: 800; color: #0a0b0d; background: linear-gradient(135deg, #D6E4FF 0%, #A9C7FF 100%); border: none; border-radius: 9px; padding: 0 24px; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
   .td-search button:hover { filter: brightness(1.1); }
-  .td-stats { display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; margin-top: 1.75rem; }
-  .td-stat { display: flex; flex-direction: column; }
-  .td-stat-num { font-size: 1.5rem; font-weight: 800; color: #f2f4f6; font-variant-numeric: tabular-nums; }
-  .td-stat-lab { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9aa3ab; }
-  .td-byline { font-size: 0.82rem; color: rgba(242, 244, 246,0.6); margin: 1.25rem 0 0; }
+  .td-stats { display: flex; gap: 10px; justify-content: flex-start; flex-wrap: wrap; margin-top: 1.75rem; }
+  .td-stat { display: flex; flex-direction: column; background: rgba(242, 244, 246,0.05); border: 1px solid rgba(242, 244, 246,0.14); border-radius: 12px; padding: 12px 20px; min-width: 108px; }
+  .td-stat-num { font-size: 1.5rem; font-weight: 800; color: #f2f4f6; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .td-stat-lab { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9aa3ab; margin-top: 3px; }
+  .td-byline { font-size: 0.82rem; color: rgba(242, 244, 246,0.6); margin: 1.5rem 0 0; }
   .td-byline a { color: #A9C7FF; font-weight: 600; }
   .daily-urgency strong { color: #A9C7FF; }
   .daily-urgency svg { color: #A9C7FF; }
