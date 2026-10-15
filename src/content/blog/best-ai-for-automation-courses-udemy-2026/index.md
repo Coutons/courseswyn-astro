@@ -25,7 +25,7 @@ We reviewed the catalog in March 2026 and identified the five courses that actua
 
 > **How we evaluated these courses:** Our editorial team analyzed 20+ Udemy courses updated between late 2025 and March 2026, scoring each across five criteria: curriculum depth beyond demo-level content, real tool integration (MCP, AutoGen, n8n v2.0, Playwright AI, local LLMs), verified student ratings and enrollment volume, instructor update frequency and credibility, and project-based outcomes that translate to portfolio-ready work. Only courses that cleared the bar on all five made this list.
 
-> **Also worth reading:** If you want to go deeper into multi-agent orchestration frameworks like CrewAI and LangGraph specifically, our [Best CrewAI Courses on Udemy 2026](/blog/best-crewai-courses-udemy-2026) roundup covers that space in full detail. Check our [Udemy Coupon Code](/udemy-coupon-code) page for the latest verified discounts before you enroll.
+> **Also worth reading:** If you want to go deeper into multi-agent orchestration frameworks like CrewAI and LangGraph specifically, our [Best CrewAI Courses on Udemy 2026](/blog/best-crewai-courses-udemy-2026/) roundup covers that space in full detail. Check our [Udemy Coupon Code](/udemy-coupon-code) page for the latest verified discounts before you enroll.
 
 ---
 

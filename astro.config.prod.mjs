@@ -77,6 +77,8 @@ export default defineConfig({
       if (/\/udemy-coupon-code\/\d+\/?$/.test(page)) return false;
       if (page.includes('?page=')) return false;
       if (/\/blog\/page\//.test(page)) return false;
+      // Search page is noindex (?q= URLs are infinite thin content)
+      if (/\/search\/?$/.test(page)) return false;
       return true;
     }
   }), mdx()],

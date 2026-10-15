@@ -288,7 +288,7 @@ The cloud computing revolution is here, and 2026 is your year to capitalize on i
 
 Don't wait for the competition to catch up. Enroll today, use our discount codes, and start building the cloud skills that will define your future.
 
-Ready for more? Explore our [best Udemy AI courses](/blog/best-udemy-generative-ai-courses) to complement your cloud expertise.
+Ready for more? Explore our [best Udemy AI courses](/blog/best-udemy-generative-ai-courses/) to complement your cloud expertise.
 
 [Start Your Cloud Journey Now!](#top-6-best-cloud-computing-courses-on-udemy-2026)
 
@@ -298,8 +298,8 @@ CoursesWyn is led by a team of experienced software engineers and educators pass
 
 ## Related Cloud Computing Articles
 
-- [Top Generative AI Courses for 2026](/blog/best-udemy-generative-ai-courses)
-- [Business Skills on Udemy](/blog/best-business-courses-udemy-2026)
+- [Top Generative AI Courses for 2026](/blog/best-udemy-generative-ai-courses/)
+- [Business Skills on Udemy](/blog/best-business-courses-udemy-2026/)
 
 ---
 

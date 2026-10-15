@@ -516,9 +516,9 @@ Quality over quantity. Aim for 100-150 problems, but ensure you can solve the "T
 ---
 
 ## Related Resources
-- [17 Best LangChain Courses 2026](/blog/top-10-best-langchain-courses-udemy)
+- [17 Best LangChain Courses 2026](/blog/top-10-best-langchain-courses-udemy/)
 - [How to Redeem Udemy Promo Codes](/how-to-redeem-coupon)
-- [Top 10 Best Generative AI Courses on Udemy](/blog/top-10-best-generative-ai-courses-udemy)
+- [Top 10 Best Generative AI Courses on Udemy](/blog/top-10-best-generative-ai-courses-udemy/)
 
 ---
 

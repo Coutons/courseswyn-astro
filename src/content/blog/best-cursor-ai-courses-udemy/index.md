@@ -342,7 +342,7 @@ This course doesn't teach you how to use Cursor's features — it assumes you kn
 
 Check our [Udemy Coupon Code](/udemy-coupon-code) page for the latest verified discounts on all seven courses above.
 
-> **Building your AI skills further?** If you want to go deeper beyond Cursor, see our guides to the [best CrewAI and AutoGen courses on Udemy](/blog/best-crewai-courses-udemy-2026) and the [best AI coding platforms compared for 2026](/blog/udemy-vs-coursera-vs-pluralsight).
+> **Building your AI skills further?** If you want to go deeper beyond Cursor, see our guides to the [best CrewAI and AutoGen courses on Udemy](/blog/best-crewai-courses-udemy-2026/) and the [best AI coding platforms compared for 2026](/blog/udemy-vs-coursera-vs-pluralsight/).
 
 ---
 

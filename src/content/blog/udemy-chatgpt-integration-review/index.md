@@ -60,7 +60,7 @@ When you ask ChatGPT about learning something new, it can now:
 
 This works for all ChatGPT users: Free, Go, Plus, and Pro plans.
 
-Read Also: [Top 10 AI Integration Courses on Udemy 2026: Complete Guide](/blog/top-ai-integration-courses-on-udemy)
+Read Also: [Top 10 AI Integration Courses on Udemy 2026: Complete Guide](/blog/top-ai-integration-courses-on-udemy/)
 
 ### What Makes It Different
 
@@ -92,7 +92,7 @@ More languages coming soon.
 
 If the integration is active, ChatGPT will display Udemy course recommendations with course details.
 
-Read Also: [Top 5 Best ChatGPT Courses on Udemy 2026 (GPT-5 Updated)](/blog/best-chatgpt-courses-udemy-2026)
+Read Also: [Top 5 Best ChatGPT Courses on Udemy 2026 (GPT-5 Updated)](/blog/best-chatgpt-courses-udemy-2026/)
 
 ---
 
@@ -205,7 +205,7 @@ Research time is decision time. If you have 5 hours per week for learning, spend
 
 ChatGPT eliminates research paralysis. You describe your goal, it suggests courses, you start learning.
 
-Read Also: [AI Engineer Roadmap 2026: Master Agentic AI & MCP Protocol for Under $100](/blog/ai-engineer-roadmap-2026)
+Read Also: [AI Engineer Roadmap 2026: Master Agentic AI & MCP Protocol for Under $100](/blog/ai-engineer-roadmap-2026/)
 
 ---
 

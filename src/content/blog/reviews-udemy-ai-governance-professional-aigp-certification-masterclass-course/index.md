@@ -19,7 +19,7 @@ faqs:
 - q: Who benefits most from the AIGP Certification Masterclass?
   a: This course is best suited for compliance professionals, risk managers, legal advisors, product leaders, policymakers, and executives who are responsible for AI oversight or regulatory alignment.
 - q: Is this course useful even if I don’t plan to take the AIGP exam?
-  a: 'Yes. Even without pursuing certification, the course provides a comprehensive framework for understanding AI governance, which is increasingly relevant across regulated industries. Suggested courses: * Link to related Udemy reviews covering: * [AI Engineer Roadmap 2026](/blog/ai-engineer-roadmap-2026) * [Top AI and Machine Learning Courses on Udemy Updated 2026](/blog/top-ai-and-machine-learning-courses-on-udemy-2026)'
+  a: 'Yes. Even without pursuing certification, the course provides a comprehensive framework for understanding AI governance, which is increasingly relevant across regulated industries. Suggested courses: * Link to related Udemy reviews covering: * [AI Engineer Roadmap 2026](/blog/ai-engineer-roadmap-2026/) * [Top AI and Machine Learning Courses on Udemy Updated 2026](/blog/top-ai-and-machine-learning-courses-on-udemy-2026/)'
 ---
 
 ## Artificial Intelligence Governance Professional (AIGP) Certification Masterclass Course. is Worth it in 2026?
@@ -170,8 +170,8 @@ Yes. Even without pursuing certification, the course provides a comprehensive fr
 
 * Link to related Udemy reviews covering:
 
-  * [AI Engineer Roadmap 2026](/blog/ai-engineer-roadmap-2026)
-  * [Top AI and Machine Learning Courses on Udemy Updated 2026](/blog/top-ai-and-machine-learning-courses-on-udemy-2026)
+  * [AI Engineer Roadmap 2026](/blog/ai-engineer-roadmap-2026/)
+  * [Top AI and Machine Learning Courses on Udemy Updated 2026](/blog/top-ai-and-machine-learning-courses-on-udemy-2026/)
 
 
 

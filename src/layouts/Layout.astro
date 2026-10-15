@@ -112,6 +112,10 @@ const jsonLdGraph = {
 const jsonLdHtml = JSON.stringify(jsonLdGraph);
 
 const currentPath = Astro.url.pathname;
+// Normalized path tanpa trailing slash (kecuali root) agar breadcrumb
+// tidak membuat ListItem kosong saat URL diakses dengan trailing slash,
+// mis. /udemy-coupons-today/ vs /udemy-coupons-today.
+const normalizedPath = currentPath.length > 1 ? currentPath.replace(/\/+$/, "") : currentPath;
 ---
 
 <!doctype html>
@@ -540,20 +544,20 @@ const currentPath = Astro.url.pathname;
 
         <div class="nav-links">
           <a href="/udemy-coupon-code" itemprop="url"
-            class:list={['nav-item', { active: currentPath === '/udemy-coupon-code' }]}
-            aria-current={currentPath === '/udemy-coupon-code' ? 'page' : undefined}>
+            class:list={['nav-item', { active: normalizedPath === '/udemy-coupon-code' }]}
+            aria-current={normalizedPath === '/udemy-coupon-code' ? 'page' : undefined}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6l4-4z"/><path d="M2 6h20"/><path d="M16 2v4H8V2"/><rect x="8" y="10" width="8" height="6"/></svg>
             <span itemprop="name">Coupons Codes</span>
           </a>
-          <a href="/udemy-coupons-today" itemprop="url"
-            class:list={['nav-item', { active: currentPath === '/udemy-coupons-today' }]}
-            aria-current={currentPath === '/udemy-coupons-today' ? 'page' : undefined}>
+          <a href="/udemy-coupons-today/" itemprop="url"
+            class:list={['nav-item', { active: normalizedPath === '/udemy-coupons-today' }]}
+            aria-current={normalizedPath === '/udemy-coupons-today' ? 'page' : undefined}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <span itemprop="name">Coupons Today</span>
           </a>
           <a href="/categories" itemprop="url"
-            class:list={['nav-item', { active: currentPath === '/categories' || currentPath.startsWith('/categories/') }]}
-            aria-current={currentPath === '/categories' || currentPath.startsWith('/categories/') ? 'page' : undefined}>
+            class:list={['nav-item', { active: normalizedPath === '/categories' || normalizedPath.startsWith('/categories/') }]}
+            aria-current={normalizedPath === '/categories' || normalizedPath.startsWith('/categories/') ? 'page' : undefined}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
             <span itemprop="name">Categories</span>
           </a>
@@ -589,19 +593,19 @@ const currentPath = Astro.url.pathname;
         <input type="text" name="q" placeholder="Search courses..." style={{ background: 'transparent', color: 'var(--text)', border: 'none', fontSize: '0.85rem', width: '100%', outline: 'none', padding: 0 }} />
       </form>
       <nav aria-label="Mobile navigation">
-        <a href="/udemy-coupon-code" class:list={['nav-mobile-link', { active: currentPath === '/udemy-coupon-code' }]}>Udemy Coupons</a>
-        <a href="/udemy-coupons-today" class:list={['nav-mobile-link', { active: currentPath === '/udemy-coupons-today' }]}>Coupons Today</a>
-        <a href="/categories" class:list={['nav-mobile-link', { active: currentPath === '/categories' || currentPath.startsWith('/categories/') }]}>Categories</a>
-        <a href="/udemy-certification-vouchers" class:list={['nav-mobile-link', { active: currentPath === '/udemy-certification-vouchers' || currentPath.startsWith('/udemy-') && currentPath.includes('voucher') }]}>Exam Vouchers</a>
-        <a href="/instructors" class:list={['nav-mobile-link', { active: currentPath === '/instructors' || currentPath.startsWith('/instructor/') }]}>Instructors</a>
-        <a href="/popular" class:list={['nav-mobile-link', { active: currentPath === '/popular' }]}>Popular Courses</a>
-        <a href="/blog" class:list={['nav-mobile-link', { active: currentPath === '/blog' || currentPath.startsWith('/blog/') }]}>Blog</a>
-        <a href="/udemy-coupons-guide" class:list={['nav-mobile-link', { active: currentPath === '/udemy-coupons-guide' }]}>Coupon Guide</a>
+        <a href="/udemy-coupon-code" class:list={['nav-mobile-link', { active: normalizedPath === '/udemy-coupon-code' }]}>Udemy Coupons</a>
+        <a href="/udemy-coupons-today/" class:list={['nav-mobile-link', { active: normalizedPath === '/udemy-coupons-today' }]}>Coupons Today</a>
+        <a href="/categories" class:list={['nav-mobile-link', { active: normalizedPath === '/categories' || normalizedPath.startsWith('/categories/') }]}>Categories</a>
+        <a href="/udemy-certification-vouchers" class:list={['nav-mobile-link', { active: normalizedPath === '/udemy-certification-vouchers' || normalizedPath.startsWith('/udemy-') && normalizedPath.includes('voucher') }]}>Exam Vouchers</a>
+        <a href="/instructors" class:list={['nav-mobile-link', { active: normalizedPath === '/instructors' || normalizedPath.startsWith('/instructor/') }]}>Instructors</a>
+        <a href="/popular" class:list={['nav-mobile-link', { active: normalizedPath === '/popular' }]}>Popular Courses</a>
+        <a href="/blog" class:list={['nav-mobile-link', { active: normalizedPath === '/blog' || normalizedPath.startsWith('/blog/') }]}>Blog</a>
+        <a href="/udemy-coupons-guide" class:list={['nav-mobile-link', { active: normalizedPath === '/udemy-coupons-guide' }]}>Coupon Guide</a>
       </nav>
     </div>
 
     <!-- Breadcrumb Navigation -->
-    {!hideBreadcrumbs && currentPath !== '/' && !currentPath.startsWith('/coupon/') && (!currentPath.startsWith('/blog/') || currentPath.startsWith('/blog/page/')) && (
+    {!hideBreadcrumbs && normalizedPath !== '/' && !normalizedPath.startsWith('/coupon/') && (!normalizedPath.startsWith('/blog/') || normalizedPath.startsWith('/blog/page/')) && (
       <nav
         aria-label="Breadcrumb"
         class="container"
@@ -622,162 +626,162 @@ const currentPath = Astro.url.pathname;
             <meta itemprop="position" content="1" />
           </li>
 
-          {(currentPath === '/udemy-coupon-code' || currentPath.startsWith('/udemy-coupon-code/')) && (
+          {(normalizedPath === '/udemy-coupon-code' || normalizedPath.startsWith('/udemy-coupon-code/')) && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>All Deals</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath === '/categories' && (
+          {normalizedPath === '/categories' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Categories</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath.startsWith('/categories/') && (
+          {normalizedPath.startsWith('/categories/') && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/categories" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Categories</span></a><meta itemprop="position" content="2" /></li>
             <li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{currentPath.split('/')[2]?.replace(/-/g, ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Category'}</span><meta itemprop="position" content="3" /></li></>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{normalizedPath.split('/')[2]?.replace(/-/g, ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Category'}</span><meta itemprop="position" content="3" /></li></>
           )}
 
-          {currentPath === '/topics' && (
+          {normalizedPath === '/topics' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Topics</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath.startsWith('/topic/') && (
+          {normalizedPath.startsWith('/topic/') && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/topics" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Topics</span></a><meta itemprop="position" content="2" /></li>
             <li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{currentPath.split('/')[2]?.replace(/-/g, ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Topic'}</span><meta itemprop="position" content="3" /></li></>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{normalizedPath.split('/')[2]?.replace(/-/g, ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Topic'}</span><meta itemprop="position" content="3" /></li></>
           )}
 
-          {currentPath.startsWith('/topics/') && (
+          {normalizedPath.startsWith('/topics/') && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/topics" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Topics</span></a><meta itemprop="position" content="2" /></li>
             <li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{currentPath.split('/')[2]?.replace(/-/g, ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Topic'}</span><meta itemprop="position" content="3" /></li></>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{normalizedPath.split('/')[2]?.replace(/-/g, ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Topic'}</span><meta itemprop="position" content="3" /></li></>
           )}
 
-          {currentPath === '/popular' && (
+          {normalizedPath === '/popular' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Popular</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath === '/instructors' && (
+          {normalizedPath === '/instructors' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Instructors</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath.startsWith('/instructor/') && (
+          {normalizedPath.startsWith('/instructor/') && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/instructors" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Instructors</span></a><meta itemprop="position" content="2" /></li>
             <li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{currentPath.split('/')[2]?.replace(/-/g, ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Instructor'}</span><meta itemprop="position" content="3" /></li></>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{normalizedPath.split('/')[2]?.replace(/-/g, ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Instructor'}</span><meta itemprop="position" content="3" /></li></>
           )}
 
-          {currentPath === '/udemy-coupons-guide' && (
+          {normalizedPath === '/udemy-coupons-guide' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Udemy Coupon Guide</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath === '/platforms' && (
+          {normalizedPath === '/platforms' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Compare Platforms</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath.startsWith('/platforms/') && (
+          {normalizedPath.startsWith('/platforms/') && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/platforms" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Compare Platforms</span></a><meta itemprop="position" content="2" /></li>
             <li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{currentPath.split('/')[2]?.replace(/-/g, ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Comparison'}</span><meta itemprop="position" content="3" /></li></>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{normalizedPath.split('/')[2]?.replace(/-/g, ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Comparison'}</span><meta itemprop="position" content="3" /></li></>
           )}
 
-          {currentPath === '/blog' && (
+          {normalizedPath === '/blog' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Blog</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath.startsWith('/blog/') && !currentPath.startsWith('/blog/page/') && (
+          {normalizedPath.startsWith('/blog/') && !normalizedPath.startsWith('/blog/page/') && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/blog" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Blog</span></a><meta itemprop="position" content="2" /></li>
             <li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Post</span><meta itemprop="position" content="3" /></li></>
           )}
 
-          {currentPath.startsWith('/blog/page/') && (
+          {normalizedPath.startsWith('/blog/page/') && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/blog" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Blog</span></a><meta itemprop="position" content="2" /></li>
             <li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Page {currentPath.split('/')[3]}</span><meta itemprop="position" content="3" /></li></>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Page {normalizedPath.split('/')[3] || '1'}</span><meta itemprop="position" content="3" /></li></>
           )}
 
-          {currentPath === '/about' && (
+          {normalizedPath === '/about' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>About</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath === '/contact' && (
+          {normalizedPath === '/contact' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Contact</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath === '/privacy' && (
+          {normalizedPath === '/privacy' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Privacy Policy</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath === '/terms' && (
+          {normalizedPath === '/terms' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Terms of Service</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath === '/sitemap' && (
+          {normalizedPath === '/sitemap' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Sitemap</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath === '/how-to-redeem-coupon' && (
+          {normalizedPath === '/how-to-redeem-coupon' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>How to Redeem</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath === '/udemy-coupons-guide' && (
+          {normalizedPath === '/udemy-coupons-guide' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Udemy Guide</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {currentPath === '/udemy-coupons-today' && (
+          {normalizedPath === '/udemy-coupons-today' && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Coupons Today</span><meta itemprop="position" content="2" /></li></>
           )}
 
-          {['/udemy-certification-vouchers', '/udemy-comptia-exam-vouchers', '/udemy-aws-exam-vouchers', '/udemy-microsoft-exam-vouchers'].includes(currentPath) && (
+          {['/udemy-certification-vouchers', '/udemy-comptia-exam-vouchers', '/udemy-aws-exam-vouchers', '/udemy-microsoft-exam-vouchers'].includes(normalizedPath) && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
-            {currentPath === '/udemy-certification-vouchers' ? (
+            {normalizedPath === '/udemy-certification-vouchers' ? (
               <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Certification Vouchers</span><meta itemprop="position" content="2" /></li>
             ) : (
               <><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/udemy-certification-vouchers" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Certification Vouchers</span></a><meta itemprop="position" content="2" /></li>
               <li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
-              <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{currentPath.includes('comptia') ? 'CompTIA Vouchers' : currentPath.includes('aws') ? 'AWS Vouchers' : 'Microsoft Vouchers'}</span><meta itemprop="position" content="3" /></li></>
+              <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{normalizedPath.includes('comptia') ? 'CompTIA Vouchers' : normalizedPath.includes('aws') ? 'AWS Vouchers' : 'Microsoft Vouchers'}</span><meta itemprop="position" content="3" /></li></>
             )}</>
           )}
 
-          {currentPath.startsWith('/udemy-coupons-today/') && (
+          {normalizedPath.startsWith('/udemy-coupons-today/') && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/udemy-coupons-today" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Coupons Today</span></a><meta itemprop="position" content="2" /></li>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a href="/udemy-coupons-today/" itemprop="item" style={{ color: "var(--muted)", textDecoration: "none" }}><span itemprop="name">Coupons Today</span></a><meta itemprop="position" content="2" /></li>
             <li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
-            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{currentPath.split('/')[2]}</span><meta itemprop="position" content="3" /></li></>
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>{normalizedPath.split('/')[2]?.replace(/-/g, ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Coupons Today'}</span><meta itemprop="position" content="3" /></li></>
           )}
 
-           {!['/udemy-coupon-code', '/categories', '/topics', '/popular', '/instructors', '/platforms', '/blog', '/about', '/contact', '/privacy', '/terms', '/sitemap', '/how-to-redeem-coupon', '/udemy-coupons-guide', '/udemy-coupons-today', '/udemy-certification-vouchers', '/udemy-comptia-exam-vouchers', '/udemy-aws-exam-vouchers', '/udemy-microsoft-exam-vouchers'].includes(currentPath) &&
-           !currentPath.startsWith('/udemy-coupon-code/') &&
-           !currentPath.startsWith('/categories/') &&
-           !currentPath.startsWith('/platforms/') &&
-           !currentPath.startsWith('/topic/') &&
-           !currentPath.startsWith('/topics/') &&
-           !currentPath.startsWith('/instructor/') &&
-           !currentPath.startsWith('/blog/') &&
-           !currentPath.startsWith('/udemy-coupons-today/') && (
+           {!['/udemy-coupon-code', '/categories', '/topics', '/popular', '/instructors', '/platforms', '/blog', '/about', '/contact', '/privacy', '/terms', '/sitemap', '/how-to-redeem-coupon', '/udemy-coupons-guide', '/udemy-coupons-today', '/udemy-certification-vouchers', '/udemy-comptia-exam-vouchers', '/udemy-aws-exam-vouchers', '/udemy-microsoft-exam-vouchers'].includes(normalizedPath) &&
+           !normalizedPath.startsWith('/udemy-coupon-code/') &&
+           !normalizedPath.startsWith('/categories/') &&
+           !normalizedPath.startsWith('/platforms/') &&
+           !normalizedPath.startsWith('/topic/') &&
+           !normalizedPath.startsWith('/topics/') &&
+           !normalizedPath.startsWith('/instructor/') &&
+           !normalizedPath.startsWith('/blog/') &&
+           !normalizedPath.startsWith('/udemy-coupons-today/') && (
             <><li aria-hidden="true" style={{ color: "var(--muted)" }}>/</li>
             <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page"><span itemprop="name" style={{ color: "var(--text)", fontWeight: 500 }}>Page</span><meta itemprop="position" content="2" /></li></>
           )}
@@ -831,7 +835,7 @@ const currentPath = Astro.url.pathname;
           <nav class="cw-foot-col" aria-label="Browse">
             <h4>Browse</h4>
             <a href="/udemy-coupon-code">All Coupons</a>
-            <a href="/udemy-coupons-today">Today&apos;s Deals</a>
+            <a href="/udemy-coupons-today/">Today&apos;s Deals</a>
             <a href="/categories">Categories</a>
             <a href="/topics">Topics</a>
             <a href="/popular">Popular Courses</a>

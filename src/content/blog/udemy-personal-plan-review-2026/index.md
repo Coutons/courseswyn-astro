@@ -98,7 +98,7 @@ The Personal Plan library spans comprehensive categories:
 - Mobile Development (iOS Swift, Android Kotlin, Flutter, React Native)
 - Programming Languages (Python, JavaScript, Java, C++, C#, Go, Rust)
 - Data Science & Machine Learning
-- Artificial Intelligence & LLMs (See our [Best RAG Courses](/blog/best-rag-courses-on-udemy))
+- Artificial Intelligence & LLMs (See our [Best RAG Courses](/blog/best-rag-courses-on-udemy/))
 - Cloud Computing (AWS, Azure, Google Cloud)
 - DevOps & Kubernetes
 - Cybersecurity & Ethical Hacking
@@ -138,7 +138,7 @@ Get instant answers while studying, receive contextual help for complex concepts
 Earn certificates of completion for every finished course, including recognized certifications from AWS, Microsoft, Google, CompTIA, and PMI. All certificates are shareable on LinkedIn to showcase your achievements.
 
 **Career Accelerators:**
-Udemy recently started career accelerators that learners can join only with the Personal plan subscription. These structured learning paths (20-80+ hours) combine courses, projects, and assessments to build job-ready skills in specific career tracks like Web Developer, Data Analyst, or AI Engineer. If you are aiming for an AI career, check out our [AI Engineer Roadmap 2026](/blog/ai-engineer-roadmap-2026).
+Udemy recently started career accelerators that learners can join only with the Personal plan subscription. These structured learning paths (20-80+ hours) combine courses, projects, and assessments to build job-ready skills in specific career tracks like Web Developer, Data Analyst, or AI Engineer. If you are aiming for an AI career, check out our [AI Engineer Roadmap 2026](/blog/ai-engineer-roadmap-2026/).
 
 ## Udemy Personal Plan vs Buying Individual Courses
 
@@ -206,7 +206,7 @@ Stick with one-time course purchases if you:
 | **Career Focus** | Immediate skill application | Career advancement credentials |
 | **Learning Path Structure** | Self-directed exploration | Structured specializations |
 
-For a deeper platform comparison, see our guide on [Udemy vs Coursera vs Pluralsight](/blog/udemy-vs-coursera-vs-pluralsight).
+For a deeper platform comparison, see our guide on [Udemy vs Coursera vs Pluralsight](/blog/udemy-vs-coursera-vs-pluralsight/).
 
 ### Strategic Platform Selection
 
@@ -567,12 +567,12 @@ Ready to accelerate your learning journey and transform your career?
 
 Maximize your learning journey with these complementary guides:
 
-- **Course Reviews**: [Best AI Web Development Courses 2026](/blog/best-ai-web-development-courses-udemy-2026)
+- **Course Reviews**: [Best AI Web Development Courses 2026](/blog/best-ai-web-development-courses-udemy-2026/)
 - **Platform Review**: [Udemy Review 2026: Is It Still Worth It?](/blog/is-udemy-worth-it/)
-- **Platform Comparisons**: [Udemy vs Coursera vs Pluralsight](/blog/udemy-vs-coursera-vs-pluralsight)
-- **Learning Strategies**: [How to Get Udemy Courses for Free or Cheap](/blog/how-to-get-udemy-courses-for-free)
-- **Career Development**: [AI Engineer Roadmap 2026](/blog/ai-engineer-roadmap-2026)
-- **Certification Guides**: [Best RAG Courses on Udemy](/blog/best-rag-courses-on-udemy)
+- **Platform Comparisons**: [Udemy vs Coursera vs Pluralsight](/blog/udemy-vs-coursera-vs-pluralsight/)
+- **Learning Strategies**: [How to Get Udemy Courses for Free or Cheap](/blog/how-to-get-udemy-courses-for-free/)
+- **Career Development**: [AI Engineer Roadmap 2026](/blog/ai-engineer-roadmap-2026/)
+- **Certification Guides**: [Best RAG Courses on Udemy](/blog/best-rag-courses-on-udemy/)
 
 ---
 
