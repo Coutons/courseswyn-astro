@@ -183,12 +183,6 @@ async function writeDealsToFile(all: Deal[]): Promise<void> {
   const dir = path.dirname(DEALS_FILE);
   await fs.mkdir(dir, { recursive: true });
   const tmp = DEALS_FILE + ".tmp";
-  const bak = DEALS_FILE + ".bak";
-  try {
-    await fs.copyFile(DEALS_FILE, bak);
-  } catch {
-    // No existing backup source; ignore.
-  }
   await fs.writeFile(tmp, JSON.stringify(all, null, 2), "utf-8");
   await fs.rename(tmp, DEALS_FILE);
   cachedDeals = null;
