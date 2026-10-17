@@ -436,18 +436,10 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
       if (!res.ok) {
         throw new Error(data.error || "Request failed");
       }
-      // Kalau slug berubah (rename), arahkan ke URL edit baru agar save berikutnya tidak 404.
-      const newSlug = (data as { slug?: string })?.slug;
-      if (isEdit && newSlug && currentId && newSlug !== currentId) {
-        currentId = newSlug;
-        form.dataset.dealId = newSlug;
-        setStatus(`Saved ✓ — slug renamed to ${newSlug}`, "adm-ok");
-        setTimeout(() => (window.location.href = `/admin/coupons/edit/${encodeURIComponent(newSlug)}`), 600);
-      } else {
-        if (newSlug) currentId = newSlug;
-        setStatus("Saved ✓", "adm-ok");
-        setTimeout(() => (window.location.href = "/admin"), 400);
-      }
+      const newSlug = String((data as { slug?: string })?.slug ?? "").trim();
+      if (newSlug) currentId = newSlug;
+      setStatus("Saved ✓", "adm-ok");
+      setTimeout(() => (window.location.href = "/admin"), 400);
     } catch (err) {
       setStatus(`Error: ${(err as Error).message}`, "adm-err");
       if (submitBtn) submitBtn.disabled = false;

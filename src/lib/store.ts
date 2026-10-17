@@ -96,7 +96,21 @@ export async function readDealsFromFile(): Promise<Deal[]> {
     const stat = await fs.stat(DEALS_FILE);
     if (cachedDeals && stat.mtimeMs === cachedDealsMtime) return cachedDeals;
     const buf = await fs.readFile(DEALS_FILE, "utf-8");
-    const data = JSON.parse(buf) as unknown;
+    let data: unknown;
+    try {
+      data = JSON.parse(buf);
+    } catch (parseError) {
+      console.error(`[deals] corrupt JSON in ${DEALS_FILE}: ${(parseError as Error).message}`);
+      const bak = DEALS_FILE + ".bak";
+      try {
+        const bakBuf = await fs.readFile(bak, "utf-8");
+        data = JSON.parse(bakBuf);
+        console.warn(`[deals] recovered from ${bak}`);
+      } catch {
+        console.error(`[deals] no usable backup; returning empty deal list`);
+        return [];
+      }
+    }
     if (Array.isArray(data)) {
       cachedDeals = validateDeals(data);
       cachedDealsMtime = stat.mtimeMs;
@@ -168,7 +182,15 @@ export async function getDeals(options: {
 async function writeDealsToFile(all: Deal[]): Promise<void> {
   const dir = path.dirname(DEALS_FILE);
   await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(DEALS_FILE, JSON.stringify(all, null, 2), "utf-8");
+  const tmp = DEALS_FILE + ".tmp";
+  const bak = DEALS_FILE + ".bak";
+  try {
+    await fs.copyFile(DEALS_FILE, bak);
+  } catch {
+    // No existing backup source; ignore.
+  }
+  await fs.writeFile(tmp, JSON.stringify(all, null, 2), "utf-8");
+  await fs.rename(tmp, DEALS_FILE);
   cachedDeals = null;
 }
 

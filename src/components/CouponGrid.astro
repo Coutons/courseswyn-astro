@@ -8,6 +8,16 @@ import { slugifyCategory, slugifyTopic } from '../lib/utils';
 import instructorDirectory from "../data/instructorCounts.json";
 import instructorProfiles from "../data/instructors.json";
 
+let coupons: any[] = [];
+try {
+  const fs = await import("fs");
+  const path = await import("path");
+  const dealsPath = path.join(process.cwd(), "src", "data", "coupons.json");
+  coupons = JSON.parse(fs.readFileSync(dealsPath, "utf-8"));
+} catch {
+  coupons = [];
+}
+
 const { deal, eager = false, priority = false } = Astro.props;
 
 function formatCount(n: number) {
@@ -92,16 +102,38 @@ const LANG_FLAGS: Record<string, string> = {
 const instructorsList = deal.instructor ? parseInstructors(String(deal.instructor)) : [];
 const firstInstructor = (instructorsList[0] ?? String(deal.instructor || "").split(/[,&]/)[0]?.trim() ?? "").trim();
 const instructorSlug = firstInstructor ? createInstructorSlug(firstInstructor) : "";
+// Candidate slugs untuk lookup direktori, tolerant terhadap urutan nama "A | B" vs
+// "B | A" (misal "Laxmi Kant | KGP Talkie" versus kunci direktori "kgp-talkie-laxmi-kant").
+const slugCandidates: string[] = [];
+if (instructorSlug) slugCandidates.push(instructorSlug);
+if (instructorSlug && /\s*\|\s*/.test(firstInstructor)) {
+  const parts = firstInstructor.split(/\s*\|\s*/).map((s) => s.trim()).filter(Boolean);
+  if (parts.length >= 2) slugCandidates.push(createInstructorSlug(parts.reverse().join(" | ")));
+}
 // Lookup bertoleransi gelar (Dr/Prof/dst) sehingga "Dr. Satyajit Pattnaik" tetap
 // menemukan entri "satyajit-pattnaik" bila slug bergelar tidak ada di direktori.
-const altSlug = instructorSlug.replace(/^(?:dr|mr|mrs|ms|miss|prof|professor|sir|ir)-/, "");
+const titleRegex = /^(?:dr|mr|mrs|ms|miss|prof|professor|sir|ir)-/;
+const altSlugCandidates = slugCandidates.map((s) => s.replace(titleRegex, ""));
+const instructorCourseCount = coupons.filter((d) => {
+  const instructors = parseInstructors(String(d.instructor || ""));
+  const dealSlugs = instructors.flatMap((name) =>
+    [name, ...name.split(/\s*[|,+&;]\s*/)]
+      .filter((s) => s.length > 2)
+      .map((n) => createInstructorSlug(n.trim()))
+  );
+  const dealCandidates = new Set<string>(dealSlugs);
+  dealSlugs.forEach((s) => {
+    if (titleRegex.test(s)) dealCandidates.add(s.replace(titleRegex, ""));
+  });
+  return [...slugCandidates, ...altSlugCandidates].some((s) => dealCandidates.has(s));
+}).length;
 type DirEntry = { name?: string; count?: number; image?: string };
 const dirEntries = instructorDirectory as unknown as Record<string, DirEntry>;
 const profileEntries = instructorProfiles as unknown as Record<string, DirEntry>;
-const dirEntry = (instructorSlug && dirEntries[instructorSlug]) || (altSlug && dirEntries[altSlug]) || undefined;
-const profileEntry = (instructorSlug && profileEntries[instructorSlug]) || (altSlug && profileEntries[altSlug]) || undefined;
+const dirEntry = slugCandidates.concat(altSlugCandidates).reduce<DirEntry | undefined>((acc, s) => acc ?? dirEntries[s], undefined);
+const profileEntry = slugCandidates.concat(altSlugCandidates).reduce<DirEntry | undefined>((acc, s) => acc ?? profileEntries[s], undefined);
 const instructorImg = (deal as any).instructorImage || profileEntry?.image || dirEntry?.image || "";
-const instructorCourses = typeof (deal as any).instructorCourses === "number" ? (deal as any).instructorCourses : dirEntry?.count;
+const instructorCourses = typeof (deal as any).instructorCourses === "number" ? (deal as any).instructorCourses : instructorCourseCount;
 const dealLang = (deal.language || "").toString().trim();
 const langFlag = LANG_FLAGS[dealLang.toLowerCase()] || "";
 const insSub = typeof instructorCourses === "number" ? `${instructorCourses} course${instructorCourses === 1 ? "" : "s"}` : (dealLang || deal.category || provider);
