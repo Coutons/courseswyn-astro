@@ -111,10 +111,12 @@ import Layout from "../layouts/Layout.astro";
   let currentPage = 1;
   const ITEMS_PER_PAGE = 12;
   let allDeals: Deal[] = [];
+  let loadFailed = false;
 
   async function loadDeals() {
     try {
       const deals = await fetch("/api/deals").then(r => r.json());
+      loadFailed = false;
       const seen = new Set<string>();
       allDeals = deals.filter((d: Deal) => {
         const key = d.slug || d.title || "";
@@ -124,6 +126,7 @@ import Layout from "../layouts/Layout.astro";
       });
     } catch {
       allDeals = [];
+      loadFailed = true;
     }
   }
 
@@ -211,6 +214,18 @@ import Layout from "../layouts/Layout.astro";
     const pageInfo = document.getElementById("page-info")!;
     const prevBtn = document.getElementById("prev-page") as HTMLButtonElement;
     const nextBtn = document.getElementById("next-page") as HTMLButtonElement;
+
+    if (loadFailed) {
+      loading.style.display = "none";
+      results.style.display = "none";
+      noResults.style.display = "none";
+      nav.style.display = "none";
+      const err = document.createElement("div");
+      err.style.cssText = "text-align:center;padding:4rem 0;color:var(--danger,#f07178);font-weight:700;";
+      err.textContent = "Gagal memuat data. Coba refresh halaman.";
+      results.parentElement?.insertBefore(err, results);
+      return;
+    }
 
     if (allDeals.length === 0) {
       loading.style.display = "block";
