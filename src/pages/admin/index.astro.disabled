@@ -64,26 +64,7 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
     </div>
   </div>
 
-  <details class="adm-card adm-details">
-    <summary><span class="adm-details-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span><b>Bulk import</b> — paste one line per coupon: <code>Title | URL | Category</code></span></summary>
-    <div class="adm-grid">
-      <textarea class="adm-textarea" id="bulkInput" rows="6" placeholder={"React Crash Course | https://trk.udemy.com/.../?couponCode=WYN2026 | Development\nPython for Beginners | https://trk.udemy.com/.../?couponCode=WYN2026 | Development"}></textarea>
-      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-        <button class="adm-btn adm-btn-primary" type="button" id="bulkImport">Import</button>
-        <span class="adm-hint" style="margin:0;">Provider defaults to Udemy, price to $0, category to Development when omitted.</span>
-        <span id="bulkStatus" class="adm-form-status"></span>
-      </div>
-    </div>
-  </details>
 
-  <details class="adm-card adm-details">
-    <summary><span class="adm-details-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span><b>Bulk set expiry</b> — select rows below, pick a date, apply</span></summary>
-    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-      <input class="adm-input" id="bulkExpiryDate" type="datetime-local" style="max-width:260px;" />
-      <button class="adm-btn adm-btn-primary" type="button" id="bulkExpiry">Apply to selected (<span id="selCount">0</span>)</button>
-      <span id="expiryStatus" class="adm-form-status"></span>
-    </div>
-  </details>
 
   <div class="adm-card">
     <div class="adm-toolbar">
@@ -371,68 +352,5 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
     });
   });
 
-  const bulkInput = document.getElementById("bulkInput") as HTMLTextAreaElement;
-  const bulkImport = document.getElementById("bulkImport") as HTMLButtonElement;
-  const bulkStatus = document.getElementById("bulkStatus") as HTMLElement;
-  bulkImport.addEventListener("click", async () => {
-    const lines = bulkInput.value.split("\n").map((l) => l.trim()).filter(Boolean);
-    if (!lines.length) return alert("Paste at least one line first.");
-    const items = lines.map((line) => {
-      const parts = line.split("|").map((p) => p.trim());
-      return {
-        title: parts[0] || "",
-        url: parts[1] || "",
-        category: parts[2] || "Development",
-        provider: "Udemy",
-        price: 0,
-      };
-    });
-    const bad = items.filter((i) => !i.title || !i.url).length;
-    if (bad) return alert(`${bad} line(s) missing title or URL. Format: Title | URL | Category`);
-    bulkImport.disabled = true;
-    bulkStatus.textContent = "Importing…";
-    try {
-      const res = await fetch("/api/deals/bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(items),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Import failed");
-      const failed = data.errors?.length || 0;
-      bulkStatus.textContent = `Imported ${data.created} coupon(s)${failed ? `, ${failed} failed` : ""}`;
-      setTimeout(() => location.reload(), 700);
-    } catch (err) {
-      bulkStatus.textContent = "";
-      alert(`Error: ${(err as Error).message}`);
-      bulkImport.disabled = false;
-    }
-  });
 
-  const bulkExpiryDate = document.getElementById("bulkExpiryDate") as HTMLInputElement;
-  const bulkExpiry = document.getElementById("bulkExpiry") as HTMLButtonElement;
-  const expiryStatus = document.getElementById("expiryStatus") as HTMLElement;
-  bulkExpiry.addEventListener("click", async () => {
-    const ids = rowChecks.filter((c) => c.checked).map((c) => c.dataset.id || "").filter(Boolean);
-    if (!ids.length) return alert("Select at least one coupon (checkboxes in the table).");
-    if (!bulkExpiryDate.value) return alert("Pick an expiry date first.");
-    const expiresAt = `${bulkExpiryDate.value}:00+07:00`;
-    bulkExpiry.disabled = true;
-    expiryStatus.textContent = "Applying…";
-    try {
-      const res = await fetch("/api/deals", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids, expiresAt }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Request failed");
-      expiryStatus.textContent = `Updated ${data.updated} coupon(s). Reloading…`;
-      setTimeout(() => location.reload(), 700);
-    } catch (err) {
-      expiryStatus.textContent = "";
-      alert(`Error: ${(err as Error).message}`);
-      bulkExpiry.disabled = false;
-    }
-  });
 </script>

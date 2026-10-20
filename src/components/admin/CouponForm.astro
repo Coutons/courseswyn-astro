@@ -242,7 +242,7 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
 <script>
   const form = document.getElementById("couponForm") as HTMLFormElement;
   const isEdit = form.dataset.isEdit === "true";
-  let currentId: string | null = form.dataset.dealId || null;
+  const currentId: string | null = form.dataset.dealId || null;
   const statusEl = document.getElementById("formStatus");
 
   function setStatus(text: string, kind = "") {
@@ -436,10 +436,8 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
       if (!res.ok) {
         throw new Error(data.error || "Request failed");
       }
-      const newSlug = String((data as { slug?: string })?.slug ?? "").trim();
-      if (newSlug) currentId = newSlug;
       setStatus("Saved ✓", "adm-ok");
-      setTimeout(() => { window.location.assign("/admin"); }, 800);
+      setTimeout(() => (window.location.href = "/admin"), 400);
     } catch (err) {
       setStatus(`Error: ${(err as Error).message}`, "adm-err");
       if (submitBtn) submitBtn.disabled = false;
