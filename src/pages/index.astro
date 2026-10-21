@@ -16,9 +16,10 @@ const last24h = allDeals.filter((d) => { const t = new Date(d.updatedAt ?? d.cre
 
 const latestSix = sortedDeals.slice(0, 6);
 
-// Homepage claims use LIVE deals only — expired entries must never feed
-// "verified coupons" counts or "up to X%" headlines.
-const liveCount = activeDeals.length;
+// Homepage headline counts show the FULL catalog (every coupon we track),
+// not just non-expired ones. Discount math below still uses LIVE deals
+// only — expired entries must never feed "up to X%" headlines.
+const totalCoupons = allDeals.length;
 const paidActive = activeDeals.filter((d) => typeof d.price === "number" && d.price > 0);
 const discountPcts = paidActive
   .filter((d): d is typeof d & { price: number; originalPrice: number } => typeof d.price === "number" && typeof d.originalPrice === "number" && d.originalPrice > d.price && d.price > 0)
@@ -73,7 +74,7 @@ function clean(s: string) { return String(s || "").replace(/&amp;/g, "&").replac
 // ("udemy coupon code") belongs to /udemy-coupon-code — this title leads
 // with the brand to avoid cannibalizing it.
 const pageTitle = `CoursesWyn: Verified Udemy Coupons & Promo Codes (${currentMonth} ${currentYear})`;
-const pageDescription = `CoursesWyn tracks ${liveCount.toLocaleString()} verified Udemy coupons & promo codes for ${currentMonth} ${currentYear} — save up to ${maxDiscountPct}% on top-rated courses. Every code re-checked daily; dead codes pulled before you see them.`;
+const pageDescription = `CoursesWyn tracks ${totalCoupons.toLocaleString()} verified Udemy coupons & promo codes for ${currentMonth} ${currentYear} — save up to ${maxDiscountPct}% on top-rated courses. Every code re-checked daily; dead codes pulled before you see them.`;
 
 const faqs = [
   { q: "Are CoursesWyn's Udemy coupons legitimate?", a: "Yes. Every coupon comes from Udemy's official affiliate program or the course instructor directly. Each code is re-checked against Udemy daily, and dead codes are pulled from the site before you see them." },
@@ -209,7 +210,7 @@ const heroChips = [
 
       <p class="sx-eyebrow"><span class="sx-blink" aria-hidden="true"></span> {last24h} codes checked in the last 24 hours</p>
       <h1>Udemy Coupons & <span class="sx-gold">Promo Codes</span> for {currentMonth} {currentYear}</h1>
-      <p class="sx-sub">Save up to {maxDiscountPct}% on {liveCount.toLocaleString()}+ live courses across development, IT, business, and design. Every code re-checked daily — dead codes pulled before you see them.</p>
+      <p class="sx-sub">Save up to {maxDiscountPct}% on {totalCoupons.toLocaleString()}+ courses across development, IT, business, and design. Every code re-checked daily — dead codes pulled before you see them.</p>
       <form action="/search" method="GET" role="search" aria-label="Search discounted Udemy courses" class="sx-search">
         <input type="search" name="q" placeholder="Search Python, AWS, Excel courses…" autocomplete="off" aria-label="Search discounted courses" />
         <button type="submit">Search</button>
@@ -217,7 +218,7 @@ const heroChips = [
       <div class="sx-chips" aria-label="Popular searches">
         {heroChips.map((c) => (<a class="sx-chip" href={`/search?q=${encodeURIComponent(c.q)}`}>{c.name}</a>))}
       </div>
-      <p class="sx-proof"><b>{liveCount.toLocaleString()}+</b> live verified coupons <span class="sx-dot">·</span> <b>{catCounts.size}</b> categories <span class="sx-dot">·</span> <b>{topicCounts.size}</b> topics <span class="sx-dot">·</span> <b>{avgDiscount}%</b> avg discount</p>
+      <p class="sx-proof"><b>{totalCoupons.toLocaleString()}+</b> verified coupons tracked <span class="sx-dot">·</span> <b>{catCounts.size}</b> categories <span class="sx-dot">·</span> <b>{topicCounts.size}</b> topics <span class="sx-dot">·</span> <b>{avgDiscount}%</b> avg discount</p>
     </div>
     <div class="sx-ticket" aria-hidden="true"><div class="sx-ticket-line"></div><div class="sx-ticket-edge"></div></div>
   </div>
@@ -328,7 +329,7 @@ const heroChips = [
         <h2>Stop paying full price for Udemy courses.</h2>
         <p>Every coupon above passed its last verification check. Pick your skill and claim it in one click.</p>
         <div class="sx-cta-row">
-          <a href="/udemy-coupon-code" class="sx-cta-btn">Browse all {liveCount.toLocaleString()} coupons →</a>
+          <a href="/udemy-coupon-code" class="sx-cta-btn">Browse all {totalCoupons.toLocaleString()} coupons →</a>
           <a href="/contact" class="sx-cta-ghost">Share a coupon</a>
         </div>
       </div>

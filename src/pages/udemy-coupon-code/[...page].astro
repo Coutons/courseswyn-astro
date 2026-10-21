@@ -9,7 +9,9 @@ import { slugifyCategory } from "../../lib/utils";
 
 export async function getStaticPaths({ paginate }: { paginate: any }) {
   const allDeals = await readDeals();
-  return paginate(allDeals, { pageSize: 24 });
+  // 48 kartu/halaman: cakupan kata kunci per halaman lebih tebal & lebih banyak CTA
+  // dalam satu layar (DesiDime ~85). Gambar kartu di bawah fold sudah loading="lazy".
+  return paginate(allDeals, { pageSize: 48 });
 }
 
 const { page } = Astro.props as { page: any };
@@ -84,18 +86,62 @@ const discountPcts = paidActiveDeals
   .map((d: any) => Math.round(100 - (d.price / d.originalPrice) * 100));
 const maxDiscountPct = discountPcts.length ? Math.max(...discountPcts) : 90;
 
+/* ==================== EDITORIAL DATA (angka nyata dari katalog hidup) ====================
+   Semua klaim di seksi panduan di bawah dihitung dari activeDeals pada build,
+   bukan angka hard-coded — begitu katalog berubah, teks ikut berubah. */
+const AI_RE = /\b(ai|artificial intelligence|machine learning|deep learning|generative|genai|chatgpt|gpt|llm|claude|gemini|prompt engineering|agentic|neural|data science|computer vision|nlp)\b/i;
+const aiDeals = activeDeals.filter((d: any) => AI_RE.test(`${d.title || ""} ${d.subcategory || ""} ${d.category || ""}`));
+const aiCount = aiDeals.length;
+
+const ratedDeals = activeDeals.filter((d: any) => typeof d.rating === "number" && d.rating >= 4.5);
+const totalStudents = activeDeals.reduce((a: number, d: any) => a + (typeof d.students === "number" ? d.students : 0), 0);
+const underTenCount = paidActiveDeals.filter((d: any) => d.price <= 9.99).length;
+
+const byStudents = (a: any, b: any) => (b.students || 0) - (a.students || 0);
+const topStudentsDeals = [...paidActiveDeals].sort(byStudents).slice(0, 6);
+const topRatedDeals = [...ratedDeals].sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0) || byStudents(a, b)).slice(0, 6);
+const topAiDeals = [...aiDeals].sort(byStudents).slice(0, 6);
+const expiringDeals = [...paidActiveDeals]
+  .filter((d: any) => d.expiresAt && new Date(d.expiresAt) > now)
+  .sort((a: any, b: any) => new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime())
+  .slice(0, 6);
+
+const pctOff = (d: any) =>
+  d.originalPrice && d.originalPrice > d.price && d.price > 0 ? Math.round(100 - (d.price / d.originalPrice) * 100) : 0;
+
+const fmtExp = (iso?: string) => {
+  if (!iso) return "—";
+  const t = new Date(iso);
+  if (isNaN(t.getTime())) return "—";
+  return t.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Asia/Jakarta" });
+};
+
+// Baris tabel "live coupons per kategori" — hitung ulang dari activeDeals.
+const catAgg = new Map<string, { name: string; count: number; maxPct: number }>();
+for (const d of activeDeals) {
+  const name = String(d.category || "").trim();
+  if (!name) continue;
+  const e = catAgg.get(name) ?? { name, count: 0, maxPct: 0 };
+  e.count++;
+  e.maxPct = Math.max(e.maxPct, pctOff(d));
+  catAgg.set(name, e);
+}
+const catRows = [...catAgg.values()].sort((a, b) => b.count - a.count).slice(0, 8);
+
 const pageTitle = currentPage === 1
-  ? `Udemy Coupon Codes (${currentMonth} ${currentYear}) | CoursesWyn`
+  ? `Udemy Coupon Code (${currentMonth} ${currentYear}): 100% Off Free Courses | CoursesWyn`
   : `Udemy Coupon Codes — Page ${currentPage} of ${totalPages} | CoursesWyn`;
 
 const pageDescription = currentPage === 1
-  ? `${totalActive.toLocaleString()} verified Udemy coupon codes & course discounts for ${currentMonth} ${currentYear} — open a deal to reveal its code; most apply automatically on Udemy. Up to ${maxDiscountPct}% off, checked ${lastChecked}.`
+  ? `Udemy coupon code for ${currentMonth} ${currentYear}: ${totalActive.toLocaleString()} verified promo codes, including 100% off free courses. Open a deal to reveal its code — most apply automatically on Udemy. Up to ${maxDiscountPct}% off, checked ${lastChecked}.`
   : `Page ${currentPage} of ${totalPages} — more verified Udemy coupon codes & course discounts for ${currentMonth} ${currentYear}, up to ${maxDiscountPct}% off. Checked ${lastChecked}.`;
 
 const pageKeywords = [
   "udemy coupon code", "udemy coupon codes", "udemy coupons discounts", "udemy promo code",
   "udemy discount", "udemy instructor coupon", "udemy sale",
-  "verified udemy coupons", "udemy courses discount", "free udemy coupon"
+  "verified udemy coupons", "udemy courses discount", "free udemy coupon",
+  "udemy 100% off coupon", "free udemy courses", "udemy free courses coupon",
+  "udemy coupon code today", "udemy coupon code 2026"
 ].join(", ");
 
 const currentDeals = currentItems.filter((d: any) => d.price > 0 || d.price == null);
@@ -115,6 +161,17 @@ const faqs = [
   { q: "Should I wait for a Udemy sale or use a coupon code now?", a: "Use a coupon code now if one fits — instructor codes often beat sale prices with deeper, course-specific cuts. Udemy's sitewide sales run every few weeks with automatic discounts up to 90% off, so if no code fits your course, add it to your wishlist and you'll get an email the moment it goes on sale." },
   { q: "Can I stack two Udemy discount codes on one purchase?", a: "No. Udemy applies only one discount per purchase — either a coupon code or the automatic sale price, whichever is lower. If a sale already gives you 85% off, entering a weaker code won't add more savings." },
   { q: "Why is my Udemy coupon code not working at checkout?", a: "Usually one of four causes: the code expired or hit its redemption cap, it only applies to specific courses, hidden spaces got pasted with the code, or Udemy's automatic sale price is already lower (Udemy then shows the lower price — that's not a bug). Try incognito mode, and check the last-checked stamp on the deal." },
+  { q: "Is there a special Udemy coupon code for new users?", a: "There is no standing 'new user code', but new accounts do get a welcome discount that usually lands courses between $9.99 and $14.99 for the first 24–48 hours, plus a 7-day trial of the Personal Plan. After that window prices reset. The instructor coupons on this page work for new and existing accounts alike, so you don't need to register fresh to claim one." },
+  { q: "Does Udemy still offer $10 courses?", a: `The flat $10 coupon is largely gone. Udemy moved to variable floor pricing by country and topic, so the equivalent saving now comes from instructor coupons in the $9.99–$14.99 band — ${underTenCount} of our live coupons sit at $9.99 or below. Sitewide sales such as New Year, Black Friday and Udemy's birthday sale are the other reliable route to that price.` },
+  { q: "Can I get Udemy courses completely free?", a: "Yes — a 100% OFF instructor coupon drops a course to $0.00. These are strictly capped: a free open coupon lasts 5 days for up to 10 students, so they disappear within hours. Free coupons aren't listed in the paid grid on this page; they live on our today's deals page where they surface the moment an instructor mints them." },
+  { q: "Do Udemy coupons work differently in different countries?", a: "Coupon codes themselves work worldwide, but the price you see is localized. Udemy displays regional pricing, so a $9.99 coupon may show as an equivalent local-currency amount at checkout. The discount percentage stays the same; only the currency figure changes. Always confirm the final total in your own currency before enrolling." },
+  { q: "Can I use a Udemy coupon on a course already on sale?", a: "You can try, but Udemy applies only one discount and keeps whichever is lower. If the automatic sale price already beats your coupon, the code is ignored and the sale price stands. This is the most common reason a valid code appears to 'do nothing' — the saving was already applied before you typed anything." },
+  { q: "What is Udemy Business and can I get it discounted?", a: "Udemy Business is the team subscription — a curated catalog of 12,000+ courses billed per user per month, aimed at companies rather than individuals. It is not covered by instructor coupons. Some public libraries in the US, UK and Canada do offer free access to a Udemy course selection through a library card, which is the legitimate free route." },
+  { q: "How often are new Udemy coupons added to this page?", a: "Daily. Our pipeline re-checks every listing against Udemy each day, pulls codes that have expired or hit their cap, and adds fresh instructor coupons as instructors mint them. The count on this page moves accordingly — it is not a figure that only ever climbs." },
+  { q: "Are Udemy certificates still issued when I use a coupon?", a: "Yes, without exception. A course enrolled at a coupon price is the identical product: same videos, same downloadable resources, same instructor Q&A, same certificate of completion, and lifetime access on individually purchased courses. Udemy does not mark or limit coupon enrollments in any way." },
+  { q: "Do Udemy coupons work on the mobile app?", a: "No. The Udemy iOS and Android apps have no coupon field — Apple and Google take a cut of in-app purchases, so Udemy disabled manual codes there. Open the course in a mobile or desktop browser, sign in, and the coupon applies normally. The course then shows up in the app too." },
+  { q: "What happens after I redeem a coupon — can I get a refund?", a: "Yes. Udemy's 30-day money-back guarantee applies to coupon purchases on eligible courses. Request it from your Purchase History within 30 days and it returns to your original payment method. Courses bought through app-store payments follow Apple's and Google's refund rules instead of Udemy's." },
+  { q: "Why did the same course cost more last week?", a: "Because instructor coupons are capped and time-boxed. A teacher mints a code to drive a launch push, it runs at $9.99–$12.99 until the redemption cap fills or the clock runs out, then the course returns to full price. Popular courses can swing from $89 to $12 and back within a single week — which is why the deals here carry a last-checked stamp." },
 ];
 
 const jsonLd: any = {
@@ -214,15 +271,11 @@ for (let p = 1; p <= totalPages; p++) {
   description={pageDescription}
   canonical={currentUrl}
   hideBreadcrumbs={false}
+  robots={currentPage > 1 ? "noindex, follow" : undefined}
 >
   <Fragment slot="head">
     {prevUrl && <link rel="prev" href={prevUrl} />}
     {nextUrl && <link rel="next" href={nextUrl} />}
-    {currentPage > 1 && <>
-      <meta name="robots" content="noindex, follow" />
-      <meta name="googlebot" content="noindex, follow" />
-      <meta name="bingbot" content="noindex, follow" />
-    </>}
     <meta name="keywords" content={pageKeywords} />
     <meta name="author" content="Andrew Derek" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -240,7 +293,7 @@ for (let p = 1; p <= totalPages; p++) {
             <div class="dh-hero-grid">
               <div class="ch-copy">
                 <p class="ch-eyebrow"><span class="ch-blink" aria-hidden="true"></span> Checked {lastChecked} · {todayAdded.toLocaleString()} new today</p>
-                <h1>Udemy <span>Coupon Codes</span> & Discounts — {currentMonth} {currentYear}, Up to {maxDiscountPct}% Off</h1>
+                <h1>Udemy <span>Coupon Code</span> — {currentMonth} {currentYear}: 100% Off <span>Free Courses</span> &amp; Promo Deals</h1>
                 <p class="ch-sub">{totalActive.toLocaleString()} verified instructor coupons & promo codes across {categories.length} categories — open any deal and the Udemy discount applies automatically, no typing needed. Save up to <strong>{maxDiscountPct}%</strong> on top-rated online courses.</p>
                 <form action="/search" method="GET" role="search" aria-label="Search coupon codes" class="ch-search">
                   <input type="search" name="q" placeholder={"Search " + totalActive.toLocaleString() + " Udemy coupons & discounts..."} autocomplete="off" aria-label="Search coupon codes" />
@@ -359,30 +412,248 @@ for (let p = 1; p <= totalPages; p++) {
       </section>
 
       {currentPage === 1 && (
-      <section class="ch-about" aria-label="About Udemy coupon codes">
-        <div class="container" style={{ maxWidth: "1280px" }}>
-          <p class="ch-about-badge">Coupon Guide</p>
-          <h2 class="ch-about-title">Udemy Coupon Codes, <span>Explained</span></h2>
-          <p class="ch-about-sub">The short course on scoring verified Udemy promo codes, instructor coupons and sale discounts without the trial and error.</p>
-          <div class="ch-about-grid">
+      <div class="cc-guide" aria-label="Udemy coupon code guide">
+
+        {/* ===== TOP COUPONS TABLE ===== */}
+        <section class="cc-guide-block" id="top-coupons-this-month">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+            Top Udemy Coupons This Month
+            <span class="cc-tag">Most claimed</span>
+          </h2>
+          <p class="cc-guide-desc">The six most-enrolled discounted courses currently live on this page, ranked by total Udemy students. Every row was re-checked {lastChecked}; the coupon price is what Udemy charges once the instructor coupon applies.</p>
+          <div class="cc-table-wrap">
+            <table class="cc-table">
+              <caption class="sr-only">Most popular Udemy coupon codes this month with price, discount and expiry</caption>
+              <thead>
+                <tr><th scope="col">Course</th><th scope="col">Category</th><th scope="col">Coupon price</th><th scope="col">Discount</th><th scope="col">Ends</th></tr>
+              </thead>
+              <tbody>
+                {topStudentsDeals.map((d: any) => (
+                  <tr>
+                    <td class="cc-td-course"><a href={`/coupon/${d.slug}`}>{d.title}</a></td>
+                    <td>{d.category}</td>
+                    <td class="cc-td-price">${Number(d.price).toFixed(2)}</td>
+                    <td class="cc-td-off">{pctOff(d)}% OFF</td>
+                    <td>{fmtExp(d.expiresAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* ===== AI COURSES ===== */}
+        <section class="cc-guide-block" id="udemy-ai-coupon-code">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v1a4 4 0 0 1 0 8v1a5 5 0 0 1-10 0v-1a4 4 0 0 1 0-8V7a5 5 0 0 1 5-5z"/></svg>
+            Udemy AI Coupon Code
+            <span class="cc-tag">{aiCount} live courses</span>
+          </h2>
+          <p class="cc-guide-desc">AI is the single largest block of discounted courses we track: <strong>{aiCount} live AI coupons</strong> across machine learning, large language models, prompt engineering and agentic AI. You do not need a special "AI coupon code" — every course below carries its own instructor coupon that applies automatically when you open the deal. Prices on this category typically land between $9.99 and $14.99 against list prices of $74.99 to $199.99.</p>
+          <ul class="cc-tips">
+            {topAiDeals.map((d: any) => (
+              <li class="cc-tip">
+                <strong><a href={`/coupon/${d.slug}`}>{d.title}</a></strong> — ${Number(d.price).toFixed(2)} instead of ${Number(d.originalPrice || 119.99).toFixed(2)} ({pctOff(d)}% off){d.rating ? `, rated ${Number(d.rating).toFixed(1)}/5` : ""}{d.students ? ` · ${Number(d.students).toLocaleString("en-US")} students` : ""}.
+              </li>
+            ))}
+          </ul>
+          <p class="cc-guide-note">Prefer to browse by subject? See <a href="/topics/artificial-intelligence-ai">all AI &amp; Machine Learning coupons</a> or scan <a href="/udemy-coupons-today">today's new drops</a> — free AI coupons surface there first.</p>
+        </section>
+
+        {/* ===== FREE / 100% OFF ===== */}
+        <section class="cc-guide-block" id="udemy-free-coupon">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            Udemy Free Coupon Code (100% Off)
+            <span class="cc-tag">{freeActiveCount} free right now</span>
+          </h2>
+          <p class="cc-guide-desc">A "Udemy free coupon" is a 100% OFF instructor coupon — the course price drops to $0.00 at checkout. Udemy caps these hard: a free open coupon lasts 5 days and is claimed by up to 10 students, so free codes vanish within hours of being posted. That is why this listing page is built for paid discounts ({underTenCount} of our live coupons are $9.99 or less) while freebies get their own dedicated page that refreshes through the day.</p>
+          <p class="cc-guide-text"><strong>How to claim a free Udemy course:</strong> open the deal from the free list, hit the coupon button, and Udemy loads the course at $0.00. Sign in before you click — the coupon binds to the account that redeems it, and there is no way to transfer a claimed free course afterwards. If a free code shows as exhausted, the redemption cap was already hit; Udemy rejects it silently rather than showing an error, so always confirm the total reads $0.00 before you press Enroll.</p>
+          <p class="cc-guide-note">Free coupons live on <a href="/udemy-coupons-today">/udemy-coupons-today</a>, not in the paid grid above. Bookmark it — free drops land there first.</p>
+        </section>
+
+        {/* ===== NOT WORKING ===== */}
+        <section class="cc-guide-block" id="udemy-coupon-not-working">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Why Is My Udemy Coupon Code Not Working?
+            <span class="cc-tag">6 causes &amp; fixes</span>
+          </h2>
+          <p class="cc-guide-desc">A rejected code is almost never random. Udemy applies several layered rules at checkout, and any one of them can block a perfectly valid coupon. These are the six causes we see most often, in the order worth checking them.</p>
+          <ol class="cc-steps">
+            <li class="cc-step">
+              <span class="cc-step-num">1</span>
+              <div>
+                <h3 class="cc-step-title">A sale price already beats your code</h3>
+                <p class="cc-step-text">This is the number one cause. During a sitewide sale Udemy marks the course down automatically, and if that sale price is lower than your coupon would give, the system keeps the lower one and ignores the code. It is not a bug — Udemy always applies whichever discount is deeper. Fix: check whether the displayed price already matches or beats the coupon's saving before assuming it failed.</p>
+              </div>
+            </li>
+            <li class="cc-step">
+              <span class="cc-step-num">2</span>
+              <div>
+                <h3 class="cc-step-title">The coupon hit its redemption cap</h3>
+                <p class="cc-step-text">Every instructor coupon carries a student cap — free coupons allow up to 10 students, targeted coupons up to 100, sitewide affiliate codes more. Once the cap is reached the code stops working immediately, even if its expiry date is still weeks away. Fix: there is no workaround; pick another course from this page. Each card here shows the last-checked stamp so you know it was live on {lastChecked}.</p>
+              </div>
+            </li>
+            <li class="cc-step">
+              <span class="cc-step-num">3</span>
+              <div>
+                <h3 class="cc-step-title">The code expired on its time limit</h3>
+                <p class="cc-step-text">Free open coupons run 5 days; targeted coupons run up to 31 days. Udemy's clock is UTC, so a code can lapse a few hours earlier than your local midnight. Fix: use the expiry shown on the deal page rather than guessing, and redeem the same day you find a course you want.</p>
+              </div>
+            </li>
+            <li class="cc-step">
+              <span class="cc-step-num">4</span>
+              <div>
+                <h3 class="cc-step-title">Hidden characters got pasted in</h3>
+                <p class="cc-step-text">Copying a code from a webpage or chat often drags along a trailing space, a line break, or a non-breaking character that looks identical on screen. Fix: paste the code into a plain text field first, trim it, then type it into Udemy's coupon box manually. Watch for hyphens and digits — codes like <code>UDEAFFMX0926</code> fail on a single wrong character.</p>
+              </div>
+            </li>
+            <li class="cc-step">
+              <span class="cc-step-num">5</span>
+              <div>
+                <h3 class="cc-step-title">The instructor opted out of promotions</h3>
+                <p class="cc-step-text">Instructors can switch their course off Udemy's marketing program entirely. When they do, the course is physically blocked from accepting any sitewide or affiliate code — only their own direct coupon links work. This is common on certification-prep and high-end AI courses where the instructor protects the full price. Fix: use the course's own instructor coupon (what every card on this page links to) instead of a general sitewide code.</p>
+              </div>
+            </li>
+            <li class="cc-step">
+              <span class="cc-step-num">6</span>
+              <div>
+                <h3 class="cc-step-title">You are in the Udemy mobile app</h3>
+                <p class="cc-step-text">The Udemy iOS and Android apps have no coupon field at all — Apple and Google take a cut of in-app purchases, so Udemy disabled codes there. Fix: open the course in a mobile or desktop browser, sign in, and redeem. Details in the mobile section below.</p>
+              </div>
+            </li>
+          </ol>
+          <p class="cc-guide-note">Still stuck on a course from this page? <a href="/contact">Send us the course link</a> and we will re-check that specific coupon against Udemy.</p>
+        </section>
+
+        {/* ===== MOBILE APP ===== */}
+        <section class="cc-guide-block" id="udemy-coupon-mobile-app">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            Udemy Coupon Codes in the Mobile App
+            <span class="cc-tag">Browser only</span>
+          </h2>
+          <p class="cc-guide-desc">Udemy coupon codes cannot be applied inside the Udemy mobile app on iOS or Android. There is no coupon field in the app's checkout — the option simply does not exist. The reason is payment rails: Apple and Google take roughly 30% of any in-app purchase, and Udemy disabled manual coupon entry in the apps rather than absorb that cut on already-discounted courses.</p>
+          <p class="cc-guide-text"><strong>The workaround takes ten seconds.</strong> Open the course link in your phone's browser (Safari, Chrome), sign in to the same Udemy account, and the coupon applies at checkout normally. The course, certificate and lifetime access then appear in the app too — redemption only has to happen in the browser once. On desktop there is no restriction at all: any modern browser works.</p>
+          <p class="cc-guide-note">Full walkthrough with screenshots: <a href="/how-to-redeem-coupon">How to Redeem a Udemy Coupon</a></p>
+        </section>
+
+        {/* ===== INSTRUCTOR VS SITEWIDE ===== */}
+        <section class="cc-guide-block" id="instructor-coupon-vs-sale">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            Instructor Coupon vs Udemy Sitewide Sale
+            <span class="cc-tag">Which is cheaper?</span>
+          </h2>
+          <p class="cc-guide-desc">Two different mechanisms produce the same low price, and knowing which one you are holding tells you whether it will still work tomorrow. An <strong>instructor coupon</strong> is minted by the teacher for their own course — up to 3 codes per course per month. A <strong>sitewide sale</strong> is Udemy's own promotion, applied automatically to the whole catalog with no code to type.</p>
+          <div class="cc-table-wrap">
+            <table class="cc-table">
+              <caption class="sr-only">Comparison of Udemy instructor coupons versus sitewide sales</caption>
+              <thead>
+                <tr><th scope="col">Factor</th><th scope="col">Instructor coupon</th><th scope="col">Udemy sitewide sale</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">How you get it</th><td>Open the deal link, or type the code</td><td>Applied automatically at checkout</td></tr>
+                <tr><th scope="row">Typical duration</th><td>5 days (free) up to 31 days</td><td>Days to weeks, runs every few weeks</td></tr>
+                <tr><th scope="row">Redemption cap</th><td>10 to 100 students, sometimes more</td><td>None — catalog-wide</td></tr>
+                <tr><th scope="row">Usual depth</th><td>60% to 95% off, course-specific</td><td>Up to 90% off, varies by category</td></tr>
+                <tr><th scope="row">Can stack?</th><td colspan="2">No — Udemy applies one discount per course, whichever is lower</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="cc-guide-text"><strong>The practical takeaway:</strong> if a course you want already shows a coupon price on this page, take it. Instructor codes routinely undercut a sitewide sale because the teacher sets the number directly, and the redemption cap means a good code can die before the sale ends. Udemy keeps whichever discount is deeper, so opening the deal through our link never costs you more than checking out straight from Udemy.</p>
+        </section>
+
+        {/* ===== WHY COUPONS EXPIRE ===== */}
+        <section class="cc-guide-block" id="why-udemy-coupons-expire">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Why Udemy Coupons Expire So Fast
+            <span class="cc-tag">The redemption cap</span>
+          </h2>
+          <p class="cc-guide-desc">Udemy coupons carry two independent kill switches, and hitting either one ends the code instantly. The first is a <strong>time limit</strong>: free open coupons last 5 days, targeted coupons up to 31 days. The second is a <strong>redemption cap</strong> — free coupons allow up to 10 students, targeted coupons up to 100. Most codes die on the cap, not the clock.</p>
+          <p class="cc-guide-text"><strong>Why instructors accept that.</strong> A coupon is a launch instrument, not a permanent discount. Instructors mint codes to spike enrollments during a launch window, which drives reviews and lifts the course in Udemy's ranking algorithm. Once the cap fills, the marketing job is done and the course returns to full price — sometimes within a single day for a popular course. That swing is why the same course can sit at $89 on Monday, $12 on Wednesday, and $89 again by Friday.</p>
+          <p class="cc-guide-text"><strong>What this site does about it.</strong> Every deal on this page carries a last-checked stamp, and our pipeline re-checks each coupon against Udemy daily. Dead codes are pruned from the listing rather than left to rot — which is why the count on this page moves every day instead of climbing forever. If you are hunting a specific subject, check the stamp before you click through: a coupon verified within the last few hours is far more likely to still be alive than one checked yesterday.</p>
+          <p class="cc-guide-note">How the checking pipeline works: <a href="/how-we-test-and-verify-udemy-coupons">our verification methodology</a>.</p>
+        </section>
+
+        {/* ===== CATEGORY TABLE ===== */}
+        <section class="cc-guide-block" id="udemy-coupons-by-category">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Udemy Coupon Codes by Category — Live Counts
+            <span class="cc-tag">{totalActive.toLocaleString()} coupons</span>
+          </h2>
+          <p class="cc-guide-desc">Where the {totalActive.toLocaleString()} live coupons on this page actually sit. Counts are the current non-expired deals per category, and the discount column is the deepest cut live in that category right now — not a historical peak.</p>
+          <div class="cc-table-wrap">
+            <table class="cc-table">
+              <caption class="sr-only">Live Udemy coupon count and deepest current discount per category</caption>
+              <thead>
+                <tr><th scope="col">Category</th><th scope="col">Live coupons</th><th scope="col">Deepest discount</th><th scope="col">Browse</th></tr>
+              </thead>
+              <tbody>
+                {catRows.map((c) => (
+                  <tr>
+                    <th scope="row">{c.name}</th>
+                    <td class="cc-td-price">{c.count.toLocaleString("en-US")}</td>
+                    <td class="cc-td-off">up to {c.maxPct}% OFF</td>
+                    <td><a href={`/categories/${slugifyCategory(c.name)}`}>View coupons →</a></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p class="cc-guide-note">Full index: <a href="/categories">all course categories</a> · <a href="/topics">all topics</a></p>
+        </section>
+
+        {/* ===== HOW MUCH YOU SAVE ===== */}
+        <section class="cc-guide-block" id="how-much-udemy-coupons-save">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            How Much Can You Actually Save?
+            <span class="cc-tag">{underTenCount} coupons under $10</span>
+          </h2>
+          <p class="cc-guide-desc">Across the {paidActiveDeals.length.toLocaleString("en-US")} paid coupons live right now, <strong>{underTenCount} courses cost $9.99 or less</strong>. Udemy's list prices typically run $49.99 to $199.99, so a working coupon usually lands between 60% and 95% off. Our most popular courses are enrolled by more than a million students each — the discounts are not a niche trick, they are how most Udemy students buy.</p>
+          <div class="cc-table-wrap">
+            <table class="cc-table">
+              <caption class="sr-only">Distribution of live Udemy coupon prices</caption>
+              <thead>
+                <tr><th scope="col">Coupon price band</th><th scope="col">Live coupons</th><th scope="col">Typical list price</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">$9.99 and under</th><td class="cc-td-price">{underTenCount}</td><td>$49.99 – $199.99</td></tr>
+                <tr><th scope="row">$10.00 – $14.99</th><td class="cc-td-price">{paidActiveDeals.filter((d: any) => d.price > 9.99 && d.price <= 14.99).length}</td><td>$74.99 – $199.99</td></tr>
+                <tr><th scope="row">$15.00 and above</th><td class="cc-td-price">{paidActiveDeals.filter((d: any) => d.price > 14.99).length}</td><td>$99.99 – $249.99</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="cc-guide-text">Every discounted course here is the identical seat full-price learners get: same videos, same downloads, same instructor Q&amp;A, same certificate of completion, and lifetime access on individual purchases. Udemy's 30-day money-back guarantee applies to coupon purchases too — request it from Purchase History if the course is not what you expected.</p>
+        </section>
+
+        {/* ===== PENJELASAN INTI — pola blok yang sama dengan seksi lain ===== */}
+        <section class="cc-guide-block" id="udemy-coupons-explained">
+          <h2 class="cc-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Udemy Coupon Codes, Explained
+            <span class="cc-tag">Coupon Guide</span>
+          </h2>
+          <p class="cc-guide-desc">The short course on scoring verified Udemy promo codes, instructor coupons and sale discounts without the trial and error.</p>
+          <div class="cc-card-grid">
             {[
               ["Where do these coupons come from?", "Instructors mint coupon codes inside Udemy to fill launches and seasonal pushes. Each carries an expiry date and a redemption cap — which is why one course can swing from $89 to $12 and back within a week."],
               ["How do I claim one?", "Open any card above to reach its coupon page, then follow the claim link — Udemy opens with the discount pre-applied at checkout. Hit Enroll and the course, certificate and lifetime access land in your library."],
               ["Why trust this directory?", "Every entry carries its receipts: live discount math, learner rating, instructor history and a last-checked stamp. Dead codes are pruned instead of left to rot."],
               ["What do I actually get?", "The identical seat full-price learners get: same videos, same downloads, same instructor Q&A, same completion certificate. The discount changes the receipt — nothing else."],
             ].map(([title, text]) => (
-              <article class="ch-about-card">
-                <h3>{title}</h3>
-                <p>{text}</p>
+              <article class="cc-card">
+                <h3 class="cc-card-title">{title}</h3>
+                <p class="cc-card-text">{text}</p>
               </article>
             ))}
           </div>
-        </div>
-      </section>
-      )}
-
-      {currentPage === 1 && (
-      <div class="cc-guide" aria-label="Udemy coupon guide">
+        </section>
 
         <section class="cc-guide-block" id="how-to-redeem">
           <h2 class="cc-section-title">
@@ -680,18 +951,16 @@ for (let p = 1; p <= totalPages; p++) {
 
   /* ===== EVERGREEN GUIDE BLOCKS ===== */
   .cc-guide { margin: 3.25rem 0 0; display: grid; gap: 1.25rem; }
-  .ch-about { margin: 3.25rem 1.5rem 0; background: linear-gradient(135deg, #0a0b0d 0%, #101216 130%); border-radius: 24px; padding: clamp(1.75rem, 4vw, 2.75rem); position: relative; overflow: hidden; }
-  .ch-about::before { content: ''; position: absolute; top: -90px; left: 50%; transform: translateX(-50%); width: 520px; height: 260px; background: radial-gradient(ellipse, rgba(169, 199, 255,0.16) 0%, transparent 65%); pointer-events: none; }
-  .ch-about-badge { display: inline-block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #A9C7FF; background: rgba(169, 199, 255,0.12); border: 1px solid rgba(169, 199, 255,0.35); border-radius: 999px; padding: 6px 14px; margin: 0 0 0.8rem; position: relative; }
-  .ch-about-title { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 800; color: #f2f4f6; margin: 0 0 0.5rem; letter-spacing: -0.02em; line-height: 1.15; position: relative; }
-  .ch-about-title span { color: #A9C7FF; }
-  .ch-about-sub { color: rgba(242, 244, 246,0.75); font-size: 0.95rem; line-height: 1.65; margin: 0; max-width: 640px; position: relative; }
-  .ch-about-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem; position: relative; }
-  .ch-about-card { background: rgba(242, 244, 246,0.05); border: 1px solid rgba(242, 244, 246,0.12); border-radius: 14px; padding: 1.25rem; transition: transform 0.2s, background 0.2s, border-color 0.2s; }
-  .ch-about-card:hover { transform: translateY(-3px); background: rgba(242, 244, 246,0.08); border-color: rgba(169, 199, 255,0.45); }
-  .ch-about-card h3 { font-size: 1rem; font-weight: 800; color: #f2f4f6; margin: 0 0 0.45rem; letter-spacing: -0.01em; }
-  .ch-about-card p { font-size: 0.87rem; color: rgba(242, 244, 246,0.72); line-height: 1.65; margin: 0; }
-  @media (max-width: 720px){ .ch-about-grid { grid-template-columns: 1fr; } }
+  /* ===== KARTU DI DALAM BLOK PANDUAN (seksi "Udemy Coupon Codes, Explained") ===== */
+  .cc-card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.9rem; }
+  .cc-card {
+    background: var(--bg-secondary); border: 1px solid #22262d; border-radius: 10px;
+    padding: 1rem 1.1rem; transition: border-color 0.2s, transform 0.2s;
+  }
+  .cc-card:hover { border-color: #3a4149; transform: translateY(-2px); }
+  .cc-card-title { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0 0 0.35rem; line-height: 1.4; }
+  .cc-card-text { font-size: 0.85rem; color: var(--muted); line-height: 1.55; margin: 0; }
+  @media (max-width: 720px) { .cc-card-grid { grid-template-columns: 1fr; } }
   .cc-guide-block { background: var(--card); border: 1px solid #22262d; border-radius: 14px; padding: 1.5rem; }
   .cc-guide-block .cc-section-title { font-size: 1.15rem; margin-bottom: 0.75rem; }
   .cc-guide-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin: 0 0 1rem; }
@@ -715,6 +984,42 @@ for (let p = 1; p <= totalPages; p++) {
   .cc-tip { font-size: 0.87rem; color: var(--muted); line-height: 1.55; background: var(--card); border: 1px solid #22262d; border-radius: 10px; padding: 0.85rem 1rem; }
   .cc-tip strong { color: var(--text); }
   .cc-tip a { font-weight: 600; }
+
+  /* ===== TABEL EDITORIAL (ledger-style, dipakai seksi panduan) ===== */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  .cc-table-wrap {
+    background: var(--card); border: 1px solid #22262d; border-radius: 12px;
+    overflow: hidden; margin: 0 0 1rem; overflow-x: auto;
+  }
+  .cc-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 520px; }
+  .cc-table caption { text-align: left; }
+  .cc-table thead th {
+    font-family: var(--font-mono); font-size: 0.625rem; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--muted); text-align: left; padding: 11px 14px;
+    border-bottom: 1px solid #22262d; background: var(--bg-secondary); white-space: nowrap;
+  }
+  .cc-table tbody th {
+    text-align: left; font-weight: 700; color: var(--text); padding: 12px 14px;
+    border-bottom: 1px solid #1a1d22; vertical-align: top;
+  }
+  .cc-table tbody td {
+    color: var(--muted); padding: 12px 14px; border-bottom: 1px solid #1a1d22; vertical-align: top;
+  }
+  .cc-table tbody tr:last-child th, .cc-table tbody tr:last-child td { border-bottom: none; }
+  .cc-table tbody tr:hover { background: rgba(169, 199, 255, 0.03); }
+  .cc-table a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  .cc-table a:hover { text-decoration: underline; }
+  .cc-td-course { min-width: 260px; }
+  .cc-td-price { font-family: var(--font-mono); font-weight: 700; color: var(--text); white-space: nowrap; }
+  .cc-td-off { font-weight: 800; color: var(--stamp); white-space: nowrap; }
+  .cc-guide-block code {
+    font-family: var(--font-mono); font-size: 0.8rem; color: var(--text);
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 4px; padding: 1px 5px;
+  }
 
   .cc-faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
   @media (max-width: 768px) { .cc-faq-grid { grid-template-columns: 1fr; } }

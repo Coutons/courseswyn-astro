@@ -1,72 +1,63 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import { readDeals } from '../../lib/store';
-import { dealTopicNames } from '../../lib/dealStats';
-import CouponGrid from '../../components/CouponGrid.astro';
-import { toISODateWIB } from '../../lib/date';
-import { slugifyTopic } from '../../lib/utils';
+// Wajib: route ini memakai paginate() sehingga harus prerender agar getStaticPaths
+// dijalankan juga di mode dev/server (tanpa ini Astro.props.page kosong → TypeError).
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import { readDeals } from '../../../lib/store';
+import { dealTopicNames } from '../../../lib/dealStats';
+import CouponGrid from '../../../components/CouponGrid.astro';
+import { toISODateWIB } from '../../../lib/date';
+import { slugifyTopic } from '../../../lib/utils';
 
-// Function to decode HTML entities
-const decodeHtml = (str: string) => str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+// Paginasi NYATA memakai paginate() Astro → membangun file statis
+// /topics/[topic]/, /topics/[topic]/2, dst. (bukan query ?page=N yang tidak
+// pernah terbaca saat build statis).
+// Catatan: getStaticPaths punya cakupan terpisah — jangan pakai const frontmatter di sini.
+export async function getStaticPaths({ paginate }: { paginate: any }) {
+  const PAGE_SIZE = 12;
+  // Catatan: getStaticPaths dikompilasi Astro dalam cakupan terpisah,
+  // sehingga tidak bisa memakai const dari frontmatter — helper-nya didefinisikan di sini.
+  const decodeHtml = (str: string) => str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
 
-export async function getStaticPaths() {
   const allDeals = await readDeals();
 
-  const topicMap = new Map();
+  // Decode subcategory sekali di sini agar pencocokan topik tidak meleset
+  allDeals.forEach((deal: any) => {
+    if (deal.subcategory && typeof deal.subcategory === 'string') {
+      deal.subcategory = decodeHtml(deal.subcategory);
+    }
+  });
+
+  const topicMap = new Map<string, { name: string; deals: any[] }>();
   for (const deal of allDeals) {
     for (const name of dealTopicNames(deal)) {
       const slug = slugifyTopic(name);
-      if (!topicMap.has(slug)) {
-        topicMap.set(slug, name);
-      }
+      const entry = topicMap.get(slug) || { name, deals: [] };
+      entry.deals.push(deal);
+      topicMap.set(slug, entry);
     }
   }
 
-  return [...topicMap.entries()].map(([slug, originalTopic]) => ({
-    params: { topic: slug },
-    props: { originalTopic, allDeals }
-  }));
+  return [...topicMap.entries()].flatMap(([slug, { name, deals }]) =>
+    paginate(deals, {
+      params: { topic: slug },
+      props: { originalTopic: name, allDeals, topicDeals: deals },
+      pageSize: PAGE_SIZE,
+    })
+  );
 }
 
 const { topic: topicSlug } = Astro.params;
-const { originalTopic, allDeals: propAllDeals } = Astro.props;
-const urlParams = new URLSearchParams(Astro.url.search);
-const page = urlParams.get('page');
+const { page, originalTopic, allDeals, topicDeals } = Astro.props as any;
 
-// Use allDeals from props, or read if in dev mode
-const allDeals = propAllDeals || await readDeals();
+// Nama topik asli datang dari props paginasi (fallback: topik tak dikenal)
+const topic: string = originalTopic || 'Unknown Topic';
 
-// Decode subcategories in deals
-allDeals.forEach(deal => {
-  if (deal.subcategory && typeof deal.subcategory === 'string') {
-    deal.subcategory = decodeHtml(deal.subcategory);
-  }
-});
-
-// Use originalTopic for exact matching, with fallback for dev mode
-let topic = originalTopic;
-if (!topic) {
-  const allNames = [...new Set(allDeals.flatMap(dealTopicNames))];
-  const matching = allNames.find(name => slugifyTopic(name) === topicSlug);
-  topic = matching || 'Unknown Topic';
-}
-
-// Filter deals for this topic (real Udemy tags, fallback subcategory) - exact match
-const topicDeals = allDeals.filter(deal => {
-  try {
-    return dealTopicNames(deal).includes(topic);
-  } catch (e) {
-    return false;
-  }
-});
-
-// Pagination
-const PAGE_SIZE = 12;
-const currentPage = parseInt(page || '1') || 1;
-const startIndex = (currentPage - 1) * PAGE_SIZE;
-const endIndex = startIndex + PAGE_SIZE;
-const currentItems = topicDeals.slice(startIndex, endIndex);
-const totalPages = Math.ceil(topicDeals.length / PAGE_SIZE);
+const currentPage = page.currentPage;
+const totalPages = page.lastPage;
+const startIndex = page.start;
+const endIndex = page.end;
+const currentItems = page.data as any[];
 
 const displayName = topic.replace(/\b\w/g, (l: string) => l.toUpperCase());
 const topicName = displayName;
@@ -161,7 +152,9 @@ const otherTopics = [...topicCounts.keys()]
 
 const siteUrl = "https://courseswyn.com";
 const topicBaseUrl = `${siteUrl}/topics/${topicSlug}`;
-const currentUrl = currentPage === 1 ? topicBaseUrl : `${topicBaseUrl}?page=${currentPage}`;
+const currentUrl = currentPage === 1 ? topicBaseUrl : `${topicBaseUrl}/${currentPage}`;
+// URL paginasi: halaman 1 = /topics/[slug], halaman N = /topics/[slug]/N
+const pageHref = (n: number) => (n <= 1 ? `/topics/${topicSlug}` : `/topics/${topicSlug}/${n}`);
 
 const pageKeywords = [
   `${topicName.toLowerCase()} courses`,
@@ -189,14 +182,10 @@ const faqs = [
   description={topicDescription}
   canonical={currentUrl}
   hideBreadcrumbs={false}
+  robots={currentPage > 1 ? "noindex, follow" : undefined}
 >
   <Fragment slot="head">
     {currentPage > 1 && <link rel="canonical" href={currentUrl} />}
-    {currentPage > 1 && <>
-      <meta name="robots" content="noindex, follow" />
-      <meta name="googlebot" content="noindex, follow" />
-      <meta name="bingbot" content="noindex, follow" />
-    </>}
     <meta name="keywords" content={pageKeywords} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -300,7 +289,7 @@ const faqs = [
             <div class="cc-grid">
               {currentItems.map((deal, idx) => <CouponGrid deal={deal} eager={idx < 6} priority={idx < 3} />)}
             </div>
-            <div class="cc-deal-more"><span class="cc-deal-count">Showing {startIndex + 1}-{Math.min(endIndex, topicDeals.length)} of {topicDeals.length} courses</span><a href="/udemy-coupons-today">See today's new coupons →</a></div>
+            <div class="cc-deal-more"><span class="cc-deal-count">Showing {startIndex + 1}-{startIndex + currentItems.length} of {topicDeals.length} courses</span><a href="/udemy-coupons-today">See today's new coupons →</a></div>
           </div>
         ) : (
           <div class="cc-empty">
@@ -313,7 +302,7 @@ const faqs = [
         {totalPages > 1 && (
           <nav class="cc-pagination" aria-label="Pagination">
             {currentPage > 1 ? (
-              <a href={`/topics/${topicSlug}?page=${currentPage - 1}`} class="cc-page-link cc-page-prev">← Prev</a>
+              <a href={pageHref(currentPage - 1)} class="cc-page-link cc-page-prev">← Prev</a>
             ) : (
               <span class="cc-page-link cc-page-disabled">← Prev</span>
             )}
@@ -324,12 +313,12 @@ const faqs = [
                   pageNum === currentPage ? (
                     <span class="cc-page-num cc-page-active">{pageNum}</span>
                   ) : (
-                    <a href={`/topics/${topicSlug}?page=${pageNum}`} class="cc-page-num">{pageNum}</a>
+                    <a href={pageHref(pageNum)} class="cc-page-num">{pageNum}</a>
                   )
                 ))}
             </div>
             {currentPage < totalPages ? (
-              <a href={`/topics/${topicSlug}?page=${currentPage + 1}`} class="cc-page-link cc-page-next">Next →</a>
+              <a href={pageHref(currentPage + 1)} class="cc-page-link cc-page-next">Next →</a>
             ) : (
               <span class="cc-page-link cc-page-disabled">Next →</span>
             )}

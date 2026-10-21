@@ -1,57 +1,53 @@
 ---
 export const prerender = true;
-import Layout from '../../layouts/Layout.astro';
+import Layout from '../../../layouts/Layout.astro';
 import PageHero from "@/components/PageHero.astro";
-import { readDeals } from '../../lib/store';
-import CouponGrid from '../../components/CouponGrid.astro';
-import { normName, slugifyCategory, buildHeroFeed } from '../../lib/utils';
-import { toISODateWIB } from '../../lib/date';
+import { readDeals } from '../../../lib/store';
+import CouponGrid from '../../../components/CouponGrid.astro';
+import { normName, slugifyCategory, buildHeroFeed } from '../../../lib/utils';
+import { toISODateWIB } from '../../../lib/date';
 
-export async function getStaticPaths() {
+// Paginasi NYATA memakai paginate() Astro → membangun file statis
+// /categories/[category]/, /categories/[category]/2, dst.
+// Sebelumnya memakai query ?page=N: saat build statis searchParams selalu kosong,
+// sehingga semua halaman menampilkan konten halaman 1 (terbukti di production).
+// Catatan: getStaticPaths punya cakupan terpisah — jangan pakai const frontmatter di sini.
+export async function getStaticPaths({ paginate }: { paginate: any }) {
+  const PAGE_SIZE = 12;
   const allDeals = await readDeals();
-  const categories = [...new Set(allDeals.map(deal => normName(deal.category)).filter(cat => cat != null))];
-  return categories.map(category => ({
-    params: { category: slugifyCategory(category!) },
-    props: { allDeals }
-  }));
-}
+  const byCategory = new Map<string, { name: string; deals: any[] }>();
 
-const { category } = Astro.params;
-const { allDeals: propAllDeals } = Astro.props as { allDeals?: any[] };
-const selectedLanguage = Astro.url.searchParams.get('language');
-const page = Astro.url.searchParams.get('page');
+  for (const deal of allDeals) {
+    const name = normName(deal.category);
+    if (!name) continue;
+    const slug = slugifyCategory(name);
+    const entry = byCategory.get(slug) || { name, deals: [] };
+    entry.deals.push(deal);
+    byCategory.set(slug, entry);
+  }
 
-// Use allDeals from props, or read if in dev mode
-const allDeals = propAllDeals || await readDeals();
-
-// Filter deals for this category
-let categoryDeals = allDeals.filter(deal => {
-  if (!deal.category || !category) return false;
-
-  const normalizedDealCategory = normName(deal.category);
-  if (!normalizedDealCategory) return false;
-
-  const dealSlug = slugifyCategory(normalizedDealCategory);
-  return dealSlug === category;
-});
-
-// Further filter by language if selected
-if (selectedLanguage) {
-  categoryDeals = categoryDeals.filter((d: any) =>
-    d.language && d.language.toLowerCase() === selectedLanguage.toLowerCase()
+  return [...byCategory.entries()].flatMap(([slug, { name, deals }]) =>
+    paginate(deals, {
+      params: { category: slug },
+      props: { allDeals, categoryName: name, categoryDeals: deals },
+      pageSize: PAGE_SIZE,
+    })
   );
 }
 
-// Pagination
-const PAGE_SIZE = 12;
-const currentPage = parseInt(page || '1') || 1;
-const startIndex = (currentPage - 1) * PAGE_SIZE;
-const endIndex = startIndex + PAGE_SIZE;
-const currentItems = categoryDeals.slice(startIndex, endIndex);
-const totalPages = Math.ceil(categoryDeals.length / PAGE_SIZE);
+const { category } = Astro.params;
+const {
+  page,
+  allDeals,
+  categoryName,
+  categoryDeals,
+} = Astro.props as { page: any; allDeals: any[]; categoryName: string; categoryDeals: any[] };
 
-const displayName = categoryDeals.length > 0 ? normName(categoryDeals[0].category) || 'Courses' : 'Courses';
-const categoryName = displayName;
+const currentPage = page.currentPage;
+const totalPages = page.lastPage;
+const startIndex = page.start;
+const endIndex = page.end;
+const currentItems = page.data as any[];
 
 // Get related categories for internal linking
 const allCategories = [...new Set(allDeals.map(deal => normName(deal.category)).filter(Boolean))].filter(cat => cat !== categoryName);
@@ -71,15 +67,16 @@ const avgDiscount = categoryDeals.length > 0
 const freeCourses = categoryDeals.filter((deal: any) => deal.price === 0 || deal.price === null).length;
 
 // Create dynamic meta description with keywords (after avgDiscount agar angkanya real)
-const langSuffix = selectedLanguage ? ` in ${selectedLanguage}` : "";
-const metaDescription = `Looking for the best ${categoryName.toLowerCase()} courses on Udemy? We ranked ${categoryDeals.length}+ verified ${categoryName.toLowerCase()} courses${langSuffix} by student rating and coupon availability — save up to ${avgDiscount}% with working codes updated daily.`;
+const metaDescription = `Looking for the best ${categoryName.toLowerCase()} courses on Udemy? We ranked ${categoryDeals.length}+ verified ${categoryName.toLowerCase()} courses by student rating and coupon availability — save up to ${avgDiscount}% with working codes updated daily.`;
 const now = new Date();
 const heroFeed = buildHeroFeed(categoryDeals, now, 3);
 
 const siteUrl = "https://courseswyn.com";
 const baseUrl = `${siteUrl}/categories/${category}`;
-const currentUrl = currentPage === 1 ? baseUrl : `${baseUrl}?page=${currentPage}`;
-const langQuery = selectedLanguage ? `&language=${encodeURIComponent(selectedLanguage)}` : "";
+// Halaman > 1 punya path sendiri (canonical menunjuk ke dirinya sendiri, noindex).
+const currentUrl = currentPage === 1 ? baseUrl : `${baseUrl}/${currentPage}`;
+// URL paginasi: halaman 1 = /categories/[slug], halaman N = /categories/[slug]/N
+const pageHref = (n: number) => (n <= 1 ? `/categories/${category}` : `/categories/${category}/${n}`);
 
 const pageKeywords = [
   `${categoryName.toLowerCase()} courses`,
@@ -104,14 +101,10 @@ const faqs = [
   description={metaDescription}
   canonical={currentUrl}
   hideBreadcrumbs={false}
+  robots={currentPage > 1 ? "noindex, follow" : undefined}
 >
   <Fragment slot="head">
     {currentPage > 1 && <link rel="canonical" href={currentUrl} />}
-    {currentPage > 1 && <>
-      <meta name="robots" content="noindex, follow" />
-      <meta name="googlebot" content="noindex, follow" />
-      <meta name="bingbot" content="noindex, follow" />
-    </>}
     <meta name="keywords" content={pageKeywords} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -183,8 +176,8 @@ const faqs = [
       <header class="cc-header">
         <PageHero
   eyebrow={`Verified coupon codes · updated ${currentDate}`}
-  titleHtml={`Best <span>${categoryName}</span> Courses on Udemy for ${currentYear}${selectedLanguage ? ` in ${selectedLanguage}` : ""}`}
-  subHtml={`Ranked by student rating and coupon availability — <strong>${categoryDeals.length}+ verified ${categoryName.toLowerCase()} courses</strong>${langSuffix} with working codes, checked against Udemy before listing.`}
+  titleHtml={`Best <span>${categoryName}</span> Courses on Udemy for ${currentYear}`}
+  subHtml={`Ranked by student rating and coupon availability — <strong>${categoryDeals.length}+ verified ${categoryName.toLowerCase()} courses</strong> with working codes, checked against Udemy before listing.`}
   stats={[{ val: categoryDeals.length, label: "courses", suffix: "+" }, { val: avgDiscount, label: "avg discount", suffix: "%" }, { val: freeCourses, label: "free courses" }]}
   feedLines={heroFeed.map((d) => ({ href: "/coupon/" + d.slug, time: d.timeLabel, cat: d.cat, title: d.title, save: "−" + d.pct + "%" }))}
   feedFootHtml={`$ category codes verified <b>${categoryDeals.length}</b>`}
@@ -207,12 +200,12 @@ const faqs = [
             <div class="cc-grid">
               {currentItems.map((deal, idx) => <CouponGrid deal={deal} eager={idx < 6} priority={idx < 3} />)}
             </div>
-            <div class="cc-deal-more"><span class="cc-deal-count">Showing {startIndex + 1}-{Math.min(endIndex, categoryDeals.length)} of {categoryDeals.length} courses</span><a href="/udemy-coupons-today">See today's new coupons →</a></div>
+            <div class="cc-deal-more"><span class="cc-deal-count">Showing {startIndex + 1}-{startIndex + currentItems.length} of {categoryDeals.length} courses</span><a href="/udemy-coupons-today">See today's new coupons →</a></div>
           </>
         ) : (
           <div class="cc-empty">
-            <h3>No {selectedLanguage ? `${selectedLanguage} ` : ''}courses found in {categoryName}</h3>
-            <p>We couldn't find any {selectedLanguage ? `${selectedLanguage} ` : ''}courses in this category. Try browsing our other categories or check back later for new courses.</p>
+            <h3>No courses found in {categoryName}</h3>
+            <p>We couldn't find any courses in this category. Try browsing our other categories or check back later for new courses.</p>
             <a href="/udemy-coupon-code" class="cc-hero-btn">Browse All Courses →</a>
           </div>
         )}
@@ -220,7 +213,7 @@ const faqs = [
         {totalPages > 1 && (
           <nav class="cc-pagination" aria-label="Pagination">
             {currentPage > 1 ? (
-              <a href={`/categories/${category}?page=${currentPage - 1}${langQuery}`} class="cc-page-link cc-page-prev">← Prev</a>
+              <a href={pageHref(currentPage - 1)} class="cc-page-link cc-page-prev">← Prev</a>
             ) : (
               <span class="cc-page-link cc-page-disabled">← Prev</span>
             )}
@@ -231,12 +224,12 @@ const faqs = [
                   pageNum === currentPage ? (
                     <span class="cc-page-num cc-page-active">{pageNum}</span>
                   ) : (
-                    <a href={`/categories/${category}?page=${pageNum}${langQuery}`} class="cc-page-num">{pageNum}</a>
+                    <a href={pageHref(pageNum)} class="cc-page-num">{pageNum}</a>
                   )
                 ))}
             </div>
             {currentPage < totalPages ? (
-              <a href={`/categories/${category}?page=${currentPage + 1}${langQuery}`} class="cc-page-link cc-page-next">Next →</a>
+              <a href={pageHref(currentPage + 1)} class="cc-page-link cc-page-next">Next →</a>
             ) : (
               <span class="cc-page-link cc-page-disabled">Next →</span>
             )}

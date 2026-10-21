@@ -40,10 +40,24 @@ jobs:
           restore-keys: |
             astro-cache-${{ runner.os }}-
 
+      # Pastikan build selalu dalam mode statis (output: 'static' + integrasi sitemap,
+      # admin di-disable). No-op jika repo sudah dalam kondisi prod — pengaman agar
+      # deploy tidak pernah menghasilkan output server (dist/client + dist/server)
+      # yang tidak bisa diserve GitHub Pages.
+      - name: Switch to production mode
+        run: npm run mode:prod
+
       - name: Build with Astro
         run: npm run build
         env:
           TZ: Asia/Jakarta
+
+      # Guard: build statis harus menghasilkan homepage & sitemap.
+      - name: Verify static output
+        run: |
+          test -f dist/index.html || { echo "❌ dist/index.html tidak ada — build tidak statis"; exit 1; }
+          test -f dist/sitemap-index.xml || { echo "❌ dist/sitemap-index.xml tidak ada — robots.txt menunjuk ke file yang tidak ada"; exit 1; }
+          echo "✅ Homepage dan sitemap ter-generate"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
