@@ -127,7 +127,7 @@ const seoTitle = `${normalizedTitle} - ${discountLabel} Udemy Coupon`;
 const seoDescription = generateSeoDescription(deal);
 
 const siteUrl = "https://courseswyn.com";
-const dealUrl = `${siteUrl}/coupon/${deal.slug}`;
+const dealUrl = `${siteUrl}/coupon/${deal.slug}/`;
 const orgName = "CoursesWyn";
 
 const couponMask = maskCoupon(deal.coupon);
@@ -161,6 +161,15 @@ function toISO8601Duration(input?: string): string | undefined {
 // Stable dates: never fall back to build time (it would shift every deploy).
 const datePublished = deal.createdAt ? new Date(deal.createdAt).toISOString() : undefined;
 const dateModified = deal.updatedAt ? new Date(deal.updatedAt).toISOString() : datePublished;
+// Google minta setiap Offer punya validThrough atau priceValidUntil (dan validFrom
+// bila validThrough dipakai). Beberapa deal tidak punya expiresAt, jadi diberi
+// horizon priceValidUntil 30 hari sejak updatedAt — berbasis data, tidak bergeser
+// tiap build (konsisten dengan konvensi tanggal stabil di atas).
+const offerValidFrom = datePublished || dateModified;
+const validUntilSrc = deal.expiresAt || deal.updatedAt || deal.createdAt;
+const priceValidUntil = validUntilSrc
+  ? new Date(new Date(validUntilSrc).getTime() + (deal.expiresAt ? 0 : 30 * 24 * 60 * 60 * 1000)).toISOString()
+  : undefined;
 ---
 
 <Layout
@@ -237,17 +246,12 @@ const dateModified = deal.updatedAt ? new Date(deal.updatedAt).toISOString() : d
                         "price": deal.price || 0,
                         "priceCurrency": "USD",
                         "availability": offerAvailability,
+                        "validFrom": offerValidFrom,
                         "validThrough": deal.expiresAt || undefined,
+                        "priceValidUntil": priceValidUntil,
                         "url": deal.url || dealUrl,
-                        "seller": { "@id": `${siteUrl}/#organization` },
-                            "hasMerchantReturnPolicy": {
-                                "@type": "MerchantReturnPolicy",
-                                "applicableCountry": "US",
-                                "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
-                                "merchantReturnDays": 30,
-                                "returnFees": "https://schema.org/FreeReturn"
-                            }
-                        },
+                        "seller": { "@id": `${siteUrl}/#organization` }
+                    },
                         "timeRequired": toISO8601Duration(deal.duration),
                     "inLanguage": deal.language || "en",
                     "teaches": deal.learn ? deal.learn.map((l) => l.replace(/\r$/, '')).join(", ") : (deal.skills?.length ? deal.skills.join(", ") : undefined),
@@ -280,18 +284,11 @@ const dateModified = deal.updatedAt ? new Date(deal.updatedAt).toISOString() : d
                         "@type": "Offer",
                         "price": deal.price || 0,
                         "priceCurrency": "USD",
-                        "priceValidUntil": deal.expiresAt || undefined,
-                        "validFrom": datePublished,
                         "availability": offerAvailability,
+                        "validFrom": offerValidFrom,
+                        "priceValidUntil": priceValidUntil,
                         "url": deal.url || dealUrl,
-                        "seller": { "@id": `${siteUrl}/#organization` },
-                        "hasMerchantReturnPolicy": {
-                            "@type": "MerchantReturnPolicy",
-                            "applicableCountry": "US",
-                            "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
-                            "merchantReturnDays": 30,
-                            "returnFees": "https://schema.org/FreeReturn"
-                        }
+                        "seller": { "@id": `${siteUrl}/#organization` }
                     }
                 },
                 {

@@ -46,7 +46,22 @@ const {
   robots,
 } = Astro.props;
 
-const canonicalURL = canonical || new URL(Astro.url.pathname, siteUrl).href;
+// Canonical HARUS sama persis dengan URL yang disajikan.
+// Build memakai format "directory" → setiap route disajikan sebagai /path/ dan
+// /path di-301 ke /path/ (GitHub Pages), sedangkan sitemap juga memakai /path/.
+// Canonical tanpa trailing slash membuat Google melabeli halaman sebagai
+// "Alternate page with proper canonical tag" (sitemap /path/, canonical /path).
+// Normalisasi ini juga menangani prop canonical yang di-hardcode di tiap halaman.
+function toServedUrl(input: string): string {
+  const url = new URL(input, siteUrl);
+  url.hash = "";
+  const p = url.pathname;
+  // Biarkan path berbentuk file (mis. /404.html) tanpa slash.
+  const isFileLike = /\.[a-z0-9]+$/i.test(p);
+  if (p !== "/" && !p.endsWith("/") && !isFileLike) url.pathname = `${p}/`;
+  return url.href;
+}
+const canonicalURL = toServedUrl(canonical || new URL(Astro.url.pathname, siteUrl).href);
 const robotsDirectives = robots ?? "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1";
 const botDirectives = robotsDirectives.includes("noindex") ? "noindex, follow" : "index, follow";
 const absoluteImageUrl = image ? (image.startsWith('http') ? image : new URL(image, siteUrl).href) : new URL('/assets/images/og-default.png', siteUrl).href;
@@ -83,7 +98,41 @@ const jsonLdGraph = {
     "description": "Find verified Udemy courses with coupon discounts.",
     "foundingDate": "2024",
     "sameAs": ["https://www.facebook.com/CoursesWyn", "https://x.com/CoursesWyn", "https://medium.com/@coursewyn"],
-    "contactPoint": { "@type": "ContactPoint", "contactType": "customer support", "url": "https://courseswyn.com/contact" }
+    "contactPoint": { "@type": "ContactPoint", "contactType": "customer support", "url": "https://courseswyn.com/contact" },
+    // Kebijakan shipping global (rekomendasi Google agar penawaran tidak lagi
+    // dilaporkan "Missing shippingDetails"). Semua deal di situs ini adalah
+    // produk digital: akses kursus dibuka langsung setelah pembelian di Udemy,
+    // tanpa pengiriman fisik.
+    "hasShippingService": {
+      "@type": "ShippingService",
+      "@id": "https://courseswyn.com/#digital-delivery",
+      "name": "Digital course delivery",
+      "description": "All CoursesWyn deals are digital products delivered online. After purchase on Udemy, course access is granted instantly. No physical shipping is involved.",
+      "fulfillmentType": "FulfillmentTypeDelivery",
+      "handlingTime": {
+        "@type": "ServicePeriod",
+        "duration": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "DAY" }
+      },
+      "shippingConditions": [
+        {
+          "@type": "ShippingConditions",
+          "shippingDestination": [
+            { "@type": "DefinedRegion", "addressCountry": "US" },
+            { "@type": "DefinedRegion", "addressCountry": "IN" },
+            { "@type": "DefinedRegion", "addressCountry": "PH" },
+            { "@type": "DefinedRegion", "addressCountry": "GB" },
+            { "@type": "DefinedRegion", "addressCountry": "CA" },
+            { "@type": "DefinedRegion", "addressCountry": "AU" },
+            { "@type": "DefinedRegion", "addressCountry": "ID" }
+          ],
+          "shippingRate": { "@type": "MonetaryAmount", "value": 0, "currency": "USD" },
+          "transitTime": {
+            "@type": "ServicePeriod",
+            "duration": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "DAY" }
+          }
+        }
+      ]
+    }
   },
   {
     "@type": "WebSite",

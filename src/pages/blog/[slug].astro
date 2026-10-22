@@ -39,6 +39,42 @@ const title = data.title;
 const description = data.description;
 const canonical = `https://courseswyn.com/blog/${post.id}/`;
 
+// Deteksi embed YouTube di body artikel → VideoObject JSON-LD.
+// Google perlu structured data video agar halaman bisa dianggap "watch page"
+// (laporan Video indexing di Search Console).
+function extractYouTubeEmbed(rawBody: string | undefined): { id: string; title: string | null } | null {
+  if (!rawBody) return null;
+  const src = rawBody.match(/youtube\.com\/embed\/([\w-]{6,})/);
+  if (!src) return null;
+  const t = rawBody.match(/<iframe[^>]*\btitle="([^"]+)"/);
+  return { id: src[1], title: t ? t[1] : null };
+}
+
+const ytVideo = extractYouTubeEmbed(post.body);
+const videoSchema = ytVideo
+  ? {
+      "@type": "VideoObject",
+      "@id": `${canonical}#video`,
+      "name": ytVideo.title || title,
+      "description": description,
+      "thumbnailUrl": [
+        `https://i.ytimg.com/vi/${ytVideo.id}/hqdefault.jpg`,
+        `https://i.ytimg.com/vi/${ytVideo.id}/maxresdefault.jpg`
+      ],
+      "uploadDate": (data.updatedAt || data.pubDate).toISOString(),
+      "contentUrl": `https://www.youtube.com/watch?v=${ytVideo.id}`,
+      "embedUrl": `https://www.youtube.com/embed/${ytVideo.id}`,
+      "url": canonical,
+      "mainEntityOfPage": { "@type": "WebPage", "@id": canonical },
+      "publisher": {
+        "@type": "Organization",
+        "name": "CoursesWyn",
+        "url": "https://courseswyn.com",
+        "logo": { "@type": "ImageObject", "url": "https://courseswyn.com/logo.svg" }
+      }
+    }
+  : undefined;
+
 function resolveImage(img: any): string {
   if (!img) return '';
   if (img?.src) return img.src;
@@ -113,6 +149,7 @@ const articleSchema = {
       "image": ogImage ? { "@type": "ImageObject", "url": ogImage } : undefined,
       "mainEntityOfPage": { "@type": "WebPage", "@id": canonical }
     },
+    ...(videoSchema ? [videoSchema] : []),
     {
       "@type": "BreadcrumbList",
       "@id": `${canonical}#breadcrumb`,
