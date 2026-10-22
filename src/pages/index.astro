@@ -2,8 +2,12 @@
 import Layout from "../layouts/Layout.astro";
 import CouponGrid from "../components/CouponGrid.astro";
 import { readDeals } from "../lib/store";
-import { toISODateWIB } from "../lib/date";
+import { toISODateWIB, formatDateWIB } from "../lib/date";
 import { slugifyCategory, slugifyTopic } from "../lib/utils";
+import { parseInstructors, createInstructorSlug } from "../lib/instructors";
+import { getInstructorImage } from "../lib/instructorProfiles";
+import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
 
 const allDeals = await readDeals();
 const now = new Date();
@@ -14,7 +18,24 @@ const sortedDeals = [...activeDeals].sort((a, b) => new Date(b.updatedAt ?? b.cr
 
 const last24h = allDeals.filter((d) => { const t = new Date(d.updatedAt ?? d.createdAt ?? 0).getTime(); return now.getTime() - t < 24 * 3600000; }).length;
 
-const latestSix = sortedDeals.slice(0, 6);
+// Fresh grid mirrors CourseDuck's "Recently updated", but one instructor
+// rarely drops six coupons in a day — spread the picks across educators so
+// the row reads as a real batch, then fill any remaining slots by recency.
+const freshPicks: typeof sortedDeals = [];
+const freshInstructors = new Set<string>();
+for (const d of sortedDeals) {
+  if (freshPicks.length >= 6) break;
+  const first = parseInstructors(d.instructor)[0];
+  if (!first || !freshInstructors.has(first)) {
+    freshPicks.push(d);
+    if (first) freshInstructors.add(first);
+  }
+}
+for (const d of sortedDeals) {
+  if (freshPicks.length >= 6) break;
+  if (!freshPicks.includes(d)) freshPicks.push(d);
+}
+const latestSix = freshPicks;
 
 // Homepage headline counts show the FULL catalog (every coupon we track),
 // not just non-expired ones. Discount math below still uses LIVE deals
@@ -43,6 +64,20 @@ const CAT_DESC: Record<string, string> = {
   "Music": "Theory and production.",
   "Personal Development": "Career and productivity.",
 };
+const CAT_ICON: Record<string, string> = {
+  "IT & Software": "M12 22h8a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4m0-3h6m-6 0H9m3 0V9m0 10v-4",
+  "Development": "M8 9l-4 3 4 3m8-6l4 3-4 3M14 5l-4 14",
+  "Business": "M3 21h18M6 21V9l6-4 6 4v12M10 21v-5h4v5",
+  "Teaching & Academics": "M22 10L12 5 2 10l10 5 10-5zM6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5",
+  "Office Productivity": "M4 4h16v16H4zM4 10h16M10 10v10",
+  "Finance & Accounting": "M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
+  "Design": "M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5L12 3z",
+  "Programming Languages": "M8 6l-5 6 5 6m8-12l5 6-5 6M13 4l-2 16",
+  "Marketing": "M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1zM16 8a5 5 0 0 1 0 8M19 5a9 9 0 0 1 0 14",
+  "Photography & Video": "M3 7h4l2-2h6l2 2h4v12H3zM12 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z",
+  "Music": "M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm12-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0z",
+  "Personal Development": "M12 21s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z",
+};
 const catCounts = new Map<string, { name: string; count: number }>();
 for (const d of activeDeals) {
   const name = String((d as any).category || "").trim();
@@ -55,6 +90,7 @@ const topCats = [...catCounts.values()].sort((a, b) => b.count - a.count).slice(
   ...c,
   slug: slugifyCategory(c.name),
   desc: CAT_DESC[c.name] ?? "Verified coupon deals.",
+  icon: CAT_ICON[c.name] ?? "M4 6h16M4 12h16M4 18h10",
 }));
 
 // Top topics — compact chip block, one click to long-tail pages.
@@ -67,6 +103,64 @@ for (const d of activeDeals) {
 const topTopics = [...topicCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([name, count]) => ({
   name, count, slug: slugifyTopic(name),
 }));
+
+// ── Top rated: students rate these highest (CourseDuck "Courses students
+// rate highest"). A minimum audience keeps a 5.0 from twelve buyers from
+// outranking a 4.8 from 60,000 — thresholds widen only if the catalog is thin.
+const rated = activeDeals.filter((d) => typeof d.rating === "number" && d.rating > 0 && (d.students ?? 0) > 0);
+const byRating = (a: typeof rated[number], b: typeof rated[number]) => (b.rating ?? 0) - (a.rating ?? 0) || (b.students ?? 0) - (a.students ?? 0);
+const topRated = [1000, 300, 100]
+  .map((min) => rated.filter((d) => (d.students ?? 0) >= min).sort(byRating).slice(0, 6))
+  .find((list) => list.length >= 6)
+  ?? rated.sort(byRating).slice(0, 6);
+const topRatedGrid = topRated;
+
+// ── Instructors students trust most (CourseDuck "Most reviewed") — ranked
+// by verified coupon count, with student reach as the tiebreaker.
+type InstAgg = { name: string; slug: string; coupons: number; students: number; ratingSum: number; ratingN: number; img?: string };
+const instMap = new Map<string, InstAgg>();
+for (const d of activeDeals) {
+  for (const raw of parseInstructors(d.instructor)) {
+    const name = raw.replace(/[\p{Cc}\p{Cf}]/gu, "").trim();
+    if (!name) continue;
+    const slug = createInstructorSlug(name);
+    if (!slug) continue;
+    const e = instMap.get(slug) ?? { name, slug, coupons: 0, students: 0, ratingSum: 0, ratingN: 0 };
+    e.coupons += 1;
+    e.students += typeof d.students === "number" ? d.students : 0;
+    if (typeof d.rating === "number" && d.rating > 0) { e.ratingSum += d.rating; e.ratingN += 1; }
+    instMap.set(slug, e);
+  }
+}
+const rankedInstructors = [...instMap.values()]
+  .sort((a, b) => b.coupons - a.coupons || b.students - a.students)
+  .slice(0, 8);
+const topInstructors = await Promise.all(rankedInstructors.map(async (i) => ({ ...i, img: await getInstructorImage(i.slug) })));
+const instructorTotal = instMap.size;
+
+// ── From the blog: 3 newest guides (CourseDuck "Guides and comparisons").
+const blogPosts = (await getCollection("blog"))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => new Date(b.data.updatedAt ?? b.data.pubDate ?? 0).getTime() - new Date(a.data.updatedAt ?? a.data.pubDate ?? 0).getTime())
+  .slice(0, 3);
+
+function fmtStudents(n: number) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(n);
+}
+function initials(name: string) {
+  return name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+}
+
+// Blog frontmatter stores either a source-relative path or a URL; the public
+// copy of every cover lives under /assets/images (same resolver as /blog).
+function resolveImage(imagePath: string | undefined): string | null {
+  if (!imagePath) return null;
+  if (imagePath.startsWith("http")) return imagePath;
+  const filename = imagePath.split("/").pop();
+  return filename ? `/assets/images/${filename}` : null;
+}
 
 function clean(s: string) { return String(s || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;|&#8217;/g, "'").replace(/\s{2,}/g, " ").trim(); }
 
@@ -105,6 +199,29 @@ const heroChips = [
   { name: "Excel", q: "Excel" },
   { name: "Design", q: "Design" },
   { name: "Business", q: "Business" },
+];
+
+// CourseDuck's "Courses from …" provider strip, in CoursesWyn's own terms:
+// Udemy is the marketplace we track, the rest are the comparison guides.
+const compareStrip = [
+  { name: "Udemy", href: "/udemy-coupon-code" },
+  { name: "Coursera", href: "/platforms/udemy-vs-coursera" },
+  { name: "edX", href: "/platforms/udemy-vs-edx" },
+  { name: "Pluralsight", href: "/platforms/udemy-vs-pluralsight" },
+  { name: "Skillshare", href: "/platforms/udemy-vs-skillshare" },
+  { name: "LinkedIn Learning", href: "/platforms/udemy-vs-linkedin-learning" },
+];
+
+const steps = [
+  { n: "1", t: "Search or browse", d: `Type a course or instructor name, or start from ${catCounts.size} categories and ${topicCounts.size} topics ranked by live coupon count.`, href: "/search", cta: "Search courses" },
+  { n: "2", t: "Check the discount", d: "Rating, student count, price vs list, level and the last-checked stamp sit on one card — so you know the deal is live before you click.", href: "/udemy-coupons-today", cta: "See today's deals" },
+  { n: "3", t: "Enrol on Udemy", d: "Every coupon links straight to the course page, where the instructor discount applies automatically at checkout. Some links earn us a commission, at no cost to you.", href: "/how-to-redeem-coupon", cta: "How to redeem" },
+];
+
+const whyCards = [
+  { t: "Every live Udemy coupon in one place", d: `${totalCoupons.toLocaleString()} verified codes across ${catCounts.size} categories, compared side by side instead of tab by tab.`, href: "/udemy-coupon-code", cta: "Browse all coupons" },
+  { t: `${last24h} codes re-checked in 24 hours`, d: "Our pipeline re-verifies each deal daily and prunes dead codes — providers cannot bury a dead listing here, because it never stays listed.", href: "/how-we-test-and-verify-udemy-coupons", cta: "How we verify" },
+  { t: "Details you will not find elsewhere", d: "Price history, last-checked time, level, length, language and certificate status — checked for every course before it goes live.", href: "/faq", cta: "Read the FAQ" },
 ];
 
 ---
@@ -156,18 +273,78 @@ const heroChips = [
   .sx-cta-btn:hover { filter: brightness(1.05); }
   .sx-cta-ghost { align-self: center; color: rgba(242, 244, 246,0.8); font-weight: 600; font-size: 0.9rem; }
 
+  /* ── Compare strip (CourseDuck "Courses from …") ── */
+  .sx-strip { display: flex; align-items: center; justify-content: center; gap: 0.75rem 1rem; flex-wrap: wrap; padding: 1.4rem 1rem 0; }
+  .sx-strip-label { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .sx-strip-links { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+  .sx-strip-links a { font-size: 0.85rem; font-weight: 700; color: var(--text); padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); text-decoration: none; transition: border-color 0.2s, color 0.2s; }
+  .sx-strip-links a:hover { border-color: var(--brand); color: var(--brand); }
+  .sx-strip-links a.sx-strip-more { border-style: dashed; color: var(--brand); }
+
   /* ── Category grid ── */
   .hp-cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.9rem; margin-top: 1.75rem; }
   .hp-cat { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.15rem 1.2rem; text-decoration: none; display: flex; flex-direction: column; gap: 0.3rem; transition: transform 0.2s, border-color 0.2s; }
   .hp-cat:hover { transform: translateY(-3px); border-color: var(--brand); }
+  .hp-cat-ico { width: 34px; height: 34px; border-radius: 9px; background: var(--brand-soft); border: 1px solid rgba(169, 199, 255, 0.25); display: flex; align-items: center; justify-content: center; color: var(--brand); margin-bottom: 0.35rem; }
+  .hp-cat-ico svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .hp-cat-count { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand); }
   .hp-cat-name { font-size: 1.02rem; font-weight: 800; color: var(--text); }
   .hp-cat-desc { font-size: 0.85rem; color: var(--muted); margin: 0; line-height: 1.55; }
   @media (max-width: 900px) { .hp-cats { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 520px) { .hp-cats { grid-template-columns: 1fr; } }
 
+  /* ── Why CoursesWyn value props ── */
+  .hp-why { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.9rem; margin-top: 1.5rem; }
+  .hp-why-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.4rem 1.35rem; display: flex; flex-direction: column; }
+  .hp-why-card:hover { border-color: var(--brand); }
+  .hp-why-num { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; color: var(--brand); letter-spacing: 0.1em; margin-bottom: 0.65rem; }
+  .hp-why-card h3 { margin: 0 0 0.5rem; font-size: 1.02rem; color: var(--text); line-height: 1.35; }
+  .hp-why-card p { margin: 0 0 1rem; color: var(--muted); font-size: 0.88rem; line-height: 1.65; flex: 1; }
+  .hp-why-card a { color: var(--brand); font-weight: 700; font-size: 0.85rem; text-decoration: none; }
+  .hp-why-card a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  @media (max-width: 860px) { .hp-why { grid-template-columns: 1fr; } }
+
+  /* ── Instructors ── */
+  .hp-ins { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.9rem; margin-top: 1.75rem; }
+  .hp-ins-tile { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.15rem 1rem; text-align: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 0.35rem; transition: transform 0.2s, border-color 0.2s; }
+  .hp-ins-tile:hover { transform: translateY(-3px); border-color: var(--brand); }
+  .hp-ins-avatar { width: 64px; height: 64px; border-radius: 50%; overflow: hidden; background: var(--brand-soft); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--brand); font-size: 1.15rem; }
+  .hp-ins-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hp-ins-name { font-size: 0.95rem; font-weight: 800; color: var(--text); line-height: 1.3; }
+  .hp-ins-tile:hover .hp-ins-name { color: var(--brand); }
+  .hp-ins-meta { font-size: 0.78rem; color: var(--muted); }
+  .hp-ins-meta b { color: var(--text); font-variant-numeric: tabular-nums; }
+  @media (max-width: 900px) { .hp-ins { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ── Three steps ── */
+  .hp-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.9rem; margin-top: 1.5rem; }
+  .hp-step { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.4rem 1.35rem; position: relative; }
+  .hp-step:hover { border-color: var(--brand); }
+  .hp-step-n { width: 34px; height: 34px; border-radius: 50%; background: var(--brand-gradient); color: #0a0b0d; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; }
+  .hp-step h3 { margin: 0 0 0.45rem; font-size: 1rem; color: var(--text); }
+  .hp-step p { margin: 0; color: var(--muted); font-size: 0.88rem; line-height: 1.65; }
+  .hp-step-cta { display: inline-block; margin-top: 0.75rem; color: var(--brand); font-weight: 700; font-size: 0.85rem; }
+  .hp-step-cta:hover { text-decoration: underline; text-underline-offset: 3px; }
+  @media (max-width: 860px) { .hp-steps { grid-template-columns: 1fr; } }
+  .hp-steps-head { margin-top: 2.25rem; }
+
+  /* ── Blog ── */
+  .hp-blog { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.9rem; margin-top: 1.75rem; }
+  .hp-blog-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 0 0 1.3rem; text-decoration: none; display: flex; flex-direction: column; gap: 0.5rem; transition: transform 0.2s, border-color 0.2s; overflow: hidden; }
+  .hp-blog-card:hover { transform: translateY(-3px); border-color: var(--brand); }
+  .hp-blog-media { position: relative; display: block; aspect-ratio: 16 / 9; background: var(--bg-secondary); overflow: hidden; }
+  .hp-blog-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease; }
+  .hp-blog-card:hover .hp-blog-media img { transform: scale(1.03); }
+  .hp-blog-tag { position: absolute; left: 10px; bottom: 10px; background: rgba(10, 11, 13, 0.82); color: var(--brand); border: 1px solid rgba(169, 199, 255, 0.3); padding: 3px 9px; border-radius: 999px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em; backdrop-filter: blur(4px); }
+  .hp-blog-date { font-family: var(--font-mono); font-size: 0.7rem; color: var(--brand); letter-spacing: 0.06em; text-transform: uppercase; padding: 0 1.3rem; margin-top: 0.85rem; }
+  .hp-blog-card h3 { margin: 0; padding: 0 1.3rem; font-size: 1rem; color: var(--text); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .hp-blog-card:hover h3 { color: var(--brand); }
+  .hp-blog-card p { margin: 0; padding: 0 1.3rem; color: var(--muted); font-size: 0.85rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .hp-blog-more { font-size: 0.82rem; font-weight: 700; color: var(--brand); margin-top: auto; padding: 0 1.3rem; }
+  @media (max-width: 860px) { .hp-blog { grid-template-columns: 1fr; } }
+
   /* ── Guide + topics ── */
-  .hp-guide { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-top: 1.75rem; }
+  .hp-guide { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-top: 1rem; }
   .hp-guide-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem 1.3rem; }
   .hp-guide-card h3 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--text); }
   .hp-guide-card p { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.7; }
@@ -223,17 +400,29 @@ const heroChips = [
     <div class="sx-ticket" aria-hidden="true"><div class="sx-ticket-line"></div><div class="sx-ticket-edge"></div></div>
   </div>
 
-  <!-- ===================== TODAY'S TOP DEALS ===================== -->
-  <section class="section-wrapper" aria-label="Today's top Udemy deals" style="padding-top:2.5rem;">
+  <!-- ===================== COMPARE STRIP ===================== -->
+  <nav class="sx-strip" aria-label="Udemy and the platforms we compare it with">
+    <span class="sx-strip-label">Compare Udemy with</span>
+    <div class="sx-strip-links">
+      {compareStrip.map((c) => (<a href={c.href}>{c.name}</a>))}
+      <a href="/platforms" class="sx-strip-more">+ all comparison guides →</a>
+    </div>
+  </nav>
+
+  <!-- ===================== TOP RATED ===================== -->
+  <section class="section-wrapper" aria-label="Top-rated Udemy courses with live coupons" style="padding-top:2rem;">
     <div class="container">
-      <div class="section-hd">
-        <h2 class="dh-tsec">Latest <span style={{ color: "var(--brand)" }}>Udemy Coupon Drops</span></h2>
-        <p class="lg-sub">Fresh instructor coupon codes — {last24h} added in the last 24 hours. Claim one before the redemption cap runs out.</p>
+      <div class="section-hd sx-head">
+        <div>
+          <p class="sx-eyebrow">Top rated</p>
+          <h2 class="sx-h2">Courses Students <span>Rate Highest</span></h2>
+          <p class="lg-sub">Ranked by real Udemy ratings, then by student count — each one below carries a coupon that still works.</p>
+        </div>
+        <a href="/udemy-coupon-code" class="lg-link">Browse all courses →</a>
       </div>
       <div class="grid">
-        {latestSix.map((deal, i) => (<CouponGrid deal={deal} eager={i < 3} priority={i < 3} />))}
+        {topRatedGrid.map((deal, i) => (<CouponGrid deal={deal} eager={i < 3} priority={i < 3} />))}
       </div>
-      <div style={{ textAlign: "center", marginTop: "1.5rem" }}><a href="/udemy-coupons-today" class="lg-link">See today's batch →</a></div>
     </div>
   </section>
 
@@ -242,15 +431,16 @@ const heroChips = [
     <div class="container">
       <div class="section-hd sx-head">
         <div>
-          <p class="sx-eyebrow">Categories</p>
-          <h2 class="sx-h2">Browse Coupons by <span>Category</span></h2>
+          <p class="sx-eyebrow">Browse by topic</p>
+          <h2 class="sx-h2">Pick a Subject to See Its <span>Best Coupons</span></h2>
           <p class="lg-sub">Every category below is a live archive of working instructor coupons — pick your field and start saving.</p>
         </div>
-        <a href="/categories" class="lg-link">All categories →</a>
+        <a href="/categories" class="lg-link">All {catCounts.size} categories →</a>
       </div>
       <div class="hp-cats">
         {topCats.map((c) => (
           <a class="hp-cat" href={`/categories/${c.slug}`} title={`Browse ${c.count} ${c.name} courses with Udemy coupons`}>
+            <span class="hp-cat-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d={c.icon} /></svg></span>
             <span class="hp-cat-count">{c.count} coupons</span>
             <span class="hp-cat-name">{c.name}</span>
             <span class="hp-cat-desc">{c.desc}</span>
@@ -259,7 +449,7 @@ const heroChips = [
       </div>
       <div class="hp-topics-head">
         <h3 class="hp-topics-title">Popular topics right now</h3>
-        <p class="hp-topics-sub">Skill-level entry points — each topic is a live list of working coupons. <a href="/topics">Browse all topics →</a></p>
+        <p class="hp-topics-sub">Skill-level entry points — each topic is a live list of working coupons. <a href="/topics">Browse all {topicCounts.size} topics →</a></p>
       </div>
       <div class="hp-topics" aria-label="Popular topics">
         {topTopics.map((t) => (
@@ -269,12 +459,89 @@ const heroChips = [
     </div>
   </section>
 
-  <!-- ===================== HOW COUPONS WORK ===================== -->
-  <section class="section-wrapper" aria-label="How Udemy coupons work">
+  <!-- ===================== WHY COURSESWYN ===================== -->
+  <section class="section-wrapper" aria-label="Why CoursesWyn">
+    <div class="container">
+      <div class="section-hd sx-head">
+        <div>
+          <p class="sx-eyebrow">Why CoursesWyn</p>
+          <h2 class="sx-h2">Choose With <span>Confidence</span></h2>
+          <p class="lg-sub">A Udemy-only coupon tracker — not a generic deals wall. No expired lists, no bait pricing.</p>
+        </div>
+        <a href="/how-we-test-and-verify-udemy-coupons" class="lg-link">How we verify →</a>
+      </div>
+      <div class="hp-why">
+        {whyCards.map((w, i) => (
+          <article class="hp-why-card">
+            <span class="hp-why-num">0{i + 1}</span>
+            <h3>{w.t}</h3>
+            <p>{w.d}</p>
+            <a href={w.href}>{w.cta} →</a>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== MOST COUPONS / INSTRUCTORS ===================== -->
+  <section class="section-wrapper sx-band" aria-label="Instructors with the most verified coupons">
+    <div class="container">
+      <div class="section-hd sx-head">
+        <div>
+          <p class="sx-eyebrow">Most coupons</p>
+          <h2 class="sx-h2">Instructors Students <span>Trust Most</span></h2>
+          <p class="lg-sub">The educators giving back most to learners right now — ranked by active, verified coupon deals.</p>
+        </div>
+        <a href="/instructors" class="lg-link">The top {instructorTotal} ranked →</a>
+      </div>
+      <div class="hp-ins">
+        {topInstructors.map((i) => (
+          <a class="hp-ins-tile" href={`/instructor/${i.slug}`} title={`${i.name} — ${i.coupons} verified coupons`}>
+            <span class="hp-ins-avatar">{i.img ? <img src={i.img} alt={i.name} width="64" height="64" loading="lazy" decoding="async" /> : initials(i.name)}</span>
+            <span class="hp-ins-name">{i.name}</span>
+            <span class="hp-ins-meta"><b>{i.coupons}</b> coupons · <b>{fmtStudents(i.students)}</b> students</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FRESH CONTENT ===================== -->
+  <section class="section-wrapper" aria-label="Recently updated Udemy deals" style="padding-top:2.5rem;">
     <div class="container">
       <div class="section-hd">
+        <h2 class="dh-tsec">Fresh <span style={{ color: "var(--brand)" }}>Udemy Coupon Drops</span></h2>
+        <p class="lg-sub">Re-verified against Udemy — {last24h} added in the last 24 hours. Claim one before the redemption cap runs out.</p>
+      </div>
+      <div class="grid">
+        {latestSix.map((deal, i) => (<CouponGrid deal={deal} eager={i < 3} priority={i < 3} />))}
+      </div>
+      <div style={{ textAlign: "center", marginTop: "1.5rem" }}><a href="/udemy-coupons-today" class="lg-link">See today's batch →</a></div>
+    </div>
+  </section>
+
+  <!-- ===================== HOW IT WORKS ===================== -->
+  <section class="section-wrapper sx-band" aria-label="How CoursesWyn works">
+    <div class="container">
+      <div class="section-hd">
+        <p class="sx-eyebrow">How it works</p>
+        <h2 class="sx-h2">Three Steps to the <span>Right Course</span></h2>
+        <p class="lg-sub">Search, verify, enrol — the discount is already applied by the time you reach Udemy's checkout.</p>
+      </div>
+      <div class="hp-steps">
+        {steps.map((s) => (
+          <article class="hp-step">
+            <span class="hp-step-n">{s.n}</span>
+            <h3>{s.t}</h3>
+            <p>{s.d}</p>
+            <a class="hp-step-cta" href={s.href}>{s.cta} →</a>
+          </article>
+        ))}
+      </div>
+
+      <div class="hp-steps-head section-hd">
         <p class="sx-eyebrow">Coupon guide</p>
-        <h2 class="sx-h2">How Udemy Coupons <span>Actually Work</span></h2>
+        <h3 class="sx-h2" style={{ fontSize: "1.35rem" }}>How Udemy Coupons <span>Actually Work</span></h3>
         <p class="lg-sub">Udemy itself documents two coupon types. Knowing the difference is the fastest way to stop wasting clicks on dead codes.</p>
       </div>
       <div class="hp-guide">
@@ -298,16 +565,54 @@ const heroChips = [
     </div>
   </section>
 
-  <!-- ===================== WHY COURSESWYN + FAQ ===================== -->
-  <section class="section-wrapper sx-band" aria-label="Why CoursesWyn for Udemy coupons">
+  <!-- ===================== FROM THE BLOG ===================== -->
+  {blogPosts.length > 0 && (
+  <section class="section-wrapper" aria-label="Guides and comparisons from the blog">
     <div class="container">
       <div class="section-hd sx-head">
         <div>
-          <p class="sx-eyebrow">Why CoursesWyn</p>
-          <h2 class="sx-h2">Why Learners Start Here for <span>Udemy Discounts</span></h2>
-          <p class="lg-sub">A Udemy-only coupon tracker — not a generic deals wall. Every instructor coupon and promo code is checked against Udemy daily: dead codes pulled, live prices verified, discounts auto-applied. No expired lists, no bait pricing.</p>
+          <p class="sx-eyebrow">From the blog</p>
+          <h2 class="sx-h2">Guides & <span>Comparisons</span></h2>
+          <p class="lg-sub">Long-form picks built from the same coupon data you see above — updated as prices and codes change.</p>
         </div>
-        <a href="/how-we-test-and-verify-udemy-coupons" class="lg-link">How we verify →</a>
+        <a href="/blog" class="lg-link">All posts →</a>
+      </div>
+      <div class="hp-blog">
+        {blogPosts.map((p) => (
+          <a class="hp-blog-card" href={`/blog/${p.id}/`}>
+            <span class="hp-blog-media">
+              <Image
+                src={resolveImage(typeof p.data.image === "string" ? p.data.image : (p.data.image as any)?.src) || "/assets/images/og-default.png"}
+                alt={p.data.title}
+                width={480}
+                height={270}
+                loading="lazy"
+                decoding="async"
+                inferSize={false}
+              />
+              {p.data.tags?.[0] && <span class="hp-blog-tag">{p.data.tags[0]}</span>}
+            </span>
+            <span class="hp-blog-date">{formatDateWIB(p.data.updatedAt || p.data.pubDate, { month: "short", day: "numeric", year: "numeric" })}</span>
+            <h3>{p.data.title}</h3>
+            <p>{p.data.description}</p>
+            <span class="hp-blog-more">Read guide →</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+  )}
+
+  <!-- ===================== FAQ ===================== -->
+  <section class="section-wrapper sx-band" aria-label="Udemy coupon FAQs">
+    <div class="container">
+      <div class="section-hd sx-head">
+        <div>
+          <p class="sx-eyebrow">FAQ</p>
+          <h2 class="sx-h2">Udemy Coupon <span>Questions Answered</span></h2>
+          <p class="lg-sub">Everything learners ask about instructor coupons, app checkouts, stacking and refunds.</p>
+        </div>
+        <a href="/faq" class="lg-link">All FAQs →</a>
       </div>
       <div class="hp-faq">
         {faqs.map((f) => (
@@ -326,8 +631,8 @@ const heroChips = [
   <section class="section-wrapper" aria-label="Browse all coupons" style="padding-top:2.5rem;">
     <div class="container">
       <div class="sx-cta">
-        <h2>Stop paying full price for Udemy courses.</h2>
-        <p>Every coupon above passed its last verification check. Pick your skill and claim it in one click.</p>
+        <h2>Found a coupon that worked?</h2>
+        <p>A two-minute share helps thousands of learners pay less — every deal above passed its last verification check.</p>
         <div class="sx-cta-row">
           <a href="/udemy-coupon-code" class="sx-cta-btn">Browse all {totalCoupons.toLocaleString()} coupons →</a>
           <a href="/contact" class="sx-cta-ghost">Share a coupon</a>
