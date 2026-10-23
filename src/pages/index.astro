@@ -104,16 +104,13 @@ const topTopics = [...topicCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0
   name, count, slug: slugifyTopic(name),
 }));
 
-// ── Top rated: students rate these highest (CourseDuck "Courses students
-// rate highest"). A minimum audience keeps a 5.0 from twelve buyers from
-// outranking a 4.8 from 60,000 — thresholds widen only if the catalog is thin.
-const rated = activeDeals.filter((d) => typeof d.rating === "number" && d.rating > 0 && (d.students ?? 0) > 0);
-const byRating = (a: typeof rated[number], b: typeof rated[number]) => (b.rating ?? 0) - (a.rating ?? 0) || (b.students ?? 0) - (a.students ?? 0);
-const topRated = [1000, 300, 100]
-  .map((min) => rated.filter((d) => (d.students ?? 0) >= min).sort(byRating).slice(0, 6))
-  .find((list) => list.length >= 6)
-  ?? rated.sort(byRating).slice(0, 6);
-const topRatedGrid = topRated;
+// ── Top enrolled: the courses the most students have actually taken.
+// Ranked by student count with rating as the tiebreaker, and a 4.5 rating
+// floor so a heavily-discounted low-rated course can never lead the block.
+const enrolled = activeDeals.filter((d) => typeof d.rating === "number" && d.rating >= 4.5 && (d.students ?? 0) > 0);
+const byStudents = (a: typeof enrolled[number], b: typeof enrolled[number]) => (b.students ?? 0) - (a.students ?? 0) || (b.rating ?? 0) - (a.rating ?? 0);
+const topEnrolled = enrolled.sort(byStudents).slice(0, 6);
+const topEnrolledGrid = topEnrolled;
 
 // ── Instructors students trust most (CourseDuck "Most reviewed") — ranked
 // by verified coupon count, with student reach as the tiebreaker.
@@ -409,19 +406,19 @@ const whyCards = [
     </div>
   </nav>
 
-  <!-- ===================== TOP RATED ===================== -->
-  <section class="section-wrapper" aria-label="Top-rated Udemy courses with live coupons" style="padding-top:2rem;">
+  <!-- ===================== TOP ENROLLED ===================== -->
+  <section class="section-wrapper" aria-label="Most enrolled Udemy courses with live coupons" style="padding-top:2rem;">
     <div class="container">
       <div class="section-hd sx-head">
         <div>
-          <p class="sx-eyebrow">Top rated</p>
-          <h2 class="sx-h2">Courses Students <span>Rate Highest</span></h2>
-          <p class="lg-sub">Ranked by real Udemy ratings, then by student count — each one below carries a coupon that still works.</p>
+          <p class="sx-eyebrow">Most popular</p>
+          <h2 class="sx-h2">Courses With the <span>Most Students</span></h2>
+          <p class="lg-sub">Ranked by total Udemy enrolments, then by rating — each one below carries a coupon that still works.</p>
         </div>
         <a href="/udemy-coupon-code" class="lg-link">Browse all courses →</a>
       </div>
       <div class="grid">
-        {topRatedGrid.map((deal, i) => (<CouponGrid deal={deal} eager={i < 3} priority={i < 3} />))}
+        {topEnrolledGrid.map((deal, i) => (<CouponGrid deal={deal} eager={i < 3} priority={i < 3} />))}
       </div>
     </div>
   </section>
