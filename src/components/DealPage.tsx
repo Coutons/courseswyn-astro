@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Deal } from "@/types/deal";
 import { slugifyCategory, slugifyTopic } from "@/lib/utils";
 import { parseInstructors, createInstructorSlug } from "@/lib/instructors";
-import { buildCouponFAQs, formatDuration, formatMoney } from "@/lib/dealStats";
+import { buildCouponFAQs, formatDuration, formatMoney, isDealExpired } from "@/lib/dealStats";
+import { buildCouponDetails, buildKeyTakeaways, buildHowToSteps, hasCertificate } from "@/lib/couponSections";
 import { renderMarkdownToHtml } from "@/lib/markdown";
 
 interface Props {
@@ -217,6 +218,53 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
 
   const masked = couponMask || "AUTO-APPLY";
 
+  // ── SEO sections: coupon overview, key takeaways, how-to redeem ──
+  const dealExpired = isDealExpired(deal);
+  const couponDetails = useMemo(() => buildCouponDetails(deal), [deal]);
+  const keyTakeaways = useMemo(() => buildKeyTakeaways(deal), [deal]);
+  const howToSteps = useMemo(() => buildHowToSteps(deal), [deal]);
+
+  const priceText = price === 0 ? "Free" : formatMoney(price);
+  const originalText = formatMoney(originalPrice);
+  const expiresLong = deal.expiresAt ? fmtDate(deal.expiresAt) : null;
+  const topicName = (deal.subcategory || "").trim();
+  const audiencePhrase = /^all\s*levels?$/i.test(levelLabel)
+    ? "suitable for learners at every level"
+    : `suitable for ${levelLabel.toLowerCase()} learners`;
+  const courseArticle = /^[aeiou]/i.test(worthCat) ? "an" : "a";
+  const instructorHref = instructorsList.length ? `/instructor/${createInstructorSlug(instructorsList[0])}` : null;
+
+  // Inline CTA: keyword-rich anchor ("{title} coupon code") + price/scarcity line.
+  // Label dipotong hanya untuk tampilan; judul utuh tetap ada di <title>, <h1>,
+  // Coupon Overview, schema Course/Product, dan aria-label tombol ini.
+  const ctaTitle = (() => {
+    const s = (deal.title || "").trim();
+    const max = 48;
+    if (s.length <= max) return s;
+    const cut = s.slice(0, max);
+    const lastSpace = cut.lastIndexOf(" ");
+    return `${(lastSpace > 24 ? cut.slice(0, lastSpace) : cut).trim()}…`;
+  })();
+  const ctaSub = [
+    price === 0
+      ? `Free with coupon${originalPrice > price ? ` (list ${formatMoney(originalPrice)})` : ""}`
+      : `$${price.toFixed(2)} with coupon`,
+    ...(price > 0 && discountPct > 0 ? [`${discountPct}% off`] : []),
+    `verified ${updatedShort}`,
+    ...(dealExpired ? ["recorded end date has passed"] : expiresLong ? [`ends ${expiresLong}`] : []),
+  ].join(" · ");
+
+  const tocLinks = [
+    { id: "coupon-overview-heading", label: "Coupon Overview" },
+    { id: "key-takeaways-heading", label: "Key Takeaways" },
+    { id: "worth-it-heading", label: "Is It Worth It?" },
+    ...(learnPoints.length ? [{ id: "learn-heading", label: "What You'll Learn" }] : []),
+    ...(reqPoints.length ? [{ id: "requirements-heading", label: "Requirements" }] : []),
+    { id: "about-heading", label: "About This Course" },
+    { id: "how-to-redeem-heading", label: "How to Redeem" },
+    ...(faqs.length ? [{ id: "faq-heading", label: "FAQs" }] : []),
+  ];
+
   const copyMasked = () => {
     try {
       if (typeof navigator !== "undefined" && navigator.clipboard) {
@@ -353,8 +401,8 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
               <div className="clx-iconbox">
                 <MedalIcon />
                 <div>
-                  <span className="clx-iconbox-title">Shareable Badge</span>
-                  <p className="clx-iconbox-desc">Certificate of completion</p>
+                  <span className="clx-iconbox-title">{hasCertificate(deal) ? "Shareable Badge" : "No Certificate"}</span>
+                  <p className="clx-iconbox-desc">{hasCertificate(deal) ? "Certificate of completion" : "Udemy only certifies paid seats"}</p>
                 </div>
               </div>
               <div className="clx-providerline">
@@ -377,7 +425,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
               <h2 className="clx-side-h2">More Info</h2>
               <ul className="clx-postinfo">
                 <li><span className="clx-gicon" aria-hidden="true">▲</span><span>Course Demand Is <strong>{demand}</strong></span></li>
-                <li className="clx-guarantee"><span className="clx-gicon" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 10v12" /><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" /></svg></span><span>Under <strong>30 Days</strong> Money Back Policy</span><span className="clx-info-tip" tabIndex={0} aria-label="About the money-back policy"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M12 20a8 8 0 1 0 0-16a8 8 0 0 0 0 16m0 2C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10m-1-11v6h2v-6zm0-4h2v2h-2z" /></svg><span className="clx-tooltip" role="tooltip">Udemy&apos;s standard 30-day money-back guarantee applies to this course — full refund, no questions asked.</span></span></li>
+                <li className="clx-guarantee"><span className="clx-gicon" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 10v12" /><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" /></svg></span><span>{price === 0 ? <><strong>Free Seat</strong> — Nothing to Refund</> : <>Under <strong>30 Days</strong> Refund Policy</>}</span><span className="clx-info-tip" tabIndex={0} aria-label="About the refund policy"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M12 20a8 8 0 1 0 0-16a8 8 0 0 0 0 16m0 2C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10m-1-11v6h2v-6zm0-4h2v2h-2z" /></svg><span className="clx-tooltip" role="tooltip">{price === 0 ? "This coupon brings the price to $0.00, so there is no payment that could be refunded." : "Udemy refunds eligible purchases within 30 days under its refund policy. A few payment methods are refundable as Udemy credits only."}</span></span></li>
               </ul>
               <div className="clx-sidetopics">
                 <div className="clx-sidetopics-title">Explore related topics</div>
@@ -396,6 +444,92 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
           </aside>
 
           <div className="clx-main">
+            {/* ── Jump links ── */}
+            {tocLinks.length > 2 && (
+              <nav className="clx-toc" aria-label="On this page">
+                <span className="clx-toc-label">On this page</span>
+                <ul>
+                  {tocLinks.map((t) => (
+                    <li key={t.id}><a href={`#${t.id}`}>{t.label}</a></li>
+                  ))}
+                </ul>
+              </nav>
+            )}
+
+            {/* ── Coupon Overview: keyword-rich summary + details table ── */}
+            <section aria-labelledby="coupon-overview-heading">
+              <h2 id="coupon-overview-heading">Coupon Overview</h2>
+              <p className="clx-sec-intro">
+                The short version of this deal — what the coupon covers, what it costs, and when our team last checked it.
+              </p>
+              <div className="clx-ov">
+                <p>
+                  This page tracks a verified <strong>{deal.provider || "Udemy"}</strong> coupon for <strong>{deal.title}</strong>
+                  {instructorsList.length > 0 ? (
+                    <> — {courseArticle} {worthCat} course from{" "}
+                      {instructorHref ? <a href={instructorHref}>{instructorsList.join(", ")}</a> : instructorsList.join(", ")}{", "}{audiencePhrase}.</>
+                  ) : (
+                    <> — {courseArticle} {worthCat} course{", "}{audiencePhrase}.</>
+                  )} Enrolling through this page takes the price from <strong>{originalText}</strong> down to <strong>{priceText}</strong>
+                  {discountPct > 0 ? <> — that&apos;s {discountPct}% off, or {formatMoney(savings)} saved</> : null}.
+                </p>
+                <p>
+                  What you get is the same as any full-price seat: lifetime access to the on-demand lessons{deal.duration ? <> ({deal.duration})</> : null}, every future update the instructor publishes, and a certificate of completion once you finish.{" "}
+                  {typeof deal.students === "number" ? (
+                    <>It has already been taken by <strong>{deal.students.toLocaleString()} learners</strong>{typeof deal.rating === "number" ? <> and holds a <strong>{deal.rating.toFixed(1)}-star</strong> average on {deal.provider || "Udemy"}</> : ""}, and the lessons are delivered in {deal.language || "English"}.</>
+                  ) : (
+                    <>The course is self-paced and delivered in {deal.language || "English"}, so you can work through it around your own schedule.</>
+                  )}
+                </p>
+                <p>
+                  The listing was last verified by hand on <strong>{updatedLong}</strong>
+                  {expiresLong ? (
+                    <> and is recorded valid through <strong>{expiresLong}</strong> — claim it before then, or while redemptions last.</>
+                  ) : (
+                    <> with no fixed end date recorded. {deal.provider || "Udemy"} coupons are still retired without notice, so the checkout price is the final source of truth.</>
+                  )}
+                </p>
+                {dealExpired ? (
+                  <p className="clx-ov-alert">
+                    <strong>Heads up:</strong> the recorded end date for this coupon ({expiresLong || "recently"}) has already passed, so {deal.provider || "Udemy"} may show the standard {originalText} price at checkout. We keep this page live because the course details, syllabus and redemption steps below stay useful — and a fresh coupon often gets recorded here later.
+                  </p>
+                ) : null}
+                <p>
+                  Best suited to {beginnerFriendly ? "beginners and career switchers" : `learners with some footing in ${worthCat}`}
+                  {reqHighlights.length > 0 ? ` — prerequisites as listed by the instructor: ${reqHighlights.join("; ")}` : " — no prerequisites are listed"}. Browse more coupons while you are here:{" "}
+                  {deal.category ? <a href={`/categories/${slugifyCategory(deal.category)}`}>{deal.category} coupons</a> : null}
+                  {topicName && topicName !== deal.category ? <> · <a href={`/topics/${slugifyTopic(topicName)}`}>{topicName} courses</a></> : null}
+                  {" · "}<a href="/udemy-coupons-today">today&apos;s free Udemy coupons</a>.
+                </p>
+              </div>
+              <dl className="clx-tk-grid clx-ov-table">
+                {couponDetails.map((row) => (
+                  <div key={row.label}>
+                    <dt>{row.label}</dt>
+                    <dd>{row.href ? <a href={row.href}>{row.value}</a> : row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+
+            {/* ── Key Takeaways ── */}
+            {keyTakeaways.length > 0 && (
+              <section aria-labelledby="key-takeaways-heading">
+                <h2 id="key-takeaways-heading">Key Takeaways</h2>
+                <p className="clx-tk-intro">Everything that matters about this coupon in one scan — price, validity, and what you walk away with.</p>
+                <div className="clx-takeaways">
+                  <ul>
+                    {keyTakeaways.map((t, i) => (
+                      <li key={i}>
+                        <span aria-hidden="true">✓</span>
+                        <span><strong>{t.lead}</strong> {t.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </section>
+            )}
+
             {/* ── Is this coupon worth it? Full verdict: meta + analysis + curriculum + prereqs + urgency + pros/cons ── */}
             <section aria-labelledby="worth-it-heading">
               <h2 id="worth-it-heading">Is the {deal.title} Coupon Worth It?</h2>
@@ -489,7 +623,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
               </>
             )}
 
-            <h2 id="about-heading">Overview</h2>
+            <h2 id="about-heading">About This Course</h2>
             <p className="clx-sec-intro">The full official description of {deal.title} — curriculum, teaching approach, and everything included with this {deal.provider || "Udemy"} coupon.</p>
             <div className={overviewOpen ? "" : "clx-collapsed" } data-readmore={overviewOpen ? undefined : "true"}>
               <div ref={markdownRef} className="clx-prose" />
@@ -498,9 +632,39 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
                 <span>{overviewOpen ? "Read Less" : "Read More"}</span>
                 <span className="clx-arrow" aria-hidden="true">⌄</span>
               </button>
-            <p className="clx-warningbox">
-              <strong>Important:</strong> this coupon may not function properly in private/incognito browsing mode. Please use a standard browser window and consider temporarily disabling any ad blockers or VPN services.
-            </p>
+
+            {/* ── How to redeem — placed right before the action zone (kept in sync with HowTo schema) ── */}
+            <section aria-labelledby="how-to-redeem-heading">
+              <h2 id="how-to-redeem-heading">How to Redeem This {deal.provider || "Udemy"} Coupon</h2>
+              <p className="clx-sec-intro">Four steps, roughly two minutes. The discount travels with our link, so there is no code to copy and paste.</p>
+              <ol className="clx-steps">
+                {howToSteps.map((s, i) => (
+                  <li key={i}>
+                    <span className="clx-step-num" aria-hidden="true">{i + 1}</span>
+                    <div className="clx-step-body">
+                      <span className="clx-step-title">{s.name}</span>
+                      <p className="clx-step-text">{s.text}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <p className="clx-warningbox">
+                <strong>Important:</strong> this coupon may not function properly in private/incognito browsing mode. Please use a standard browser window and consider temporarily disabling any ad blockers or VPN services.
+                {deal.provider === "Udemy" ? <> If the Udemy app opens instead of the browser, switch to a browser tab — Udemy does not support coupon codes inside its mobile app.</> : null}
+              </p>
+              <a href={deal.url} target="_blank" rel="noopener noreferrer nofollow" className="clx-enroll clx-cta-inline" aria-label={`Get the ${discountPct > 0 ? `${discountPct}% off` : "discounted"} coupon code for ${deal.title} on ${deal.provider || "Udemy"}`}>
+                <span className="clx-enroll-text">
+                  <span className="clx-cta-title">Claim {ctaTitle} Coupon Code</span>
+                  <span className="clx-cta-sub">{ctaSub}</span>
+                </span>
+                <span className="clx-enroll-icon" aria-hidden="true">
+                  <svg viewBox="0 0 512 512" width="16" height="16" fill="currentColor"><path d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0,16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z" /></svg>
+                </span>
+              </a>
+              <p className="clx-steps-foot">
+                Prefer screenshots? Follow our full <a href="/how-to-redeem-coupon">how to redeem a Udemy coupon</a> guide. Curious how each code gets confirmed? Read <a href="/how-we-test-and-verify-udemy-coupons">how we test and verify Udemy coupons</a>.
+              </p>
+            </section>
 
             <div className="clx-share">
               <span>Share:</span>
@@ -863,11 +1027,12 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         .clx-banner-sub { font-size: 14px; font-weight: 400; line-height: 1.6; color: rgba(255,255,255,.8); margin: 0; padding: 0; }
         .clx-banner-right { flex: 0 0 380px; max-width: 100%; position: relative; z-index: 1; }
         .clx-banner-row { display: flex; gap: 8px; }
-        .clx-nl-email { flex: 1; min-width: 0; padding: 13px 16px; font-family: system-ui, sans-serif; font-size: 14px; font-weight: 500; color: #1a1040; background: #101216; border: 2px solid transparent; border-radius: 11px; outline: none; }
+        .clx-nl-email { flex: 1; min-width: 0; padding: 13px 16px; font-family: system-ui, sans-serif; font-size: 14px; font-weight: 500; color: #EAF0FF; background: #101216; border: 2px solid transparent; border-radius: 11px; outline: none; }
         .clx-nl-email::placeholder { color: #a09cbe; }
         .clx-nl-email:focus { border-color: #D6E4FF; box-shadow: 0 0 0 3px rgba(169, 199, 255,.2); }
-        .clx-nl-submit { padding: 13px 22px; font-family: system-ui, sans-serif; font-size: 14px; font-weight: 800; color: #2E1FBE; background: #101216; border: none; border-radius: 11px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-        .clx-nl-submit:hover { background: #D6E4FF; color: #1a1040; }
+        .clx-nl-submit { padding: 13px 22px; font-family: system-ui, sans-serif; font-size: 14px; font-weight: 800; color: #1a1040; background: #D6E4FF; border: none; border-radius: 11px; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background 0.15s ease, color 0.15s ease; }
+        .clx-nl-submit:hover { background: #2E1FBE; color: #E9EEFF; }
+        .clx-nl-submit:active { background: #241a9c; color: #E9EEFF; }
         .clx-nl-trust { font-size: 11.5px; font-weight: 500; color: rgba(255,255,255,.55); margin: 8px 0 0 0; padding: 0; }
         .clx-nl-trust a { color: rgba(255,255,255,.7); text-decoration: underline; }
         .clx-nl-error { font-size: 12.5px; font-weight: 600; color: #ffb3b3; background: rgba(255,50,50,.18); border: 1px solid rgba(255,80,80,.22); border-radius: 8px; padding: 8px 12px; text-align: center; margin: 8px 0 0 0; }
@@ -966,6 +1131,30 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
           .clx-stickybar-sub { font-size: 0.72rem; color: #9aa3ab; }
           .clx-stickybar-cta { width: auto; margin-top: 0; }
         }
+        /* ── SEO sections: TOC, coupon overview, key takeaways, how-to steps ── */
+        .clx-toc { border: 1px solid #22262d; border-radius: 10px; background: #101216; padding: 0.85rem 1.1rem; margin: 0 0 0.25rem 0; }
+        .clx-toc-label { display: block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #9aa3ab; margin-bottom: 0.5rem; }
+        .clx-toc ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.45rem 0.55rem; }
+        .clx-toc li { margin: 0; }
+        .clx-main .clx-toc a { display: inline-block; border: 1px solid #22262d; border-radius: 100px; padding: 4px 12px; font-size: 0.82rem; font-weight: 600; color: #C9C9CF; text-decoration: none; background: #14171c; }
+        .clx-main .clx-toc a:hover { border-color: #A9C7FF; color: #A9C7FF; }
+        .clx-ov p { font-size: 0.97rem; color: #C9C9CF; line-height: 1.75; margin: 0 0 1rem 0; max-width: 760px; }
+        .clx-ov p:last-child { margin-bottom: 0; }
+        .clx-ov strong { color: #f2f4f6; }
+        .clx-ov-alert { border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.07); border-radius: 0 6px 6px 0; padding: 0.75rem 1rem; }
+        .clx-ov-table { margin: 1.25rem 0 0 0; border-top: 1px solid #22262d; padding-top: 0.25rem; max-width: 760px; }
+        .clx-steps { list-style: none; margin: 0 0 1rem 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; max-width: 760px; }
+        .clx-steps > li { display: flex; gap: 12px; align-items: flex-start; border: 1px solid #22262d; border-radius: 10px; background: #101216; padding: 0.9rem 1.1rem; }
+        .clx-step-num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%; background: var(--brand-gradient); color: #0a0b0d; font-size: 0.85rem; font-weight: 800; margin-top: 2px; }
+        .clx-step-body { min-width: 0; }
+        .clx-step-title { display: block; font-size: 0.98rem; font-weight: 700; color: #f2f4f6; margin-bottom: 2px; }
+        .clx-step-text { margin: 0; font-size: 0.9rem; color: #C9C9CF; line-height: 1.65; }
+        .clx-steps-foot { font-size: 0.88rem; color: #9aa3ab; line-height: 1.65; margin: 0 0 1rem 0; max-width: 760px; }
+        .clx-main .clx-cta-inline { width: auto; display: inline-flex; align-items: center; margin: 0 0 1.1rem 0; padding: 14px 22px 13px 20px; gap: 12px; font-size: 15px; color: #0a0b0d; text-decoration: none; text-align: left; }
+        .clx-main .clx-cta-inline .clx-enroll-text { flex: none; display: inline-flex; flex-direction: column; gap: 3px; text-transform: none; letter-spacing: 0; }
+        .clx-main .clx-cta-inline .clx-cta-title { font-size: 15px; font-weight: 800; line-height: 1.25; color: #0a0b0d; }
+        .clx-main .clx-cta-inline .clx-cta-sub { font-size: 12.5px; font-weight: 600; line-height: 1.3; color: rgba(10, 11, 13, 0.72); }
+        .clx-main .clx-cta-inline:hover { color: #0a0b0d; text-decoration: none; }
       `}</style>
     </div>
   );

@@ -25,12 +25,13 @@ export function generateSeoDescription(deal: Deal): string {
   const es = isSpanishCourse(deal);
   const months = es ? MONTHS_ES : MONTHS_EN;
   const title = (deal.title || "This course").replace(/["“”‘’]/g, " ").replace(/\s+/g, " ").trim();
+  const provider = deal.provider || "Udemy";
   const checked =
     fmtMonthYear(deal.updatedAt || deal.createdAt || deal.expiresAt, months) ||
     fmtMonthYear(new Date().toISOString(), months);
 
   if (es) {
-    return `Ahorra en ${title} con un cupón de Udemy verificado (comprobado ${checked}). Consulta el precio actual, la disponibilidad y los detalles del curso.`;
+    return `Ahorra en ${title} con un cupón de ${provider} verificado (comprobado ${checked}). Consulta el precio actual, la disponibilidad y los detalles del curso.`;
   }
-  return `Save on ${title} with a verified Udemy coupon (checked ${checked}). See current price, availability and course details.`;
+  return `Save on ${title} with a verified ${provider} coupon (checked ${checked}). See current price, availability and course details.`;
 }

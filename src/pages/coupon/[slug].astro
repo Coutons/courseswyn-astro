@@ -7,6 +7,7 @@ import { categoryStats, buildCouponFAQs, isDealExpired } from "../../lib/dealSta
 import { parseInstructors, createInstructorSlug } from "../../lib/instructors";
 import { getInstructorImage } from "../../lib/instructorProfiles";
 import { generateSeoDescription } from "../../lib/seo";
+import { buildHowToSteps } from "../../lib/couponSections";
 import DealPage from "../../components/DealPage";
 import type { Deal } from "../../types/deal.d.ts";
 
@@ -107,6 +108,9 @@ const faqPageEntities = [...couponFaqList, ...dealFaqList]
 
 const catStats = categoryStats(deal, allDeals);
 
+// Same step copy that DealPage renders visibly — schema must mirror the page.
+const howToSteps = buildHowToSteps(deal);
+
 const primaryInstructorName = parseInstructors(deal.instructor)[0];
 const instructorImage = primaryInstructorName
   ? await getInstructorImage(createInstructorSlug(primaryInstructorName))
@@ -123,7 +127,7 @@ for (const n of parseInstructors(deal.instructor)) {
 const normalizedTitle = deal.title?.trim() || "Premium Course";
 const isFreeCoupon = (deal.price ?? 0) === 0;
 const discountLabel = isFreeCoupon ? "FREE" : discountPercentage > 0 ? `${discountPercentage}% OFF` : "Discount";
-const seoTitle = `${normalizedTitle} - ${discountLabel} Udemy Coupon`;
+const seoTitle = `${normalizedTitle} - ${discountLabel} ${deal.provider || "Udemy"} Coupon`;
 const seoDescription = generateSeoDescription(deal);
 
 const siteUrl = "https://courseswyn.com";
@@ -183,7 +187,7 @@ const priceValidUntil = validUntilSrc
         <meta property="product:retailer_item_id" content={deal.slug} />
         <meta property="product:price:amount" content={String(deal.price ?? 0)} />
         <meta property="product:price:currency" content="USD" />
-        <meta name="keywords" content={`${deal.title}, Online Course, Lifetime Access, discount code, coupon code, free download, Udemy coupon`} />
+        <meta name="keywords" content={`${deal.title}, ${deal.provider || "Udemy"} coupon, online course, lifetime access, certificate of completion, discount code, coupon code`} />
     </Fragment>
     <script type="application/ld+json" set:html={
         JSON.stringify({
@@ -255,7 +259,7 @@ const priceValidUntil = validUntilSrc
                         "timeRequired": toISO8601Duration(deal.duration),
                     "inLanguage": deal.language || "en",
                     "teaches": deal.learn ? deal.learn.map((l) => l.replace(/\r$/, '')).join(", ") : (deal.skills?.length ? deal.skills.join(", ") : undefined),
-                    "keywords": `${deal.title}, Online Course, Lifetime Access, discount code, coupon code, free download`,
+                    "keywords": `${deal.title}, ${deal.provider || "Udemy"} coupon, online course, lifetime access, certificate of completion, discount code, coupon code`,
                     "educationalLevel": deal.level || "Beginner to Advanced",
                     "educationalUse": "Professional Development",
                     "datePublished": datePublished,
@@ -320,40 +324,20 @@ const priceValidUntil = validUntilSrc
                     "publisher": { "@id": `${siteUrl}/#organization` },
                     "speakable": {
                         "@type": "SpeakableSpecification",
-                        "cssSelector": ["h1", "p", ".prose"]
+                        "cssSelector": ["h1", "h2", "p", ".clx-prose", ".clx-ov"]
                     }
                 },
                 {
                     "@type": "HowTo",
                     "@id": `${dealUrl}#howto`,
-                    "name": "How to Redeem This Coupon",
+                    "name": `How to Redeem This ${deal.provider || "Udemy"} Coupon`,
                     "description": `Follow these steps to enroll in ${deal.title} at the discounted price.`,
-                    "step": [
-                        {
-                            "@type": "HowToStep",
-                            "position": 1,
-                            "name": "Click Get Coupon",
-                            "text": "Click the 'Get Coupon' button on this page."
-                        },
-                        {
-                            "@type": "HowToStep",
-                            "position": 2,
-                            "name": "Go to Checkout",
-                            "text": `You'll be redirected to ${deal.provider || 'Udemy'} checkout page with the discount auto-applied.`
-                        },
-                        {
-                            "@type": "HowToStep",
-                            "position": 3,
-                            "name": "Sign In or Sign Up",
-                            "text": `Log into your ${deal.provider || 'Udemy'} account or create a free account.`
-                        },
-                        {
-                            "@type": "HowToStep",
-                            "position": 4,
-                            "name": "Enroll",
-                            "text": `Verify the discounted price and click 'Enroll Now' to start learning.`
-                        }
-                    ],
+                    "step": howToSteps.map((s, i) => ({
+                        "@type": "HowToStep",
+                        "position": i + 1,
+                        "name": s.name,
+                        "text": s.text
+                    })),
                     "totalTime": "PT2M",
                     "estimatedCost": {
                         "@type": "MonetaryAmount",
