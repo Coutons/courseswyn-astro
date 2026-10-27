@@ -4,30 +4,35 @@ import { formatDateWIB, toISODateWIB } from "../lib/date";
 import { getDeals } from "../lib/store.js";
 
 const canonicalUrl = "https://courseswyn.com/udemy-coupons-guide/";
-const pageTitle = "Udemy Coupon Codes 2026: How to Save on Courses (Updated Daily)";
-const pageDescription = "Learn how to use Udemy coupon codes in 2026. Step-by-step guide to finding, verifying, and redeeming Udemy discount codes that actually work.";
-
 const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
+const pageTitle = `Udemy Coupons Guide ${currentYear}: Find, Check & Redeem Coupon Codes`;
+const pageDescription = `A practical guide to Udemy coupons in ${currentYear}: how instructor codes work, why they expire fast, how to check a deal, and how to redeem one at checkout.`;
+
 const lastModified = toISODateWIB();
 
 import { Image } from "astro:assets";
 const allDeals = await getDeals();
 const now = new Date();
-const activeCount = allDeals.filter(d => !d.expiresAt || new Date(d.expiresAt) > now).length;
-const verifiedToday = allDeals.filter(d => {
-  const t = new Date(d.updatedAt || d.createdAt || 0).getTime();
-  return t > now.getTime() - 86400000;
+const activeDeals = allDeals.filter(d => !d.expiresAt || new Date(d.expiresAt) > now);
+const activeCount = activeDeals.length;
+const freeActive = activeDeals.filter(d => d.price === 0).length;
+const todayStr = toISODateWIB(now);
+const updatedToday = activeDeals.filter(d => {
+  const raw = d.updatedAt || d.createdAt;
+  return raw ? toISODateWIB(new Date(raw)) === todayStr : false;
 }).length;
-const ogImage = "https://courseswyn.com/assets/images/udemy-coupons-guide.jpg";
-const featuredImage = "/assets/images/udemy-coupons-guide.jpg";
+const ogImage = "https://courseswyn.com/assets/images/udemy-coupons-guide-2026.jpg";
+const featuredImage = "/assets/images/udemy-coupons-guide-2026.jpg";
 
 const faqs = [
-  { q: "Are CoursesWyn coupons safe?", a: "Yes. Every coupon comes from Udemy's official instructor program. We never ask for personal data, surveys, or downloads." },
-  { q: "How often do you update the deals?", a: "Coupons are re-verified on a rolling schedule throughout the day. Expired ones are removed automatically within minutes of failing a check." },
-  { q: "Do courses include certificates?", a: "Yes. All Udemy courses come with a certificate of completion." },
-  { q: "Can I get banned for using too many coupons?", a: "Udemy doesn't publicly state a limit, but mass-enrolling in hundreds of courses without watching any may flag your account." },
-  { q: "What if a coupon doesn't work?", a: "Click the 'Report' link on the deal page and we'll re-check it. Most issues are resolved within an hour." },
+  { q: "Are CoursesWyn coupons safe?", a: "Yes. We list instructor-issued coupons and Udemy sale prices from Udemy's official affiliate feed. We never ask for personal data, surveys, or downloads." },
+  { q: "How often do you update the deals?", a: "The catalog is refreshed from Udemy's feed on a daily schedule, and listings past their expiry date are filtered out automatically. Every deal card shows the last-checked date so you can judge how fresh it is." },
+  { q: "Do courses include certificates?", a: "Udemy courses generally include a certificate of completion. Check the individual course page to confirm, since the instructor controls what is offered." },
+  { q: "Can I get banned for using too many coupons?", a: "Udemy doesn't publicly state a coupon limit, but mass-enrolling in hundreds of courses you never open can look like abusive activity. Enroll only in courses you actually plan to take." },
+  { q: "What if a coupon doesn't work?", a: "Use the contact form and send us the deal URL. Coupons can hit their redemption cap between checks, so we'll re-check the listing and update or remove it." },
   { q: "Do you have coupons for other platforms?", a: "Currently we focus on Udemy. We may expand to Coursera and Skillshare in the future." },
+  { q: "Are all Udemy coupons free?", a: "No. Most live coupons are paid discounts, often $9.99–$19.99. 100% off codes exist, but they are capped and disappear quickly. The deal card always shows the current price before you click through." },
+  { q: "Do I need to type a coupon code at checkout?", a: "Usually not. Most instructor coupons apply automatically when you open Udemy through the deal link. If a code must be entered manually, the deal page shows it with copy instructions." },
 ];
 ---
 
@@ -41,7 +46,7 @@ const faqs = [
         "@type": "Article",
         "@id": `${canonicalUrl}#article`,
         "url": canonicalUrl,
-        "headline": "Udemy Coupon Codes 2026: How to Save on Courses (Updated Daily)",
+        "headline": pageTitle,
         "description": pageDescription,
         "datePublished": "2026-05-29",
         "dateModified": lastModified,
@@ -55,27 +60,24 @@ const faqs = [
       {
         "@type": "HowTo",
         "@id": `${canonicalUrl}#howto`,
-        "name": "How to Get Discounted Udemy Courses Using Coupon Codes",
-        "description": "Step-by-step instructions to find, verify, and redeem Udemy coupon codes for discounted courses.",
+        "name": "How to Redeem a Udemy Coupon Code",
+        "description": "A five-step process for checking and redeeming a Udemy coupon at checkout.",
         "totalTime": "PT5M",
         "step": [
-          { "@type": "HowToStep", "position": 1, "name": "Pick a course", "text": "Browse CoursesWyn deals and choose a course you want." },
-          { "@type": "HowToStep", "position": 2, "name": "Click the deal link", "text": "Open the course page and click the coupon to go to Udemy with the code pre-applied." },
-          { "@type": "HowToStep", "position": 3, "name": "Sign in to Udemy", "text": "Create a free Udemy account or log in with your existing credentials." },
-          { "@type": "HowToStep", "position": 4, "name": "Verify the price", "text": "Confirm the checkout total shows $0.00 before completing enrollment." },
-          { "@type": "HowToStep", "position": 5, "name": "Enroll and learn", "text": "Complete checkout. The course is in your library with lifetime access." }
+          { "@type": "HowToStep", "position": 1, "name": "Open the deal page", "text": "Check the current price, original price, and last-checked date before clicking through." },
+          { "@type": "HowToStep", "position": 2, "name": "Reveal the code or use the deal link", "text": "Some coupons apply automatically through the deal link; others show a code you need to copy." },
+          { "@type": "HowToStep", "position": 3, "name": "Open Udemy in a browser", "text": "Udemy's mobile apps do not accept coupon codes. Use Safari, Chrome, or Firefox on desktop or mobile." },
+          { "@type": "HowToStep", "position": 4, "name": "Sign in and confirm the price", "text": "The checkout total should match the advertised deal price. A 100% off code shows $0.00; a paid coupon shows the discounted amount." },
+          { "@type": "HowToStep", "position": 5, "name": "Enroll and learn", "text": "Complete checkout and confirm the course appears in My learning." }
         ]
       },
       {
         "@type": "FAQPage",
-        "mainEntity": [
-          { "@type": "Question", "name": "Are CoursesWyn coupons safe?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every coupon comes from Udemy's official instructor program. We never ask for personal data, surveys, or downloads." } },
-          { "@type": "Question", "name": "How often do you update the deals?", "acceptedAnswer": { "@type": "Answer", "text": "Coupons are re-verified on a rolling schedule throughout the day. Expired ones are removed automatically within minutes of failing a check." } },
-          { "@type": "Question", "name": "Do courses include certificates?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. All Udemy courses come with a certificate of completion." } },
-          { "@type": "Question", "name": "Can I get banned for using too many coupons?", "acceptedAnswer": { "@type": "Answer", "text": "Udemy doesn't publicly state a limit, but mass-enrolling in hundreds of courses without watching any may flag your account." } },
-          { "@type": "Question", "name": "What if a coupon doesn't work?", "acceptedAnswer": { "@type": "Answer", "text": "Click the 'Report' link on the deal page and we'll re-check it. Most issues are resolved within an hour." } },
-          { "@type": "Question", "name": "Do you have coupons for other platforms?", "acceptedAnswer": { "@type": "Answer", "text": "Currently we focus on Udemy. We may expand to Coursera and Skillshare in the future." } }
-        ]
+        "mainEntity": faqs.map(faq => ({
+          "@type": "Question",
+          "name": faq.q,
+          "acceptedAnswer": { "@type": "Answer", "text": faq.a }
+        }))
       }
     ]
   })} />
@@ -93,16 +95,20 @@ const faqs = [
           </div>
           <h1 class="gg-hero-title">
             Udemy Coupons Guide {currentYear}
-            <span>How to Find & Redeem Coupon Codes — Step by Step</span>
+            <span>How to find, check, and redeem coupon codes — without wasting time on dead deals</span>
           </h1>
           <p class="gg-hero-desc">
-            Everything you need to know about Udemy coupons: where to find them, how they work,
-            how to redeem them, and how to avoid expired codes — explained clearly and honestly.
+            Most "Udemy coupon" lists are stale within hours. This guide explains how instructor
+            coupons actually work, how to check a deal before you enroll, and how to redeem a code
+            at checkout — without the hype.
+          </p>
+          <p class="gg-hero-note">
+            Looking for the actual codes? <a href="/udemy-coupon-code">Browse the live Udemy coupon list</a> — every deal shows its price and last-checked date.
           </p>
           <div class="gg-hero-meta">
             <span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              By <strong>CoursesWyn</strong>
+              By <strong>Andrew Derek</strong>
             </span>
             <span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -110,21 +116,21 @@ const faqs = [
             </span>
             <span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              6 min read
+              7 min read
             </span>
           </div>
           <div class="gg-hero-stats">
             <span class="gg-hero-stat">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></svg>
-              <strong>{allDeals.length.toLocaleString()}</strong> total coupons
+              <strong>{activeCount.toLocaleString()}</strong> live coupons
             </span>
             <span class="gg-hero-stat">
               <span class="gg-dot gg-dot-green"></span>
-              <strong>{activeCount.toLocaleString()}</strong> active now
+              <strong>{freeActive}</strong> free (100% off) right now
             </span>
             <span class="gg-hero-stat">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-              <strong>{verifiedToday}</strong> added today
+              <strong>{updatedToday}</strong> refreshed today
             </span>
           </div>
         </div>
@@ -133,7 +139,7 @@ const faqs = [
       <!-- FEATURED IMAGE -->
       <div class="gg-featured-wrap">
         <div class="gg-featured-img">
-          <Image src={featuredImage} alt="Udemy Coupon Codes 2026 - How to Save on Courses with Verified Daily Deals" width={1200} height={630} loading="eager" inferSize={false} />
+          <Image src={featuredImage} alt="Udemy Coupons Guide 2026 — how coupon codes work and how to redeem them" width={1200} height={630} loading="eager" inferSize={false} />
         </div>
       </div>
 
@@ -143,8 +149,9 @@ const faqs = [
           <h2 id="toc-heading" class="gg-toc-title">In this guide</h2>
           <ol class="gg-toc-list">
             {[
-              ["#problem", "Why most Udemy coupons fail (and how we fix it)"],
-              ["#how-courseswyn-works", "How CoursesWyn verifies coupons in real time"],
+              ["#types", "Instructor coupons vs. Udemy sitewide sales"],
+              ["#why-they-fail", "Why most coupon lists go stale"],
+              ["#redeem", "How to redeem a Udemy coupon"],
               ["#mistakes", "5 mistakes that waste your coupon"],
               ["#strategy", "Smart enrollment strategy"],
               ["#beyond", "Beyond coupons — other ways to save"],
@@ -165,59 +172,87 @@ const faqs = [
       <article class="gg-article">
         <div class="gg-article-inner">
 
-          <!-- Section 1: The problem -->
-          <section id="problem" class="gg-section">
-            <h2 class="gg-section-title">Why Most Udemy Coupons Fail (and How We Fix It)</h2>
+          <!-- Section 1: What a Udemy coupon is -->
+          <section id="types" class="gg-section">
+            <h2 class="gg-section-title">Instructor Coupons vs. Udemy Sitewide Sales</h2>
             <p>
-              If you've ever searched for "free Udemy coupons" on Google, you've probably landed on a site
-              listing hundreds of codes — most of which are dead. This isn't because the site is malicious.
-              It's because Udemy coupons expire fast, and most sites don't bother checking them again after
-              the initial post.
+              "Udemy coupon" is used for two different things, and that confusion is why so many
+              searches end in disappointment. Before you hunt for a code, it helps to know which
+              kind of discount you're actually looking at.
+            </p>
+            <div class="gg-grid-2">
+              <div class="gg-card">
+                <h3>Instructor coupon codes</h3>
+                <p>Created by the instructor for one specific course. They can be a paid discount (often $9.99–$19.99) or, less often, 100% off. Each code has an expiry date and a redemption cap, so it can stop working before the listed date.</p>
+              </div>
+              <div class="gg-card">
+                <h3>Udemy sitewide sales</h3>
+                <p>Udemy's own promotions run every few weeks and apply automatically at checkout. There is no code to copy, and most courses are included unless the instructor opts out.</p>
+              </div>
+            </div>
+            <p>
+              <strong>What this means for you:</strong> most live "Udemy coupons" are paid discounts,
+              not free courses. 100% off codes do exist, but they are capped and disappear quickly.
+              If a page promises hundreds of free codes with no timestamps, treat that as a red flag.
+            </p>
+          </section>
+
+          <!-- Section 2: Why coupon lists go stale -->
+          <section id="why-they-fail" class="gg-section">
+            <h2 class="gg-section-title">Why Most Udemy Coupon Lists Go Stale</h2>
+            <p>
+              If you've searched for "free Udemy coupons" and landed on a page full of dead codes,
+              the site may not be malicious — it may just be old. Udemy coupons expire in two ways:
+              the clock runs out, or the redemption cap fills. A code posted this morning can be gone
+              by lunchtime.
             </p>
             <p>
-              Udemy's 2025 policy update made things worse: free coupons are now capped at roughly
-              10–100 redemptions (down from unlimited). A coupon posted this morning can be exhausted
-              by lunchtime. By the time a static list gets indexed by Google, the deals are gone.
+              Static coupon pages make this worse. They are indexed once and rarely re-checked, so a
+              page can rank for months while every code on it is dead. A banner that says "updated
+              daily" is not proof; a timestamp next to each deal is.
             </p>
             <div class="gg-callout gg-callout-brand">
-              <strong>How CoursesWyn is different:</strong> We re-verify every coupon against Udemy's servers
-              multiple times a day. Expired deals are removed automatically. The list you see is always live —
-              not a snapshot from last week.
+              <strong>How CoursesWyn handles it:</strong> we refresh the catalog from Udemy's affiliate
+              feed, re-check listings on a daily schedule, filter out deals past their expiry date, and
+              show a last-checked date on every card. We don't claim a coupon will work forever — no
+              honest site can. We show you when it was last checked and what it cost then.
             </div>
           </section>
 
-          <!-- Section 2: How CoursesWyn works -->
-          <section id="how-courseswyn-works" class="gg-section">
-            <h2 class="gg-section-title">How CoursesWyn Verifies Coupons in Real Time</h2>
+          <!-- Section 3: How to redeem -->
+          <section id="redeem" class="gg-section">
+            <h2 class="gg-section-title">How to Redeem a Udemy Coupon (5 Steps)</h2>
             <p>
-              Most coupon sites follow a publish-and-forget model. CoursesWyn uses a continuous
-              verification pipeline:
+              Once you've found a deal that fits, redeeming it takes about a minute. The important
+              part is checking the price before you enroll.
             </p>
             <ol class="gg-list gg-list-numbered">
               <li>
-                <strong>Crawl & collect</strong> — We discover instructor-issued coupons from official
-                Udemy affiliate feeds and instructor directories. Every source is vetted.
+                <strong>Open the deal page</strong> — Every CoursesWyn listing shows the current price,
+                the original price, and the last-checked date. Check those before you click through.
               </li>
               <li>
-                <strong>Verify</strong> — Each coupon URL is checked against Udemy's checkout endpoint.
-                If the response shows a discount, it passes. If it redirects to full price, it's marked as expired.
+                <strong>Reveal the code or use the deal link</strong> — Some instructor coupons apply
+                automatically through our link; others show a code you need to copy. The deal page
+                tells you which.
               </li>
               <li>
-                <strong>Re-verify</strong> — Every active coupon is re-checked on a rolling schedule.
-                High-traffic courses are verified more frequently because their redemption caps fill fastest.
+                <strong>Open Udemy in a browser, not the app</strong> — Udemy's iOS and Android apps
+                don't have a coupon field. Use Safari, Chrome, or Firefox on desktop or mobile.
               </li>
               <li>
-                <strong>Remove</strong> — Failed coupons are automatically delisted. No manual cleanup.
-                No stale listings cluttering the page.
+                <strong>Sign in and confirm the price</strong> — The checkout total should match the
+                deal price. A 100% off code will show $0.00; a paid coupon will show the discounted
+                amount. If the total is full price, the code has likely expired or hit its cap.
+              </li>
+              <li>
+                <strong>Enroll and check your library</strong> — Complete checkout and confirm the
+                course appears under "My learning".
               </li>
             </ol>
-            <p>
-              This means when you browse CoursesWyn's deals, every <strong>"100% Off"</strong> badge you see has
-              been confirmed working within the last few hours — not days or weeks ago.
-            </p>
           </section>
 
-          <!-- Section 3: 5 mistakes -->
+          <!-- Section 4: 5 mistakes -->
           <section id="mistakes" class="gg-section">
             <h2 class="gg-section-title">5 Mistakes That Waste Your Coupon</h2>
             <p>
@@ -227,23 +262,23 @@ const faqs = [
               {[
                 {
                   title: "Waiting too long to redeem",
-                  desc: "You find a great course but tell yourself 'I'll enroll later.' By the time you come back, the 100-redemption cap is hit. Rule of thumb: if you want it, grab it on <a href='/udemy-coupons-today'>today's deals page</a> immediately."
+                  desc: "You find a great course but tell yourself 'I'll enroll later.' By the time you come back, the redemption cap may be full. Rule of thumb: if you want it, grab it from <a href='/udemy-coupons-today'>today's deals page</a> and check out while the price is still live."
                 },
                 {
-                  title: "Not checking the region restrictions",
-                  desc: "Some instructor coupons are geo-limited. If the checkout page shows full price despite a valid code, try a VPN set to the US or the instructor's country. Most courses on <a href='/categories/development'>our Development page</a> work worldwide."
+                  title: "Assuming every coupon means a free course",
+                  desc: "Most instructor coupons are paid discounts, not 100% off. A $12.99 coupon for a $129.99 course is still a good deal, but it is not free. Read the price on the deal card and confirm it at checkout before enrolling."
                 },
                 {
-                  title: "Redeeming on mobile without checking the price",
-                  desc: "The <a href='https://www.udemy.com/mobile/' rel='noopener' target='_blank'>Udemy mobile app</a> sometimes glitches and skips the coupon. Always open the link in a browser (Safari, Chrome) and confirm the price says $0.00 before tapping enroll."
+                  title: "Redeeming in the mobile app",
+                  desc: "The <a href='https://www.udemy.com/mobile/' rel='noopener' target='_blank'>Udemy mobile app</a> does not accept coupon codes. Open the course page in a browser (Safari, Chrome, or Firefox), sign in there, and confirm the price before you enroll."
                 },
                 {
                   title: "Enrolling in courses you won't take",
-                  desc: "It sounds harmless, but mass-enrolling in hundreds of courses without watching any can flag your account. <a href='https://www.udemy.com/terms/' rel='noopener' target='_blank'>Udemy's terms of use</a> prohibit abusive activity. Enroll only in courses you'll actually start."
+                  desc: "Mass-enrolling in hundreds of courses you never open can look like abusive activity. <a href='https://www.udemy.com/terms/' rel='noopener' target='_blank'>Udemy's terms of use</a> prohibit abuse, so enroll only in courses you actually plan to start."
                 },
                 {
-                  title: "Using an old CoursesWyn bookmark",
-                  desc: "Our deals update constantly. If you saved a link to a specific course page and visit it a week later, the coupon is likely gone. Bookmark <a href='/udemy-coupons-today'>today's deals</a> or browse by <a href='/categories'>category</a> for fresh listings."
+                  title: "Using an old bookmark or screenshot",
+                  desc: "A code that worked last week may be dead today. Bookmark <a href='/udemy-coupon-code'>the live deals page</a> or browse by <a href='/categories'>category</a> instead of saving a specific course link."
                 },
               ].map(m => (
                 <div class="gg-card">
@@ -254,12 +289,12 @@ const faqs = [
             </div>
           </section>
 
-          <!-- Section 4: Strategy -->
+          <!-- Section 5: Strategy -->
           <section id="strategy" class="gg-section">
             <h2 class="gg-section-title">Smart Enrollment Strategy</h2>
             <p>
-              Getting a free course is easy. Building real skills from those courses takes a bit of planning.
-              Here's a strategy that works:
+              Getting a discounted course is easy. Building real skills from it takes a bit of
+              planning. Here's a strategy that works:
             </p>
             <ol class="gg-list gg-list-numbered">
               <li>
@@ -268,7 +303,7 @@ const faqs = [
                 finish courses instead of starting them.
               </li>
               <li>
-                <strong>Check the syllabus before enrolling</strong> — Even free courses cost time. Skim the
+                <strong>Check the syllabus before enrolling</strong> — Even a cheap course costs time. Skim the
                 curriculum on the Udemy course page to make sure it covers what you need. Avoid courses with
                 outdated tools or versions.
               </li>
@@ -283,17 +318,17 @@ const faqs = [
             </ol>
           </section>
 
-          <!-- Section 5: Beyond coupons -->
+          <!-- Section 6: Beyond coupons -->
           <section id="beyond" class="gg-section">
             <h2 class="gg-section-title">Beyond Coupons — Other Ways to Save</h2>
             <p>
-              100% off coupons are the best deal, but they're not the only way to save on Udemy.
-              Here are backup options if a coupon expires before you grab it:
+              A 100% off code is the best deal when you can find one, but it's not the only way to
+              save. Here are backup options if a coupon expires before you grab it:
             </p>
             <div class="gg-grid-2">
               <div class="gg-card">
-                <h3>Udemy site-wide sales</h3>
-                <p>Udemy runs sales every few weeks where most courses drop to $9.99–$14.99. No coupon needed. Sign up for Udemy's newsletter to catch the next one.</p>
+                <h3>Udemy sitewide sales</h3>
+                <p>Udemy runs sales every few weeks where many courses drop to $9.99–$14.99. No coupon needed. Sign up for Udemy's newsletter to catch the next one.</p>
               </div>
               <div class="gg-card">
                 <h3>Instructor bundles</h3>
@@ -301,18 +336,18 @@ const faqs = [
               </div>
               <div class="gg-card">
                 <h3>Udemy Personal Plan</h3>
-                <p>For ~$30/month, the Personal Plan gives access to 8,000+ courses. Worth it if you take more than 2–3 paid courses per month.</p>
+                <p>A separate subscription that gives access to a curated catalog for a monthly fee. It is not covered by instructor coupons, so check Udemy's current price and course list before subscribing.</p>
               </div>
               <div class="gg-card">
-                <h3>30-day refund policy</h3>
-                <p>Bought a course that wasn't what you expected? Udemy refunds within 30 days, no questions asked. It's a risk-free way to try a paid course.</p>
+                <h3>30-day refund window</h3>
+                <p>Eligible courses can be refunded within Udemy's 30-day window. Check the course page for eligibility — not every purchase qualifies, and app-store purchases follow different rules.</p>
               </div>
             </div>
           </section>
 
-          <!-- Section 6: FAQ -->
+          <!-- Section 7: FAQ -->
           <section id="faq" class="gg-section">
-            <h2 class="gg-section-title">Udemy Coupon Code FAQs <span class="gg-faq-count">{faqs.length} questions</span></h2>
+            <h2 class="gg-section-title">Udemy Coupon Questions <span class="gg-faq-count">{faqs.length} questions</span></h2>
             <div class="gg-faq-grid">
               {faqs.map(faq => (
                 <div class="gg-faq-card">
@@ -325,11 +360,11 @@ const faqs = [
 
           <!-- CTA -->
           <section class="gg-cta">
-            <h2>Ready to save on your first course?</h2>
-            <p>Browse verified Udemy coupon codes — updated every few minutes, not every few days.</p>
+            <h2>Ready to check a live deal?</h2>
+            <p>Browse current Udemy coupons — each listing shows its price and last-checked date, so you know what you're getting before you click.</p>
             <div class="gg-cta-actions">
-              <a href="/udemy-coupon-code" class="gg-btn gg-btn-primary">Browse Free Deals</a>
-              <a href="/udemy-coupons-today" class="gg-btn gg-btn-secondary">Today's Coupons</a>
+              <a href="/udemy-coupon-code" class="gg-btn gg-btn-primary">Browse Live Coupons</a>
+              <a href="/udemy-coupons-today" class="gg-btn gg-btn-secondary">See Today's Deals</a>
             </div>
           </section>
 
@@ -350,7 +385,9 @@ const faqs = [
     .gg-hero-tag svg { color:var(--brand); }
     .gg-hero-title { font-size:clamp(1.8rem,4vw,2.8rem); font-weight:800; line-height:1.2; margin:0 0 1rem; color:var(--text); }
     .gg-hero-title span { display:block; font-size:0.55em; font-weight:500; color:var(--muted); margin-top:0.4rem; }
-    .gg-hero-desc { font-size:clamp(0.95rem,2vw,1.1rem); color:var(--muted); line-height:1.7; margin:0 auto 2rem; max-width:640px; }
+    .gg-hero-desc { font-size:clamp(0.95rem,2vw,1.1rem); color:var(--muted); line-height:1.7; margin:0 auto 1rem; max-width:640px; }
+    .gg-hero-note { font-size:0.85rem; color:var(--muted); line-height:1.6; margin:0 auto 1.5rem; max-width:640px; }
+    .gg-hero-note a { color:var(--brand); font-weight:600; text-decoration:underline; }
     .gg-hero-meta { display:flex; justify-content:center; align-items:center; gap:1.5rem; flex-wrap:wrap; font-size:0.82rem; color:var(--muted); margin-bottom:1.5rem; }
     .gg-hero-meta span { display:inline-flex; align-items:center; gap:0.35rem; }
     .gg-hero-meta svg { width:14px; height:14px; flex-shrink:0; opacity:0.6; }

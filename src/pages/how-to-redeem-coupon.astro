@@ -1,138 +1,230 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import AuthorBox from "../components/AuthorBox.astro";
+import { Image } from "astro:assets";
 import { formatDateWIB, toISODateWIB } from "../lib/date";
 
-const canonicalUrl = "https://courseswyn.com/how-to-redeem-coupon/";
-const pageTitle = "How to Redeem Udemy Coupons in 2026 — Step-by-Step Guide | CoursesWyn";
-const pageDescription = "Learn exactly how to redeem a Udemy coupon code in 5 steps. Includes what to do when a coupon doesn't work, common errors, and tips to always get the best price.";
+const siteUrl = "https://courseswyn.com";
+const canonicalUrl = `${siteUrl}/how-to-redeem-coupon/`;
+const currentYear = Number(new Date().toLocaleString('en-US', { year: 'numeric', timeZone: 'Asia/Jakarta' }));
+const pageTitle = `How to Redeem a Udemy Coupon Code (${currentYear}): 5 Steps + Fixes`;
+const pageDescription = `Step-by-step guide to redeeming a Udemy coupon code in ${currentYear}: where to click, how to check the price, what to do if the code fails, and when you need to pay.`;
 const lastModified = toISODateWIB();
+
+const ogImage = `${siteUrl}/assets/images/how-to-redeem-udemy-coupon-2026.jpg`;
+const featuredImage = "/assets/images/how-to-redeem-udemy-coupon-2026.jpg";
+const stepsImage = "/assets/images/how-to-redeem-udemy-coupon-steps-2026.jpg";
+const priceImage = "/assets/images/udemy-coupon-price-check-2026.jpg";
+const troubleImage = "/assets/images/udemy-coupon-troubleshooting-2026.jpg";
 
 const faqs = [
   {
     q: "Why is my Udemy coupon not working?",
-    a: "The most common reason is expiry or hitting the 1,000-use cap. Other causes: you went to Udemy directly instead of via the CoursesWyn link, you're already enrolled, or the instructor removed the coupon. Solution: click the CoursesWyn button again in a fresh tab. If still broken, the coupon is gone — check for a newer listing."
+    a: "Usually because the coupon expired or hit its redemption cap. Other causes: you opened Udemy directly instead of through the deal link, you skipped a code that must be typed manually, or you already own the course. Reopen the deal link in a fresh browser tab first; if the price is still full, the coupon is likely dead."
   },
   {
     q: "Why does Udemy still show the full price after I clicked the link?",
-    a: "The coupon is likely expired. Try refreshing the page or opening the link in a private window. If the full price persists, return to CoursesWyn — instructors sometimes re-issue coupons periodically."
+    a: "The coupon is likely expired, capped, or no longer valid for that course. Refresh the page or try a private window. If the full price persists, return to the live list and choose a newer deal. Udemy applies only one discount per purchase."
   },
   {
     q: "Do I need to type the coupon code manually?",
-    a: "No. The CoursesWyn redemption link has the coupon embedded in the URL. Clicking the button takes you directly to Udemy with the discount already applied. You can also find the full coupon code on the deal page if you want to enter it manually."
+    a: "Usually not. Most instructor coupons are embedded in the deal link and apply automatically. Some deals show a code that must be copied at checkout; the deal page tells you which. The Udemy mobile app has no coupon field, so use a browser."
   },
   {
     q: "Can I use a coupon if I already own the course?",
-    a: "No — Udemy won't apply a coupon to a course you already own. Check your Udemy library (My Learning) — if you enrolled previously, you already have full access. Nothing more to do."
+    a: "No. Udemy won't apply a coupon to a course already in your library. Check My Learning — you already have access, so there is nothing more to buy."
   },
   {
-    q: "What do I get with a coupon vs buying the course?",
-    a: "Identical access: same videos, same resources, same Q&A, same certificate of completion. There is no practical difference between a coupon enrollment and a paid enrollment."
+    q: "What do I get with a coupon vs buying at full price?",
+    a: "The same course access: videos, resources, Q&A, updates, and the certificate when the course offers one. Udemy does not mark or limit coupon enrollments."
+  },
+  {
+    q: "Can I redeem a Udemy coupon in the mobile app?",
+    a: "No. The iOS and Android apps do not have a coupon field. Open the course in Safari, Chrome, Firefox, or Edge, sign in, and complete checkout there. The course then appears in the app."
+  },
+  {
+    q: "Do paid coupons require a credit card?",
+    a: "Yes, if the coupon is a paid discount. You pay the discounted price at checkout. A 100% off coupon drops the price to $0.00 and requires no payment method."
+  },
+  {
+    q: "How long do Udemy coupons last?",
+    a: "It varies. Instructor coupons are time-limited and redemption-capped; popular free coupons can disappear within hours. Always check the last-checked date on the deal card and confirm the price at checkout."
   }
 ];
 
 const troubleshootItems = [
   {
     problem: "Full price still showing",
-    causes: "Coupon expired OR you navigated to Udemy directly (not via CoursesWyn link)",
-    fix: "Open the CoursesWyn deal page again and click the button in a fresh tab. If still showing full price, the coupon is expired — check CoursesWyn for a newer listing of the same course."
+    causes: "The coupon expired, hit its redemption cap, or you opened Udemy directly instead of through the deal link.",
+    fix: "Reopen the deal link in a fresh tab. If the full price persists, the coupon is dead — return to the live list and pick a newer deal."
   },
   {
-    problem: '"Coupon not valid" or "Coupon not found" error',
-    causes: "Coupon has been fully redeemed (hit the 1,000 use cap) or the instructor revoked it",
-    fix: "The coupon is gone. Return to CoursesWyn — instructors often re-issue coupons. Alternatively, Udemy frequently has sales where the same course is $9.99–$14.99."
+    problem: '"Coupon not found" or "Invalid coupon"',
+    causes: "The code was typed incorrectly, revoked by the instructor, or fully redeemed.",
+    fix: "Copy the code exactly from the deal page and check for extra spaces. If it still fails, the coupon is gone; look for a newer listing."
   },
   {
     problem: "Discount applied but less than expected",
-    causes: "This is a partial-discount coupon, not a full discount",
-    fix: "Check the CoursesWyn listing — the discount percentage is shown on each deal card."
+    causes: "The coupon is a partial discount, or Udemy's automatic sale price is already lower than the code.",
+    fix: "Check the price advertised on the deal card. Udemy applies only one discount per purchase; if the current sale price is already lower, the coupon may not reduce it further."
   },
   {
     problem: '"You already own this course"',
-    causes: "You previously enrolled in the course (possibly via an earlier coupon)",
-    fix: "Go to udemy.com → My Learning — the course is already in your library with lifetime access. No need to re-enroll."
+    causes: "You enrolled previously, possibly with an older coupon.",
+    fix: "Open My Learning — the course is already in your library. There is no need to re-enroll."
   },
   {
     problem: "Coupon link opens a different course",
-    causes: "Rare: the instructor changed the course URL or it was removed",
-    fix: "Search for the course title on udemy.com directly and check if it's still available. Report the broken link to CoursesWyn via the contact page."
+    causes: "The instructor changed the course URL or removed the course from Udemy.",
+    fix: "Search for the course title on Udemy directly. If it is gone, report the deal through our contact page."
+  },
+  {
+    problem: "Mobile app won't apply the coupon",
+    causes: "The iOS and Android apps do not have a coupon field.",
+    fix: "Open Udemy in a browser, sign in, and complete checkout there. The course then appears in the app."
   }
 ];
 
 const verifyItems = [
-  { icon: "✅", label: "Good sign", text: "Price shows $0.00 or the expected discounted amount (e.g., $9.99)" },
-  { icon: "✅", label: "Good sign", text: "A strikethrough on the original price (e.g., ~~$99.99~~ $0.00)" },
-  { icon: "✅", label: "Good sign", text: '"Coupon applied" message appears near the price box' },
-  { icon: "❌", label: "Problem", text: "Original full price appears with no strikethrough — coupon has expired" },
-  { icon: "❌", label: "Problem", text: '"Coupon not found" or "Invalid coupon" error — coupon has expired or hit its limit' },
-  { icon: "❌", label: "Problem", text: '"You already own this course" — you enrolled previously, no action needed' }
+  { icon: "✅", label: "Good sign", text: "The price shows the expected discounted amount — or $0.00 for a 100% off code." },
+  { icon: "✅", label: "Good sign", text: "The original price has a strikethrough next to the lower price." },
+  { icon: "✅", label: "Good sign", text: "The price box shows the reduced price — some checkouts also display a “Coupon applied” message." },
+  { icon: "❌", label: "Problem", text: "The full price appears with no strikethrough — the coupon did not apply." },
+  { icon: "❌", label: "Problem", text: "“Coupon not found” or “Invalid coupon” — expired, capped, or the wrong code." },
+  { icon: "❌", label: "Problem", text: "“You already own this course” — you are enrolled; check My Learning." }
 ];
 
 const features = [
   { icon: "♾️", title: "Lifetime access", desc: "Course content never expires. Return to rewatch lessons anytime — even years later." },
-  { icon: "📱", title: "Mobile & TV app", desc: "Watch via the Udemy mobile app on iOS or Android, or on your TV with the Udemy app." },
+  { icon: "📱", title: "Mobile app", desc: "Watch on iOS or Android. Coupon checkout still has to happen in a browser." },
   { icon: "⬇️", title: "Downloadable resources", desc: "Source code, PDFs, exercises, and supplementary files the instructor provides." },
   { icon: "❓", title: "Q&A and community", desc: "Ask questions directly to the instructor and interact with other students in the discussion section." },
-  { icon: "🏆", title: "Certificate of completion", desc: "Shareable PDF certificate awarded when you complete the required content." },
+  { icon: "🏆", title: "Certificate of completion", desc: "Shareable PDF certificate awarded when you complete the required content, when the course offers one." },
   { icon: "🔄", title: "Course updates", desc: "You receive all future updates to courses you own at no extra cost." }
+];
+
+const beforeItems = [
+  {
+    title: "A live deal",
+    text: "Start from the current coupon list, not a screenshot or an old bookmark. Check the price and the last-checked date."
+  },
+  {
+    title: "A free Udemy account",
+    text: "You need an account to enroll. Creating one takes about 30 seconds, and you can use the same account for every course."
+  },
+  {
+    title: "A browser",
+    text: "Use Chrome, Safari, Firefox, or Edge. The iOS and Android apps do not accept coupon codes."
+  }
+];
+
+const toc = [
+  ["#quick-answer", "Quick answer"],
+  ["#before-you-start", "Before you start"],
+  ["#steps", "5 steps to redeem"],
+  ["#verify", "Verify the price"],
+  ["#troubleshooting", "Troubleshooting"],
+  ["#after-enrollment", "After enrolling"],
+  ["#faq", "FAQs"]
 ];
 ---
 
-<Layout title={pageTitle} description={pageDescription} canonical={canonicalUrl} type="article">
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={canonicalUrl}
+  type="article"
+  image={ogImage}
+  imageWidth={1200}
+  imageHeight={630}
+  pubDate={new Date("2026-03-04")}
+  updatedDate={new Date(lastModified)}
+>
+  <meta name="author" content="Andrew Derek" slot="head" />
 
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
     "@graph": [
       {
+        "@type": "Article",
+        "@id": `${canonicalUrl}#article`,
+        "url": canonicalUrl,
+        "headline": pageTitle,
+        "description": pageDescription,
+        "image": [
+          ogImage,
+          `${siteUrl}/assets/images/how-to-redeem-udemy-coupon-steps-2026.jpg`,
+          `${siteUrl}/assets/images/udemy-coupon-price-check-2026.jpg`
+        ],
+        "datePublished": "2026-03-04",
+        "dateModified": lastModified,
+        "inLanguage": "en-US",
+        "author": { "@type": "Person", "name": "Andrew Derek", "url": `${siteUrl}/about` },
+        "publisher": {
+          "@type": "Organization",
+          "@id": `${siteUrl}/#organization`,
+          "name": "CoursesWyn",
+          "url": siteUrl,
+          "logo": { "@type": "ImageObject", "url": `${siteUrl}/logo.svg` }
+        },
+        "mainEntityOfPage": { "@type": "WebPage", "@id": canonicalUrl },
+        "isPartOf": { "@id": siteUrl }
+      },
+      {
         "@type": "HowTo",
         "@id": `${canonicalUrl}#howto`,
         "name": "How to Redeem a Udemy Coupon Code",
-        "description": "Step-by-step instructions to find a Udemy coupon on CoursesWyn and redeem it for a discounted course.",
-        "totalTime": "PT3M",
+        "description": "Step-by-step instructions to redeem a Udemy coupon on CoursesWyn, including how to verify the price before enrolling.",
+        "image": [ogImage, `${siteUrl}/assets/images/how-to-redeem-udemy-coupon-steps-2026.jpg`],
+        "totalTime": "PT2M",
         "supply": [
           { "@type": "HowToSupply", "name": "Free Udemy account" },
-          { "@type": "HowToSupply", "name": "Valid Udemy coupon from CoursesWyn" }
+          { "@type": "HowToSupply", "name": "Valid Udemy coupon from a live CoursesWyn listing" },
+          { "@type": "HowToSupply", "name": "Web browser" }
         ],
         "step": [
           {
             "@type": "HowToStep", "position": 1,
-            "name": "Find a course deal on CoursesWyn",
-            "text": "Browse CoursesWyn's deals page or search by topic or category."
+            "name": "Find a live Udemy deal",
+            "text": "Browse the current CoursesWyn coupon list and check the price, original price, and last-checked date."
           },
           {
             "@type": "HowToStep", "position": 2,
-            "name": "Click 'Redeem Coupon'",
-            "text": "Click the 'Redeem Coupon' button on the CoursesWyn deal page. The coupon is pre-applied in the URL."
+            "name": "Open the deal link",
+            "text": "Click Redeem Coupon or Get Deal. Most coupons apply automatically; if a code is shown, copy it before continuing."
           },
           {
             "@type": "HowToStep", "position": 3,
-            "name": "Confirm the discounted price on Udemy",
-            "text": "Verify the checkout price shows the discounted amount. If full price appears, the coupon has expired."
+            "name": "Check the price on Udemy",
+            "text": "A 100% off code shows $0.00; a paid coupon shows the discounted amount. If the full price remains, the coupon is expired or capped."
           },
           {
             "@type": "HowToStep", "position": 4,
-            "name": "Log in or create a free Udemy account",
-            "text": "Sign in with your Udemy credentials or create a free account."
+            "name": "Sign in to Udemy",
+            "text": "Log in or create a free account in the same browser session."
           },
           {
             "@type": "HowToStep", "position": 5,
-            "name": "Click 'Enroll Now' to complete enrollment",
-            "text": "Click 'Enroll Now'. The course is added to your Udemy library with lifetime access."
+            "name": "Enroll and confirm",
+            "text": "Click Enroll Now, pay the discounted price if applicable, and confirm the course appears in My Learning."
           }
         ],
         "inLanguage": "en-US",
-        "datePublished": "2024-01-01",
+        "datePublished": "2026-03-04",
         "dateModified": lastModified,
-        "author": { "@type": "Organization", "name": "CoursesWyn", "url": "https://courseswyn.com" }
+        "author": { "@type": "Person", "name": "Andrew Derek", "url": `${siteUrl}/about` }
       },
       {
         "@type": "BreadcrumbList",
+        "@id": `${canonicalUrl}#breadcrumb`,
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://courseswyn.com" },
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
           { "@type": "ListItem", "position": 2, "name": "How to Redeem Coupon", "item": canonicalUrl }
         ]
       },
       {
         "@type": "FAQPage",
+        "@id": `${canonicalUrl}#faq`,
         "mainEntity": faqs.map(faq => ({
           "@type": "Question",
           "name": faq.q,
@@ -142,70 +234,168 @@ const features = [
     ]
   })} />
 
-  <main class="p-root">
+  <div class="p-root">
     <article class="p-article">
 
       <header class="p-hdr">
-        <h1>How to Redeem a Udemy Coupon</h1>
+        <p class="p-eyebrow">Udemy Coupon Guide</p>
+        <h1>How to Redeem a Udemy Coupon Code <span class="p-h1-sub">{currentYear} Step-by-Step</span></h1>
         <p class="p-meta">
-          <span>By CoursesWyn</span>
+          <span>By <a href="/about">Andrew Derek</a></span>
           <span>·</span>
           <span>Updated <time datetime={lastModified}>{formatDateWIB(new Date(), {year:'numeric',month:'long',day:'numeric'})}</time></span>
           <span>·</span>
-          <span>4 min read</span>
+          <span>7 min read</span>
+        </p>
+        <p class="p-intro">
+          This guide shows exactly where to click, how to confirm the discount before you enroll,
+          and what to do when a code fails. It works for paid instructor coupons and 100% off codes.
         </p>
       </header>
 
-      <section class="p-intro">
-        <p>How to claim a discounted Udemy course using a CoursesWyn coupon — including what to do when the coupon doesn't work.</p>
+      <figure class="p-fig p-hero-fig">
+        <Image
+          src={featuredImage}
+          alt="How to redeem a Udemy coupon code in 2026 — five-step checkout guide"
+          width={1200}
+          height={630}
+          loading="eager"
+          fetchpriority="high"
+          inferSize={false}
+        />
+        <figcaption>Redeeming a Udemy coupon takes about two minutes — the key is checking the price before you enroll.</figcaption>
+      </figure>
+
+      <section id="quick-answer" class="p-quick">
+        <div class="p-sec-hdr"><h2>Quick Answer</h2></div>
+        <p>
+          To redeem a Udemy coupon: open the deal through CoursesWyn, check that the price changed on
+          Udemy, sign in, and enroll. Most instructor coupons apply automatically; some need the code
+          copied from the deal page. Use a browser — the Udemy mobile app does not accept coupon codes.
+        </p>
+        <div class="p-quick-grid">
+          <div><strong>Time needed</strong><span>About 2 minutes</span></div>
+          <div><strong>Payment</strong><span>Only for paid coupons</span></div>
+          <div><strong>Works on</strong><span>Desktop or mobile browser</span></div>
+        </div>
       </section>
 
-      <!-- Steps -->
-      <section>
+      <nav class="p-toc" aria-label="On this page">
+        <p class="p-toc-title">On this page</p>
+        <ol>
+          {toc.map(([href, label]) => (
+            <li><a href={href as string}>{label as string}</a></li>
+          ))}
+        </ol>
+      </nav>
+
+      <section id="before-you-start">
+        <div class="p-sec-hdr"><h2>Before You Start: 3 Things You Need</h2></div>
+        <ul class="p-checklist">
+          {beforeItems.map(item => (
+            <li>
+              <strong>{item.title}.</strong> {item.text}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section id="steps">
         <div class="p-sec-hdr"><h2>5 Steps to Redeem a Udemy Coupon</h2></div>
-        <p>CoursesWyn embeds the coupon code directly in the link — you never have to copy and paste anything. Here's the complete process from start to finish:</p>
+        <p>
+          Most CoursesWyn deals embed the coupon in the link, so the discount applies automatically.
+          If a deal shows a code instead, copy it before you continue. Here is the full process:
+        </p>
 
         <ol class="p-steps">
           <li><span class="p-step-num">1</span>
             <div>
-              <strong>Find a course deal on CoursesWyn</strong>
-              <p>Go to the <a href="/udemy-coupon-code">Deals page</a> and browse by <a href="/categories">category</a> or <a href="/topics">topic</a>. Each listing shows the course title, rating, instructor, discount percentage, and when the coupon was last verified. Pick a course you're genuinely interested in.</p>
+              <strong>Find a live deal</strong>
+              <p>
+                Browse the <a href="/udemy-coupon-code">current Udemy coupon list</a> or
+                <a href="/udemy-coupons-today">today's deals</a> and pick a course you actually want.
+                Check the current price, original price, and last-checked date. Most coupons are paid
+                discounts; 100% off codes are rarer and sell out fast.
+              </p>
             </div>
           </li>
           <li><span class="p-step-num">2</span>
             <div>
-              <strong>Click "Redeem Coupon" on the deal page</strong>
-              <p>On the CoursesWyn deal page, click <strong>Redeem Coupon</strong> (or "Get Deal"). This opens the Udemy course page in a new tab. The coupon code is embedded in the URL automatically — Udemy reads it and applies the discount without you doing anything extra.</p>
-              <div class="p-callout"><strong>Important:</strong> Always open the Udemy page via the CoursesWyn link. If you navigate to the course directly on Udemy, the coupon is not applied and you'll see the full price.</div>
+              <strong>Open the deal link</strong>
+              <p>
+                Click <strong>Redeem Coupon</strong> or <strong>Get Deal</strong> on the deal page.
+                Most links open Udemy with the coupon already applied. If the deal page shows a code,
+                copy it — you will paste it at checkout.
+              </p>
+              <div class="p-callout"><strong>Important:</strong> open Udemy through the deal link. If you navigate to the course directly, the coupon may not apply.</div>
             </div>
           </li>
           <li><span class="p-step-num">3</span>
             <div>
-              <strong>Verify the price before doing anything else</strong>
-              <p>On the Udemy course page, look at the price shown in the purchase box on the right. It should display the discounted price. If you still see the original price (e.g., $99.99), stop — the coupon is expired. Return to CoursesWyn to check for a newer listing.</p>
+              <strong>Check the price before you sign in</strong>
+              <p>
+                On Udemy, look at the purchase box. A 100% off code shows <strong>$0.00</strong>; a
+                paid coupon shows the discounted amount. If the full price is still there, stop — the
+                code is expired or has hit its redemption cap.
+              </p>
             </div>
           </li>
           <li><span class="p-step-num">4</span>
             <div>
-              <strong>Log in or create a free Udemy account</strong>
-              <p>Click <strong>Enroll Now</strong>. If you're not signed in, Udemy will prompt you to log in or create an account. Creating a Udemy account is free and takes about 30 seconds. If you already have an account, just log in.</p>
-              <div class="p-callout p-callout-warn"><strong>Note:</strong> If you log in before clicking the CoursesWyn link, make sure you use the same browser session. Switching accounts or browsers can sometimes lose the coupon from the URL.</div>
+              <strong>Sign in or create a free Udemy account</strong>
+              <p>
+                Log in with your existing account or create one. Stay in the same browser session;
+                switching browsers or accounts can lose the coupon from the URL.
+              </p>
             </div>
           </li>
           <li><span class="p-step-num">5</span>
             <div>
-              <strong>Complete enrollment — no payment needed if coupon covers full price</strong>
-              <p>Udemy will confirm your enrollment at the discounted price. Click <strong>Enroll Now</strong> to finish. No credit card is required. The course immediately appears in your Udemy library under "My Learning".</p>
-              <div class="p-callout p-callout-ok"><strong>Done!</strong> You now have lifetime access to the course — same as any paying student. All videos, downloadable resources, Q&A, and the completion certificate are included.</div>
+              <strong>Complete enrollment and check My Learning</strong>
+              <p>
+                Click <strong>Enroll Now</strong>. For a 100% off coupon, no payment is needed. For a
+                paid coupon, pay the discounted price shown at checkout. The course then appears in
+                <strong>My Learning</strong>.
+              </p>
+              <div class="p-callout p-callout-ok"><strong>Done:</strong> coupon enrollments get the same course access as full-price enrollments — videos, resources, Q&amp;A, updates, and the certificate when the course offers one.</div>
             </div>
           </li>
         </ol>
+
+        <figure class="p-fig">
+          <Image
+            src={stepsImage}
+            alt="Five steps to redeem a Udemy coupon: find a deal, open the link, check the price, sign in, and enroll"
+            width={1200}
+            height={675}
+            loading="lazy"
+            decoding="async"
+            inferSize={false}
+          />
+          <figcaption>The five-step flow: find a live deal, open the link, verify the price, sign in, and enroll.</figcaption>
+        </figure>
       </section>
 
-      <!-- Verify -->
-      <section>
+      <section id="verify">
         <div class="p-sec-hdr"><h2>How to Verify the Coupon Was Applied</h2></div>
-        <p>After clicking the CoursesWyn link and landing on Udemy, here's exactly what to check:</p>
+        <p>
+          After the deal link opens Udemy, check the purchase box before you enroll. This is the
+          difference between a working coupon and a dead one:
+        </p>
+
+        <figure class="p-fig">
+          <Image
+            src={priceImage}
+            alt="Udemy checkout price comparison: coupon applied showing $12.99 versus full price $129.99"
+            width={1200}
+            height={675}
+            loading="lazy"
+            decoding="async"
+            inferSize={false}
+          />
+          <figcaption>Illustration: a working coupon changes the price. If the full price remains, the code did not apply.</figcaption>
+        </figure>
+
         <div class="p-verify">
           {verifyItems.map(item => (
             <div class="p-verify-item" data-type={item.icon === '✅' ? 'ok' : 'bad'}>
@@ -217,12 +407,29 @@ const features = [
             </div>
           ))}
         </div>
+        <div class="p-callout"><strong>Rule of thumb:</strong> if the price did not change, do not enroll. Return to the live list and pick a newer deal.</div>
       </section>
 
-      <!-- Troubleshooting -->
-      <section>
+      <section id="troubleshooting">
         <div class="p-sec-hdr"><h2>Troubleshooting: When the Coupon Doesn't Work</h2></div>
-        <p>Udemy coupons expire fast — often within hours for popular courses. Here's how to diagnose and fix the most common problems:</p>
+        <p>
+          Udemy coupons can expire or hit their redemption cap within hours. Match the symptom below
+          to the likely cause and fix:
+        </p>
+
+        <figure class="p-fig">
+          <Image
+            src={troubleImage}
+            alt="Udemy coupon troubleshooting chart: full price, coupon not found, already owned, and mobile app issues"
+            width={1200}
+            height={675}
+            loading="lazy"
+            decoding="async"
+            inferSize={false}
+          />
+          <figcaption>Most coupon failures are expiry or redemption caps — not browser problems.</figcaption>
+        </figure>
+
         <div class="p-trouble">
           {troubleshootItems.map(item => (
             <details class="p-accordion">
@@ -234,13 +441,15 @@ const features = [
             </details>
           ))}
         </div>
-        <div class="p-callout"><strong>General rule:</strong> If a coupon is not working, the #1 cause is expiry — not a browser issue. Coupons are capped at a limited number of uses and can be fully redeemed within hours of being shared. The solution is almost always: return to CoursesWyn and find a fresher listing.</div>
+        <div class="p-callout"><strong>General rule:</strong> if a coupon is not working, expiry or a filled redemption cap is the most likely cause. Return to the live list and choose a fresher deal.</div>
       </section>
 
-      <!-- After enrollment -->
-      <section>
+      <section id="after-enrollment">
         <div class="p-sec-hdr"><h2>What You Get After Enrolling</h2></div>
-        <p>Enrolling via a coupon gives you <strong>identical access</strong> to what a full-price student gets. There are no restrictions on coupon enrollments.</p>
+        <p>
+          Enrolling with a coupon gives you the same course access as paying full price. Udemy does
+          not mark or limit coupon enrollments.
+        </p>
         <div class="p-feats">
           {features.map(f => (
             <div class="p-feat">
@@ -252,9 +461,8 @@ const features = [
         </div>
       </section>
 
-      <!-- FAQ -->
-      <section>
-        <div class="p-sec-hdr"><h2>Udemy Coupon Redeem FAQs <span class="p-faq-count">{faqs.length} questions</span></h2></div>
+      <section id="faq">
+        <div class="p-sec-hdr"><h2>Udemy Coupon Redemption FAQs <span class="p-faq-count">{faqs.length} questions</span></h2></div>
         <div class="p-faqs">
           {faqs.map(faq => (
             <div class="p-faq-card">
@@ -265,26 +473,70 @@ const features = [
         </div>
       </section>
 
-      <!-- CTA -->
       <div class="p-cta">
-        <h2>Ready to Start Saving on Courses?</h2>
-        <p>Browse verified Udemy coupon codes — updated daily across 100+ topics.</p>
-        <a href="/udemy-coupon-code" class="p-btn">Browse Free Deals →</a>
+        <h2>Ready to redeem your first coupon?</h2>
+        <p>Browse live Udemy coupons — each listing shows its price and last-checked date, so you know what you're getting before you click.</p>
+        <div class="p-cta-actions">
+          <a href="/udemy-coupon-code" class="p-btn">Browse Live Coupons →</a>
+          <a href="/udemy-coupons-today" class="p-btn p-btn-ghost">See Today's Deals</a>
+        </div>
       </div>
 
+      <section class="p-related">
+        <div class="p-sec-hdr"><h2>Keep Reading</h2></div>
+        <ul>
+          <li><a href="/udemy-coupons-guide">Udemy Coupons Guide: how coupons work and why they expire</a></li>
+          <li><a href="/how-we-test-and-verify-udemy-coupons">How we test and verify Udemy coupons</a></li>
+          <li><a href="/udemy-coupon-code">All live Udemy coupon codes</a></li>
+        </ul>
+      </section>
+
+      <AuthorBox image="/images/author.jpg" />
+
     </article>
-  </main>
+  </div>
 
   <style>
     .p-root { padding: 3rem 1rem 4rem; }
     .p-article { max-width: 48rem; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem; }
 
     .p-hdr { }
+    .p-eyebrow { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: var(--brand); margin: 0 0 0.6rem; }
     .p-hdr h1 { font-size: 1.75rem; font-weight: 700; color: var(--text); margin: 0; line-height: 1.15; }
+    .p-hdr h1 .p-h1-sub { display: block; color: var(--muted); font-weight: 500; font-size: 0.68em; margin-top: 0.35rem; }
     .p-meta { font-size: 0.82rem; color: var(--muted); margin: 0.5rem 0 0; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .p-meta a { color: var(--brand); text-decoration: none; }
+    .p-meta a:hover { text-decoration: underline; }
     .p-meta strong { color: var(--text); }
 
-    .p-intro p { font-size: 0.92rem; color: var(--muted); line-height: 1.65; margin: 0; }
+    .p-intro p, .p-intro { font-size: 0.95rem; color: var(--muted); line-height: 1.7; margin: 1rem 0 0; }
+
+    .p-fig { margin: 0; }
+    .p-fig img { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--card); }
+    .p-fig figcaption { font-size: 0.78rem; color: var(--muted); line-height: 1.55; margin-top: 0.6rem; text-align: center; }
+    .p-hero-fig { margin-top: 0.25rem; }
+
+    .p-quick { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1.35rem; gap: 0.75rem; }
+    .p-quick .p-sec-hdr { border-top: none; border-bottom: none; padding: 0; }
+    .p-quick p { font-size: 0.92rem; color: var(--muted); line-height: 1.7; margin: 0; }
+    .p-quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin-top: 0.25rem; }
+    .p-quick-grid div { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem 0.75rem; }
+    .p-quick-grid strong { display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--brand); margin-bottom: 0.2rem; }
+    .p-quick-grid span { font-size: 0.82rem; color: var(--text); line-height: 1.4; }
+
+    .p-toc { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; }
+    .p-toc-title { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin: 0 0 0.6rem; }
+    .p-toc ol { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem 1.25rem; counter-reset: toc; }
+    .p-toc li { counter-increment: toc; }
+    .p-toc a { font-size: 0.85rem; color: var(--brand); text-decoration: none; display: inline-flex; gap: 0.45rem; line-height: 1.5; }
+    .p-toc a::before { content: counter(toc) "."; color: var(--muted); font-family: var(--font-mono); font-size: 0.72rem; }
+    .p-toc a:hover { text-decoration: underline; }
+
+    .p-checklist { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.55rem; }
+    .p-checklist li { position: relative; padding-left: 1.5rem; font-size: 0.9rem; color: var(--muted); line-height: 1.65; }
+    .p-checklist li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--brand); font-weight: 700; }
+    .p-checklist strong { color: var(--text); }
+    .p-checklist a { color: var(--brand); }
 
     section { display: flex; flex-direction: column; gap: 0.75rem; }
 
@@ -309,6 +561,7 @@ const features = [
     .p-steps li > div { flex: 1; }
     .p-steps li > div > strong { display: block; font-size: 0.9rem; color: var(--text); margin-bottom: 0.3rem; }
     .p-steps li > div > p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin: 0; }
+    .p-steps li > div > p a { color: var(--brand); }
 
     /* Verify */
     .p-verify { display: flex; flex-direction: column; gap: 0.4rem; }
@@ -353,8 +606,16 @@ const features = [
     .p-cta { border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; text-align: center; }
     .p-cta h2 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0 0 0.4rem; }
     .p-cta p { font-size: 0.85rem; color: var(--muted); margin: 0 0 1rem; }
+    .p-cta-actions { display: flex; justify-content: center; gap: 0.6rem; flex-wrap: wrap; }
     .p-btn { display: inline-block; padding: 0.65rem 1.5rem; background: var(--brand); color: #fff; text-decoration: none; border-radius: 6px; font-weight: 700; font-size: 0.85rem; transition: opacity 0.15s; }
     .p-btn:hover { opacity: 0.9; }
+    .p-btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .p-btn-ghost:hover { border-color: var(--brand); color: var(--brand); opacity: 1; }
+
+    /* Related */
+    .p-related ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+    .p-related a { color: var(--brand); font-size: 0.88rem; text-decoration: none; }
+    .p-related a:hover { text-decoration: underline; }
 
     @media (max-width: 640px) {
       .p-root { padding: 2rem 1rem 3rem; }
@@ -362,6 +623,10 @@ const features = [
       .p-steps li { flex-direction: column; gap: 0.4rem; }
       .p-feats { grid-template-columns: 1fr 1fr; }
       .p-faqs { grid-template-columns: 1fr; }
+      .p-quick-grid { grid-template-columns: 1fr; }
+      .p-toc ol { grid-template-columns: 1fr; }
+      .p-cta-actions { flex-direction: column; }
+      .p-btn { width: 100%; }
     }
   </style>
 </Layout>
