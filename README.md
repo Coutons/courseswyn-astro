@@ -1,13 +1,13 @@
 # CoursesWyn — Verified Udemy Coupons & Expert Course Reviews
 
-> **1,422 Udemy coupons verified daily** — 100% OFF promo codes, expert reviews & savings guides. 70 in-depth course audits across AI, Web Dev, Cloud & more.
-> Built with Astro 7.3 + React 19 + custom CSS. Featured in the Official Astro Showcase.
+> **1,468 Udemy coupons verified daily** — 100% OFF promo codes, expert reviews & savings guides. 72 in-depth course audits across AI, Web Dev, Cloud & more.
+> Built with Astro 7.4 + React 19.2 + custom CSS. Featured in the Official Astro Showcase.
 
 <p align="center">
   <a href="https://courseswyn.com"><img src="https://img.shields.io/badge/CoursesWyn.com-Verified_Udemy_Coupons-FF5D01?style=for-the-badge&logo=udemy&logoColor=white" alt="Live Site"></a>
-  <a href="https://courseswyn.com/udemy-coupon-code"><img src="https://img.shields.io/badge/1.4k%2B_Coupons_Verified-100%25_Tested-38B2AC?style=for-the-badge" alt="Active Coupons"></a>
-  <a href="https://courseswyn.com/blog"><img src="https://img.shields.io/badge/70_Expert_Reviews-No_Affiliate_Bias-A435F0?style=for-the-badge" alt="Expert Reviews"></a>
-  <a href="https://courseswyn.com/categories"><img src="https://img.shields.io/badge/16_Categories_Browse-By_Topic-BC52EE?style=for-the-badge" alt="Browse Categories"></a>
+  <a href="https://courseswyn.com/udemy-coupon-code"><img src="https://img.shields.io/badge/1,468%2B_Coupons_Verified-100%25_Tested-38B2AC?style=for-the-badge" alt="Active Coupons"></a>
+  <a href="https://courseswyn.com/blog"><img src="https://img.shields.io/badge/72_Expert_Reviews-No_Affiliate_Bias-A435F0?style=for-the-badge" alt="Expert Reviews"></a>
+  <a href="https://courseswyn.com/categories"><img src="https://img.shields.io/badge/12_Categories_Browse-By_Topic-BC52EE?style=for-the-badge" alt="Browse Categories"></a>
 </p>
 
 <p align="center">
@@ -15,7 +15,7 @@
   <a href="https://github.com/Coutons/courseswyn-astro/commits/main"><img src="https://img.shields.io/github/last-commit/Coutons/courseswyn-astro?style=flat&label=Updated" alt="Last Commit"></a>
   <a href="https://github.com/Coutons/courseswyn-astro/actions/workflows/deploy.yml"><img src="https://github.com/Coutons/courseswyn-astro/actions/workflows/deploy.yml/badge.svg" alt="Deploy"></a>
   <a href="https://courseswyn.com"><img src="https://img.shields.io/badge/Lighthouse-95%2B-38B2AC?style=flat&logo=lighthouse" alt="Lighthouse"></a>
-  <a href="https://astro.build"><img src="https://img.shields.io/badge/Astro_7.3-FF5D01?style=flat&logo=astro&logoColor=white" alt="Astro"></a>
+  <a href="https://astro.build"><img src="https://img.shields.io/badge/Astro_7.4-FF5D01?style=flat&logo=astro&logoColor=white" alt="Astro"></a>
 </p>
 
 ---
@@ -23,7 +23,7 @@
 ## Preview
 
 <p align="center">
-  <img src="public/assets/images/screenshot.jpeg" alt="CoursesWyn.com — Verified Udemy coupon codes, 100% OFF daily deals and expert course reviews with ratings" width="80%">
+  <img src="public/assets/images/Screenshot.png" alt="CoursesWyn.com — Verified Udemy coupon codes, 100% OFF daily deals and expert course reviews with ratings" width="80%">
   <br><em>CoursesWyn — Daily Verified Promo Codes & Savings Strategies for Lifelong Learners</em>
 </p>
 
@@ -52,10 +52,10 @@
 
 [CoursesWyn](https://courseswyn.com) is an independent platform providing **verified Udemy promo codes**, **expert course reviews**, and **structured career roadmaps**. Every coupon is manually tested before publishing — expired deals are purged within 4 hours.
 
-- **1,422 active coupons** — manually verified, updated daily with 100% OFF and limited-time discounts
-- **70 in-depth expert reviews** — opinionated audits covering AI engineering, agentic AI, web development, cloud computing, data science, and business
-- **16 categories** — browse by topic at [courseswyn.com/categories](https://courseswyn.com/categories)
-- **468 instructor profiles** — top-rated educators with curated course collections at [courseswyn.com/instructors](https://courseswyn.com/instructors)
+- **1,468 verified coupons** — manually verified, updated daily with 100% OFF and limited-time discounts
+- **72 in-depth expert reviews** — opinionated audits covering AI engineering, agentic AI, web development, cloud computing, data science, and business
+- **12 categories** — browse by topic at [courseswyn.com/categories](https://courseswyn.com/categories)
+- **467 instructor profiles** — top-rated educators with curated course collections at [courseswyn.com/instructors](https://courseswyn.com/instructors)
 - **Real-time search** — Fuse.js powered instant search across all deals and reviews at [courseswyn.com/search](https://courseswyn.com/search)
 - **Featured** in the Official Astro Showcase for high-performance implementation
 
@@ -69,16 +69,17 @@ We don't just aggregate links — we audit every course. Our mission is to prote
 - **No Affiliate Bias**: Rankings based on curriculum quality and instructor credibility, not commission
 - **Daily Updates**: Fresh deals added every day. Price drops, flash sales, and new 100% OFF coupons tracked in real time
 - **Career Roadmaps**: Structured learning paths across AI engineering, web development, cloud, and data science — from beginner to job-ready
-- **Expert Reviews**: 70 opinionated deep-dives with curriculum analysis, instructor background checks, and alternative recommendations
+- **Expert Reviews**: 72 opinionated deep-dives with curriculum analysis, instructor background checks, and alternative recommendations
 
 ---
 
 ## Expert Course Reviews
 
-Browse all [70 expert reviews](https://courseswyn.com/blog) with opinionated rankings across every major category.
+Browse all [72 expert reviews](https://courseswyn.com/blog) with opinionated rankings across every major category.
 
 ### AI, Agents & LLM Engineering
 
+- [Best AI Agents in 2026 and How to Use Them in Your Workflow](https://courseswyn.com/blog/best-ai-agents/)
 - [Best Udemy Claude Code Courses 2026 — Expert Ranked](https://courseswyn.com/blog/best-udemy-claude-code-courses-2026/)
 - [Model Context Protocol (MCP) & Agentic AI: The 2026 Guide](https://courseswyn.com/blog/model-context-protocol-mcp-agentic-ai/)
 - [What Is Agentic AI? Architecture, MCP & Use Cases (2026)](https://courseswyn.com/blog/what-is-agentic-ai-architecture-mcp-use-cases/)
@@ -154,6 +155,7 @@ Browse all [70 expert reviews](https://courseswyn.com/blog) with opinionated ran
 
 ### Guides & Comparisons
 
+- [Best Udemy Courses in Spanish (2026)](https://courseswyn.com/blog/spanish-language-course/)
 - [How to Get Udemy Courses for Free (Legally)](https://courseswyn.com/blog/how-to-get-udemy-courses-for-free/)
 - [Is Udemy Worth It? — 2026 Honest Review](https://courseswyn.com/blog/is-udemy-worth-it/)
 - [Udemy Black Friday 2026 — Complete Guide](https://courseswyn.com/blog/udemy-black-friday-2026/)
@@ -173,16 +175,20 @@ Explore courses by topic at [courseswyn.com/categories](https://courseswyn.com/c
 
 | Category | Deals | Link |
 |---|---|---|
-| IT & Software | 545 | [courseswyn.com/categories/it-and-software](https://courseswyn.com/categories/it-and-software) |
-| Development | 404 | [courseswyn.com/categories/development](https://courseswyn.com/categories/development) |
-| Business | 132 | [courseswyn.com/categories/business](https://courseswyn.com/categories/business) |
+| IT & Software | 607 | [courseswyn.com/categories/it-and-software](https://courseswyn.com/categories/it-and-software) |
+| Development | 508 | [courseswyn.com/categories/development](https://courseswyn.com/categories/development) |
+| Business | 136 | [courseswyn.com/categories/business](https://courseswyn.com/categories/business) |
 | Teaching & Academics | 46 | [courseswyn.com/categories/teaching-and-academics](https://courseswyn.com/categories/teaching-and-academics) |
+| Office Productivity | 41 | [courseswyn.com/categories/office-productivity](https://courseswyn.com/categories/office-productivity) |
 | Finance & Accounting | 31 | [courseswyn.com/categories/finance-and-accounting](https://courseswyn.com/categories/finance-and-accounting) |
-| Design | 31 | [courseswyn.com/categories/design](https://courseswyn.com/categories/design) |
-| Office Productivity | 27 | [courseswyn.com/categories/office-productivity](https://courseswyn.com/categories/office-productivity) |
-| Marketing | 17 | [courseswyn.com/categories/marketing](https://courseswyn.com/categories/marketing) |
+| Design | 28 | [courseswyn.com/categories/design](https://courseswyn.com/categories/design) |
+| Programming Languages | 25 | [courseswyn.com/categories/programming-languages](https://courseswyn.com/categories/programming-languages) |
+| Marketing | 19 | [courseswyn.com/categories/marketing](https://courseswyn.com/categories/marketing) |
+| Music | 10 | [courseswyn.com/categories/music](https://courseswyn.com/categories/music) |
+| Photography & Video | 10 | [courseswyn.com/categories/photography-and-video](https://courseswyn.com/categories/photography-and-video) |
+| Personal Development | 7 | [courseswyn.com/categories/personal-development](https://courseswyn.com/categories/personal-development) |
 
-Plus 8 more categories (including Spanish-language catalogs) — 16 total. Browse all instructors at [courseswyn.com/instructors](https://courseswyn.com/instructors), topics at [courseswyn.com/topics](https://courseswyn.com/topics), and popular deals at [courseswyn.com/popular](https://courseswyn.com/popular).
+Browse all 12 categories at [courseswyn.com/categories](https://courseswyn.com/categories). Browse all instructors at [courseswyn.com/instructors](https://courseswyn.com/instructors), topics at [courseswyn.com/topics](https://courseswyn.com/topics), and popular deals at [courseswyn.com/popular](https://courseswyn.com/popular).
 
 ---
 
@@ -190,14 +196,14 @@ Plus 8 more categories (including Spanish-language catalogs) — 16 total. Brows
 
 | Metric | Value |
 |---|---|
-| Active Coupons | 1,422 verified daily |
-| Expert Reviews | 70 in-depth audits |
-| Instructor Profiles | 468 |
-| Course Categories | 16 topics |
+| Active Coupons | 1,468 verified daily |
+| Expert Reviews | 72 in-depth audits |
+| Instructor Profiles | 467 ranked |
+| Course Categories | 12 topics |
 | Update Frequency | Daily (4-hour expiry purge) |
 | Learners Served | 150K+ worldwide |
 | Lighthouse Score | 95+ (All Categories) |
-| Tech Stack | Astro 7.3, React 19, custom CSS |
+| Tech Stack | Astro 7.4, React 19.2, custom CSS |
 
 ---
 
@@ -248,11 +254,11 @@ npm run mode:restore  # restore the last backup
 
 | Technology | Purpose |
 |---|---|
-| **Astro 7.3** | Islands Architecture — static-first with dynamic islands |
-| **React 19** | Interactive UI components (deal cards, search, comparison tables) |
+| **Astro 7.4** | Islands Architecture — static-first with dynamic islands |
+| **React 19.2** | Interactive UI components (deal cards, search, comparison tables) |
 | **Custom CSS** | Neo-Brutalist design system (CSS variables, no framework) |
 | **MDX + Content Layer** | Blog with schema-validated frontmatter |
-| **Fuse.js** | Client-side fuzzy search across 1,400+ deals |
+| **Fuse.js** | Client-side fuzzy search across 1,468+ deals |
 | **GitHub Actions + Pages** | CI build and deployment (see `.github/workflows/deploy.yml`) |
 | **Schema.org (LD+JSON)** | Automated rich snippets for every page |
 | **astro-seo** | Per-page meta tags, OG images, and canonical URLs |
@@ -268,13 +274,13 @@ npm run mode:restore  # restore the last backup
 | `/udemy-coupons-today` | Today's fresh coupon deals |
 | `/udemy-coupons-guide` | Coupon guide & savings strategies |
 | `/coupon/[slug]` | Single coupon deal page |
-| `/categories` | Browse coupons by category (16 categories) |
+| `/categories` | Browse coupons by category (12 categories) |
 | `/categories/[category]` | Single category archive |
 | `/topics` | Browse by topic (AI, Web Dev, Cloud, etc.) |
 | `/topics/[topic]` | Single topic archive |
-| `/instructors` | Instructor leaderboard (468 ranked) |
+| `/instructors` | Instructor leaderboard (467 ranked) |
 | `/instructor/[instructor]` | Single instructor profile |
-| `/blog` | 70 expert course reviews and guides |
+| `/blog` | 72 expert course reviews and guides |
 | `/blog/[slug]` | Single review / guide |
 | `/popular` | Most popular deals |
 | `/search` | Instant full-text search |

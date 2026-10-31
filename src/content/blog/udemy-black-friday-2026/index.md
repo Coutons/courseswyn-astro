@@ -108,7 +108,7 @@ The **$199.99 list price** on Udemy courses is a psychological anchor — it alm
 - **Wider course selection** eligible for the discount (215,000+ vs ~180,000 during regular sales)
 - **Longer validity window** — usually 10–14 days vs 2–3 days for flash sales
 - **More instructor 100% OFF coupons** released alongside the sale
-- **Personal Plan discounts** also run simultaneously (rare outside Black Friday)
+- **Personal Plan promotions** may also run at the same time, though availability varies
 
 ### Black Friday vs Regular Flash Sales
 
@@ -175,7 +175,7 @@ If there's a specific paid course you want that doesn't have a free coupon, add 
 
 ### Hack #5: Udemy Personal Plan for Binge Learners
 
-If you plan to take 2+ courses, the **Udemy Personal Plan at $9.75/month** (annual billing) can be more cost-effective than individual purchases. It includes access to 10,000+ top courses. It occasionally goes on further discount during Black Friday itself.
+If you plan to take several courses, the **Udemy Personal Plan** (starting at $13/month; regional pricing varies) can be more cost-effective than buying each one. It includes access to 28,000+ courses. Udemy sometimes adds a subscription promotion during Black Friday, but the discount and eligibility vary.
 
 ---
 
@@ -435,7 +435,7 @@ Here's the honest breakdown:
 | You want a course that has a 100% OFF coupon | ❌ No — enroll free today on CoursesWyn |
 | You want a course with no active free coupon | ✅ Yes — or wait for the next weekly flash sale |
 | You want to buy 5+ courses at once | ✅ Yes — BF gives you the best price + widest selection |
-| You want the Udemy Personal Plan subscription | ✅ Yes — BF is one of the few times it goes on extra discount |
+| You want the Udemy Personal Plan subscription | ✅ Yes — Black Friday sometimes includes a subscription promotion |
 | You need the course now for a job or project | ❌ No — buy during the next weekly sale ($9.99–$14.99) |
 
 **The real secret:** Black Friday is Udemy's best *timing* — but CoursesWyn's daily free coupons are the best *price* (100% OFF). The ideal strategy is to use free coupons for courses that have them, and save Black Friday for the paid courses that don't.

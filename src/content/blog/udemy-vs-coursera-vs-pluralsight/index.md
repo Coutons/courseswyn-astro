@@ -77,7 +77,7 @@ Udemy is the YouTube of online education — massive, democratic, and occasional
 ### Udemy Pricing in 2026
 
 - **Individual courses:** Listed at $20–$200, but almost always discounted to $10–$20 during sales (which run constantly).
-- **Udemy Personal Plan:** $16.58/month for access to 26,000+ curated courses — a subscription option Udemy launched to compete with Coursera and Pluralsight.
+- **Udemy Personal Plan:** Starting at $13/month for access to 28,000+ curated courses — a subscription option Udemy launched to compete with Coursera and Pluralsight. Pricing varies by region and billing period.
 - **Free courses:** 600+ permanently free courses available directly on the platform.
 - **100% off coupons:** Instructors release free coupons daily — check [CoursesWyn.com](/udemy-coupon-code/) to grab premium courses at $0.
 

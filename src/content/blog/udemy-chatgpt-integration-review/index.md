@@ -151,7 +151,7 @@ You can explore Udemy courses in ChatGPT without a Udemy account. Login only nee
 Udemy course prices in ChatGPT match regular Udemy prices:
 - Standard range: $19.99 - $199.99
 - Sale prices: $9.99 - $29.99 (frequent)
-- Udemy Personal Plan: ~$30/month for 8,000+ courses
+- Udemy Personal Plan: starting at $13/month for 28,000+ courses (regional pricing varies)
 
 **Important:** ChatGPT integration doesn't change pricing. You still need to buy courses on Udemy's platform.
 
