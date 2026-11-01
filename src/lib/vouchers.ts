@@ -26,6 +26,8 @@ export interface Voucher {
   tag: string;
   note: string;
   priceNote?: string;
+  /** Product page is not live (sold out/retired) — link to the catalog instead. */
+  catalogOnly?: boolean;
 }
 
 export interface VoucherGroup {
@@ -132,18 +134,21 @@ export const AWS_GROUPS: VoucherGroup[] = [
       {
         slug: "aws-certified-developer-associate",
         name: "AWS Developer – Associate",
+        code: "DVA-C02",
         tag: "Developer",
         note: "Usable for all AWS Associate exams. Voucher + Second Chance valid for at least 9 months.",
       },
       {
         slug: "aws-certified-data-engineer-associate",
         name: "AWS Data Engineer – Associate",
+        code: "DEA-C01",
         tag: "Data",
         note: "Usable for all AWS Associate exams. Voucher + Second Chance valid for at least 9 months.",
       },
       {
         slug: "aws-certified-cloudops-engineer-associate",
         name: "AWS CloudOps Engineer – Associate",
+        code: "SOA-C03",
         tag: "Operations",
         note: "Usable for all AWS Associate exams. Voucher + Second Chance valid for at least 9 months.",
       },
@@ -151,7 +156,8 @@ export const AWS_GROUPS: VoucherGroup[] = [
         slug: "aws-certified-machine-learning-engineer-associate",
         name: "AWS ML Engineer – Associate",
         tag: "Machine Learning",
-        note: "Usable for all AWS Associate exams. Voucher + Second Chance valid for at least 9 months.",
+        note: "Usable for all AWS Associate exams. The dedicated MLA-C01 listing was not live at our last check — the Solutions Architect Associate voucher also covers this exam. Check the catalog for restock.",
+        catalogOnly: true,
       },
     ],
   },

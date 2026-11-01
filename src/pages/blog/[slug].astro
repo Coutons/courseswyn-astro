@@ -61,7 +61,7 @@ const videoSchema = ytVideo
         `https://i.ytimg.com/vi/${ytVideo.id}/hqdefault.jpg`,
         `https://i.ytimg.com/vi/${ytVideo.id}/maxresdefault.jpg`
       ],
-      "uploadDate": (data.updatedAt || data.pubDate).toISOString(),
+      "uploadDate": ((data as any).videoUploadDate || data.updatedAt || data.pubDate).toISOString(),
       "contentUrl": `https://www.youtube.com/watch?v=${ytVideo.id}`,
       "embedUrl": `https://www.youtube.com/embed/${ytVideo.id}`,
       "url": canonical,
@@ -87,6 +87,8 @@ function resolveImage(img: any): string {
 }
 const ogImage = resolveImage(data.image);
 const heroImageUrl = ogImage || '';
+// Schema.org image URLs should be absolute so crawlers do not have to resolve them.
+const schemaImage = ogImage ? new URL(ogImage, 'https://courseswyn.com').href : '';
 
 // Parse FAQ from MDX content for schema
 const faqMatches: { q: string; a: string }[] = [];
@@ -146,7 +148,7 @@ const articleSchema = {
         "url": "https://courseswyn.com",
         "logo": { "@type": "ImageObject", "url": "https://courseswyn.com/logo.svg" }
       },
-      "image": ogImage ? { "@type": "ImageObject", "url": ogImage } : undefined,
+      "image": schemaImage ? { "@type": "ImageObject", "url": schemaImage } : undefined,
       "mainEntityOfPage": { "@type": "WebPage", "@id": canonical }
     },
     ...(videoSchema ? [videoSchema] : []),
