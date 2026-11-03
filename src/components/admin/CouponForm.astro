@@ -68,7 +68,8 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
         </div>
         <div>
           <label class="adm-label" for="url">Course URL (with coupon code) *</label>
-          <input class="adm-input code" id="url" name="url" type="url" required placeholder="https://trk.udemy.com/.../?couponCode=CODE" value={deal?.url ?? ""} />
+          <textarea class="adm-textarea code adm-url-field" id="url" name="url" rows="2" required placeholder="https://trk.udemy.com/.../?couponCode=CODE" spellcheck="false">{deal?.url ?? ""}</textarea>
+          <span class="adm-hint">URL panjang ditampilkan penuh (wrap otomatis).</span>
         </div>
         <div>
           <label class="adm-label" for="slug">Slug (URL)</label>
@@ -237,6 +238,7 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
   .rte-preview li { margin-bottom: 0.3em; }
   .rte-preview a { color: var(--adm-accent); }
   .rte-empty { color: var(--adm-faint); }
+  .adm-url-field { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; line-height: 1.55; resize: none; overflow: hidden; min-height: 2.6rem; }
 </style>
 
 <script>
@@ -396,6 +398,16 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
     }
   });
 
+  // Course URL: tampilkan penuh — auto-resize tinggi textarea mengikuti isi.
+  const urlField = document.getElementById("url") as HTMLTextAreaElement | null;
+  function autoSizeUrl() {
+    if (!urlField) return;
+    urlField.style.height = "auto";
+    urlField.style.height = `${urlField.scrollHeight}px`;
+  }
+  urlField?.addEventListener("input", autoSizeUrl);
+  autoSizeUrl();
+
   const NUMERIC = new Set(["price", "originalPrice", "rating", "students"]);
   const ARRAYS = new Set(["learn", "requirements"]);
 
@@ -414,6 +426,9 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
         if (!isNaN(num)) payload[key] = num;
       } else if (key === "expiresAt" && raw) {
         payload[key] = `${raw}:00+07:00`;
+      } else if (key === "url") {
+        // URL tidak boleh mengandung spasi/baris baru (textarea bisa wrap).
+        payload[key] = raw.replace(/\s+/g, "");
       } else if (raw) {
         payload[key] = raw;
       }

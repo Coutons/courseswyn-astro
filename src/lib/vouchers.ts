@@ -38,7 +38,7 @@ export interface VoucherGroup {
 const NINE_MO =
   "Voucher valid for at least 9 months after purchase. Online or in-person exams.";
 const NINE_MO_RETAKE =
-  "Voucher + Second Chance valid for at least 9 months after purchase. Online or in-person exams.";
+  "Voucher plus retake option valid for at least 9 months after purchase. Online or in-person exams.";
 
 export const COMPTIA_GROUPS: VoucherGroup[] = [
   {

@@ -9,17 +9,165 @@ import { formatDateWIB, toISODateWIB } from "../../lib/date";
 import { COMPTIA_GROUPS, countVouchers, voucherAffUrl, voucherCatalogAffUrl } from "../../lib/vouchers.js";
 
 const canonicalUrl = "https://courseswyn.com/udemy-comptia-exam-vouchers/";
-const pageTitle = "Udemy CompTIA Exam Vouchers 2026: Security+, A+, Network+ Discounts | CoursesWyn";
+const pageTitle = "CompTIA Exam Voucher 2026: Udemy Prices & 10% Off";
 const pageDescription =
-  "All 15 official CompTIA exam vouchers on Udemy — Security+ (SY0-701), A+, Network+ (N10-009), CySA+, PenTest+, Linux+ and more. Valid ≥9 months, Second Chance retake option, online or in-person.";
+  "CompTIA exam vouchers on Udemy (2026): Security+ (SY0-701), A+, Network+ (N10-009) and more — Udemy advertises 10% off on the pages we checked, valid ≥9 months, online or in-person.";
+const publishedISO = "2026-09-20";
 const lastModified = toISODateWIB();
 const now = new Date();
 const dateFull = formatDateWIB(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 const catalogUrl = voucherCatalogAffUrl();
 const total = countVouchers(COMPTIA_GROUPS);
+const allVouchers = COMPTIA_GROUPS.flatMap((g) => g.items);
+const availableVouchers = allVouchers.filter((v) => !v.catalogOnly);
+const totalAvailable = availableVouchers.length;
+
+const examFamilies = [
+  {
+    family: "Fundamentals & A+",
+    exams: "Tech+, and A+ (Core 1 & Core 2) — both sold on Udemy.",
+    coverage: "One exam per voucher. A+ needs one Core 1 + one Core 2 voucher — an A+ voucher cannot pay for both halves.",
+  },
+  {
+    family: "Networking & Security",
+    exams: "Network+ (N10-009), Security+ (SY0-701) — both sold on Udemy.",
+    coverage: "Exam-specific — one voucher per exam code",
+  },
+  {
+    family: "Cybersecurity",
+    exams: "CySA+, PenTest+, SecurityX — all three sold on Udemy.",
+    coverage: "Exam-specific — one voucher per exam",
+  },
+  {
+    family: "Infrastructure & Cloud",
+    exams: "Linux+, Cloud+, CloudNetX and Server+ — all four sold on Udemy.",
+    coverage: "Exam-specific. CloudNetX is the premium listing (advertised at US$476.50 when we checked) — always verify the live price.",
+  },
+  {
+    family: "Data & Project",
+    exams: "Data+, DataSys+, DataAI and Project+ — all four sold on Udemy.",
+    coverage: "Exam-specific — one voucher per exam",
+  },
+];
+
+const voucherPicks = [
+  {
+    level: "A+ (Core 1 & Core 2)",
+    best: "Starting out in IT",
+    body: "The standard entry ticket for help desk and IT support. Remember: one voucher covers either Core 1 or Core 2 — budget for two vouchers (and two exams) to finish A+.",
+  },
+  {
+    level: "Security+ (SY0-701)",
+    best: "Most popular",
+    body: "The baseline cybersecurity certification and the one most employers and government/defense frameworks reference. SY0-701 is the current version — CompTIA has announced Security+ V8 for 17 November 2026, so confirm which code your voucher covers if you buy around the transition.",
+  },
+  {
+    level: "CySA+ / PenTest+ / SecurityX",
+    best: "Hands-on security",
+    body: "For analyst and offensive roles (CySA+ and PenTest+) and expert-level security architecture (SecurityX). Take Security+ first unless you already work in the field.",
+  },
+];
+
+const comparisonRows = [
+  {
+    label: "Price",
+    udemy: "Udemy advertises “save 10%” on the Security+, A+ and Network+ pages we checked (4 November 2026); CloudNetX advertises a saving without a fixed percentage. Udemy's price is its own — it is not tied to the CompTIA price and varies by country and promotion.",
+    aws: "CompTIA store: each exam is priced separately, per exam and per country, with local-currency pricing in many markets. Prices change — the price on your regional CompTIA store at checkout is the one that applies.",
+  },
+  {
+    label: "Retake",
+    udemy: "Retake Assurance (the add-on on the pages that offer it): one extra attempt bundled with the voucher. Must be bought with the voucher; cannot be added later; non-refundable.",
+    aws: "A failed attempt means buying a new exam. No retake is included with a standard CompTIA store voucher.",
+  },
+  {
+    label: "Validity",
+    udemy: "At least 9 months from purchase, including bundled retake options. Cannot be extended.",
+    aws: "12 months from purchase, per CompTIA's store return policy. Cannot be extended either.",
+  },
+  {
+    label: "Refund",
+    udemy: "Non-refundable and non-transferable. Expired vouchers are forfeited. No exception if you pass first try.",
+    aws: "CompTIA's return policy likewise treats exam vouchers as non-refundable and non-transferable once purchased.",
+  },
+  {
+    label: "Region",
+    udemy: "Valid only in the country of purchase.",
+    aws: "Also region- and currency-specific; the price you see is for your region.",
+  },
+  {
+    label: "Scheduling",
+    udemy: "Redeem on CompTIA's site; exam is booked through Pearson VUE (online proctored or in a test centre). Udemy handles only the voucher.",
+    aws: "Same — Pearson VUE delivers the exam. The CompTIA store only sells the voucher.",
+  },
+  {
+    label: "Best for",
+    udemy: "Getting a small advertised saving and, where offered, bundling one extra attempt with your prep course.",
+    aws: "Direct purchase with a longer (12-month) expiry and CompTIA's standard support.",
+  },
+];
+
+const faqs: { q: string; a: string; html?: string }[] = [
+  {
+    q: "How much does a CompTIA exam cost in 2026?",
+    a: "CompTIA does not publish a single global USD price list — each exam is priced separately per exam and per country, and prices change. The price on your regional CompTIA store (or at Pearson VUE checkout) is the one that applies to you. Because of that, we do not quote assumed dollar figures on this page.",
+  },
+  {
+    q: "How much is a Udemy CompTIA exam voucher in 2026?",
+    a: "Udemy advertises “save 10%” on the Security+, A+ and Network+ voucher pages we checked (4 November 2026). The CloudNetX page advertises a saving without a fixed percentage. Udemy does not publish a fixed price table — the amount at checkout varies by country and promotion. Compare the live checkout price with the CompTIA price for your region before buying; don't assume a flat 10% off.",
+  },
+  {
+    q: "Which CompTIA vouchers include a retake option?",
+    a: "Most CompTIA voucher pages on Udemy that mention a retake option sell it as an add-on (shown at checkout). It cannot be added after purchase, covers one extra attempt, and is non-refundable. Not every page offers it — the options shown at your checkout are the ones available to you, and the A+ listing we track advertises validity only, not a retake add-on. Confirm at checkout before paying.",
+  },
+  {
+    q: "How do I schedule my CompTIA exam with a voucher?",
+    a: "After payment, copy the code from My learning → Certifications (or the email from Udemy). Then sign in to your CompTIA account, start the scheduling flow, and you will be directed to Pearson VUE to pick online proctored or an in-person appointment. Paste the voucher code at checkout. Vouchers are valid only in the country of purchase, and CompTIA/Pearson VUE — not Udemy — handle scheduling and proctoring.",
+  },
+  {
+    q: "How long is a CompTIA voucher valid?",
+    a: "At least 9 months from the date of purchase on Udemy, including any bundled retake option. CompTIA's own store vouchers expire 12 months after purchase. Neither can be extended, and expired vouchers are forfeited. Vouchers are non-refundable and non-transferable.",
+  },
+  {
+    q: "Does one A+ voucher cover both core exams?",
+    a: "No. The CompTIA A+ voucher can be used for either the Core 1 or the Core 2 exam — you need a separate voucher for each half. If you are buying A+, budget for two vouchers.",
+  },
+  {
+    q: "What happens if I fail the exam?",
+    a: "CompTIA's own retake policy applies between attempts — check the current policy on CompTIA's site before booking. If you bought the retake add-on with your Udemy voucher, one extra attempt is covered; otherwise you purchase a new exam. Waiting periods still apply and are not waived by the add-on.",
+  },
+  {
+    q: "Is there a free way to retake a CompTIA exam?",
+    a: "No general free retake exists. Your options are the retake add-on on eligible Udemy voucher pages (one extra attempt, non-refundable) or buying a new exam. CompTIA sometimes runs promotions — check the CompTIA store and certification pages for current offers.",
+  },
+  {
+    q: "Do CompTIA certifications expire?",
+    a: "Most CompTIA certifications must be renewed every three years through Continuing Education (CE) — you collect CE credits (training, exams, teaching, publishing) to keep the certification current. Check the individual certification page for its renewal rules.",
+  },
+  {
+    q: "Are Udemy CompTIA exam vouchers legitimate?",
+    a: "Yes. Udemy sells and delivers the voucher code; Pearson VUE delivers and proctors the exam; CompTIA owns the certification and issues it. The code is redeemed in the CompTIA → Pearson VUE flow, not inside Udemy. Buy only from the official voucher pages and keep your receipt.",
+  },
+  {
+    q: "Can I use a Udemy coupon on a CompTIA voucher?",
+    a: "No. Udemy coupons and promo codes never apply to exam vouchers — but they do apply to the CompTIA prep courses below, which is usually the cheapest way to get exam-ready.",
+  },
+  {
+    q: "Can I get a refund on a CompTIA voucher?",
+    a: "No. CompTIA vouchers are non-refundable and non-transferable, and an expired voucher is forfeited. Cancel or reschedule at least 24 hours before the appointment or the voucher is forfeited — the exact window is set by Pearson VUE and CompTIA policy, so confirm before the exam date.",
+  },
+  {
+    q: "Which Security+ version should I buy for: SY0-701 or V8?",
+    a: "SY0-701 is the current Security+ exam. CompTIA has announced Security+ V8 for 17 November 2026. A voucher is tied to the exam code it is sold for — if a new version launches near your exam date, confirm with CompTIA (or at Pearson VUE checkout) which code your voucher can be used for before booking.",
+  },
+  {
+    q: "Which CompTIA voucher should I buy first?",
+    a: "If you are new to IT, start with A+ (two vouchers: Core 1 and Core 2). If you target networking, Network+ comes next. For a security career, Security+ (SY0-701) is the most requested baseline. From there, pick the specialisation — CySA+, PenTest+ or SecurityX — that matches the job you want.",
+    html: `If you are new to IT, start with A+ (two vouchers: Core 1 and Core 2). If you target networking, Network+ comes next. For a security career, Security+ (SY0-701) is the most requested baseline — or see our <a href="/blog/best-udemy-cybersecurity-courses-with-ai-integration-for-2026/">cybersecurity courses guide</a> for a full study path.`,
+  },
+];
 
 const allDeals = await getDeals();
-const comptiaRe = /(comptia|security\+|network\+|cysa|pentest|linux\+|server\+|project\+|cloud\+|cloudnetx|datasys|a\+|tech\+)/i;
+const comptiaRe = /(comptia|security\+|network\+|cysa|pentest|linux\+|server\+|project\+|cloud\+|cloudnetx|datasys|a\+|tech\+|data\+)/i;
 const starRe = /(jason dion|dion training)/i;
 const prepDeals = allDeals
   .filter((d: any) => comptiaRe.test(`${d.title || ""} ${d.subcategory || ""} ${d.category || ""}`))
@@ -31,137 +179,364 @@ const prepDeals = allDeals
   })
   .slice(0, 3);
 
-const faqs = [
-  {
-    q: "Which CompTIA exam vouchers are available on Udemy?",
-    a: `Udemy lists ${total} official CompTIA vouchers: Security+ (SY0-701), A+ (Core 1 & Core 2), Network+ (N10-009), CySA+, PenTest+, Linux+, Cloud+, Server+, Project+, Data+, DataSys+, DataAI, CloudNetX, SecurityX and Tech+. Availability and pricing vary by region — confirm on the live voucher page.`,
-  },
-  {
-    q: "How long is a CompTIA voucher valid?",
-    a: "CompTIA vouchers bought through Udemy are valid for at least 9 months from the date of purchase, including any Second Chance retake. They can be used for online proctored exams or in-person at authorized test centers.",
-  },
-  {
-    q: "Does one A+ voucher cover both Core exams?",
-    a: "No. The CompTIA A+ voucher can be used for either the Core 1 or the Core 2 exam — you need a separate voucher for each half of the certification.",
-  },
-  {
-    q: "What is Second Chance on a CompTIA voucher?",
-    a: "Second Chance is Udemy's retake option: if you fail, report it from My learning → Certifications and Udemy issues a brand-new voucher code (usually within 7 days) after verifying your result. It must be bought together with the voucher and can't be added later.",
-  },
-  {
-    q: "Can I use a Udemy coupon on a CompTIA voucher?",
-    a: "No. Coupons and promo codes never apply to exam vouchers — but they do apply to the CompTIA prep courses below, which is the cheapest way to get exam-ready.",
-  },
-  {
-    q: "How do I schedule my CompTIA exam?",
-    a: "After payment, copy your code from My learning → Certifications, then schedule at CompTIA (Pearson VUE) and paste the code at checkout. Udemy can't help with scheduling — contact the exam provider directly.",
-  },
-];
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": `${canonicalUrl}#webpage`,
+      url: canonicalUrl,
+      name: pageTitle,
+      description: pageDescription,
+      inLanguage: "en-US",
+      datePublished: publishedISO,
+      dateModified: lastModified,
+      isPartOf: { "@id": "https://courseswyn.com/#website" },
+      about: { "@type": "Thing", name: "CompTIA certification exam vouchers and discounts" },
+      mainEntity: { "@id": `${canonicalUrl}#vouchers` },
+      author: { "@type": "Person", name: "Andrew Derek", url: "https://courseswyn.com/about" },
+      publisher: { "@id": "https://courseswyn.com/#organization" },
+      breadcrumb: { "@id": `${canonicalUrl}#breadcrumb` },
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": `${canonicalUrl}#breadcrumb`,
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://courseswyn.com/" },
+        { "@type": "ListItem", position: 2, name: "Certification Vouchers", item: "https://courseswyn.com/udemy-certification-vouchers/" },
+        { "@type": "ListItem", position: 3, name: "CompTIA Exam Vouchers", item: canonicalUrl },
+      ],
+    },
+    {
+      "@type": "ItemList",
+      "@id": `${canonicalUrl}#vouchers`,
+      name: "CompTIA Exam Vouchers on Udemy",
+      numberOfItems: totalAvailable,
+      itemListElement: availableVouchers.map((v, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `https://www.udemy.com/certification-vouchers/${v.slug}/`,
+        name: `${v.name} Exam Voucher`,
+      })),
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${canonicalUrl}#faq`,
+      mainEntity: faqs.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    },
+  ],
+};
 ---
 
-<Layout title={pageTitle} description={pageDescription} canonical={canonicalUrl} type="article">
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={canonicalUrl}
+  type="article"
+  pubDate={new Date(publishedISO)}
+  updatedDate={now}
+>
   <meta name="author" content="Andrew Derek" slot="head" />
-  <meta name="keywords" content="comptia exam voucher, udemy comptia voucher, security+ voucher sy0-701, comptia a+ voucher core 1 core 2, network+ n10-009 voucher, udemy second chance comptia" slot="head" />
-
-  <script
-    type="application/ld+json"
-    set:html={JSON.stringify({
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Article",
-          "@id": `${canonicalUrl}#article`,
-          url: canonicalUrl,
-          headline: pageTitle,
-          description: pageDescription,
-          datePublished: "2026-09-20",
-          dateModified: lastModified,
-          inLanguage: "en-US",
-          author: { "@type": "Person", name: "Andrew Derek", url: "https://courseswyn.com" },
-          publisher: {
-            "@type": "Organization",
-            "@id": "https://courseswyn.com/#organization",
-            name: "CoursesWyn",
-            url: "https://courseswyn.com",
-            logo: { "@type": "ImageObject", url: "https://courseswyn.com/logo.svg" },
-          },
-          breadcrumb: {
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Home", item: "https://courseswyn.com" },
-              { "@type": "ListItem", position: 2, name: "Certification Vouchers", item: "https://courseswyn.com/udemy-certification-vouchers/" },
-              { "@type": "ListItem", position: 3, name: "CompTIA Exam Vouchers", item: canonicalUrl },
-            ],
-          },
-        },
-        {
-          "@type": "ItemList",
-          "@id": `${canonicalUrl}#vouchers`,
-          "name": "CompTIA Exam Vouchers on Udemy",
-          "numberOfItems": total,
-          "itemListElement": COMPTIA_GROUPS.flatMap((g) => g.items).map((v, i) => ({
-            "@type": "ListItem",
-            "position": i + 1,
-            "url": `https://www.udemy.com/certification-vouchers/${v.slug}/`,
-            "name": `${v.name} Exam Voucher`,
-          })),
-        },
-        {
-          "@type": "FAQPage",
-          "@id": `${canonicalUrl}#faq`,
-          mainEntity: faqs.map((f) => ({
-            "@type": "Question",
-            name: f.q,
-            acceptedAnswer: { "@type": "Answer", text: f.a },
-          })),
-        },
-      ],
-    })}
+  <meta
+    name="keywords"
+    content="udemy comptia exam voucher, comptia exam voucher 2026, security+ voucher sy0-701, comptia a+ voucher core 1 core 2, network+ n10-009 voucher, retake assurance comptia, pearson vue comptia exam"
+    slot="head"
   />
 
-  <main class="cv-wrap">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <div class="cv-wrap">
     <VoucherHero
       badgeHref="/how-we-test-and-verify-udemy-coupons"
-      badgeText={`Live · ${total} CompTIA vouchers`}
+      badgeText={`Checked · ${total} CompTIA vouchers`}
       titleA="CompTIA"
       titleAccent="Exam Vouchers"
       titleB="2026"
-      subHtml={`All <strong>${total} official CompTIA vouchers</strong> on Udemy — Security+ (SY0-701), A+, Network+ (N10-009), CySA+, PenTest+ and the new CloudNetX. Valid ≥9 months, online or in-person. Updated ${dateFull}.`}
-      stats={[{ val: `${total}`, label: "official vouchers" }, { val: "≥9 mo", label: "validity" }, { val: "2nd", label: "chance retake" }]}
-      primary={{ href: catalogUrl, text: "Browse All CompTIA Vouchers →", external: true }}
-      secondary={{ href: "/udemy-certification-vouchers/", text: "All Providers" }}
+      subHtml={`All <strong>${total} official CompTIA exam vouchers</strong> on Udemy — Security+ (SY0-701), A+, Network+ (N10-009), CySA+, PenTest+ and more. Udemy advertises <strong>save 10%</strong> on the pages we checked, valid ≥9 months. Updated ${dateFull}.`}
+      stats={[
+        { val: `${total}`, label: "official vouchers" },
+        { val: "10%", label: "off Security+/A+/Network+ (checked)" },
+        { val: "≥9 mo", label: "validity" },
+      ]}
+      primary={{ href: catalogUrl, text: "Browse CompTIA Vouchers →", external: true }}
+      secondary={{ href: "#exam-fees", text: "See Exam Fees" }}
       noteHtml={`Sponsored — CoursesWyn may earn a commission at no extra cost to you. <a href="/affiliate-disclosure">Affiliate Disclosure</a>`}
-      termTitle="agents@courseswyn: ~/vouchers --comptia"
       termLines={COMPTIA_GROUPS.flatMap((g) => g.items).slice(0, 6).map((v) => ({ href: voucherAffUrl(v.slug), code: v.code ?? v.tag, name: `${v.name} Voucher` }))}
-      termFootHtml={`<b>${total}</b>&nbsp;CompTIA vouchers · <a href="${catalogUrl}" target="_blank" rel="sponsored noopener noreferrer">browse all →</a>`}
     />
+    <div class="cv-meta">
+      <span>By <a href="/about">Andrew Derek</a></span>
+      <span class="cv-dot">·</span>
+      <span>Updated <time datetime={lastModified}>{dateFull}</time></span>
+      <span class="cv-dot">·</span>
+      <span>
+        Checked against{" "}
+        <a href="https://www.udemy.com/certification-vouchers/comptia-security-plus/" target="_blank" rel="noopener noreferrer">Udemy voucher listings</a>{" "}
+        and <a href="https://www.comptia.org/en-us/certifications/" target="_blank" rel="noopener noreferrer">CompTIA certification pages</a>
+      </span>
+    </div>
 
-    <section class="cv-block" aria-label="CompTIA voucher catalog">
-      <h2>All {total} CompTIA Exam Vouchers</h2>
+    <nav class="cv-toc" aria-label="On this page">
+      <span class="cv-toc-label">On this page</span>
+      <a href="#quick-answer">Quick answer</a>
+      <a href="#exam-fees">Exam fees</a>
+      <a href="#vouchers">All vouchers</a>
+      <a href="#which-voucher">Which voucher</a>
+      <a href="#how-to-redeem">How to redeem</a>
+      <a href="#retake-assurance">Retake option</a>
+      <a href="#comptia-offers">Ways to save</a>
+      <a href="#voucher-vs-direct">Udemy vs CompTIA</a>
+      <a href="#worth-it">Is it worth it?</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+
+    <section class="cv-block cv-answer" id="quick-answer" aria-labelledby="quick-answer-title">
+      <h2 id="quick-answer-title">CompTIA exam vouchers on Udemy: the short answer</h2>
       <p>
-        Prices and availability vary by region — Udemy guarantees savings versus booking direct. Vouchers are bought
-        inside eligible prep courses or from each voucher page below.
+        A CompTIA exam voucher is a prepaid code for one attempt at one specific exam. Udemy advertises{" "}
+        <strong>save 10%</strong> on the Security+, A+ and Network+ pages we checked (4 November 2026), sells
+        vouchers for the <strong>exact exam</strong> — not by level like AWS — and they are valid for at least{" "}
+        <strong>9 months</strong> from purchase.
       </p>
-      <VoucherGrid groups={COMPTIA_GROUPS} />
+      <p>
+        CompTIA sets prices per exam and per country, and its store vouchers expire after 12 months. Udemy's price
+        is not tied to the CompTIA price — it can be lower or higher. Compare the live checkout price with the price
+        on your regional CompTIA store before you pay.
+      </p>
+      <ul class="cv-check">
+        <li><strong>Want the simplest saving?</strong> Udemy advertises 10% off on the Security+, A+ and Network+ pages we checked — verify the live price at checkout.</li>
+        <li><strong>Buying A+?</strong> You need two vouchers — one Core 1 and one Core 2 — for the full certification.</li>
+        <li><strong>Want a retake safety net?</strong> Pick the voucher + retake option at checkout where it is offered — it cannot be added later.</li>
+        <li><strong>Around 17 November 2026?</strong> Security+ V8 is scheduled then — confirm which exam code your voucher covers before buying.</li>
+      </ul>
     </section>
 
-    <section class="cv-block cv-warn" aria-label="Second Chance">
-      <h2>Second Chance: Don't Fear the First Attempt</h2>
+    <section class="cv-block" id="exam-fees" aria-labelledby="fees-title">
+      <h2 id="fees-title">How much does a CompTIA exam cost in 2026?</h2>
       <p>
-        Add Second Chance at checkout and a failed attempt isn't wasted money: report it from{" "}
-        <em>My learning → Certifications → Claim Second Chance</em> and Udemy issues a new voucher code (usually
-        within 7 days) after verifying your result. Rules: must be bought with the voucher, one extra attempt only,
-        no refund if you pass first try, and vouchers are non-refundable and expire as stated.
+        CompTIA prices each exam separately, per exam and per country — there is no single global USD table, and
+        prices change. The price on your regional CompTIA store, or at Pearson VUE checkout, is the one that applies
+        to you.
       </p>
+      <div class="cv-table-wrap">
+        <table class="cv-table">
+          <caption>CompTIA exam families sold as Udemy vouchers (2026)</caption>
+          <thead>
+            <tr>
+              <th scope="col">Family</th>
+              <th scope="col">Exams at this level</th>
+              <th scope="col">Udemy voucher covers</th>
+            </tr>
+          </thead>
+          <tbody>
+            {examFamilies.map((row) => (
+              <tr>
+                <th scope="row">{row.family}</th>
+                <td>{row.exams}</td>
+                <td>{row.coverage}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="cv-note">
+        CompTIA store vouchers expire 12 months after purchase; Udemy vouchers are valid for at least 9 months.
+        Udemy's advertised discount applies to Udemy's own price, not necessarily to the CompTIA price. Check the live
+        price on the voucher page and your regional CompTIA store before buying — checked against Udemy voucher pages
+        and <a href="https://www.comptia.org/en-us/certifications/" target="_blank" rel="noopener noreferrer">CompTIA certification pages</a> on 4 November 2026.
+      </p>
+      <p>
+        What you actually pay varies by region and promotion. We do not quote assumed checkout prices here — open the
+        voucher page, note the price, and compare it with the CompTIA price for your country before paying.
+      </p>
+    </section>
+
+    <section class="cv-block" id="vouchers" aria-labelledby="vouchers-title">
+      <h2 id="vouchers-title">Compare all {total} CompTIA exam vouchers on Udemy</h2>
+      <p>
+        Udemy lists {total} CompTIA voucher products. Each is valid for <strong>one specific exam</strong> — A+ is the
+        one exception that still needs two vouchers (Core 1 + Core 2). The advertised discount we verified is{" "}
+        <strong>save 10%</strong> on Security+, A+ and Network+; other listings advertise a saving without a fixed
+        percentage.
+      </p>
+      <VoucherGrid groups={COMPTIA_GROUPS} />
+      <p class="cv-note">
+        Prices, stock and promotions change, and Udemy's catalog may show a different offer than the checkout. Confirm
+        the live price, the expiry date and the exam code on the product page before paying. A+ vouchers are sold per
+        core exam — buy two if you are taking full A+.
+      </p>
+    </section>
+
+    <section class="cv-block" id="which-voucher" aria-labelledby="which-title">
+      <h2 id="which-title">Which CompTIA exam voucher do you need?</h2>
+      <p>
+        Choose the voucher that matches the exact exam you plan to sit — CompTIA vouchers are exam-specific, and
+        buying the wrong one is an expensive, non-refundable mistake.
+      </p>
+      <div class="cv-pick-grid">
+        {voucherPicks.map((pick) => (
+          <article class="cv-pick">
+            <span class="cv-pick-tag">{pick.best}</span>
+            <h3>{pick.level}</h3>
+            <p>{pick.body}</p>
+          </article>
+        ))}
+      </div>
+      <p class="cv-note">
+        Still deciding? Start with our <a href="/blog/cloud-computing-courses-udemy-2026/">cloud computing courses guide</a> or{" "}
+        <a href="/blog/best-udemy-cybersecurity-courses-with-ai-integration-for-2026/">cybersecurity courses guide</a> before you buy.
+      </p>
+    </section>
+
+    <section class="cv-block" id="how-to-redeem" aria-labelledby="redeem-title">
+      <h2 id="redeem-title">How to buy and redeem a CompTIA exam voucher</h2>
+      <p>
+        Buying the voucher and booking the exam are two separate steps. Udemy sells the code; CompTIA and Pearson VUE
+        run the exam. Follow this order so you don't lose time or buy the wrong code.
+      </p>
+      <ol class="cv-steps">
+        <li><strong>Pick the exact exam.</strong> Each voucher is valid only for its own exam — confirm the code on the voucher page matches the exam you intend to sit (e.g. SY0-701, N10-009).</li>
+        <li><strong>Choose voucher-only or the voucher + retake option</strong> where offered. The retake add-on cannot be added after checkout.</li>
+        <li><strong>Pay on Udemy.</strong> A card or Udemy credits work. Udemy coupons do not apply to vouchers.</li>
+        <li><strong>Get your code from My learning → Certifications.</strong> Udemy also emails it, but your account is the source of truth.</li>
+        <li><strong>Sign in to your CompTIA account</strong> and start the scheduling flow — you'll be directed to Pearson VUE to book online proctored or an in-person appointment.</li>
+        <li><strong>Paste the voucher code at checkout.</strong> Valid only in the country where you bought it.</li>
+        <li><strong>Reschedule or cancel at least 24 hours before the appointment.</strong> Miss the window and the voucher is forfeited — it cannot be extended.</li>
+      </ol>
+      <div class="cv-callout">
+        <strong>Before you pay, check:</strong> the exam code, the expiry date (at least 9 months), the retake option
+        if you want it, your country's eligibility, and that the name on your CompTIA account matches your ID. For A+,
+        remember you need one voucher per core exam.
+      </div>
+      <p class="cv-cta-line">
+        <a class="cv-btn" href={catalogUrl} target="_blank" rel="sponsored noopener noreferrer">Browse CompTIA Vouchers →</a>
+      </p>
+    </section>
+
+    <section class="cv-block cv-warn" id="retake-assurance" aria-labelledby="retake-title">
+      <h2 id="retake-title">Retake Assurance: the retake option, bought up front</h2>
+      <p>
+        Udemy's retake add-on — labelled <strong>Retake Assurance</strong> on the pages we checked — bundles your
+        first attempt plus <strong>one extra attempt at the same exam if you fail</strong>. It is not a CompTIA
+        programme, and it is not offered on every page. Older materials may call it “Second Chance” — it is the same
+        idea; the exact wording at your checkout is what counts.
+      </p>
+      <ul class="cv-check">
+        <li><strong>Where it exists:</strong> on the eligible voucher pages that show a retake option at checkout — most of the Security+, Network+ and advanced listings we track.</li>
+        <li><strong>Where it may not:</strong> the A+ listing we track advertises validity only — check the checkout options for your exam.</li>
+        <li><strong>How to buy it:</strong> select the voucher + retake option with the voucher itself. It cannot be added after purchase, and it covers one extra attempt only.</li>
+        <li><strong>The catch:</strong> non-refundable and non-transferable — including if you pass first try.</li>
+        <li><strong>Waiting periods still apply:</strong> CompTIA's retake policy governs how soon you can sit again. The add-on does not waive these.</li>
+      </ul>
+      <p class="cv-note">
+        Sources: Udemy voucher pages checked 4 November 2026,{" "}
+        <a href="https://help.comptia.org/hc/en-us/search?query=Certification%20Retake%20Policy" target="_blank" rel="noopener noreferrer">CompTIA retake policy (help centre)</a>,{" "}
+        <a href="https://www.comptia.org/en-us/certifications/" target="_blank" rel="noopener noreferrer">CompTIA certification pages</a>.
+      </p>
+    </section>
+
+    <section class="cv-block" id="comptia-offers" aria-labelledby="offers-title">
+      <h2 id="offers-title">Ways to lower the cost that aren't Udemy coupons</h2>
+      <ul class="cv-check">
+        <li><strong>Udemy's advertised 10%:</strong> applied automatically at the voucher page price on the Security+, A+ and Network+ pages we checked — no code needed. Verify the live price.</li>
+        <li><strong>Retake option:</strong> bundles one extra attempt with the voucher. Compare the bundle price with paying for two attempts separately.</li>
+        <li><strong>CompTIA promotions:</strong> CompTIA periodically runs store discounts and bundle offers — check the CompTIA store and certification pages before paying list price.</li>
+        <li><strong>CompTIA renewals (CE):</strong> most certifications renew every three years through Continuing Education, so the exam fee is not a monthly cost.</li>
+        <li><strong>Academic route:</strong> CompTIA works with academic partners — ask your school or college about institutional exam pricing.</li>
+      </ul>
+      <p class="cv-note">
+        Sources: <a href="https://store.comptia.org/" target="_blank" rel="noopener noreferrer">CompTIA store</a>,{" "}
+        <a href="https://www.comptia.org/en-us/certifications/" target="_blank" rel="noopener noreferrer">CompTIA certifications</a>,{" "}
+        <a href="https://www.comptia.org/en-us/return-policy/" target="_blank" rel="noopener noreferrer">CompTIA return policy</a>. Availability and terms change — verify before buying.
+      </p>
+    </section>
+
+    <section class="cv-block" id="voucher-vs-direct" aria-labelledby="compare-title">
+      <h2 id="compare-title">Udemy voucher vs buying from the CompTIA store</h2>
+      <p>
+        Udemy advertises a saving on the pages we checked, but the convenience has trade-offs — Udemy vouchers expire
+        sooner (9+ months vs 12 months at the CompTIA store). Here's the honest side-by-side.
+      </p>
+      <div class="cv-table-wrap">
+        <table class="cv-table cv-compare">
+          <caption>Udemy CompTIA voucher compared with buying from the CompTIA store</caption>
+          <thead>
+            <tr>
+              <th scope="col">Feature</th>
+              <th scope="col">Udemy voucher</th>
+              <th scope="col">CompTIA store</th>
+            </tr>
+          </thead>
+          <tbody>
+            {comparisonRows.map((row) => (
+              <tr>
+                <th scope="row">{row.label}</th>
+                <td>{row.udemy}</td>
+                <td>{row.aws}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="cv-block" id="legit" aria-labelledby="legit-title">
+      <h2 id="legit-title">Are Udemy CompTIA exam vouchers legitimate?</h2>
+      <p>
+        Yes — with one important distinction. Udemy is the <strong>seller of the voucher</strong>, not the exam
+        provider. CompTIA owns the certification and issues it; Pearson VUE delivers and proctors the exam. That is
+        why the code is redeemed in the CompTIA → Pearson VUE scheduling flow, not inside Udemy.
+      </p>
+      <ul class="cv-check">
+        <li><strong>Who sells it:</strong> Udemy, on udemy.com. The receipt and code come from Udemy.</li>
+        <li><strong>Who delivers the exam:</strong> Pearson VUE (test centre or online proctored). You schedule and reschedule there.</li>
+        <li><strong>Who issues the certification:</strong> CompTIA. Udemy cannot issue, renew or verify a CompTIA certification.</li>
+        <li><strong>How to verify your code:</strong> it appears in My learning → Certifications and is accepted at Pearson VUE checkout.</li>
+      </ul>
+      <p class="cv-note">
+        Red flags: a seller asking for bank transfer or crypto, codes sent by direct message, or prices far below the
+        CompTIA price. Vouchers are non-transferable, so a code from a stranger may not work. Buy from the official
+        Udemy voucher pages or the CompTIA store.
+      </p>
+    </section>
+
+    <section class="cv-block" id="worth-it" aria-labelledby="worth-title">
+      <h2 id="worth-title">Are Udemy CompTIA exam vouchers worth it?</h2>
+      <p>
+        The advertised 10% on the checked pages is real but modest — and CompTIA sets regional prices, so the
+        absolute saving varies. Judge the voucher against the CompTIA price for <em>your</em> country, not against a
+        US list price.
+      </p>
+      <h3>When the Udemy voucher makes sense</h3>
+      <ul>
+        <li>You want one checkout for prep course and voucher, and the live voucher price beats the CompTIA price in your region.</li>
+        <li>You want the retake option bundled at purchase where it is offered.</li>
+        <li>You're not ready to schedule immediately but want to lock the voucher in (≥9 months validity).</li>
+      </ul>
+      <h3>When buying from the CompTIA store is better</h3>
+      <ul>
+        <li>The Udemy price in your region matches or exceeds the CompTIA price.</li>
+        <li>You'd rather have 12 months to schedule — the CompTIA store voucher lasts longer.</li>
+        <li>You need maximum flexibility on scheduling and local-currency pricing.</li>
+      </ul>
+      <h3>Either way, remember the renewal part</h3>
+      <ul>
+        <li>Most CompTIA certifications renew every three years via Continuing Education — no repeat exam required for most certs.</li>
+        <li>The A+ requires two vouchers (Core 1 and Core 2) — budget accordingly before buying.</li>
+        <li>Students can ask their institution about academic pricing before paying the standard fee.</li>
+      </ul>
     </section>
 
     {
       prepDeals.length > 0 && (
-        <section class="cv-block" aria-label="CompTIA prep courses">
-          <h2>Pair It With a Discounted Prep Course</h2>
+        <section class="cv-block" id="prep-courses" aria-labelledby="prep-title">
+          <h2 id="prep-title">Best CompTIA prep courses to pair with your voucher</h2>
           <p>
-            Coupons don't work on vouchers — but they <em>do</em> work on prep courses. These verified CompTIA deals
-            are the cheapest way to get exam-ready:
+            These are verified Udemy coupons for CompTIA prep courses. They are separate from the voucher: the
+            course prepares you, the voucher pays for the exam. Coupons work on the courses, never on the voucher.
           </p>
           <p>
             Prefer <strong>Jason Dion</strong>, CompTIA's best-selling instructor?{" "}
@@ -174,61 +549,145 @@ const faqs = [
           </div>
           <p class="cv-note">
             <a href="/udemy-coupon-code/">Browse all verified coupons →</a> ·{" "}
+            <a href="/instructor/jason-dion">Jason Dion courses →</a> ·{" "}
+            <a href="/blog/best-udemy-cybersecurity-courses-with-ai-integration-for-2026/">Cybersecurity guide →</a>
+          </p>
+          <p class="cv-note">
+            Compare providers:{" "}
             <a href="/udemy-aws-exam-vouchers/">AWS vouchers →</a> ·{" "}
-            <a href="/udemy-microsoft-exam-vouchers/">Microsoft vouchers →</a>
+            <a href="/udemy-microsoft-exam-vouchers/">Microsoft vouchers →</a> ·{" "}
+            <a href="/udemy-certification-vouchers/">All vouchers →</a>
           </p>
         </section>
       )
     }
 
-    <section class="cv-block" aria-label="Frequently asked questions">
-      <h2>Frequently Asked Questions</h2>
+    <section class="cv-block" id="related" aria-labelledby="related-title">
+      <h2 id="related-title">Related guides and voucher pages</h2>
+      <div class="cv-related">
+        <a href="/blog/best-udemy-cybersecurity-courses-with-ai-integration-for-2026/">
+          <strong>Best cybersecurity courses</strong>
+          <span>Security+ prep ranked with honest weaknesses, AI included.</span>
+        </a>
+        <a href="/blog/cloud-computing-courses-udemy-2026/">
+          <strong>Cloud computing courses on Udemy</strong>
+          <span>AWS, Azure and Google Cloud training in one guide.</span>
+        </a>
+        <a href="/udemy-aws-exam-vouchers/">
+          <strong>AWS exam vouchers</strong>
+          <span>Voucher-only vs retake bundles, and AWS discounts.</span>
+        </a>
+        <a href="/udemy-microsoft-exam-vouchers/">
+          <strong>Microsoft exam vouchers</strong>
+          <span>AZ-900 to AZ-305 with Retake Assurance details.</span>
+        </a>
+        <a href="/udemy-certification-vouchers/">
+          <strong>All certification vouchers</strong>
+          <span>Compare AWS, CompTIA and Microsoft vouchers in one place.</span>
+        </a>
+        <a href="/how-we-test-and-verify-udemy-coupons">
+          <strong>How we verify coupons</strong>
+          <span>Our testing method for every voucher and coupon we list.</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="cv-block" id="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title">CompTIA exam voucher FAQ</h2>
       <div class="cv-faq">
         {faqs.map((f) => (
           <details>
             <summary>{f.q}</summary>
-            <p>{f.a}</p>
+            <p set:html={f.html ?? f.a} />
           </details>
         ))}
       </div>
     </section>
 
     <section class="cv-block cv-final" aria-label="Final call to action">
-      <h2>Commit to Your CompTIA Goal Today</h2>
-      <p>Prep, practice &amp; purchase in one place — valid ≥9 months, online or in-person.</p>
+      <h2>Ready to book your CompTIA exam?</h2>
+      <p>
+        Check the live voucher price against the CompTIA price for your country, pick voucher-only or the retake
+        option where offered, and book at least 24 hours before your appointment. For A+, buy two vouchers — one per
+        core exam.
+      </p>
       <a class="cv-btn big" href={catalogUrl} target="_blank" rel="sponsored noopener noreferrer">
-        Get CompTIA Exam Vouchers →
+        Browse CompTIA Vouchers →
       </a>
       <p class="cv-note">Sponsored — we may earn a commission at no extra cost to you.</p>
     </section>
 
-    <div style="margin-top:48px"><AuthorBox image="/images/author.jpg" /></div>
-  </main>
+    <div class="cv-author"><AuthorBox image="/images/author.jpg" /></div>
+  </div>
 
   <style>
-    .cv-wrap { max-width: 1280px; margin: 0 auto; padding: 24px 1.5rem 64px; }
-    .cv-crumb { font-size: 0.8rem; color: var(--muted); margin-bottom: 14px; }
-    .cv-crumb a { color: var(--brand); text-decoration: none; font-weight: 600; }
-    .cv-hero h1 { font-size: clamp(1.7rem, 4.5vw, 2.5rem); line-height: 1.15; margin: 10px 0 12px; letter-spacing: -0.02em; }
-    .cv-pill { display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #fff; background: var(--brand-gradient); border-radius: 999px; padding: 5px 12px; }
-    .cv-sub { font-size: 1.05rem; color: var(--text); opacity: 0.9; line-height: 1.65; }
-    .cv-cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 14px 0 8px; }
-    .cv-btn { display: inline-block; background: var(--brand); color: #fff; font-weight: 700; border-radius: 999px; padding: 0.85rem 1.9rem; text-decoration: none; }
-    .cv-btn.ghost { background: transparent; color: var(--brand); border: 2px solid var(--brand); }
-    .cv-btn.big { font-size: 1.05rem; padding: 1rem 2.4rem; }
-    .cv-note { font-size: 0.8rem; color: var(--muted); }
+    .cv-wrap { max-width: 1180px; margin: 0 auto; padding: 24px 1.5rem 64px; }
+    .cv-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 14px 0 0; font-size: 0.8rem; color: var(--muted); }
+    .cv-meta a { color: var(--brand); font-weight: 600; text-decoration: none; }
+    .cv-meta a:hover { text-decoration: underline; }
+    .cv-dot { color: var(--muted-light); }
+    .cv-toc { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 18px 0 0; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-secondary); }
+    .cv-toc-label { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+    .cv-toc a { font-size: 0.8rem; font-weight: 600; color: var(--text); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 5px 11px; }
+    .cv-toc a:hover { border-color: var(--brand); color: var(--brand); }
+    .cv-block { margin-top: 46px; scroll-margin-top: 90px; }
+    .cv-block h2 { font-size: clamp(1.4rem, 2.6vw, 1.85rem); line-height: 1.25; letter-spacing: -0.015em; margin: 0 0 10px; }
+    .cv-block h3 { font-size: 1.08rem; line-height: 1.35; margin: 22px 0 8px; }
+    .cv-block p, .cv-block li { line-height: 1.75; color: #c7d0da; }
+    .cv-block p { margin: 0 0 14px; }
+    .cv-block strong { color: var(--text); }
+    .cv-block a { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .cv-block a:hover { text-decoration: underline; }
+    .cv-answer { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px 22px 10px; }
+    .cv-check { list-style: none; padding: 0; margin: 8px 0 16px; display: grid; gap: 8px; }
+    .cv-check li { padding-left: 26px; position: relative; }
+    .cv-check li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--brand); font-weight: 800; }
+    .cv-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: 14px; margin: 16px 0; background: var(--card); }
+    .cv-table { width: 100%; min-width: 680px; border-collapse: collapse; }
+    .cv-table caption { caption-side: top; text-align: left; padding: 14px 16px; font-size: 0.8rem; font-weight: 700; color: var(--muted); background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
+    .cv-table th, .cv-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; font-size: 0.9rem; line-height: 1.6; }
+    .cv-table thead th { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--bg-secondary); white-space: nowrap; }
+    .cv-table tbody th { color: var(--text); font-weight: 700; }
+    .cv-table tbody tr:last-child th, .cv-table tbody tr:last-child td { border-bottom: none; }
+    .cv-compare td { color: #c7d0da; }
+    .cv-pick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 16px 0; }
+    .cv-pick { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+    .cv-pick-tag { display: inline-block; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #0a0b0d; background: var(--brand-gradient); border-radius: 999px; padding: 3px 9px; margin-bottom: 8px; }
+    .cv-pick h3 { margin: 0 0 6px; font-size: 1.05rem; }
+    .cv-pick p { margin: 0; font-size: 0.9rem; }
+    .cv-steps { padding-left: 22px; display: grid; gap: 10px; margin: 14px 0; }
+    .cv-steps li { padding-left: 4px; }
+    .cv-callout { background: var(--brand-soft); border-left: 4px solid var(--brand); border-radius: 0 12px 12px 0; padding: 14px 16px; margin: 16px 0; font-size: 0.92rem; line-height: 1.7; color: var(--text); }
+    .cv-cta-line { margin: 18px 0 0; }
+    .cv-btn { display: inline-block; background: var(--brand); color: #0a0b0d !important; font-weight: 800; border-radius: 999px; padding: 0.8rem 1.7rem; text-decoration: none !important; }
+    .cv-btn:hover { filter: brightness(1.05); }
+    .cv-btn.big { font-size: 1.02rem; padding: 0.95rem 2.1rem; }
+    .cv-note { font-size: 0.82rem; line-height: 1.65; color: var(--muted) !important; }
     .cv-note a { color: var(--brand); font-weight: 600; }
-    .cv-trust { list-style: none; padding: 0; margin: 14px 0 0; display: flex; gap: 8px 18px; flex-wrap: wrap; font-size: 0.9rem; font-weight: 600; }
-    .cv-block { margin-top: 40px; }
-    .cv-block h2 { font-size: 1.35rem; letter-spacing: -0.01em; margin-bottom: 10px; }
-    .cv-block p, .cv-block li { line-height: 1.7; }
-    .cv-warn { background: rgba(169, 199, 255, 0.12); border: 1px solid rgba(169, 199, 255, 0.55); border-radius: 14px; padding: 18px 20px; }
+    .cv-warn { background: rgba(169, 199, 255, 0.1); border: 1px solid rgba(169, 199, 255, 0.45); border-radius: 16px; padding: 20px 22px 8px; }
     .cv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin: 16px 0; }
-    @media (max-width: 900px) { .cv-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 600px) { .cv-grid { grid-template-columns: 1fr; } }
-    .cv-faq details { border: 1px solid var(--border, #e5e7eb); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; }
-    .cv-faq summary { font-weight: 700; cursor: pointer; }
-    .cv-faq p { margin: 8px 0 2px; color: var(--text); opacity: 0.9; }
-    .cv-final { text-align: center; background: var(--card, #0e1526); border-radius: 18px; padding: 32px 22px; }
+    .cv-related { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+    .cv-related a { display: block; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; text-decoration: none; }
+    .cv-related a:hover { border-color: var(--brand); text-decoration: none; }
+    .cv-related strong { display: block; color: var(--text); font-size: 0.93rem; line-height: 1.4; }
+    .cv-related span { display: block; color: var(--muted); font-size: 0.8rem; line-height: 1.5; margin-top: 4px; }
+    .cv-faq details { border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; background: var(--card); }
+    .cv-faq summary { font-weight: 700; cursor: pointer; color: var(--text); }
+    .cv-faq p { margin: 8px 0 2px; color: #c7d0da; }
+    .cv-final { text-align: center; background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 32px 22px; }
+    .cv-final p { max-width: 560px; margin-left: auto; margin-right: auto; }
+    .cv-author { margin-top: 48px; }
+    @media (max-width: 900px) {
+      .cv-grid { grid-template-columns: repeat(2, 1fr); }
+      .cv-related { grid-template-columns: repeat(2, 1fr); }
+      .cv-pick-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .cv-wrap { padding: 18px 1rem 48px; }
+      .cv-grid, .cv-related { grid-template-columns: 1fr; }
+      .cv-block { margin-top: 38px; }
+      .cv-answer, .cv-warn { padding: 18px 16px 6px; }
+      .cv-toc a { font-size: 0.75rem; }
+    }
   </style>
 </Layout>

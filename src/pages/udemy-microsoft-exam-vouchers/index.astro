@@ -9,14 +9,155 @@ import { formatDateWIB, toISODateWIB } from "../../lib/date";
 import { MICROSOFT_GROUPS, countVouchers, voucherAffUrl, voucherCatalogAffUrl } from "../../lib/vouchers.js";
 
 const canonicalUrl = "https://courseswyn.com/udemy-microsoft-exam-vouchers/";
-const pageTitle = "Udemy Microsoft Exam Vouchers 2026: AZ-900, AZ-104, AZ-500 Discounts | CoursesWyn";
+const pageTitle = "Microsoft Exam Voucher 2026: Udemy Prices & 10% Off";
 const pageDescription =
-  "All 8 official Microsoft exam vouchers on Udemy — AZ-900, DP-900, AZ-104, AZ-500, AI-102, AZ-305 and more. Save 10%, valid ≥9 months, Retake Assurance available, Pearson VUE scheduling.";
+  "Microsoft exam vouchers on Udemy (2026): AZ-900, DP-900, AZ-104, AZ-305 and more — Udemy advertises 10% off, Retake Assurance on role-based exams, and 9+ month validity.";
+const publishedISO = "2026-09-20";
 const lastModified = toISODateWIB();
 const now = new Date();
 const dateFull = formatDateWIB(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 const catalogUrl = voucherCatalogAffUrl();
 const total = countVouchers(MICROSOFT_GROUPS);
+const allVouchers = MICROSOFT_GROUPS.flatMap((g) => g.items);
+const availableVouchers = allVouchers.filter((v) => !v.catalogOnly);
+const totalAvailable = availableVouchers.length;
+
+const examLevels = [
+  {
+    level: "Fundamentals",
+    fee: "US$99*",
+    exams: "AZ-900 (Azure Fundamentals), DP-900 (Azure Data Fundamentals) — both sold on Udemy. Also AI-900, MS-900, PL-900.",
+    coverage: "Exam-specific — one voucher per exam",
+  },
+  {
+    level: "Associate",
+    fee: "US$165",
+    exams: "AZ-104 (Administrator), AZ-500 (Security), AI-102 (AI Engineer), AZ-800 (Windows Server Hybrid), MD-102 (Endpoint) — all five sold on Udemy.",
+    coverage: "Exam-specific — one voucher per exam",
+  },
+  {
+    level: "Expert",
+    fee: "US$165",
+    exams: "AZ-305 (Azure Solutions Architect Expert) — sold on Udemy. AZ-400 (DevOps Engineer Expert) is also Expert-level.",
+    coverage: "Exam-specific — one voucher per exam",
+  },
+];
+
+const voucherPicks = [
+  {
+    level: "Fundamentals (AZ-900 / DP-900)",
+    best: "First cloud certification",
+    body: "Pick AZ-900 for a general cloud foundation or DP-900 if you work with data. Neither requires experience. Note: the Fundamentals voucher pages on Udemy do NOT offer Retake Assurance.",
+  },
+  {
+    level: "Associate (AZ-104, AZ-500, AI-102, AZ-800, MD-102)",
+    best: "Most popular level",
+    body: "Role-based and hands-on. Retake Assurance is available on all five Udemy pages when bought with the voucher. Choose the exam that matches your job: administration, security, AI, hybrid server or endpoint.",
+  },
+  {
+    level: "Expert (AZ-305)",
+    best: "Senior architects",
+    body: "For designing end-to-end Azure solutions. Retake Assurance available on the Udemy page. Best taken after Associate-level experience or AZ-104.",
+  },
+];
+
+const comparisonRows = [
+  {
+    label: "Price",
+    udemy: "Udemy advertises “save 10%” on every Microsoft voucher page (checked 4 Nov 2026). Final price is shown at checkout and varies by country and promotion.",
+    aws: "Microsoft price per exam page — typically US$99 (Fundamentals) and US$165 (Associate/Expert), priced per country and region.",
+  },
+  {
+    label: "Retake",
+    udemy: "Retake Assurance, bought together with the voucher. Role-based exams only — NOT on Fundamentals (AZ-900, DP-900). One extra attempt; non-refundable.",
+    aws: "Pay again after the waiting period: 24 hours after the first attempt, then 14 days between later attempts (max 5 attempts per 12 months).",
+  },
+  {
+    label: "Validity",
+    udemy: "At least 9 months from purchase. The expiry date cannot be extended.",
+    aws: "No voucher to expire — you pay when you schedule the exam.",
+  },
+  {
+    label: "Refund",
+    udemy: "Non-refundable and non-transferable. No refund if you pass first time; no-shows forfeit the voucher.",
+    aws: "Microsoft does not refund failed exams or missed appointments either. Reschedule or cancel at least 24 hours before or forfeit the fee/voucher.",
+  },
+  {
+    label: "Region",
+    udemy: "Valid only in the country of purchase. Availability varies by country.",
+    aws: "Priced per country and region with local-currency pricing in many markets; book wherever you are eligible to test.",
+  },
+  {
+    label: "Support",
+    udemy: "Udemy handles the voucher code; Pearson VUE handles scheduling and delivery.",
+    aws: "Pearson VUE handles scheduling; Microsoft issues the certification.",
+  },
+  {
+    label: "Best for",
+    udemy: "Buying a retake safety net together with your prep course, at a small discount.",
+    aws: "Direct payment, local pricing, and no expiry date hanging over you.",
+  },
+];
+
+const faqs: { q: string; a: string; html?: string }[] = [
+  {
+    q: "How much does a Microsoft exam cost in 2026?",
+    a: "Microsoft's exam FAQ states that Associate and Expert exams typically cost US$165, priced according to currency values in specific countries and regions; prices are subject to change and taxes may apply. Fundamentals exams (AZ-900, DP-900) are typically US$99. The price shown on the Microsoft Learn exam page and at Pearson VUE checkout is the one that applies to you.",
+  },
+  {
+    q: "How much is a Udemy Microsoft exam voucher in 2026?",
+    a: "Udemy advertises “save 10%” on every Microsoft exam voucher page (verified on 4 November 2026 across az-900, dp-900, az-104, az-500, ai-102, az-800, md-102 and az-305). Udemy does not publish a fixed price table — the amount at checkout varies by country and promotion, and can be above or below the Microsoft price. Compare the live checkout price with the Microsoft price on the exam page before buying; don't assume a flat 10% off the US list price.",
+  },
+  {
+    q: "Which Microsoft vouchers include Retake Assurance?",
+    a: "Only role-based vouchers: AZ-104, AZ-500, AI-102, AZ-800 and MD-102 (Associate) and AZ-305 (Expert) show the Retake Assurance section on Udemy. The Fundamentals pages for AZ-900 and DP-900 do not offer it. Retake Assurance must be bought together with the voucher — it cannot be added later — and it covers one extra attempt.",
+  },
+  {
+    q: "How do I schedule my Microsoft exam with a voucher?",
+    a: "Log in to your Microsoft account and you will be directed to Pearson VUE to pick an appointment — online proctored or in person — up to 90 days in advance. You can have a maximum of two Microsoft exams scheduled at a time. Enter the voucher code at checkout; it is also stored in My learning → Certifications. Vouchers are only valid in the country of purchase.",
+  },
+  {
+    q: "How long is a Microsoft voucher valid?",
+    a: "At least 9 months from the date of purchase, whether bought alone or as an Exam Voucher + Retake bundle. Vouchers are non-refundable, non-transferable, and an expired voucher's value is forfeited. Reschedule or cancel at least 24 hours before your appointment or the fee/voucher is forfeited.",
+  },
+  {
+    q: "Can one voucher cover multiple exams?",
+    a: "No. Udemy's Microsoft voucher pages state the voucher is valid only for the specified exam and provider. Unlike AWS vouchers (which cover every exam at a level), a Microsoft voucher covers one exam code only — an AZ-104 voucher cannot pay for AZ-305, for example.",
+  },
+  {
+    q: "What happens if I fail the exam?",
+    a: "You must wait 24 hours after the first attempt, then 14 days between subsequent attempts, up to 5 attempts in a 12-month period from the first attempt. You cannot retake an exam you have passed until your certification expires. Each retake costs the exam fee unless you bought Retake Assurance with the voucher — and even then, Microsoft's waiting periods still apply.",
+  },
+  {
+    q: "Is there a free way to retake a Microsoft exam?",
+    a: "There is no general free retake. Your options are the Retake Assurance bundle on the Udemy role-based voucher pages (one extra attempt, non-refundable) or Microsoft Exam Replay, sold through Pearson VUE's Mindhub store — one exam plus one retake for role-based exams within 12 months, excluding Fundamentals, Office Specialist and beta exams. Students may qualify for academic pricing through Microsoft Learn.",
+  },
+  {
+    q: "Are Microsoft certifications renewable for free?",
+    a: "Yes. Eligible role-based certifications can be renewed every year at no cost by passing a short online assessment on Microsoft Learn. You pay the exam fee once; keeping the certification current does not cost extra. Fundamentals certifications do not expire.",
+  },
+  {
+    q: "Are Udemy Microsoft exam vouchers legitimate?",
+    a: "Yes. Udemy sells the voucher on udemy.com, Pearson VUE delivers and proctors the exam, and Microsoft issues the certification. The code is redeemed in the Pearson VUE checkout flow through your Microsoft account, not on Udemy. Buy only from the official voucher pages and keep your receipt.",
+  },
+  {
+    q: "Can I use a Udemy coupon on a Microsoft voucher?",
+    a: "No. Udemy coupons and promo codes never apply to exam vouchers — but Udemy credits can be applied at checkout, and coupons do apply to the prep courses below, which is usually the cheapest way to get exam-ready.",
+  },
+  {
+    q: "Can I get a refund on a Microsoft voucher?",
+    a: "No. Microsoft exam vouchers, including the Retake Assurance portion, are non-refundable and non-transferable, and forfeited if missed. If you pass on the first attempt, nothing is refunded for the retake part. Cancel or reschedule at least 24 hours before the appointment.",
+  },
+  {
+    q: "Do students get a discount on Microsoft exams?",
+    a: "Microsoft offers academic pricing — you verify your student status through your Microsoft account (verification lasts 12 months). Microsoft Office Specialist (MOS) exams are handled through Certiport. See the student discounts page on Microsoft Learn for current eligibility and terms.",
+  },
+  {
+    q: "Which should I take first: AZ-900 or DP-900?",
+    a: "Take AZ-900 if you want a broad cloud foundation, or DP-900 if your focus is data. Both are Fundamentals with no prerequisites and neither offers Retake Assurance. If you already work with Azure, skip straight to AZ-104 — it is the most common next step.",
+    html: `Take AZ-900 if you want a broad cloud foundation, or DP-900 if your focus is data. Both are Fundamentals with no prerequisites and neither offers Retake Assurance. If you already work with Azure, skip straight to AZ-104 — or see our <a href="/blog/cloud-computing-courses-udemy-2026/">cloud computing courses guide</a> for a full study path.`,
+  },
+];
 
 const allDeals = await getDeals();
 const msRe = /(azure|microsoft|az-900|az-104|az-500|microsoft 365|intune|windows server)/i;
@@ -31,136 +172,364 @@ const prepDeals = allDeals
   })
   .slice(0, 3);
 
-const faqs = [
-  {
-    q: "Which Microsoft exam vouchers are available on Udemy?",
-    a: `Udemy lists ${total} official Microsoft vouchers: AZ-900 (Azure Fundamentals), DP-900 (Azure Data Fundamentals), AZ-104 (Administrator), AZ-500 (Security Engineer), AI-102 (AI Engineer), AZ-305 (Solutions Architect Expert), AZ-800 (Windows Server Hybrid Admin) and MD-102 (Endpoint Administrator). Each saves 10% off the exam fee.`,
-  },
-  {
-    q: "What is Retake Assurance on a Microsoft voucher?",
-    a: "Retake Assurance is Microsoft's version of the retake safety net: buy the Exam Voucher + Retake bundle and you can re-sit the same exam if you fail, subject to Microsoft's certification exam policies. It must be bought with the voucher — never separately — and there's no refund if you pass first try.",
-  },
-  {
-    q: "How do I schedule my Microsoft exam with a voucher?",
-    a: "Log in to your Microsoft account, get directed to Pearson VUE (Microsoft's testing provider), and paste the voucher code from My learning → Certifications at checkout. Exams run online proctored or in-person. Vouchers are only valid in the country of purchase.",
-  },
-  {
-    q: "How long is a Microsoft voucher valid?",
-    a: "At least 9 months from the date of purchase. Vouchers are non-refundable, non-transferable, and an expired voucher's value is forfeited — schedule early.",
-  },
-  {
-    q: "Can I use a Udemy coupon on a Microsoft voucher?",
-    a: "No. Coupons never apply to exam vouchers — but they do apply to the Azure prep courses below, which is the cheapest way to get exam-ready.",
-  },
-  {
-    q: "Do I need a prep course if I buy the voucher?",
-    a: "The voucher only pays for the exam seat. Pair it with an expert-led prep course and practice tests — Microsoft exams are scenario-heavy, and most candidates fail at least once without structured preparation.",
-  },
-];
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": `${canonicalUrl}#webpage`,
+      url: canonicalUrl,
+      name: pageTitle,
+      description: pageDescription,
+      inLanguage: "en-US",
+      datePublished: publishedISO,
+      dateModified: lastModified,
+      isPartOf: { "@id": "https://courseswyn.com/#website" },
+      about: { "@type": "Thing", name: "Microsoft Certification exam vouchers and discounts" },
+      mainEntity: { "@id": `${canonicalUrl}#vouchers` },
+      author: { "@type": "Person", name: "Andrew Derek", url: "https://courseswyn.com/about" },
+      publisher: { "@id": "https://courseswyn.com/#organization" },
+      breadcrumb: { "@id": `${canonicalUrl}#breadcrumb` },
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": `${canonicalUrl}#breadcrumb`,
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://courseswyn.com/" },
+        { "@type": "ListItem", position: 2, name: "Certification Vouchers", item: "https://courseswyn.com/udemy-certification-vouchers/" },
+        { "@type": "ListItem", position: 3, name: "Microsoft Exam Vouchers", item: canonicalUrl },
+      ],
+    },
+    {
+      "@type": "ItemList",
+      "@id": `${canonicalUrl}#vouchers`,
+      name: "Microsoft Exam Vouchers on Udemy",
+      numberOfItems: totalAvailable,
+      itemListElement: availableVouchers.map((v, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `https://www.udemy.com/certification-vouchers/${v.slug}/`,
+        name: `${v.name} Exam Voucher`,
+      })),
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${canonicalUrl}#faq`,
+      mainEntity: faqs.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    },
+  ],
+};
 ---
 
-<Layout title={pageTitle} description={pageDescription} canonical={canonicalUrl} type="article">
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={canonicalUrl}
+  type="article"
+  pubDate={new Date(publishedISO)}
+  updatedDate={now}
+>
   <meta name="author" content="Andrew Derek" slot="head" />
-  <meta name="keywords" content="microsoft exam voucher, udemy microsoft voucher, az-900 voucher discount, az-104 voucher, azure exam voucher 10% off, retake assurance microsoft, pearson vue microsoft" slot="head" />
-
-  <script
-    type="application/ld+json"
-    set:html={JSON.stringify({
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Article",
-          "@id": `${canonicalUrl}#article`,
-          url: canonicalUrl,
-          headline: pageTitle,
-          description: pageDescription,
-          datePublished: "2026-09-20",
-          dateModified: lastModified,
-          inLanguage: "en-US",
-          author: { "@type": "Person", name: "Andrew Derek", url: "https://courseswyn.com" },
-          publisher: {
-            "@type": "Organization",
-            "@id": "https://courseswyn.com/#organization",
-            name: "CoursesWyn",
-            url: "https://courseswyn.com",
-            logo: { "@type": "ImageObject", url: "https://courseswyn.com/logo.svg" },
-          },
-          breadcrumb: {
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Home", item: "https://courseswyn.com" },
-              { "@type": "ListItem", position: 2, name: "Certification Vouchers", item: "https://courseswyn.com/udemy-certification-vouchers/" },
-              { "@type": "ListItem", position: 3, name: "Microsoft Exam Vouchers", item: canonicalUrl },
-            ],
-          },
-        },
-        {
-          "@type": "ItemList",
-          "@id": `${canonicalUrl}#vouchers`,
-          "name": "Microsoft Exam Vouchers on Udemy",
-          "numberOfItems": total,
-          "itemListElement": MICROSOFT_GROUPS.flatMap((g) => g.items).map((v, i) => ({
-            "@type": "ListItem",
-            "position": i + 1,
-            "url": `https://www.udemy.com/certification-vouchers/${v.slug}/`,
-            "name": `${v.name} Exam Voucher`,
-          })),
-        },
-        {
-          "@type": "FAQPage",
-          "@id": `${canonicalUrl}#faq`,
-          mainEntity: faqs.map((f) => ({
-            "@type": "Question",
-            name: f.q,
-            acceptedAnswer: { "@type": "Answer", text: f.a },
-          })),
-        },
-      ],
-    })}
+  <meta
+    name="keywords"
+    content="udemy microsoft exam voucher, microsoft exam voucher 2026, az-900 voucher, az-104 voucher, az-305 voucher, retake assurance microsoft, pearson vue microsoft exam, microsoft certification voucher discount"
+    slot="head"
   />
 
-  <main class="cv-wrap">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <div class="cv-wrap">
     <VoucherHero
       badgeHref="/how-we-test-and-verify-udemy-coupons"
-      badgeText={`Live · ${total} Microsoft vouchers`}
+      badgeText={`Checked · ${total} Microsoft vouchers`}
       titleA="Microsoft"
       titleAccent="Exam Vouchers"
       titleB="2026"
-      subHtml={`All <strong>${total} official Microsoft vouchers</strong> on Udemy — AZ-900, AZ-104, AZ-500, AI-102 and more. Flat <strong>10% off</strong> every exam, valid ≥9 months, Retake Assurance available. Updated ${dateFull}.`}
-      stats={[{ val: `${total}`, label: "official vouchers" }, { val: "10%", label: "off every exam" }, { val: "≥9 mo", label: "validity" }]}
-      primary={{ href: catalogUrl, text: "Browse All Microsoft Vouchers →", external: true }}
-      secondary={{ href: "/udemy-certification-vouchers/", text: "All Providers" }}
+      subHtml={`All <strong>${total} official Microsoft exam vouchers</strong> on Udemy — AZ-900, DP-900, AZ-104, AZ-500, AI-102, AZ-800, MD-102 and AZ-305. Udemy advertises <strong>save 10%</strong> on every voucher, valid ≥9 months. Retake Assurance is available on role-based vouchers — not on Fundamentals. Updated ${dateFull}.`}
+      stats={[
+        { val: `${total}`, label: "official vouchers" },
+        { val: "10%", label: "off every exam (advertised)" },
+        { val: "≥9 mo", label: "validity" },
+      ]}
+      primary={{ href: catalogUrl, text: "Browse Microsoft Vouchers →", external: true }}
+      secondary={{ href: "#exam-fees", text: "See Exam Fees" }}
       noteHtml={`Sponsored — CoursesWyn may earn a commission at no extra cost to you. <a href="/affiliate-disclosure">Affiliate Disclosure</a>`}
-      termTitle="agents@courseswyn: ~/vouchers --microsoft"
       termLines={MICROSOFT_GROUPS.flatMap((g) => g.items).slice(0, 6).map((v) => ({ href: voucherAffUrl(v.slug), code: v.code ?? v.tag, name: `${v.name} Voucher` }))}
-      termFootHtml={`<b>${total}</b>&nbsp;Microsoft vouchers · <a href="${catalogUrl}" target="_blank" rel="sponsored noopener noreferrer">browse all →</a>`}
     />
+    <div class="cv-meta">
+      <span>By <a href="/about">Andrew Derek</a></span>
+      <span class="cv-dot">·</span>
+      <span>Updated <time datetime={lastModified}>{dateFull}</time></span>
+      <span class="cv-dot">·</span>
+      <span>
+        Checked against{" "}
+        <a href="https://learn.microsoft.com/en-us/credentials/certifications/frequently-asked-questions" target="_blank" rel="noopener noreferrer">Microsoft exam FAQ</a>{" "}
+        and <a href="https://www.udemy.com/all-certification-vouchers/" target="_blank" rel="noopener noreferrer">Udemy voucher listings</a>
+      </span>
+    </div>
 
-    <section class="cv-block" aria-label="Microsoft voucher catalog">
-      <h2>All {total} Microsoft Exam Vouchers</h2>
+    <nav class="cv-toc" aria-label="On this page">
+      <span class="cv-toc-label">On this page</span>
+      <a href="#quick-answer">Quick answer</a>
+      <a href="#exam-fees">Exam fees</a>
+      <a href="#vouchers">All vouchers</a>
+      <a href="#which-voucher">Which voucher</a>
+      <a href="#how-to-redeem">How to redeem</a>
+      <a href="#retake-assurance">Retake Assurance</a>
+      <a href="#microsoft-offers">Ways to save</a>
+      <a href="#voucher-vs-direct">Udemy vs direct</a>
+      <a href="#worth-it">Is it worth it?</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+
+    <section class="cv-block cv-answer" id="quick-answer" aria-labelledby="quick-answer-title">
+      <h2 id="quick-answer-title">Microsoft exam vouchers on Udemy: the short answer</h2>
       <p>
-        Every Microsoft voucher saves a flat 10% and is valid for at least 9 months. Prices vary by region — confirm
-        the live price before buying.
+        A Microsoft exam voucher is a prepaid code for one attempt at one specific exam. Udemy advertises{" "}
+        <strong>save 10%</strong> on every Microsoft voucher page (verified 4 November 2026), sells them for the{" "}
+        <strong>exact exam code</strong> — not by level like AWS — and they are valid for at least{" "}
+        <strong>9 months</strong> from purchase.
       </p>
-      <VoucherGrid groups={MICROSOFT_GROUPS} />
+      <p>
+        Prices are set per country and region and are subject to change, so compare the live checkout price with the
+        price on the Microsoft Learn exam page before you buy. Udemy's price is not tied to the Microsoft list price —
+        it can be lower or higher.
+      </p>
+      <ul class="cv-check">
+        <li><strong>Want the simplest saving?</strong> Udemy advertises 10% off every Microsoft voucher — check the live price against the Microsoft price for your region.</li>
+        <li><strong>Role-based exams (AZ-104 to AZ-305)?</strong> You can bundle Retake Assurance with the voucher for one extra attempt — it cannot be added later.</li>
+        <li><strong>Fundamentals (AZ-900, DP-900)?</strong> No Retake Assurance on those pages — buy expecting only the discount.</li>
+        <li><strong>Already certified?</strong> Renewals are free — the annual assessment costs nothing.</li>
+      </ul>
     </section>
 
-    <section class="cv-block cv-warn" aria-label="Retake Assurance">
-      <h2>Retake Assurance: Microsoft's Safety Net</h2>
+    <section class="cv-block" id="exam-fees" aria-labelledby="fees-title">
+      <h2 id="fees-title">How much does a Microsoft exam cost in 2026?</h2>
       <p>
-        Every Microsoft voucher page offers an <strong>Exam Voucher + Retake</strong> bundle under Microsoft's
-        certification exam policies: fail once and you can re-sit. It must be bought with the voucher (never
-        separately), covers one extra attempt only, and is non-refundable — including when you pass first try.
+        Microsoft prices exams by level, not per exam code, and sets prices per country and region. Microsoft's exam
+        FAQ states that Associate and Expert exams typically cost <strong>US$165</strong>; Fundamentals exams are
+        typically <strong>US$99</strong>. Prices are subject to change and taxes may apply — the price on the Microsoft
+        Learn exam page and at Pearson VUE checkout is the current one.
       </p>
+      <div class="cv-table-wrap">
+        <table class="cv-table">
+          <caption>Microsoft certification exam levels — US typical pricing (USD)</caption>
+          <thead>
+            <tr>
+              <th scope="col">Level</th>
+              <th scope="col">Exams at this level</th>
+              <th scope="col">Microsoft US typical price</th>
+              <th scope="col">Udemy voucher</th>
+            </tr>
+          </thead>
+          <tbody>
+            {examLevels.map((row) => (
+              <tr>
+                <th scope="row">{row.level}</th>
+                <td>{row.exams}</td>
+                <td><strong>{row.fee}</strong></td>
+                <td>{row.coverage}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="cv-note">
+        *Fundamentals pricing per Microsoft exam FAQ guidance — confirm on the AZ-900 or DP-900 exam page, since Microsoft
+        does not publish a single global USD table and prices vary by country/region. Udemy advertises “save 10%” on the
+        voucher page; that discount applies to Udemy's own price, not necessarily to the Microsoft list price. Checked
+        against <a href="https://learn.microsoft.com/en-us/credentials/certifications/frequently-asked-questions" target="_blank" rel="noopener noreferrer">Microsoft's exam FAQ</a> on 4 November 2026.
+      </p>
+      <p>
+        What you actually pay on Udemy varies by region and promotion. We do not quote assumed checkout prices here —
+        open the voucher page, note the price, and compare it with the Microsoft price for your country before paying.
+      </p>
+    </section>
+
+    <section class="cv-block" id="vouchers" aria-labelledby="vouchers-title">
+      <h2 id="vouchers-title">Compare all {total} Microsoft exam vouchers on Udemy</h2>
+      <p>
+        Udemy lists {total} Microsoft voucher products. Each is valid for <strong>one specific exam code</strong> and
+        the advertised discount on every page we checked (4 November 2026) is <strong>save 10%</strong>. Retake
+        Assurance is offered on the role-based pages (Associate and Expert) — never on Fundamentals.
+      </p>
+      <VoucherGrid groups={MICROSOFT_GROUPS} />
+      <p class="cv-note">
+        Prices, stock and promotions change, and Udemy's catalog may show a different offer than the checkout. Confirm
+        the live price, the expiry date and the exam code on the product page before paying.
+      </p>
+    </section>
+
+    <section class="cv-block" id="which-voucher" aria-labelledby="which-title">
+      <h2 id="which-title">Which Microsoft exam voucher do you need?</h2>
+      <p>
+        Choose the voucher that matches the exact exam you plan to sit — Microsoft vouchers are exam-specific, and
+        buying the wrong one is an expensive, non-refundable mistake.
+      </p>
+      <div class="cv-pick-grid">
+        {voucherPicks.map((pick) => (
+          <article class="cv-pick">
+            <span class="cv-pick-tag">{pick.best}</span>
+            <h3>{pick.level}</h3>
+            <p>{pick.body}</p>
+          </article>
+        ))}
+      </div>
+      <p class="cv-note">
+        Still deciding? Start with our <a href="/blog/cloud-computing-courses-udemy-2026/">cloud computing courses guide</a> or
+        browse <a href="/topics/microsoft-azure/">Microsoft Azure courses</a> before you buy.
+      </p>
+    </section>
+
+    <section class="cv-block" id="how-to-redeem" aria-labelledby="redeem-title">
+      <h2 id="redeem-title">How to buy and redeem a Microsoft exam voucher</h2>
+      <p>
+        Buying the voucher and booking the exam are two separate steps. Udemy sells the code; Microsoft and Pearson VUE
+        run the exam. Follow this order so you don't lose time or buy the wrong code.
+      </p>
+      <ol class="cv-steps">
+        <li><strong>Pick the exact exam.</strong> Each voucher is valid only for its own exam code — confirm the code on the voucher page matches the exam you intend to sit.</li>
+        <li><strong>Choose voucher-only or Exam Voucher + Retake (role-based only).</strong> Retake Assurance cannot be added after checkout.</li>
+        <li><strong>Pay on Udemy.</strong> A card or Udemy credits work. Udemy coupons do not apply to vouchers.</li>
+        <li><strong>Get your code from My learning → Certifications.</strong> Udemy also emails it, but your account is the source of truth.</li>
+        <li><strong>Sign in to your Microsoft account.</strong> You'll be directed to Pearson VUE to schedule — up to 90 days in advance; a maximum of two Microsoft exams can be scheduled at a time.</li>
+        <li><strong>Pick online proctored or a test centre, then paste the voucher code at checkout.</strong> Valid only in the country where you bought it.</li>
+        <li><strong>Reschedule or cancel at least 24 hours before the appointment.</strong> Miss that window and the fee or voucher is forfeited — it cannot be extended.</li>
+      </ol>
+      <div class="cv-callout">
+        <strong>Before you pay, check:</strong> the exam code, the expiry date (at least 9 months), Retake Assurance if
+        you want it, your country's eligibility, and that the name on your Microsoft account matches your ID. An
+        organization (work/school) account's exam records are lost if you leave the organization — register with a
+        personal Microsoft account.
+      </div>
+      <p class="cv-cta-line">
+        <a class="cv-btn" href={catalogUrl} target="_blank" rel="sponsored noopener noreferrer">Browse Microsoft Vouchers →</a>
+      </p>
+    </section>
+
+    <section class="cv-block cv-warn" id="retake-assurance" aria-labelledby="retake-title">
+      <h2 id="retake-title">Retake Assurance: only for role-based vouchers</h2>
+      <p>
+        Retake Assurance is an add-on sold by Udemy with Microsoft exam vouchers: your first attempt plus{" "}
+        <strong>one extra attempt at the same exam if you fail</strong>. It is not a Microsoft programme, and it is not
+        available on every page.
+      </p>
+      <ul class="cv-check">
+        <li><strong>Where it exists:</strong> the Associate and Expert voucher pages we checked (AZ-104, AZ-500, AI-102, AZ-800, MD-102, AZ-305) show a Retake Assurance section.</li>
+        <li><strong>Where it doesn't:</strong> the Fundamentals pages (AZ-900, DP-900) do not offer it — don't expect it there.</li>
+        <li><strong>How to buy it:</strong> select Exam Voucher + Retake with the voucher itself. It cannot be added after purchase, and it covers one extra attempt only.</li>
+        <li><strong>The catch:</strong> non-refundable and non-transferable — including if you pass first try. You acknowledge Microsoft Certification exam policies when you buy.</li>
+        <li><strong>Waiting periods still apply:</strong> 24 hours after your first fail, then 14 days between later attempts (max 5 in 12 months). Retake Assurance does not waive these.</li>
+      </ul>
+      <p class="cv-note">
+        Sources: Udemy voucher pages checked 4 November 2026,{" "}
+        <a href="https://learn.microsoft.com/en-us/credentials/support/retake-policy" target="_blank" rel="noopener noreferrer">Microsoft exam retake policy</a>,{" "}
+        <a href="https://learn.microsoft.com/en-us/credentials/certifications/certification-exam-policies" target="_blank" rel="noopener noreferrer">Microsoft certification exam policies</a>.
+      </p>
+    </section>
+
+    <section class="cv-block" id="microsoft-offers" aria-labelledby="offers-title">
+      <h2 id="offers-title">Ways to lower the cost that aren't Udemy coupons</h2>
+      <ul class="cv-check">
+        <li><strong>Udemy's advertised 10%:</strong> applied automatically at the voucher page price — no code needed. Check it against the Microsoft price for your region.</li>
+        <li><strong>Retake Assurance (role-based only):</strong> bundles one retake with the voucher. Compare the bundle price against paying for two attempts separately.</li>
+        <li><strong>Microsoft Exam Replay:</strong> sold through Pearson VUE's Mindhub store — one exam plus one retake within 12 months, for role-based exams only (not Fundamentals, MOS or beta exams).</li>
+        <li><strong>Student / academic pricing:</strong> verify your student status in your Microsoft account (lasts 12 months) for discounted exam prices; MOS exams go through Certiport.</li>
+        <li><strong>Free renewal:</strong> eligible role-based certifications renew every year at no cost with a short online assessment — you never pay to keep them current.</li>
+      </ul>
+      <p class="cv-note">
+        Sources: <a href="https://www.mindhub.com/p/Microsoft-Exam-Replay" target="_blank" rel="noopener noreferrer">Microsoft Exam Replay (Mindhub)</a>,{" "}
+        <a href="https://learn.microsoft.com/en-us/credentials/certifications/student-discounts" target="_blank" rel="noopener noreferrer">Microsoft student discounts</a>,{" "}
+        <a href="https://learn.microsoft.com/en-us/credentials/certifications/deals" target="_blank" rel="noopener noreferrer">Microsoft certification offers</a>. Availability and terms change — verify before buying.
+      </p>
+    </section>
+
+    <section class="cv-block" id="voucher-vs-direct" aria-labelledby="compare-title">
+      <h2 id="compare-title">Udemy voucher vs booking directly with Microsoft</h2>
+      <p>
+        Udemy advertises 10% off, but the convenience has trade-offs — no expiry on direct payment, and Udemy vouchers
+        expire. Here's the honest side-by-side.
+      </p>
+      <div class="cv-table-wrap">
+        <table class="cv-table cv-compare">
+          <caption>Udemy Microsoft voucher compared with paying Microsoft / Pearson VUE directly</caption>
+          <thead>
+            <tr>
+              <th scope="col">Feature</th>
+              <th scope="col">Udemy voucher</th>
+              <th scope="col">Direct with Microsoft / Pearson VUE</th>
+            </tr>
+          </thead>
+          <tbody>
+            {comparisonRows.map((row) => (
+              <tr>
+                <th scope="row">{row.label}</th>
+                <td>{row.udemy}</td>
+                <td>{row.aws}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="cv-block" id="legit" aria-labelledby="legit-title">
+      <h2 id="legit-title">Are Udemy Microsoft exam vouchers legitimate?</h2>
+      <p>
+        Yes — with one important distinction. Udemy is the <strong>seller of the voucher</strong>, not the exam
+        provider. Microsoft owns the certification and issues it; Pearson VUE delivers and proctors the exam. That is
+        why the code is redeemed in the Microsoft → Pearson VUE scheduling flow, not inside Udemy.
+      </p>
+      <ul class="cv-check">
+        <li><strong>Who sells it:</strong> Udemy, on udemy.com. The receipt and code come from Udemy.</li>
+        <li><strong>Who delivers the exam:</strong> Pearson VUE (test centre or online proctored). You schedule and reschedule there.</li>
+        <li><strong>Who issues the certification:</strong> Microsoft. Udemy cannot issue, renew or verify a Microsoft certification.</li>
+        <li><strong>How to verify your code:</strong> it appears in My learning → Certifications and is accepted at Pearson VUE checkout.</li>
+      </ul>
+      <p class="cv-note">
+        Red flags: a seller asking for bank transfer or crypto, codes sent by direct message, or prices far below the
+        Microsoft price. Vouchers are non-transferable, so a code from a stranger may not work. Buy from the official
+        Udemy voucher pages or Pearson VUE.
+      </p>
+    </section>
+
+    <section class="cv-block" id="worth-it" aria-labelledby="worth-title">
+      <h2 id="worth-title">Are Udemy Microsoft exam vouchers worth it?</h2>
+      <p>
+        The advertised 10% is real but modest — and Microsoft sets regional prices, so the absolute saving varies.
+        Judge the voucher against the Microsoft price for <em>your</em> country, not the US list price.
+      </p>
+      <h3>When the Udemy voucher makes sense</h3>
+      <ul>
+        <li>You want one checkout for prep course and voucher, and the live voucher price beats the Microsoft price in your region.</li>
+        <li>You're sitting a role-based exam and want Retake Assurance bundled at purchase.</li>
+        <li>You're not ready to schedule immediately but want to lock the voucher in (≥9 months validity).</li>
+      </ul>
+      <h3>When paying Microsoft directly is better</h3>
+      <ul>
+        <li>The Udemy price in your region matches or exceeds the Microsoft price.</li>
+        <li>You'd rather not hold a voucher that expires — direct payment has no expiry date.</li>
+        <li>You need maximum flexibility on scheduling and local-currency pricing.</li>
+      </ul>
+      <h3>Either way, remember the free part</h3>
+      <ul>
+        <li>Renewing an eligible role-based certification is a free annual assessment — you never pay to keep it current.</li>
+        <li>Fundamentals certifications don't expire at all.</li>
+        <li>Students can ask about academic pricing before paying the standard fee.</li>
+      </ul>
     </section>
 
     {
       prepDeals.length > 0 && (
-        <section class="cv-block" aria-label="Microsoft prep courses">
-          <h2>Pair It With a Discounted Prep Course</h2>
+        <section class="cv-block" id="prep-courses" aria-labelledby="prep-title">
+          <h2 id="prep-title">Best Microsoft prep courses to pair with your voucher</h2>
           <p>
-            Coupons don't work on vouchers — but they <em>do</em> work on prep courses. These verified Azure and
-            Microsoft 365 deals are the cheapest way to get exam-ready:
+            These are verified Udemy coupons for Azure and Microsoft prep courses. They are separate from the voucher:
+            the course prepares you, the voucher pays for the exam. Coupons work on the courses, never on the voucher.
           </p>
           <div class="cv-grid">
             {prepDeals.map((d: any, i: number) => (
@@ -169,61 +538,144 @@ const faqs = [
           </div>
           <p class="cv-note">
             <a href="/udemy-coupon-code/">Browse all verified coupons →</a> ·{" "}
+            <a href="/topics/microsoft-azure/">Microsoft Azure courses →</a> ·{" "}
+            <a href="/blog/cloud-computing-courses-udemy-2026/">Cloud computing guide →</a>
+          </p>
+          <p class="cv-note">
+            Compare providers:{" "}
             <a href="/udemy-aws-exam-vouchers/">AWS vouchers →</a> ·{" "}
-            <a href="/udemy-comptia-exam-vouchers/">CompTIA vouchers →</a>
+            <a href="/udemy-comptia-exam-vouchers/">CompTIA vouchers →</a> ·{" "}
+            <a href="/udemy-certification-vouchers/">All vouchers →</a>
           </p>
         </section>
       )
     }
 
-    <section class="cv-block" aria-label="Frequently asked questions">
-      <h2>Frequently Asked Questions</h2>
+    <section class="cv-block" id="related" aria-labelledby="related-title">
+      <h2 id="related-title">Related guides and voucher pages</h2>
+      <div class="cv-related">
+        <a href="/blog/cloud-computing-courses-udemy-2026/">
+          <strong>Cloud computing courses on Udemy</strong>
+          <span>AWS, Azure and Google Cloud training in one guide.</span>
+        </a>
+        <a href="/blog/best-ai-certification-courses-udemy/">
+          <strong>Best AI certification courses</strong>
+          <span>Azure AI-102 prep ranked with honest weaknesses.</span>
+        </a>
+        <a href="/udemy-aws-exam-vouchers/">
+          <strong>AWS exam vouchers</strong>
+          <span>Voucher-only vs Second Chance, and the 50% AWS discount.</span>
+        </a>
+        <a href="/udemy-comptia-exam-vouchers/">
+          <strong>CompTIA exam vouchers</strong>
+          <span>Security+, Network+, A+ and more, with retake options.</span>
+        </a>
+        <a href="/udemy-certification-vouchers/">
+          <strong>All certification vouchers</strong>
+          <span>Compare AWS, CompTIA and Microsoft vouchers in one place.</span>
+        </a>
+        <a href="/how-we-test-and-verify-udemy-coupons">
+          <strong>How we verify coupons</strong>
+          <span>Our testing method for every voucher and coupon we list.</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="cv-block" id="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title">Microsoft exam voucher FAQ</h2>
       <div class="cv-faq">
         {faqs.map((f) => (
           <details>
             <summary>{f.q}</summary>
-            <p>{f.a}</p>
+            <p set:html={f.html ?? f.a} />
           </details>
         ))}
       </div>
     </section>
 
     <section class="cv-block cv-final" aria-label="Final call to action">
-      <h2>Commit to Your Microsoft Goal Today</h2>
-      <p>Prep, practice &amp; purchase in one place — save 10% with Retake Assurance.</p>
+      <h2>Ready to book your Microsoft exam?</h2>
+      <p>
+        Check the live voucher price against the Microsoft price for your country, pick voucher-only or Exam Voucher +
+        Retake (role-based only), and book at least 24 hours before your appointment.
+      </p>
       <a class="cv-btn big" href={catalogUrl} target="_blank" rel="sponsored noopener noreferrer">
-        Get Microsoft Exam Vouchers →
+        Browse Microsoft Vouchers →
       </a>
       <p class="cv-note">Sponsored — we may earn a commission at no extra cost to you.</p>
     </section>
 
-    <div style="margin-top:48px"><AuthorBox image="/images/author.jpg" /></div>
-  </main>
+    <div class="cv-author"><AuthorBox image="/images/author.jpg" /></div>
+  </div>
 
   <style>
-    .cv-wrap { max-width: 1280px; margin: 0 auto; padding: 24px 1.5rem 64px; }
-    .cv-crumb { font-size: 0.8rem; color: var(--muted); margin-bottom: 14px; }
-    .cv-crumb a { color: var(--brand); text-decoration: none; font-weight: 600; }
-    .cv-hero h1 { font-size: clamp(1.7rem, 4.5vw, 2.5rem); line-height: 1.15; margin: 10px 0 12px; letter-spacing: -0.02em; }
-    .cv-pill { display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #fff; background: var(--brand-gradient); border-radius: 999px; padding: 5px 12px; }
-    .cv-sub { font-size: 1.05rem; color: var(--text); opacity: 0.9; line-height: 1.65; }
-    .cv-cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 14px 0 8px; }
-    .cv-btn { display: inline-block; background: var(--brand); color: #fff; font-weight: 700; border-radius: 999px; padding: 0.85rem 1.9rem; text-decoration: none; }
-    .cv-btn.ghost { background: transparent; color: var(--brand); border: 2px solid var(--brand); }
-    .cv-btn.big { font-size: 1.05rem; padding: 1rem 2.4rem; }
-    .cv-note { font-size: 0.8rem; color: var(--muted); }
+    .cv-wrap { max-width: 1180px; margin: 0 auto; padding: 24px 1.5rem 64px; }
+    .cv-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 14px 0 0; font-size: 0.8rem; color: var(--muted); }
+    .cv-meta a { color: var(--brand); font-weight: 600; text-decoration: none; }
+    .cv-meta a:hover { text-decoration: underline; }
+    .cv-dot { color: var(--muted-light); }
+    .cv-toc { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 18px 0 0; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-secondary); }
+    .cv-toc-label { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+    .cv-toc a { font-size: 0.8rem; font-weight: 600; color: var(--text); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 5px 11px; }
+    .cv-toc a:hover { border-color: var(--brand); color: var(--brand); }
+    .cv-block { margin-top: 46px; scroll-margin-top: 90px; }
+    .cv-block h2 { font-size: clamp(1.4rem, 2.6vw, 1.85rem); line-height: 1.25; letter-spacing: -0.015em; margin: 0 0 10px; }
+    .cv-block h3 { font-size: 1.08rem; line-height: 1.35; margin: 22px 0 8px; }
+    .cv-block p, .cv-block li { line-height: 1.75; color: #c7d0da; }
+    .cv-block p { margin: 0 0 14px; }
+    .cv-block strong { color: var(--text); }
+    .cv-block a { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .cv-block a:hover { text-decoration: underline; }
+    .cv-answer { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px 22px 10px; }
+    .cv-check { list-style: none; padding: 0; margin: 8px 0 16px; display: grid; gap: 8px; }
+    .cv-check li { padding-left: 26px; position: relative; }
+    .cv-check li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--brand); font-weight: 800; }
+    .cv-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: 14px; margin: 16px 0; background: var(--card); }
+    .cv-table { width: 100%; min-width: 680px; border-collapse: collapse; }
+    .cv-table caption { caption-side: top; text-align: left; padding: 14px 16px; font-size: 0.8rem; font-weight: 700; color: var(--muted); background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
+    .cv-table th, .cv-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; font-size: 0.9rem; line-height: 1.6; }
+    .cv-table thead th { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--bg-secondary); white-space: nowrap; }
+    .cv-table tbody th { color: var(--text); font-weight: 700; }
+    .cv-table tbody tr:last-child th, .cv-table tbody tr:last-child td { border-bottom: none; }
+    .cv-compare td { color: #c7d0da; }
+    .cv-pick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 16px 0; }
+    .cv-pick { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+    .cv-pick-tag { display: inline-block; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #0a0b0d; background: var(--brand-gradient); border-radius: 999px; padding: 3px 9px; margin-bottom: 8px; }
+    .cv-pick h3 { margin: 0 0 6px; font-size: 1.05rem; }
+    .cv-pick p { margin: 0; font-size: 0.9rem; }
+    .cv-steps { padding-left: 22px; display: grid; gap: 10px; margin: 14px 0; }
+    .cv-steps li { padding-left: 4px; }
+    .cv-callout { background: var(--brand-soft); border-left: 4px solid var(--brand); border-radius: 0 12px 12px 0; padding: 14px 16px; margin: 16px 0; font-size: 0.92rem; line-height: 1.7; color: var(--text); }
+    .cv-cta-line { margin: 18px 0 0; }
+    .cv-btn { display: inline-block; background: var(--brand); color: #0a0b0d !important; font-weight: 800; border-radius: 999px; padding: 0.8rem 1.7rem; text-decoration: none !important; }
+    .cv-btn:hover { filter: brightness(1.05); }
+    .cv-btn.big { font-size: 1.02rem; padding: 0.95rem 2.1rem; }
+    .cv-note { font-size: 0.82rem; line-height: 1.65; color: var(--muted) !important; }
     .cv-note a { color: var(--brand); font-weight: 600; }
-    .cv-trust { list-style: none; padding: 0; margin: 14px 0 0; display: flex; gap: 8px 18px; flex-wrap: wrap; font-size: 0.9rem; font-weight: 600; }
-    .cv-block { margin-top: 40px; }
-    .cv-block h2 { font-size: 1.35rem; letter-spacing: -0.01em; margin-bottom: 10px; }
-    .cv-block p, .cv-block li { line-height: 1.7; }
-    .cv-warn { background: rgba(169, 199, 255, 0.12); border: 1px solid rgba(169, 199, 255, 0.55); border-radius: 14px; padding: 18px 20px; }
+    .cv-warn { background: rgba(169, 199, 255, 0.1); border: 1px solid rgba(169, 199, 255, 0.45); border-radius: 16px; padding: 20px 22px 8px; }
     .cv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin: 16px 0; }
-    @media (max-width: 900px) { .cv-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 600px) { .cv-grid { grid-template-columns: 1fr; } }
-    .cv-faq details { border: 1px solid var(--border, #e5e7eb); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; }
-    .cv-faq summary { font-weight: 700; cursor: pointer; }
-    .cv-faq p { margin: 8px 0 2px; color: var(--text); opacity: 0.9; }
-    .cv-final { text-align: center; background: var(--card, #0e1526); border-radius: 18px; padding: 32px 22px; }
+    .cv-related { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+    .cv-related a { display: block; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; text-decoration: none; }
+    .cv-related a:hover { border-color: var(--brand); text-decoration: none; }
+    .cv-related strong { display: block; color: var(--text); font-size: 0.93rem; line-height: 1.4; }
+    .cv-related span { display: block; color: var(--muted); font-size: 0.8rem; line-height: 1.5; margin-top: 4px; }
+    .cv-faq details { border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; background: var(--card); }
+    .cv-faq summary { font-weight: 700; cursor: pointer; color: var(--text); }
+    .cv-faq p { margin: 8px 0 2px; color: #c7d0da; }
+    .cv-final { text-align: center; background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 32px 22px; }
+    .cv-final p { max-width: 560px; margin-left: auto; margin-right: auto; }
+    .cv-author { margin-top: 48px; }
+    @media (max-width: 900px) {
+      .cv-grid { grid-template-columns: repeat(2, 1fr); }
+      .cv-related { grid-template-columns: repeat(2, 1fr); }
+      .cv-pick-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .cv-wrap { padding: 18px 1rem 48px; }
+      .cv-grid, .cv-related { grid-template-columns: 1fr; }
+      .cv-block { margin-top: 38px; }
+      .cv-answer, .cv-warn { padding: 18px 16px 6px; }
+      .cv-toc a { font-size: 0.75rem; }
+    }
   </style>
 </Layout>
