@@ -120,9 +120,6 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("Coupon expired");
   const [reportDetail, setReportDetail] = useState("");
-  const [nlEmail, setNlEmail] = useState("");
-  const [nlDone, setNlDone] = useState(false);
-  const [nlError, setNlError] = useState("");
   const trackRef = useRef<HTMLDivElement>(null);
   const pauseRef = useRef(false);
   const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
@@ -164,16 +161,6 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
     }, 3000);
     return () => clearInterval(id);
   }, [relatedDeals.length]);
-
-  const nlSubmit = () => {
-    const em = nlEmail.trim();
-    if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) {
-      setNlError("Enter a valid email address.");
-      return;
-    }
-    setNlError("");
-    setNlDone(true);
-  };
 
   useEffect(() => {
     if (!qnOpen && !reportOpen) return;
@@ -737,41 +724,16 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
               </div>
             </div>
 
-            {/* ── Subscribe banner ── */}
+            {/* ── RSS / follow banner ── */}
             <div className="clx-banner">
               <div className="clx-banner-left">
-                <span className="clx-banner-label"><span className="clx-banner-dot" />Free · Weekly</span>
+                <span className="clx-banner-label"><span className="clx-banner-dot" />Free · RSS</span>
                 <h3 className="clx-banner-heading">Enjoyed this? Get more<br /><em>worth reading.</em></h3>
-                <p className="clx-banner-sub">Fresh verified coupons &amp; course deals — straight to your inbox.</p>
+                <p className="clx-banner-sub">New coupons &amp; course deals — straight to your feed reader. No inbox, no spam.</p>
               </div>
               <div className="clx-banner-right">
-                {!nlDone ? (
-                  <>
-                    <div className="clx-banner-row">
-                      <input
-                        className="clx-nl-email"
-                        type="email"
-                        placeholder="your@email.com"
-                        autoComplete="email"
-                        inputMode="email"
-                        aria-label="Email address"
-                        value={nlEmail}
-                        onChange={(e) => setNlEmail(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") nlSubmit(); }}
-                      />
-                      <button className="clx-nl-submit" type="button" onClick={nlSubmit}>Subscribe →</button>
-                    </div>
-                    {nlError ? <p className="clx-nl-error">{nlError}</p> : null}
-                    <p className="clx-nl-trust">By subscribing you agree to our <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>. Unsubscribe anytime.</p>
-                  </>
-                ) : (
-                  <div className="clx-nl-success">
-                    <span className="clx-nl-ok" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#D6E4FF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                    </span>
-                    <div><strong>You&apos;re in.</strong><p>Fresh coupons land soon. Welcome.</p></div>
-                  </div>
-                )}
+                <a className="clx-nl-submit clx-rss-btn" href="/rss.xml">Subscribe via RSS →</a>
+                <p className="clx-nl-trust">Or follow us on <a href="https://x.com/CoursesWyn" target="_blank" rel="noopener noreferrer">X</a> · <a href="https://www.facebook.com/CoursesWyn" target="_blank" rel="noopener noreferrer">Facebook</a> · <a href="https://medium.com/@coursewyn" target="_blank" rel="noopener noreferrer">Medium</a></p>
               </div>
             </div>
 
@@ -1026,20 +988,12 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         .clx-banner-heading em { font-style: normal; color: #D6E4FF; }
         .clx-banner-sub { font-size: 14px; font-weight: 400; line-height: 1.6; color: rgba(255,255,255,.8); margin: 0; padding: 0; }
         .clx-banner-right { flex: 0 0 380px; max-width: 100%; position: relative; z-index: 1; }
-        .clx-banner-row { display: flex; gap: 8px; }
-        .clx-nl-email { flex: 1; min-width: 0; padding: 13px 16px; font-family: system-ui, sans-serif; font-size: 14px; font-weight: 500; color: #EAF0FF; background: #101216; border: 2px solid transparent; border-radius: 11px; outline: none; }
-        .clx-nl-email::placeholder { color: #a09cbe; }
-        .clx-nl-email:focus { border-color: #D6E4FF; box-shadow: 0 0 0 3px rgba(169, 199, 255,.2); }
         .clx-nl-submit { padding: 13px 22px; font-family: system-ui, sans-serif; font-size: 14px; font-weight: 800; color: #1a1040; background: #D6E4FF; border: none; border-radius: 11px; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background 0.15s ease, color 0.15s ease; }
         .clx-nl-submit:hover { background: #2E1FBE; color: #E9EEFF; }
         .clx-nl-submit:active { background: #241a9c; color: #E9EEFF; }
+        .clx-rss-btn { display: inline-block; text-decoration: none; text-align: center; box-sizing: border-box; }
         .clx-nl-trust { font-size: 11.5px; font-weight: 500; color: rgba(255,255,255,.55); margin: 8px 0 0 0; padding: 0; }
         .clx-nl-trust a { color: rgba(255,255,255,.7); text-decoration: underline; }
-        .clx-nl-error { font-size: 12.5px; font-weight: 600; color: #ffb3b3; background: rgba(255,50,50,.18); border: 1px solid rgba(255,80,80,.22); border-radius: 8px; padding: 8px 12px; text-align: center; margin: 8px 0 0 0; }
-        .clx-nl-success { display: flex; align-items: center; gap: 14px; text-align: left; padding: 4px 0; }
-        .clx-nl-ok { width: 44px; height: 44px; border-radius: 12px; background: rgba(169, 199, 255,.18); border: 1px solid rgba(169, 199, 255,.35); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .clx-nl-success strong { display: block; font-family: sans-serif; font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 3px; }
-        .clx-nl-success p { font-size: 13px; color: rgba(255,255,255,.75); margin: 0; padding: 0; line-height: 1.5; }
         .clx-card { border-radius: 10px; padding: 10px; background: #101216; border: 1px solid #22262d; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; flex-direction: column; text-decoration: none; transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
         .clx-card:hover { transform: translateY(-3px); border-color: #A9C7FF; box-shadow: 0 12px 28px -12px rgba(169, 199, 255,0.28); }
         .clx-card:focus-within { border-color: #A9C7FF; box-shadow: 0 0 0 3px rgba(169, 199, 255,0.15); }
@@ -1111,8 +1065,7 @@ export default function DealPage({ deal, relatedDeals = [], instructorImages = {
         @media (max-width: 767px) {
           .clx-track .clx-card { flex-basis: 82%; }
           .clx-ctas { grid-template-columns: 1fr; }
-          .clx-banner-row { flex-direction: column; }
-          .clx-banner-row .clx-nl-submit { width: 100%; }
+          .clx-banner-right .clx-rss-btn { width: 100%; }
           .clx-hero { flex-direction: column; }
           .clx-media { flex: none; width: 100%; }
           .clx-enroll-desktop { display: none; }
