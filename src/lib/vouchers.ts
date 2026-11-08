@@ -2,7 +2,7 @@
 // Slugs verified against live Udemy /certification-vouchers/* pages (Sept 2026).
 // Prices/validity change by region — pages must caveat "check live price".
 
-export const VOUCHER_CAMPAIGN = "https://trk.udemy.com/c/6564357/4028133/39854";
+export const VOUCHER_CAMPAIGN = "https://trk.udemy.com/c/6564357/4052981/39854";
 export const VOUCHER_CATALOG_URL = "https://www.udemy.com/all-certification-vouchers/";
 
 export function voucherPageUrl(slug: string): string {
