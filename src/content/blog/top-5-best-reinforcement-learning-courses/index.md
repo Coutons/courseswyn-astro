@@ -11,7 +11,7 @@ tags:
   - Machine Learning
   - Udemy
   - 2026 courses
-image: ../../../assets/images/top-reinforcement-learning-courses-2026.png
+image: /assets/images/top-5-best-reinforcement-learning-courses.jpg
 faqs:
 - q: Which is the best Reinforcement Learning course for beginners on Udemy?
   a: Fundamentals of Reinforcement Learning by Tom Walker – clearest theory, no prior deep coding needed.

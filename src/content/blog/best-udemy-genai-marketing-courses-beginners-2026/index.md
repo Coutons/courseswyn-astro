@@ -12,7 +12,7 @@ tags:
   - AI Tools
   - Beginners
   - Content Creation
-image: ../../../assets/images/top-genai-marketing-courses-2026.jpg
+image: /assets/images/best-udemy-genai-marketing-courses-beginners-2026.jpg
 ---
 
 ## Why Learn GenAI for Marketing in 2026?

@@ -10,7 +10,7 @@ tags:
   - Subscription
   - E-Learning
   - Career Development
-image: /assets/images/udemy-personal-plan-review-2026.png
+image: /assets/images/udemy-personal-plan-review-2026.jpg
 faqs:
   - q: "Can I download courses for offline viewing?"
     a: "Yes, the Udemy mobile app allows downloads for offline access. Downloaded content stays accessible during your active subscription but becomes unavailable after cancellation."

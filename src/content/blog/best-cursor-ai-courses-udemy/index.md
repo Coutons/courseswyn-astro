@@ -13,7 +13,7 @@ tags:
   - Udemy Courses
   - AI Tools
   - Web Development
-image: ../../../assets/images/best-cursor-ai-courses-udemy-2026.png
+image: /assets/images/best-cursor-ai-courses-udemy.jpg
 affiliate_links:
   - url: "https://trk.udemy.com/c/6564357/3193860/39854"
     text: "Get Udemy Discounts"

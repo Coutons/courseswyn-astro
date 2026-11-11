@@ -7,7 +7,7 @@ tags:
   - udemy
   - black-friday
   - deals
-image: /assets/images/udemy-black-friday-2026.png
+image: /assets/images/udemy-black-friday-2026.jpg
 faqs:
 - q: When is Udemy Black Friday 2026?
   a: Based on 5 years of data, Udemy Black Friday 2026 is expected to go live **around November 19–20, 2026** and run through November 28–30. Udemy typically extends the sale 3–7 days beyond the official end date. The 2025 sale ran November 19–29.

@@ -23,7 +23,7 @@
 ## Preview
 
 <p align="center">
-  <img src="public/assets/images/Screenshot.png" alt="CoursesWyn.com — Verified Udemy coupon codes, 100% OFF daily deals and expert course reviews with ratings" width="80%">
+  <img src="docs/screenshot.jpg" alt="CoursesWyn.com — Verified Udemy coupon codes, 100% OFF daily deals and expert course reviews with ratings" width="80%">
   <br><em>CoursesWyn — Daily Verified Promo Codes & Savings Strategies for Lifelong Learners</em>
 </p>
 
@@ -231,7 +231,11 @@ Open [http://localhost:4321](http://localhost:4321) in your browser.
 - `npm run build` — Build production site to `./dist/`
 - `npm run preview` — Preview production build locally
 - `npm run lint` — Run `astro check` for type and content validation
+- `npm run og` — Regenerate every featured/OG image (`og:blog`, `og:pages`, `og:dry`, `og:check` for subsets and validation)
 - `npm run deploy` — Switch to prod config, build, and push `dist/` to the `gh-pages` branch
+
+Featured images are generated, not uploaded — see **[docs/featured-images.md](docs/featured-images.md)**
+for the full workflow (new post → spec → `npm run og -- --only <slug>`).
 
 ---
 

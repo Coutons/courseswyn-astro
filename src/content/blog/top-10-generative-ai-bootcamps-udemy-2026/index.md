@@ -8,7 +8,7 @@ tags:
   - LLM Agents
   - AI Engineering
   - Langchain
-image: ../../../assets/images/top-generative-ai-bootcamps-2026.jpg
+image: /assets/images/top-10-generative-ai-bootcamps-udemy-2026.jpg
 ---
 
 ## Why Learn **Generative AI** in 2026?

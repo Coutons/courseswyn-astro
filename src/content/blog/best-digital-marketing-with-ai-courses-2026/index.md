@@ -12,7 +12,7 @@ tags:
   - Social Media Marketing
   - Udemy Courses
   - Beginner
-image: ../../../assets/images/digital-marketing-with-ai-2026.jpg
+image: /assets/images/best-digital-marketing-with-ai-courses-2026.jpg
 ---
 
 ## Digital Marketing with AI in 2026: What Beginners Must Know

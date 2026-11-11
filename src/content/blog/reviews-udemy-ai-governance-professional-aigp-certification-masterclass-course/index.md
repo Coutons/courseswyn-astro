@@ -10,7 +10,7 @@ tags:
   - AI Compliance
   - AI Regulation
   - Udemy Review
-image: ../../../assets/images/review-aigp-udemy-masterclass.jpg
+image: /assets/images/reviews-udemy-ai-governance-professional-aigp-certification-masterclass-course.jpg
 faqs:
 - q: Is this course aligned with the official AIGP certification exam?
   a: Yes. The course content closely follows the AI Governance Professional (AIGP) Masterclass Course competency domains, making it suitable both as a primary study resource and as a structured revision guide before attempting the exam.

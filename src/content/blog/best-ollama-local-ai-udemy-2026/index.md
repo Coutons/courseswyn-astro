@@ -11,7 +11,7 @@ tags:
   - LM Studio
   - Self-Hosted AI
   - Udemy
-image: ../../../assets/images/best-ollama-local-ai-courses-udemy-2026.jpg
+image: /assets/images/best-ollama-local-ai-udemy-2026.jpg
 slug: best-ollama-local-ai-udemy-2026
 ---
 

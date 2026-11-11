@@ -41,6 +41,17 @@
 - Blog FAQ structured data is parsed from a `## Frequently Asked Questions` section using `### question` headings; follow that format when adding FAQs.
 - Admin saves preserve `.mdx` when the body contains imports/JSX and remove the stale sibling `.md` file; keep blog posts as directories, not standalone files.
 
+## Featured images
+
+- Full workflow: `docs/featured-images.md`. Read it before adding or editing a post.
+- Every post uses a generated OG card: `image: /assets/images/<slug>.jpg` (1200×630, q84, ~35–45 KB) plus a `<slug>-600.jpg` card variant that `/blog` uses through `srcset`. Don't hand-upload stock images; regenerate instead.
+- New article: add a `POST_SPECS` entry in `scripts/og-specs.mjs`, then `npm run og -- --only <slug>`. Posts without an entry still get an auto-derived card, but that is a safety net, not the intended path.
+- Other commands: `npm run og` (everything), `npm run og:blog`, `npm run og:pages`, `npm run og:dry` (text-fit report, writes nothing), `npm run og:check` (every expected file exists at 1200×630). The footer date comes from the post's `updatedAt`, so regenerate after changing it.
+- Design config lives in `scripts/og-specs.mjs`: one `POST_SPECS` entry per post (`keyword`, `lines`, `category`, `kicker`) and one `PAGE_SPECS` entry per static page (`og-home`, `og-blog`, …). `og-default.jpg` is the site-wide fallback.
+- Static pages set the card through `Layout`'s `image` prop; the mapping is in the docs. Pages with their own `ogImage` variable need both the absolute URL (JSON-LD) and the root-relative path (hero) updated.
+- The generator needs `sharp` (declared in `devDependencies`) and the brand fonts installed locally (Space Grotesk Bold, IBM Plex Mono). It is an authoring tool, not part of the build; CI never runs it.
+- Keep `public/assets/images/` limited to files that are actually referenced. Delete the `.jpg` and `-600.jpg` together when a post is removed.
+
 ## License
 
 - This repository is proprietary, not open source. Don't copy or redistribute the code, `src/data`, or `src/content`; see `LICENSE`.

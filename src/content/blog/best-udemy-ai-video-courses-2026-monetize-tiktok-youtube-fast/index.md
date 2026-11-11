@@ -12,7 +12,7 @@ tags:
   - Faceless Content
   - CapCut
   - Udemy
-image: ../../../assets/images/best-ai-video-courses-udemy-2026.jpg
+image: /assets/images/best-udemy-ai-video-courses-2026-monetize-tiktok-youtube-fast.jpg
 ---
 
 ## Why AI Video Creation Is the Skill That Actually Pays in 2026

@@ -3,7 +3,7 @@ title: "How to Get Udemy Courses for Free in 2026 (7 Legal Methods That Actually
 description: "Want free Udemy courses? 7 legal methods: coupon sites, library cards, Personal Plan trials when offered, and instructor promos. Updated for 2026."
 pubDate: 2026-01-15T00:00:00.000Z
 updatedAt: 2026-03-10T00:00:00.000Z
-image: ../../../assets/images/udemy-free-courses.png
+image: /assets/images/how-to-get-udemy-courses-for-free.jpg
 tags: ["Education", "Tips", "Udemy", "Free Courses", "Online Learning"]
 affiliate_links: []
 ---

@@ -9,7 +9,7 @@ tags:
   - Azure
   - GCP
   - Udemy
-image: ../../../assets/images/top-cloud-computing-courses-2026.jpg
+image: /assets/images/cloud-computing-courses-udemy-2026.jpg
 ---
 
 # 🚀 Top 6 Best Cloud Computing Courses on Udemy 2026: Master AWS, Azure & GCP Like a Pro

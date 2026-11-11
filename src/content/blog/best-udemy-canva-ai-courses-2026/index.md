@@ -12,7 +12,7 @@ tags:
   - Content Creation
   - Social Media
   - ChatGPT
-image: ../../../assets/images/best-canva-ai-courses-udemy-2026.jpg
+image: /assets/images/best-udemy-canva-ai-courses-2026.jpg
 ---
 
 ## Want to learn Canva AI Course for FREE? 

@@ -8,7 +8,7 @@ tags:
   - Blockchain
   - Udemy
   - 2026 courses
-image: ../../../assets/images/top-nft-courses-2026.jpg
+image: /assets/images/top-10-best-nft-courses-udemy-2026.jpg
 faqs:
 - q: What is the best NFT course for beginners on Udemy in 2026?
   a: George Levy's NFT Fundamentals for minting basics, or Ebiner's Ultimate for added trading.

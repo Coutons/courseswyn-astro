@@ -9,7 +9,7 @@ tags:
   - "Best Udemy Courses"
   - "Cursor AI"
   - "LLM"
-image: ../../../assets/images/best-vibe-coding-courses-2026.jpg
+image: /assets/images/top-vibe-coding-courses-udemy.jpg
 imageAlt: "Best Udemy Courses for Vibe Coding in 2026 - Complete Guide"
 ---
 

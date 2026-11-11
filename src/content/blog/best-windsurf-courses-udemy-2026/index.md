@@ -11,7 +11,7 @@ tags:
   - Udemy
   - 2026 courses
   - Cascade AI
-image: ../../../assets/images/best-windsurf-udemy-courses-2026.jpg
+image: /assets/images/best-windsurf-courses-udemy-2026.jpg
 ---
 
 ## Why Learn Windsurf and Vibe Coding in 2026?

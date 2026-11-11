@@ -5,7 +5,7 @@ pubDate: 2026-02-06T00:00:00.000Z
 updatedAt: 2026-09-13T09:00:00.000Z
 slug: "top-10-python-courses-on-udemy"
 author: "Andrew Derek"
-image: /assets/images/best-python-courses-udemy-2026.jpg
+image: /assets/images/top-10-python-courses-on-udemy.jpg
 tags: ["Python", "Development", "Best Udemy Courses", "Online Course Reviews"]
 faqs:
   - q: "Which Python course on Udemy is best for beginners in 2026?"

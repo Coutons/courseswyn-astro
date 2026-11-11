@@ -11,7 +11,7 @@ tags:
   - UI/UX
   - Freelancing
   - Responsive Design
-image: ../../../assets/images/top-figma-courses-2026.jpg
+image: /assets/images/best-udemy-figma-courses-2026.jpg
 ---
 
 ## Why Learn **Figma for No-Code Web Design and UI/UX** in 2026?

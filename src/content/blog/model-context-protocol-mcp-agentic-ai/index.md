@@ -12,7 +12,7 @@ tags:
 - LangGraph
 - CrewAI
 - AutoGen
-image: ../../../assets/images/model-context-protocol-agentic-ai-2026.jpg
+image: /assets/images/model-context-protocol-mcp-agentic-ai.jpg
 
 ---
 

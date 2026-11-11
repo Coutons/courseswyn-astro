@@ -12,7 +12,7 @@ tags:
   - udemy business courses
   - online business training
   - business skills 2026
-image: ../../../assets/images/best-business-courses-udemy-2026.jpg
+image: /assets/images/best-business-courses-udemy-2026.jpg
 affiliate_links:
   - text: Enroll Notion Course Now on Udemy
     url: 'https://trk.udemy.com/c/6564357/3193860/39854?u=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Fnotion-workspace-course%2F%3FcouponCode%3DCP250105G2'

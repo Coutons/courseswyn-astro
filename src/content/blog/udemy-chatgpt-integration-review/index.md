@@ -3,7 +3,7 @@ title: "Udemy ChatGPT Integration 2026: How to Access Courses Inside ChatGPT"
 description: "Udemy is now integrated with ChatGPT. Discover how to access 290,000+ courses, get AI-powered recommendations, and find the right course faster."
 pubDate: 2026-02-12T00:00:00.000Z
 updatedAt: 2026-02-12T00:00:00.000Z
-image: ../../../assets/images/udemy-chatgpt-integration.jpg
+image: /assets/images/udemy-chatgpt-integration-review.jpg
 tags: ["ChatGPT", "ChatGPT courses", "AI learning", "Udemy"]
 canonical: "https://courseswyn.com/blog/udemy-chatgpt-integration-review"
 faqs:

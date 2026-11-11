@@ -11,7 +11,7 @@ tags:
   - Smart Contracts
   - Web3
   - Bitcoin
-image: ../../../assets/images/top-blockchain-2026.jpg
+image: /assets/images/top-blockchain-courses-udemy.jpg
 ---
 
 ## Why Learn **Blockchain** in 2026?

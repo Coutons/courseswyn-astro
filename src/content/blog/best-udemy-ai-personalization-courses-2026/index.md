@@ -14,7 +14,7 @@ tags:
   - Udemy Learning
   - AI Personalization
   - AI Productivity
-image: ../../../assets/images/top-ai-personalization-courses-2026.jpg
+image: /assets/images/best-udemy-ai-personalization-courses-2026.jpg
 ---
 
 ## Why Learn AI Personalization in 2026?

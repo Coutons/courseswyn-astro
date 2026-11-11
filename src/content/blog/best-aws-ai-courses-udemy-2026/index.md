@@ -8,7 +8,7 @@ videoUploadDate: 2024-10-08T15:16:01.000Z
 slug: "best-aws-ai-courses-udemy-2026"
 author: "Andrew Derek"
 authorBio: "Andrew Derek is a senior edtech analyst with 8+ years of experience evaluating online learning platforms. He has analyzed 500+ Udemy courses, interviewed 50+ instructors, and helped 10,000+ learners choose the right courses."
-image: ../../../assets/images/best-aws-ai-courses-udemy-2026.jpg
+image: /assets/images/best-aws-ai-courses-udemy-2026.jpg
 tags:
   - AWS AI
   - AWS Certified AI Practitioner

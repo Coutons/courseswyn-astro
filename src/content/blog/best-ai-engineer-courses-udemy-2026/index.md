@@ -14,7 +14,7 @@ tags:
   - MCP
   - Udemy Courses
   - AI Engineering
-image: ../../../assets/images/best-ai-engineer-courses-udemy-2026.jpg
+image: /assets/images/best-ai-engineer-courses-udemy-2026.jpg
 ---
 
 Two years ago, "AI Engineer" wasn't a job title most companies knew how to hire for. In 2026, it's one of the fastest-growing roles in tech — sitting at the intersection of software engineering, machine learning, and production deployment. The shift happened fast: as large language models moved from research demos to the backbone of real products, companies needed engineers who could build with them, not just study them.

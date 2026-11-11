@@ -4,7 +4,7 @@ description: "How CoursesWyn was featured in the Official Astro Showcase (Februa
 pubDate: 2026-03-01T00:00:00.000Z
 updatedAt: 2026-03-01T00:00:00.000Z
 author: "Andrew Derek"
-image: ../../../assets/images/courseswyn-entry-astro-showcase.jpg
+image: /assets/images/astro-showcase-courseswyn.jpg
 category: "Technology"
 tags: ["astro", "web-performance", "astro-showcase", "content-sites", "islands-architecture", "udemy-coupons", "static-site-generator"]
 ---

@@ -15,7 +15,7 @@ tags:
   - Audio Processing AI
   - Generative AI 2026
 canonicalURL: https://courseswyn.com/blog/best-udemy-multimodal-ai-courses-2026/
-image: ../../../assets/images/best-multimodal-ai-udemy-2026.jpg
+image: /assets/images/best-udemy-multimodal-ai-courses-2026.jpg
 ---
 
 ## Quick Navigation: Find Your Ideal Multimodal AI Course

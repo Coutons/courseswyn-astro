@@ -37,14 +37,20 @@ function formatDate(post: any) {
 }
 
 function resolveImage(imagePath: any): string {
-  if (!imagePath) return '/assets/images/og-default.png';
+  if (!imagePath) return '/assets/images/og-default.jpg';
   if (imagePath?.src) return imagePath.src;
   if (typeof imagePath === 'string') {
     if (imagePath.startsWith('http') || imagePath.startsWith('/')) return imagePath;
     const filename = imagePath.split('/').pop();
-    return filename ? `/assets/images/${filename}` : '/assets/images/og-default.png';
+    return filename ? `/assets/images/${filename}` : '/assets/images/og-default.jpg';
   }
-  return '/assets/images/og-default.png';
+  return '/assets/images/og-default.jpg';
+}
+
+/** Listing cards only need the 600px variant; the full 1200px file stays for OG/hero. */
+function cardSrcset(full: string | null | undefined): string | undefined {
+  if (!full || !full.endsWith('.jpg')) return undefined;
+  return `${full} 1200w, ${full.replace(/\.jpg$/, '-600.jpg')} 600w`;
 }
 
 const title = `Udemy Course Reviews & Learning Guides — Page ${page.currentPage} | CoursesWyn`;
@@ -159,6 +165,8 @@ for (let p = 1; p <= page.lastPage; p++) {
                 <div class="bl-card-media">
                   <Image
                     src={resolveImage(post.data.image)}
+                    srcset={cardSrcset(resolveImage(post.data.image))}
+                    sizes="(max-width: 640px) 92vw, (max-width: 1100px) 46vw, 480px"
                     alt={post.data.title}
                     width={480}
                     height={270}

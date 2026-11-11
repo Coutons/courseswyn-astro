@@ -12,7 +12,7 @@ tags:
 - CrewAI
 - AutoGen
 - Autonomous AI
-image: ../../../assets/images/what-is-agentic-ai-2026.jpg
+image: /assets/images/what-is-agentic-ai-architecture-mcp-use-cases.jpg
 
 ---
 

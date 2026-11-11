@@ -12,7 +12,7 @@ tags:
   - Machine Learning
   - Data Science
   - Web Development
-image: ../../../assets/images/100-Days-of-Code-Python-Bootcamp.jpg
+image: /assets/images/angela-yu-100-days-code-review-2026.jpg
 faqs:
 - q: How long does it take to complete Angela Yu's 100 Days of Code?
   a: The course is designed for 100 days, with 1 hour per day. However, many students complete it in 3-6 months depending on commitment and prior experience.

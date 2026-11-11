@@ -96,7 +96,8 @@ const mdxPath = path.join(process.cwd(), 'src/content/blog', post.id, 'index.mdx
 const mdPath = path.join(process.cwd(), 'src/content/blog', post.id, 'index.md');
 try {
   const raw = fs.readFileSync(fs.existsSync(mdxPath) ? mdxPath : mdPath, 'utf-8');
-  const faqSection = raw.split('## Frequently Asked Questions')[1]?.split('## ')[0];
+  // Split on line-anchored H2s so `### question` headings do not truncate the section.
+  const faqSection = raw.split(/^##\s+Frequently Asked Questions\s*$/m)[1]?.split(/^## /m)[0];
   if (faqSection) {
     const re = /### (.+?)\n\n([\s\S]*?)(?=\n### |$)/g;
     let m;

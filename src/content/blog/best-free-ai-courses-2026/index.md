@@ -14,7 +14,7 @@ tags:
 - artificial intelligence
 - Python AI
 - online learning
-image: ../../../assets/images/best-free-ai-courses-2026.jpg
+image: /assets/images/best-free-ai-courses-2026.jpg
 canonical: https://courseswyn.com//blog/best-free-ai-courses-2026
 ---
 

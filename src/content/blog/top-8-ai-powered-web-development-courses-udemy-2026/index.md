@@ -12,7 +12,7 @@ tags:
   - Full-Stack
   - Tailwind CSS
   - OpenAI API
-image: ../../../assets/images/top-ai-web-dev-2026.jpg
+image: /assets/images/top-8-ai-powered-web-development-courses-udemy-2026.jpg
 ---
 
 ## Why Learn **AI-Powered Web Development** in 2026?

@@ -15,6 +15,12 @@ function resolveImage(imagePath: string | undefined): string | null {
   return `/assets/images/${filename}`;
 }
 
+/** Listing cards only need the 600px variant; the full 1200px file stays for OG/hero. */
+function cardSrcset(full: string | null | undefined): string | undefined {
+  if (!full || !full.endsWith('.jpg')) return undefined;
+  return `${full} 1200w, ${full.replace(/\.jpg$/, '-600.jpg')} 600w`;
+}
+
 const allPosts = await getCollection("blog");
 const posts = allPosts.sort((a: any, b: any) => {
   const dateA = a.data.updatedAt || a.data.pubDate;
@@ -171,7 +177,7 @@ const structuredData = {
 };
 ---
 
-<Layout title={title} description={description} canonical={canonical} image="/assets/images/og-default.png" hideBreadcrumbs={false}>
+<Layout title={title} description={description} canonical={canonical} image="/assets/images/og-blog.jpg" hideBreadcrumbs={false}>
   <Fragment slot="head">
     <meta name="keywords" content={pageKeywords} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -228,7 +234,9 @@ const structuredData = {
             <a href={`/blog/${post.id}/`} class="bl-card">
               <div class="bl-card-media">
                 <Image
-                  src={resolveImage(typeof post.data.image === 'string' ? post.data.image : (post.data.image as any)?.src) || '/assets/images/og-default.png'}
+                  src={resolveImage(typeof post.data.image === 'string' ? post.data.image : (post.data.image as any)?.src) || '/assets/images/og-default.jpg'}
+                  srcset={cardSrcset(resolveImage(typeof post.data.image === 'string' ? post.data.image : (post.data.image as any)?.src))}
+                  sizes="(max-width: 640px) 92vw, (max-width: 1100px) 46vw, 480px"
                   alt={post.data.title}
                   width={480}
                   height={270}

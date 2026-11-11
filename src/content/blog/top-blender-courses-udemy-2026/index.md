@@ -8,7 +8,7 @@ tags:
   - 3D Modeling
   - Udemy
   - 2026 courses
-image: ../../../assets/images/top-blender-courses-2026.jpg
+image: /assets/images/top-blender-courses-udemy-2026.jpg
 faqs:
 - q: What is the best Blender course for complete beginners on Udemy in 2026?
   a: Complete Blender Creator by GameDev.tv — 1M+ students, updated monthly, from UI basics to Unity export with Blender 4.5+ features.

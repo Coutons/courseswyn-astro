@@ -3,7 +3,7 @@ title: "Udemy vs Coursera vs Pluralsight: Which Coding Platform Wins in 2026? (H
 description: "In-depth comparison of Udemy, Coursera, and Pluralsight for 2026 — covering pricing, certificates, content quality, and what the $2.5B Coursera-Udemy merger means for your learning decision."
 pubDate: 2026-02-05T00:00:00.000Z
 updatedAt: 2026-03-10T00:00:00.000Z
-image: ../../../assets/images/udemy-vs-coursera-vs-pluralsight-hero.png
+image: /assets/images/udemy-vs-coursera-vs-pluralsight.jpg
 tags: ["Reviews", "Coding", "Online Learning", "Udemy", "Coursera", "Pluralsight"]
 affiliate_links:
   - url: "https://trk.udemy.com/c/6564357/3193860/39854"
