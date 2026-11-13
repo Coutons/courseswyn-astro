@@ -292,6 +292,22 @@ const isInstructors = path.startsWith("/admin/instructors");
 </html>
 
 <script>
+  // Pengaman redirect setelah save: kalau halaman edit ter-reload (HMR) sebelum
+  // sempat pindah ke dashboard, reload berikutnya langsung diarahkan ke tujuan.
+  const PENDING_REDIRECT_KEY = "adm.pendingRedirect";
+  try {
+    const raw = sessionStorage.getItem(PENDING_REDIRECT_KEY);
+    if (raw) {
+      sessionStorage.removeItem(PENDING_REDIRECT_KEY);
+      const pending = JSON.parse(raw);
+      const path = location.pathname.replace(/\/+$/, "");
+      const isEditPage = /^\/admin\/(blog|coupons)\/(edit\/|create)/.test(path);
+      if (isEditPage && pending?.href && Date.now() - pending.at < 20000) {
+        location.replace(pending.href);
+      }
+    }
+  } catch {}
+
   const burger = document.getElementById("admBurger");
   const overlay = document.getElementById("admOverlay");
   function setNav(open: boolean) {

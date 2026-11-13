@@ -1,5 +1,13 @@
 import { listBlogPosts, readBlogPost, writeBlogPost, deleteBlogPost, slugifyBlogTitle } from '../../lib/blog.js';
 
+// Dev only: tahan full-reload dari content watcher selama redirect admin.
+// Lihat quietAdminContentReloads() di astro.config.dev.mjs.
+function quietContentReload(ms = 2000) {
+  if (process.env.NODE_ENV !== 'production') {
+    process.env.__CW_QUIET_CONTENT_RELOAD_UNTIL = String(Date.now() + ms);
+  }
+}
+
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
@@ -69,6 +77,7 @@ export async function POST({ request }) {
     const data = buildData(body, null);
     data.pubDate = body.pubDate || new Date().toISOString();
 
+    quietContentReload();
     const created = await writeBlogPost({ slug, data, body: String(body.body ?? '') });
     return json(created, 201);
   } catch (error) {
@@ -96,6 +105,7 @@ export async function PUT({ request }) {
     const data = buildData(body, existing);
     data.updatedAt = body.updatedAt || new Date().toISOString();
 
+    quietContentReload();
     await writeBlogPost({
       slug,
       prevSlug,
@@ -118,6 +128,7 @@ export async function DELETE({ request }) {
     const existing = await readBlogPost(slug);
     if (!existing) return json({ error: 'Post not found' }, 404);
 
+    quietContentReload();
     await deleteBlogPost(slug);
     return json({ success: true, deletedSlug: slug });
   } catch (error) {

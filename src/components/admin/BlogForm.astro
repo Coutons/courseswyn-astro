@@ -159,6 +159,14 @@ const submitLabel = isEdit ? "Save Changes" : "Publish Post";
     const submitBtn = form.querySelector<HTMLButtonElement>("button[type='submit']");
     if (submitBtn) submitBtn.disabled = true;
 
+    // Tandai tujuan redirect SEBELUM request: kalau content watcher memicu
+    // reload saat file ditulis, halaman edit akan reload dan AdminShell
+    // langsung mengarahkan ke dashboard sesuai tanda ini.
+    const redirectTo = "/admin/blog";
+    try {
+      sessionStorage.setItem("adm.pendingRedirect", JSON.stringify({ href: redirectTo, at: Date.now() }));
+    } catch {}
+
     try {
       const url = isEdit ? `/api/blog?slug=${encodeURIComponent(String(postSlug))}` : "/api/blog";
       const res = await fetch(url, {
@@ -169,8 +177,10 @@ const submitLabel = isEdit ? "Save Changes" : "Publish Post";
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Request failed");
       setStatus("Saved ✓", "adm-ok");
-      setTimeout(() => (window.location.href = "/admin/blog"), 500);
+      // Redirect langsung (tanpa timer) supaya tidak bisa dibatalkan reload lain.
+      window.location.replace(redirectTo);
     } catch (err) {
+      try { sessionStorage.removeItem("adm.pendingRedirect"); } catch {}
       setStatus(`Error: ${(err as Error).message}`, "adm-err");
       if (submitBtn) submitBtn.disabled = false;
     }

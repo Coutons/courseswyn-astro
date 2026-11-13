@@ -180,7 +180,10 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
   const statusFilter = document.getElementById("statusFilter") as HTMLSelectElement;
   const countLabel = document.getElementById("countLabel") as HTMLElement;
   const selAll = document.getElementById("selAll") as HTMLInputElement;
-  const selCount = document.getElementById("selCount") as HTMLElement;
+  // Tidak ada elemen selCount di halaman ini (tidak ada bulk-action bar).
+  // Tanpa guard, updateSel() melempar error dan baris sesudahnya — termasuk
+  // menampilkan tombol clear search — tidak pernah dieksekusi.
+  const selCount = document.getElementById("selCount") as HTMLElement | null;
   const rows = Array.from(document.querySelectorAll<HTMLElement>("[data-row]"));
   const rowChecks = Array.from(document.querySelectorAll<HTMLInputElement>(".row-check"));
   const pager = document.getElementById("pager") as HTMLElement;
@@ -291,7 +294,7 @@ const staleCount = rows.filter((r) => !r.expired && staleDays(r.updatedAt) >= 7)
 
   function updateSel() {
     const checked = rowChecks.filter((c) => c.checked && c.closest("tr")?.style.display !== "none").length;
-    selCount.textContent = String(checked);
+    if (selCount) selCount.textContent = String(checked);
     const visible = rows.filter((r) => r.style.display !== "none").length;
     selAll.checked = visible > 0 && rowChecks.filter((c) => c.closest("tr")?.style.display !== "none").every((c) => c.checked);
   }

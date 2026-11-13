@@ -440,6 +440,12 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
     const submitBtn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
     if (submitBtn) submitBtn.disabled = true;
 
+    // Pengaman: kalau file data memicu reload sebelum redirect selesai,
+    // AdminShell akan meneruskan ke dashboard setelah reload.
+    try {
+      sessionStorage.setItem("adm.pendingRedirect", JSON.stringify({ href: "/admin", at: Date.now() }));
+    } catch {}
+
     try {
       const url = isEdit ? `/api/deals?id=${encodeURIComponent(String(currentId))}` : "/api/deals";
       const res = await fetch(url, {
@@ -452,8 +458,10 @@ const submitLabel = isEdit ? "Save Changes" : "Create Coupon";
         throw new Error(data.error || "Request failed");
       }
       setStatus("Saved ✓", "adm-ok");
-      setTimeout(() => (window.location.href = "/admin"), 400);
+      // Redirect langsung (tanpa timer) supaya tidak bisa dibatalkan reload lain.
+      window.location.replace("/admin");
     } catch (err) {
+      try { sessionStorage.removeItem("adm.pendingRedirect"); } catch {}
       setStatus(`Error: ${(err as Error).message}`, "adm-err");
       if (submitBtn) submitBtn.disabled = false;
     }
