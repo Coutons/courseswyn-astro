@@ -396,9 +396,9 @@ export const POST_SPECS = {
   },
   'the-complete-ai-curriculum': {
     keyword: 'ROADMAP',
-    lines: ['Complete AI', 'Curriculum 2026'],
+    lines: ['Complete AI', 'Curriculum 2027'],
     category: 'CAREER',
-    kicker: 'ED DONNER \u00b7 FULL ROADMAP',
+    kicker: 'ED DONNER \u00b7 8-COURSE PATH',
   },
   'best-udemy-courses-2026': {
     keyword: 'TOP 70',
