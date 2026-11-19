@@ -162,6 +162,7 @@ wired through the `image` prop of `Layout.astro`.
 | `og-vouchers-aws.jpg` | `/udemy-aws-exam-vouchers/` | `src/pages/udemy-aws-exam-vouchers/index.astro` |
 | `og-vouchers-comptia.jpg` | `/udemy-comptia-exam-vouchers/` | `src/pages/udemy-comptia-exam-vouchers/index.astro` |
 | `og-vouchers-microsoft.jpg` | `/udemy-microsoft-exam-vouchers/` | `src/pages/udemy-microsoft-exam-vouchers/index.astro` |
+| `og-vouchers-linux.jpg` | `/udemy-linux-exam-vouchers/` | `src/pages/udemy-linux-exam-vouchers/index.astro` |
 | `og-default.jpg` | fallback for any page without its own image | `src/layouts/Layout.astro` |
 
 Adding a page image:

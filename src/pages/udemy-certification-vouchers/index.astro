@@ -9,15 +9,20 @@ import {
   COMPTIA_GROUPS,
   AWS_GROUPS,
   MICROSOFT_GROUPS,
+  LINUX_GROUPS,
   countVouchers,
   voucherAffUrl,
   voucherCatalogAffUrl,
 } from "../../lib/vouchers.js";
 
 const canonicalUrl = "https://courseswyn.com/udemy-certification-vouchers/";
-const pageTitle = "Udemy Certification Exam Vouchers 2026: AWS, CompTIA & Microsoft | CoursesWyn";
-const pageDescription =
-  "All 35 official Udemy exam vouchers — 15 CompTIA, 12 AWS, 8 Microsoft. Valid ≥9 months, retake options explained per provider, plus verified prep courses. Compare live Udemy prices with CompTIA, AWS and Microsoft before you buy.";
+const totalAll =
+  countVouchers(COMPTIA_GROUPS) +
+  countVouchers(AWS_GROUPS) +
+  countVouchers(MICROSOFT_GROUPS) +
+  countVouchers(LINUX_GROUPS);
+const pageTitle = "Udemy Certification Exam Vouchers 2026: AWS, CompTIA, Microsoft & Linux";
+const pageDescription = `All ${totalAll} official Udemy exam vouchers — ${countVouchers(COMPTIA_GROUPS)} CompTIA, ${countVouchers(AWS_GROUPS)} AWS, ${countVouchers(MICROSOFT_GROUPS)} Microsoft, ${countVouchers(LINUX_GROUPS)} Linux Foundation. Validity and retake rules explained per provider, plus verified prep courses. Compare live Udemy prices before you buy.`;
 const lastModified = toISODateWIB();
 const now = new Date();
 const dateFull = formatDateWIB(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
@@ -25,7 +30,6 @@ const dateFull = formatDateWIB(now, { weekday: "long", year: "numeric", month: "
 // Official Impact tracking link + impression pixel (campaign 4028133). Do not alter.
 const voucherUrl = "https://trk.udemy.com/c/6564357/4028133/39854";
 const catalogUrl = voucherCatalogAffUrl();
-const totalAll = countVouchers(COMPTIA_GROUPS) + countVouchers(AWS_GROUPS) + countVouchers(MICROSOFT_GROUPS);
 
 const providers = [
   {
@@ -48,6 +52,13 @@ const providers = [
     name: "Microsoft Exam Vouchers",
     desc: "AZ-900, DP-900, AZ-104, AZ-500, AI-102, AZ-305, AZ-800, MD-102. Advertised 10% off; Retake Assurance on role-based exams only.",
     img: "/assets/images/vouchers/provider-microsoft.svg",
+  },
+  {
+    href: "/udemy-linux-exam-vouchers/",
+    pill: `${countVouchers(LINUX_GROUPS)} vouchers · Save 30%`,
+    name: "Linux Foundation Exam Vouchers",
+    desc: "CKA, CNPE and CKS Kubernetes certifications. Advertised 30% off, two exam attempts, redeem within 6 months and sit the exam within 12 months of redemption.",
+    img: "/assets/images/vouchers/provider-linux.svg",
   },
 ];
 
@@ -77,19 +88,23 @@ const msPrep = topPrep(
   /(azure|microsoft|az-900|az-104|az-500|microsoft 365|intune|windows server)/i,
   /(scott duffy)/i
 );
+const linuxPrep = topPrep(
+  /(kubernetes|\bk8s\b|\bcka\b|\bcks\b|\bcnpe\b|linux foundation|kodekloud)/i,
+  /(mumshad mannam|kodekloud|zeal vora)/i
+);
 
 const faqs = [
   {
     q: "What are certification exam vouchers on Udemy?",
-    a: "Exam vouchers are pre-purchases for certification exams: you pay Udemy, receive a voucher code, and paste it when scheduling the exam on the provider's site — Pearson VUE for AWS and Microsoft, CompTIA/Pearson VUE for CompTIA. Udemy's price isn't tied to the provider's list price: we verified “save 10%” on the Microsoft pages and the Security+/A+/Network+ pages (4 Nov 2026), but AWS vouchers can cost above or below AWS list. Your code lives in My learning → Certifications.",
+    a: "Exam vouchers are pre-purchases for certification exams: you pay Udemy, receive a voucher code, and paste it when scheduling the exam on the provider's site — Pearson VUE for AWS and Microsoft, CompTIA/Pearson VUE for CompTIA, and the Linux Foundation portal via PSI for CKA, CNPE and CKS. Udemy's price isn't tied to the provider's list price: we verified “save 10%” on the Microsoft pages and the Security+/A+/Network+ pages (4 Nov 2026), “save 30%” on the Linux Foundation pages (20 Nov 2026), and AWS vouchers can cost above or below AWS list. Your code lives in My learning → Certifications.",
   },
   {
     q: "Which vouchers are available?",
-    a: `We track ${totalAll} official vouchers: ${countVouchers(COMPTIA_GROUPS)} CompTIA, ${countVouchers(AWS_GROUPS)} AWS and ${countVouchers(MICROSOFT_GROUPS)} Microsoft. See each provider page for the full per-exam list.`,
+    a: `We track ${totalAll} official vouchers: ${countVouchers(COMPTIA_GROUPS)} CompTIA, ${countVouchers(AWS_GROUPS)} AWS, ${countVouchers(MICROSOFT_GROUPS)} Microsoft and ${countVouchers(LINUX_GROUPS)} Linux Foundation. See each provider page for the full per-exam list.`,
   },
   {
-    q: "Second Chance vs Retake Assurance — what's the difference?",
-    a: "Both are retake safety nets bought with the voucher, but they differ by provider. AWS — Second Chance: fail once, claim it in My learning → Certifications, and Udemy issues a new code (usually within 7 days, valid ≥9 months; verified 2 Nov 2026). Microsoft — Retake Assurance: role-based exams only (not AZ-900/DP-900), one extra attempt under Microsoft's retake policy. CompTIA — a retake option is offered at checkout on eligible pages (the A+ listing we track doesn't include it); check the exact wording and rules at checkout. None is sold separately, each covers one extra attempt, and none is refunded if you pass first try.",
+    q: "Second Chance, Retake Assurance and two attempts — what's the difference?",
+    a: "They are all retake safety nets bought with the voucher, but they differ by provider. AWS — Second Chance: fail once, claim it in My learning → Certifications, and Udemy issues a new code (usually within 7 days, valid ≥9 months; verified 2 Nov 2026). Microsoft — Retake Assurance: role-based exams only (not AZ-900/DP-900), one extra attempt under Microsoft's retake policy. CompTIA — a retake option is offered at checkout on eligible pages (the A+ listing we track doesn't include it); check the exact wording and rules at checkout. Linux Foundation — the CKA, CNPE and CKS pages state two exam attempts, matching the one retake included when you buy directly. None is sold separately, each covers one extra attempt, and none is refunded if you pass first try.",
   },
   {
     q: "Can I use Udemy coupons or credits on vouchers?",
@@ -97,7 +112,7 @@ const faqs = [
   },
   {
     q: "Are vouchers refundable? How long are they valid?",
-    a: "Vouchers and their retake add-ons are non-refundable, non-transferable, and expire as stated — Udemy vouchers are valid at least 9 months; CompTIA's own store vouchers last 12 months. Expired value is forfeited, and vouchers are only valid in the country of purchase.",
+    a: "Vouchers and their retake add-ons are non-refundable, non-transferable, and expire as stated — most Udemy vouchers are valid at least 9 months, CompTIA's own store vouchers last 12 months, and Linux Foundation vouchers must be redeemed within 6 months with the exam taken within 12 months of redemption. Expired value is forfeited, and vouchers are only valid in the country of purchase.",
   },
   {
     q: "What if my voucher is out of stock?",
@@ -105,14 +120,14 @@ const faqs = [
   },
   {
     q: "How do I schedule or reschedule my exam?",
-    a: "Udemy doesn't handle scheduling. Book and manage your exam on the provider's site (AWS/Microsoft via Pearson VUE, CompTIA via its scheduler) and contact them for any scheduling issues.",
+    a: "Udemy doesn't handle scheduling. Book and manage your exam on the provider's site — AWS and Microsoft via Pearson VUE, CompTIA via its scheduler, and Linux Foundation exams via the My Portal → PSI flow (online proctored only). Contact the provider for any scheduling issues.",
   },
 ];
 ---
 
 <Layout title={pageTitle} description={pageDescription} canonical={canonicalUrl} type="article" image="/assets/images/og-vouchers-certification.jpg" imageWidth={1200} imageHeight={630}>
   <meta name="author" content="Andrew Derek" slot="head" />
-  <meta name="keywords" content="udemy certification vouchers, udemy exam voucher discount, comptia voucher udemy, aws exam voucher discount, microsoft exam voucher az-900, udemy second chance, retake assurance udemy" slot="head" />
+  <meta name="keywords" content="udemy certification vouchers, udemy exam voucher discount, comptia voucher udemy, aws exam voucher discount, microsoft exam voucher az-900, linux foundation voucher, cka voucher, udemy second chance, retake assurance udemy" slot="head" />
 
   <script
     type="application/ld+json"
@@ -164,8 +179,8 @@ const faqs = [
       titleA="Save on"
       titleAccent="Certification Exam Vouchers"
       titleB="2026"
-      subHtml={`Prep, practice & purchase — all in one place. <strong>${totalAll} official vouchers</strong> across CompTIA, AWS and Microsoft, valid ≥9 months. Udemy advertises 10% off on the Microsoft pages and the Security+/A+/Network+ pages we checked; AWS prices vary vs list. Updated ${dateFull}.`}
-      stats={[{ val: `${totalAll}`, label: "official vouchers" }, { val: "3", label: "providers" }, { val: "≥9 mo", label: "validity" }]}
+      subHtml={`Prep, practice & purchase — all in one place. <strong>${totalAll} official vouchers</strong> across CompTIA, AWS, Microsoft and Linux Foundation. Udemy advertises 10% off on the Microsoft and selected CompTIA pages, 30% off the Linux Foundation pages we checked, and AWS prices vary vs list. Updated ${dateFull}.`}
+      stats={[{ val: `${totalAll}`, label: "official vouchers" }, { val: "4", label: "providers" }, { val: "≥9 mo", label: "typical validity" }]}
       primary={{ href: catalogUrl, text: `Browse All ${totalAll} Vouchers →`, external: true }}
       noteHtml={`Sponsored — CoursesWyn may earn a commission at no extra cost to you. <a href="/affiliate-disclosure">Affiliate Disclosure</a>`}
       termTitle="agents@courseswyn: ~/vouchers --all"
@@ -175,7 +190,7 @@ const faqs = [
         { slug: "aws-certified-solutions-architect-associate", code: "SAA-C03", name: "Solutions Architect" },
         { slug: "aws-certified-cloud-practitioner", code: "CLF-C02", name: "Cloud Practitioner" },
         { slug: "microsoft-az-900", code: "AZ-900", name: "Azure Fundamentals" },
-        { slug: "microsoft-az-104", code: "AZ-104", name: "Azure Administrator" },
+        { slug: "certified-kubernetes-administrator-cka", code: "CKA", name: "Kubernetes Administrator" },
       ].map((v) => ({ href: voucherAffUrl(v.slug), code: v.code, name: `${v.name} Voucher` }))}
       termFootHtml={`<b>${totalAll}</b>&nbsp;vouchers · <a href="${catalogUrl}" target="_blank" rel="sponsored noopener noreferrer">browse all →</a>`}
     />
@@ -198,8 +213,9 @@ const faqs = [
       <p>
         Every voucher below is official, bought through Udemy with savings versus booking direct. Pick your track —
         <a href="/udemy-comptia-exam-vouchers/">CompTIA vouchers</a> for IT and cybersecurity careers,{" "}
-        <a href="/udemy-aws-exam-vouchers/">AWS vouchers</a> for cloud roles, or{" "}
-        <a href="/udemy-microsoft-exam-vouchers/">Microsoft vouchers</a> for Azure and Microsoft 365 paths.
+        <a href="/udemy-aws-exam-vouchers/">AWS vouchers</a> for cloud roles,{" "}
+        <a href="/udemy-microsoft-exam-vouchers/">Microsoft vouchers</a> for Azure and Microsoft 365 paths, or{" "}
+        <a href="/udemy-linux-exam-vouchers/">Linux Foundation vouchers</a> for Kubernetes and platform engineering.
       </p>
       <div class="cv-prov-grid">
         {providers.map((p) => (
@@ -223,10 +239,10 @@ const faqs = [
       </p>
       <ol class="cv-steps">
         <li><strong>Pick your exam's voucher page</strong> (or open an eligible prep course → <em>Overview</em> tab under the player).</li>
-        <li><strong>Choose voucher-only or the retake option</strong> (Second Chance on AWS, Retake Assurance on Microsoft role-based exams, checkout option on eligible CompTIA pages) — it can't be added later.</li>
+        <li><strong>Choose voucher-only or the retake option</strong> (Second Chance on AWS, Retake Assurance on Microsoft role-based exams, checkout option on eligible CompTIA pages, two attempts on Linux Foundation pages) — it can't be added later.</li>
         <li><strong>Check out</strong> with any Udemy-accepted method (Udemy credits work; coupons don't apply to vouchers).</li>
         <li><strong>Copy your code</strong> from <em>My learning → Certifications</em>.</li>
-        <li><strong>Schedule on the provider's site</strong> — Pearson VUE for AWS/Microsoft, CompTIA's scheduler — and paste the code at checkout.</li>
+        <li><strong>Schedule on the provider's site</strong> — Pearson VUE for AWS/Microsoft, CompTIA's scheduler, or the Linux Foundation My Portal → PSI flow — and paste the code at checkout.</li>
       </ol>
       <a class="cv-btn" href={voucherUrl} target="_blank" rel="sponsored noopener noreferrer">Start — Browse Vouchers →</a>
     </section>
@@ -237,12 +253,13 @@ const faqs = [
         <li><strong>AWS — Second Chance:</strong> fail → claim it in My learning → Certifications → Udemy verifies → new code, usually within 7 days (verified 2 Nov 2026). Claim before the original voucher expires; replacement valid ≥9 months.</li>
         <li><strong>Microsoft — Retake Assurance:</strong> role-based exams only (not Fundamentals AZ-900/DP-900). One extra attempt; Microsoft's waiting periods still apply (24h after the first fail, then 14 days).</li>
         <li><strong>CompTIA — retake option:</strong> offered at checkout on eligible pages; the A+ listing we track doesn't include it. Confirm the exact wording, claim window and rules at checkout.</li>
-        <li><strong>All three:</strong> bought only with the voucher, one extra attempt, non-refundable, nothing refunded if you pass first try.</li>
+        <li><strong>Linux Foundation — two exam attempts:</strong> the CKA, CNPE and CKS pages state two attempts, matching the one retake included when you register directly. Redeem within 6 months and sit the exam within 12 months of redemption.</li>
+        <li><strong>All four:</strong> bought only with the voucher, one extra attempt, non-refundable, nothing refunded if you pass first try.</li>
       </ul>
     </section>
 
     {
-      (awsPrep.length > 0 || comptiaPrep.length > 0 || msPrep.length > 0) && (
+      (awsPrep.length > 0 || comptiaPrep.length > 0 || msPrep.length > 0 || linuxPrep.length > 0) && (
         <section class="cv-block" aria-label="Certification prep courses">
           <h2>Recommended Prep Courses by Instructor</h2>
           <p>
@@ -278,10 +295,21 @@ const faqs = [
               </div>
             </>
           )}
+          {linuxPrep.length > 0 && (
+            <>
+              <h3 style="margin:22px 0 4px;font-size:1.1rem">Kubernetes Courses — Top Rated</h3>
+              <div class="cv-grid">
+                {linuxPrep.map((d: any, i: number) => (
+                  <CouponGrid deal={d} eager={i < 6} priority={i < 3} />
+                ))}
+              </div>
+            </>
+          )}
           <p class="cv-note">
             <a href="/udemy-coupon-code/">Browse all verified coupons →</a> ·{" "}
             <a href="/blog/best-aws-certification-courses-2026/">AWS certification guide →</a> ·{" "}
-            <a href="/blog/best-ai-certification-courses-udemy/">AI certification guide →</a>
+            <a href="/blog/best-ai-certification-courses-udemy/">AI certification guide →</a> ·{" "}
+            <a href="/udemy-linux-exam-vouchers/">Linux Foundation vouchers →</a>
           </p>
         </section>
       )

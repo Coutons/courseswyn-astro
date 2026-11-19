@@ -6,7 +6,7 @@ import VoucherHero from "../../components/VoucherHero.astro";
 import VoucherGrid from "../../components/VoucherGrid.astro";
 import { getDeals } from "../../lib/store.js";
 import { formatDateWIB, toISODateWIB } from "../../lib/date";
-import { AWS_GROUPS, countVouchers, voucherAffUrl, voucherCatalogAffUrl } from "../../lib/vouchers.js";
+import { AWS_GROUPS, countVouchers, voucherAffUrl, voucherCatalogAffUrl, voucherSecondChanceAffUrl } from "../../lib/vouchers.js";
 
 const canonicalUrl = "https://courseswyn.com/udemy-aws-exam-vouchers/";
 const pageTitle = "AWS Exam Voucher Discount 2026: Udemy Prices & 50% Off";
@@ -18,6 +18,7 @@ const lastModified = toISODateWIB();
 const now = new Date();
 const dateFull = formatDateWIB(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 const catalogUrl = voucherCatalogAffUrl();
+const secondChanceUrl = voucherSecondChanceAffUrl();
 const total = countVouchers(AWS_GROUPS);
 const allVouchers = AWS_GROUPS.flatMap((g) => g.items);
 const availableVouchers = allVouchers.filter((v) => !v.catalogOnly);
@@ -112,11 +113,11 @@ const comparisonRows = [
 ];
 
 const voucherPrices = [
-  { exam: "Cloud Practitioner (CLF-C02)", list: "$100", only: "$87.50", bundle: "$115.50", twoAttempts: "$200.00", saving: "$84.50" },
-  { exam: "AI Practitioner (AIF-C01)", list: "$100", only: "$105.00", bundle: "$138.60", twoAttempts: "$200.00", saving: "$61.40" },
-  { exam: "Solutions Architect – Associate (SAA-C03)", list: "$150", only: "$131.25", bundle: "$177.80", twoAttempts: "$300.00", saving: "$122.20" },
-  { exam: "Developer – Associate (DVA-C02)", list: "$150", only: "$157.50", bundle: "$213.36", twoAttempts: "$300.00", saving: "$86.64" },
-  { exam: "Security – Specialty (SCS-C02)", list: "$300", only: "—", bundle: "$418.56", twoAttempts: "$600.00", saving: "$181.44" },
+  { slug: "aws-certified-cloud-practitioner", exam: "Cloud Practitioner (CLF-C02)", list: "$100", only: "$87.50", bundle: "$115.50", twoAttempts: "$200.00", saving: "$84.50" },
+  { slug: "aws-certified-ai-practitioner", exam: "AI Practitioner (AIF-C01)", list: "$100", only: "$105.00", bundle: "$138.60", twoAttempts: "$200.00", saving: "$61.40" },
+  { slug: "aws-certified-solutions-architect-associate", exam: "Solutions Architect – Associate (SAA-C03)", list: "$150", only: "$131.25", bundle: "$177.80", twoAttempts: "$300.00", saving: "$122.20" },
+  { slug: "aws-certified-developer-associate", exam: "Developer – Associate (DVA-C02)", list: "$150", only: "$157.50", bundle: "$213.36", twoAttempts: "$300.00", saving: "$86.64" },
+  { slug: "aws-certified-security-specialty", exam: "Security – Specialty (SCS-C02)", list: "$300", only: "—", bundle: "$418.56", twoAttempts: "$600.00", saving: "$181.44" },
 ];
 
 const faqs: { q: string; a: string; html?: string }[] = [
@@ -314,7 +315,7 @@ const schema = {
       <ul class="cv-check">
         <li><strong>Want the lowest single-exam price?</strong> Compare the voucher-only price with the AWS list price. If it is higher, book direct.</li>
         <li><strong>Already certified?</strong> Check the 50% AWS discount voucher in your Certification Account before buying — it can beat Udemy's price.</li>
-        <li><strong>Want a safety net?</strong> Buy the + Second Chance bundle and claim it before the original voucher expires.</li>
+        <li><strong>Want a safety net?</strong> Buy the <a href={secondChanceUrl} target="_blank" rel="sponsored noopener noreferrer">+ Second Chance bundle</a> and claim it before the original voucher expires.</li>
         <li><strong>Not sure which exam?</strong> The voucher is level-based, so start with the level that matches your experience.</li>
       </ul>
     </section>
@@ -344,7 +345,15 @@ const schema = {
                 <th scope="row">{row.exam}</th>
                 <td>{row.list}</td>
                 <td>{row.only}</td>
-                <td>{row.bundle}</td>
+                <td>
+                  <a
+                    href={voucherSecondChanceAffUrl(row.slug)}
+                    target="_blank"
+                    rel="sponsored noopener noreferrer"
+                  >
+                    {row.bundle}
+                  </a>
+                </td>
                 <td><strong>{row.saving}</strong></td>
               </tr>
             ))}
@@ -501,6 +510,9 @@ const schema = {
         One extra attempt only. Non-refundable and non-transferable. If you pass first time, the Second Chance portion
         is not refunded. Do not book the retake until the new code arrives.
       </p>
+      <p class="cv-cta-line">
+        <a class="cv-btn" href={secondChanceUrl} target="_blank" rel="sponsored noopener noreferrer">Compare + Second Chance Vouchers →</a>
+      </p>
     </section>
 
     <section class="cv-block" id="voucher-vs-direct" aria-labelledby="compare-title">
@@ -616,6 +628,13 @@ const schema = {
             <a href="/topics/aws-certified-solutions-architect-associate/">Solutions Architect Associate</a> ·{" "}
             <a href="/topics/aws-certified-ai-practitioner/">AI Practitioner</a>
           </p>
+          <p class="cv-note">
+            Compare providers:{" "}
+            <a href="/udemy-comptia-exam-vouchers/">CompTIA vouchers →</a> ·{" "}
+            <a href="/udemy-microsoft-exam-vouchers/">Microsoft vouchers →</a> ·{" "}
+            <a href="/udemy-linux-exam-vouchers/">Linux Foundation vouchers →</a> ·{" "}
+            <a href="/udemy-certification-vouchers/">All vouchers →</a>
+          </p>
         </section>
       )
     }
@@ -645,7 +664,7 @@ const schema = {
         </a>
         <a href="/udemy-certification-vouchers/">
           <strong>All certification vouchers</strong>
-          <span>Compare AWS, CompTIA and Microsoft vouchers in one place.</span>
+          <span>Compare AWS, CompTIA, Microsoft and Linux Foundation vouchers in one place.</span>
         </a>
       </div>
     </section>

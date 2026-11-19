@@ -3,6 +3,8 @@
 // Prices/validity change by region — pages must caveat "check live price".
 
 export const VOUCHER_CAMPAIGN = "https://trk.udemy.com/c/6564357/4058277/39854";
+/** Separate Impact campaign for the + Second Chance / retake bundle. */
+export const VOUCHER_SECOND_CHANCE_CAMPAIGN = "https://trk.udemy.com/c/6564357/4052981/39854";
 export const VOUCHER_CATALOG_URL = "https://www.udemy.com/all-certification-vouchers/";
 
 export function voucherPageUrl(slug: string): string {
@@ -17,6 +19,15 @@ export function voucherAffUrl(slug: string): string {
 /** Affiliate deep link to the full voucher catalog. */
 export function voucherCatalogAffUrl(): string {
   return `${VOUCHER_CAMPAIGN}?u=${encodeURIComponent(VOUCHER_CATALOG_URL)}`;
+}
+
+/**
+ * Affiliate deep link for the + Second Chance bundle on a voucher page.
+ * With no slug it opens the full voucher catalog under the Second Chance campaign.
+ */
+export function voucherSecondChanceAffUrl(slug?: string): string {
+  if (!slug) return VOUCHER_SECOND_CHANCE_CAMPAIGN;
+  return `${VOUCHER_SECOND_CHANCE_CAMPAIGN}?u=${encodeURIComponent(voucherPageUrl(slug))}`;
 }
 
 export interface Voucher {
@@ -272,6 +283,35 @@ export const MICROSOFT_GROUPS: VoucherGroup[] = [
         code: "AZ-305",
         tag: "Architect",
         note: "Voucher + Retake Assurance available. Valid ≥9 months. Schedule via Pearson VUE.",
+      },
+    ],
+  },
+];
+
+export const LINUX_GROUPS: VoucherGroup[] = [
+  {
+    title: "Kubernetes & Cloud Native",
+    items: [
+      {
+        slug: "certified-kubernetes-administrator-cka",
+        name: "Certified Kubernetes Administrator",
+        code: "CKA",
+        tag: "Kubernetes Admin",
+        note: "Advertised save 30%. Two exam attempts. Redeem within 6 months; sit the exam within 12 months of redemption.",
+      },
+      {
+        slug: "certified-cloud-native-platform-engineer",
+        name: "Certified Cloud Native Platform Engineer",
+        code: "CNPE",
+        tag: "Platform Engineering",
+        note: "Advertised save 30%. Two exam attempts. New platform-engineering certification with no prerequisites.",
+      },
+      {
+        slug: "certified-kubernetes-security-specialist",
+        name: "Certified Kubernetes Security Specialist",
+        code: "CKS",
+        tag: "Kubernetes Security",
+        note: "Advertised save 30%. Two exam attempts. You must pass CKA before you can sit CKS.",
       },
     ],
   },

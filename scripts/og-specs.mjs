@@ -520,7 +520,7 @@ export const PAGE_SPECS = {
     keyword: 'CERT',
     lines: ['Certification', 'Exam Vouchers'],
     category: 'VOUCHERS',
-    kicker: 'AWS \u00b7 COMPTIA \u00b7 MICROSOFT',
+    kicker: 'AWS \u00b7 COMPTIA \u00b7 MICROSOFT \u00b7 LINUX',
   },
   'og-vouchers-aws': {
     keyword: 'AWS',
@@ -539,5 +539,11 @@ export const PAGE_SPECS = {
     lines: ['Microsoft Exam', 'Vouchers'],
     category: 'VOUCHERS',
     kicker: 'AZ \u00b7 MS \u00b7 SC EXAMS',
+  },
+  'og-vouchers-linux': {
+    keyword: 'K8S',
+    lines: ['Linux Foundation', 'Exam Vouchers'],
+    category: 'VOUCHERS',
+    kicker: 'CKA \u00b7 CKS \u00b7 CNPE',
   },
 };

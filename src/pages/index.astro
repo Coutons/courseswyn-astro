@@ -6,6 +6,7 @@ import { toISODateWIB, formatDateWIB } from "../lib/date";
 import { slugifyCategory, slugifyTopic } from "../lib/utils";
 import { parseInstructors, createInstructorSlug } from "../lib/instructors";
 import { getInstructorImage } from "../lib/instructorProfiles";
+import { AWS_GROUPS, COMPTIA_GROUPS, MICROSOFT_GROUPS, LINUX_GROUPS, countVouchers } from "../lib/vouchers";
 import { getCollection } from "astro:content";
 import { Image } from "astro:assets";
 
@@ -103,6 +104,45 @@ for (const d of activeDeals) {
 const topTopics = [...topicCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([name, count]) => ({
   name, count, slug: slugifyTopic(name),
 }));
+
+// Exam vouchers are a separate, higher-value path from course coupons.
+// Surface all four providers with live counts so the homepage links straight
+// into the money pages instead of sending traffic to a generic catalog.
+const voucherProviders = [
+  {
+    href: "/udemy-aws-exam-vouchers/",
+    img: "/assets/images/vouchers/provider-aws.svg",
+    name: "AWS exam vouchers",
+    cta: "Compare AWS",
+    desc: "Cloud Practitioner to Solutions Architect. Voucher-only or + Second Chance.",
+    count: countVouchers(AWS_GROUPS),
+  },
+  {
+    href: "/udemy-comptia-exam-vouchers/",
+    img: "/assets/images/vouchers/provider-comptia.svg",
+    name: "CompTIA exam vouchers",
+    cta: "Compare CompTIA",
+    desc: "Security+, Network+, A+ and more. Save 10% with retake options where offered.",
+    count: countVouchers(COMPTIA_GROUPS),
+  },
+  {
+    href: "/udemy-microsoft-exam-vouchers/",
+    img: "/assets/images/vouchers/provider-microsoft.svg",
+    name: "Microsoft exam vouchers",
+    cta: "Compare Microsoft",
+    desc: "Azure, Microsoft 365 and role-based exams. Save 10% with Retake Assurance.",
+    count: countVouchers(MICROSOFT_GROUPS),
+  },
+  {
+    href: "/udemy-linux-exam-vouchers/",
+    img: "/assets/images/vouchers/provider-linux.svg",
+    name: "Linux Foundation exam vouchers",
+    cta: "Compare Linux",
+    desc: "CKA, CKS and CNPE. Save 30% with two exam attempts.",
+    count: countVouchers(LINUX_GROUPS),
+  },
+];
+const voucherTotal = voucherProviders.reduce((n, p) => n + p.count, 0);
 
 // ── Top enrolled: the courses the most students have actually taken.
 // Ranked by student count with rating as the tiebreaker, and a 4.5 rating
@@ -290,6 +330,25 @@ const whyCards = [
   @media (max-width: 900px) { .hp-cats { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 520px) { .hp-cats { grid-template-columns: 1fr; } }
 
+  /* ── Exam vouchers ── */
+  .hp-vouch { position: relative; border: 1px solid rgba(169, 199, 255, 0.2); border-radius: 24px; padding: clamp(1.35rem, 3vw, 2.25rem); background: radial-gradient(ellipse 80% 120% at 8% 0%, rgba(169, 199, 255, 0.14), transparent 62%), linear-gradient(160deg, #101216 0%, #141821 100%); overflow: hidden; }
+  .hp-vouch::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 50% 80% at 100% 0%, rgba(169, 199, 255, 0.08), transparent 65%); }
+  .hp-vouch > * { position: relative; }
+  .hp-vouch-head { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .hp-vouch-off { white-space: nowrap; }
+  .hp-vouch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.9rem; }
+  .hp-vouch-card { background: #0b0d11; border: 1px solid #22262d; border-radius: 16px; overflow: hidden; text-decoration: none; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; }
+  .hp-vouch-card:hover { transform: translateY(-4px); border-color: var(--brand); box-shadow: 0 20px 44px -20px rgba(169, 199, 255, 0.55); }
+  .hp-vouch-img { width: 100%; height: auto; display: block; background: #fff; }
+  .hp-vouch-body { display: flex; flex-direction: column; gap: 0.4rem; padding: 1rem 1.05rem 1.1rem; flex: 1; }
+  .hp-vouch-name { margin: 0; font-size: 0.98rem; font-weight: 800; color: var(--text); line-height: 1.3; }
+  .hp-vouch-desc { margin: 0; font-size: 0.83rem; line-height: 1.6; color: var(--muted); flex: 1; }
+  .hp-vouch-cta { display: inline-block; align-self: stretch; margin-top: 0.35rem; padding: 0.55rem 0.85rem; border-radius: 999px; border: 1px solid rgba(169, 199, 255, 0.32); background: rgba(169, 199, 255, 0.1); color: var(--brand); text-align: center; font-size: 0.8rem; font-weight: 800; transition: background 0.2s, color 0.2s, border-color 0.2s; }
+  .hp-vouch-card:hover .hp-vouch-cta { background: var(--brand); border-color: var(--brand); color: #0a0b0d; }
+  .hp-vouch-note { margin: 1.15rem 0 0; font-size: 0.76rem; line-height: 1.6; color: #7d858d; }
+  @media (max-width: 1000px) { .hp-vouch-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .hp-vouch-grid { grid-template-columns: 1fr; } }
+
   /* ── Why CoursesWyn value props ── */
   .hp-why { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.9rem; margin-top: 1.5rem; }
   .hp-why-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.4rem 1.35rem; display: flex; flex-direction: column; }
@@ -453,6 +512,45 @@ const whyCards = [
           <a class="hp-topic" href={`/topics/${t.slug}`} title={`Browse ${t.count} ${t.name} courses`}>{t.name} <span>· {t.count}</span></a>
         ))}
       </div>
+    </div>
+  </section>
+
+  <!-- ===================== EXAM VOUCHERS ===================== -->
+  <section class="section-wrapper" id="exam-vouchers" aria-label="Certification exam vouchers">
+    <div class="container">
+      <div class="section-hd sx-head">
+        <div>
+          <p class="sx-eyebrow">Exam vouchers</p>
+          <h2 class="sx-h2">Certification Exam Vouchers, <span class="hp-vouch-off">Up to 30% Off</span></h2>
+          <p class="lg-sub">Udemy sells these separately from its courses. Compare voucher-only prices, retake options and validity before you book — no coupon code needed.</p>
+        </div>
+        <a href="/udemy-certification-vouchers/" class="lg-link">All {voucherTotal} vouchers →</a>
+      </div>
+      <div class="hp-vouch-grid">
+        {voucherProviders.map((p) => (
+          <a class="hp-vouch-card" href={p.href}>
+            <img
+              class="hp-vouch-img"
+              src={p.img}
+              alt={`${p.name} — ${p.count} compared on CoursesWyn`}
+              width="480"
+              height="270"
+              loading="lazy"
+              decoding="async"
+            />
+            <div class="hp-vouch-body">
+              <h3 class="hp-vouch-name">{p.name}</h3>
+              <p class="hp-vouch-desc">{p.desc}</p>
+              <span class="hp-vouch-cta">Get Voucher →</span>
+            </div>
+          </a>
+        ))}
+      </div>
+      <p class="hp-vouch-note">
+        Exam vouchers are separate from course coupons — Udemy promo codes don't apply. Prices vary by country and
+        promotion, so check the live price before buying. Sponsored — CoursesWyn may earn a commission at no extra
+        cost to you.
+      </p>
     </div>
   </section>
 
