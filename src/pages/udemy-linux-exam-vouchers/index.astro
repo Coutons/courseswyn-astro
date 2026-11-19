@@ -1,0 +1,699 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import CouponGrid from "../../components/CouponGrid.astro";
+import AuthorBox from "../../components/AuthorBox.astro";
+import VoucherHero from "../../components/VoucherHero.astro";
+import VoucherGrid from "../../components/VoucherGrid.astro";
+import { getDeals } from "../../lib/store.js";
+import { formatDateWIB, toISODateWIB } from "../../lib/date";
+import { LINUX_GROUPS, countVouchers, voucherAffUrl, voucherCatalogAffUrl } from "../../lib/vouchers.js";
+
+const canonicalUrl = "https://courseswyn.com/udemy-linux-exam-vouchers/";
+const pageTitle = "Linux Foundation Exam Voucher Discount 2026: CKA, CKS & CNPE";
+const pageDescription =
+  "Compare Udemy Linux Foundation exam vouchers for CKA, CKS and CNPE: advertised 30% off, two exam attempts, 6-month redemption and 12-month exam validity.";
+const publishedISO = "2026-11-20";
+const lastModified = toISODateWIB();
+const now = new Date();
+const dateFull = formatDateWIB(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+const catalogUrl = voucherCatalogAffUrl();
+const total = countVouchers(LINUX_GROUPS);
+
+const examRows = [
+  {
+    cert: "Certified Kubernetes Administrator",
+    code: "CKA",
+    fee: "US$445",
+    duration: "2 hours",
+    attempts: "2 attempts",
+    prereq: "None",
+  },
+  {
+    cert: "Certified Cloud Native Platform Engineer",
+    code: "CNPE",
+    fee: "US$445",
+    duration: "2 hours",
+    attempts: "2 attempts",
+    prereq: "None",
+  },
+  {
+    cert: "Certified Kubernetes Security Specialist",
+    code: "CKS",
+    fee: "US$445",
+    duration: "2 hours",
+    attempts: "2 attempts",
+    prereq: "CKA passed first",
+  },
+];
+
+const voucherPicks = [
+  {
+    level: "CKA — start here",
+    best: "Kubernetes administrator",
+    body: "The core Kubernetes operations exam: cluster architecture, workloads, services and networking, storage, and a 30% troubleshooting domain. It is the prerequisite for CKS and the natural first Linux Foundation voucher for most engineers.",
+  },
+  {
+    level: "CKS — after CKA",
+    best: "Kubernetes security",
+    body: "Advanced security across cluster setup, hardening, supply chain and runtime. Linux Foundation rules require you to have passed CKA before you sit CKS, so buy this only after CKA is done or scheduled.",
+  },
+  {
+    level: "CNPE — platform engineering",
+    best: "Senior platform roles",
+    body: "Broader than Kubernetes: platform architecture, GitOps and continuous delivery, self-service APIs, observability and policy. No prerequisites, but it is aimed at engineers already running cloud-native platforms.",
+  },
+];
+
+const comparisonRows = [
+  {
+    label: "Price",
+    udemy: "Udemy advertises “save 30%” on all three pages we checked (20 Nov 2026). At the US$445 list price that is about US$311.50, but the live checkout price varies by country and promotion.",
+    direct: "Linux Foundation lists each exam at US$445, including one retake and 12 months of exam eligibility. Bundles with THRIVE-ONE or a training course cost more.",
+  },
+  {
+    label: "Attempts",
+    udemy: "The voucher pages state two exam attempts. Confirm how the second attempt is claimed and whether any waiting period applies.",
+    direct: "One retake is included with the exam registration — effectively two attempts, booked through your Linux Foundation portal.",
+  },
+  {
+    label: "Validity",
+    udemy: "Redeem the code within 6 months of purchase, then take the exam within 12 months of redemption. That can stretch to roughly 18 months end to end if you redeem late.",
+    direct: "12 months of exam eligibility from purchase. The certification itself is valid for 2 years either way.",
+  },
+  {
+    label: "Exam simulator",
+    udemy: "The Udemy listing does not mention the Killer.sh simulator at our last check. If simulator access matters to you, confirm before buying or compare with buying direct.",
+    direct: "Registration includes two exam-simulator attempts, each giving 36 hours of access from activation.",
+  },
+  {
+    label: "Refund",
+    udemy: "Exam vouchers are non-refundable and non-transferable, and expire as stated at purchase.",
+    direct: "Linux Foundation's own terms apply. Check the current policy before paying — exam registrations are generally non-refundable once redeemed.",
+  },
+  {
+    label: "Region",
+    udemy: "Valid only in the country of purchase. Availability varies by country.",
+    direct: "Buy and test from wherever you are eligible; Linux Foundation exams are delivered online.",
+  },
+  {
+    label: "Support",
+    udemy: "Udemy supplies the voucher code; Linux Foundation and PSI handle redemption, scheduling and proctoring.",
+    direct: "Linux Foundation handles the registration, simulator and scheduling in one place.",
+  },
+  {
+    label: "Best for",
+    udemy: "Buying the voucher alongside a discounted prep course, provided the live price beats the Linux Foundation price in your region.",
+    direct: "Maximum clarity on simulator access, retake mechanics and a single support path.",
+  },
+];
+
+const faqs: { q: string; a: string; html?: string }[] = [
+  {
+    q: "How much is a Linux Foundation exam voucher on Udemy in 2026?",
+    a: "Udemy advertises “save 30%” on the CKA, CNPE and CKS voucher pages (checked 20 November 2026). Linux Foundation lists each exam at US$445, so a true 30% discount works out to about US$311.50. Udemy sets its own price per country and promotion, though — the checkout amount can differ. Compare the live price with the Linux Foundation price for your region before paying.",
+  },
+  {
+    q: "Which Linux Foundation vouchers does Udemy sell?",
+    a: "We track three: Certified Kubernetes Administrator (CKA), Certified Cloud Native Platform Engineer (CNPE) and Certified Kubernetes Security Specialist (CKS). Udemy's wider catalog may list other Linux Foundation exams from time to time; these are the three pages that were live at our last check.",
+  },
+  {
+    q: "Do Udemy Linux Foundation vouchers include two exam attempts?",
+    a: "Yes — the CKA, CNPE and CKS pages all state “two exam attempts”. Linux Foundation's direct registration likewise includes one retake. Read the checkout terms for how the second attempt is claimed, and remember the voucher is non-refundable if you pass first time.",
+  },
+  {
+    q: "How long is a Linux Foundation voucher valid?",
+    a: "Udemy's pages say: redeem within 6 months of purchase, then take the exam within 12 months of redemption. The certification is valid for 2 years. Linux Foundation's direct registration gives 12 months of exam eligibility from purchase. Expired vouchers are forfeited and cannot be extended.",
+  },
+  {
+    q: "Do I need CKA before I can take CKS?",
+    a: "Yes. Linux Foundation requires CKS candidates to have taken and passed the CKA exam before attempting CKS. CKA and CNPE have no prerequisites. If you buy CKS before passing CKA, you are buying ahead — make sure the redemption window covers your CKA timeline.",
+  },
+  {
+    q: "What is the CNPE certification?",
+    a: "The Certified Cloud Native Platform Engineer (CNPE) is Linux Foundation's platform-engineering certification, launched in October 2025. It is a 2-hour, performance-based exam taken from a Linux-based remote desktop. Domains cover platform architecture, GitOps and continuous delivery, platform APIs and self-service, observability and operations, and security and policy enforcement.",
+  },
+  {
+    q: "How do I redeem and schedule a Linux Foundation exam?",
+    a: "After purchase, copy the code from My learning → Certifications in Udemy. Log in to the Linux Foundation My Portal, redeem the code, and you will be directed to PSI to choose a date and time. Linux Foundation exams are online and remotely proctored only — there is no test centre option. Keep the name on your account consistent with your ID.",
+  },
+  {
+    q: "Is the Linux Foundation exam online or in person?",
+    a: "Online only, remotely proctored through PSI. You take the exam from your own home or office. CKA and CKS are command-line, performance-based exams; CNPE uses a Linux-based remote desktop with terminal and web-based interfaces.",
+  },
+  {
+    q: "Does the Udemy voucher include the Killer.sh exam simulator?",
+    a: "The Udemy voucher pages do not mention the Killer.sh simulator at our last check. Linux Foundation's direct registration includes two simulator attempts, each with 36 hours of access. If the simulator is part of your study plan, confirm what the Udemy purchase includes or compare the direct price before deciding.",
+  },
+  {
+    q: "Can I use a Udemy coupon on a Linux Foundation voucher?",
+    a: "No. Udemy coupons and promo codes never apply to exam vouchers, but Udemy credits can be used at checkout. Coupons do apply to the prep courses below, which is usually the cheapest way to combine study material with the voucher.",
+  },
+  {
+    q: "Are Linux Foundation vouchers refundable?",
+    a: "No. Exam vouchers are non-refundable, non-transferable and valid only for the specified exam and provider. They are also valid only in the country of purchase. An expired or unused voucher is forfeited, and nothing is refunded if you pass on the first attempt.",
+  },
+  {
+    q: "Are Udemy Linux Foundation exam vouchers legitimate?",
+    a: "Yes. Udemy sells the voucher and delivers the code; Linux Foundation owns the certification and runs the exam; PSI proctors it. The code is redeemed in the Linux Foundation My Portal, not inside Udemy. Buy only from the official voucher pages and keep your receipt.",
+  },
+  {
+    q: "CKA, CKS or CNPE — which should I take first?",
+    a: "Take CKA first if you want to administer Kubernetes clusters, then CKS once you have passed it. Choose CNPE if your job is building self-service platforms and you already work across GitOps, observability and platform APIs; CKA is a useful companion but not a prerequisite. Spreading the exams out? Check the redemption windows before you stockpile vouchers.",
+  },
+];
+
+const allDeals = await getDeals();
+const linuxRe = /(kubernetes|\bk8s\b|\bcka\b|\bcks\b|\bcnpe\b|linux foundation|kodekloud|containers?|docker)/i;
+const certFirst = (d: any) => {
+  const t = `${d.title || ""} ${d.subcategory || ""}`.toLowerCase();
+  if (/(certified kubernetes administrator|\bcka\b)/.test(t)) return 0;
+  if (/(certified kubernetes security|\bcks\b)/.test(t)) return 1;
+  if (/(\bcnpe\b|platform engineer)/.test(t)) return 2;
+  if (/kubernetes/.test(t)) return 3;
+  if (/(linux foundation|\blfcs\b)/.test(t)) return 4;
+  return 5;
+};
+const prepDeals = allDeals
+  .filter((d: any) => linuxRe.test(`${d.title || ""} ${d.subcategory || ""} ${d.category || ""}`))
+  .sort((a: any, b: any) => {
+    const ca = certFirst(a);
+    const cb = certFirst(b);
+    if (ca !== cb) return ca - cb;
+    const ra = Number(a.rating) || 0;
+    const rb = Number(b.rating) || 0;
+    if (ra !== rb) return rb - ra;
+    return (Number(b.students) || 0) - (Number(a.students) || 0);
+  })
+  .slice(0, 3);
+
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": `${canonicalUrl}#webpage`,
+      url: canonicalUrl,
+      name: pageTitle,
+      description: pageDescription,
+      inLanguage: "en-US",
+      datePublished: publishedISO,
+      dateModified: lastModified,
+      isPartOf: { "@id": "https://courseswyn.com/#website" },
+      about: { "@type": "Thing", name: "Linux Foundation and Kubernetes certification exam vouchers" },
+      mainEntity: { "@id": `${canonicalUrl}#vouchers` },
+      author: { "@type": "Person", name: "Andrew Derek", url: "https://courseswyn.com/about" },
+      publisher: { "@id": "https://courseswyn.com/#organization" },
+      breadcrumb: { "@id": `${canonicalUrl}#breadcrumb` },
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": `${canonicalUrl}#breadcrumb`,
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://courseswyn.com/" },
+        { "@type": "ListItem", position: 2, name: "Certification Vouchers", item: "https://courseswyn.com/udemy-certification-vouchers/" },
+        { "@type": "ListItem", position: 3, name: "Linux Foundation Exam Vouchers", item: canonicalUrl },
+      ],
+    },
+    {
+      "@type": "ItemList",
+      "@id": `${canonicalUrl}#vouchers`,
+      name: "Linux Foundation Exam Vouchers on Udemy",
+      numberOfItems: total,
+      itemListElement: LINUX_GROUPS.flatMap((g) => g.items).map((v, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `https://www.udemy.com/certification-vouchers/${v.slug}/`,
+        name: `${v.name} Exam Voucher`,
+      })),
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${canonicalUrl}#faq`,
+      mainEntity: faqs.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    },
+  ],
+};
+---
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={canonicalUrl}
+  type="article"
+  pubDate={new Date(publishedISO)}
+  updatedDate={now}
+  image="/assets/images/og-vouchers-linux.jpg"
+  imageWidth={1200}
+  imageHeight={630}
+>
+  <meta name="author" content="Andrew Derek" slot="head" />
+  <meta
+    name="keywords"
+    content="linux foundation exam voucher, linux foundation certification voucher, linux foundation exam discount, linux foundation exam cost, cka exam voucher, cka exam voucher discount, cks exam voucher, cnpe exam voucher, kubernetes certification voucher, udemy linux foundation voucher"
+    slot="head"
+  />
+
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <div class="cv-wrap">
+    <VoucherHero
+      badgeHref="/how-we-test-and-verify-udemy-coupons"
+      badgeText={`Checked · ${total} Linux Foundation vouchers`}
+      titleA="Linux Foundation"
+      titleAccent="Exam Vouchers"
+      titleB="2026"
+      subHtml={`All <strong>${total} Linux Foundation exam vouchers</strong> we track on Udemy — CKA, CNPE and CKS. Udemy advertises <strong>save 30%</strong>, <strong>two exam attempts</strong>, redeem within 6 months and sit the exam within 12 months of redemption. Updated ${dateFull}.`}
+      stats={[
+        { val: `${total}`, label: "official vouchers" },
+        { val: "30%", label: "off (advertised)" },
+        { val: "2", label: "exam attempts" },
+      ]}
+      primary={{ href: catalogUrl, text: "Browse Linux Vouchers →", external: true }}
+      secondary={{ href: "#exam-fees", text: "See Exam Fees" }}
+      noteHtml={`Sponsored — CoursesWyn may earn a commission at no extra cost to you. <a href="/affiliate-disclosure">Affiliate Disclosure</a>`}
+      termTitle="agents@courseswyn: ~/vouchers --linux"
+      termLines={[
+        { slug: "certified-kubernetes-administrator-cka", code: "CKA", name: "Kubernetes Administrator" },
+        { slug: "certified-cloud-native-platform-engineer", code: "CNPE", name: "Cloud Native Platform Engineer" },
+        { slug: "certified-kubernetes-security-specialist", code: "CKS", name: "Kubernetes Security Specialist" },
+      ].map((v) => ({ href: voucherAffUrl(v.slug), code: v.code, name: `${v.name} Voucher` }))}
+      termFootHtml={`<b>${total}</b>&nbsp;vouchers · <a href="${catalogUrl}" target="_blank" rel="sponsored noopener noreferrer">browse all →</a>`}
+    />
+    <div class="cv-meta">
+      <span>By <a href="/about">Andrew Derek</a></span>
+      <span class="cv-dot">·</span>
+      <span>Updated <time datetime={lastModified}>{dateFull}</time></span>
+      <span class="cv-dot">·</span>
+      <span>
+        Checked against{" "}
+        <a href="https://training.linuxfoundation.org/certification/certified-kubernetes-administrator-cka/" target="_blank" rel="noopener noreferrer">Linux Foundation certification pages</a>{" "}
+        and <a href="https://www.udemy.com/all-certification-vouchers/" target="_blank" rel="noopener noreferrer">Udemy voucher listings</a>
+      </span>
+    </div>
+
+    <nav class="cv-toc" aria-label="On this page">
+      <span class="cv-toc-label">On this page</span>
+      <a href="#quick-answer">Quick answer</a>
+      <a href="#exam-fees">Exam fees</a>
+      <a href="#vouchers">All vouchers</a>
+      <a href="#which-voucher">Which voucher</a>
+      <a href="#how-to-redeem">How to redeem</a>
+      <a href="#two-attempts">Two attempts</a>
+      <a href="#voucher-vs-direct">Udemy vs direct</a>
+      <a href="#worth-it">Is it worth it?</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+
+    <section class="cv-block cv-answer" id="quick-answer" aria-labelledby="quick-answer-title">
+      <h2 id="quick-answer-title">Linux Foundation vouchers on Udemy: the short answer</h2>
+      <p>
+        A Linux Foundation exam voucher is a prepaid code for one certification exam. Udemy advertises{" "}
+        <strong>save 30%</strong> on the CKA, CNPE and CKS pages we checked (20 November 2026), and each page states{" "}
+        <strong>two exam attempts</strong>. The catch is timing: you must <strong>redeem within 6 months</strong> of
+        purchase, then <strong>take the exam within 12 months of redemption</strong>.
+      </p>
+      <p>
+        Linux Foundation lists every one of these exams at <strong>US$445</strong>, including one retake and 12 months
+        of eligibility. Udemy sets its own price per country and promotion, so a 30% discount is not guaranteed to land
+        at exactly 30% off the US list price. Compare the live checkout price with the Linux Foundation price for your
+        region before you pay.
+      </p>
+      <ul class="cv-check">
+        <li><strong>New to Kubernetes?</strong> Start with CKA — it is the prerequisite for CKS and the most requested of the three.</li>
+        <li><strong>Already CKA-certified?</strong> CKS is the security specialisation, covering hardening, supply chain and runtime defence.</li>
+        <li><strong>Running an internal developer platform?</strong> CNPE covers GitOps, platform APIs, observability and policy — no prerequisites.</li>
+        <li><strong>Watch the clock:</strong> redeem within 6 months; a voucher you sit on for a year can expire before you book.</li>
+      </ul>
+    </section>
+
+    <section class="cv-block" id="exam-fees" aria-labelledby="fees-title">
+      <h2 id="fees-title">How much does a Linux Foundation exam cost in 2026?</h2>
+      <p>
+        All three certifications cost <strong>US$445</strong> when bought directly from the Linux Foundation. That price
+        includes one retake, 12 months of exam eligibility, a 2-hour performance-based exam and two years of
+        certification validity. Prices are set per region, so check the Linux Foundation checkout for your country.
+      </p>
+      <div class="cv-table-wrap">
+        <table class="cv-table">
+          <caption>Linux Foundation Kubernetes certifications — list pricing and exam format (checked 20 Nov 2026)</caption>
+          <thead>
+            <tr>
+              <th scope="col">Certification</th>
+              <th scope="col">Code</th>
+              <th scope="col">List price</th>
+              <th scope="col">Duration</th>
+              <th scope="col">Attempts</th>
+              <th scope="col">Prerequisite</th>
+            </tr>
+          </thead>
+          <tbody>
+            {examRows.map((row) => (
+              <tr>
+                <th scope="row">{row.cert}</th>
+                <td>{row.code}</td>
+                <td><strong>{row.fee}</strong></td>
+                <td>{row.duration}</td>
+                <td>{row.attempts}</td>
+                <td>{row.prereq}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div class="cv-callout">
+        <strong>The 30% maths:</strong> 30% off US$445 is about <strong>US$311.50</strong>. If Udemy's live price is
+        higher than that in your country, the advertised discount is not beating the list price by 30% — compare before
+        checkout. Udemy credits work; coupons do not apply to vouchers.
+      </div>
+      <p class="cv-note">
+        CKA and CKS are aligned with Kubernetes v1.37 at our last check; Linux Foundation updates the exam environment
+        within roughly 4–8 weeks of a Kubernetes minor release. CNPE is taken from a Linux-based remote desktop and is
+        not tied to a single Kubernetes version. Sources:{" "}
+        <a href="https://training.linuxfoundation.org/certification/certified-kubernetes-administrator-cka/" target="_blank" rel="noopener noreferrer">CKA</a>,{" "}
+        <a href="https://training.linuxfoundation.org/certification/certified-cloud-native-platform-engineer-cnpe/" target="_blank" rel="noopener noreferrer">CNPE</a>,{" "}
+        <a href="https://training.linuxfoundation.org/certification/certified-kubernetes-security-specialist/" target="_blank" rel="noopener noreferrer">CKS</a>.
+      </p>
+    </section>
+
+    <section class="cv-block" id="vouchers" aria-labelledby="vouchers-title">
+      <h2 id="vouchers-title">Compare all {total} Linux Foundation exam vouchers on Udemy</h2>
+      <p>
+        Udemy lists a separate voucher product for each exam. All three pages we checked advertise{" "}
+        <strong>save 30%</strong>, <strong>two exam attempts</strong> and the same redemption rules: redeem within 6
+        months, sit the exam within 12 months of redemption. The voucher is valid only for the named exam and only in
+        the country of purchase.
+      </p>
+      <VoucherGrid groups={LINUX_GROUPS} />
+      <p class="cv-note">
+        Prices, stock and promotions change. Confirm the live price, the exam code and the redemption window on the
+        product page before paying — and remember that an unused voucher cannot be extended.
+      </p>
+    </section>
+
+    <section class="cv-block" id="which-voucher" aria-labelledby="which-title">
+      <h2 id="which-title">Which Linux Foundation voucher do you need?</h2>
+      <p>
+        These are three different jobs, not three difficulty levels of the same exam. Buy the one that matches the role
+        you are targeting, and buy CKS only once CKA is passed or firmly scheduled.
+      </p>
+      <div class="cv-pick-grid">
+        {voucherPicks.map((pick) => (
+          <article class="cv-pick">
+            <span class="cv-pick-tag">{pick.best}</span>
+            <h3>{pick.level}</h3>
+            <p>{pick.body}</p>
+          </article>
+        ))}
+      </div>
+      <p class="cv-note">
+        Want the full Kubernetes path? CKA → CKS is the administration and security track. Adding KCNA, KCSA and CKAD
+        completes the five-exam <a href="https://training.linuxfoundation.org/resources/kubestronaut-program/" target="_blank" rel="noopener noreferrer">Kubestronaut</a>{" "}
+        programme. Browse <a href="/topics/kubernetes/">Kubernetes courses</a> before you commit.
+      </p>
+    </section>
+
+    <section class="cv-block" id="how-to-redeem" aria-labelledby="redeem-title">
+      <h2 id="redeem-title">How to buy and redeem a Linux Foundation voucher</h2>
+      <p>
+        Udemy sells the code; the Linux Foundation and PSI run the exam. The redemption step is easy to postpone — and
+        that is exactly how people lose vouchers. Do it the same week you buy.
+      </p>
+      <ol class="cv-steps">
+        <li><strong>Pick the exact exam.</strong> CKA, CNPE and CKS are separate products. CKS also requires CKA to be passed first.</li>
+        <li><strong>Check the live price against US$445.</strong> Udemy advertises 30% off; confirm the checkout price in your country actually beats the Linux Foundation price.</li>
+        <li><strong>Pay on Udemy.</strong> A card or Udemy credits work. Coupons do not apply to vouchers.</li>
+        <li><strong>Copy the code from My learning → Certifications.</strong> Udemy also emails it, but your account is the source of truth.</li>
+        <li><strong>Redeem it in the Linux Foundation My Portal within 6 months.</strong> This is the step with the hard deadline.</li>
+        <li><strong>Schedule with PSI.</strong> From the portal you are directed to PSI to choose a date and time; Linux Foundation exams are online and remotely proctored only.</li>
+        <li><strong>Take the exam within 12 months of redemption.</strong> Check your system and ID requirements before exam day, and keep your name consistent with your ID.</li>
+      </ol>
+      <div class="cv-callout">
+        <strong>Before you pay, check:</strong> the exam code, the country restriction, the 6-month redemption deadline,
+        whether the second attempt is automatic or must be claimed, and — if you want it — whether Killer.sh simulator
+        access is included. The Udemy listing does not mention the simulator at our last check.
+      </div>
+      <p class="cv-cta-line">
+        <a class="cv-btn" href={catalogUrl} target="_blank" rel="sponsored noopener noreferrer">Browse Linux Vouchers →</a>
+      </p>
+    </section>
+
+    <section class="cv-block cv-warn" id="two-attempts" aria-labelledby="attempts-title">
+      <h2 id="attempts-title">Two exam attempts — what the pages actually say</h2>
+      <p>
+        The CKA, CNPE and CKS voucher pages all list <strong>“two exam attempts”</strong>. Linux Foundation's direct
+        registration describes the same benefit as <strong>one retake</strong>: you get a second attempt if you fail the
+        first. The practical outcome is the same, but the mechanics and deadlines are worth confirming.
+      </p>
+      <ul class="cv-check">
+        <li><strong>Both attempts cover the same exam.</strong> You cannot use the second attempt for a different certification.</li>
+        <li><strong>Nothing is refunded if you pass first time.</strong> The retake is an insurance policy, not a discount.</li>
+        <li><strong>Waiting periods may apply.</strong> Check the Linux Foundation candidate handbook for the current retake rules before booking the second attempt.</li>
+        <li><strong>The simulator is separate from the exam attempts.</strong> Linux Foundation's direct registration includes two Killer.sh simulator attempts (36 hours each); the Udemy pages do not state that at our last check.</li>
+        <li><strong>Certification validity is 2 years.</strong> Recertification is a separate exam and a separate cost, whichever route you buy through.</li>
+      </ul>
+      <p class="cv-note">
+        Sources: Udemy CKA/CNPE/CKS voucher pages (20 Nov 2026),{" "}
+        <a href="https://docs.linuxfoundation.org/tc-docs/certification/lf-handbook2" target="_blank" rel="noopener noreferrer">Linux Foundation candidate handbook</a>,{" "}
+        <a href="https://training.linuxfoundation.org/about/policies/" target="_blank" rel="noopener noreferrer">certification policies</a>.
+      </p>
+    </section>
+
+    <section class="cv-block" id="voucher-vs-direct" aria-labelledby="compare-title">
+      <h2 id="compare-title">Udemy voucher vs buying directly from the Linux Foundation</h2>
+      <p>
+        Udemy's advertised 30% is the headline, but the direct price already includes a retake and the simulator. The
+        honest comparison is total cost and total convenience, not the sticker price alone.
+      </p>
+      <div class="cv-table-wrap">
+        <table class="cv-table cv-compare">
+          <caption>Udemy Linux Foundation voucher compared with buying from the Linux Foundation directly</caption>
+          <thead>
+            <tr>
+              <th scope="col">Feature</th>
+              <th scope="col">Udemy voucher</th>
+              <th scope="col">Direct with Linux Foundation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {comparisonRows.map((row) => (
+              <tr>
+                <th scope="row">{row.label}</th>
+                <td>{row.udemy}</td>
+                <td>{row.direct}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="cv-block" id="legit" aria-labelledby="legit-title">
+      <h2 id="legit-title">Are Udemy Linux Foundation exam vouchers legitimate?</h2>
+      <p>
+        Yes — with the same distinction as every other voucher on this site. Udemy is the{" "}
+        <strong>seller of the voucher</strong>, not the certification body. The Linux Foundation owns the certification
+        and PSI delivers and proctors the exam. That is why the code is redeemed in the Linux Foundation My Portal, not
+        inside Udemy.
+      </p>
+      <ul class="cv-check">
+        <li><strong>Who sells it:</strong> Udemy, on udemy.com. The receipt and code come from Udemy.</li>
+        <li><strong>Who delivers the exam:</strong> PSI, through the Linux Foundation portal. Online and remotely proctored only.</li>
+        <li><strong>Who issues the certification:</strong> the Linux Foundation / CNCF. Udemy cannot issue, renew or verify it.</li>
+        <li><strong>How to verify your code:</strong> it appears in My learning → Certifications and is accepted when you redeem it in the Linux Foundation portal.</li>
+      </ul>
+      <p class="cv-note">
+        Red flags: a seller asking for bank transfer or crypto, codes sent by direct message, or prices far below the
+        Linux Foundation price. Vouchers are non-transferable, so a code bought from a stranger may not work. Buy from
+        the official Udemy voucher pages or the Linux Foundation.
+      </p>
+    </section>
+
+    <section class="cv-block" id="worth-it" aria-labelledby="worth-title">
+      <h2 id="worth-title">Are Udemy Linux Foundation exam vouchers worth it?</h2>
+      <p>
+        It depends on whether the 30% survives the regional price difference — and whether you value the simulator. At
+        US$445 list, a real 30% saving is about US$133.50, which is substantial. But if Udemy's local price is higher, or
+        you have to buy the simulator separately, the gap narrows quickly.
+      </p>
+      <h3>When the Udemy voucher makes sense</h3>
+      <ul>
+        <li>The live voucher price in your country is clearly below the Linux Foundation price after currency conversion.</li>
+        <li>You are already buying a prep course on Udemy and want one checkout.</li>
+        <li>You will redeem the code within 6 months and sit the exam within the following 12 months.</li>
+      </ul>
+      <h3>When buying direct is better</h3>
+      <ul>
+        <li>You want the Killer.sh simulator bundled without having to confirm what Udemy includes.</li>
+        <li>The Udemy price matches or exceeds US$445 in your region.</li>
+        <li>You want a single support path for registration, scheduling and retakes.</li>
+      </ul>
+      <h3>Either way, remember</h3>
+      <ul>
+        <li>All three exams are performance-based and hands-on — a voucher does not replace lab practice.</li>
+        <li>Certifications last 2 years; factor recertification into the total cost.</li>
+        <li>CKS requires CKA first, so do not buy CKS expecting to skip the prerequisite.</li>
+      </ul>
+    </section>
+
+    {
+      prepDeals.length > 0 && (
+        <section class="cv-block" id="prep-courses" aria-labelledby="prep-title">
+          <h2 id="prep-title">Best Kubernetes prep courses to pair with your voucher</h2>
+          <p>
+            These are verified Udemy coupons for Kubernetes and Linux Foundation prep. They are separate from the
+            voucher: the course prepares you, the voucher pays for the exam. Coupons work on the courses, never on the
+            voucher.
+          </p>
+          <div class="cv-grid">
+            {prepDeals.map((d: any, i: number) => (
+              <CouponGrid deal={d} eager={i < 6} priority={i < 3} />
+            ))}
+          </div>
+          <p class="cv-note">
+            <a href="/udemy-coupon-code/">Browse all verified coupons →</a> ·{" "}
+            <a href="/topics/kubernetes/">Kubernetes courses →</a> ·{" "}
+            <a href="/topics/docker/">Docker courses →</a>
+          </p>
+          <p class="cv-note">
+            Compare providers:{" "}
+            <a href="/udemy-aws-exam-vouchers/">AWS vouchers →</a> ·{" "}
+            <a href="/udemy-comptia-exam-vouchers/">CompTIA vouchers →</a> ·{" "}
+            <a href="/udemy-microsoft-exam-vouchers/">Microsoft vouchers →</a> ·{" "}
+            <a href="/udemy-certification-vouchers/">All vouchers →</a>
+          </p>
+        </section>
+      )
+    }
+
+    <section class="cv-block" id="related" aria-labelledby="related-title">
+      <h2 id="related-title">Related guides and voucher pages</h2>
+      <div class="cv-related">
+        <a href="/udemy-certification-vouchers/">
+          <strong>All certification vouchers</strong>
+          <span>Compare AWS, CompTIA, Microsoft and Linux Foundation vouchers.</span>
+        </a>
+        <a href="/udemy-comptia-exam-vouchers/">
+          <strong>CompTIA exam vouchers</strong>
+          <span>Includes CompTIA Linux+ for Linux administration fundamentals.</span>
+        </a>
+        <a href="/udemy-aws-exam-vouchers/">
+          <strong>AWS exam vouchers</strong>
+          <span>Cloud certifications if you run Kubernetes on AWS.</span>
+        </a>
+        <a href="/topics/kubernetes/">
+          <strong>Kubernetes courses on Udemy</strong>
+          <span>Verified coupons for CKA, CKS and hands-on labs.</span>
+        </a>
+        <a href="/topics/docker/">
+          <strong>Docker courses on Udemy</strong>
+          <span>Container fundamentals before you tackle Kubernetes.</span>
+        </a>
+        <a href="/how-we-test-and-verify-udemy-coupons">
+          <strong>How we verify coupons</strong>
+          <span>Our testing method for every voucher and coupon we list.</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="cv-block" id="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title">Linux Foundation exam voucher FAQ</h2>
+      <div class="cv-faq">
+        {faqs.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <p set:html={f.html ?? f.a} />
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="cv-block cv-final" aria-label="Final call to action">
+      <h2>Ready to book your Kubernetes exam?</h2>
+      <p>
+        Check the live voucher price against the Linux Foundation price for your country, confirm what the two attempts
+        include, and redeem the code within 6 months of purchase.
+      </p>
+      <a class="cv-btn big" href={catalogUrl} target="_blank" rel="sponsored noopener noreferrer">
+        Browse Linux Vouchers →
+      </a>
+      <p class="cv-note">Sponsored — we may earn a commission at no extra cost to you.</p>
+    </section>
+
+    <div class="cv-author"><AuthorBox image="/images/author.jpg" /></div>
+  </div>
+
+  <style>
+    .cv-wrap { max-width: 1180px; margin: 0 auto; padding: 24px 1.5rem 64px; }
+    .cv-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 14px 0 0; font-size: 0.8rem; color: var(--muted); }
+    .cv-meta a { color: var(--brand); font-weight: 600; text-decoration: none; }
+    .cv-meta a:hover { text-decoration: underline; }
+    .cv-dot { color: var(--muted-light); }
+    .cv-toc { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 18px 0 0; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-secondary); }
+    .cv-toc-label { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+    .cv-toc a { font-size: 0.8rem; font-weight: 600; color: var(--text); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 5px 11px; }
+    .cv-toc a:hover { border-color: var(--brand); color: var(--brand); }
+    .cv-block { margin-top: 46px; scroll-margin-top: 90px; }
+    .cv-block h2 { font-size: clamp(1.4rem, 2.6vw, 1.85rem); line-height: 1.25; letter-spacing: -0.015em; margin: 0 0 10px; }
+    .cv-block h3 { font-size: 1.08rem; line-height: 1.35; margin: 22px 0 8px; }
+    .cv-block p, .cv-block li { line-height: 1.75; color: #c7d0da; }
+    .cv-block p { margin: 0 0 14px; }
+    .cv-block strong { color: var(--text); }
+    .cv-block a { color: var(--brand); text-decoration: none; font-weight: 600; }
+    .cv-block a:hover { text-decoration: underline; }
+    .cv-answer { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px 22px 10px; }
+    .cv-check { list-style: none; padding: 0; margin: 8px 0 16px; display: grid; gap: 8px; }
+    .cv-check li { padding-left: 26px; position: relative; }
+    .cv-check li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--brand); font-weight: 800; }
+    .cv-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: 14px; margin: 16px 0; background: var(--card); }
+    .cv-table { width: 100%; min-width: 680px; border-collapse: collapse; }
+    .cv-table caption { caption-side: top; text-align: left; padding: 14px 16px; font-size: 0.8rem; font-weight: 700; color: var(--muted); background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
+    .cv-table th, .cv-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; font-size: 0.9rem; line-height: 1.6; }
+    .cv-table thead th { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--bg-secondary); white-space: nowrap; }
+    .cv-table tbody th { color: var(--text); font-weight: 700; }
+    .cv-table tbody tr:last-child th, .cv-table tbody tr:last-child td { border-bottom: none; }
+    .cv-compare td { color: #c7d0da; }
+    .cv-pick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 16px 0; }
+    .cv-pick { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+    .cv-pick-tag { display: inline-block; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #0a0b0d; background: var(--brand-gradient); border-radius: 999px; padding: 3px 9px; margin-bottom: 8px; }
+    .cv-pick h3 { margin: 0 0 6px; font-size: 1.05rem; }
+    .cv-pick p { margin: 0; font-size: 0.9rem; }
+    .cv-steps { padding-left: 22px; display: grid; gap: 10px; margin: 14px 0; }
+    .cv-steps li { padding-left: 4px; }
+    .cv-callout { background: var(--brand-soft); border-left: 4px solid var(--brand); border-radius: 0 12px 12px 0; padding: 14px 16px; margin: 16px 0; font-size: 0.92rem; line-height: 1.7; color: var(--text); }
+    .cv-cta-line { margin: 18px 0 0; }
+    .cv-btn { display: inline-block; background: var(--brand); color: #0a0b0d !important; font-weight: 800; border-radius: 999px; padding: 0.8rem 1.7rem; text-decoration: none !important; }
+    .cv-btn:hover { filter: brightness(1.05); }
+    .cv-btn.big { font-size: 1.02rem; padding: 0.95rem 2.1rem; }
+    .cv-note { font-size: 0.82rem; line-height: 1.65; color: var(--muted) !important; }
+    .cv-note a { color: var(--brand); font-weight: 600; }
+    .cv-warn { background: rgba(169, 199, 255, 0.1); border: 1px solid rgba(169, 199, 255, 0.45); border-radius: 16px; padding: 20px 22px 8px; }
+    .cv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin: 16px 0; }
+    .cv-related { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+    .cv-related a { display: block; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; text-decoration: none; }
+    .cv-related a:hover { border-color: var(--brand); text-decoration: none; }
+    .cv-related strong { display: block; color: var(--text); font-size: 0.93rem; line-height: 1.4; }
+    .cv-related span { display: block; color: var(--muted); font-size: 0.8rem; line-height: 1.5; margin-top: 4px; }
+    .cv-faq details { border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; background: var(--card); }
+    .cv-faq summary { font-weight: 700; cursor: pointer; color: var(--text); }
+    .cv-faq p { margin: 8px 0 2px; color: #c7d0da; }
+    .cv-final { text-align: center; background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 32px 22px; }
+    .cv-final p { max-width: 560px; margin-left: auto; margin-right: auto; }
+    .cv-author { margin-top: 48px; }
+    @media (max-width: 900px) {
+      .cv-grid { grid-template-columns: repeat(2, 1fr); }
+      .cv-related { grid-template-columns: repeat(2, 1fr); }
+      .cv-pick-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .cv-wrap { padding: 18px 1rem 48px; }
+      .cv-grid, .cv-related { grid-template-columns: 1fr; }
+      .cv-block { margin-top: 38px; }
+      .cv-answer, .cv-warn { padding: 18px 16px 6px; }
+      .cv-toc a { font-size: 0.75rem; }
+    }
+  </style>
+</Layout>
