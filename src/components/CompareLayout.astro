@@ -7,6 +7,21 @@ interface Related { href: string; label: string; desc: string }
 interface Stat { val: number; label: string; plus?: boolean }
 interface FeedItem { title: string; slug: string; cat: string; pct: number; timeLabel: string }
 
+// Optional SEO/AIO/GEO extras. Pages that need richer structured data (author,
+// dates, speakable, entity mentions, extra @graph nodes) pass a single `seo`
+// object. Every field is optional so existing comparison pages are unchanged.
+interface SeoAuthor { name: string; url?: string; jobTitle?: string; description?: string }
+interface SeoExtras {
+  image?: string;
+  type?: string;
+  datePublished?: string;
+  dateModified?: string;
+  author?: SeoAuthor;
+  speakableSelectors?: string[];
+  about?: any[];
+  extraGraph?: any[];
+}
+
 interface Props {
   title: string;
   description: string;
@@ -24,12 +39,23 @@ interface Props {
   termFoot: string;
   faqs: Faq[];
   related: Related[];
+  seo?: SeoExtras;
 }
 
-const { title, description, keywords, canonical, crumbs, badge, h1Accent, h1Rest, heroSub, heroSubStrong, stats, heroFeed, termTitle, termFoot, faqs, related } = Astro.props as Props;
+const { title, description, keywords, canonical, crumbs, badge, h1Accent, h1Rest, heroSub, heroSubStrong, stats, heroFeed, termTitle, termFoot, faqs, related, seo = {} } = Astro.props as Props;
+const {
+  image: seoImage,
+  type = 'website',
+  datePublished,
+  dateModified,
+  author,
+  speakableSelectors = ['h1', '.vs-verdict'],
+  about,
+  extraGraph = [],
+} = seo;
 const siteUrl = 'https://courseswyn.com';
 
-const structuredData = {
+const structuredData: any = {
   '@context': 'https://schema.org',
   '@graph': [
     {
@@ -53,6 +79,12 @@ const structuredData = {
       keywords,
       inLanguage: 'en-US',
       isPartOf: { '@id': `${siteUrl}#website` },
+      ...(datePublished ? { datePublished } : {}),
+      ...(dateModified ? { dateModified, lastReviewed: dateModified } : {}),
+      ...(author ? { author: { '@type': 'Person', ...author } } : {}),
+      ...(speakableSelectors.length ? { speakable: { '@type': 'SpeakableSpecification', cssSelector: speakableSelectors } } : {}),
+      ...(about ? { about, mentions: about } : {}),
+      ...(seoImage ? { primaryImageOfPage: { '@type': 'ImageObject', url: seoImage.startsWith('http') ? seoImage : `${siteUrl}${seoImage}` } } : {}),
     },
     {
       '@type': 'FAQPage',
@@ -64,9 +96,20 @@ const structuredData = {
     },
   ],
 };
+
+if (extraGraph.length) structuredData['@graph'].push(...extraGraph);
 ---
 
-<Layout title={title} description={description} canonical={canonical} hideBreadcrumbs={false}>
+<Layout
+  title={title}
+  description={description}
+  canonical={canonical}
+  image={seoImage}
+  type={type}
+  pubDate={datePublished ? new Date(datePublished) : undefined}
+  updatedDate={dateModified ? new Date(dateModified) : undefined}
+  hideBreadcrumbs={false}
+>
   <Fragment slot="head">
     <meta name="keywords" content={keywords} />
   </Fragment>
@@ -240,6 +283,28 @@ const structuredData = {
   .vs-card li strong { color: var(--text); }
   .vs-card p { font-size: 0.85rem; color: var(--muted); line-height: 1.55; margin: 0; }
   .vs-card p a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  /* Answer-first blocks: scannable for readers and extractable by AI/GEO engines. */
+  .vs-tldr { background: var(--bg-secondary); border: 1px solid #2a3038; border-left: 3px solid var(--brand); border-radius: 12px; padding: 1.1rem 1.35rem; margin-top: 1.5rem; }
+  .vs-tldr h2 { font-size: 0.78rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .07em; color: var(--brand); margin: 0 0 0.7rem; }
+  .vs-tldr ul { margin: 0; padding-left: 1.15rem; font-size: 0.9rem; color: var(--muted); line-height: 1.7; }
+  .vs-tldr li + li { margin-top: 0.35rem; }
+  .vs-tldr li strong { color: var(--text); }
+  .vs-updated { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); margin-top: 0.9rem; }
+  .vs-toc { margin-top: 1.5rem; padding: 1rem 1.25rem; background: var(--card); border: 1px solid #22262d; border-radius: 12px; font-size: 0.85rem; color: var(--muted); }
+  .vs-toc h2 { font-size: 0.78rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .07em; color: var(--brand); margin: 0 0 0.5rem; }
+  .vs-toc ol { margin: 0; padding-left: 1.15rem; columns: 2; column-gap: 1.5rem; line-height: 1.8; }
+  .vs-toc a { color: var(--muted); text-decoration: none; }
+  .vs-toc a:hover { color: var(--brand); text-decoration: underline; }
+  @media (max-width: 640px) { .vs-toc ol { columns: 1; } }
+  .vs-steps { margin: 1rem 0 0; padding-left: 1.25rem; font-size: 0.9rem; color: var(--muted); line-height: 1.7; }
+  .vs-steps li + li { margin-top: 0.6rem; }
+  .vs-steps strong { color: var(--text); }
+  .vs-bottom { background: var(--card); border: 1px solid var(--brand); border-radius: 14px; padding: 1.25rem 1.5rem; margin-top: 3.25rem; }
+  .vs-bottom h2 { font-size: 1.15rem; font-weight: 700; color: var(--text); margin: 0 0 0.6rem; }
+  .vs-bottom p { font-size: 0.92rem; color: var(--muted); line-height: 1.7; margin: 0; }
+  .vs-bottom p + p { margin-top: 0.65rem; }
+  .vs-bottom strong { color: var(--text); }
+  .vs-bottom a { color: var(--brand); text-decoration: none; font-weight: 600; }
   .cc-header { background: linear-gradient(135deg, #0a0b0d 0%, #101216 100%); border-radius: 24px; padding: clamp(1.75rem, 4vw, 3rem); position: relative; overflow: hidden; }
   .cc-header::before { content: ''; position: absolute; top: -100px; left: 10%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(169, 199, 255,0.12) 0%, transparent 65%); pointer-events: none; }
   .cc-header > * { position: relative; z-index: 1; }

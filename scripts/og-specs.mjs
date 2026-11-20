@@ -504,6 +504,12 @@ export const PAGE_SPECS = {
     category: 'EXPLAINER',
     kicker: 'HOW COUPONS ACTUALLY WORK',
   },
+  'og-udemy-vs-coursera': {
+    keyword: 'VS',
+    lines: ['Udemy vs Coursera', 'Which Wins?'],
+    category: 'COMPARISON',
+    kicker: 'PRICE \u00b7 CERTIFICATES \u00b7 FREE',
+  },
   'og-how-to-redeem': {
     keyword: 'APPLY',
     lines: ['How to Redeem', 'a Udemy Coupon'],
