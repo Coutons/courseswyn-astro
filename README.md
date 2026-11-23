@@ -5,7 +5,7 @@
 
 <p align="center">
   <a href="https://courseswyn.com"><img src="https://img.shields.io/badge/CoursesWyn.com-Verified_Udemy_Coupons-FF5D01?style=for-the-badge&logo=udemy&logoColor=white" alt="Live Site"></a>
-  <a href="https://courseswyn.com/udemy-coupon-code"><img src="https://img.shields.io/badge/1,468%2B_Coupons_Verified-100%25_Tested-38B2AC?style=for-the-badge" alt="Active Coupons"></a>
+  <a href="https://courseswyn.com/udemy-coupon-code"><img src="https://img.shields.io/badge/1,500%2B_Coupons_Verified-100%25_Tested-38B2AC?style=for-the-badge" alt="Active Coupons"></a>
   <a href="https://courseswyn.com/blog"><img src="https://img.shields.io/badge/72_Expert_Reviews-No_Affiliate_Bias-A435F0?style=for-the-badge" alt="Expert Reviews"></a>
   <a href="https://courseswyn.com/categories"><img src="https://img.shields.io/badge/12_Categories_Browse-By_Topic-BC52EE?style=for-the-badge" alt="Browse Categories"></a>
 </p>
@@ -52,7 +52,7 @@
 
 [CoursesWyn](https://courseswyn.com) is an independent platform providing **verified Udemy promo codes**, **expert course reviews**, and **structured career roadmaps**. Every coupon is manually tested before publishing — expired deals are purged within 4 hours.
 
-- **1,468 verified coupons** — manually verified, updated daily with 100% OFF and limited-time discounts
+- **1,500 verified coupons** — manually verified, updated daily with 100% OFF and limited-time discounts
 - **72 in-depth expert reviews** — opinionated audits covering AI engineering, agentic AI, web development, cloud computing, data science, and business
 - **12 categories** — browse by topic at [courseswyn.com/categories](https://courseswyn.com/categories)
 - **467 instructor profiles** — top-rated educators with curated course collections at [courseswyn.com/instructors](https://courseswyn.com/instructors)
@@ -196,7 +196,7 @@ Browse all 12 categories at [courseswyn.com/categories](https://courseswyn.com/c
 
 | Metric | Value |
 |---|---|
-| Active Coupons | 1,468 verified daily |
+| Active Coupons | 1,500 verified daily |
 | Expert Reviews | 72 in-depth audits |
 | Instructor Profiles | 467 ranked |
 | Course Categories | 12 topics |
