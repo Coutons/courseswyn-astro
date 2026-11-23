@@ -3,10 +3,24 @@
 // replacement for `set TZ=Asia/Jakarta` in npm scripts (Windows-only syntax).
 process.env.TZ = 'Asia/Jakarta';
 
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 import mdx from '@astrojs/mdx';
+
+// lastmod di sitemap mengikuti data deal (updatedAt), bukan waktu build —
+// kalau pakai waktu build, semua ~3k URL berubah "freshness" tiap deploy.
+const dealUpdatedAt = new Map();
+try {
+  const raw = JSON.parse(readFileSync(new URL('./src/data/coupons.json', import.meta.url), 'utf8'));
+  const deals = Array.isArray(raw) ? raw : (raw.deals ?? raw.coupons ?? []);
+  for (const d of deals) {
+    if (d?.slug && d?.updatedAt) dealUpdatedAt.set(d.slug, d.updatedAt);
+  }
+} catch (err) {
+  console.warn('[sitemap] gagal membaca updatedAt deal:', err?.message ?? err);
+}
 
 export default defineConfig({
   output: 'static',
@@ -82,6 +96,13 @@ export default defineConfig({
       // Search page is noindex (?q= URLs are infinite thin content)
       if (/\/search\/?$/.test(page)) return false;
       return true;
+    },
+    serialize(item) {
+      const match = item.url.match(/\/coupon\/([^/?#]+)\//);
+      const iso = match ? dealUpdatedAt.get(decodeURIComponent(match[1])) : undefined;
+      if (!iso) return item;
+      const date = new Date(iso);
+      return Number.isNaN(date.getTime()) ? item : { ...item, lastmod: date.toISOString() };
     }
   }), mdx()],
   site: 'https://courseswyn.com',

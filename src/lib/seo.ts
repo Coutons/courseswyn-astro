@@ -19,7 +19,7 @@ function isSpanishCourse(deal: Deal): boolean {
 /**
  * Fully automatic SEO description generated at build time.
  * Format (Comidoc-style):
- *   Save on [title] with a verified Udemy coupon (checked [Month Year]). See current price, availability and course details.
+ *   Get [title] with a verified Udemy coupon code (checked [Month Year]). See the current price, validity and full course details.
  */
 export function generateSeoDescription(deal: Deal): string {
   const es = isSpanishCourse(deal);
@@ -31,7 +31,7 @@ export function generateSeoDescription(deal: Deal): string {
     fmtMonthYear(new Date().toISOString(), months);
 
   if (es) {
-    return `Ahorra en ${title} con un cupón de ${provider} verificado (comprobado ${checked}). Consulta el precio actual, la disponibilidad y los detalles del curso.`;
+    return `Consigue ${title} con un código de cupón de ${provider} verificado (comprobado ${checked}). Consulta el precio actual, la validez y todos los detalles del curso.`;
   }
-  return `Save on ${title} with a verified ${provider} coupon (checked ${checked}). See current price, availability and course details.`;
+  return `Get ${title} with a verified ${provider} coupon code (checked ${checked}). See the current price, validity and full course details.`;
 }

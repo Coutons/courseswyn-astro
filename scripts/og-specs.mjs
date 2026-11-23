@@ -438,9 +438,9 @@ export const POST_SPECS = {
   },
   'udemy-black-friday-2026': {
     keyword: '95%',
-    lines: ['Udemy Black Friday', '2026 Deals'],
+    lines: ['Udemy Black Friday', 'Live Until Nov 27'],
     category: 'DEALS',
-    kicker: '25 COURSES \u00b7 DATES INSIDE',
+    kicker: 'LIVE NOW \u00b7 OFFICIAL DEALS',
   },
   'udemy-flash-sale': {
     keyword: 'SALE',

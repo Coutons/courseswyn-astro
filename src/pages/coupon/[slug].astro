@@ -9,6 +9,7 @@ import { getInstructorImage } from "../../lib/instructorProfiles";
 import { generateSeoDescription } from "../../lib/seo";
 import { buildHowToSteps } from "../../lib/couponSections";
 import DealPage from "../../components/DealPage";
+import "../../styles/deal-page.css";
 import type { Deal } from "../../types/deal.d.ts";
 
 export async function getStaticPaths() {
@@ -127,12 +128,11 @@ for (const n of parseInstructors(deal.instructor)) {
 const normalizedTitle = deal.title?.trim() || "Premium Course";
 const isFreeCoupon = (deal.price ?? 0) === 0;
 const discountLabel = isFreeCoupon ? "FREE" : discountPercentage > 0 ? `${discountPercentage}% OFF` : "Discount";
-const seoTitle = `${normalizedTitle} - ${discountLabel} ${deal.provider || "Udemy"} Coupon`;
+const seoTitle = `${normalizedTitle} - ${discountLabel} ${deal.provider || "Udemy"} Coupon Code`;
 const seoDescription = generateSeoDescription(deal);
 
 const siteUrl = "https://courseswyn.com";
 const dealUrl = `${siteUrl}/coupon/${deal.slug}/`;
-const orgName = "CoursesWyn";
 
 const couponMask = maskCoupon(deal.coupon);
 const clientDeal: Deal = { ...deal };
@@ -174,6 +174,18 @@ const validUntilSrc = deal.expiresAt || deal.updatedAt || deal.createdAt;
 const priceValidUntil = validUntilSrc
   ? new Date(new Date(validUntilSrc).getTime() + (deal.expiresAt ? 0 : 30 * 24 * 60 * 60 * 1000)).toISOString()
   : undefined;
+
+// Sumber tunggal untuk breadcrumb: dipakai JSON-LD di bawah dan tampilan di DealPage.
+// Urutannya harus identik dengan yang dirender di DealPage (clx-crumb).
+const breadcrumbItems = [
+  { name: "Home", url: siteUrl },
+  { name: "Coupons", url: `${siteUrl}/udemy-coupon-code` },
+  ...(deal.category ? [{ name: deal.category, url: `${siteUrl}/categories/${slugifyCategory(deal.category)}` }] : []),
+  ...(deal.subcategory && deal.subcategory !== deal.category
+    ? [{ name: deal.subcategory, url: `${siteUrl}/topics/${slugifyTopic(deal.subcategory)}` }]
+    : []),
+  { name: deal.title, url: dealUrl },
+];
 ---
 
 <Layout
@@ -192,38 +204,9 @@ const priceValidUntil = validUntilSrc
     <script type="application/ld+json" set:html={
         JSON.stringify({
             "@context": "https://schema.org",
+            // Organization & WebSite (@id #organization / #website) sudah di-emit
+            // sekali oleh Layout.astro — jangan diulang di sini dengan payload beda.
             "@graph": [
-                {
-                    "@type": "Organization",
-                    "@id": `${siteUrl}/#organization`,
-                    "name": orgName,
-                    "url": siteUrl,
-                    "logo": {
-                        "@type": "ImageObject",
-                        "url": `${siteUrl}/logo.svg`
-                    },
-                    "sameAs": [
-                        "https://www.facebook.com/courseswyn",
-                        "https://twitter.com/courseswyn"
-                    ]
-                },
-                {
-                    "@type": "WebSite",
-                    "@id": `${siteUrl}/#website`,
-                    "url": siteUrl,
-                    "name": orgName,
-                    "description": `Find the best Udemy coupon codes and course deals. Save up to ${discountPercentage || 95}% on thousands of courses updated daily.`,
-                    "publisher": { "@id": `${siteUrl}/#organization` },
-                    "potentialAction": {
-                        "@type": "SearchAction",
-                        "target": {
-                            "@type": "EntryPoint",
-                            "urlTemplate": `${siteUrl}/search?q={search_term_string}`
-                        },
-                        "query-input": "required name=search_term_string"
-                    },
-                    "inLanguage": "en-US"
-                },
                 {
                     "@type": "Course",
                     "@id": `${dealUrl}#course`,
@@ -264,6 +247,17 @@ const priceValidUntil = validUntilSrc
                     "educationalUse": "Professional Development",
                     "datePublished": datePublished,
                     "dateModified": dateModified,
+                    // Rating agregat dari data asli. Sengaja tanpa ratingCount/reviewCount:
+                    // `students` adalah jumlah peserta, bukan jumlah pemberi rating —
+                    // memakainya sebagai count akan menyesatkan (dan berisiko di Google).
+                    ...(typeof deal.rating === "number" && isFinite(deal.rating) ? {
+                        "aggregateRating": {
+                            "@type": "AggregateRating",
+                            "ratingValue": String(deal.rating),
+                            "bestRating": "5",
+                            "worstRating": "1"
+                        }
+                    } : {}),
                     "hasCourseInstance": {
                         "@type": "CourseInstance",
                         "courseMode": "online",
@@ -275,36 +269,14 @@ const priceValidUntil = validUntilSrc
                     }
                 },
                 {
-                    "@type": "Product",
-                    "@id": `${dealUrl}#product`,
-                    "name": seoTitle,
-                    "description": seoDescription,
-                    "image": deal.seoOgImage || deal.image || `${siteUrl}/logo.svg`,
-                    "brand": {
-                        "@type": "Brand",
-                        "name": deal.provider || "Udemy"
-                    },
-                    "offers": {
-                        "@type": "Offer",
-                        "price": deal.price || 0,
-                        "priceCurrency": "USD",
-                        "availability": offerAvailability,
-                        "validFrom": offerValidFrom,
-                        "priceValidUntil": priceValidUntil,
-                        "url": deal.url || dealUrl,
-                        "seller": { "@id": `${siteUrl}/#organization` }
-                    }
-                },
-                {
                     "@type": "BreadcrumbList",
-                    "itemListElement": [
-                        { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
-                        { "@type": "ListItem", "position": 2, "name": "Coupons", "item": `${siteUrl}/udemy-coupon-code` },
-                        ...(deal.category ? [{ "@type": "ListItem", "position": 3, "name": deal.category, "item": `${siteUrl}/categories/${slugifyCategory(deal.category)}` }] : []),
-                        ...(deal.subcategory && deal.subcategory !== deal.category
-                            ? [{ "@type": "ListItem", "position": deal.category ? 4 : 3, "name": deal.subcategory, "item": `${siteUrl}/topics/${slugifyTopic(deal.subcategory)}` }]
-                            : [{ "@type": "ListItem", "position": deal.category ? 4 : 3, "name": deal.title, "item": dealUrl }])
-                    ]
+                    "@id": `${dealUrl}#breadcrumb`,
+                    "itemListElement": breadcrumbItems.map((crumb, i) => ({
+                        "@type": "ListItem",
+                        "position": i + 1,
+                        "name": crumb.name,
+                        "item": crumb.url
+                    }))
                 },
                 ...(faqPageEntities.length ? [{
                     "@type": "FAQPage",
@@ -319,6 +291,7 @@ const priceValidUntil = validUntilSrc
                     "description": `${seoDescription} ${deal.students ? `${deal.students.toLocaleString()} students enrolled.` : ''} Limited time offer.`,
                     "inLanguage": "en-US",
                     "isPartOf": { "@id": `${siteUrl}/#website` },
+                    "mainEntity": { "@id": `${dealUrl}#course` },
                     "datePublished": datePublished,
                     "dateModified": dateModified,
                     "publisher": { "@id": `${siteUrl}/#organization` },
@@ -353,6 +326,6 @@ const priceValidUntil = validUntilSrc
         })
     } />
 
-    <DealPage client:load deal={clientDeal} relatedDeals={relatedDeals} catStats={catStats} instructorImage={instructorImage} instructorImages={instructorImages} couponMask={couponMask} />
+    <DealPage client:load deal={clientDeal} relatedDeals={relatedDeals} catStats={catStats} instructorImage={instructorImage} instructorImages={instructorImages} couponMask={couponMask} couponCode={(deal.coupon || "").trim()} />
 
 </Layout>
