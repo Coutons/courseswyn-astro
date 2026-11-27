@@ -141,7 +141,7 @@ const now = new Date();
 const heroFeed = buildHeroFeed(instructorCourses, now, 3);
 
 // Topik instructor dari subcategory (spesifik) — fallback ke tags bila kosong.
-// dipakai untuk title format: "Memi Lavi [Topics] Courses"
+// Dipakai untuk label seksi, keyword, dan konteks entity (bukan judul H1).
 const _topicCounts = new Map<string, number>();
 for (const c of instructorCourses) {
   const subs = (c.subcategory ? [String(c.subcategory)] : []).map((s) =>
@@ -190,22 +190,29 @@ for (const c of instructorCourses) {
 const relatedTopics = [...relatedTopicCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
 const relatedCategories = [...relatedCategoryCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
 
-const dealWord = courseCount === 1 ? 'Deal' : 'Deals';
+// SEO title: entity dulu (nama instructor + provider + keyword), lalu sinyal
+// kesegaran halaman. Jangan pakai format "X Deals for <Month Year>": angka
+// tersebut adalah snapshot katalog saat build, bukan promo khusus bulan itu.
+const monthShort = new Date().toLocaleDateString('en-US', { month: 'short', timeZone: 'Asia/Jakarta' });
+const titleKeyword = `${cleanName} ${provider} Coupon Codes`;
+const titleWithDeals = `${titleKeyword} & Deals`;
+const titleCandidates = [
+  `${titleWithDeals} (Updated ${monthYear})`,
+  `${titleKeyword} (Updated ${monthYear})`,
+  `${titleWithDeals} (Updated ${monthShort} ${currentYear})`,
+  `${titleKeyword} (Updated ${monthShort} ${currentYear})`,
+  `${titleKeyword} ${currentYear}`,
+  titleKeyword,
+];
+const title = titleCandidates.find((candidate) => candidate.length <= 60) ?? titleKeyword;
 
-// Title unik berbasis data: nama instructor + keyword + jumlah deal + bulan/tahun.
-// Varian dipendekkan hanya untuk nama panjang supaya tidak terpotong di SERP.
-const titleFull = `${cleanName} ${provider} Coupon Codes: ${courseCount} ${dealWord} for ${monthYear}`;
-const titleCompact = `${cleanName} ${provider} Coupon Codes: ${courseCount} ${dealWord}, ${monthYear}`;
-const titleBase = `${cleanName} ${provider} Coupon Codes — ${monthYear}`;
-const title =
-  cleanName.length <= 12 ? titleFull :
-  cleanName.length <= 17 ? titleCompact :
-  titleBase;
+// H1 tetap natural dan tidak mengklaim jumlah/bulan yang bisa menyesatkan.
+const heroTitle = titleWithDeals;
 
 const discountSuffix = maxDisc > 0 ? `, up to ${maxDisc}% off` : '';
 // Deskripsi adaptif: buang bagian opsional kalau nama instructor panjang,
 // supaya meta description tetap utuh di SERP (≤160 karakter).
-const descCore = `${courseCount} ${provider} course${courseCount === 1 ? '' : 's'} from ${cleanName} with verified coupon codes for ${monthYear}`;
+const descCore = `${courseCount} ${provider} course${courseCount === 1 ? '' : 's'} from ${cleanName} with verified coupon codes (updated ${monthYear})`;
 const descFull = `${descCore} — compare prices, ratings and savings${discountSuffix}.`;
 const descCompact = `${descCore}${discountSuffix}.`;
 const descShort = `${courseCount} verified ${provider} coupon code${courseCount === 1 ? '' : 's'} from ${cleanName}${discountSuffix}.`;
@@ -423,7 +430,7 @@ const benefitCards = [
       <header class="cc-header">
         <PageHero
   eyebrow={`${provider} · ${instructorCourses.length} Deal${instructorCourses.length === 1 ? "" : "s"}`}
-  titleHtml={title}
+  titleHtml={heroTitle}
   subHtml={heroSubHtml}
   stats={[]}
   feedLines={heroFeed.map((d) => ({ href: "/coupon/" + d.slug, time: d.timeLabel, cat: d.cat, title: d.title, save: "−" + d.pct + "%" }))}
